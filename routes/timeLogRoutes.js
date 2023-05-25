@@ -273,6 +273,8 @@ router.delete('/', authController.protect, timeLogController.deleteLog);
 *                          date:
 *                              type: string
 *                              format: date
+*                          isManualTime:
+*                              type: boolean
 *                          machineId:
 *                               type: string
 *                          makeThisDeviceActive:

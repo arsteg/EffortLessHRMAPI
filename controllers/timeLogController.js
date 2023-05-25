@@ -252,8 +252,8 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
       filePath:"",     
       isManualTime:true
     }
-    //let result = await TimeLog.create();
-    result.push(newLog);
+    let logItem = await TimeLog.create(newLog);
+    result.push(logItem);
     recordCount++;  
     startTime = moment(startTime).add(10, 'm').toDate();      
   }  
