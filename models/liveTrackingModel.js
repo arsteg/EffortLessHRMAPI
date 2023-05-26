@@ -3,12 +3,12 @@ var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
 
 var liveTrackingModelSchema = new Schema({  
-  userId: {
+  user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required:true,    
   },  
-  companId: {
+  company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required:true
@@ -16,15 +16,8 @@ var liveTrackingModelSchema = new Schema({
     fileString: {
       type: String,
       required: false
-    },
-    url: {
-      type: String,
-      required: false
-    },
-    modifiedOn: {
-      type: Date,
-     // required: true      
-    },
+    }
+    
     
   },
   {
@@ -34,10 +27,10 @@ var liveTrackingModelSchema = new Schema({
   {collection: 'userSubordinate' });
   liveTrackingModelSchema.pre(/^find/,async function(next) {
     this.populate({
-      path: 'userId',
+      path: 'user',
       select: 'email'
     }).populate({
-      path: 'companyId',
+      path: 'company',
       select: 'companyName'
     });
     next();

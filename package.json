@@ -46,7 +46,9 @@
     "slugify": "^1.6.4",
     "swagger-jsdoc": "^6.2.5",
     "swagger-ui-express": "^4.6.0",
-    "validator": "^13.7.0"
+    "validator": "^13.7.0",
+    "websocket": "^1.0.34",
+    "ws": "^8.13.0"
   },
   "engines": {
     "node": ">=14.0.0"

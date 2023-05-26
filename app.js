@@ -18,6 +18,7 @@ const compression = require('compression');
 const cors = require('cors');
 var authRouter = require('./routes/authRouter');
 var leaveRouter = require('./routes/leaveRouter');
+var liveTracking = require('./routes/liveTrackingRoute');
 const AppError = require('./utils/appError');
 var recruitmentRouter = require('./routes/recruitmentRouter');
 var app = express();
@@ -86,9 +87,11 @@ app.use('/api/v1/task', taskRouter);
 app.use('/api/v1/leave', leaveRouter);
 app.use('/api/v1/recruitment', recruitmentRouter);
 app.use('/api/v1/recruitment', recruitmentRouter);
+
 app.use('/api/v1/userPreferences', userPreferences);
 app.use('/api/v1/appWebsite', appWebsite);
 app.use('/api/v1/report', reportRouter);
+app.use('/api/v1/liveTracking', liveTracking);
 
 // api route for common API like Country , Role , Permission , RolePermission
 app.use('/api/v1/common', commonRouter);
