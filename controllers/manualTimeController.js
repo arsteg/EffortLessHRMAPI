@@ -9,6 +9,7 @@ const sendEmail = require('../utils/email');
 const User = require('../models/permissions/userModel');
 const Project = require('../models/projectModel');
 const Company = require('../models/companyModel');
+const Task = require('../models/taskModel');
 var moment = require('moment'); 
 
 exports.addManualTimeRequest = catchAsync(async (req, res, next) => {  
@@ -32,6 +33,11 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
     return next(new AppError(`There is no manager with id ${user}}.`, 404));
   }
 
+  const task = await Task.findById(req.body.task);
+  if (!task) {
+    return next(new AppError(`There is no task with id ${task}}.`, 404));
+  }
+
   const project = await Project.findById(req.body.project);
   if (!project) {
     return next(new AppError(`Project is required.`, 404));
@@ -44,6 +50,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
       company: req.cookies.companyId,
       project:req.body.project,
       manager:req.body.manager,
+      task:req.body.task,
       fromDate:req.body.fromDate,
       toDate:req.body.toDate,
       status:"pending",
@@ -105,7 +112,8 @@ exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
       const manualTimeRequests = await manualTimeRequest.find({}).where('user').equals(req.params.id);
       for(let i=0;i<manualTimeRequests.length;i++){ 
         manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project); 
-        manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager); 
+        manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager);
+        manualTimeRequests[i].task = await Task.findById(manualTimeRequests[i].task); 
       }
       res.status(200).json({
           status: 'success',

@@ -28,6 +28,8 @@ const router = express.Router();
  *                              type: string 
  *                          manager:
  *                              type: string
+ *                          task:
+ *                              type: string 
  *                          fromDate:
  *                              type: string
  *                              format: date 

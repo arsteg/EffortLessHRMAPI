@@ -12,16 +12,24 @@ var manualTimeRequestSchema = new Schema({
   },
   company: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Company'//,
+    ref: 'Company',
+    required: true
     //required: [true, 'User must belong to a User']
   },
   project: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Project'
+    ref: 'Project',
+    required: true
   },
   manager:{
     type: mongoose.Schema.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
+  },
+  task:{
+    type: mongoose.Schema.ObjectId,
+    ref: 'Task',
+    required: true
   },
   fromDate: {
     type: Date,
