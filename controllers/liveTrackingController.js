@@ -72,7 +72,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
     const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
     if (liveTrackigExits.length>0) {
       const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();            
-   
+      console.log("update image string");
     }
     else{ 
      //this.addNew();
@@ -81,14 +81,16 @@ exports.addNew = catchAsync(async (req, res, next) => {
       user:req.cookies.userId,
       company : req.cookies.companyId,
     });   
+    console.log("save image string");
     }
     const newliveTracking = await LiveTracking.find({}).where('user').equals(req.cookies.userId);  
     res.status(200).json({
       status: 'success',
-      data: {
-        liveTracking:newliveTracking
-      }
+      // data: {
+      //   liveTracking:newliveTracking
+      // }
     });
+    console.log("end save image string");
   });
    
 
@@ -99,7 +101,7 @@ exports.getByUserId = catchAsync(async (req, res, next) => {
         if (!liveTrackingEntry) {
           return res.status(404).json({ error: 'Live tracking entry not found' });
         }
-        res.json(liveTrackingEntry);
+        res.json(liveTrackingEntry[0].fileString);
       })
       .catch(error => {
         res.status(500).json({ error: 'Error retrieving live tracking entry' });
