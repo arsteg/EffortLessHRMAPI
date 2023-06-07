@@ -12,7 +12,7 @@ let wpfSocket = null;
 wss.on('connection', (socket, req) => {
   console.log('Client connected');
   wpfSocket = socket;
-  const userId = req.cookies.userId;
+  const userId = req.url.slice(1);
   clients.set(userId, wpfSocket);
 
   wpfSocket.on('close', () => {
@@ -32,6 +32,10 @@ exports.startStopLivePreview = catchAsync(async (req, res, next) => {
           console.log('stoplivepreview');
           client.send(JSON.stringify({ EventName: "stoplivepreview", UserId: req.body.userId }));
         }
+        res.status(200).json({
+          status: 'success'
+        });
+
       }
     });
   }
@@ -58,13 +62,11 @@ exports.closeWebSocket = catchAsync(async (req, res, next) => {
 });
 
 exports.addNew = catchAsync(async (req, res, next) => {
-   
     const newLiveTracking = await LiveTracking.create({
       fileString: req.body.fileString,
       user:req.cookies.userId,
       company : req.cookies.companyId,
     });   
-   
   });
   exports.addOrUpdateIfExists = catchAsync(async (req, res, next) => {
     const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
@@ -73,7 +75,12 @@ exports.addNew = catchAsync(async (req, res, next) => {
    
     }
     else{ 
-     this.addNew();
+     //this.addNew();
+     const newLiveTracking = await LiveTracking.create({
+      fileString: req.body.fileString,
+      user:req.cookies.userId,
+      company : req.cookies.companyId,
+    });   
     }
     const newliveTracking = await LiveTracking.find({}).where('user').equals(req.cookies.userId);  
     res.status(200).json({
