@@ -49,7 +49,7 @@ const router = express.Router();
  *                          type: object
  *
  */
-router.post('/addManualTimeRequest', manualTimeController.addManualTimeRequest);
+router.post('/addManualTimeRequest', authController.protect,manualTimeController.addManualTimeRequest);
 
 /**
  * @swagger
