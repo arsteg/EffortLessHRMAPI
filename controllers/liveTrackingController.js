@@ -94,16 +94,22 @@ exports.addNew = catchAsync(async (req, res, next) => {
   });
    
 
-exports.getByUserId = catchAsync(async (req, res, next) => {
-    const { userId } = req.params;
-    LiveTracking.where('user').equals(userId)
-      .then(liveTrackingEntry => {
-        if (!liveTrackingEntry) {
-          return res.status(404).json({ error: 'Live tracking entry not found' });
-        }
-        res.json(liveTrackingEntry[0].fileString);
-      })
-      .catch(error => {
-        res.status(500).json({ error: 'Error retrieving live tracking entry' });
-      });
+  exports.getByUsers = catchAsync(async (req, res, next) => {
+    let filter;
+    
+    var liveTrackings=[];
+    if(req.body.users!='')
+    {
+      filter = { 'user': { $in: req.body.users }};
+     var userIds = await LiveTracking.find(filter).distinct('user');   
+      LiveTracking.where('user').in(userIds).
+        then(liveTrackingEntry => {  
+        
+          liveTrackings.push(liveTrackingEntry);
+          res.status(200).json({
+            status: 'success',
+            data: liveTrackings
+          }); 
+        });  
+  }
   });

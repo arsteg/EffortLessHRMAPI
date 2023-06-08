@@ -75,18 +75,22 @@ router.post('/closewebsocket', liveTrackingController.closeWebSocket);
 // Read by ID
 /**
  * @swagger
- * /api/v1/liveTracking/getByUserId/{userId}:
- *   get:
+ * /api/v1/liveTracking/getByUsers:
+ *   post:
  *     tags:
  *       - Live Tracking
  *     summary: Get a live tracking entry by ID
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         description: UserId of the live tracking entry
- *         schema:
- *           type: string
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         users:
+ *                              type: array
+ *                              items:
+ *                                type: string
+ *                                example: ""
  *     responses:
  *       200:
  *         description: Successfully retrieved the live tracking entry
@@ -95,4 +99,4 @@ router.post('/closewebsocket', liveTrackingController.closeWebSocket);
  *       500:
  *         description: Internal server error
  */
-router.get('/getByUserId/:userId', liveTrackingController.getByUserId);
+router.post('/getByUsers', liveTrackingController.getByUsers);
