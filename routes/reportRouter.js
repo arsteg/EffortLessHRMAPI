@@ -29,11 +29,6 @@ const router = express.Router();
  *                              items:
  *                                type: object
  *                                example: ""
- *                         tasks:
-  *                              type: array
- *                              items:
- *                                type: object
- *                                example: ""
  *                         fromdate:
  *                              type: string
  *                              format: date

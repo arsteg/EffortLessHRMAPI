@@ -29,30 +29,14 @@ if(teamIds==null)
   {
      teamIdsArray.push(req.cookies.userId);
   } 
-if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
+if(req.body.users!='' && req.body.projects!='')
   {
-    filter = { 'user': { $in: req.body.users },'project': { $in: req.body.projects },'task': { $in: req.body.tasks }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };
-  }
-  else if(req.body.users!='' && req.body.tasks!='')
-  {
-    filter = { 'user': { $in: req.body.users },'task': { $in: req.body.tasks }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };
-  }
-  else if(req.body.users!='' && req.body.projects!='')
-  {
-    filter = { 'user': { $in: req.body.users },'project': { $in: req.body.projects }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };
-  }
-  else if(req.body.tasks!='' && req.body.projects!='')
-  {
-    filter = { 'project': { $in: req.body.projects } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate} };  
-  }
+    filter = { 'user': { $in: req.body.users },'project': { $in: req.body.projects  }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };
+  }  
   else if(req.body.projects!='')
   {
     filter = { 'project': { $in: req.body.projects }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate} }; 
   }  
-  else if(req.body.tasks!='')
-  {
-    filter = { 'task': { $in: req.body.tasks }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };   
-  }
   else if(req.body.users!='')
   {
     filter = { 'user': { $in: req.body.users }, 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };
@@ -76,29 +60,7 @@ if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
       }
      const timeLog = await TimeLog.find(filterProject).distinct('project');
      for(var j = 0; j < timeLog.length; j++)
-     {
-      let filterTask ={};
-        if(req.body.tasks!='' && req.body.projects!='')
-        {
-          filterTask = { 'project': { $in: req.body.projects } ,'task': { $in: req.body.tasks },'user': timeLogs[i], 'date' : {$gte: req.body.fromdate,$lte: req.body.todate} };  
-        }
-        else if(req.body.tasks!='')
-        {
-          filterTask = { 'task': { $in: req.body.tasks }, 'user': timeLogs[i],'project':timeLog[j],'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };   
-        }
-        else if(req.body.projects!='')
-        {
-          filterTask = {'user': timeLogs[i],'project':req.body.projects,'date' : {$gte: req.body.fromdate,$lte: req.body.todate}  };   
-        }
-        else
-        {
-          filterTask = {'user': timeLogs[i],'project':timeLog[j], 'date' : {$gte: req.body.fromdate,$lte: req.body.todate} };
-        }
-        const timeLogTask = await TimeLog.find(filterTask).distinct('task');
-        if(timeLogTask.length>0) 
-         {
-              for(var k = 0; k < timeLogTask.length; k++) 
-              {   
+     {   
                 const dateFrom = new Date(req.body.fromdate).getDate();
                 const dateTo = new Date(req.body.todate).getDate();
                 let days = dateTo - dateFrom;
@@ -107,9 +69,9 @@ if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
                   var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
                   var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));
 
-                  let filterAll = {'user': timeLogs[i],'project':timeLog[j],'task':timeLogTask[k],'date' : {'$gte': tomorrow,'$lte': end}};                  
-                  const timeLogAll = await TimeLog.find(filterAll);                
-                 
+                  let filterAll = {'user': timeLogs[i],'project':timeLog[j],'date' : {'$gte': tomorrow,'$lte': end}};                  
+                  const timeLogAll = await TimeLog.find(filterAll);
+                  
                  if(timeLogAll.length>0)    
                   {                   
                     const newLogInUSer = {};
@@ -118,18 +80,13 @@ if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
                     if(timeLogAll[0].project)
                     {
                      newLogInUSer.project = timeLogAll[0].project.projectName;
-                    }
-                    if(timeLogAll[0].task)
-                    {
-                        newLogInUSer.task = timeLogAll[0].task.taskName;
-                    }
+                    }                   
                     newLogInUSer.time = timeLogAll.length*10;      
                     newLogInUSer.date = timeLogAll[0].date;
                     timeLogsAll.push(newLogInUSer);
                   }
                 }
-              }
-          }
+             
        }   
    }
   res.status(200).json({

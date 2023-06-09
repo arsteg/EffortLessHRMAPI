@@ -7,13 +7,23 @@ const router = express.Router();
 /**
  * @swagger
  * /api/v1/project/projectlist:
- *  get:
+ *  post:
  *      tags:
  *          - Project Management
  *      summary: "Get all Project"
  *      security: [{
  *         bearerAuth: []
  *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string              
  *      produces:
  *          - application/json
  *      responses:
@@ -26,7 +36,7 @@ const router = express.Router();
  *
  */
 
-router.get('/projectlist',authController.protect,projectController.getProjectList);
+router.post('/projectlist',authController.protect,projectController.getProjectList);
 //router.patch('/updateCompany',companyController.saveCoutry);
 
 /**

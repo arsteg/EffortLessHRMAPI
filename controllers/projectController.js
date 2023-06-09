@@ -54,10 +54,12 @@ res.status(200).json({
 });
  // Get Country List
  exports.getProjectList = catchAsync(async (req, res, next) => {        
-  const projectList = await Project.find({}).where('company').equals(req.cookies.companyId);  
+  const projectList = await Project.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.limit);  
   if(projectList)
       {
+       
        for(var i = 0; i < projectList.length; i++) {
+        console.log(projectList[i]);
        const projectUsers = await ProjectUser.find({}).where('project').equals(projectList[i]._id);  
        if(projectUsers) 
           {
