@@ -3,6 +3,7 @@ const express = require('express');
 const { Router } = require('express');
 const app = require('../app');
 const router = express.Router();
+const authController = require('../controllers/authController');
 module.exports = router;
 
 /**
@@ -12,6 +13,9 @@ module.exports = router;
  *      tags:
  *          - Generic Setting Management
  *      summary: "Create Generic setting Data"   
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *      requestBody:
  *          content:
  *              application/json:
@@ -40,7 +44,7 @@ module.exports = router;
  * 
  * 
  */
-router.post('/create', genericSettingController.addNew);
+router.post('/create',authController.protect, genericSettingController.addNew);
 
 /**
  * @swagger
@@ -49,6 +53,9 @@ router.post('/create', genericSettingController.addNew);
  *      tags:
  *          - Generic Setting Management
  *      summary: "Delete by ID"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *      parameters:
  *       - name: id
  *         in: path
@@ -67,7 +74,7 @@ router.post('/create', genericSettingController.addNew);
  *                          type: object
  *
  */
-router.delete('/delete/:id', genericSettingController.delete);
+router.delete('/delete/:id',authController.protect, genericSettingController.delete);
 
 /**
  * @swagger
@@ -76,6 +83,9 @@ router.delete('/delete/:id', genericSettingController.delete);
  *      tags:
  *          - Generic Setting Management
  *      summary: "Get ID"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *      parameters:
  *       - name: id
  *         in: path
@@ -95,7 +105,7 @@ router.delete('/delete/:id', genericSettingController.delete);
  *
  */
 
-router.get('/get/:id', genericSettingController.getById);
+router.get('/get/:id',authController.protect, genericSettingController.getById);
 
 /**
  * @swagger
@@ -104,7 +114,9 @@ router.get('/get/:id', genericSettingController.getById);
  *      tags:
  *          - Generic Setting Management
  *      summary: "Update"
- * 
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *      requestBody:
  *          content:
  *              application/json:
@@ -141,7 +153,7 @@ router.get('/get/:id', genericSettingController.getById);
  *
  */
 
-router.patch('/update/:id', genericSettingController.update);
+router.patch('/update/:id',authController.protect, genericSettingController.update);
 
 /**
  * @swagger
@@ -149,7 +161,10 @@ router.patch('/update/:id', genericSettingController.update);
  *  post:
  *      tags:
  *          - Generic Setting Management
- *      summary: "Get Generic setting Data By User"   
+ *      summary: "Get Generic setting Data By User"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }]  
  *      requestBody:
  *          content:
  *              application/json:
@@ -172,4 +187,4 @@ router.patch('/update/:id', genericSettingController.update);
  * 
  * 
  */
-router.post('/getsettingbyuser', genericSettingController.getGenericSettingByUser);
+router.post('/getsettingbyuser',authController.protect, genericSettingController.getGenericSettingByUser);

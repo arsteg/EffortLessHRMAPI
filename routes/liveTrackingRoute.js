@@ -4,7 +4,7 @@ const app = require('../app');
 const router = express.Router();
 module.exports = router;
 const liveTrackingController = require('../controllers/liveTrackingController')
-
+const authController = require('../controllers/authController');
 // Create
 /**
  * @swagger
@@ -13,6 +13,9 @@ const liveTrackingController = require('../controllers/liveTrackingController')
  *     tags:
  *       - Live Tracking
  *     summary: Create a new live tracking entry
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *     requestBody:
  *       content:
  *         application/json:
@@ -29,9 +32,7 @@ const liveTrackingController = require('../controllers/liveTrackingController')
  *       500:
  *         description: Internal server error
  */
-
-router.post('/save', liveTrackingController.addOrUpdateIfExists);
-
+router.post('/save',authController.protect, liveTrackingController.addOrUpdateIfExists);
 
 // Start Stop Live Preview
 /**
@@ -41,6 +42,9 @@ router.post('/save', liveTrackingController.addOrUpdateIfExists);
  *     tags:
  *       - Live Tracking
  *     summary: Start Stop Live Preview
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *     requestBody:
  *       content:
  *         application/json:
@@ -55,8 +59,7 @@ router.post('/save', liveTrackingController.addOrUpdateIfExists);
  *       200:
  *         description: Successfully Start/Stop Live Preview
  */
-router.post('/startstoplivepreview', liveTrackingController.startStopLivePreview);
-
+router.post('/startstoplivepreview',authController.protect, liveTrackingController.startStopLivePreview);
 
 // Start Close Web Socket
 /**
@@ -66,11 +69,14 @@ router.post('/startstoplivepreview', liveTrackingController.startStopLivePreview
  *     tags:
  *       - Live Tracking
  *     summary: Close Web Socket
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *     responses:
  *       200:
  *         description: Successfully Start/Stop Live Preview
  */
-router.post('/closewebsocket', liveTrackingController.closeWebSocket);
+router.post('/closewebsocket',authController.protect, liveTrackingController.closeWebSocket);
 
 // Read by ID
 /**
@@ -80,6 +86,9 @@ router.post('/closewebsocket', liveTrackingController.closeWebSocket);
  *     tags:
  *       - Live Tracking
  *     summary: Get a live tracking entry by ID
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
  *     requestBody:
  *          content:
  *              application/json:
@@ -99,4 +108,4 @@ router.post('/closewebsocket', liveTrackingController.closeWebSocket);
  *       500:
  *         description: Internal server error
  */
-router.post('/getByUsers', liveTrackingController.getByUsers);
+router.post('/getByUsers',authController.protect, liveTrackingController.getByUsers);
