@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
 
-var liveTrackingModelSchema = new Schema({  
+var genericSettingModelSchema = new Schema({  
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
@@ -13,19 +13,33 @@ var liveTrackingModelSchema = new Schema({
     ref: 'Company',
     required:true
     },
-    fileString: {
+    CategoryName: {
       type: String,
       required: false
-    }
-    
-    
+    },
+    ControlType: {
+      type: String,
+      required: false
+    },
+    ControlLabel: {
+      type: String,
+      required: false
+    },
+    ToolTip: {
+      type: String,
+      required: false
+    },
+    FieldName: {
+      type: String,
+      required: false
+    }       
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
-  {collection: 'LiveTracking' });
-  liveTrackingModelSchema.pre(/^find/,async function(next) {
+  {collection: 'GenericSetting' });
+  genericSettingModelSchema.pre(/^find/,async function(next) {
     this.populate({
       path: 'user',
       select: 'email'
@@ -35,4 +49,4 @@ var liveTrackingModelSchema = new Schema({
     });
     next();
   });
-  module.exports = mongoose.model('LiveTracking', liveTrackingModelSchema);
+  module.exports = mongoose.model('GenericSetting', genericSettingModelSchema);
