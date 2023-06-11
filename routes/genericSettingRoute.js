@@ -5,8 +5,6 @@ const app = require('../app');
 const router = express.Router();
 module.exports = router;
 
-
-//App Website Routes
 /**
  * @swagger
  * /api/v1/genericsetting/create:
@@ -99,7 +97,6 @@ router.delete('/delete/:id', genericSettingController.delete);
 
 router.get('/get/:id', genericSettingController.getById);
 
-// User Preferences routes
 /**
  * @swagger
  * /api/v1/genericsetting/update/{id}:
@@ -152,7 +149,7 @@ router.patch('/update/:id', genericSettingController.update);
  *  post:
  *      tags:
  *          - Generic Setting Management
- *      summary: "Create Generic setting Data"   
+ *      summary: "Get Generic setting Data By User"   
  *      requestBody:
  *          content:
  *              application/json:
