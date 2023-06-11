@@ -142,6 +142,11 @@ userSchema.virtual('userSubordinate', {
   foreignField: 'subordinateUserId', // tour field in review model pointing to this model
   localField: '_id' // id of current model
 });
+userSchema.virtual('genericSetting', {
+  ref: 'GenericSetting',
+  foreignField: 'user', // tour field in review model pointing to this model
+  localField: '_id' // id of current model
+});
 
 userSchema.virtual('taskUser', {
   ref: 'TaskUsers',

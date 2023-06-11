@@ -28,7 +28,7 @@ const path = require('path');
 var manualTimeRouter = require('./routes/manualTimeRouter');
 var settingsRouter = require('./routes/settingsRouter');
 var dashboardRouter = require('./routes/dashboardRoute');
-
+var genericSettingRoute = require('./routes/genericSettingRoute');
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 
@@ -98,4 +98,5 @@ app.use('/api/v1/common', commonRouter);
 app.use('/api/v1/manualTime', manualTimeRouter);
 app.use('/api/v1/settings', settingsRouter);
 app.use('/api/v1/dashboard', dashboardRouter );
+app.use('/api/v1/genericsetting', genericSettingRoute );
 module.exports = app;
