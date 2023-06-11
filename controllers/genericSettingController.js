@@ -71,8 +71,6 @@ exports.getById = catchAsync(async (req, res, next) => {
     }
 });
 
-
-
 exports.update = catchAsync(async (req, res, next) => {
     try {
         const updateDocument = await genericSetting.findByIdAndUpdate(req.params.id, req.body, {
@@ -94,9 +92,6 @@ exports.update = catchAsync(async (req, res, next) => {
 
     }
 });
-
-
-
 
 exports.getByIdAndDate = catchAsync(async (req, res, next) => {
     try 
@@ -120,4 +115,21 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
         });
     }
 })
+
+exports.getGenericSettingByUser = catchAsync(async (req, res, next) => {
+    try {
+        console.log(req.params.id);
+        const documents = await genericSetting.find({}).where('user').equals(req.cookies.userId).where('company').equals(req.cookies.companyId);
+        res.status(200).json({
+            status: 'success',
+            body: documents
+        });
+    }
+    catch (err) {
+        res.status(400).json({
+            status: 'failed',
+            body: err
+        });
+    }
+});
 

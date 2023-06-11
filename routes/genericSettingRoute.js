@@ -146,4 +146,33 @@ router.get('/get/:id', genericSettingController.getById);
 
 router.patch('/update/:id', genericSettingController.update);
 
-
+/**
+ * @swagger
+ * /api/v1/genericsetting/getsettingbyuser:
+ *  post:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Create Generic setting Data"   
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          user:
+ *                              type: string
+ *                          company:
+ *                              type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ * 
+ * 
+ */
+router.post('/getsettingbyuser', genericSettingController.getGenericSettingByUser);
