@@ -165,16 +165,6 @@ router.patch('/update/:id',authController.protect, genericSettingController.upda
  *      security: [{
  *         bearerAuth: []
  *      }]  
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          user:
- *                              type: string
- *                          company:
- *                              type: string 
  *      produces:
  *          - application/json
  *      responses:
