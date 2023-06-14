@@ -155,6 +155,6 @@ router.get('/emailTemplate/:id', commonController.getEmailTemplateById)
  *       500:
  *         description: Server error
  */
-router.get('/AllEmailTemplates', commonController.getAllEmailTemplates)
+router.get('/AllEmailTemplates', authController.protect, commonController.getAllEmailTemplates)
 
 module.exports = router;

@@ -212,9 +212,9 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 
   exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {        
     try {
-      const { companyId } = req.cookies.companyId;
-      const emailTemplates = await EmailTemplate.find({ company: companyId });
-  
+      //const { companyId } = req.cookies.companyId;
+      //const emailTemplates = await EmailTemplate.find({ company: companyId });
+      const emailTemplates = await EmailTemplate.find();
       res.status(200).json(emailTemplates);
     } catch (error) {
       console.error(error);

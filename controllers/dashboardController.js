@@ -3,6 +3,9 @@ const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
 const moment = require('moment'); 
 const Task = require('../models/taskModel');
+const appWebsiteModel = require('../models/commons/appWebsiteModel');
+const Productivity = require('../models/productivityModel');
+
 exports.getHoursWorked = catchAsync(async (req, res, next) => {
   const userId = req.query.userId;
   const date =   req.query.date;  
@@ -256,6 +259,51 @@ exports.getTaskwiseStatus = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: tasksByProject
+  });
+}
+);
+
+exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {   
+ 
+   // Find all appWebsite entries for the given user and date
+   const appWebsites = await appWebsiteModel.find({
+    userReference: req.query.userId,
+    date: req.query.date
+  });
+
+  // Get the keys (appWebsite values) from appWebsite entries
+  const appWebsiteKeys = appWebsites.map(app => app.appWebsite);
+
+  // Find the corresponding productivity entries for the appWebsiteKeys
+  const productivityEntries = await Productivity.find({
+    key: { $in: appWebsiteKeys }
+  });
+
+  // Calculate the total time spent on productive, non-productive, and neutral applications
+  let productiveTime = 0;
+  let nonProductiveTime = 0;
+  let neutralTime = 0;
+
+  appWebsites.forEach(app => {
+    const productivityEntry = productivityEntries.find(entry => entry.key === app.appWebsite);
+
+    if (productivityEntry) {
+      if (productivityEntry.isProductive) {
+        productiveTime += app.TimeSpent;
+      } else {
+        nonProductiveTime += app.TimeSpent;
+      }
+    } else {
+      neutralTime += app.TimeSpent;
+    }
+  });   
+  res.status(200).json({
+    status: 'success',
+    data: {
+      productiveTime,
+      nonProductiveTime,
+      neutralTime
+    }
   });
 }
 );

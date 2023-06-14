@@ -170,4 +170,40 @@ router.get('/taskwiseHours', dashboardController.getTaskwiseHours);
  */
 router.get('/taskwiseStatus', dashboardController.getTaskwiseStatus);
 
+/**
+ * @swagger
+ * /api/v1/dashboard/getApplicationTimeSummary:
+ *  get:
+ *      tags:
+ *          - Dashboard
+ *      summary: "get Application Time Summary based On UserId and a date"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: userId
+ *         in: query
+ *         description: User Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *       - name: date
+ *         in: query
+ *         description: Date to get time logs for (YYYY-MM-DD).
+ *         required: true
+ *         schema:
+ *           type: string  
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getApplicationTimeSummary', dashboardController.getApplicationTimeSummary);
+
 module.exports = router;
