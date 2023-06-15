@@ -451,7 +451,7 @@ let taskUsers =  await TaskUser.find({"user":req.body.userId});// .where('user':
 
 taskUsers.forEach(element => {
   if(element.task?.project?.id==req.body.projectId)  {
-    results.push({id:element.task.id, name:element.task.taskName});
+    results.push(element.task);
   }
 });
 
