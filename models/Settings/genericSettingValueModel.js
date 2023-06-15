@@ -18,5 +18,11 @@ var genericSettingValueModelSchema = new Schema({
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
   {collection: 'GenericSettingValue' });
- 
+  genericSettingValueModelSchema.pre(/^find/,async function(next) {
+    this.populate({
+      path: 'genericSetting',
+      select: 'CategoryName'
+    });
+    next();
+  });
   module.exports = mongoose.model('GenericSettingValue', genericSettingValueModelSchema);

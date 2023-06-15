@@ -22,5 +22,11 @@ var genericSettingListDataModelSchema = new Schema({
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
   {collection: 'GenericSettingListData' });
-
+  genericSettingListDataModelSchema.pre(/^find/,async function(next) {
+    this.populate({
+      path: 'genericSetting',
+      select: 'CategoryName'
+    });
+    next();
+  });
   module.exports = mongoose.model('GenericSettingListData', genericSettingListDataModelSchema);

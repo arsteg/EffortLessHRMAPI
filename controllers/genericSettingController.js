@@ -1,4 +1,6 @@
 const genericSetting = require('../models/Settings/genericSettingModel');
+const genericSettingValue = require('../models/Settings/genericSettingValueModel');
+const genericSettingListData = require('../models/Settings/genericSettingListDataModel');
 const express = require('express');
 const app = express();
 app.use(express.json);
@@ -6,7 +8,7 @@ const catchAsync = require('../utils/catchAsync');
 const { findById } = require("../models/item");
 
 exports.addNew = catchAsync(async (req, res, next) => {
-    
+    console.log("hii");
      try {       
             const createDocument = await genericSetting.create({
                 CategoryName:req.body.CategoryName,
@@ -17,10 +19,35 @@ exports.addNew = catchAsync(async (req, res, next) => {
                 company: req.cookies.companyId,
                 user: req.cookies.userId,
               }); 
-
+              console.log("hii1");
+              if(req.body.values!=null)
+              {
+                for(var i = 0; i < req.body.values.length; i++) {
+                    console.log(req.body.values.length);
+                    const newvaluesItem = await genericSettingValue.create({
+                    genericSetting:createDocument._id,
+                    value:req.body.values[i].value
+                    });                  
+                }
+              }
+              console.log("hii2");
+              if(req.body.listData!=null)
+              {
+                for(var i = 0; i < req.body.listData.length; i++) {
+                    const newvaluesItem = await genericSettingListData.create({
+                    genericSetting:createDocument._id,
+                    key:req.body.listData[i].key,
+                    value:req.body.listData[i].value
+                    });                  
+                }
+              }
+            console.log(createDocument._id);
+        const getDocumentByID = await genericSetting.findById(createDocument._id);
+                
+           
         res.status(201).json({
             status: 'success',
-            body: createDocument
+            body: getDocumentByID
         })
 
 

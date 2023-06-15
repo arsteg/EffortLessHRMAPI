@@ -32,6 +32,16 @@ module.exports = router;
  *                              type: string
  *                          FieldName:
  *                              type: string 
+ *                          values:
+ *                              type: array
+ *                              items:
+ *                                type: string 
+ *                                example: {"value"} 
+ *                          listData:
+ *                              type: array
+ *                              items:
+ *                                type: string
+ *                                example: {"key","value"}  
  *      produces:
  *          - application/json
  *      responses:

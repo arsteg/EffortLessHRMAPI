@@ -32,7 +32,8 @@ var genericSettingModelSchema = new Schema({
     FieldName: {
       type: String,
       required: false
-    }       
+    },
+    GenericSettingValue:[], 
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
@@ -49,4 +50,17 @@ var genericSettingModelSchema = new Schema({
     });
     next();
   });
-  module.exports = mongoose.model('GenericSetting', genericSettingModelSchema);
+  genericSettingModelSchema.virtual('genericSettingValue', {
+    ref: 'GenericSettingValue',
+    foreignField: 'genericSetting', // tour field in review model pointing to this model
+    localField: '_id' // id of current model
+  });
+  genericSettingModelSchema.virtual('genericSettingListData', {
+    ref: 'GenericSettingListData',
+    foreignField: 'genericSetting', // tour field in review model pointing to this model
+    localField: '_id' // id of current model
+  });
+ 
+ const GenericSetting = mongoose.model('GenericSetting', genericSettingModelSchema);
+
+module.exports = GenericSetting;
