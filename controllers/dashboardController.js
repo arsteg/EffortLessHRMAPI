@@ -226,8 +226,8 @@ exports.getTaskwiseStatus = catchAsync(async (req, res, next) => {
 
   // Group time logs by project and task
   const timeLogsByProjectAndTask = timeLogs.reduce((acc, curr) => {
-    const projectId = curr.project._id;
-    const taskId = curr.task._id;
+    const projectId = curr.project?._id;
+    const taskId = curr.task?._id;
     if (!acc[projectId]) {
       acc[projectId] = {};
     }
