@@ -81,8 +81,12 @@ if(req.body.users!='' && req.body.projects!='')
                     {
                      newLogInUSer.project = timeLogAll[0].project.projectName;
                     }                   
-                    newLogInUSer.time = timeLogAll.length*10;      
-                    newLogInUSer.date = timeLogAll[0].date;
+                    newLogInUSer.time = timeLogAll.length*10;   
+                    if(timeLogAll[0].task)
+                    {
+                        newLogInUSer.task = timeLogAll[0].task.taskName;
+                    }
+                      newLogInUSer.date = timeLogAll[0].date;
                     timeLogsAll.push(newLogInUSer);
                   }
                 }
