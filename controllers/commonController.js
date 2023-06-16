@@ -156,7 +156,7 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
     newEmailTemplate.updatedOn= new Date();
     newEmailTemplate.createdBy= req.cookies.userId;
     newEmailTemplate.updatedBy =req.cookies.userId;
-
+    newEmailTemplate.company =req.cookies.companyId;
     const result = await EmailTemplate.create(newEmailTemplate);
     res.status(200).json({
       status: 'success',
@@ -212,8 +212,8 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 
   exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {        
     try {
-      //const { companyId } = req.cookies.companyId;
-      //const emailTemplates = await EmailTemplate.find({ company: companyId });
+      const { companyId } = req.cookies.companyId;
+     // const emailTemplates = await EmailTemplate.find({ company: companyId });
       const emailTemplates = await EmailTemplate.find();
       res.status(200).json(emailTemplates);
     } catch (error) {
