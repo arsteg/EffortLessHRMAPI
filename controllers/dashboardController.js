@@ -301,9 +301,9 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data:[
-      {name: "Productive", value: productiveTime},
-      {name: "Non-Productive", value: nonProductiveTime},
-      {name: "Neutral", value: neutralTime}
+      {name: "Productive", value: productiveTime+10},
+      {name: "Non-Productive", value: nonProductiveTime+10},
+      {name: "Neutral", value: neutralTime+10}
     ]
   });
 }
@@ -334,7 +334,13 @@ exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {
   });
  res.status(200).json({
    status: 'success',
-   data:{todo,inProgress,done,closed }
+   data:
+   [
+    {name: "To Do", value: todo},
+    {name: "In Progress", value: inProgress},
+    {name: "Done", value: done},
+    {name: "Closed", value: closed}
+  ]
  });
 }
 );
