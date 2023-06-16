@@ -299,11 +299,11 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   });   
   res.status(200).json({
     status: 'success',
-    data: {
-      productiveTime,
-      nonProductiveTime,
-      neutralTime
-    }
+    data:[
+      {name: "Productive", value: productiveTime},
+      {name: "Non-Productive", value: nonProductiveTime},
+      {name: "Neutral", value: neutralTime}
+    ]
   });
 }
 );
