@@ -143,7 +143,7 @@ router.delete('/emailTemplates/:id', commonController.deleteEmailTemplate)
 router.get('/emailTemplate/:id', commonController.getEmailTemplateById)
 /**
  * @swagger
- * /api/v1/common/AllEmailTemplates:
+ * /api/v1/common/emailTemplates:
  *   get:
  *     summary: Get all email templates
  *     tags: [Email Templates] 
@@ -155,6 +155,6 @@ router.get('/emailTemplate/:id', commonController.getEmailTemplateById)
  *       500:
  *         description: Server error
  */
-router.get('/AllEmailTemplates', authController.protect, commonController.getAllEmailTemplates)
+router.get('/emailTemplates', authController.protect, commonController.getAllEmailTemplates)
 
 module.exports = router;
