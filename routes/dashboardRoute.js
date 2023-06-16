@@ -206,4 +206,34 @@ router.get('/taskwiseStatus', dashboardController.getTaskwiseStatus);
  */
 router.get('/getApplicationTimeSummary', dashboardController.getApplicationTimeSummary);
 
+/**
+ * @swagger
+ * /api/v1/dashboard/getTaskStatusCounts:
+ *  get:
+ *      tags:
+ *          - Dashboard
+ *      summary: "get get Task Status Counts based On UserId"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: userId
+ *         in: query
+ *         description: User Id
+ *         required: true
+ *         schema:
+ *           type: string  
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getTaskStatusCounts', dashboardController.getTaskStatusCounts);
+
 module.exports = router;

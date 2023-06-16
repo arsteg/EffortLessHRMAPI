@@ -35,11 +35,7 @@ var taskUsersModelSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company'//,
     //required: [true, 'User must belong to a User']
-  },
-  status:
-  {
-    type: String
-  }
+  },  
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON

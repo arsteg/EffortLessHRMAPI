@@ -5,6 +5,7 @@ const moment = require('moment');
 const Task = require('../models/taskModel');
 const appWebsiteModel = require('../models/commons/appWebsiteModel');
 const Productivity = require('../models/productivityModel');
+const TaskUsers = require('../models/taskUserModel')
 
 exports.getHoursWorked = catchAsync(async (req, res, next) => {
   const userId = req.query.userId;
@@ -305,5 +306,35 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
       {name: "Neutral", value: neutralTime}
     ]
   });
+}
+);
+
+exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {  
+  
+  const userTasks = await TaskUsers.find({user: mongoose.Types.ObjectId(req.query.userId)});  
+  let todo = 0;
+  let inProgress = 0;
+  let done = 0;
+  let closed = 0;
+  userTasks.forEach(task=>{    
+    switch(task?.task?.status?.toUpperCase()){
+      case 'TODO':
+        todo++;
+      break;
+        case 'IN PROGRESS':
+          inProgress++;  
+        break;
+          case 'DONE':
+            done++;  
+          break;
+            case 'CLOSED':
+              closed++;  
+            break;
+    }
+  });
+ res.status(200).json({
+   status: 'success',
+   data:{todo,inProgress,done,closed }
+ });
 }
 );
