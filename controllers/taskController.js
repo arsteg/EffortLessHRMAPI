@@ -423,8 +423,8 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
 });
 
 
-exports.getTaskList = catchAsync(async (req, res, next) => {    
-  const taskList = await Task.find({}).where('company').equals(req.cookies.companyId);  
+exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {    
+  const taskList = await Task.find({}).where('parentTask').equals(req.params.taskId); 
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
