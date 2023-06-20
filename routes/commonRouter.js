@@ -8,7 +8,6 @@ router.get('/countrylist',commonController.getCountryList);
 router.post('/savecountry',commonController.saveCoutry);
 
 // Role Router
-
 router.get('/getrolebyname',commonController.getRoleByName);
 
 // Permission Router
@@ -20,13 +19,15 @@ router.get('/rolepermissionlist',commonController.getRolePermsList);
 router.post('/saverolepermission',commonController.saveRolePermission);
 router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
 
-
 /**
  * @swagger
  * /api/v1/common/emailTemplate:
  *   post:
  *     summary: Add a new email template
  *     tags: [Email Templates]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     requestBody:
  *       required: true
  *       content:
@@ -54,7 +55,7 @@ router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
  *       500:
  *         description: Server error
  */
-router.post('/emailTemplate',  commonController.addEmailTemplate);
+router.post('/emailTemplate',  authController.protect, commonController.addEmailTemplate);
 
 /**
  * @swagger
@@ -62,6 +63,9 @@ router.post('/emailTemplate',  commonController.addEmailTemplate);
  *   put:
  *     summary: Update an existing email template
  *     tags: [Email Templates]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -96,7 +100,7 @@ router.post('/emailTemplate',  commonController.addEmailTemplate);
  *             schema:
  *               $ref: '#/components/schemas/EmailTemplate'
  */
-router.put('/emailTemplates/:id', commonController.updateEmailTemplate)
+router.put('/emailTemplates/:id',  authController.protect, commonController.updateEmailTemplate)
 
 /**
  * @swagger
@@ -104,6 +108,9 @@ router.put('/emailTemplates/:id', commonController.updateEmailTemplate)
  *   delete:
  *     summary: Delete an email template
  *     tags: [Email Templates]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -115,7 +122,7 @@ router.put('/emailTemplates/:id', commonController.updateEmailTemplate)
  *       204:
  *         description: Email template deleted successfully
  */
-router.delete('/emailTemplates/:id', commonController.deleteEmailTemplate)
+router.delete('/emailTemplates/:id', authController.protect, commonController.deleteEmailTemplate)
 
 /**
  * @swagger
@@ -123,6 +130,9 @@ router.delete('/emailTemplates/:id', commonController.deleteEmailTemplate)
  *   get:
  *     summary: Get an email template by ID
  *     tags: [Email Templates]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -140,13 +150,17 @@ router.delete('/emailTemplates/:id', commonController.deleteEmailTemplate)
  *       500:
  *         description: Server error
  */
-router.get('/emailTemplate/:id', commonController.getEmailTemplateById)
+router.get('/emailTemplate/:id', authController.protect, commonController.getEmailTemplateById)
+
 /**
  * @swagger
  * /api/v1/common/emailTemplates:
  *   get:
  *     summary: Get all email templates
  *     tags: [Email Templates] 
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     responses:
  *       200:
  *         description: Successfully retrieved all email templates

@@ -193,11 +193,8 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 
   exports.getEmailTemplateById = catchAsync(async (req, res, next) => {        
     
-    try {
-      const { id } = req.params;
-      const { companyId } = req.cookies.companyId;
-      const emailTemplate = await EmailTemplate.findOne({ _id: id, company: companyId });
-  
+    try {     
+      const emailTemplate = await EmailTemplate.find({}).where('_id').equals(req.params.id); 
       if (!emailTemplate) {
         return res.status(404).json({ error: 'Email template not found' });
       }
@@ -210,10 +207,12 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
     
   });
 
-  exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {        
+  exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {   
+    console.log("hello");     
     try {
-      const { companyId } = req.cookies.companyId;
-      const emailTemplates = await EmailTemplate.find({ company: companyId });
+      const { companyId } = req.cookies.companyId;    
+      const emailTemplates = await EmailTemplate.find({}).where('company').equals(req.cookies.companyId);  
+      console.log(emailTemplates);
      // const emailTemplates = await EmailTemplate.find();
       res.status(200).json(emailTemplates);
     } catch (error) {

@@ -36,7 +36,7 @@ const emailTemplateSchema = new mongoose.Schema({
       company: {
         type: mongoose.Schema.ObjectId,
         ref: 'Company',
-        required: [true, 'User must belong to a Company']
+        required: [true, 'Company must belong to a Company']
       },    
 },{ collection: 'emailTemplate' })
 module.exports = mongoose.model("emailTemplate", emailTemplateSchema);
