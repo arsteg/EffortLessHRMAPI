@@ -46,22 +46,23 @@ var taskModelSchema = new Schema({
   },  
   createdBy: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User'//,
-  //  required: [true, 'User must belong to a User']
+    ref: 'User',
+    required: [true, 'User must belong to a User']
   },
   updatedBy: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User'//,
-    //required: [true, 'User must belong to a User']
+    ref: 'User',
+    required: [true, 'User must belong to a User']
   },
   company: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Company'//,
-    //required: [true, 'User must belong to a User']
+    ref: 'Company',
+    required: [true, 'Company must belong to a Company']
   },
   project: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Project'
+    ref: 'Project',
+    required: [true, 'Project must belong to a Project']
   },
   parentTask: {
     type: mongoose.Schema.ObjectId,

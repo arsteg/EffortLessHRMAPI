@@ -26,6 +26,39 @@ const router = express.Router();
  *
  */
 router.get('/tasklist',authController.protect,taskController.getTaskList);
+
+/**
+ * @swagger
+ * /api/v1/task/tasklistbyparenttask/{taskId}:
+ *  get:
+ *      tags:
+ *          - Task Management
+ *      summary: "Get Task List based on ProjectId"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: taskId
+ *         in: path
+ *         description: Task Id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: int64
+ *                
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/tasklistbyparenttask/:taskId',authController.protect,taskController.getTaskListByParentTask);
+
 /**
  * @swagger
  * /api/v1/task/tasklistbyproject/{projectId}:
