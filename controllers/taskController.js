@@ -247,6 +247,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
       updatedOn: new Date(),
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId,
+      company: req.cookies.companyId,
       url:url
     });  
   
@@ -703,6 +704,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
       updatedOn: new Date(),
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId,
+      company: req.cookies.companyId,
       url:url
     });  
   }
