@@ -380,7 +380,7 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
 });
  // Get Country List
 exports.getTaskList = catchAsync(async (req, res, next) => {    
-    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId);  
+    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
     if(taskList)
     {
      for(var i = 0; i < taskList.length; i++) {

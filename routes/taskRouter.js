@@ -7,13 +7,23 @@ const router = express.Router();
 /**
  * @swagger
  * /api/v1/task/tasklist:
- *  get:
+ *  post:
  *      tags:
  *          - Task Management
  *      summary: "Get all task"
  *      security: [{
  *         bearerAuth: []
  *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string
  *      produces:
  *          - application/json
  *      responses:
@@ -25,7 +35,7 @@ const router = express.Router();
  *                          type: object
  *
  */
-router.get('/tasklist',authController.protect,taskController.getTaskList);
+router.post('/tasklist',authController.protect,taskController.getTaskList);
 
 /**
  * @swagger
