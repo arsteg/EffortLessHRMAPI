@@ -30,14 +30,22 @@ const createAndSendToken = async (user, statusCode, res) => {
     ),
     httpOnly: true
   };    
-  res.cookie('companyId', user.company.id, {
-    secure: true,
-    sameSite: 'none'
-  });
-  res.cookie('userId', user._id.id, {
-    secure: true,
-    sameSite: 'none'
-  });
+  if (process.env.NODE_ENV === 'production')
+  {
+      res.cookie('companyId', user.company.id, {
+        secure: true,
+        sameSite: 'none'
+      });
+      res.cookie('userId', user._id, {
+        secure: true,
+        sameSite: 'none'
+      });
+  }
+  else
+  {
+    res.cookie('companyId', user.company.id);
+    res.cookie('userId', user._id);
+  }
   // In production save cookie only in https connection
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
   res.cookie('jwt', token, cookieOptions);

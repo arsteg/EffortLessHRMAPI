@@ -325,7 +325,6 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     "Blob was uploaded successfully. requestId: ",
     uploadBlobResponse.requestId
   );
-  console.log(req.body.comment);
     const newTaskAttachment = await TaskAttachments.create({
       task:req.body.taskId,
       attachmentType:req.body.taskAttachments[i].attachmentType,
@@ -339,6 +338,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
       updatedOn: new Date(),
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId,
+      company: req.cookies.companyId,
       url: url
     });    
   
