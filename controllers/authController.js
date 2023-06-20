@@ -29,12 +29,19 @@ const createAndSendToken = async (user, statusCode, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 
     ),
     httpOnly: true
-  };
-  res.cookie('companyId', user.company.id);  
-  res.cookie('userId', user._id);  
+  };    
+  res.cookie('companyId', user.company.id, {
+    secure: true,
+    sameSite: 'none'
+  });
+  res.cookie('userId', user._id.id, {
+    secure: true,
+    sameSite: 'none'
+  });
   // In production save cookie only in https connection
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
   res.cookie('jwt', token, cookieOptions);
+  
   // Remove password from the output
   user.password = undefined;
 
