@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
 
 var genericSettingListDataModelSchema = new Schema({  
@@ -22,6 +21,7 @@ var genericSettingListDataModelSchema = new Schema({
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
   {collection: 'GenericSettingListData' });
+  
   genericSettingListDataModelSchema.pre(/^find/,async function(next) {
     this.populate({
       path: 'genericSetting',
@@ -29,4 +29,7 @@ var genericSettingListDataModelSchema = new Schema({
     });
     next();
   });
-  module.exports = mongoose.model('GenericSettingListData', genericSettingListDataModelSchema);
+
+ const GenericSettingListData = mongoose.model('GenericSettingListData', genericSettingListDataModelSchema);
+
+ module.exports = GenericSettingListData;

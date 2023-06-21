@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
-   // required: [true, 'Company must belong to a Company']
+    required: [true, 'Company must belong to a Company']
   },
   // Used for authorization
   photo: String,

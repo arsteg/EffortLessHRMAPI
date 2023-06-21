@@ -1,7 +1,5 @@
 var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
-
 var genericSettingModelSchema = new Schema({  
   user: {
     type: mongoose.Schema.ObjectId,
@@ -15,7 +13,7 @@ var genericSettingModelSchema = new Schema({
     },
     CategoryName: {
       type: String,
-      required: false
+      required: [true, 'CategoryName field is required']
     },
     ControlType: {
       type: String,
@@ -32,8 +30,7 @@ var genericSettingModelSchema = new Schema({
     FieldName: {
       type: String,
       required: false
-    },
-    GenericSettingValue:[], 
+    },  
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON

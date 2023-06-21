@@ -114,7 +114,6 @@ router.delete('/delete/:id',authController.protect, genericSettingController.del
  *                          type: object
  *
  */
-
 router.get('/get/:id',authController.protect, genericSettingController.getById);
 
 /**
@@ -162,7 +161,6 @@ router.get('/get/:id',authController.protect, genericSettingController.getById);
  *                          type: object
  *
  */
-
 router.patch('/update/:id',authController.protect, genericSettingController.update);
 
 /**
@@ -188,3 +186,210 @@ router.patch('/update/:id',authController.protect, genericSettingController.upda
  * 
  */
 router.post('/getsettingbyuser',authController.protect, genericSettingController.getGenericSettingByUser);
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/createvalues/{genericSettingId}:
+ *  post:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Create Generic setting values"   
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: genericSettingId
+ *         in: path
+ *         description: generic SettingId
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          values:
+ *                              type: array
+ *                              items:
+ *                                type: string 
+ *                                example: {"value"} 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ * 
+ * 
+ */
+router.post('/createvalues/:genericSettingId',authController.protect, genericSettingController.addGenericSettingValue);
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/createlistdata/{genericSettingId}:
+ *  post:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Create Generic setting values"   
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: genericSettingId
+ *         in: path
+ *         description: generic SettingId
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:  
+ *                          listData:
+ *                              type: array
+ *                              items:
+ *                                type: string
+ *                                example: {"key","value"}
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ * 
+ * 
+ */
+router.post('/createlistdata/:genericSettingId',authController.protect, genericSettingController.addGenericSettingListData);
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/deletelistdata/{listDataId}:
+ *  delete:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Delete listData by Id"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: listDataId
+ *         in: path
+ *         description: Delete listDataId by Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.delete('/deletelistdata/:listDataId',authController.protect, genericSettingController.deleteGenericSettingListData);
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/getlistdata/{genericSettingId}:
+ *  get:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Get List Data by genericSettingId"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: genericSettingId
+ *         in: path
+ *         description: Get List Data by generic Setting Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+
+router.get('/getlistdata/:genericSettingId',authController.protect, genericSettingController.getGenericSettingListData);
+
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/deletevalues/{valuesId}:
+ *  delete:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Delete values by valuesId"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: valuesId
+ *         in: path
+ *         description: Delete values by Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.delete('/deletevalues/:valuesId',authController.protect, genericSettingController.deleteGenericSettingValue);
+
+/**
+ * @swagger
+ * /api/v1/genericsetting/getvalues/{genericSettingId}:
+ *  get:
+ *      tags:
+ *          - Generic Setting Management
+ *      summary: "Get values by genericSettingId"  
+ *      security: [{
+ *         bearerAuth: []
+ *      }] 
+ *      parameters:
+ *       - name: genericSettingId
+ *         in: path
+ *         description: Get values by generic Setting Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+
+router.get('/getvalues/:genericSettingId',authController.protect, genericSettingController.getGenericSettingValue);

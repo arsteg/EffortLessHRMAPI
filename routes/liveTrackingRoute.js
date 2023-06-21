@@ -12,10 +12,10 @@ const authController = require('../controllers/authController');
  *   post:
  *     tags:
  *       - Live Tracking
- *     summary: Create a new live tracking entry
- *      security: [{
+ *     summary: "Create a new live tracking entry"
+ *     security: [{
  *         bearerAuth: []
- *      }] 
+ *     }] 
  *     requestBody:
  *       content:
  *         application/json:
@@ -41,10 +41,10 @@ router.post('/save',authController.protect, liveTrackingController.addOrUpdateIf
  *   post:
  *     tags:
  *       - Live Tracking
- *     summary: Start Stop Live Preview
- *      security: [{
+ *     summary: "Start Stop Live Preview"
+ *     security: [{
  *         bearerAuth: []
- *      }] 
+ *     }] 
  *     requestBody:
  *       content:
  *         application/json:
@@ -68,10 +68,10 @@ router.post('/startstoplivepreview',authController.protect, liveTrackingControll
  *   post:
  *     tags:
  *       - Live Tracking
- *     summary: Close Web Socket
- *      security: [{
+ *     summary: "Close Web Socket"
+ *     security: [{
  *         bearerAuth: []
- *      }] 
+ *     }] 
  *     responses:
  *       200:
  *         description: Successfully Start/Stop Live Preview
@@ -85,10 +85,10 @@ router.post('/closewebsocket',authController.protect, liveTrackingController.clo
  *   post:
  *     tags:
  *       - Live Tracking
- *     summary: Get a live tracking entry by ID
- *      security: [{
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
  *         bearerAuth: []
- *      }] 
+ *     }] 
  *     requestBody:
  *          content:
  *              application/json:

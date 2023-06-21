@@ -1,8 +1,7 @@
 var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
 
-var genericSettingValueModelSchema = new Schema({  
+var genericSettingValueSchema = new Schema({  
   genericSetting: {
     type: mongoose.Schema.ObjectId,
     ref: 'GenericSetting',
@@ -18,11 +17,11 @@ var genericSettingValueModelSchema = new Schema({
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
   {collection: 'GenericSettingValue' });
-  genericSettingValueModelSchema.pre(/^find/,async function(next) {
+  genericSettingValueSchema.pre(/^find/,async function(next) {
     this.populate({
       path: 'genericSetting',
       select: 'CategoryName'
     });
     next();
   });
-  module.exports = mongoose.model('GenericSettingValue', genericSettingValueModelSchema);
+  module.exports = mongoose.model('GenericSettingValue', genericSettingValueSchema);
