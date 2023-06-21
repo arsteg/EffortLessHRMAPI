@@ -48,7 +48,10 @@ if(req.body.users!='' && req.body.projects!='')
    
    timeLogs = await TimeLog.find(filter).distinct('user');    
    for(var i = 0; i < timeLogs.length; i++)
-   {    
+   {   
+                    const newLogInUSer = {};
+                    
+                    const newLogAll = [];
       let filterProject ={};  
       if(req.body.projects!='')
       {
@@ -65,34 +68,36 @@ if(req.body.users!='' && req.body.projects!='')
                 const dateTo = new Date(req.body.todate).getDate();
                 let days = dateTo - dateFrom;
                 for(var day = 0;day <= days; day++)
-                {                 
+                {    const newLog = {};              
                   var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
                   var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));
 
                   let filterAll = {'user': timeLogs[i],'project':timeLog[j],'date' : {'$gte': tomorrow,'$lte': end}};                  
                   const timeLogAll = await TimeLog.find(filterAll);
-                  
+                 
                  if(timeLogAll.length>0)    
                   {                   
-                    const newLogInUSer = {};
                     newLogInUSer.firstName = timeLogAll[0].user.firstName;  
-                    newLogInUSer.lastName = timeLogAll[0].user.lastName;
+                    newLogInUSer.lastName = timeLogAll[0].user.lastName; 
                     if(timeLogAll[0].project)
                     {
-                     newLogInUSer.project = timeLogAll[0].project.projectName;
+                      newLog.project = timeLogAll[0].project.projectName;
                     }                   
-                    newLogInUSer.time = timeLogAll.length*10;   
+                    newLog.time = timeLogAll.length*10;   
                     if(timeLogAll[0].task)
                     {
-                        newLogInUSer.task = timeLogAll[0].task.taskName;
+                      newLog.task = timeLogAll[0].task.taskName;
                     }
-                      newLogInUSer.date = timeLogAll[0].date;
-                    timeLogsAll.push(newLogInUSer);
+                    newLog.date = timeLogAll[0].date;
+                    newLogAll.push(newLog);
                   }
                 }
              
        }   
+       newLogInUSer.logs=newLogAll;
+       timeLogsAll.push(newLogInUSer);
    }
+ 
   res.status(200).json({
     status: 'success',
     data: timeLogsAll
