@@ -108,9 +108,15 @@ exports.getTaskListByUser  = catchAsync(async (req, res, next) => {
     const newTaskUserList = await TaskUser.find({}).where('user').equals(req.body.userId);  
     if(newTaskUserList)
       {
+      
        for(var i = 0; i < newTaskUserList.length; i++) {
-           taskList.push(newTaskUserList[i].task);
+        if(newTaskUserList[i].task)
+        {
+           
+           const task = await Task.findById(newTaskUserList[i].task._id);  
+           taskList.push(task);
          }  
+        }
       }
       res.status(200).json({
       status: 'success',
