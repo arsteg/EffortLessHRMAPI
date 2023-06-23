@@ -71,8 +71,9 @@ if(req.body.users!='' && req.body.projects!='')
                 {    const newLog = {};              
                   var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
                   var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));
-
-                  let filterAll = {'user': timeLogs[i],'project':timeLog[j],'date' : {'$gte': tomorrow,'$lte': end}};                  
+console.log(tomorrow);
+console.log(end);
+                  let filterAll = {'user': timeLogs[i],'project':timeLog[j],'date' : {'$gte': tomorrow,'$lt': end}};                  
                   const timeLogAll = await TimeLog.find(filterAll);
                  
                  if(timeLogAll.length>0)    
