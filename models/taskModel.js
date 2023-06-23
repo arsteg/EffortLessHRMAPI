@@ -35,6 +35,10 @@ var taskModelSchema = new Schema({
   },
   priority:{
     type:String
+  },  
+  taskNumber:{
+    type:Number,
+    required: true
   },
   createdOn: {
     type: Date,

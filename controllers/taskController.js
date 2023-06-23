@@ -177,6 +177,12 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
 exports.addTask = catchAsync(async (req, res, next) => { 
 
   // Upload Capture image on block blob client 
+var taskNumber=0;
+const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.body.project);  
+if(taskList)
+{ 
+  taskNumber=taskList.length+1;
+}
 
   const newTask = await Task.create({
     taskName: req.body.taskName,
@@ -199,7 +205,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
     createdOn: new Date(),
     updatedOn: new Date(),
     createdBy: req.cookies.userId,
-    updatedBy: req.cookies.userId
+    updatedBy: req.cookies.userId,
+    taskNumber:taskNumber
+
   });  
   if(req.body.taskUsers!=null)
   {
