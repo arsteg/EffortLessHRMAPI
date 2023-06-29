@@ -200,7 +200,7 @@ exports.getLog = catchAsync(async (req, res, next) => {
 });
 
 exports.getLogsWithImages = catchAsync(async (req, res, next) => {
-  var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).getDate() + 1));
+  var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).getDate()));
   const timeLogs =  await TimeLog.find({}).where('user').equals(req.body.user).find({
     "date" : {"$gte": req.body.date,"$lte": tomorrow}});
   res.status(200).json({
