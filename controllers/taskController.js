@@ -1,5 +1,6 @@
 const Task = require('../models/taskModel');
 const TaskUser = require('../models/taskUserModel');
+const User = require('../models/permissions/userModel');
 const TaskAttachments = require('../models/taskAttachmentModel');
 const catchAsync = require('../utils/catchAsync');
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -8,6 +9,9 @@ const AppError = require('../utils/appError');
 const Tag = require('../models/task/tagModel');
 const TaskTag = require('../models/Task/taskTagModel');
 const Comment  = require('../models/Task/taskCommentModel');
+const CommonController  = require('../controllers/commonController');
+const EmailTemplate = require('../models/commons/emailTemplateModel');
+const sendEmail = require('../utils/email');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 if (!AZURE_STORAGE_CONNECTION_STRING) {
@@ -189,7 +193,8 @@ if(taskList)
 { 
   taskNumber=taskList.length+1;
 }
-
+const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
+ 
   const newTask = await Task.create({
     taskName: req.body.taskName,
     startDate:req.body.startDate,
@@ -215,6 +220,7 @@ if(taskList)
     taskNumber:taskNumber
 
   });  
+  CommonController.getEmailTemplateByName("AssignUserToTemplate");
   if(req.body.taskUsers!=null)
   {
   for(var i = 0; i < req.body.taskUsers.length; i++) {
@@ -228,8 +234,16 @@ if(taskList)
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId
     });  
-    
-  
+    if(newTaskUserItem){   
+      const user = await User.findOne({ _id: newTaskUserItem.user });
+     console.log(user.email);
+      await sendEmail({
+        email: user.email,
+        subject:emailTemplate.Name,
+        message:emailTemplate.contentData
+      });  
+  }
+ 
   }
   }
   if(req.body.taskAttachments!=null)
@@ -280,8 +294,9 @@ if(taskList)
     }
   });
 });
-
 exports.addTaskUser = catchAsync(async (req, res, next) => { 
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
+  
   // Upload Capture image on block blob client 
  for(var i = 0; i < req.body.taskUsers.length; i++) {
   const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId).where('user').equals(req.body.taskUsers[i].user);  
@@ -300,6 +315,15 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId
     });    
+   if(newTaskUserItem){   
+        const user = await User.findOne({ _id: newTaskUserItem.user });
+      
+        await sendEmail({
+          email: user.email,
+          subject:emailTemplate.Name,
+          message:emailTemplate.contentData
+        });  
+    }
   }
   }  
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.taskId);  
@@ -311,10 +335,24 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
   });
 });
 exports.deleteTaskUser = catchAsync(async (req, res, next) => {
-  console.log("hii");
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
+  const taskUser = await TaskUser.findOne({ _id: req.params.id });
+  const user = await User.findOne({ _id: taskUser.user });
+    
   const document = await TaskUser.findByIdAndDelete(req.params.id);
   if (!document) {
     return next(new AppError('No document found with that ID', 404));
+  }
+  else
+  {
+    if(taskUser){   
+       console.log(user.email);
+      await sendEmail({
+        email: user.email,
+        subject:emailTemplate.Name,
+        message:emailTemplate.contentData
+      });  
+  }
   }
   res.status(204).json({
     status: 'success',
