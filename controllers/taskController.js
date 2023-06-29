@@ -23,8 +23,33 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 
 exports.deleteTask = catchAsync(async (req, res, next) => {
-  const newTaskUserList = await TaskUser.findOneAndDelete({}).where('task').equals(req.params.id);  
-  const newTaskAttachmentList = await TaskAttachments.findOneAndDelete({}).where('task').equals(req.params.id);
+ // const newTaskUserList = await TaskUser.findOneAndDelete({}).where('task').equals(req.params.id);  
+ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
+ const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
+  if(newTaskUserList)
+  {
+    for(var j = 0; j < newTaskUserList.length; j++) 
+    { 
+     
+      const user = await User.findOne({ _id: newTaskUserList[j].user });        
+      const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
+      if (!document) {
+        return next(new AppError('No document found with that ID', 404));
+      }
+      else
+      {
+        if(user){   
+          console.log(user.email);
+          await sendEmail({
+            email: user.email,
+            subject:emailTemplate.Name,
+            message:emailTemplate.contentData
+          });  
+      }
+      }
+    }
+  }
+  //const newTaskAttachmentList = await TaskAttachments.findOneAndDelete({}).where('task').equals(req.params.id);
   const document = await Task.findByIdAndDelete(req.params.id);
   res.status(204).json({
     status: 'success',
@@ -220,7 +245,7 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
     taskNumber:taskNumber
 
   });  
-  CommonController.getEmailTemplateByName("AssignUserToTemplate");
+  
   if(req.body.taskUsers!=null)
   {
   for(var i = 0; i < req.body.taskUsers.length; i++) {
