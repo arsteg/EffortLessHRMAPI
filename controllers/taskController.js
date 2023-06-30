@@ -170,12 +170,27 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
     return next(new AppError('Task User already exists.', 403));
   }
   else{ 
+   
     const document = await TaskUser.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data
   });
+
   if (!document) {
     return next(new AppError('No document found with that ID', 404));
+  }
+  else
+  { 
+    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
+  
+    if(document){   
+      const user = await User.findOne({ _id: document.user });
+      await sendEmail({
+        email: user.email,
+        subject:emailTemplate.Name,
+        message:emailTemplate.contentData
+      });  
+}
   }
   res.status(201).json({
     status: 'success',
