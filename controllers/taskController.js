@@ -143,8 +143,16 @@ exports.getTaskListByUser  = catchAsync(async (req, res, next) => {
         {
            
            const task = await Task.findById(newTaskUserList[i].task._id);  
-           taskList.push(task);
-         }  
+           const taskUser = await TaskUser.find({}).where('task').equals(task._id);  
+          if(taskUser) 
+          {
+            task.TaskUsers=taskUser;
+          }
+          else{
+            task.TaskUsers=null;
+          }
+            taskList.push(task);
+          }  
         }
       }
       res.status(200).json({
