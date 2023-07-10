@@ -154,3 +154,87 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
         });
     }
 });
+
+exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
+    try {
+        console.log(`getUserProductivityApps called`);
+        const userId = req.params.userId;
+        console.log(userId);
+        const productivityApps = await Productivity.find({company:req.cookies.companyId,user:userId});        
+        res.status(200).json({
+            status: 'success',
+            data: productivityApps
+        })
+    }
+    catch (err) {
+        res.status(400).json({
+            status: 'failed',
+            data: err
+        });
+    }
+});
+
+exports.getproductivities = catchAsync(async (req, res, next) => {
+    const productivityData = await Productivity.find();    
+    res.status(200).json({
+        status: 'success',
+        body: productivityData
+    });
+});
+
+exports.getproductivityById = catchAsync(async (req, res, next) => {    
+    const productivityData = await Productivity.findById(req.params.id);
+    res.status(200).json({
+        status: 'success',
+        body: productivityData
+    });
+});
+
+exports.addProductivity = catchAsync(async (req, res, next) => {    
+    console.log(req.body);
+
+    const productivityData = await Productivity.create(
+        {
+            icon: req.body.icon,            
+            key: req.body.key,            
+            name: req.body.name,            
+            isProductive: req.body.isProductive,
+            isApproved: req.body.isApproved,
+            company: req.cookies.companyId,            
+            user:req.cookies.userId,
+            createdOn: new Date(Date.now()),
+            updatedOn: new Date(Date.now()),
+            createdBy: req.cookies.userId,
+            updatedBy: req.cookies.userId,
+          }
+    );
+    res.status(200).json({
+        status: 'success',
+        data: productivityData
+    });
+});
+
+exports.updateProductivity = catchAsync(async (req, res, next) => {
+    const productivityData = await Productivity.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      );
+      res.status(200).json({
+        status: 'success',
+        body: productivityData
+    });
+
+});
+
+exports.deleteProductivity = catchAsync(async (req, res, next) => {
+    const productivityData = await Productivity.findByIdAndDelete(req.params.id);
+    if (productivityData) {
+        res.status(200).json({
+            status: 'success',
+            data: productivityData
+        });
+    } else {
+      res.status(404).json({ error: 'Productivity record not found' });
+    }
+});

@@ -3,8 +3,7 @@ const { boolean } = require('webidl-conversions');
 const Schema = mongoose.Schema;
 
 const productivityModelSchema = new mongoose.Schema({
-    icon: {
-        required: true,
+    icon: {        
         type: String
     },
     key:{
@@ -18,6 +17,9 @@ const productivityModelSchema = new mongoose.Schema({
     isProductive: {
         type:Boolean
     },
+    isApproved: {
+      type:Boolean
+  },
     createdOn: {
         type: Date,
         required: true    
@@ -40,6 +42,11 @@ const productivityModelSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Company',
         required: [true, 'Company must belong to a Company']
+      },
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        required: [true, 'User is required']
       },
 });
 module.exports = mongoose.model("Productivity", productivityModelSchema);
