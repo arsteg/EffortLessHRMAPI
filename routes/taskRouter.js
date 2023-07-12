@@ -438,11 +438,8 @@ router.route('/:id').delete(authController.protect,taskController.deleteTask);
  *                      properties:
  *                          taskId:
  *                              type: string
- *                          taskUsers:
- *                              type: array
- *                              items:
- *                                type: string
- *                                example: {"user"}
+ *                          user:
+ *                              type: string
  *                          
  *      produces:
  *          - application/json

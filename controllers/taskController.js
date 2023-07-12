@@ -346,8 +346,8 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
   
   // Upload Capture image on block blob client 
- for(var i = 0; i < req.body.taskUsers.length; i++) {
-  const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId).where('user').equals(req.body.taskUsers[i].user);  
+ 
+  const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId).where('user').equals(req.body.user);  
   
   if (taskUsersexists.length>0) {
     return next(new AppError('Task User already exists.', 403));
@@ -355,7 +355,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
   else{ 
     const newTaskUserItem = await TaskUser.create({
       task:req.body.taskId,
-      user:req.body.taskUsers[i].user,
+      user:req.body.user,
       company:req.cookies.companyId,
       status:"Active",
       createdOn: new Date(),
@@ -373,7 +373,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         });  
     }
   }
-  }  
+  
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.taskId);  
   res.status(200).json({
     status: 'success',
