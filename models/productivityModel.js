@@ -17,8 +17,9 @@ const productivityModelSchema = new mongoose.Schema({
     isProductive: {
         type:Boolean
     },
-    isApproved: {
-      type:Boolean
+    status: {
+      required: true,
+        type: String
   },
     createdOn: {
         type: Date,

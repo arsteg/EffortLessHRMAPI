@@ -199,7 +199,7 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
             key: req.body.key,            
             name: req.body.name,            
             isProductive: req.body.isProductive,
-            isApproved: req.body.isApproved,
+            status: req.body.status,
             company: req.cookies.companyId,            
             user:req.cookies.userId,
             createdOn: new Date(Date.now()),
@@ -214,17 +214,22 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.updateProductivity = catchAsync(async (req, res, next) => {
+exports.updateProductivity = catchAsync(async (req, res, next) => {    
+    const { id } = req.params.id;
+    const { status } = req.body.status;
+    
+    console.log(`req.body.id: ${req.body.id}`);
+    console.log(`req.body.status: ${req.body.status}`);
+    
     const productivityData = await Productivity.findByIdAndUpdate(
-        req.params.id,
-        req.body,
+        req.body.id,
+        { $set: { status: req.body.status } },
         { new: true }
       );
       res.status(200).json({
         status: 'success',
         body: productivityData
     });
-
 });
 
 exports.deleteProductivity = catchAsync(async (req, res, next) => {

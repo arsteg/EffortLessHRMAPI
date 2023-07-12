@@ -264,20 +264,45 @@ exports.getTaskwiseStatus = catchAsync(async (req, res, next) => {
 }
 );
 
-exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {   
- 
-   // Find all appWebsite entries for the given user and date
-   const appWebsites = await appWebsiteModel.find({
-    userReference: req.query.userId,
-    date: req.query.date
-  });
+exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {    
+  
+  const targetDate = new Date(req.query.date);
+  const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
+  const userId= req.query.userId;
+
+  
+  // Find all appWebsite entries for the given user and date
+  const appWebsites = await appWebsiteModel.find({  
+    $and: [
+      {
+        $expr: {
+          $eq: [
+            { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+            { $dateToString: { format: '%Y-%m-%d', date: targetDate } }
+          ]
+        }
+      },
+      {
+        userReference: userId
+      }
+    ]
+  })
+
+  
+  
+  // const appWebsites = await appWebsiteModel.find({
+  //   userReference: req.query.userId,
+  //   date: req.query.date
+  // });
 
   // Get the keys (appWebsite values) from appWebsite entries
   const appWebsiteKeys = appWebsites.map(app => app.appWebsite);
 
   // Find the corresponding productivity entries for the appWebsiteKeys
-  const productivityEntries = await Productivity.find({
-    key: { $in: appWebsiteKeys }
+  let  productivityEntries = await Productivity.find({
+    key: { $in: appWebsiteKeys},
+    status: "approved"
   });
 
   // Calculate the total time spent on productive, non-productive, and neutral applications
@@ -301,9 +326,9 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data:[
-      {name: "Productive", value: productiveTime+10},
-      {name: "Non-Productive", value: nonProductiveTime+10},
-      {name: "Neutral", value: neutralTime+10}
+      {name: "Productive", value: productiveTime},
+      {name: "Non-Productive", value: nonProductiveTime},
+      {name: "Neutral", value: neutralTime}
     ]
   });
 }

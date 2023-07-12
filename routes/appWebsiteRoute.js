@@ -274,8 +274,8 @@ router.get('/productivity/:id', appWebsiteController.getproductivityById);
  *                          isProductive:
  *                              type: boolean
  *                              required: true
- *                          isApproved:
- *                              type: boolean
+ *                          status:
+ *                              type: string
  *                              required: true
  *     responses:
  *       200:
@@ -307,8 +307,12 @@ router.post('/productivity', appWebsiteController.addProductivity);
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Productivity'
+ *                  schema:
+ *                      type: object
+ *                      properties:  
+ *                          status:
+ *                              type: string
+ *                              required: true
  *     responses:
  *       200:
  *         description: Success
