@@ -212,7 +212,7 @@ router.post('/getCurrentWeekTotalTime', authController.protect, timeLogControlle
 
 /**
  * @swagger
- * /api/v1/timelogs:
+ * /api/v1/timelogs/deleteTimeLog:
  *  delete:
  *      tags:
  *          - Timelog Management
@@ -242,7 +242,7 @@ router.post('/getCurrentWeekTotalTime', authController.protect, timeLogControlle
  *                          type: object
  *
  */
-router.delete('/', authController.protect, timeLogController.deleteLog);
+router.delete('/deleteTimeLog', authController.protect, timeLogController.deleteLog);
 
 /**
 * @swagger
