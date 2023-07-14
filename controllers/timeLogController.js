@@ -211,13 +211,16 @@ exports.getLogsWithImages = catchAsync(async (req, res, next) => {
 
 exports.deleteLog = catchAsync(async (req, res, next) => {
   for(var i = 0; i < req.body.logs.length; i++) {
-  const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);   
+  const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);    
   if(timeLogsExists)
   {
-    var url = timeLogsExists.filePath;    
-    containerClient.getBlockBlobClient(url).deleteIfExists();
-    const blockBlobClient = containerClient.getBlockBlobClient(url);
-    await blockBlobClient.deleteIfExists();
+    if(timeLogsExists.filePath)
+    {
+        var url = timeLogsExists.filePath;     
+        containerClient.getBlockBlobClient(url).deleteIfExists();
+        const blockBlobClient = containerClient.getBlockBlobClient(url);
+        await blockBlobClient.deleteIfExists();
+    }
     const document = await TimeLog.findByIdAndDelete(req.body.logs[i].logId);
     if (!document) {
       console.log('No document found with that ID');
@@ -232,7 +235,6 @@ res.status(204).json({
   data: null
 });
 });
-
 exports.addManualTime = catchAsync(async (req, res, next) => {    
   let startTime = moment(req.body.startTime).toDate();
   const endTime = moment(req.body.endTime).toDate();  
