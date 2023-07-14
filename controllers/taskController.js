@@ -551,7 +551,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
 
 let taskUsers =  await TaskUser.find({"user":req.body.userId});// .where('user':);//.equals().select('task').where('project').equals(req.body.projectId);// ({project:{id:{$eq:req.body.projectId}}});
 for(var i = 0; i < taskUsers.length; i++) {
-  if(taskUsers[i].task.project?.id==req.body.projectId)  {  
+  if(taskUsers[i].task?.project?.id==req.body.projectId)  {  
     const taskUser = await TaskUser.find({}).where('task').equals( taskUsers[i].task._id);  
     if(taskUser) 
     {
