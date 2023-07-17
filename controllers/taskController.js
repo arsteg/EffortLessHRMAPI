@@ -161,7 +161,7 @@ exports.getTaskListByUser  = catchAsync(async (req, res, next) => {
         taskList:taskList
       }
     });   
-  });
+});
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
     res.status(200).json({
@@ -269,12 +269,11 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
 
   });  
   
-  if(req.body.taskUsers!=null)
+  if(req.body.user!=null)
   {
-  for(var i = 0; i < req.body.taskUsers.length; i++) {
     const newTaskUserItem = await TaskUser.create({
       task:newTask._id,
-      user:req.body.taskUsers[i],
+      user:req.body.user,
       company:req.cookies.companyId,
       status:"Active",
       createdOn: new Date(),
@@ -283,16 +282,13 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
       updatedBy: req.cookies.userId
     });  
     if(newTaskUserItem){   
-      const user = await User.findOne({ _id: newTaskUserItem.user });
-     console.log(user.email);
+      const user = await User.findOne({ _id: newTaskUserItem.user });     
       await sendEmail({
         email: user.email,
         subject:emailTemplate.Name,
         message:emailTemplate.contentData
       });  
-  }
- 
-  }
+    }
   }
   if(req.body.taskAttachments!=null)
   {
@@ -306,12 +302,12 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
     const buffer = new Buffer.from(FileString, 'base64');
     const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
     const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-  console.log(
-    "Blob was uploaded successfully. requestId: ",
-    uploadBlobResponse.requestId
-  );
+    console.log(
+      "Blob was uploaded successfully. requestId: ",
+      uploadBlobResponse.requestId
+    );
 
-    const newTaskUserItem = await TaskAttachments.create({
+      const newTaskUserItem = await TaskAttachments.create({
       task:newTask._id,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
@@ -326,12 +322,10 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
       company: req.cookies.companyId,
       url:url
     });  
-  
   }
 }
 
-  const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id);  
- 
+  const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id); 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);  
   res.status(200).json({
     status: 'success',
@@ -342,11 +336,10 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
     }
   });
 });
+
 exports.addTaskUser = catchAsync(async (req, res, next) => { 
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
-  
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
   // Upload Capture image on block blob client 
- for(var i = 0; i < req.body.taskUsers.length; i++) {
   const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId);    
   if (taskUsersexists.length>0) {
       const document = await TaskUser.findByIdAndUpdate(req.body.taskId, req.body, {
@@ -354,10 +347,10 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         runValidators: true // Validate data
     });
   }
-  else{ 
+  else {
     const newTaskUserItem = await TaskUser.create({
       task:req.body.taskId,
-      user:req.body.taskUsers[i].user,
+      user:req.body.user,
       company:req.cookies.companyId,
       status:"Active",
       createdOn: new Date(),
@@ -365,17 +358,17 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId
     });    
+
    if(newTaskUserItem){   
-        const user = await User.findOne({ _id: newTaskUserItem.user });
-      
+        const user = await User.findOne({ _id: newTaskUserItem.user });      
         await sendEmail({
           email: user.email,
           subject:emailTemplate.Name,
           message:emailTemplate.contentData
         });  
     }
+  
   }
-  }  
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.taskId);  
   res.status(200).json({
     status: 'success',
@@ -384,6 +377,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
   });
 });
+
 exports.deleteTaskUser = catchAsync(async (req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
   const taskUser = await TaskUser.findOne({ _id: req.params.id });
