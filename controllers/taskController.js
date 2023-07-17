@@ -347,10 +347,12 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
   
   // Upload Capture image on block blob client 
  for(var i = 0; i < req.body.taskUsers.length; i++) {
-  const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId).where('user').equals(req.body.taskUsers[i].user);  
-  
+  const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId);    
   if (taskUsersexists.length>0) {
-    return next(new AppError('Task User already exists.', 403));
+      const document = await TaskUser.findByIdAndUpdate(req.body.taskId, req.body, {
+        new: true, // If not found - add new
+        runValidators: true // Validate data
+    });
   }
   else{ 
     const newTaskUserItem = await TaskUser.create({
