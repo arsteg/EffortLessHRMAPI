@@ -173,10 +173,8 @@ router.route('/:id').get(authController.protect,taskController.getTask);
  *                              type: number
  *                          timeTaken:
  *                              type: number 
- *                          taskUsers:
- *                              type: array
- *                              items:
- *                                type: string 
+ *                          user:
+ *                              type: string                             
  *                          taskAttachments:
  *                              type: array
  *                              items:
