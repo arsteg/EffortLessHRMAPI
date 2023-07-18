@@ -434,7 +434,7 @@ router.route('/:id').delete(authController.protect,taskController.deleteTask);
  *                  schema:
  *                      type: object
  *                      properties:
- *                          taskId:
+ *                          task:
  *                              type: string
  *                          user:
  *                              type: string
@@ -451,45 +451,7 @@ router.route('/:id').delete(authController.protect,taskController.deleteTask);
  *
  */
 router.post('/newtaskuser',authController.protect,taskController.addTaskUser);
-/**
- * @swagger
- * /api/v1/task/update/taskuser/{id}:
- *  patch:
- *      tags:
- *          - Task Management
- *      summary: "Update Task User based on TaskUserId"   
- *      security: [{
- *         bearerAuth: []
- *     }]
- *      parameters:
- *       - name: id
- *         in: path
- *         description: Task User Id
- *         required: true
- *         schema:
- *           type: string
- *           format: int64
- *           
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          user:
- *                              type: string  
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
- */
-router.patch('/update/taskuser/:id',authController.protect,taskController.updateTaskUser);
+
 /**
  * @swagger
  * /api/v1/task/taskuser/{id}:

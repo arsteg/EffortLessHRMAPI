@@ -340,16 +340,19 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
 exports.addTaskUser = catchAsync(async (req, res, next) => { 
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
   // Upload Capture image on block blob client 
-  const taskUsersexists = await TaskUser.find({}).where('task').equals(req.body.taskId);    
-  if (taskUsersexists.length>0) {
-      const document = await TaskUser.findByIdAndUpdate(req.body.taskId, req.body, {
+  const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task);    
+  var newTaskUserItem=null;
+  if (taskUsersExists.length>0) {
+    console.log(taskUsersExists);
+    newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists.id, req.body, {
         new: true, // If not found - add new
         runValidators: true // Validate data
     });
+  console.log(newTaskUserItem);
   }
   else {
-    const newTaskUserItem = await TaskUser.create({
-      task:req.body.taskId,
+    newTaskUserItem = await TaskUser.create({
+      task:req.body.task,
       user:req.body.user,
       company:req.cookies.companyId,
       status:"Active",
@@ -369,7 +372,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
   
   }
-  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.taskId);  
+  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);  
   res.status(200).json({
     status: 'success',
     data: {      
