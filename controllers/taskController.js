@@ -131,39 +131,32 @@ exports.getTaskAttachments  = catchAsync(async (req, res, next) => {
       }
     });  
 });
-exports.getTaskListByUser  = catchAsync(async (req, res, next) => {    
-  var taskList=[];
+exports.getTaskListByUser = catchAsync(async (req, res, next) => {
+  const userId = req.body.userId;
+  const skip = req.body.skip;
+  const limit = req.body.next;
 
-    const newTaskUserList = await TaskUser.find({}).where('user').equals(req.body.userId).skip(req.body.skip).limit(req.body.next);  
-    const taskCount = await TaskUser.countDocuments({ "user": req.body.userId });  
-    if(newTaskUserList)
-      {
-      
-       for(var i = 0; i < newTaskUserList.length; i++) {
-        if(newTaskUserList[i].task)
-        {
-           
-           const task = await Task.findById(newTaskUserList[i].task._id);  const taskUser = await TaskUser.find({}).where('task').equals(task._id);  
-          if(taskUser) 
-          {
-            task.TaskUsers=taskUser;
-          }
-          else{
-            task.TaskUsers=null;
-          }
-           taskList.push(task);
-         }  
-        }
-      }
-      
-      res.status(200).json({
-      status: 'success',
-      data: {
-        taskList:taskList,
-        taskCount:taskCount
-      }
-    });   
+  const taskUserQuery = TaskUser.find({ user: userId, task: { $exists: true } })
+    .skip(skip)
+    .limit(limit)
+    .select('task')
+    .populate('task');
+
+  const [taskList, taskCount] = await Promise.all([
+    taskUserQuery,
+    TaskUser.countDocuments({ user: userId, task: { $exists: true } })
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      taskList: taskList.filter(taskUser => taskUser.task !== null).map(taskUser => taskUser.task),
+      taskCount: taskCount
+    }
+  });
 });
+
+
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
     res.status(200).json({
@@ -503,7 +496,8 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
     });  
 });
 exports.getTaskListByProject = catchAsync(async (req, res, next) => {    
-  const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.params.projectId);  
+  const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.params.projectId).skip(req.body.skip).limit(req.body.next); ;  
+  const taskCount = await Task.countDocuments({ "company": req.cookies.companyId ,"project": req.params.projectId });
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
@@ -520,12 +514,11 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
    res.status(200).json({
     status: 'success',
     data: {
-      taskList: taskList
+      taskList: taskList,
+      taskCount: taskCount
     }
   });  
 });
-
-
 exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {    
   const taskList = await Task.find({}).where('parentTask').equals(req.params.taskId); 
   if(taskList)
@@ -549,27 +542,26 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  var results=[];
-
-let taskUsers =  await TaskUser.find({"user":req.body.userId});// .where('user':);//.equals().select('task').where('project').equals(req.body.projectId);// ({project:{id:{$eq:req.body.projectId}}});
-for(var i = 0; i < taskUsers.length; i++) {
-  if(taskUsers[i].task?.project?.id==req.body.projectId)  {  
-    const taskUser = await TaskUser.find({}).where('task').equals( taskUsers[i].task._id);  
-    if(taskUser) 
-    {
-      taskUsers[i].task.TaskUsers=taskUser;
+  var results = [];
+  console.log("hii");
+  let taskUsers = await TaskUser.find({ user: req.body.userId });
+  for (var i = 0; i < taskUsers.length; i++) {
+    if (taskUsers[i].task && taskUsers[i].task.project && taskUsers[i].task.project.id === req.body.projectId) {
+      const taskUser = await TaskUser.find({ "task": taskUsers[i].task._id });
+      if (taskUser) {
+        taskUsers[i].task.TaskUsers = taskUser;
+      } else {
+        taskUsers[i].task.TaskUsers = null;
+      }
+      results.push(taskUsers[i].task);
     }
-    else{
-      taskUsers[i].task.TaskUsers=null;
-    }     
-    results.push(taskUsers[i].task);
   }
-}
- res.status(200).json({
-  status: 'success',
-  data: results
-});  
+  res.status(200).json({
+    status: 'success',
+    data: results
+  });
 });
+
 //Tag management
 exports.addTag = catchAsync(async (req, res, next) => {  
   const tagExists = await Tag.find( {"title":
@@ -592,9 +584,8 @@ exports.addTag = catchAsync(async (req, res, next) => {
     data: newTag
   }); 
 } 
-  });
-
-  exports.updateTag = catchAsync(async (req, res, next) => { 
+});
+exports.updateTag = catchAsync(async (req, res, next) => { 
     
     let tagExists = await Tag.find( {"_id": req.body.id}).where('company').equals(req.cookies.companyId);  
     if(tagExists.length==0){
@@ -608,16 +599,17 @@ exports.addTag = catchAsync(async (req, res, next) => {
       data: newTag
     }); 
   } 
-    });
+});
   
-  exports.deleteTagById = async (req, res) => {
-      try {
+exports.deleteTagById = async (req, res) => {
+  try {
         const tag = await Tag.findByIdAndDelete(req.params.id);
         if (!tag) {
           return res.status(404).send();
         }
         res.send(tag);
-      } catch (err) {
+      } 
+  catch (err) {
         res.status(500).send({ error: 'Server error' });
       }
 };
@@ -633,8 +625,6 @@ exports.getTagById = async (req, res) => {
     res.status(500).send({ error: 'Server error' });
   }
 };
-
-
 exports.getTagsByTaskId = catchAsync(async (req, res, next) => {    
     // Find all TaskTag documents that match the taskId    
      const taskId = req.params.taskId;

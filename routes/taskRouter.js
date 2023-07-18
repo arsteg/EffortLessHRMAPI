@@ -72,7 +72,7 @@ router.get('/tasklistbyparenttask/:taskId',authController.protect,taskController
 /**
  * @swagger
  * /api/v1/task/tasklistbyproject/{projectId}:
- *  get:
+ *  post:
  *      tags:
  *          - Task Management
  *      summary: "Get Task List based on ProjectId"
@@ -87,7 +87,16 @@ router.get('/tasklistbyparenttask/:taskId',authController.protect,taskController
  *         schema:
  *           type: string
  *           format: int64
- *                
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string              
  *      produces:
  *          - application/json
  *      responses:
@@ -99,7 +108,7 @@ router.get('/tasklistbyparenttask/:taskId',authController.protect,taskController
  *                          type: object
  *
  */
- router.route('/tasklistbyproject/:projectId').get(authController.protect,taskController.getTaskListByProject);
+ router.route('/tasklistbyproject/:projectId').post(authController.protect,taskController.getTaskListByProject);
 /**
  * @swagger
  * /api/v1/task/{id}:
@@ -638,6 +647,10 @@ router.post('/new/taskattachment',authController.protect,taskController.addTaskA
  *                      properties:
  *                          userId:
  *                              type: string  
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string 
  *      produces:
  *          - application/json
  *      responses:
