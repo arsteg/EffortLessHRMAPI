@@ -134,7 +134,8 @@ exports.getTaskAttachments  = catchAsync(async (req, res, next) => {
 exports.getTaskListByUser  = catchAsync(async (req, res, next) => {    
   var taskList=[];
 
-    const newTaskUserList = await TaskUser.find({}).where('user').equals(req.body.userId);  
+    const newTaskUserList = await TaskUser.find({}).where('user').equals(req.body.userId).skip(req.body.skip).limit(req.body.next);  
+    const taskCount = await TaskUser.countDocuments({ "user": req.body.userId });  
     if(newTaskUserList)
       {
       
@@ -158,7 +159,8 @@ exports.getTaskListByUser  = catchAsync(async (req, res, next) => {
       res.status(200).json({
       status: 'success',
       data: {
-        taskList:taskList
+        taskList:taskList,
+        taskCount:taskCount
       }
     });   
 });
@@ -177,8 +179,8 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
   if (taskUsersexists.length>0) {
     return next(new AppError('Task User already exists.', 403));
   }
-  else{ 
-   
+  else
+  {
     const document = await TaskUser.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data
@@ -190,7 +192,6 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
   else
   { 
     const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
-  
     if(document){   
       const user = await User.findOne({ _id: document.user });
       await sendEmail({
@@ -198,7 +199,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
         subject:emailTemplate.Name,
         message:emailTemplate.contentData
       });  
-}
+    }
   }
   res.status(201).json({
     status: 'success',
