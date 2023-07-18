@@ -91,9 +91,12 @@ exports.addLog = catchAsync(async (req, res, next) => {
 
 exports.getTimeLogs = catchAsync(async (req, res, next) => {
 var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).getDate() + 1));
-  const timeLogs =  await TimeLog.find({}).where('user').equals(req.body.user).find({
-    "date" : {"$gte": req.body.date,"$lte": tomorrow}});
- 
+  
+    const timeLogs = await TimeLog.find({
+      "user": req.body.user,
+      "date": { "$gte": req.body.date, "$lte": tomorrow }
+    });
+    
   res.status(200).json({
     status: 'success',
     data: timeLogs
