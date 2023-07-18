@@ -406,7 +406,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 exports.addTaskAttachment = catchAsync(async (req, res, next) => { 
 
   // Upload Capture image on block blob client 
-  for(var i = 0; i < req.body.taskAttachments.length; i++) {
+for(var i = 0; i < req.body.taskAttachments.length; i++) {
     
     const blobName = "Capture" + uuidv1() + req.body.taskAttachments[i].extention;
   // Get a block blob client
@@ -477,7 +477,8 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
  // Get Country List
 exports.getTaskList = catchAsync(async (req, res, next) => {    
     const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
-    if(taskList)
+    const taskCount = await Task.countDocuments({ "company": req.cookies.companyId });
+     if(taskList)
     {
      for(var i = 0; i < taskList.length; i++) {
      const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
@@ -492,7 +493,8 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
     } res.status(200).json({
       status: 'success',
       data: {
-        taskList: taskList
+        taskList: taskList,
+        taskCount:taskCount
       }
     });  
 });
