@@ -332,13 +332,15 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
 });
 
 exports.addTaskUser = catchAsync(async (req, res, next) => { 
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
+  const emailTemplateOldUser = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
+  const emailTemplateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
+ var emailOldUser=null;
   // Upload Capture image on block blob client 
   const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task);    
   var newTaskUserItem=null;
-  if (taskUsersExists.length>0) {
-    console.log(taskUsersExists);
-    newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists.id, req.body, {
+  if (taskUsersExists.length>0) {  
+    emailOldUser=taskUsersExists[0].user;   
+    newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists[0].id, req.body, {
         new: true, // If not found - add new
         runValidators: true // Validate data
     });
@@ -357,13 +359,22 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     });    
 
    if(newTaskUserItem){   
-        const user = await User.findOne({ _id: newTaskUserItem.user });      
+        const oldUser = await User.findOne({ _id: newTaskUserItem.user });      
         await sendEmail({
-          email: user.email,
-          subject:emailTemplate.Name,
-          message:emailTemplate.contentData
+          email: oldUser.email,
+          subject:emailTemplateOldUser.Name,
+          message:emailTemplateOldUser.contentData
         });  
-    }
+      }
+      if(emailOldUser!=null)
+      {
+        const newUser = await User.findOne({ _id:emailOldUser });      
+        await sendEmail({
+          email: newUser.email,
+          subject:emailTemplateNewUser.Name,
+          message:emailTemplateNewUser.contentData
+        });  
+      }
   
   }
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);  
