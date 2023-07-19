@@ -311,24 +311,19 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   let neutralTime = 0;
 
   appWebsites.forEach(app => {
-    const productivityEntry = productivityEntries.find(entry => entry.key === app.appWebsite);
-
+    const productivityEntry = productivityEntries.find(entry => entry.key === app.appWebsite);    
     if (productivityEntry) {
-      if (productivityEntry.isProductive) {
-        productiveTime += app.TimeSpent;
-      } else {
-        nonProductiveTime += app.TimeSpent;
-      }
+      productiveTime += app.TimeSpent;      
     } else {
-      neutralTime += app.TimeSpent;
+      nonProductiveTime += app.TimeSpent;
     }
   });   
   res.status(200).json({
     status: 'success',
     data:[
-      {name: "Productive", value: productiveTime},
-      {name: "Non-Productive", value: nonProductiveTime},
-      {name: "Neutral", value: neutralTime}
+      {name: "Productive", value: productiveTime/(1000*60)},
+      {name: "Non-Productive", value: nonProductiveTime/(1000*60)},
+      {name: "Neutral", value: neutralTime/(1000*60)}
     ]
   });
 }
