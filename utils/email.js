@@ -5,7 +5,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
   // 1) Define the email options
   
   const msg = {
-    from: 'testingemail112021@gmail.com',
+    from: 'hrmeffortless@gmail.com',
     to: options.email,
     subject: options.subject,
     text: options.message
