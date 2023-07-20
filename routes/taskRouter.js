@@ -685,7 +685,11 @@ router.post('/new/taskattachment',authController.protect,taskController.addTaskA
  *                              type: string  
  *                          projectId:
  *                              type: string  
-*      produces:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string
+ *      produces:
  *          - application/json
  *      responses:
  *          200:

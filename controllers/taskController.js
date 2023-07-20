@@ -571,23 +571,39 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  var results = [];
-  let taskUsers = await TaskUser.find({ user: req.body.userId });
-  for (var i = 0; i < taskUsers.length; i++) {
-    if (taskUsers[i].task && taskUsers[i].task.project && taskUsers[i].task.project.id === req.body.projectId) {
-      const taskUser = await TaskUser.find({ "task": taskUsers[i].task._id });
-      if (taskUser) {
-        taskUsers[i].task.TaskUsers = taskUser;
-      } else {
-        taskUsers[i].task.TaskUsers = null;
+  
+  var taskList = [];
+  const skip = req.body.skip;
+  const limit = req.body.next;
+  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId );
+  // Extract the task ids from the tasks found in the previous step
+  const taskIdsWithProjectId = tasksWithProjectId.map((task) => task._id);
+  // Step 2: Find TaskUser documents that have the task ids from Step 1
+  const taskUsers = await TaskUser.find({
+    user: req.body.userId,
+    task: { $in: taskIdsWithProjectId }
+  })
+    .populate('task')
+    .skip(skip)
+    .limit(limit);
+      
+    const taskCount = await TaskUser.countDocuments({       
+    user: req.body.userId,
+    task: { $in: taskIdsWithProjectId }});
+    for (var i = 0; i < taskUsers.length; i++) {
+      const taskUser = taskUsers[i].task;
+      if (taskUser && taskUser.project && taskUser.project.id === req.body.projectId) {
+        // Here, you don't need to query TaskUser again, as the taskUser already contains the related TaskUsers through the population.
+        taskList.push(taskUser);
       }
-      results.push(taskUsers[i].task);
     }
-  }
+  
   res.status(200).json({
     status: 'success',
-    data: results
+    taskList: taskList,
+    taskCount:taskCount
   });
+  
 });
 
 //Tag management
