@@ -202,18 +202,47 @@ exports.getLog = catchAsync(async (req, res, next) => {
   });
 });
 
+// exports.getLogsWithImages = catchAsync(async (req, res, next) => {
+//   var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).getDate()+1));
+//   const timeLogs = await TimeLog.find({
+//     "user": req.body.user,
+//     "date": { "$gte": req.body.date, "$lte": tomorrow }
+//   });
+  
+//   res.status(200).json({
+//     status: 'success',
+//     data: timeLogs
+//   });
+// });
 exports.getLogsWithImages = catchAsync(async (req, res, next) => {
-  var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).getDate()+1));
+  const givenDate = new Date(req.body.date);
+
+  // Get the start and end of the given date
+  const startDate = new Date(givenDate);
+  startDate.setHours(0, 0, 0, 0); // Start of the day
+
+  const endDate = new Date(givenDate);
+  endDate.setHours(23, 59, 59, 999); // End of the day
+
+  // Get the start of the next day
+  const tomorrow = new Date(givenDate);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
   const timeLogs = await TimeLog.find({
     "user": req.body.user,
-    "date": { "$gte": req.body.date, "$lte": tomorrow }
+    "$and": [
+      { "date": { "$gte": startDate } }, // Logs greater than or equal to start of the given date
+      { "date": { "$lt": tomorrow } }    // Logs less than the start of the next day
+    ]
   });
-  
+
   res.status(200).json({
     status: 'success',
     data: timeLogs
   });
 });
+
 
 exports.deleteLog = catchAsync(async (req, res, next) => {
   for(var i = 0; i < req.body.logs.length; i++) {
