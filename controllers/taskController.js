@@ -141,16 +141,34 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     .limit(limit)
     .select('task')
     .populate('task');
-
-  const [taskList, taskCount] = await Promise.all([
+  const taskList = [];
+  const [taskUserList, taskCount] = await Promise.all([
     taskUserQuery,
     TaskUser.countDocuments({ user: userId, task: { $exists: true } })
   ]);
-
+  if(taskUserList)
+  {
+   
+   for(var i = 0; i < taskUserList.length; i++) {
+      if(taskUserList[i].task){
+        console.log(taskUserList[i].task.id);
+    // const task = await Task.findById(taskUserList[i].task);    
+      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task.id);    
+      if(taskUser) 
+        {
+          taskUserList[i].task.TaskUsers=taskUser;
+        }
+        else{
+          taskUserList[i].task.TaskUsers=null;
+        }
+        taskList.push(taskUserList[i].task);
+    }
+   }
+  }
   res.status(200).json({
     status: 'success',
-    data: {
-      taskList: taskList.filter(taskUser => taskUser.task !== null).map(taskUser => taskUser.task),
+    data: {      
+      taskList: taskList,
       taskCount: taskCount
     }
   });
@@ -416,7 +434,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   // Upload Capture image on block blob client 
 for(var i = 0; i < req.body.taskAttachments.length; i++) {
     
-    const blobName = "Capture" + uuidv1() + req.body.taskAttachments[i].extention;
+  const blobName = "Capture" + uuidv1() + req.body.taskAttachments[i].extention;
   // Get a block blob client
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   console.log("\nUploading to Azure storage as blob:\n\t", );
@@ -554,7 +572,6 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   var results = [];
-  console.log("hii");
   let taskUsers = await TaskUser.find({ user: req.body.userId });
   for (var i = 0; i < taskUsers.length; i++) {
     if (taskUsers[i].task && taskUsers[i].task.project && taskUsers[i].task.project.id === req.body.projectId) {
@@ -596,15 +613,14 @@ exports.addTag = catchAsync(async (req, res, next) => {
   }); 
 } 
 });
-exports.updateTag = catchAsync(async (req, res, next) => { 
-    
+exports.updateTag = catchAsync(async (req, res, next) => {    
     let tagExists = await Tag.find( {"_id": req.body.id}).where('company').equals(req.cookies.companyId);  
     if(tagExists.length==0){
       res.status(403).send({ error: `Tag doesn't exist.`});    
     }
     else{          
-      tagExists.title=req.body.title;
-      const newTag = await Tag.updateOne( { _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title }} ).exec();            
+     tagExists.title=req.body.title;
+     const newTag = await Tag.updateOne( { _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title }} ).exec();            
      res.status(200).json({
       status: 'success',
       data: newTag

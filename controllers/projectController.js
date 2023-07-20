@@ -55,6 +55,7 @@ res.status(200).json({
  // Get Country List
  exports.getProjectList = catchAsync(async (req, res, next) => {        
  const projectList = await Project.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
+ const projectCount = await Project.countDocuments({ "company": req.cookies.companyId });
   if(projectList)
       {
        
@@ -73,7 +74,8 @@ res.status(200).json({
   res.status(200).json({
       status: 'success',
       data: {
-        projectList: projectList
+        projectList: projectList,
+        projectCount:projectCount
       }
     });  
   });
