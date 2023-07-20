@@ -6,6 +6,7 @@ const Task = require('../models/taskModel');
 const appWebsiteModel = require('../models/commons/appWebsiteModel');
 const Productivity = require('../models/productivityModel');
 const TaskUsers = require('../models/taskUserModel')
+const { ObjectId } = require('mongoose').Types;
 
 exports.getHoursWorked = catchAsync(async (req, res, next) => {
   const userId = req.query.userId;
@@ -364,3 +365,80 @@ exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {
  });
 }
 );
+
+exports.getDayWorkStatusByUser = catchAsync(async (req, res, next) => {    
+  const targetDate = new Date(req.query.date);
+  const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
+  const userId= req.query.userId;
+  
+  // Find all appWebsite entries for the given user and date
+  const timeLogs = await TimeLog.find({  
+    $and: [
+      {
+        $expr: {
+          $eq: [
+            { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+            { $dateToString: { format: '%Y-%m-%d', date: targetDate } }
+          ]
+        }
+      },
+      {
+        user: userId
+      }
+    ]
+  }) 
+  let results=[];
+  timeLogs.forEach(log=>{    
+    results.push({
+      id:log._id,
+      task:{id:log.task.id,taskName:log.task.taskName},
+      project:{id:log.project.id,projectName:log.project.projectName},      
+    });
+    });
+    
+    const result = groupByProjectAndCountTasks(results);
+
+ res.status(200).json({
+   status: 'success',
+   data: result
+ });
+}
+);
+
+
+
+function groupByProjectAndCountTasks(timeLogs) {
+  const projectTaskCount = timeLogs.reduce((acc, log) => {
+    const projectId = log.project.id;
+    const taskId = log.task.id;
+
+    if (!acc[projectId]) {
+      acc[projectId] = {
+        projectName: log.project.projectName,
+        tasks: {},
+      };
+    }
+
+    if (!acc[projectId].tasks[taskId]) {
+      acc[projectId].tasks[taskId] = {
+        taskName: log.task.taskName,
+        count: 0,
+      };
+    }
+
+    acc[projectId].tasks[taskId].count++;
+    return acc;
+  }, {});
+
+  // Convert the object into an array of projects with tasks
+  const projectsWithTasks = Object.values(projectTaskCount).map((project) => {
+    const tasks = Object.values(project.tasks);
+    return {
+      projectName: project.projectName,
+      tasks,
+    };
+  });
+
+  return projectsWithTasks;
+}

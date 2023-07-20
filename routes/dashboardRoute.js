@@ -236,4 +236,40 @@ router.get('/getApplicationTimeSummary', dashboardController.getApplicationTimeS
  */
 router.get('/getTaskStatusCounts', dashboardController.getTaskStatusCounts);
 
+/**
+ * @swagger
+ * /api/v1/dashboard/getDayWorkStatusByUser:
+ *  get:
+ *      tags:
+ *          - Dashboard
+ *      summary: "get Day work status by user"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+  *      parameters:
+ *       - name: userId
+ *         in: query
+ *         description: User Id
+ *         required: true
+ *         schema:
+ *           type: string 
+ *       - name: date
+ *         in: query
+ *         description: Date to get time logs for (YYYY-MM-DD).
+ *         required: true
+ *         schema:
+ *           type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getDayWorkStatusByUser', dashboardController.getDayWorkStatusByUser);
+
 module.exports = router;
