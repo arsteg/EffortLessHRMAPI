@@ -3,19 +3,18 @@ const WebSocket = require('ws');
 
 const wss = new WebSocket.Server({ port: 8081 });
 
-const clients = new Map();
-let wpfSocket = null;
-
-wss.on('connection', (socket, req) => {
+wss.on('connection', (ws) => {
   console.log('Client connected');
-  wpfSocket = socket;
-  const userId = req.url.slice(1);
-  clients.set(userId, wpfSocket);
 
-  wpfSocket.on('close', () => {
-    clients.delete(userId);
+  // Handle messages from clients
+  ws.on('message', (message) => {
+    console.log('Received:', message);
   });
 
+  // Handle client disconnection
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
 });
 
 

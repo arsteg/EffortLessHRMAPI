@@ -10,8 +10,6 @@ const User = require('../models/permissions/userModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 exports.getActivity = catchAsync(async (req, res, next) => {
-//let date = `${req.body.date}.000+00:00`;
-//console.log("getTimeLogs, date:" + date);
 const timeLogsAll = [];
 var timeLogs;
 let filter;
@@ -71,11 +69,8 @@ if(req.body.users!='' && req.body.projects!='')
                 {    const newLog = {};              
                   var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
                   var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));
-console.log(tomorrow);
-console.log(end);
                   let filterAll = {'user': timeLogs[i],'project':timeLog[j],'date' : {'$gte': tomorrow,'$lt': end}};                  
-                  const timeLogAll = await TimeLog.find(filterAll);
-                 
+                  const timeLogAll = await TimeLog.find(filterAll);                 
                  if(timeLogAll.length>0)    
                   {                   
                     newLogInUSer.firstName = timeLogAll[0].user.firstName;  
@@ -106,8 +101,6 @@ console.log(end);
 });
 
 exports.getProductivityByMember = catchAsync(async (req, res, next) => {
-  //let date = `${req.body.date}.000+00:00`;
-  //console.log("getTimeLogs, date:" + date);
   var appWebsiteSummary={};
   var appwebsiteDetails=[];
   let filter;
@@ -185,10 +178,6 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
    }
 
    teamIdsArray.push(req.cookies.userId);
-   
-   
-    //let date = `${req.body.date}.000+00:00`;
-    //console.log("getTimeLogs, date:" + date);   
     var appwebsiteDetails=[];
     var appwebsiteproductivity=[];
     let filter;
@@ -200,16 +189,13 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
         filter={
            'userReference': { $in: teamIdsArray } ,'date':{$gte: req.body.fromdate,$lte: req.body.todate}};
      }
-    console.log(teamIdsArray);
-    console.log(filter);
  var appwebsiteusers = await AppWebsite.find(filter).distinct('userReference') 
  if(appwebsiteusers.length>0)
- {  console.log(appwebsiteusers);
-            for(var u = 0; u < appwebsiteusers.length; u++) 
-            {    
-             var appWebsiteSummary={};
-             var filterdate={
-                'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
+ { 
+for(var u = 0; u < appwebsiteusers.length; u++) 
+{    
+    var appWebsiteSummary={};
+    var filterdate={'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
     const appWebsites = await AppWebsite.find(filterdate).where('userReference').equals(appwebsiteusers[u]._id);  
     let mouseClicks=0,keyboardStrokes=0,scrollingNumber=0,totalTimeSpent=0,timeSpentProductive=0,timeSpentNonProductive=0,inactive=0;
     if(appWebsites.length>0)    
@@ -286,9 +272,8 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
         data: appwebsiteproductivity
       });  
 });
+
 exports.getAppWebsite = catchAsync(async (req, res, next) => {
-  //let date = `${req.body.date}.000+00:00`;
-  //console.log("getTimeLogs, date:" + date);
   const appWebsiteAll = [];
   let filter;
     
@@ -308,7 +293,7 @@ exports.getAppWebsite = catchAsync(async (req, res, next) => {
         filter={
           'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
      }
-     appWebsiteusers = await AppWebsite.find(filter).distinct('userReference') 
+    var appWebsiteusers = await AppWebsite.find(filter).distinct('userReference') 
 
      for(var i = 0; i < appWebsiteusers.length; i++) 
      {          
@@ -433,12 +418,12 @@ exports.gettimesheet = catchAsync(async (req, res, next) => {
                 teamIdsArray.push(ids[i]);        
             }
       }
-  if(teamIds==null)    
+    if(teamIds==null)    
       {
          teamIdsArray.push(req.cookies.userId);
       } 
  
-  if(req.body.users.length>0)
+    if(req.body.users.length>0)
       {
         filter = { 'user': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
       }
@@ -516,21 +501,21 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                 teamIdsArray.push(ids[i]);        
             }
       }
-  if(teamIds==null)    
+    if(teamIds==null)    
       {
          teamIdsArray.push(req.cookies.userId);
       } 
  
-  if(req.body.users.length>0)
+    if(req.body.users.length>0)
       {
         filter = { 'user': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
       }
-      else{
+    else{
           filter={'user': { $in: teamIdsArray } ,
             'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
        }
-      const users = await TimeLog.find(filter).distinct('user') 
-      for(var i = 0; i < users.length; i++) 
+    const users = await TimeLog.find(filter).distinct('user') 
+    for(var i = 0; i < users.length; i++) 
        {          
           let filterProject;
           if(req.body.projects.length>0)
@@ -543,7 +528,7 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
         
           }   
         const projects = await TimeLog.find(filterProject).distinct('project');      
-         if(projects.length>0) 
+        if(projects.length>0) 
              {
 
                   for(var k = 0; k < projects.length; k++) 
@@ -575,8 +560,7 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                       newLogInUSer.logs = allLogs;
                       attandanceDetails.push(newLogInUSer);
                   }
-              }
-             
+          }             
        }
     res.status(200).json({
       status: 'success',
@@ -596,30 +580,30 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                 teamIdsArray.push(ids[i]);        
             }
       }
-  if(teamIds==null)    
+    if(teamIds==null)    
       {
          teamIdsArray.push(req.cookies.userId);
       } 
- 
-  if(req.body.users.length>0)
+     var toDate = new Date(new Date(req.body.todate).setDate(new Date( req.body.todate).getDate() + 1));
+     if(req.body.users.length>0)
       {
-        filter = { 'user': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
+        filter = { 'user': { $in: req.body.users } , 'date' : {$gt: req.body.fromdate,$lt: toDate}};
       }
-      else{
+      else
+      {
           filter={'user': { $in: teamIdsArray } ,
-            'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-       }
-
-      const users = await TimeLog.find(filter).distinct('user') 
+            'date' : {$gte: req.body.fromdate,$lt: toDate}};
+      }     
+      const users = await TimeLog.find(filter).distinct('user')
       for(var i = 0; i < users.length; i++) 
        {          
                     const newLogInUSer = {};                       
                     const allLogs = [];
-                    let filterAll = { 'user': { $in: users[i] } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};    
+                    let filterAll = { 'user': { $in: users[i] } , 'date' : {$gte: req.body.fromdate,$lte: toDate}};    
                     const timeLogAll = await TimeLog.find(filterAll);  
                     var count = timeLogAll.length-1;  
                     if(timeLogAll.length>0)    
-                    {                  
+                    {                         
                             newLogInUSer.time = timeLogAll.length * 10;      
                             var start = new Date(timeLogAll[0].startTime);
                             var end = new Date(timeLogAll[count].startTime);
@@ -629,21 +613,9 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                             newLogInUSer.activity = "";                           
                             newLogInUSer.firstName = timeLogAll[0].user.firstName;  
                             newLogInUSer.lastName = timeLogAll[0].user.lastName;
-                            const dateFrom = new Date(req.body.fromdate).getDate();
-                            const dateTo = new Date(req.body.todate).getDate();
-                            let days = dateTo - dateFrom;
-                            for(var day = 0;day <= days; day++)
-                            {  
-                              var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
-                              //tomorrow.toISOString().slice(0, 10)
-                            //  let filterManual = { 'fromdate' : {$lte: tomorrow},'todate' : {$gte: tomorrow},'user':user._id};        
-                             // const manualTimeRequests = await manualTimeRequest.find(filterManual);
-                             // for(let time=0;time < manualTimeRequests.length;time++){ 
-                             // manual = manual + 48;
-                             // }
-                              newLogInUSer.manual = manual;
-                              newLogInUSer.total = newLogInUSer.manual+newLogInUSer.time;                          
-                            }        
+                            newLogInUSer.date= timeLogAll[0].date;                           
+                            newLogInUSer.manual = manual;
+                            newLogInUSer.total = newLogInUSer.manual+newLogInUSer.time;
                      }
                     attandanceDetails.push(newLogInUSer);
         }
