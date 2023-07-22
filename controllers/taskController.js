@@ -591,10 +591,17 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     user: req.body.userId,
     task: { $in: taskIdsWithProjectId }});
     for (var i = 0; i < taskUsers.length; i++) {
-      const taskUser = taskUsers[i].task;
-      if (taskUser && taskUser.project && taskUser.project.id === req.body.projectId) {
+      const task = taskUsers[i].task;
+      if (task && task.project && task.project.id === req.body.projectId) {
         // Here, you don't need to query TaskUser again, as the taskUser already contains the related TaskUsers through the population.
-        taskList.push(taskUser);
+        const taskUserList = await TaskUser.find({}).where('task').equals(task._id);  
+        if(task) 
+           {
+            task.TaskUsers=taskUserList;
+           }
+           else{
+            task.TaskUsers=null;
+           } taskList.push(task);
       }
     }
   
