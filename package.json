@@ -48,6 +48,8 @@
     "swagger-ui-express": "^4.6.0",
     "validator": "^13.7.0",
     "websocket": "^1.0.34",
+    "winston": "^3.10.0",
+    "winston-mongodb": "^5.1.1",
     "ws": "^8.13.0"
   },
   "engines": {

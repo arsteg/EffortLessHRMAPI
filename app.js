@@ -31,8 +31,10 @@ var dashboardRouter = require('./routes/dashboardRoute');
 var genericSettingRoute = require('./routes/genericSettingRoute');
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
+const loggingMiddleware = require('./Logger/loggingMiddleware');
 
-console.log('max limit set');
+
+app.use(loggingMiddleware);
 
 var allowedOrigin ="http://localhost:4200";
 if (process.env.NODE_ENV === 'development') {
