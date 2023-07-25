@@ -597,7 +597,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     { $limit: limit },
   ]);
 
-  const taskCount = await Task.countDocuments({ project: req.body.projectId });
+  const taskCount = await Task.countDocuments({ project: req.body.projectId,company:req.cookies?.companyId });
 
   res.status(200).json({
     status: 'success',
