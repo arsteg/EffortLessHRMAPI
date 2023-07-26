@@ -223,14 +223,27 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // 3) Send it to user's email
-  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;
+  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;  
 
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL} \nIf you didn't forget your password, please ignore this email.`;
+  const message = `Dear ${user.firstName} ${user.lastName},
 
+  We received a request to reset your password for your EffortlessHRM account. To proceed with the password reset, please click on the link below:
+  
+  ${resetURL}
+  
+  If you did not initiate this request or believe it to be in error, you can safely ignore this email. Your account will remain secure, and no action is required.
+  
+  For security reasons, this link will expire after a short period, so please reset your password promptly.
+  
+  Thank you for using EffortlessHRM!
+  
+  Best Regards,
+  Team EffortlessHRM`
+  
   try {
     await sendEmail({
       email: user.email,
-      subject: 'Your password reset token (valid for 10min)',
+      subject: ' Password Reset Request',
       message
     });
     res.status(200).json({
