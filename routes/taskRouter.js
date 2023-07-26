@@ -181,7 +181,9 @@ router.route('/:id').get(authController.protect,taskController.getTask);
  *                          estimate:
  *                              type: number
  *                          timeTaken:
- *                              type: number 
+ *                              type: number
+ *                          status:
+ *                              type: string
  *                          user:
  *                              type: string                             
  *                          taskAttachments:
@@ -252,7 +254,7 @@ router.post('/newtask',authController.protect,taskController.addTask);
  *                          estimate:
  *                              type: number
  *                          timeTaken:
- *                              type: number 
+ *                              type: number
  *                          status:
  *                              type: string
  *      produces:
