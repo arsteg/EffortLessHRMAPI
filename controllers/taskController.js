@@ -256,86 +256,27 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
 
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   const userId = req.body.userId;
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-const taskUserQuery = TaskUser.aggregate([
-  {
-    $match: {
-      user: userId,
-      task: { $exists: true },
-    },
-  },
-  {
-    $lookup: {
-      from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
-      localField: 'task',
-      foreignField: '_id',
-      as: 'taskDetails',
-    },
-  },
-  {
-    $unwind: {
-      path: '$taskDetails',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $skip: skip,
-  },
-  {
-    $limit: limit,
-  },
-  {
-    $project: {
-      _id: 1,
-      task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
-    },
-  },
-]);
+  const skip = req.body.skip;
+  const limit = req.body.next;
 
-const taskCountQuery = TaskUser.aggregate([
-  {
-    $match: {
-      user: userId,
-      task: { $exists: true },
-    },
-  },
-  {
-    $lookup: {
-      from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
-      localField: 'task',
-      foreignField: '_id',
-      as: 'taskDetails',
-    },
-  },
-  {
-    $unwind: {
-      path: '$taskDetails',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
- {
-    $project: {
-      _id: 1,
-      task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
-    },
-  },
-]);
-// Execute the aggregation query and await the result
-const taskUserResults = await taskUserQuery.exec();
-const taskCountResult = await taskCountQuery.exec();
+  const taskUserQuery = TaskUser.find({ user: userId, task: { $exists: true } })
+    .skip(skip)
+    .limit(limit)
+    .select('task')
+    .populate('task');
   const taskList = [];
   const [taskUserList, taskCount] = await Promise.all([
     taskUserQuery,
-    taskCountResult.length]);
+    TaskUser.countDocuments({ user: userId, task: { $exists: true } })
+  ]);
   if(taskUserList)
   {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i].task){
-        console.log(taskUserList[i].task);
+        console.log(taskUserList[i].task.id);
     // const task = await Task.findById(taskUserList[i].task);    
-      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task);    
+      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task.id);    
       if(taskUser) 
         {
           taskUserList[i].task.TaskUsers=taskUser;
@@ -355,6 +296,7 @@ const taskCountResult = await taskCountQuery.exec();
     }
   });
 });
+
 
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
