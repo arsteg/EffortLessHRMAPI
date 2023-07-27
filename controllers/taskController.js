@@ -765,36 +765,41 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
 
-  // Use aggregation pipeline to fetch the data efficiently
-  const tasksWithProjectId = await Task.aggregate([
-    { $match: { project: req.body.projectId, company:req.cookies?.companyId } },
-    {
-      $lookup: {
-        from: 'taskusers', // Replace 'taskusers' with the actual name of your TaskUser collection
-        localField: '_id',
-        foreignField: 'task',
-        as: 'taskUsers',
-      },
-    },
-    {
-      $addFields: {
-        taskUsersCount: { $size: '$taskUsers' },
-      },
-    },
-    {
-      $sort: { createdAt: -1 }, // Sorting can be adjusted based on your requirements
-    },
-    { $skip: skip },
-    { $limit: limit },
-  ]);
-
-  const taskCount = await Task.countDocuments({ project: req.body.projectId,company:req.cookies?.companyId });
-
+  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId );
+  // Extract the task ids from the tasks found in the previous step
+  const taskIdsWithProjectId = tasksWithProjectId.map((task) => task._id);
+  // Step 2: Find TaskUser documents that have the task ids from Step 1
+  const taskUsers = await TaskUser.find({
+    user: req.body.userId,
+    task: { $in: taskIdsWithProjectId }
+  })
+    .populate('task')
+    .skip(skip)
+    .limit(limit);
+      
+    const taskCount = await TaskUser.countDocuments({       
+    user: req.body.userId,
+    task: { $in: taskIdsWithProjectId }});
+    for (var i = 0; i < taskUsers.length; i++) {
+      const task = taskUsers[i].task;
+      if (task && task.project && task.project.id === req.body.projectId) {
+        // Here, you don't need to query TaskUser again, as the taskUser already contains the related TaskUsers through the population.
+        const taskUserList = await TaskUser.find({}).where('task').equals(task._id);  
+        if(task) 
+           {
+            task.TaskUsers=taskUserList;
+           }
+           else{
+            task.TaskUsers=null;
+           } taskList.push(task);
+      }
+    }
+  
   res.status(200).json({
     status: 'success',
-    taskList: tasksWithProjectId,
-    taskCount: taskCount,
-  });
+    taskList: taskList,
+    taskCount:taskCount
+  });  
 });
 
 //Tag management

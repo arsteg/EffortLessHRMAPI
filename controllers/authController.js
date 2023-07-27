@@ -227,14 +227,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   const message = `Dear ${user.firstName} ${user.lastName},
 
-  We received a request to reset your password for your EffortlessHRM account. To proceed with the password reset, please click on the link below:
-  
-  ${resetURL}
-  
-  If you did not initiate this request or believe it to be in error, you can safely ignore this email. Your account will remain secure, and no action is required.
-  
-  For security reasons, this link will expire after a short period, so please reset your password promptly.
-  
+  We received a request to reset your password for your EffortlessHRM account. To proceed with the password reset, please click on the link below:  
+  ${resetURL}  
+  If you did not initiate this request or believe it to be in error, you can safely ignore this email. Your account will remain secure, and no action is required.  
+  For security reasons, this link will expire after a short period, so please reset your password promptly.  
   Thank you for using EffortlessHRM!
   
   Best Regards,
