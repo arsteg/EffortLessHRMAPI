@@ -54,7 +54,13 @@ var projectModelSchema = new Schema({
     toObject: { virtuals: true } // Use virtuals when outputing as Object
   },
   { collection: 'Project' });
-
+  projectModelSchema.pre(/^find/,async function(next) {
+    this.populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
+    });
+    next();
+  });
   projectModelSchema.virtual('timeLog', {
     ref: 'TimeLog',
     foreignField: 'project', // tour field in review model pointing to this model

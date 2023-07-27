@@ -102,6 +102,9 @@ var taskModelSchema = new Schema({
     this.populate({
       path: 'project',
       select: 'projectName'
+    }).populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
     });
     next();
   });
