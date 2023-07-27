@@ -55,19 +55,6 @@ var projectModelSchema = new Schema({
   },
   { collection: 'Project' });
 
-  projectModelSchema.pre(/^find/,async function(next) {
-    this.populate({
-      path: 'company',
-      select: 'companyName'
-    }).populate({
-      path: 'createdBy',
-      select: 'firstName lastName'
-    }).populate({
-      path: 'updatedBy',
-      select: 'firstName lastName'
-    });
-    next();
-  });
   projectModelSchema.virtual('timeLog', {
     ref: 'TimeLog',
     foreignField: 'project', // tour field in review model pointing to this model

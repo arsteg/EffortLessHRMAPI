@@ -39,6 +39,39 @@ router.post('/tasklist',authController.protect,taskController.getTaskList);
 
 /**
  * @swagger
+ * /api/v1/task/tasklistbyteam:
+ *  post:
+ *      tags:
+ *          - Task Management
+ *      summary: "Get all task"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/tasklistbyteam',authController.protect,taskController.getTaskListByTeam);
+
+/**
+ * @swagger
  * /api/v1/task/tasklistbyparenttask/{taskId}:
  *  get:
  *      tags:

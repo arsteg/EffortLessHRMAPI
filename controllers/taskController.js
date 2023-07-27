@@ -11,6 +11,7 @@ const TaskTag = require('../models/Task/taskTagModel');
 const Comment  = require('../models/Task/taskCommentModel');
 const CommonController  = require('../controllers/commonController');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
+const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -131,29 +132,108 @@ exports.getTaskAttachments  = catchAsync(async (req, res, next) => {
       }
     });  
 });
-exports.getTaskListByUser = catchAsync(async (req, res, next) => {
-  const userId = req.body.userId;
-  const skip = req.body.skip;
-  const limit = req.body.next;
 
-  const taskUserQuery = TaskUser.find({ user: userId, task: { $exists: true } })
-    .skip(skip)
-    .limit(limit)
-    .select('task')
-    .populate('task');
+exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+ 
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const taskUserQuery = TaskUser.aggregate([
+    {
+      $match: {
+        user: { $in: teamIdsArray },
+        task: { $exists: true },
+      },
+    },
+    {
+      $lookup: {
+        from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
+        localField: 'task',
+        foreignField: '_id',
+        as: 'taskDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$taskDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $project: {
+        _id: 1,
+        task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
+      },
+    },
+  ]);
+  
+  const taskCountQuery = TaskUser.aggregate([
+    {
+      $match: {
+        user: { $in: teamIdsArray },
+        task: { $exists: true },
+      },
+    },
+    {
+      $lookup: {
+        from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
+        localField: 'task',
+        foreignField: '_id',
+        as: 'taskDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$taskDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+   {
+      $project: {
+        _id: 1,
+        task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
+      },
+    },
+  ]);
+  // Execute the aggregation query and await the result
+  const taskUserResults = await taskUserQuery.exec();
+  const taskCountResult = await taskCountQuery.exec();
+  
+ // const taskUserQuery = TaskUser.find({ user:  { $in: teamIdsArray }, task: { $exists: true } })
+   
   const taskList = [];
   const [taskUserList, taskCount] = await Promise.all([
     taskUserQuery,
-    TaskUser.countDocuments({ user: userId, task: { $exists: true } })
+    taskCountResult.length
   ]);
   if(taskUserList)
   {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i].task){
-        console.log(taskUserList[i].task.id);
+        console.log(taskUserList[i].task);
     // const task = await Task.findById(taskUserList[i].task);    
-      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task.id);    
+      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task);    
       if(taskUser) 
         {
           taskUserList[i].task.TaskUsers=taskUser;
@@ -174,6 +254,107 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getTaskListByUser = catchAsync(async (req, res, next) => {
+  const userId = req.body.userId;
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+const taskUserQuery = TaskUser.aggregate([
+  {
+    $match: {
+      user: userId,
+      task: { $exists: true },
+    },
+  },
+  {
+    $lookup: {
+      from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
+      localField: 'task',
+      foreignField: '_id',
+      as: 'taskDetails',
+    },
+  },
+  {
+    $unwind: {
+      path: '$taskDetails',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $skip: skip,
+  },
+  {
+    $limit: limit,
+  },
+  {
+    $project: {
+      _id: 1,
+      task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
+    },
+  },
+]);
+
+const taskCountQuery = TaskUser.aggregate([
+  {
+    $match: {
+      user: userId,
+      task: { $exists: true },
+    },
+  },
+  {
+    $lookup: {
+      from: 'tasks', // Replace 'tasks' with the actual name of the Task collection if different
+      localField: 'task',
+      foreignField: '_id',
+      as: 'taskDetails',
+    },
+  },
+  {
+    $unwind: {
+      path: '$taskDetails',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+ {
+    $project: {
+      _id: 1,
+      task: '$taskDetails', // Renaming the 'taskDetails' field to 'task'
+    },
+  },
+]);
+// Execute the aggregation query and await the result
+const taskUserResults = await taskUserQuery.exec();
+const taskCountResult = await taskCountQuery.exec();
+  const taskList = [];
+  const [taskUserList, taskCount] = await Promise.all([
+    taskUserQuery,
+    taskCountResult.length]);
+  if(taskUserList)
+  {
+   
+   for(var i = 0; i < taskUserList.length; i++) {
+      if(taskUserList[i].task){
+        console.log(taskUserList[i].task);
+    // const task = await Task.findById(taskUserList[i].task);    
+      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task);    
+      if(taskUser) 
+        {
+          taskUserList[i].task.TaskUsers=taskUser;
+        }
+        else{
+          taskUserList[i].task.TaskUsers=null;
+        }
+        taskList.push(taskUserList[i].task);
+    }
+   }
+  }
+  res.status(200).json({
+    status: 'success',
+    data: {      
+      taskList: taskList,
+      taskCount: taskCount
+    }
+  });
+});
 
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
@@ -184,6 +365,7 @@ exports.getTaskUser  = catchAsync(async (req, res, next) => {
       }
     });  
 });
+
 exports.updateTaskUser =  catchAsync(async (req, res, next) => {
   const taskUsersexists = await TaskUser.find({}).where('_id').equals(req.params.id).where('user').equals(req.body.user);  
   
@@ -220,6 +402,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
   });
 }
 });
+
 exports.getTaskAttachment  = catchAsync(async (req, res, next) => {    
       const newTaskAttachment = await TaskAttachments.find({}).where('_id').equals(req.params.id);  
       res.status(200).json({
@@ -229,6 +412,7 @@ exports.getTaskAttachment  = catchAsync(async (req, res, next) => {
         }
       });  
 });
+
 exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
   const document = await TaskAttachments.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
@@ -244,6 +428,7 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
     }
   });
 });
+
 exports.addTask = catchAsync(async (req, res, next) => { 
 
   // Upload Capture image on block blob client 
@@ -429,6 +614,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
 exports.addTaskAttachment = catchAsync(async (req, res, next) => { 
 
   // Upload Capture image on block blob client 
@@ -490,6 +676,7 @@ for(var i = 0; i < req.body.taskAttachments.length; i++) {
 
 }
 });
+
 exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
   const document = await TaskAttachments.findByIdAndDelete(req.params.id);
   if (!document) {
@@ -500,14 +687,15 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
  // Get Country List
 exports.getTaskList = catchAsync(async (req, res, next) => {    
-    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
+    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).select('taskName startDate endDate description comment priority status taskNumber').skip(req.body.skip).limit(req.body.next);  
     const taskCount = await Task.countDocuments({ "company": req.cookies.companyId });
      if(taskList)
     {
      for(var i = 0; i < taskList.length; i++) {
-     const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
+     const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id).select('user');  
      if(taskUser) 
         {
           taskList[i].TaskUsers=taskUser;
@@ -524,6 +712,8 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
       }
     });  
 });
+
+
 exports.getTaskListByProject = catchAsync(async (req, res, next) => {    
   const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.params.projectId).skip(req.body.skip).limit(req.body.next); ;  
   const taskCount = await Task.countDocuments({ "company": req.cookies.companyId ,"project": req.params.projectId });
@@ -548,6 +738,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
     }
   });  
 });
+
 exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {    
   const taskList = await Task.find({}).where('parentTask').equals(req.params.taskId); 
   if(taskList)
@@ -571,8 +762,8 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  const skip = req.body.skip || 0;
-  const limit = req.body.limit || 10; // Default limit of 10, you can adjust this as per your needs.
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
 
   // Use aggregation pipeline to fetch the data efficiently
   const tasksWithProjectId = await Task.aggregate([
@@ -629,6 +820,7 @@ exports.addTag = catchAsync(async (req, res, next) => {
   }); 
 } 
 });
+
 exports.updateTag = catchAsync(async (req, res, next) => {    
     let tagExists = await Tag.find( {"_id": req.body.id}).where('company').equals(req.cookies.companyId);  
     if(tagExists.length==0){
@@ -668,6 +860,7 @@ exports.getTagById = async (req, res) => {
     res.status(500).send({ error: 'Server error' });
   }
 };
+
 exports.getTagsByTaskId = catchAsync(async (req, res, next) => {    
     // Find all TaskTag documents that match the taskId    
      const taskId = req.params.taskId;
@@ -832,7 +1025,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
       uploadBlobResponse.requestId
     );
     const newTaskUserItem = await TaskAttachments.create({
-      task:newComment.taskId,
+      task:newComment.task,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
@@ -918,6 +1111,6 @@ exports.getAllComments = catchAsync(async (req, res, next) => {
     status: 'success',
     data: comments
   });
-  });
+});
   
 //END Task Tags

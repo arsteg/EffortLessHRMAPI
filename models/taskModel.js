@@ -100,15 +100,6 @@ var taskModelSchema = new Schema({
 
   taskModelSchema.pre(/^find/,async function(next) {
     this.populate({
-      path: 'company',
-      select: 'companyName'
-    }).populate({
-      path: 'createdBy',
-      select: 'firstName lastName'
-    }).populate({
-      path: 'updatedBy',
-      select: 'firstName lastName'
-    }).populate({
       path: 'project',
       select: 'projectName'
     });

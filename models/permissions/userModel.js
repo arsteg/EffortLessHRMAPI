@@ -121,12 +121,6 @@ userSchema.pre(/^find/,async function(next) {
   }).populate({
     path: 'role',
     select: 'roleName'
-  }).populate({
-    path: 'createdBy',
-    select: 'firstName'
-  }).populate({
-    path: 'updatedBy',
-    select: 'firstName'
   });
   next();
 });

@@ -45,15 +45,6 @@ var taskUsersModelSchema = new Schema({
 
   taskUsersModelSchema.pre(/^find/,async function(next) {
     this.populate({
-      path: 'company',
-      select: 'companyName'
-    }).populate({
-      path: 'createdBy',
-      select: 'firstName lastName'
-    }).populate({
-      path: 'updatedBy',
-      select: 'firstName lastName'
-    }).populate({
       path: 'task',
       select: 'taskName startDate endDate description comment priority status taskNumber'
     }).populate({
