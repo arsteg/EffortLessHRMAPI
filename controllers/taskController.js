@@ -762,6 +762,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
+  var taskList = [];
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
 
