@@ -230,18 +230,17 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   {
    
    for(var i = 0; i < taskUserList.length; i++) {
-      if(taskUserList[i].task){
-        console.log(taskUserList[i].task);
-    // const task = await Task.findById(taskUserList[i].task);    
-      const taskUser = await TaskUser.find({}).where('task').equals(taskUserList[i].task);    
+      if(taskUserList[i]){        
+      const task = await Task.findById(taskUserList[i].task).select('taskName startDate endDate description comment priority status taskNumber');    
+      const taskUser = await TaskUser.find({}).where('task').equals(task._id);    
       if(taskUser) 
         {
-          taskUserList[i].task.TaskUsers=taskUser;
+          task.TaskUsers=taskUser;
         }
         else{
-          taskUserList[i].task.TaskUsers=null;
+          task.TaskUsers=null;
         }
-        taskList.push(taskUserList[i].task);
+        taskList.push(task);
     }
    }
   }
