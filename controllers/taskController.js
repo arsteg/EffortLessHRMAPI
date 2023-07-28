@@ -96,10 +96,10 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
 });
 
 exports.getTask  = catchAsync(async (req, res, next) => {    
-const task = await Task.findById(req.params.id); 
-const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
+const task = await Task.findById(req.params.id);
+const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
 const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
- 
+ console.log("hii");
   
 res.status(200).json({
   status: 'success',
@@ -231,8 +231,8 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i]){        
-      const task = await Task.findById(taskUserList[i].task).select('taskName startDate endDate description comment priority status taskNumber');    
-      const taskUser = await TaskUser.find({}).where('task').equals(task._id);    
+      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber');    
+      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
       if(taskUser) 
         {
           task.TaskUsers=taskUser;
