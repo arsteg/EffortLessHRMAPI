@@ -32,11 +32,8 @@ var companyModelSchema = new Schema({
       type: String
     },
     email: {
-      type: String,
-      required: [true, 'Email field is required'],
-      unique: true,
-      lowercase: true, // Transform value to lowercase
-      validate: [validator.isEmail, 'Specified email ({VALUE}) is incorrect']
+      type: String,     
+      lowercase: true,      
     },    
     phone: {
       type: Number
@@ -58,7 +55,12 @@ var companyModelSchema = new Schema({
       type: mongoose.Schema.ObjectId,
       ref: 'User'//,
       //required: [true, 'User must belong to a User']
-    }
+    },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false
+    },
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON

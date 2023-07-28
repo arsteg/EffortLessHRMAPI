@@ -53,8 +53,7 @@ const createAndSendToken = async (user, statusCode, res) => {
   // Remove password from the output
   user.password = undefined;
 
-  console.log(statusCode);
-   res.status(statusCode).json({
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
@@ -65,7 +64,6 @@ const createAndSendToken = async (user, statusCode, res) => {
 
 exports.signup = catchAsync(async(req, res, next) => { 
 
-  console.log(req.body.companyId);
   const company = await Company.findOne({_id:req.body.companyId});
   const newUser = await User.create({
     firstName: req.body.firstName,
@@ -82,6 +80,65 @@ exports.signup = catchAsync(async(req, res, next) => {
     updatedOn: new Date(Date.now())    
   }); 
   createAndSendToken(newUser, 201, res);
+});
+
+exports.register = catchAsync(async(req, res, next) => {
+  const company = await Company.findOne({companyName:req.body.companyName});
+  console.log(company);
+  if(company === null){
+    company = await Company.create({
+    companyName: req.body.companyName,
+    contactPerson: req.body.firstName + " "+ req.body.lastName,
+    email: req.body.email,      
+    active:true,
+    createdOn: new Date(Date.now()),
+    updatedOn: new Date(Date.now())    
+  }); 
+  if(company)
+  {
+
+  }
+  }
+  
+  const newUser = await User.create({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,    
+    role: req.body.role,   
+    isSuperAdmin: false,
+    company:company,
+    status:"Active",
+    active:true,
+    createdOn: new Date(Date.now()),
+    updatedOn: new Date(Date.now())
+  }); 
+  if(newUser)
+  {
+    const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+    const message = `Welcome, Please go on : ${resetURL} \n and update your profile `;
+    try {
+      await sendEmail({
+        email: newUser.email,
+        subject: 'Update your profile',
+        message
+      });
+      res.status(200).json({
+        status: 'success',
+        message: 'update profile link sent to email!'
+      });
+    } catch (err) {   
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+    );
+   }
+  createAndSendToken(newUser, 201, res);
+  }
+
 });
 exports.CreateUser = catchAsync(async(req, res, next) => {      
   const newUser = await User.create({
@@ -148,8 +205,6 @@ exports.protect = catchAsync(async (req, res, next) => {
   // It is a standard to send header in this format
   // Key: Authorization
   // Value: Bearer <TOKEN_VALUE>
-  console.log('protected');
-  console.log(req.headers.authorization);
   let token;  
   if (
     req.headers.authorization &&
@@ -287,9 +342,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   createAndSendToken(user, 200, res);
 });
 exports.sendLog = catchAsync(async (req, res, next) => {
-  console.log("Sending Email Log every night at 12 AM");
  
-
   // Thanks to merging params in routers      
   // Generate query based on request params
   const managerIds = await userSubordinate.find({}).distinct("userId");  
@@ -319,17 +372,13 @@ exports.sendLog = catchAsync(async (req, res, next) => {
           }
           
       }
-  console.log("hello");
-  const userListmy = await User.find({}).where("status").equals("Active");  
-  console.log(userListmy);
  
+  const userListmy = await User.find({}).where("status").equals("Active");  
   const userList = await User.find({}).where("email").equals("sapana@arsteg.com");  
    
   if(userList)
   {
     for(var i = 0; i < userList.length; i++) {
-     console.log(userList[i].email);     
-   
      try {
       const timeLogs = await TimeLog.find({}).where('user').equals(userList[i].email).where('date').equals("2023-01-04");       
       for (const timeLog of timeLogs) {       
@@ -370,14 +419,10 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   // 1) Get user from collection
   const user = await User.findById(req.body.id).select('+password');
-  // 2) Check if POSTed current password is correct
-  console.log("hii");
-  console.log(req.body.password);
-  console.log(req.body.passwordCurrent);
+  // 2) Check if POSTed current password is correct 
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
     return next(new AppError('Your current password is wrong.', 401));
   }
-  console.log(req.body.password)
   // 3) If so, update password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -481,7 +526,6 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   }});
 
  exports.getSubordinates = catchAsync(async (req, res, next) => {  
-  console.log(req.params.id);
   const ids = await userSubordinate.find({}).distinct("subordinateUserId").where('userId' ).equals(req.params.id);   
     res.status(201).json({
       status: 'success',
@@ -490,10 +534,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
  });
 
  exports.deleteSubordinates = catchAsync(async (req, res, next) => {  
-  
-  //const result = await userSubordinate.find({userId:req.params.userId,subordinateUserId:subordinateUserId}).remove().exec();  
-
-  userSubordinate.deleteOne({userId:req.params.userId,subordinateUserId:req.params.subordinateUserId}, function (err) {
+   userSubordinate.deleteOne({userId:req.params.userId,subordinateUserId:req.params.subordinateUserId}, function (err) {
     if(err) console.log(err);
     console.log("Successful deletion");
   });

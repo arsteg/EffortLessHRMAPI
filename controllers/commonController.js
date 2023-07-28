@@ -5,7 +5,8 @@ const factory = require('./handlerFactory');
 const Permission = require('../models/permissions/permissionModel');
 const RolePerms = require('../models/rolePermsModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
-
+const TaskStatus = require('../models/commons/taskStatusModel');
+const TaskPriority = require('../models/commons/taskPriorityModel');
  // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -31,7 +32,30 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
     }); 
   });
 
-  
+  exports.saveTaskStatus = catchAsync(async (req, res, next) => {
+    const newtaskStatus = await TaskStatus.create({      
+        status:req.body.Status,
+        company:req.cookies.companyId
+    });  
+    res.status(200).json({
+      status: 'success',
+      data: {
+        TaskStatus:newtaskStatus
+      }
+    }); 
+  });
+  exports.saveTaskPriority = catchAsync(async (req, res, next) => {
+    const newTaskPriority = await TaskPriority.create({      
+        priority:req.body.Priority,
+        company:req.cookies.companyId
+    });  
+    res.status(200).json({
+      status: 'success',
+      data: {
+        TaskPriority:newTaskPriority
+      }
+    }); 
+  });
   exports.getRoleByName = catchAsync(async (req, res, next) => {    
     const role = await Role.find({}).where('roleName').equals(req.body.roleName);  
     res.status(200).json({
@@ -149,14 +173,14 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
     });  
   });
 
-  exports.addEmailTemplate = catchAsync(async (req, res, next) => {            
+  exports.addEmailTemplate = catchAsync(async (req, res, next) => {           
     
     const newEmailTemplate = req.body;
-    newEmailTemplate.createdOn= new Date();
-    newEmailTemplate.updatedOn= new Date();
-    newEmailTemplate.createdBy= req.cookies.userId;
-    newEmailTemplate.updatedBy =req.cookies.userId;
-    newEmailTemplate.company =req.cookies.companyId;
+    newEmailTemplate.createdOn = new Date();
+    newEmailTemplate.updatedOn = new Date();
+    newEmailTemplate.createdBy = req.cookies.userId;
+    newEmailTemplate.updatedBy = req.cookies.userId;
+    newEmailTemplate.company = req.cookies.companyId;
     const result = await EmailTemplate.create(newEmailTemplate);
     res.status(200).json({
       status: 'success',
@@ -201,22 +225,17 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
   
       res.status(200).json(emailTemplate);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Server error' });
+     res.status(500).json({ error: 'Server error' });
     }
     
   });
 
-  exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {   
-    console.log("hello");     
+  exports.getAllEmailTemplates = catchAsync(async (req, res, next) => {           
     try {
       const { companyId } = req.cookies.companyId;    
       const emailTemplates = await EmailTemplate.find({}).where('company').equals(req.cookies.companyId);  
-      console.log(emailTemplates);
-     // const emailTemplates = await EmailTemplate.find();
       res.status(200).json(emailTemplates);
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: 'Server error' });
     }
   });

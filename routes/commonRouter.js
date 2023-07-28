@@ -171,4 +171,59 @@ router.get('/emailTemplate/:id', authController.protect, commonController.getEma
  */
 router.get('/emailTemplates', authController.protect, commonController.getAllEmailTemplates)
 
+
+/**
+ * @swagger
+ * /api/v1/common/taskstatus:
+ *   post:
+ *     summary: Add a new task status
+ *     tags: [Task Status]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               Status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Successfully added a new Task Status
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post('/taskstatus',  authController.protect, commonController.saveTaskStatus);
+
+
+/**
+ * @swagger
+ * /api/v1/common/taskpriority:
+ *   post:
+ *     summary: Add a new task Priority
+ *     tags: [Task Priority]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               Priority:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Successfully added a new Task Priority
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post('/taskpriority',  authController.protect, commonController.saveTaskPriority);
 module.exports = router;
