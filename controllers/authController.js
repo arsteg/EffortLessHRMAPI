@@ -15,6 +15,9 @@ const RolePermission = require('../models/permissions/rolePermissionModel');
 const factory = require('./handlerFactory');
 const TimeLog = require('../models/timeLog');
 const { timeLog } = require('console');
+const TaskStatus = require('../models/commons/taskStatusModel');
+const TaskPriority = require('../models/commons/taskPriorityModel');
+const mongoose = require('mongoose');
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
@@ -82,10 +85,11 @@ exports.signup = catchAsync(async(req, res, next) => {
   createAndSendToken(newUser, 201, res);
 });
 
-exports.register = catchAsync(async(req, res, next) => {
-  const company = await Company.findOne({companyName:req.body.companyName});
-  console.log(company);
+exports.webSignup = catchAsync(async(req, res, next) => {
+  var company = await Company.findOne({companyName:req.body.companyName});
+ 
   if(company === null){
+    console.log("Company Not Exsists");
     company = await Company.create({
     companyName: req.body.companyName,
     contactPerson: req.body.firstName + " "+ req.body.lastName,
@@ -94,21 +98,65 @@ exports.register = catchAsync(async(req, res, next) => {
     createdOn: new Date(Date.now()),
     updatedOn: new Date(Date.now())    
   }); 
-  if(company)
-  {
-
-  }
-  }
+}
+    var companyId = process.env.DEFAULT_COMPANY_Id;
+    const rolesToDuplicate = await Role.find({ company: companyId });
+    // Step 3: Create new records by cloning and assigning a new id
+    const duplicatedRoles= rolesToDuplicate.map((record) => {
+      // Create a new object with the same properties as the original record
+      const duplicatedRole = Object.assign({}, record.toObject());
+      duplicatedRole._id = new mongoose.Types.ObjectId();
+      // Assign a new id to the duplicated record (you can generate new id as you like)
+      duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+      return duplicatedRole;
+      console.log(duplicatedRole);
   
+    });
+     // Step 4: Save the duplicated records back to the database
+        await Role.insertMany(duplicatedRoles);
+
+    const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
+    // Step 3: Create new records by cloning and assigning a new id
+    const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
+      // Create a new object with the same properties as the original record
+      const duplicatedTaskStatus= Object.assign({}, record.toObject());
+      duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
+   
+      // Assign a new id to the duplicated record (you can generate new id as you like)
+      duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+      return duplicatedTaskStatus;
+    });
+    // Step 4: Save the duplicated records back to the database
+        await TaskStatus.insertMany(duplicatedTaskStatusList);
+      
+        const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedTaskPriority  = Object.assign({}, record.toObject());
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
+          return duplicatedTaskPriority;
+        });
+        await TaskPriority.insertMany(duplicatedTaskPriorityList);
+  
+  
+  const roles = await Role.find({ company: company._id });
+  console.log(roles);
+  const role = await Role.findOne({
+    company: company._id,
+    Name: "Admin"
+  });
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,    
-    role: req.body.role,   
+    role: role.id,   
     isSuperAdmin: false,
-    company:company,
+    company:company.id,
     status:"Active",
     active:true,
     createdOn: new Date(Date.now()),

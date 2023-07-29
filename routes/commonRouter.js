@@ -199,6 +199,27 @@ router.get('/emailTemplates', authController.protect, commonController.getAllEma
  */
 router.post('/taskstatus',  authController.protect, commonController.saveTaskStatus);
 
+/**
+  * @swagger
+  * /api/v1/common/taskstatus:
+  *  get:
+  *      tags: [Task Status]
+  *      summary: "Get all task status"
+  *      security: [{
+  *         bearerAuth: []
+  *     }]  
+  *      produces:
+  *          - application/json
+  *      responses:
+  *          200:
+  *              description: "Success"
+  *              content:
+  *                  application/json:
+  *                      schema:
+  *                          type: object
+  *
+  */ 
+router.get('/taskstatus/', authController.protect, commonController.getTaskStatus);
 
 /**
  * @swagger
@@ -226,4 +247,26 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
  *         description: Server error
  */
 router.post('/taskpriority',  authController.protect, commonController.saveTaskPriority);
+
+/**
+  * @swagger
+  * /api/v1/common/taskpriority:
+  *  get:
+  *      tags: [Task Priority]
+  *      summary: "Get all task priority"
+  *      security: [{
+  *         bearerAuth: []
+  *     }]  
+  *      produces:
+  *          - application/json
+  *      responses:
+  *          200:
+  *              description: "Success"
+  *              content:
+  *                  application/json:
+  *                      schema:
+  *                          type: object
+  *
+  */ 
+router.get('/taskpriority/', authController.protect, commonController.getTaskPriority);
 module.exports = router;

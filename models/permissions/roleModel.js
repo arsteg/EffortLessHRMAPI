@@ -5,8 +5,7 @@ var Schema = mongoose.Schema;
 var roleModelSchema = new Schema({    
     Name: {
       type: String,
-      required: true,
-      unique: true
+      required: true
     },
     company: {
       type: mongoose.Schema.ObjectId,
@@ -30,11 +29,11 @@ var roleModelSchema = new Schema({
     },
     createdOn: {
       type: Date,
-      required: true    
+     // required: true    
     },
     updatedOn: {
       type: Date,
-      required: true    
+    //  required: true    
     }    
   },
   {

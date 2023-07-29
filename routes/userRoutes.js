@@ -44,6 +44,46 @@ const router = express.Router();
  *
  */
 router.post('/signup', authController.signup);
+
+// Auth routes
+/**
+ * @swagger
+ * /api/v1/users/websignup:
+ *  post:
+ *      tags:
+ *          - Registration
+ *      summary: "Register New User from web application , here company also created with default data"   
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          firstName:
+ *                              type: string
+ *                          lastName:
+ *                              type: string
+ *                          email:
+ *                              type: string
+ *                          password:
+ *                              type: string
+ *                          passwordConfirm:
+ *                              type: string
+ *                          companyName:
+ *                              type: string
+ *              
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/websignup', authController.webSignup);
 /**
  * @swagger
  * /api/v1/users/login:

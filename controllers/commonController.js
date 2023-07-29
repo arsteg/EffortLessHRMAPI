@@ -32,6 +32,15 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
     }); 
   });
 
+  exports.getTaskStatus = catchAsync(async (req, res, next) => {    
+    const statusList = await TaskStatus.find({}).where('company').equals(req.cookies.companyId);  
+    res.status(200).json({
+      status: 'success',
+      data: {
+        statusList: statusList
+      }
+    });  
+  });
   exports.saveTaskStatus = catchAsync(async (req, res, next) => {
     const newtaskStatus = await TaskStatus.create({      
         status:req.body.Status,
@@ -43,6 +52,15 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
         TaskStatus:newtaskStatus
       }
     }); 
+  });
+  exports.getTaskPriority = catchAsync(async (req, res, next) => {    
+    const priorityList = await TaskPriority.find({}).where('company').equals(req.cookies.companyId);  
+    res.status(200).json({
+      status: 'success',
+      data: {
+        priorityList: priorityList
+      }
+    });  
   });
   exports.saveTaskPriority = catchAsync(async (req, res, next) => {
     const newTaskPriority = await TaskPriority.create({      
