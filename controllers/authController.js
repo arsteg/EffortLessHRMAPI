@@ -176,7 +176,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
      try {
       await sendEmail({
         email: newUser.email,
-        subject: 'Update your profile',
+        subject: emailTemplate.subject,
         message
       });
       res.status(200).json({
@@ -214,11 +214,16 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   }); 
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-  const message = `Welcome, Please go on : ${resetURL} \n and update your profile `;
-  try {
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
+
+  const template = emailTemplate.contentData; 
+  const message = template
+  .replace("{firstName}", newUser.firstName)
+  .replace("{url}", resetURL)
+  .replace("{lastName}", newUser.lastName); try {
     await sendEmail({
       email: newUser.email,
-      subject: 'Update your profile',
+      subject: emailTemplate.subject,
       message
     });
     res.status(200).json({
@@ -346,7 +351,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: ' Password Reset Request',
+      subject: emailTemplate.subject,
       message
     });
     res.status(200).json({
