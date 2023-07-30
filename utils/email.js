@@ -11,16 +11,19 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     text: options.message
 }
   // 2) Actually send the email
- console.log(msg);
- sgMail
-  .send(msg)
-  .then((response) => {
-    console.log(response[0].statusCode)
-    console.log(response[0].headers)
-  })
-  .catch((error) => {
-    console.error(error)
-  })
+ try {
+  const response = await sgMail.send(msg);
+  console.log('Email sent successfully.');
+  console.log('Status Code:', response[0].statusCode);
+  console.log('Headers:', response[0].headers);
+} catch (error) {
+  console.error('Error sending email:', error.message);
+  res.status(500).json({
+    status: 'failed',
+    message: 'Failed to send email.',
+    error: error.message,
+  });
+}
 };
 
 module.exports = sendEmail;

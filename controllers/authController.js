@@ -98,7 +98,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     createdOn: new Date(Date.now()),
     updatedOn: new Date(Date.now())    
   }); 
-}
+
     var companyId = process.env.DEFAULT_COMPANY_Id;
     const rolesToDuplicate = await Role.find({ company: companyId });
     // Step 3: Create new records by cloning and assigning a new id
@@ -141,7 +141,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
         });
         await TaskPriority.insertMany(duplicatedTaskPriorityList);
   
-  
+  }
   const roles = await Role.find({ company: company._id });
   console.log(roles);
   const role = await Role.findOne({
@@ -166,7 +166,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   {
     const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
     const message = `Welcome, Please go on : ${resetURL} \n and update your profile `;
-    try {
+     try {
       await sendEmail({
         email: newUser.email,
         subject: 'Update your profile',
