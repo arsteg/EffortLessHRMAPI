@@ -17,6 +17,7 @@ const TimeLog = require('../models/timeLog');
 const { timeLog } = require('console');
 const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
+const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -164,8 +165,14 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   }); 
   if(newUser)
   {
-    const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-    const message = `Welcome, Please go on : ${resetURL} \n and update your profile `;
+  const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
+
+  const template = emailTemplate.contentData; 
+  const message = template
+  .replace("{firstName}", newUser.firstName)
+  .replace("{url}", resetURL)
+  .replace("{lastName}", newUser.lastName);
      try {
       await sendEmail({
         email: newUser.email,
@@ -325,20 +332,17 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Deactivate all validators - thanks to it, we don't have to specify email
   await user.save({ validateBeforeSave: false });
 
+
   // 3) Send it to user's email
   const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;  
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Forgot Password").where('company').equals(req.cookies.companyId); 
 
-  const message = `Dear ${user.firstName} ${user.lastName},
+  const template = emailTemplate.contentData; 
+  const message = template
+  .replace("{firstName}", user.firstName)
+  .replace("{url}", resetURL)
+  .replace("{lastName}", user.lastName);
 
-  We received a request to reset your password for your EffortlessHRM account. To proceed with the password reset, please click on the link below:  
-  ${resetURL}  
-  If you did not initiate this request or believe it to be in error, you can safely ignore this email. Your account will remain secure, and no action is required.  
-  For security reasons, this link will expire after a short period, so please reset your password promptly.  
-  Thank you for using EffortlessHRM!
-  
-  Best Regards,
-  Team EffortlessHRM`
-  
   try {
     await sendEmail({
       email: user.email,
