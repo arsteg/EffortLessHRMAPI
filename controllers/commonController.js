@@ -32,7 +32,7 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
     }); 
   });
 
-  exports.getTaskStatus = catchAsync(async (req, res, next) => {    
+  exports.getTaskStatusList = catchAsync(async (req, res, next) => {    
     const statusList = await TaskStatus.find({}).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
       status: 'success',
@@ -41,9 +41,24 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
       }
     });  
   });
+  exports.updateTaskStatus = catchAsync(async (req, res, next) => {        
+    const id = req.params.id;
+    const updatedTaskStatus = req.body;
+    updatedTaskStatus.updatedOn= new Date();
+    updatedTaskStatus.updatedBy= req.cookies.userId;
+    // Logic to update an existing email template
+     TaskStatus.findByIdAndUpdate(id, updatedTaskStatus, { new: true })
+      .then((updatedTaskStatus) => {
+        res.status(200).json(updatedTaskStatus);
+      })
+      .catch((error) => {
+        res.status(500).json({ error: error.message });
+      }); 
+    });
+  
   exports.saveTaskStatus = catchAsync(async (req, res, next) => {
     const newtaskStatus = await TaskStatus.create({      
-        status:req.body.Status,
+        status:req.body.status,
         company:req.cookies.companyId
     });  
     res.status(200).json({
@@ -53,7 +68,30 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
       }
     }); 
   });
-  exports.getTaskPriority = catchAsync(async (req, res, next) => {    
+  exports.deleteTaskStatus = catchAsync(async (req, res, next) => {  
+    const document = await TaskStatus.findByIdAndDelete(req.params.id);
+    if (!document) {
+      return next(new AppError('No document found with that ID', 404));
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  });
+  
+  exports.getTaskStatusById = catchAsync(async (req, res, next) => {       
+    const taskStatus = await TaskStatus.find({}).where('_id').equals(req.params.id);   
+    if (!taskStatus) {
+      return next(new AppError('No Task Status found', 403));
+    }  
+    res.status(200).json({
+      status: 'success',
+      data: taskStatus
+    });  
+   });
+  
+
+  exports.getTaskPriorityList = catchAsync(async (req, res, next) => {    
     const priorityList = await TaskPriority.find({}).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
       status: 'success',
@@ -64,7 +102,7 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
   });
   exports.saveTaskPriority = catchAsync(async (req, res, next) => {
     const newTaskPriority = await TaskPriority.create({      
-        priority:req.body.Priority,
+        priority:req.body.priority,
         company:req.cookies.companyId
     });  
     res.status(200).json({
@@ -74,6 +112,41 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
       }
     }); 
   });
+  exports.updateTaskPriority = catchAsync(async (req, res, next) => {        
+    const id = req.params.id;
+    const updatedTaskPriority = req.body;
+    updatedTaskPriority.updatedOn= new Date();
+    updatedTaskPriority.updatedBy= req.cookies.userId;
+    // Logic to update an existing email template
+    TaskPriority.findByIdAndUpdate(id, updatedTaskPriority, { new: true })
+      .then((updatedTaskPriority) => {
+        res.status(200).json(updatedTaskPriority);
+      })
+      .catch((error) => {
+        res.status(500).json({ error: error.message });
+      }); 
+    });
+  
+  exports.deleteTaskPriority = catchAsync(async (req, res, next) => {  
+    const document = await TaskPriority.findByIdAndDelete(req.params.id);
+    if (!document) {
+      return next(new AppError('No document found with that ID', 404));
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  });
+  exports.getTaskPriorityById = catchAsync(async (req, res, next) => {       
+    const taskPriority = await TaskPriority.find({}).where('_id').equals(req.params.id);   
+    if (!taskPriority) {
+      return next(new AppError('No Task Status found', 403));
+    }  
+    res.status(200).json({
+      status: 'success',
+      data: taskPriority
+    });  
+   })
   exports.getRoleByName = catchAsync(async (req, res, next) => {    
     const role = await Role.find({}).where('roleName').equals(req.body.roleName);  
     res.status(200).json({
@@ -83,8 +156,6 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
       }
     });  
   });
-
-
   // Save Permission List
   exports.getPermissionList = catchAsync(async (req, res, next) => {    
     const permissionList = await Permission.find({}).all();  

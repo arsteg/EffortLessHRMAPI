@@ -187,7 +187,7 @@ router.get('/emailTemplates', authController.protect, commonController.getAllEma
  *         application/json:
  *           schema:
  *             properties:
- *               Status:
+ *               status:
  *                 type: string
  *     responses:
  *       201:
@@ -201,7 +201,7 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
 
 /**
   * @swagger
-  * /api/v1/common/taskstatus:
+  * /api/v1/common/taskstatuslist:
   *  get:
   *      tags: [Task Status]
   *      summary: "Get all task status"
@@ -219,7 +219,91 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
   *                          type: object
   *
   */ 
-router.get('/taskstatus/', authController.protect, commonController.getTaskStatus);
+router.get('/taskstatuslist/', authController.protect, commonController.getTaskStatusList);
+
+/**
+ * @swagger
+ *  /api/v1/common/taskstatus/{id}:
+ *   put:
+ *     summary: Update an existing Task Status
+ *     tags: [Task Status]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the task status
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated task status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TaskStatus'
+ */
+router.put('/taskstatus/:id',  authController.protect, commonController.updateTaskStatus)
+
+/**
+ * @swagger
+ * /api/v1/common/taskstatus/{id}:
+ *   delete:
+ *     summary: Delete an task status
+ *     tags: [Task Status]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the task status
+ *     responses:
+ *       204:
+ *         description: Task Status deleted successfully
+ */
+router.delete('/taskstatus/:id', authController.protect, commonController.deleteTaskStatus)
+
+/**
+ * @swagger
+ * /api/v1/common/taskstatus/{id}:
+ *   get:
+ *     summary: Get an task status by ID
+ *     tags: [Task Status]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task Status ID 
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the task status
+ *       400:
+ *         description: Invalid task status ID
+ *       404:
+ *         description: Task status not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/taskstatus/:id', authController.protect, commonController.getTaskStatusById)
 
 /**
  * @swagger
@@ -236,7 +320,7 @@ router.get('/taskstatus/', authController.protect, commonController.getTaskStatu
  *         application/json:
  *           schema:
  *             properties:
- *               Priority:
+ *               priority:
  *                 type: string
  *     responses:
  *       201:
@@ -250,7 +334,7 @@ router.post('/taskpriority',  authController.protect, commonController.saveTaskP
 
 /**
   * @swagger
-  * /api/v1/common/taskpriority:
+  * /api/v1/common/taskprioritylist:
   *  get:
   *      tags: [Task Priority]
   *      summary: "Get all task priority"
@@ -268,5 +352,89 @@ router.post('/taskpriority',  authController.protect, commonController.saveTaskP
   *                          type: object
   *
   */ 
-router.get('/taskpriority/', authController.protect, commonController.getTaskPriority);
+router.get('/taskprioritylist/', authController.protect, commonController.getTaskPriorityList);
+
+/**
+ * @swagger
+ *  /api/v1/common/taskpriority/{id}:
+ *   put:
+ *     summary: Update an existing Task Priority
+ *     tags: [Task Priority]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the task priority
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               priority:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated task priority
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TaskPriority'
+ */
+router.put('/taskpriority/:id',  authController.protect, commonController.updateTaskPriority)
+
+/**
+ * @swagger
+ * /api/v1/common/taskpriority/{id}:
+ *   delete:
+ *     summary: Delete an task priority
+ *     tags: [Task Priority]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the task priority
+ *     responses:
+ *       204:
+ *         description: Task Priority deleted successfully
+ */
+router.delete('/taskpriority/:id', authController.protect, commonController.deleteTaskPriority)
+
+/**
+ * @swagger
+ * /api/v1/common/taskpriority/{id}:
+ *   get:
+ *     summary: Get an task priority by ID
+ *     tags: [Task Priority]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task Priority ID 
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the task priority
+ *       400:
+ *         description: Invalid task priority ID
+ *       404:
+ *         description: Task priority not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/taskpriority/:id', authController.protect, commonController.getTaskPriorityById)
 module.exports = router;
