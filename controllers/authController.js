@@ -19,6 +19,8 @@ const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
+const htmlToText = require('html-to-text').htmlToText;
+
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
@@ -88,7 +90,7 @@ exports.signup = catchAsync(async(req, res, next) => {
 
 exports.webSignup = catchAsync(async(req, res, next) => {
   var company = await Company.findOne({companyName:req.body.companyName});
- 
+  var companyId = process.env.DEFAULT_COMPANY_Id;
   if(company === null){
     console.log("Company Not Exsists");
     company = await Company.create({
@@ -100,7 +102,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     updatedOn: new Date(Date.now())    
   }); 
 
-    var companyId = process.env.DEFAULT_COMPANY_Id;
+    
     const rolesToDuplicate = await Role.find({ company: companyId });
     // Step 3: Create new records by cloning and assigning a new id
     const duplicatedRoles= rolesToDuplicate.map((record) => {
@@ -166,13 +168,19 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   if(newUser)
   {
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
-
-  const template = emailTemplate.contentData; 
-  const message = template
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(companyId); 
+  console.log(companyId);
+  console.log(emailTemplate);
+  const template = emailTemplate.contentData;
+  const plainTextContent = htmlToText(template, {
+    wordwrap: 130 // Set the desired word wrap length
+  });
+  const message = plainTextContent
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
   .replace("{lastName}", newUser.lastName);
+  
+
      try {
       await sendEmail({
         email: newUser.email,
@@ -217,7 +225,10 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
 
   const template = emailTemplate.contentData; 
-  const message = template
+  const plainTextContent = htmlToText(template, {
+    wordwrap: 130 // Set the desired word wrap length
+  });
+  const message = plainTextContent
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
   .replace("{lastName}", newUser.lastName); try {
@@ -340,10 +351,14 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) Send it to user's email
   const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;  
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Forgot Password").where('company').equals(req.cookies.companyId); 
+  var companyId = process.env.DEFAULT_COMPANY_Id;
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Forgot Password").where('company').equals(companyId); 
 
   const template = emailTemplate.contentData; 
-  const message = template
+  const plainTextContent = htmlToText(template, {
+    wordwrap: 130 // Set the desired word wrap length
+  });
+  const message = plainTextContent  
   .replace("{firstName}", user.firstName)
   .replace("{url}", resetURL)
   .replace("{lastName}", user.lastName);

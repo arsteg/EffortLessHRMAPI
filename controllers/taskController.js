@@ -13,6 +13,7 @@ const CommonController  = require('../controllers/commonController');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
+const htmlToText = require('html-to-text').htmlToText;
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 if (!AZURE_STORAGE_CONNECTION_STRING) {
@@ -378,9 +379,7 @@ const taskList = await Task.find({}).where('company').equals(req.cookies.company
 if(taskList)
 { 
   taskNumber=taskList.length+1;
-}
-const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
- 
+} 
   const newTask = await Task.create({
     taskName: req.body.taskName,
     startDate:req.body.startDate,
@@ -420,14 +419,27 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
       updatedBy: req.cookies.userId
     });  
     if(newTaskUserItem){   
-      const user = await User.findOne({ _id: newTaskUserItem.user });     
+      const newUser = await User.findOne({ _id: newTaskUserItem.user });   
+      const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
+      console.log(templateNewUser);
+      const contentNewUser = templateNewUser.contentData; 
+      const plainTextContent = htmlToText(contentNewUser, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
+     const emailTemplateNewUser = plainTextContent;
+     //  .replace("{firstName}", newUser.firstName)
+    //.replace("{startDate}", taskUsersExists.task.startDate)
+    // .replace("{endDate}", taskUsersExists.task.endDate)
+    //  .replace("{taskName}", taskUsersExists.task.Name) .replace("{url}", resetURL)
+    //  .replace("{lastName}", newUser.lastName);     
       await sendEmail({
-        email: user.email,
-        subject:emailTemplate.Name,
-        message:emailTemplate.contentData
+        email: newUser.email,
+        subject:emailTemplateNewUser.Name,
+        message:emailTemplateNewUser.contentData
       });  
     }
-  }
+    }
+  
   if(req.body.taskAttachments!=null)
   {
   for(var i = 0; i < req.body.taskAttachments.length; i++) {
@@ -475,20 +487,16 @@ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test
   });
 });
 
-exports.addTaskUser = catchAsync(async (req, res, next) => { 
-  const emailTemplateOldUser = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
-  const emailTemplateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId);   
- var emailOldUser=null;
-  // Upload Capture image on block blob client 
-  const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task);    
-  var newTaskUserItem=null;
-  if (taskUsersExists.length>0) {  
-    emailOldUser=taskUsersExists[0].user;   
+exports.addTaskUser = catchAsync(async (req, res, next) => {   
+  var emailOldUser = null; 
+  const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
+  var newTaskUserItem = null;
+  if (taskUsersExists.length > 0) {  
+    emailOldUser = taskUsersExists[0].user;
     newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists[0].id, req.body, {
-        new: true, // If not found - add new
-        runValidators: true // Validate data
+        new: true, 
+        runValidators: true
     });
-  console.log(newTaskUserItem);
   }
   else {
     newTaskUserItem = await TaskUser.create({
@@ -502,17 +510,38 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       updatedBy: req.cookies.userId
     });    
 
-   if(newTaskUserItem){   
-        const oldUser = await User.findOne({ _id: newTaskUserItem.user });      
+    if(emailOldUser!=null)
+    { 
+        const oldUser = await User.findOne({ _id:emailOldUser });         
+        const templateOldUser = await EmailTemplate.findOne({}).where('Name').equals("Task Unassigned").where('company').equals(req.cookies.companyId);   
+        const contentOldUser = templateOldUser.contentData; 
+        const plainTextContent = htmlToText(contentOldUser, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
+       
+        const emailTemplateOldUser = plainTextContent
+        .replace("{firstName}", oldUser.firstName)
+        .replace("{startDate}", taskUsersExists.task.startDate)
+        .replace("{endDate}", taskUsersExists.task.endDate)
+        .replace("{taskName}", taskUsersExists.task.Name)
+        .replace("{lastName}", oldUser.lastName);    
         await sendEmail({
           email: oldUser.email,
           subject:emailTemplateOldUser.Name,
           message:emailTemplateOldUser.contentData
         });  
       }
-      if(emailOldUser!=null)
-      {
-        const newUser = await User.findOne({ _id:emailOldUser });      
+     
+      if(newTaskUserItem){   
+        const newUser = await User.findOne({ _id: newTaskUserItem.user });   
+        const templateNewUser = await EmailTemplate.findOne({}).where('Task Assigned').equals("Test").where('company').equals(req.cookies.companyId);   
+        const contentNewUser = templateNewUser.contentData; 
+        const emailTemplateNewUser = contentNewUser
+        .replace("{firstName}", newUser.firstName)
+        .replace("{startDate}", taskUsersExists.task.startDate)
+        .replace("{endDate}", taskUsersExists.task.endDate)
+        .replace("{taskName}", taskUsersExists.task.Name) .replace("{url}", resetURL)
+        .replace("{lastName}", newUser.lastName);     
         await sendEmail({
           email: newUser.email,
           subject:emailTemplateNewUser.Name,
@@ -531,7 +560,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteTaskUser = catchAsync(async (req, res, next) => {
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
+  const emailTemplate = await EmailTemplate.findOne({}).where('Task Unassigned').equals("Delete Task").where('company').equals(req.cookies.companyId); 
   const taskUser = await TaskUser.findOne({ _id: req.params.id });
   const user = await User.findOne({ _id: taskUser.user });
     
