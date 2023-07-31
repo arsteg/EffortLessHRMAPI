@@ -233,7 +233,9 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i]){        
       const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber');    
-      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
+      if(task)
+      { 
+     const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
       if(taskUser) 
         {
           task.TaskUsers=taskUser;
@@ -242,6 +244,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
           task.TaskUsers=null;
         }
         taskList.push(task);
+      }
     }
    }
   }
