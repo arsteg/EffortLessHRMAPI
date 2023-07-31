@@ -26,7 +26,7 @@ const containerClient = blobServiceClient.getContainerClient(process.env.CONTAIN
 
 exports.deleteTask = catchAsync(async (req, res, next) => {
  // const newTaskUserList = await TaskUser.findOneAndDelete({}).where('task').equals(req.params.id);  
- const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Test").where('company').equals(req.cookies.companyId); 
+ const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
   if(newTaskUserList)
   {
@@ -429,19 +429,19 @@ if(taskList)
       const plainTextContent = htmlToText(contentNewUser, {
         wordwrap: 130 // Set the desired word wrap length
       });
-     const emailTemplateNewUser = plainTextContent;
-     //  .replace("{firstName}", newUser.firstName)
-    //.replace("{startDate}", taskUsersExists.task.startDate)
-    // .replace("{endDate}", taskUsersExists.task.endDate)
-    //  .replace("{taskName}", taskUsersExists.task.Name) .replace("{url}", resetURL)
-    //  .replace("{lastName}", newUser.lastName);     
+     const emailTemplateNewUser = plainTextContent
+     .replace("{firstName}", newUser.firstName)
+     .replace("{startDate}", newTask.startDate)
+     .replace("{endDate}", newTask.endDate)
+      .replace("{taskName}", newTask.taskName)
+      .replace("{lastName}", newUser.lastName);     
       await sendEmail({
         email: newUser.email,
-        subject:emailTemplateNewUser.Name,
-        message:emailTemplateNewUser.contentData
+        subject:templateNewUser.Name,
+        message:emailTemplateNewUser
       });  
     }
-    }
+  }
   
   if(req.body.taskAttachments!=null)
   {
@@ -460,7 +460,7 @@ if(taskList)
       uploadBlobResponse.requestId
     );
 
-      const newTaskUserItem = await TaskAttachments.create({
+      const newTaskAttachments = await TaskAttachments.create({
       task:newTask._id,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
@@ -526,7 +526,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         .replace("{firstName}", oldUser.firstName)
         .replace("{startDate}", taskUsersExists.task.startDate)
         .replace("{endDate}", taskUsersExists.task.endDate)
-        .replace("{taskName}", taskUsersExists.task.Name)
+        .replace("{taskName}", taskUsersExists.task.taskName)
         .replace("{lastName}", oldUser.lastName);    
         await sendEmail({
           email: oldUser.email,
@@ -537,17 +537,17 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
      
       if(newTaskUserItem){   
         const newUser = await User.findOne({ _id: newTaskUserItem.user });   
-        const templateNewUser = await EmailTemplate.findOne({}).where('Task Assigned').equals("Test").where('company').equals(req.cookies.companyId);   
+        const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
         const contentNewUser = templateNewUser.contentData; 
         const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", newUser.firstName)
         .replace("{startDate}", taskUsersExists.task.startDate)
         .replace("{endDate}", taskUsersExists.task.endDate)
-        .replace("{taskName}", taskUsersExists.task.Name) .replace("{url}", resetURL)
+        .replace("{taskName}", taskUsersExists.task.taskName)
         .replace("{lastName}", newUser.lastName);     
         await sendEmail({
           email: newUser.email,
-          subject:emailTemplateNewUser.Name,
+          subject:templateNewUser.Name,
           message:emailTemplateNewUser.contentData
         });  
       }

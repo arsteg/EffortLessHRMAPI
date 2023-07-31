@@ -143,6 +143,18 @@ exports.webSignup = catchAsync(async(req, res, next) => {
           return duplicatedTaskPriority;
         });
         await TaskPriority.insertMany(duplicatedTaskPriorityList);
+
+        const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
+          return duplicatedEmailTemplate;
+        });
+        await EmailTemplate.insertMany(duplicatedEmailTemplateList);
   
   }
   const roles = await Role.find({ company: company._id });
@@ -231,7 +243,8 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   const message = plainTextContent
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
-  .replace("{lastName}", newUser.lastName); try {
+  .replace("{lastName}", newUser.lastName);
+   try {
     await sendEmail({
       email: newUser.email,
       subject: emailTemplate.subject,
@@ -249,6 +262,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       )
     );
   }
+  console.log("hello");
   createAndSendToken(newUser, 201, res);
 });
 exports.login = catchAsync(async (req, res, next) => {
