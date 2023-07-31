@@ -18,11 +18,11 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
   console.log('Headers:', response[0].headers);
 } catch (error) {
   console.error('Error sending email:', error.message);
-  res.status(500).json({
-    status: 'failed',
-    message: 'Failed to send email.',
-    error: error.message,
-  });
+  // res.status(500).json({
+  //   status: 'failed',
+  //   message: 'Failed to send email.',
+  //   error: error.message,
+  // });
 }
 };
 
