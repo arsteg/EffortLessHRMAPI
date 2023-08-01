@@ -98,6 +98,12 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
 
 exports.getTask  = catchAsync(async (req, res, next) => {    
 const task = await Task.findById(req.params.id);
+task.description = htmlToText(task.description, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
+ task.comment = htmlToText(task.comment, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
 const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
  console.log("hii");
@@ -235,6 +241,12 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
       const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber parentTask');    
       if(task)
       { 
+        task.description = htmlToText(task.description, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
+        task.comment = htmlToText(task.comment, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
       if(taskUser) 
         {
@@ -287,6 +299,12 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
         else{
           taskUserList[i].task.TaskUsers=null;
         }
+        taskUserList[i].task.description = htmlToText(taskUserList[i].task.description, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
+        taskUserList[i].task.comment = htmlToText(taskUserList[i].task.comment, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
         taskList.push(taskUserList[i].task);
     }
    }
@@ -668,6 +686,12 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
      if(taskList)
     {
      for(var i = 0; i < taskList.length; i++) {
+      taskList[i].description = htmlToText(taskList[i].description, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
+      taskList[i].comment = htmlToText(taskList[i].comment, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
      const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id).select('user');  
      if(taskUser) 
         {
@@ -693,6 +717,12 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
+    taskList[i].description = htmlToText(taskList[i].description, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
+    taskList[i].comment = htmlToText(taskList[i].comment, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
    const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
    if(taskUser) 
       {
@@ -717,6 +747,12 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
+    taskList[i].description = htmlToText(taskList[i].description, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
+    taskList[i].comment = htmlToText(taskList[i].comment, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
    const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
    if(taskUser) 
       {
@@ -756,6 +792,12 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     task: { $in: taskIdsWithProjectId }});
     for (var i = 0; i < taskUsers.length; i++) {
       const task = taskUsers[i].task;
+      task.description = htmlToText(task.description, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
+      task.comment = htmlToText(task.comment, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
       if (task && task.project && task.project.id === req.body.projectId) {
         // Here, you don't need to query TaskUser again, as the taskUser already contains the related TaskUsers through the population.
         const taskUserList = await TaskUser.find({}).where('task').equals(task._id);  
