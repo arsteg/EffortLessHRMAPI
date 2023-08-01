@@ -450,9 +450,8 @@ if(taskList)
     if(newTaskUserItem){   
       const newUser = await User.findOne({ _id: newTaskUserItem.user });   
       const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
-      console.log(templateNewUser);
       const contentNewUser = templateNewUser.contentData; 
-      const plainTextContent = htmlToText(contentNewUser, {
+      const plainTextContent = htmlTotText(contentNewUser, {
         wordwrap: 130 // Set the desired word wrap length
       });
      const emailTemplateNewUser = plainTextContent
@@ -519,15 +518,26 @@ if(taskList)
 exports.addTaskUser = catchAsync(async (req, res, next) => {   
   var emailOldUser = null; 
   const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
+ const task = await Task.findById(req.body.task);
   var newTaskUserItem = null;
   if (taskUsersExists.length > 0) {  
-    emailOldUser = taskUsersExists[0].user;
+    
+    emailOldUser = taskUsersExists[0].user;   
+    if(emailOldUser.id===req.body.user)
+    {
+      res.status(200).json({
+      status: 'failed',
+      data: {      
+        Error :"Same user allredy assigned"
+      }
+    });}
     newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists[0].id, req.body, {
         new: true, 
         runValidators: true
     });
   }
-  else {
+  else 
+  {
     newTaskUserItem = await TaskUser.create({
       task:req.body.task,
       user:req.body.user,
@@ -538,47 +548,49 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId
     });    
-
+  }
     if(emailOldUser!=null)
     { 
-        const oldUser = await User.findOne({ _id:emailOldUser });         
+       const oldUser = await User.findOne({ _id:emailOldUser });         
         const templateOldUser = await EmailTemplate.findOne({}).where('Name').equals("Task Unassigned").where('company').equals(req.cookies.companyId);   
         const contentOldUser = templateOldUser.contentData; 
         const plainTextContent = htmlToText(contentOldUser, {
           wordwrap: 130 // Set the desired word wrap length
         });
-       
-        const emailTemplateOldUser = plainTextContent
+       const emailTemplateOldUser = plainTextContent
         .replace("{firstName}", oldUser.firstName)
-        .replace("{startDate}", taskUsersExists.task.startDate)
-        .replace("{endDate}", taskUsersExists.task.endDate)
-        .replace("{taskName}", taskUsersExists.task.taskName)
+        .replace("{startDate}", task.startDate)
+        .replace("{endDate}", task.endDate)
+        .replace("{taskName}",task.taskName)
         .replace("{lastName}", oldUser.lastName);    
         await sendEmail({
           email: oldUser.email,
-          subject:emailTemplateOldUser.Name,
-          message:emailTemplateOldUser.contentData
+          subject:templateOldUser.Name,
+          message:emailTemplateOldUser
         });  
       }
      
-      if(newTaskUserItem){   
-        const newUser = await User.findOne({ _id: newTaskUserItem.user });   
+      if(newTaskUserItem !=null){   
+        const newUser= await User.findOne({ _id: newTaskUserItem.user });   
         const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
         const contentNewUser = templateNewUser.contentData; 
-        const emailTemplateNewUser = contentNewUser
+         const plainTextContent = htmlToText(contentNewUser, {
+          wordwrap: 130 // Set the desired word wrap length
+        });
+        const emailTemplateNewUser = plainTextContent
         .replace("{firstName}", newUser.firstName)
-        .replace("{startDate}", taskUsersExists.task.startDate)
-        .replace("{endDate}", taskUsersExists.task.endDate)
-        .replace("{taskName}", taskUsersExists.task.taskName)
+        .replace("{startDate}", task.startDate)
+        .replace("{endDate}", task.endDate)
+        .replace("{taskName}", task.taskName)
         .replace("{lastName}", newUser.lastName);     
         await sendEmail({
           email: newUser.email,
           subject:templateNewUser.Name,
-          message:emailTemplateNewUser.contentData
+          message:emailTemplateNewUser
         });  
-      }
+      
   
-  }
+     }
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);  
   res.status(200).json({
     status: 'success',
