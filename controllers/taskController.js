@@ -232,7 +232,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i]){        
-      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber');    
+      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber parentTaskId');    
       if(task)
       { 
      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
@@ -663,7 +663,7 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
 
  // Get Country List
 exports.getTaskList = catchAsync(async (req, res, next) => {    
-    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).select('taskName startDate endDate description comment priority status taskNumber').skip(req.body.skip).limit(req.body.next);  
+    const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).select('taskName startDate endDate description comment priority status taskNumber parentTaskId').skip(req.body.skip).limit(req.body.next);  
     const taskCount = await Task.countDocuments({ "company": req.cookies.companyId });
      if(taskList)
     {
