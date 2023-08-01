@@ -581,24 +581,34 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteTaskUser = catchAsync(async (req, res, next) => {
-  const emailTemplate = await EmailTemplate.findOne({}).where('Task Unassigned').equals("Delete Task").where('company').equals(req.cookies.companyId); 
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Task Unassigned").where('company').equals(req.cookies.companyId); 
   const taskUser = await TaskUser.findOne({ _id: req.params.id });
+  const task = await Task.findOne({ _id: taskUser.task });
   const user = await User.findOne({ _id: taskUser.user });
-    
-  const document = await TaskUser.findByIdAndDelete(req.params.id);
-  if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+  const contentNewUser = emailTemplate.contentData; 
+      const plainTextContent = htmlToText(contentNewUser, {
+        wordwrap: 130 // Set the desired word wrap length
+      });
+     const emailTemplateNewUser = plainTextContent
+     .replace("{firstName}", user.firstName)
+     .replace("{startDate}", task.startDate)
+     .replace("{endDate}", task.endDate)
+      .replace("{taskName}", task.taskName)
+      .replace("{lastName}", user.lastName);            
+
+    const document = await TaskUser.findByIdAndDelete(req.params.id);
+    if (!document) {
+     return next(new AppError('No document found with that ID', 404));
   }
   else
   {
-    if(taskUser){   
-       console.log(user.email);
+    if(taskUser){       
       await sendEmail({
         email: user.email,
         subject:emailTemplate.Name,
-        message:emailTemplate.contentData
+        message:emailTemplateNewUser
       });  
-  }
+    }
   }
   res.status(204).json({
     status: 'success',
