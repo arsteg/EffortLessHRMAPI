@@ -30,9 +30,6 @@ var taskModelSchema = new Schema({
   isSubTask:{
     type:Boolean
   },
-  parentTaskId:{
-    type:String
-  },
   priority:{
     type:String
   },  
