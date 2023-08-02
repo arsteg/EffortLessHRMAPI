@@ -715,13 +715,7 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
     const taskCount = await Task.countDocuments({ "company": req.cookies.companyId });
      if(taskList)
     {
-     for(var i = 0; i < taskList.length; i++) {
-      taskList[i].description = htmlToText(taskList[i].description, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
-      taskList[i].comment = htmlToText(taskList[i].comment, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
+     for(var i = 0; i < taskList.length; i++) {     
      const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id).select('user');  
      if(taskUser) 
         {
@@ -747,12 +741,6 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
-    taskList[i].description = htmlToText(taskList[i].description, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
-    taskList[i].comment = htmlToText(taskList[i].comment, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
    const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
    if(taskUser) 
       {
@@ -777,12 +765,6 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
   if(taskList)
   {
    for(var i = 0; i < taskList.length; i++) {
-    taskList[i].description = htmlToText(taskList[i].description, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
-    taskList[i].comment = htmlToText(taskList[i].comment, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
    const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
    if(taskUser) 
       {
@@ -821,22 +803,16 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     user: req.body.userId,
     task: { $in: taskIdsWithProjectId }});
     for (var i = 0; i < taskUsers.length; i++) {
-      const task = taskUsers[i].task;
-      task.description = htmlToText(task.description, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
-      task.comment = htmlToText(task.comment, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
+      const task = taskUsers[i].task;     
       if (task && task.project && task.project.id === req.body.projectId) {
         // Here, you don't need to query TaskUser again, as the taskUser already contains the related TaskUsers through the population.
         const taskUserList = await TaskUser.find({}).where('task').equals(task._id);  
         if(task) 
            {
-            task.TaskUsers=taskUserList;
+            task.TaskUsers = taskUserList;
            }
            else{
-            task.TaskUsers=null;
+            task.TaskUsers = null;
            } taskList.push(task);
       }
     }
