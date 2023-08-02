@@ -313,10 +313,10 @@ const htmlToText = require('html-to-text').htmlToText;
         return res.status(404).json({ error: 'Email template not found' });
       }   
       else{
-        const plainTextContent = emailTemplate[0].contentData;  
-        emailTemplate[0].contentData = htmlToText(plainTextContent, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
+       // const plainTextContent = emailTemplate[0].contentData;  
+        //emailTemplate[0].contentData = htmlToText(plainTextContent, {
+         // wordwrap: 130 // Set the desired word wrap length
+        //});
       }
        res.status(200).json(emailTemplate);
     } catch (error) {
@@ -329,12 +329,12 @@ const htmlToText = require('html-to-text').htmlToText;
     try {
       const { companyId } = req.cookies.companyId;    
       const emailTemplates = await EmailTemplate.find({}).where('company').equals(req.cookies.companyId);  
-      for(var i = 0; i < emailTemplates.length; i++) {
+      /*for(var i = 0; i < emailTemplates.length; i++) {
         const plainTextContent = emailTemplates[i].contentData;        
         emailTemplates[i].contentData = htmlToText(plainTextContent, {
           wordwrap: 130 // Set the desired word wrap length
         });
-      }
+      }*/
       res.status(200).json(emailTemplates);
     } catch (error) {
       res.status(500).json({ error: 'Server error' });
