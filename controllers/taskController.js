@@ -106,12 +106,12 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
 
 exports.getTask  = catchAsync(async (req, res, next) => {    
 const task = await Task.findById(req.params.id);
-task.description = htmlToText(task.description, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
- task.comment = htmlToText(task.comment, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
+// task.description = htmlToText(task.description, {
+//           wordwrap: 130 // Set the desired word wrap length
+//         });
+//  task.comment = htmlToText(task.comment, {
+//           wordwrap: 130 // Set the desired word wrap length
+//         });
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
 const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
  console.log("hii");
