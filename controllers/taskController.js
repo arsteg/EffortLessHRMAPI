@@ -14,6 +14,7 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 const htmlToText = require('html-to-text').htmlToText;
+const notification  = require('../controllers/notficationController');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 if (!AZURE_STORAGE_CONNECTION_STRING) {
@@ -841,6 +842,14 @@ exports.addTag = catchAsync(async (req, res, next) => {
     createdBy: req.cookies.userId,
     updatedBy: req.cookies.userId
   });
+ let message=req.body.title;
+  try {
+     notification.SendNotification(req, res, next, message);
+    // Handle success if needed
+  } catch (err) {
+    // Handle errors if needed
+  }
+
    res.status(200).json({
     status: 'success',
     data: newTag

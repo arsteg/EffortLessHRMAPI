@@ -1,4 +1,5 @@
 const catchAsync = require('../utils/catchAsync');
+const catchMessageAsync= require('../utils/catchMessageAsync');
 const WebSocket = require('ws');
 const express = require('express');
 
@@ -45,9 +46,9 @@ wss.on('connection', (ws, request) => {
 });
 
 // API endpoint to send notifications to connected clients
-exports.SendNotification = catchAsync(async (req, res, next) => {
-  const notificationMessage = req.body.message;
-
+exports.SendNotification = catchMessageAsync(async (req, res, next, message) => {
+  console.log(message);
+  const notificationMessage = message;
   // Send the notification message to all connected clients
   connectedClients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -55,5 +56,5 @@ exports.SendNotification = catchAsync(async (req, res, next) => {
     }
   });
 
-  res.status(200).json({ success: true });
+  return Promise.resolve();
 });
