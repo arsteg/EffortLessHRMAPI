@@ -15,6 +15,7 @@ const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 const htmlToText = require('html-to-text').htmlToText;
 const notification  = require('../controllers/notficationController');
+
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 if (!AZURE_STORAGE_CONNECTION_STRING) {
@@ -452,7 +453,7 @@ if(taskList)
       const newUser = await User.findOne({ _id: newTaskUserItem.user });   
       const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
       const contentNewUser = templateNewUser.contentData; 
-      const plainTextContent = htmlTotText(contentNewUser, {
+      const plainTextContent = htmlToText(contentNewUser, {
         wordwrap: 130 // Set the desired word wrap length
       });
      const emailTemplateNewUser = plainTextContent
