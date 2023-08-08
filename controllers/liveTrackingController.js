@@ -8,7 +8,7 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 
 // Store connected clients
-const connectedClients = new Set();
+const clients = new Set();
 
 // WebSocket upgrade listener for the HTTP server
 const server = app.listen(4000, () => {
@@ -24,9 +24,10 @@ server.on('upgrade', (request, socket, head) => {
 // WebSocket connection event
 wss.on('connection', (ws, request) => {
   console.log('A new client connected');
-
+  const userId = request.url.slice(1);
+  clients.set(userId, wpfSocket);
   // Add the client to the set of connected clients
-  connectedClients.add(ws);
+  clients.add(ws);
 
   // WebSocket message event
   ws.on('message', (message) => {
@@ -38,7 +39,7 @@ wss.on('connection', (ws, request) => {
   ws.on('close', () => {
     console.log('Client disconnected');
     // Remove the client from the set of connected clients
-    connectedClients.delete(ws);
+    clients.delete(ws);
   });
 
   // You can also send an initial message to the client upon connection if needed
