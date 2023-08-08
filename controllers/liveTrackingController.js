@@ -5,31 +5,54 @@ const app = express();
 app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8081 });
-const clients = new Map();
-let wpfSocket = null;
+const wss = new WebSocket.Server({ noServer: true });
 
-wss.on('connection', (socket, req) => {
-  console.log('Client connected');
-  wpfSocket = socket;
-  const userId = req.url.slice(1);
-  clients.set(userId, wpfSocket);
+// Store connected clients
+const connectedClients = new Set();
 
-  wpfSocket.on('close', () => {
-    clients.delete(userId);
+// WebSocket upgrade listener for the HTTP server
+const server = app.listen(4000, () => {
+  console.log('WebSocket server is running on port 4000');
+});
+
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
+});
+
+// WebSocket connection event
+wss.on('connection', (ws, request) => {
+  console.log('A new client connected');
+
+  // Add the client to the set of connected clients
+  connectedClients.add(ws);
+
+  // WebSocket message event
+  ws.on('message', (message) => {
+    console.log(`Received message: ${message}`);
+    // You can handle incoming messages from the client here if needed
   });
 
+  // WebSocket close event
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    // Remove the client from the set of connected clients
+    connectedClients.delete(ws);
+  });
+
+  // You can also send an initial message to the client upon connection if needed
+  // ws.send('Welcome to the WebSocket server!');
 });
+
 
 exports.startStopLivePreview = catchAsync(async (req, res, next) => {
   try{
     clients.forEach(function each(client, clientId) {
       if (clientId === req.body.userId && client.readyState === WebSocket.OPEN) {
-        if(req.body.isStart == true){
-          console.log('startlivepreview');
+        if(req.body.isStart == true) {
           client.send(JSON.stringify({ EventName: "startlivepreview", UserId: req.body.userId }));
         } else{
-          console.log('stoplivepreview');
           client.send(JSON.stringify({ EventName: "stoplivepreview", UserId: req.body.userId }));
         }
         res.status(200).json({
