@@ -346,3 +346,101 @@ router.put('/productivity/:id', appWebsiteController.updateProductivity);
  *         description: Productivity record not found
  */
 router.delete('/productivity/:id', appWebsiteController.deleteProductivity);
+
+//Browser History
+
+/**
+ * @swagger
+ * /api/v1/appWebsite/browser-history:
+ *   post:
+ *     summary: Create a new browser history document
+ *     tags: [BrowserHistory]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               browser:
+ *                 type: string
+ *               uri:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *                 required: true
+ *               lastVisitTime:
+ *                 type: string
+ *                 format: date
+ *               visitCount:
+ *                 type: number
+ *                 required: true
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: "Success"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.post('/browser-history', appWebsiteController.addBrowserHistory);
+  
+  /**
+   * @swagger
+   * /api/v1/appWebsite/browser-history/{id}:
+   *   delete:
+   *     summary: Delete a browser history document by ID
+   *     tags: [BrowserHistory]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Document deleted successfully
+   *       404:
+   *         description: Document not found
+   *       500:
+   *         description: Internal Server Error
+   */
+  router.delete('/browser-history/:id', appWebsiteController.deleteBrowserHistory);
+  
+  /**
+   * @swagger
+   * /api/v1/appWebsite/browser-history:
+   *   get:
+   *     summary: Retrieve browser history documents based on filters
+   *     tags: [BrowserHistory]
+   *     parameters:
+   *       - in: query
+   *         name: startDate
+   *         schema:
+   *           type: string
+   *         description: Start date for filtering
+   *       - in: query
+   *         name: endDate
+   *         schema:
+   *           type: string
+   *         description: End date for filtering
+   *       - in: query
+   *         name: userId
+   *         schema:
+   *           type: string
+   *         description: User ID for filtering   
+   *     responses:
+   *       200:
+   *         description: Retrieved browser history documents
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/BrowserHistory'
+   *       500:
+   *         description: Internal Server Error
+   */
+  router.get('/browser-history', appWebsiteController.getBrowserHistory);

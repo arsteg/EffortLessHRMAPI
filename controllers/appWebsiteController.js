@@ -5,7 +5,7 @@ app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
 const { findById } = require("../models/item");
 const Productivity = require('./../models/productivityModel');
-
+const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     var appWebsiteKey = req.body.appWebsite.split(".");
@@ -242,4 +242,60 @@ exports.deleteProductivity = catchAsync(async (req, res, next) => {
     } else {
       res.status(404).json({ error: 'Productivity record not found' });
     }
+});
+
+exports.addBrowserHistory = catchAsync(async (req, res, next) => {
+    const newHistory = await BrowserHistory.create(
+        {
+            browser: req.body.browser,            
+            uri: req.body.uri,            
+            title: req.body.title,            
+            lastVisitTime: req.body.lastVisitTime,            
+            visitCount: req.body.visitCount,            
+            company: req.cookies.companyId,            
+            user:req.cookies.userId,            
+          }
+    );
+    res.status(200).json({
+        status: 'success',
+        data: newHistory
+    });
+});
+
+exports.deleteBrowserHistory = catchAsync(async (req, res, next) => {    
+    const deletedHistory = await BrowserHistory.findByIdAndDelete(req.params.id);
+    if (deletedHistory) {
+        res.status(200).json({
+            status: 'success',
+            data: deletedHistory
+        });
+    } else {
+      res.status(404).json({ error: 'Document not found' });
+    }
+});
+
+exports.getBrowserHistory = catchAsync(async (req, res, next) => {  
+    
+    const filters = {};
+
+    if (req.query.startDate && req.query.endDate) {
+      filters.lastVisitTime = {
+        $gte: new Date(req.query.startDate),
+        $lte: new Date(req.query.endDate)
+      };
+    }
+
+    if (req.query.userId) {
+      filters.user = req.query.userId;
+    }
+    
+    filters.company = req.cookies.companyId;
+
+    const history = await BrowserHistory.find(filters);
+    
+    res.status(200).json({
+        status: 'success',
+        data: history
+    });
+
 });
