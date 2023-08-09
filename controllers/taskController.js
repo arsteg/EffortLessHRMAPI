@@ -643,7 +643,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   // Upload Capture image on block blob client 
 for(var i = 0; i < req.body.taskAttachments.length; i++) {
     
-  const blobName = "Capture" + uuidv1() + req.body.taskAttachments[i].extention;
+  const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
   // Get a block blob client
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   console.log("\nUploading to Azure storage as blob:\n\t", );
@@ -1047,15 +1047,15 @@ exports.createComment = catchAsync(async (req, res, next) => {
   if(req.body.taskAttachments!=null)
   {
   for(var i = 0; i < req.body.taskAttachments.length; i++) {
-    const blobName = "Capture" + uuidv1() + ".png";
+    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
     // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     console.log("\nUploading to Azure storage as blob:\n\t", );
     // Upload data to the blob
     var FileString =  req.body.taskAttachments[i].file;
     const buffer = new Buffer.from(FileString, 'base64');
-    const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-    const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
+    const uploadBlobResponse = await blockBlobClient.upload(buffer , buffer.length);
+    const url = process.env.CONTAINER_URL_BASE_URL + process.env.CONTAINER_NAME + "/"+ blobName; 
    
     console.log(
       "Blob was uploaded successfully. requestId: ",
