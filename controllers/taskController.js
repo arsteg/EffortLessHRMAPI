@@ -191,6 +191,11 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
       },
     },
     {
+      $match: {
+        'taskDetails': { $ne: null }, // Exclude user documents where taskDetails is null (task not found)
+      },
+    },
+    {
       $skip: skip,
     },
     {
@@ -473,8 +478,8 @@ if(taskList)
   if(req.body.taskAttachments!=null)
   {
   for(var i = 0; i < req.body.taskAttachments.length; i++) {
-    const blobName = "Capture" + uuidv1() + ".png";
-    // Get a block blob client
+    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
+   // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     console.log("\nUploading to Azure storage as blob:\n\t", );
     // Upload data to the blob
