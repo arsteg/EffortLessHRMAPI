@@ -274,28 +274,47 @@ exports.deleteBrowserHistory = catchAsync(async (req, res, next) => {
     }
 });
 
-exports.getBrowserHistory = catchAsync(async (req, res, next) => {  
-    
+exports.getBrowserHistory = catchAsync(async (req, res, next) => {
     const filters = {};
 
     if (req.query.startDate && req.query.endDate) {
+      const startDate = new Date(req.query.startDate);
+      const endDate = new Date(req.query.endDate);
+
+      // Extract the date parts (year, month, day) from the start and end dates
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
+      const startDay = startDate.getDate();
+      
+      const endYear = endDate.getFullYear();
+      const endMonth = endDate.getMonth();
+      const endDay = endDate.getDate();
+      
+      // Construct new date objects with the extracted date parts
+      const newStartDate = new Date(startYear, startMonth, startDay);
+      const newEndDate = new Date(endYear, endMonth, endDay);
+
+      console.log('Start Date:', newStartDate);
+      console.log('End Date:', newEndDate);
+
       filters.lastVisitTime = {
-        $gte: new Date(req.query.startDate),
-        $lte: new Date(req.query.endDate)
+        $gte: newStartDate,
+        $lte: newEndDate
       };
     }
 
     if (req.query.userId) {
       filters.user = req.query.userId;
     }
-    
+
     filters.company = req.cookies.companyId;
 
+    console.log('Filters:', filters);
+
     const history = await BrowserHistory.find(filters);
-    
+
     res.status(200).json({
         status: 'success',
         data: history
     });
-
 });
