@@ -6,26 +6,20 @@ var userPreferencesSchema = new Schema({
         type: String,
         required: true
     },
-    company: {
+    user: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Company',
-        required: [true, 'Company must belong to a Company']
+        ref: 'User',
+        required: [true, 'user is required']
     },
-    preferenceName: {
-        type: String,
-        required: true
+    preference: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'PreferenceOption',
+        required: [true, 'Preference option is required']
     },
     preferenceValue: {
         type: String,
         required: true
     }
 });
-userPreferencesSchema.pre(/^find/,async function(next) {
-    this.populate({
-      path: 'company',
-      select: 'companyName'
-    });
-    next();
-  });
 userPreferences = mongoose.model('userPreferences', userPreferencesSchema);
 module.exports = userPreferences;
