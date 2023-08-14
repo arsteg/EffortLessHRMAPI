@@ -146,9 +146,6 @@ router.get('/preference-categories', userPreferencesController.getAllPreferenceC
  *                 required: true
  *               name:
  *                 type: string
- *                 required: true
- *               name:
- *                 type: string
  *                 required: true 
  *               description:
  *                 type: string
@@ -346,7 +343,7 @@ router.post('/userPreferences', authController.protect,  userPreferencesControll
  *       500:
  *         description: Internal server error
  */
-router.get('/userPreferences/:id',  authController.protect, userPreferencesController.getUserPreference);
+router.get('/userPreferences/:id',  userPreferencesController.getUserPreference);
 
 /**
  * @swagger
