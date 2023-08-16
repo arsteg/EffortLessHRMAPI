@@ -46,11 +46,17 @@ const createAndSendToken = async (user, statusCode, res) => {
         secure: true,
         sameSite: 'none'
       });
+      res.cookie('companyName', user.company.companyName, {
+        secure: true,
+        sameSite: 'none'
+      });
+     
   }
   else
   {
     res.cookie('companyId', user.company.id);
     res.cookie('userId', user._id);
+    res.cookie('companyName', user.company.companyName);
   }
   // In production save cookie only in https connection
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
@@ -181,8 +187,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   {
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(companyId); 
-  console.log(companyId);
-  console.log(emailTemplate);
+  console.log(newUser);
   const template = emailTemplate.contentData;
   const plainTextContent = htmlToText(template, {
     wordwrap: 130 // Set the desired word wrap length
@@ -190,7 +195,10 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   const message = plainTextContent
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
+  .replace("{company}",  req.cookies.companyName)
+  .replace("{company}", req.cookies.companyName)
   .replace("{lastName}", newUser.lastName);
+
   
 
      try {
@@ -199,10 +207,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
         subject: emailTemplate.subject,
         message
       });
-      res.status(200).json({
-        status: 'success',
-        message: 'update profile link sent to email!'
-      });
+     
     } catch (err) {   
       return next(
         new AppError(
@@ -240,20 +245,19 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   const plainTextContent = htmlToText(template, {
     wordwrap: 130 // Set the desired word wrap length
   });
+  console.log(newUser);
   const message = plainTextContent
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
+  .replace("{company}", req.cookies.companyName)
+  .replace("{company}", req.cookies.companyName)
   .replace("{lastName}", newUser.lastName);
    try {
     await sendEmail({
       email: newUser.email,
       subject: emailTemplate.subject,
       message
-    });
-    res.status(200).json({
-      status: 'success',
-      message: 'update profile link sent to email!'
-    });
+    });   
   } catch (err) {   
     return next(
       new AppError(
@@ -262,7 +266,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       )
     );
   }
-  console.log("hello");
+
   createAndSendToken(newUser, 201, res);
 });
 exports.login = catchAsync(async (req, res, next) => {
@@ -383,10 +387,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       subject: emailTemplate.subject,
       message
     });
-    res.status(200).json({
-      status: 'success',
-      message: 'Token sent to email!'
-    });
+    
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;

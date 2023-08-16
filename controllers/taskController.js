@@ -26,7 +26,13 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
   AZURE_STORAGE_CONNECTION_STRING
 );
 const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
+function formatDateToDDMMYY(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const year = String(date.getFullYear()).slice(-2);
 
+  return `${day}/${month}/${year}`;
+}
 exports.deleteTask = catchAsync(async (req, res, next) => {
  // const newTaskUserList = await TaskUser.findOneAndDelete({}).where('task').equals(req.params.id);  
  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
@@ -45,6 +51,9 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
      const emailTemplateNewUser = plainTextContent
      .replace("{firstName}", user.firstName)    
       .replace("{taskName}", task.taskName)
+      .replace("{date}", formatDateToDDMMYY(new Date()))
+      .replace("{company}", task.company.companyName)
+      .replace("{projectName}", task.project.projectName)
       .replace("{lastName}", user.lastName);     
        const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
       if (!document) {
@@ -556,6 +565,9 @@ if(taskList)
      .replace("{firstName}", newUser.firstName)
      .replace("{startDate}", newTask.startDate)
      .replace("{endDate}", newTask.endDate)
+     .replace("{company}", req.cookies.companyName)
+     .replace("{description}", newTask.description)
+     .replace("{priority}", newTask.priority)
       .replace("{taskName}", newTask.taskName)
       .replace("{lastName}", newUser.lastName);     
       await sendEmail({
@@ -660,6 +672,9 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         .replace("{startDate}", task.startDate)
         .replace("{endDate}", task.endDate)
         .replace("{taskName}",task.taskName)
+        .replace("{date}", formatDateToDDMMYY(new Date()))
+      .replace("{company}", req.cookies.companyName)
+      .replace("{projectName}", task.project.projectName)
         .replace("{lastName}", oldUser.lastName);    
         await sendEmail({
           email: oldUser.email,
@@ -680,6 +695,9 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         .replace("{startDate}", task.startDate)
         .replace("{endDate}", task.endDate)
         .replace("{taskName}", task.taskName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{description}", task.description)
+        .replace("{priority}", task.priority)
         .replace("{lastName}", newUser.lastName);     
         await sendEmail({
           email: newUser.email,
