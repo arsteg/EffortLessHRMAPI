@@ -9,7 +9,8 @@ const Leave = require('../models/leaveModel');
 const User = require('../models/permissions/userModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
-exports.getActivity = catchAsync(async (req, res, next) => {
+const mongoose = require('mongoose');
+exports.getActivityold = catchAsync(async (req, res, next) => {
 const timeLogsAll = [];
 var timeLogs;
 let filter;
@@ -98,6 +99,109 @@ if(req.body.users!='' && req.body.projects!='')
     status: 'success',
     data: timeLogsAll
   });  
+});
+
+ exports.getActivity = catchAsync(async (req, res, next) => {
+  var users = req.body.users;
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+            if(users==="")
+            {
+              users=ids[i]; 
+            }
+            else
+            {
+              users=users +","+ ids[i];        
+            }
+        }
+    }
+  if(teamIds==null)    
+    {
+      if(users==="")
+            {
+              users=ids[i]; 
+            }
+            else
+            {
+              users=users +","+ ids[i];        
+            }
+    } 
+  const userIds = req.body.users.split(',');
+  const projectIds = req.body.projects.split(',');
+  const startDate = new Date(req.body.startDate); // Get start date from the request
+  const endDate = new Date(req.body.endDate); // Get end date from the request
+  console.log(`userIds: ${users} startDate: ${startDate} endDate:${endDate}`);
+  const pipeline = [
+    // Match time logs for the given users and date range
+    {
+      $match: {
+        user: { $in: userIds.map(id => mongoose.Types.ObjectId(id)) },
+        project: { $in: projectIds.map(id => mongoose.Types.ObjectId(id)) },
+        date: { $gte: new Date(startDate), $lte: new Date(endDate) }
+      }
+    },
+    // Group time logs by user, project and date, and calculate the total time spent for each day
+    {
+      $group: {
+        _id: { user: '$user', project: '$project', task: '$task', date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } } },
+        timeSpent: { $sum: { $subtract: ['$endTime', '$startTime'] } }
+      }
+    },
+    // Group time logs by user and project, and pivot the data to create a column for each date
+    {
+      $group: {
+        _id: { user: '$_id.user', project: '$_id.project',task: '$_id.task',},
+        timeSpent: { $push: { date: '$_id.date', timeSpent: '$timeSpent' } }
+      }
+    },
+    // Sort projects by name
+    {
+      $sort: { '_id.user': 1, '_id.project': 1 }
+    }
+  ];
+  
+  try {
+    // Execute the pipeline using the TimeLog collection
+    const results = await TimeLog.aggregate(pipeline);
+  
+    // Create an array of dates within the date range
+    const dates = getDatesInRange(startDate, endDate);
+                       
+    // Create a matrix of time spent by project and date for each user
+    const matrix = {};
+    userIds.forEach(userId => {
+      matrix[userId] = results
+        .filter(result => result._id.user.toString() === userId)
+        .map(result => {
+          console.log(result);
+          const row = [result._id.project,result._id.task];
+          dates.forEach(date => {
+            const timeSpent = result.timeSpent.find(t => t.date === date);
+            row.push(timeSpent ? timeSpent.timeSpent : 0);
+          });
+          return row;
+        });
+    });
+  
+    // Create an array of column names with the project name and the dates
+    const columns = ['User','Project','task', ...dates];
+  
+    // Send the response with the matrix and column names
+    
+    res.status(200).json({
+      status: 'success',
+      data: { matrix, columns }
+    });
+  
+  
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }    
 });
 
 exports.getProductivityByMember = catchAsync(async (req, res, next) => {
@@ -567,7 +671,7 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
       data: attandanceDetails
     });  
   });
-  exports.getattandance = catchAsync(async (req, res, next) => {
+exports.getattandance = catchAsync(async (req, res, next) => {
     var attandanceDetails=[];
     let filter;
       var teamIdsArray = [];
@@ -624,3 +728,13 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
       data: attandanceDetails
     });  
   });
+  // Helper function to get an array of dates within a date range
+function getDatesInRange(startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+  while (currentDate <= new Date(endDate)) {
+    dates.push(currentDate.toISOString().slice(0, 10));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return dates;
+}

@@ -20,19 +20,13 @@ const router = express.Router();
  *                      type: object
  *                      properties:
  *                         users:
- *                              type: array
- *                              items:
- *                                type: string
- *                                example: ""
+ *                              type: string
  *                         projects:
- *                              type: array
- *                              items:
- *                                type: object
- *                                example: ""
- *                         fromdate:
+ *                              type: string
+ *                         startDate:
  *                              type: string
  *                              format: date
- *                         todate:
+ *                         endDate:
  *                              type: string
  *                              format: date
  *     
