@@ -271,10 +271,16 @@ exports.getProductivityByMember = catchAsync(async (req, res, next) => {
 
 exports.getProductivity = catchAsync(async (req, res, next) => {
  var teamIdsArray=[];
+  var toDate = req.body.todate;
+  if(req.body.fromdate===req.body.todate)
+  {
+    toDate = new Date(new Date( req.body.todate).setDate(new Date( req.body.todate).getDate() + 1));                      
+    console.log(toDate);
+  }
  var teamIds='';
  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
  if(ids.length > 0)    
-     { 
+     {
        for(var i = 0; i < ids.length; i++) 
          {    
              teamIdsArray.push(ids[i]);        
@@ -287,11 +293,11 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
     let filter;
     if(req.body.users.length>0)
     {
-      filter = { 'userReference': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
+      filter = { 'userReference': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: toDate}};
     }
     else{
         filter={
-           'userReference': { $in: teamIdsArray } ,'date':{$gte: req.body.fromdate,$lte: req.body.todate}};
+           'userReference': { $in: teamIdsArray } ,'date':{$gte: req.body.fromdate,$lte: toDate}};
      }
  var appwebsiteusers = await AppWebsite.find(filter).distinct('userReference') 
  if(appwebsiteusers.length>0)
@@ -299,7 +305,7 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
 for(var u = 0; u < appwebsiteusers.length; u++) 
 {    
     var appWebsiteSummary={};
-    var filterdate={'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
+    var filterdate={'date' : {$gte: req.body.fromdate,$lte: toDate}};
     const appWebsites = await AppWebsite.find(filterdate).where('userReference').equals(appwebsiteusers[u]._id);  
     let mouseClicks=0,keyboardStrokes=0,scrollingNumber=0,totalTimeSpent=0,timeSpentProductive=0,timeSpentNonProductive=0,inactive=0;
     if(appWebsites.length>0)    
@@ -324,7 +330,7 @@ for(var u = 0; u < appwebsiteusers.length; u++)
         {
           for(var c = 0; c < appWebsitename.length; c++) 
               { 
-                filterforcount = {'appWebsite':appWebsitename[c],'userReference':appwebsiteusers[u]._id,'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};  
+                filterforcount = {'appWebsite':appWebsitename[c],'userReference':appwebsiteusers[u]._id,'date' : {$gte: req.body.fromdate,$lte: toDate}};  
                 let TimeSpent=0;
                 var appWebsite={};
                 filterforproductivity = {'name':appWebsitename[c]};  
