@@ -6,20 +6,28 @@ app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
-
+const http = require('http');
 // Store connected clients
 const clients = new Map();
 
-// WebSocket upgrade listener for the HTTP server
-const server = app.listen(4000, () => {
-  console.log('WebSocket server is running on port 4000');
-});
 
+// Create an HTTP server
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('WebSocket server');
+});
+// Start the HTTP server
+const port = 4000;
+server.listen(port, () => {
+  console.log(`WebSocket server is running on port ${port}`);
+});
+// Handle WebSocket upgrade requests
 server.on('upgrade', (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit('connection', ws, request);
   });
 });
+
 
 // WebSocket connection event
 wss.on('connection', (ws, request) => {
