@@ -22,7 +22,11 @@ var preferenceOptionSchema = new Schema({
     dataType: {
         type: String,
         required: true
+    },
+    defaultValue: {
+        type: String        
     }
+    
 });
 preferenceOptions = mongoose.model('preferenceOptions', preferenceOptionSchema);
 module.exports = preferenceOptions;

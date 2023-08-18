@@ -147,12 +147,17 @@ router.get('/preference-categories', userPreferencesController.getAllPreferenceC
  *               name:
  *                 type: string
  *                 required: true 
+ *               label:
+ *                 type: string
+ *                 required: true  
  *               description:
  *                 type: string
  *                 required: true
  *               dataType:
  *                 type: string
  *                 required: true
+ *               defaultValue:
+ *                 type: string 
  *     responses:
  *       201:
  *         description: Preference option successfully added
@@ -289,10 +294,16 @@ router.get('/preferenceOptions', authController.protect, userPreferencesControll
 
 /**
  * @swagger
- * /api/v1/userPreferences:
+ * /api/v1/userPreferences/preferences/{id}:
  *   post:
  *     summary: Add a new user preference
  *     tags: [User Preferences Management]
+ *     parameters:
+ *       - in: path
+ *         name: id 
+ *         schema:
+ *           type: string
+ *         description: ID of the user preference
  *     requestBody:
  *       description: User preference details
  *       required: true
@@ -300,10 +311,7 @@ router.get('/preferenceOptions', authController.protect, userPreferencesControll
  *         application/json:
  *           schema:
  *             type: object
- *             properties:
- *               userName:
- *                 type: string
- *                 required: true
+ *             properties: 
  *               user:
  *                 type: string
  *                 required: true
@@ -321,20 +329,26 @@ router.get('/preferenceOptions', authController.protect, userPreferencesControll
  *       500:
  *         description: Internal server error
  */
-router.post('/userPreferences', authController.protect,  userPreferencesController.createUserPreference);
+router.post('/preferences/:id',  userPreferencesController.createUserPreference);
 /**
  * @swagger
- * /api/v1/userPreferences/{id}:
+ * /api/v1/userPreferences/preferences/{userId}/{categoryId}:
  *   get:
  *     summary: Get a user preference by ID
  *     tags: [User Preferences Management]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: userId
  *         required: true
  *         schema:
  *           type: string
  *         description: ID of the user preference
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: category Id of the user preference
  *     responses:
  *       200:
  *         description: Successful response with the user preference
@@ -343,11 +357,11 @@ router.post('/userPreferences', authController.protect,  userPreferencesControll
  *       500:
  *         description: Internal server error
  */
-router.get('/userPreferences/:id',  userPreferencesController.getUserPreference);
+router.get('/preferences/:userId/:categoryId',  userPreferencesController.getUserPreference);
 
 /**
  * @swagger
- * /api/v1/userPreferences/{id}:
+ * /api/v1/userPreferences/preferences/{id}:
  *   put:
  *     summary: Update a user preference by ID
  *     tags: [User Preferences Management]
@@ -382,11 +396,11 @@ router.get('/userPreferences/:id',  userPreferencesController.getUserPreference)
  *       500:
  *         description: Internal server error
  */
-router.put('/userPreferences/:id', authController.protect,  userPreferencesController.updateUserPreference);
+router.put('/preferences/:id', authController.protect,  userPreferencesController.updateUserPreference);
 
 /**
  * @swagger
- * /api/v1/userPreferences/{id}:
+ * /api/v1/userPreferences/preferences/{id}:
  *   delete:
  *     summary: Delete a user preference by ID
  *     tags: [User Preferences Management]
@@ -405,20 +419,6 @@ router.put('/userPreferences/:id', authController.protect,  userPreferencesContr
  *       500:
  *         description: Internal server error
  */
-router.delete('/userPreferences/:id', authController.protect, userPreferencesController.deleteUserPreference);
-
-/**
- * @swagger
- * /api/v1/userPreferences:
- *   get:
- *     summary: Get all user preferences
- *     tags: [User Preferences Management]
- *     responses:
- *       200:
- *         description: Successful response with user preferences
- *       500:
- *         description: Internal server error
- */
-router.get('/userPreferences', authController.protect, userPreferencesController.getAllUserPreferences);
+router.delete('/preferences/:id', userPreferencesController.deleteUserPreference);
 
 
