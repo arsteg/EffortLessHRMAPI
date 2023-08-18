@@ -335,6 +335,8 @@ router.post('/me',authController.protect,userController.getUser);
  *                              type: string
  *                          extraDetails:
  *                              type: string
+ *                          role:
+ *                              type: string
  *                          
  *      produces:
  *          - application/json
