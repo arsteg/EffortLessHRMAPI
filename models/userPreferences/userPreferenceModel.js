@@ -1,11 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var userPreferencesSchema = new Schema({
-    userName: {
-        type: String,
-        required: true
-    },
+var userPreferencesSchema = new Schema({    
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',

@@ -157,9 +157,32 @@ exports.getAllPreferenceOptions = catchAsync(async (req, res, next) => {
   });
 
   // controllers/userPreferencesController.js
-exports.createUserPreference = catchAsync(async (req, res, next) => {
-  const userPreference = await UserPreference.create(req.body);
-  res.status(201).json({
+exports.createUserPreference = catchAsync(async (req, res, next) => {  
+  const { user, preference } = req.body;  
+  let userPreference={};
+  if (!mongoose.Types.ObjectId.isValid(req.params.id))
+  {
+    let userPreferenceExists = await UserPreference.findOne({ user, preference });
+  if(userPreferenceExists){
+    return next(new AppError('given preference already exists', 400));
+  }  
+    userPreference = new UserPreference(req.body);
+    userPreference.set(req.body);
+    await userPreference.save();
+  }
+  else{
+    userPreference = await UserPreference.findById(req.params.id);
+    if (!userPreference) {
+      // If userPreference doesn't exist, create a new one
+      userPreference = new UserPreference(req.body);
+    } else {
+      // If userPreference exists, update it with the new data
+      userPreference.set(req.body);
+    }
+    await userPreference.save();
+  }  
+
+  res.status(200).json({
     status: 'success',
     data: userPreference
   });
@@ -167,13 +190,41 @@ exports.createUserPreference = catchAsync(async (req, res, next) => {
 
 // controllers/userPreferencesController.js
 exports.getUserPreference = catchAsync(async (req, res, next) => {
-  const userPreference = await UserPreference.findById(req.params.id);
-  if (!userPreference) {
-    return next(new AppError('User preference not found', 404));
-  }
+  
+  const userId= req.params.userId;
+  const categoryId= req.params.categoryId;
+
+  // Find all preference options
+  const allPreferenceOptions = await PreferenceOption.find();
+
+  // Find user preferences matching the given user ID
+  const userPreferences = await UserPreference.find({ user: userId });
+
+  // Convert user preferences to a map for easy lookup
+  const userPreferencesMap = {};
+  const userPreferencesIdMap = {};
+  userPreferences.forEach((pref) => {
+    userPreferencesMap[pref.preference.toString()] = pref.preferenceValue;
+    userPreferencesIdMap[pref.preference.toString()] = pref._id.toString();
+  });
+
+  // Map the results to the desired format
+  const userPreferencesAllCat = allPreferenceOptions.map((option) => ({
+    preference:option.id,
+    category: option.category,
+    name: option.name,
+    label: option.label,
+    description: option.description,
+    dataType: option.dataType,
+    preferenceValue: userPreferencesMap[option._id.toString()] || option.defaultValue, // Set to null if not found
+    Id: userPreferencesIdMap[option._id.toString()] || null, // Set to null if not found
+  }));
+  
+  const result = userPreferencesAllCat.filter((r)=>r.category==categoryId);
+
   res.status(200).json({
     status: 'success',
-    data: userPreference
+    data: result
   });
 });
 
