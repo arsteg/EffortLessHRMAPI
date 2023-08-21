@@ -581,7 +581,7 @@ exports.getRole = catchAsync(async (req, res, next) => {
  });
 
 exports.getRoles = catchAsync(async (req, res, next) => {    
-  const roles = await Role.find({});  
+  const roles = await Role.find({}).where('company').equals(req.cookies.companyId);  
   if (!roles) {
     return next(new AppError('No role found', 403));
   }
