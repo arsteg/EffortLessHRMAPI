@@ -379,7 +379,7 @@ router.patch('/updateuser/:id',authController.protect, userController.updateUser
  *                          type: object
  *
  */
-router.delete('/deleteuser/:id',userController.deleteMe);
+router.delete('/deleteuser/:id',userController.deleteUser);
 
 // Only admins are able to use routes below
 //router.use(authController.restrictTo('admin'));
