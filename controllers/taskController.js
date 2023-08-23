@@ -138,7 +138,40 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
     { $set: updates },
     { new: false, runValidators: true }
   );
-  if(!task) return res.status(404).send({ error: 'Task not found'});     
+  if(!task) 
+  {
+    return res.status(404).send({ error: 'Task not found'});     
+  }
+  else
+    {
+    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Task Notification").where('company').equals(req.cookies.companyId); 
+    const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
+    const task = await Task.findById(req.params.id);  
+    if(task)
+     {  
+    const user = await User.findOne({ _id: newTaskUserList[0].user });     
+    const contentNewUser = emailTemplate.contentData; 
+    const plainTextContent = htmlToText(contentNewUser, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
+    const emailTemplateNewUser = plainTextContent
+    .replace("{firstName}", user.firstName)
+      .replace("{taskName}", task.taskName)
+      .replace("{date}", formatDateToDDMMYY(new Date()))
+      .replace("{company}", req.cookies.companyName)
+      .replace("{projectName}", task.project.projectName)
+      .replace("{description}", task.description)
+      .replace("{priority}", task.priority)
+      .replace("{lastName}", user.lastName); 
+  
+      if(user){   
+              await sendEmail({
+                  email: user.email,
+                  subject:emailTemplate.Name,
+                  message:emailTemplateNewUser
+                });  
+            }  
+    }}
   res.status(201).json({
     status: 'success',
     data: {
@@ -657,6 +690,7 @@ if(taskList)
 });
 
 exports.addTaskUser = catchAsync(async (req, res, next) => {   
+  console.log("hello");
   var emailOldUser = null; 
   const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
  const task = await Task.findById(req.body.task);

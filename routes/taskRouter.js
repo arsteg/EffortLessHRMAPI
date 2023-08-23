@@ -237,71 +237,7 @@ router.route('/:id').get(authController.protect,taskController.getTask);
  *
  */
 router.post('/newtask',authController.protect,taskController.addTask);
-/**
- * @swagger
- * /api/v1/task/update/{id}:
- *  patch:
- *      tags:
- *          - Task Management
- *      summary: "Update Task based on TaskId"   
- *      security: [{
- *         bearerAuth: []
- *     }]
- *      parameters:
- *       - name: id
- *         in: path
- *         description: Task Id
- *         required: true
- *         schema:
- *           type: string
- *           format: int64
- *           
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          taskName:
- *                              type: string
- *                          startDate:
- *                              type: string
- *                              format: date
- *                          endDate:
- *                              type: string
- *                              format: date
- *                          startTime:
- *                              type: string
- *                          description:
- *                              type: string
- *                          comment:
- *                              type: string
- *                          priority:
- *                              type: string
- *                          project:
- *                              type: string
- *                          title:
- *                              type: string 
- *                          parentTask:
- *                              type: string  
- *                          estimate:
- *                              type: number
- *                          timeTaken:
- *                              type: number
- *                          status:
- *                              type: string
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
- */
- router.patch('/update/:id',authController.protect,taskController.updateTask);
+
 /**
  * @swagger
  * /api/v1/task/update/{id}:
