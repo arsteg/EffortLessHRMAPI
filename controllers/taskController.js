@@ -52,7 +52,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
      .replace("{firstName}", user.firstName)    
       .replace("{taskName}", task.taskName)
       .replace("{date}", formatDateToDDMMYY(new Date()))
-      .replace("{company}", task.company.companyName)
+      .replace("{company}", req.cookies.companyName)
       .replace("{projectName}", task.project.projectName)
       .replace("{lastName}", user.lastName);     
        const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
@@ -80,13 +80,43 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 });
 
 exports.updateTask =  catchAsync(async (req, res, next) => {
-
-  const document = await Task.findOneAndUpdate(req.params.id, req.body, {
+  const filter = { _id: req.params.id }; // Replace with your actual filter criteria
+  const document = await Task.findOneAndUpdate(filter, req.body, {
     new: false, // If not found - add new
     runValidators: true // Validate data
   });
   if (!document) {
     return next(new AppError('No document found with that ID', 404));
+  }
+  else
+  {
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Task Notification").where('company').equals(req.cookies.companyId); 
+  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
+  const task = await Task.findById(req.params.id);  
+  if(task)
+   {  
+  const user = await User.findOne({ _id: newTaskUserList[0].user });     
+  const contentNewUser = emailTemplate.contentData; 
+  const plainTextContent = htmlToText(contentNewUser, {
+    wordwrap: 130 // Set the desired word wrap length
+  });
+  const emailTemplateNewUser = plainTextContent
+  .replace("{firstName}", user.firstName)
+    .replace("{taskName}", task.taskName)
+    .replace("{date}", formatDateToDDMMYY(new Date()))
+    .replace("{company}", req.cookies.companyName)
+    .replace("{projectName}", task.project.projectName)
+    .replace("{description}", task.description)
+    .replace("{priority}", task.priority)
+    .replace("{lastName}", user.lastName); 
+
+    if(user){   
+            await sendEmail({
+                email: user.email,
+                subject:emailTemplate.Name,
+                message:emailTemplateNewUser
+              });  
+          }  
   }
   res.status(201).json({
     status: 'success',
@@ -94,6 +124,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
       data: document
     }
   });
+  }
 });
 
 exports.updateFlex =  catchAsync(async (req, res, next) => {    
