@@ -42,33 +42,35 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   {
     for(var j = 0; j < newTaskUserList.length; j++) 
     { 
-     
       const user = await User.findOne({ _id: newTaskUserList[j].user });        
-      const contentNewUser = emailTemplate.contentData; 
-      const plainTextContent = htmlToText(contentNewUser, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
-     const emailTemplateNewUser = plainTextContent
-     .replace("{firstName}", user.firstName)    
-      .replace("{taskName}", task.taskName)
-      .replace("{date}", formatDateToDDMMYY(new Date()))
-      .replace("{company}", req.cookies.companyName)
-      .replace("{projectName}", task.project.projectName)
-      .replace("{lastName}", user.lastName);     
-       const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
-      if (!document) {
-        return next(new AppError('No document found with that ID', 404));
-      }
-      else
+      if(user)
       {
-        if(user){   
-         await sendEmail({
-            email: user.email,
-            subject:emailTemplate.Name,
-            message:emailTemplateNewUser
-          });  
-      }
-      }
+        const contentNewUser = emailTemplate.contentData; 
+          const plainTextContent = htmlToText(contentNewUser, {
+            wordwrap: 130 // Set the desired word wrap length
+          });
+        const emailTemplateNewUser = plainTextContent
+        .replace("{firstName}", user.firstName)    
+          .replace("{taskName}", task.taskName)
+          .replace("{date}", formatDateToDDMMYY(new Date()))
+          .replace("{company}", req.cookies.companyName)
+          .replace("{projectName}", task.project.projectName)
+          .replace("{lastName}", user.lastName);     
+          const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
+          if (!document) {
+            return next(new AppError('No document found with that ID', 404));
+          }
+          else
+          {
+            if(user){   
+            await sendEmail({
+                email: user.email,
+                subject:emailTemplate.Name,
+                message:emailTemplateNewUser
+              });  
+            }
+          }
+       }
     }
   }
   //const newTaskAttachmentList = await TaskAttachments.findOneAndDelete({}).where('task').equals(req.params.id);
