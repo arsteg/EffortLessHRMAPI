@@ -23,6 +23,10 @@ var customAttributeSchema = new Schema({
   dataType: {
     type: String,
     required: true
+  },
+  isRequired: {
+    type: Boolean,
+    required: true
   }
 }, { collection: 'CustomAttribute' });
 

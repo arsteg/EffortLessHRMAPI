@@ -41,6 +41,9 @@ var assetSchema = new Schema({
   cost: {
     type: Number,
     required: true
+  },
+  image: {
+    type: String    
   }
 }, { collection: 'Asset' });
 

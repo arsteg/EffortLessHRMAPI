@@ -218,7 +218,7 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
 
 
 exports.createAssetStatus = catchAsync(async (req, res, next) => {  
-  const assetStatus = await AssetStatus.create(req.body);
+  const assetStatus = await AssetStatus.create({statusName:req.body.statusName,company:req.cookies.companyId});
   res.status(201).json({
     status: 'success',
     data: assetStatus
@@ -262,7 +262,7 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
-    const assetStatuses = await AssetStatus.find();
+    const assetStatuses = await AssetStatus.find({company:req.cookies.companyId});
     res.status(200).json({
       status: 'success',
       data: assetStatuses
@@ -384,7 +384,19 @@ exports.getAllEmployeeAssets = catchAsync(async (req, res, next) => {
 
 
 exports.createVendor = catchAsync(async (req, res, next) => {
-    const vendor = await Vendor.create(req.body);
+   
+  console.log(req.body);
+
+  const {vendorId,vendorName, email,address,phone } = req.body;
+
+  const vendor = await Vendor.create({
+    vendorId,
+    vendorName,
+    email,
+    address,
+    phone,
+    company:req.cookies.companyId
+  });
     res.status(201).json({
         status: 'success',
         data: vendor
