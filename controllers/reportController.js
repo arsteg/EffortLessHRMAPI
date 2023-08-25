@@ -680,7 +680,7 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
 exports.getattandance = catchAsync(async (req, res, next) => {
     var attandanceDetails=[];
     let filter;
-      var teamIdsArray = [];
+    var teamIdsArray = [];
     var teamIds;
     const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
     if(ids.length > 0)    
@@ -725,7 +725,17 @@ exports.getattandance = catchAsync(async (req, res, next) => {
                             newLogInUSer.lastName = timeLogAll[0].user.lastName;
                             newLogInUSer.date= timeLogAll[0].date;                           
                             newLogInUSer.manual = manual;
-                            newLogInUSer.total = newLogInUSer.manual+newLogInUSer.time;
+                            newLogInUSer.total = newLogInUSer.manual + newLogInUSer.time;
+                             const totalTrackedTime = (newLogInUSer.manual + newLogInUSer.time)/60;
+                            const dailyHours = 8;
+                            const startDate = new Date(req.body.fromdate);
+                            const endDate = new Date(req.body.todate);                            
+                            const timeDifference = endDate - startDate;
+                            //const numberOfDays = timeDifference / (1000 * 60 * 60 * 24); // Convert milliseconds to days
+                            const numberOfDays = calculateWeekdays(startDate, endDate, 1); // Count total weekdays
+
+                            const percentage = calculatePercentage(totalTrackedTime, dailyHours, numberOfDays);
+                            newLogInUSer.percetage=percentage.toFixed(2);
                      }
                     attandanceDetails.push(newLogInUSer);
         }
@@ -734,6 +744,27 @@ exports.getattandance = catchAsync(async (req, res, next) => {
       data: attandanceDetails
     });  
   });
+  function calculatePercentage(totalTrackedTime, dailyHours, numberOfDays) {
+    const percentage = (totalTrackedTime / (dailyHours * numberOfDays)) * 100;
+    return percentage;
+  }
+  function calculateWeekdays(startDate, endDate, dailyHours) {
+    const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+  
+    let totalWeekdays = 0;
+  
+    while (start <= end) {
+      const dayOfWeek = start.getDay(); // 0 (Sunday) to 6 (Saturday)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        totalWeekdays++;
+      }
+      start.setTime(start.getTime() + oneDay); // Move to the next day
+    }
+  
+    return totalWeekdays * dailyHours;
+  }
   // Helper function to get an array of dates within a date range
 function getDatesInRange(startDate, endDate) {
   const dates = [];
