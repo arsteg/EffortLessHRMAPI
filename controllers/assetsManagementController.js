@@ -8,22 +8,23 @@ const Asset = require("../models/AssetsManagement/assetModel");
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-exports.addAssetType = catchAsync(async (req, res, next) => {
-    const assetType = await AssetType.create(req.body);
+exports.addAssetType = catchAsync(async (req, res, next) => {    
+  req.body.company = req.cookies.companyId;
+  const assetType = await AssetType.create(req.body);
     res.status(201).json({
         status: 'success',
         data: assetType
     });
 });
 
-exports.getAssetType = catchAsync(async (req, res, next) => {
-    const assetType = await AssetType.findById(req.params.id);
-    if (!assetType) {
+exports.getAssetTypes = catchAsync(async (req, res, next) => {
+    const assetTypes = await AssetType.findById({id:req.params.id,company:req.cookies.companyId});
+    if (!assetTypes) {
         return next(new AppError('AssetType not found', 404));
     }
     res.status(200).json({
         status: 'success',
-        data: assetType
+        data: assetTypes
     });
 });
 
@@ -42,21 +43,41 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetType = catchAsync(async (req, res, next) => {
-    const assetType = await AssetType.findByIdAndDelete(req.params.id);
-    if (!assetType) {
-        return next(new AppError('AssetType not found', 404));
-    }
-    res.status(204).json({
-        status: 'success',
-        data: null
-    });
+  // Check if any Asset references the AssetType
+  const assetExists = await Asset.findOne({ assetType: req.params.id,company:req.cookies.companyId });
+  if (assetExists) {
+      return next(new AppError('AssetType cannot be deleted as it is associated with existing assets', 400));
+  }
+
+  // If no assets reference the AssetType, delete all CustomAttributes related to that AssetType
+  await CustomAttribute.deleteMany({ assetType: req.params.id,company:req.cookies.companyId });
+
+  // Delete the AssetType
+  const assetType = await AssetType.findByIdAndDelete({id:req.params.id,company:req.cookies.companyId});
+  if (!assetType) {
+      return next(new AppError('AssetType not found', 404));
+  }
+
+  res.status(204).json({
+      status: 'success',
+      data: null
+  });
 });
 
 exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
-    const assetTypes = await AssetType.find();
+    const assetTypes = await AssetType.find({company:req.cookies.companyId});    
+    const allAssetTypes = await Promise.all(assetTypes.map(async asset => {
+      const assetObj = asset.toObject(); // Convert to plain JS object
+      const customAttributes = await CustomAttribute.find({assetType:asset.id,company:req.cookies.companyId});
+      assetObj.customAttributes = customAttributes;      
+      return assetObj;
+  }));
+
+  console.log(allAssetTypes);
+  
     res.status(200).json({
         status: 'success',
-        data: assetTypes
+        data: allAssetTypes
     });
 });
 
@@ -415,7 +436,8 @@ exports.getVendor = catchAsync(async (req, res, next) => {
 });
 
 exports.updateVendor = catchAsync(async (req, res, next) => {
-    const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, {
+    
+  const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
     });

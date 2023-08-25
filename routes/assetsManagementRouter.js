@@ -1,5 +1,5 @@
 const express = require('express');
-const assetsManagementController = require('../controllers/assetsManagementController');
+const assetsManagementController = require(`../controllers/assetsManagementController`);
 const assetsManagementRouter = express.Router();
 
 // AssetType routes
@@ -58,7 +58,7 @@ assetsManagementRouter.post('/assetTypes', assetsManagementController.addAssetTy
  *       500:
  *         description: Internal server error
  */
-assetsManagementRouter.get('/assetTypes/:id', assetsManagementController.getAssetType);
+assetsManagementRouter.get('/assetTypes/:id', assetsManagementController.getAssetTypes);
 
 /**
  * @swagger
@@ -122,7 +122,7 @@ assetsManagementRouter.delete('/assetTypes/:id', assetsManagementController.dele
 
 /**
  * @swagger
- * /api/v1/assetsManagement/assetTypes:
+ * /api/v1/assetsManagement/allAssetTypes:
  *   get:
  *     summary: Get all assetTypes
  *     tags: [Assets Management]
@@ -132,7 +132,7 @@ assetsManagementRouter.delete('/assetTypes/:id', assetsManagementController.dele
  *       500:
  *         description: Internal server error
  */
-assetsManagementRouter.get('/assetTypes', assetsManagementController.getAllAssetTypes);
+assetsManagementRouter.get('/allAssetTypes', assetsManagementController.getAllAssetTypes);
 
 // AssetAttributeValue routes
 

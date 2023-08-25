@@ -393,8 +393,9 @@ exports.getDayWorkStatusByUser = catchAsync(async (req, res, next) => {
     results.push({
       id:log._id,
       task:{id:log.task.id,taskName:log.task.taskName},
-      project:{id:log.project.id,projectName:log.project.projectName},      
+      project:{id:log.project?.id,projectName:log.project?.projectName},      
     });
+    
     });
     
     const result = groupByProjectAndCountTasks(results);
