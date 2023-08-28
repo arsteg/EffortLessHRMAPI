@@ -725,7 +725,7 @@ assetsManagementRouter.put('/customAttributes/:id', assetsManagementController.u
 
 /**
  * @swagger
- * /api/v1/assetsManagement/customAttributes/{id}:
+ * /api/v1/assetsManagement/customAttribute/{id}:
  *   delete:
  *     summary: Delete a CustomAttribute by ID
  *     tags: [Assets Management]
@@ -744,7 +744,30 @@ assetsManagementRouter.put('/customAttributes/:id', assetsManagementController.u
  *       500:
  *         description: Internal server error
  */
-assetsManagementRouter.delete('/customAttributes/:id', assetsManagementController.deleteCustomAttribute);
+assetsManagementRouter.delete('/customAttribute/:id', assetsManagementController.deleteCustomAttribute);
+
+/**
+ * @swagger
+ * /api/v1/assetsManagement/customAttributes/{assetTypeId}:
+ *   delete:
+ *     summary: Delete a CustomAttribute by asset Type
+ *     tags: [Assets Management]
+ *     parameters:
+ *       - in: path
+ *         name: assetTypeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the CustomAttribute
+ *     responses:
+ *       204:
+ *         description: CustomAttribute successfully deleted
+ *       404:
+ *         description: CustomAttribute not found
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.delete('/customAttributes/:assetTypeId', assetsManagementController.deleteCustomAttributeByAssetType);
 
 /**
  * @swagger
@@ -759,6 +782,56 @@ assetsManagementRouter.delete('/customAttributes/:id', assetsManagementControlle
  *         description: Internal server error
  */
 assetsManagementRouter.get('/customAttributes', assetsManagementController.getAllCustomAttributes);
+
+// Existing code...
+
+// Route to add multiple CustomAttributes to an existing AssetType
+/**
+ * @swagger
+ * /api/v1/assetsManagement/assetTypes/{id}/customAttributes:
+ *   post:
+ *     summary: Add multiple customAttributes to an existing assetType
+ *     tags: [Assets Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the assetType
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 attributeName:
+ *                   type: string
+ *                   description: Name of the attribute
+ *                 assetType:
+ *                   type: string
+ *                   description: Type of the asset
+ *                 description:
+ *                   type: string
+ *                   description: Description of the custom attribute
+ *                 dataType:
+ *                   type: string
+ *                   description: Data type of the custom attribute
+ *                 isRequired:
+ *                   type: boolean
+ *                   description: Indicator if the attribute is required
+ *     responses:
+ *       200:
+ *         description: Successfully added customAttributes
+ *       404:
+ *         description: AssetType not found
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.post('/assetTypes/:id/customAttributes', assetsManagementController.addCustomAttributes);
+
 
 /**
  * @swagger

@@ -9,11 +9,20 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.addAssetType = catchAsync(async (req, res, next) => {    
-  req.body.company = req.cookies.companyId;
-  const assetType = await AssetType.create(req.body);
-    res.status(201).json({
+  
+  const response = new AssetType({
+    typeName: req.body.typeName,
+    description: req.body.description,
+    company : req.cookies.companyId
+});
+
+response.save((err, savedAssetType) => {
+    if (err) return console.error(err);
+    console.log(savedAssetType);
+});
+  res.status(201).json({
         status: 'success',
-        data: assetType
+        data: response
     });
 });
 
@@ -28,8 +37,8 @@ exports.getAssetTypes = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.updateAssetType = catchAsync(async (req, res, next) => {
-    const assetType = await AssetType.findByIdAndUpdate(req.params.id, req.body, {
+exports.updateAssetType = catchAsync(async (req, res, next) => {    
+  const assetType = await AssetType.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
     });
@@ -52,8 +61,11 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
   // If no assets reference the AssetType, delete all CustomAttributes related to that AssetType
   await CustomAttribute.deleteMany({ assetType: req.params.id,company:req.cookies.companyId });
 
-  // Delete the AssetType
-  const assetType = await AssetType.findByIdAndDelete({id:req.params.id,company:req.cookies.companyId});
+  // Delete the AssetType 
+
+  const assetType = await AssetType.findOneAndDelete({ _id: req.params.id, company: req.cookies.companyId });
+
+
   if (!assetType) {
       return next(new AppError('AssetType not found', 404));
   }
@@ -338,6 +350,19 @@ exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
     });
 });
 
+exports.deleteCustomAttributeByAssetType = catchAsync(async (req, res, next) => {
+  const customAttributes = await CustomAttribute.deleteMany({assetType:req.params.assetTypeId,company:req.cookies.companyId});
+
+  if (!customAttributes) {
+      return next(new AppError('CustomAttribute not found', 404));
+  }
+
+  res.status(204).json({
+      status: 'success',
+      data: customAttributes
+  });
+});
+
 exports.getAllCustomAttributes = catchAsync(async (req, res, next) => {
     const customAttributes = await CustomAttribute.find();
     res.status(200).json({
@@ -345,6 +370,29 @@ exports.getAllCustomAttributes = catchAsync(async (req, res, next) => {
         data: customAttributes
     });
 });
+
+exports.addCustomAttributes = catchAsync(async (req, res, next) => {
+  const assetType = await AssetType.findById(req.params.id);
+  if (!assetType) {
+      return next(new AppError('AssetType not found', 404));
+  }
+
+  const arrayCostomAttributes = req.body;
+  
+  arrayCostomAttributes.forEach(element => {
+    element.company = req.cookies.companyId;
+    element.assetType = req.params.id;
+  });
+
+  // Assuming req.body is an array of CustomAttribute objects 
+  const addedCustomAttributes = await CustomAttribute.insertMany(arrayCostomAttributes);   
+
+  res.status(200).json({
+      status: 'success',
+      data: addedCustomAttributes
+  });
+});
+
 
 exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
     const employeeAsset = await EmployeeAssets.create(req.body);
