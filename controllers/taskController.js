@@ -15,6 +15,7 @@ const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 const htmlToText = require('html-to-text').htmlToText;
 const { ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
 const notification  = require('../controllers/notficationController');
 
 // AZURE STORAGE CONNECTION DETAILS
@@ -970,7 +971,7 @@ exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
 
-  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId );
+  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId);
   // Extract the task ids from the tasks found in the previous step
   const taskIdsWithProjectId = tasksWithProjectId.map((task) => task._id);
   // Step 2: Find TaskUser documents that have the task ids from Step 1
