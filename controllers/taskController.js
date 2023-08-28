@@ -368,14 +368,10 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   });
 });
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
-  var teamIdsArray = [];
-  var teamIds;
- 
-  if(teamIds==null)    
-    {
-       teamIdsArray.push(req.body.userId);
-    } 
-    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+  const teamIdsArray = [req.body.userId];
+  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+
+    //const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
 
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
@@ -453,7 +449,6 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     },
   ]);
   // Execute the aggregation query and await the result
-  const taskUserResults = await taskUserQuery.exec();
   const taskCountResult = await taskCountQuery.exec();
   
  // const taskUserQuery = TaskUser.find({ user:  { $in: teamIdsArray }, task: { $exists: true } })
@@ -468,12 +463,9 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i]){        
-      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber parentTask');    
+      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate comment priority status taskNumber parentTask');    
       if(task)
-      { 
-        task.description = htmlToText(task.description, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
+      {        
         task.comment = htmlToText(task.comment, {
           wordwrap: 130 // Set the desired word wrap length
         });
