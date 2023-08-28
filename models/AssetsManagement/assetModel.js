@@ -1,12 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var assetSchema = new Schema({
-  assetId: {
-    type: String,
-    required: true,
-    unique: true  // Assuming you want each assetId to be unique
-  },
+var assetSchema = new Schema({  
   assetType: {
     type: mongoose.Schema.ObjectId,
     ref: 'AssetType',  // Assuming the reference is to an AssetType schema
@@ -26,22 +21,13 @@ var assetSchema = new Schema({
     required: true
   },
   warrantyExpiry: {
-    type: Date,
-    required: true
+    type: Date    
   },
   status: {
     type: mongoose.Schema.ObjectId,
     ref: 'AssetStatus',  // Assuming the reference is to an AssetStatus schema
     required: true
-  },
-  serialNumber: {
-    type: String,
-    required: true
-  },
-  cost: {
-    type: Number,
-    required: true
-  },
+  },    
   image: {
     type: String    
   }

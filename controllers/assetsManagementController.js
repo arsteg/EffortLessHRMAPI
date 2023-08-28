@@ -5,6 +5,7 @@ const Vendor = require('../models/AssetsManagement/vendorModel');
 const VendorAssetsPurchased = require("../models/AssetsManagement/vendorAssetsPurchasedModel");
 const CustomAttribute = require("../models/AssetsManagement/CustomAttributeModel");
 const Asset = require("../models/AssetsManagement/assetModel");
+const EmployeeAssets = require("../models/AssetsManagement/employeeAssetsModel");
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -402,8 +403,8 @@ exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
-    const employeeAsset = await EmployeeAssets.findById(req.params.id);
+exports.getEmployeeAsset = catchAsync(async (req, res, next) => {   
+    const employeeAsset = await EmployeeAssets.find({employee: req.params.id}).populate('Asset');
     if (!employeeAsset) {
         return next(new AppError('EmployeeAsset not found', 404));
     }
@@ -430,8 +431,7 @@ exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteEmployeeAsset = catchAsync(async (req, res, next) => {
-    const employeeAsset = await EmployeeAssets.findByIdAndDelete(req.params.id);
-
+    const employeeAsset = await EmployeeAssets.findOneAndDelete({Employee:req.params.employeeId,Asset:req.params.assetId});
     if (!employeeAsset) {
         return next(new AppError('EmployeeAsset not found', 404));
     }
@@ -573,6 +573,7 @@ exports.getAllVendorAssets = catchAsync(async (req, res, next) => {
 });
 
 exports.addAsset = catchAsync(async (req, res, next) => {
+  req.body.company = req.cookies.companyId;
   const asset = await Asset.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -623,3 +624,28 @@ exports.getAllAssets = catchAsync(async (req, res, next) => {
     data: assets
   });
 });
+
+exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  // Find assets assigned to the given user
+  const assignedAssetsForUser = await EmployeeAssets.find({ Employee: userId });
+
+  console.log(`assignedAssetsForUser:`+ assignedAssetsForUser.length);
+
+  // Extract asset IDs from the result
+  const assignedAssetIds = assignedAssetsForUser.map(item => item.Asset);
+
+  console.log(`assignedAssetIds:`+assignedAssetIds);
+
+  // Find all assets that are NOT in the list of assigned assets for the user
+  const unassignedAssets = await Asset.find({
+    _id: { $nin: assignedAssetIds },company:req.cookies.companyId
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: unassignedAssets
+  });
+});
+

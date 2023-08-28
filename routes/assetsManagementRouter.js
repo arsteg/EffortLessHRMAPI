@@ -923,17 +923,23 @@ assetsManagementRouter.put('/employeeAssets/:id', assetsManagementController.upd
 
 /**
  * @swagger
- * /api/v1/assetsManagement/employeeAssets/{id}:
+ * /api/v1/assetsManagement/employeeAssets/{employeeId}:/{assetId}:
  *   delete:
  *     summary: Delete a employeeAsset by ID
  *     tags: [Assets Management]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: employeeId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the employeeAsset
+ *         description: ID of the employee
+ *       - in: path
+ *         name: assetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the asset
  *     responses:
  *       204:
  *         description: EmployeeAsset successfully deleted
@@ -942,7 +948,7 @@ assetsManagementRouter.put('/employeeAssets/:id', assetsManagementController.upd
  *       500:
  *         description: Internal server error
  */
-assetsManagementRouter.delete('/employeeAssets/:id', assetsManagementController.deleteEmployeeAsset);
+assetsManagementRouter.delete('/employeeAssets/:employeeId/:assetId', assetsManagementController.deleteEmployeeAsset);
 
 /**
  * @swagger
@@ -1312,6 +1318,28 @@ assetsManagementRouter.delete('/assets/:id', assetsManagementController.deleteAs
  */
 assetsManagementRouter.get('/assets', assetsManagementController.getAllAssets);
 
+/**
+ * @swagger
+ * /api/v1/assetsManagement/unassignedAssets/{userId}:
+ *   get:
+ *     summary: Get unassigned assets for a specific user
+ *     tags: [Assets Management]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         description: ID of the user to get unassigned assets for
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with unassigned assets for the user
+ *       400:
+ *         description: Bad request (e.g. invalid user ID)
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.get('/unassignedAssets/:userId', assetsManagementController.getUnassignedAssetsForUser);
 
 module.exports = assetsManagementRouter;
 
