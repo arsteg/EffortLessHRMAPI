@@ -15,6 +15,7 @@ const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 const htmlToText = require('html-to-text').htmlToText;
 const { ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
 const notification  = require('../controllers/notficationController');
 
 // AZURE STORAGE CONNECTION DETAILS
@@ -367,14 +368,10 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   });
 });
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
-  var teamIdsArray = [];
-  var teamIds;
- 
-  if(teamIds==null)    
-    {
-       teamIdsArray.push(req.body.userId);
-    } 
-    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+  const teamIdsArray = [req.body.userId];
+  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+
+    //const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
 
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
@@ -452,7 +449,6 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     },
   ]);
   // Execute the aggregation query and await the result
-  const taskUserResults = await taskUserQuery.exec();
   const taskCountResult = await taskCountQuery.exec();
   
  // const taskUserQuery = TaskUser.find({ user:  { $in: teamIdsArray }, task: { $exists: true } })
@@ -467,12 +463,9 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
    
    for(var i = 0; i < taskUserList.length; i++) {
       if(taskUserList[i]){        
-      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber parentTask');    
+      const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate comment priority status taskNumber parentTask');    
       if(task)
-      { 
-        task.description = htmlToText(task.description, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
+      {        
         task.comment = htmlToText(task.comment, {
           wordwrap: 130 // Set the desired word wrap length
         });
@@ -970,7 +963,7 @@ exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
 
-  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId );
+  const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId);
   // Extract the task ids from the tasks found in the previous step
   const taskIdsWithProjectId = tasksWithProjectId.map((task) => task._id);
   // Step 2: Find TaskUser documents that have the task ids from Step 1
