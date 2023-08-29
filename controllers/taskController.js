@@ -911,23 +911,39 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
 });
 
 
-exports.getTaskListByProject = catchAsync(async (req, res, next) => {    
-  const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.params.projectId).skip(req.body.skip).limit(req.body.next); ;  
-  const taskCount = await Task.countDocuments({ "company": req.cookies.companyId ,"project": req.params.projectId });
-  if(taskList)
-  {
-   for(var i = 0; i < taskList.length; i++) {
-   const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id);  
-   if(taskUser) 
-      {
-        taskList[i].TaskUsers=taskUser;
+exports.getTaskListByProject = catchAsync(async (req, res, next) => { 
+  // Fetch tasks for the company and project first 
+  const tasksForProject = await Task.find({})
+    .where('company').equals(req.cookies.companyId)
+    .where('project').equals(req.params.projectId)
+    .skip(req.body.skip)
+    .limit(req.body.next);
+  
+  // Get task IDs for the specified user
+  const userTaskIds = (await TaskUser.find({})
+    .where('userId').equals(req.body.userId))
+    .map(taskUser => taskUser.task);
+
+  // Filter tasksForProject using userTaskIds
+  const taskList = tasksForProject.filter(task => userTaskIds.includes(task._id.toString()));
+
+  const taskCount = userTaskIds.length;
+
+  if(taskList) {
+    for(var i = 0; i < taskList.length; i++) {
+      const taskUser = await TaskUser.find({})
+        .where('task').equals(taskList[i]._id)
+        .where('userId').equals(req.body.userId);  // Filter for user
+
+      if(taskUser && taskUser.length) {
+        taskList[i].TaskUsers = taskUser;
+      } else {
+        taskList[i].TaskUsers = null;
       }
-      else{
-        taskList[i].TaskUsers=null;
-      }
-   }
+    }
   }
-   res.status(200).json({
+
+  res.status(200).json({
     status: 'success',
     data: {
       taskList: taskList,
@@ -935,6 +951,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
     }
   });  
 });
+
 
 exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {    
   const taskList = await Task.find({}).where('parentTask').equals(req.params.taskId); 
