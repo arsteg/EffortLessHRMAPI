@@ -221,7 +221,7 @@ exports.getProductivityByMember = catchAsync(async (req, res, next) => {
             scrollingNumber=scrollingNumber+appWebsites[i].scrollingNumber; 
             inactive=inactive+appWebsites[i].inactive;                  
          }
-      totalTimeSpent = appWebsites.length*10;  
+    totalTimeSpent = appWebsites.length*10;  
     appWebsiteSummary.mouseClicks=mouseClicks;
     appWebsiteSummary.keyboardStrokes=keyboardStrokes;
     appWebsiteSummary.scrollingNumber=scrollingNumber;                 
@@ -274,7 +274,7 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
   var toDate = req.body.todate;
   if(req.body.fromdate===req.body.todate)
   {
-    toDate = new Date(new Date( req.body.todate).setDate(new Date( req.body.todate).getDate() + 1));                      
+    toDate = new Date(new Date(req.body.todate).setDate(new Date( req.body.todate).getDate() + 1));                      
     console.log(toDate);
   }
  var teamIds='';
@@ -325,6 +325,8 @@ for(var u = 0; u < appwebsiteusers.length; u++)
       appWebsiteSummary.scrollingNumber = scrollingNumber;                 
       appWebsiteSummary.TimeSpent = totalTimeSpent; 
       appWebsiteSummary.inactive = inactive; 
+      appWebsiteSummary.date=appWebsites[0].date;
+       
       const appWebsitename = await AppWebsite.find(filterdate).where('userReference').equals(appwebsiteusers[u]._id).distinct('appWebsite');                               
       if(appWebsitename.length>0) 
         {
@@ -366,11 +368,11 @@ for(var u = 0; u < appwebsiteusers.length; u++)
                 appWebsite.name=appWebsitename[c];             
                 appwebsiteDetails.push(appWebsite);
              }
+           
        }
            
      appWebsiteSummary.appwebsiteDetails=appwebsiteDetails;
      appWebsiteSummary.total = appWebsiteSummary.TimeSpent+appWebsiteSummary.inactive;   
-     appWebsiteSummary.dateOfJoining=appWebsites[0].userReference.createdOn;
      appWebsiteSummary.timeSpentProductive=timeSpentProductive;
      appWebsiteSummary.timeSpentNonProductive=timeSpentNonProductive;     
      appwebsiteproductivity.push(appWebsiteSummary);
