@@ -332,12 +332,14 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
 
 exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {  
   
-  const userTasks = await TaskUsers.find({user: mongoose.Types.ObjectId(req.query.userId)});  
+  const userTasks = (await TaskUsers.find({user: mongoose.Types.ObjectId(req.query.userId)}).populate('task'));  
   let todo = 0;
   let inProgress = 0;
   let done = 0;
   let closed = 0;
+  console.log(userTasks);
   userTasks.forEach(task=>{    
+   
     switch(task?.task?.status?.toUpperCase()){
       case 'TODO':
         todo++;
