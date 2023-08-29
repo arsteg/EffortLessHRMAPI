@@ -975,7 +975,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
   });  
 });
 
-exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
+exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   var taskList = [];
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
@@ -1017,63 +1017,6 @@ exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   });  
 });
 
-exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-
-  const pipeline = [
-    // Match tasks by project ID
-    {
-      $match: {
-        project: mongoose.Types.ObjectId(req.body.projectId)
-      }
-    },
-    // Lookup TaskUser documents for the user
-    {
-      $lookup: {
-        from: 'taskusers',
-        let: { taskId: '$_id' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ['$user', mongoose.Types.ObjectId(req.body.userId)] },
-                  { $eq: ['$task', '$$taskId'] }
-                ]
-              }
-            }
-          }
-        ],
-        as: 'taskUsers'
-      }
-    },
-    // Skip and limit results
-    { $skip: skip },
-    { $limit: limit }
-  ];
-
-  const taskList = await Task.aggregate(pipeline);
-  
-  const taskCountPipeline = [
-    // Match tasks by project ID
-    {
-      $match: {
-        project: mongoose.Types.ObjectId(req.body.projectId)
-      }
-    },
-    // Count matched tasks
-    { $count: 'count' }
-  ];
-
-  const [taskCountResult] = await Task.aggregate(taskCountPipeline);
-
-  res.status(200).json({
-    status: 'success',
-    taskList: taskList,
-    taskCount: taskCountResult ? taskCountResult.count : 0
-  });
-});
 
 //Tag management
 exports.addTag = catchAsync(async (req, res, next) => {  
