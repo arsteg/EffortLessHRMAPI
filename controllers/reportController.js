@@ -662,7 +662,11 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                       for(var day = 0;day <= days; day++)
                       {                 
                         var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
-                        var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));                      
+                        var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate()));    
+                        if(req.body.fromdate===req.body.todate)
+                        {
+                        var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));    
+                        }                  
                         let filterAll = {'user': users[i],'project':projects[k],'date' : {'$gte': tomorrow,'$lte': end}};                  
                         const timeLogAll = await TimeLog.find(filterAll);                
                         if(timeLogAll.length>0)    
