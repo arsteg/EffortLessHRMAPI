@@ -1212,12 +1212,31 @@ assetsManagementRouter.get('/vendorAssets', assetsManagementController.getAllVen
  *     summary: Add a new asset
  *     tags: [Assets Management]
  *     requestBody:
- *       description: Asset details
+ *       description: VendorAsset details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/definitions/Asset'
+ *             type: object
+ *             properties:
+ *               assetType:
+ *                 type: string
+ *                 required: true
+ *               assetName:
+ *                 type: string
+ *                 required: true
+ *               purchaseDate:
+ *                 type: string
+ *                 format: date 
+ *               warrantyExpiry:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 required: true 
+ *               image:
+ *                 type: string
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Asset successfully added
@@ -1317,6 +1336,27 @@ assetsManagementRouter.delete('/assets/:id', assetsManagementController.deleteAs
  *         description: Internal server error
  */
 assetsManagementRouter.get('/assets', assetsManagementController.getAllAssets);
+
+/**
+ * @swagger
+ * /api/v1/assetsManagement/assetsByType/{assetType}:
+ *   get:
+ *     summary: Get all assets
+ *     tags: [Assets Management]
+*     parameters:
+ *       - name: assetType
+ *         in: path
+ *         description: assetType ID
+ *         required: true
+ *         schema:
+ *           type: string 
+*     responses:
+ *       200:
+ *         description: Successful response with assets
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.get('/assetsByType/:assetType', assetsManagementController.getAllAssetsByAssetTpe);
 
 /**
  * @swagger
