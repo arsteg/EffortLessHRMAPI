@@ -177,7 +177,6 @@ if(req.body.users!='' && req.body.projects!='')
       matrix[userId] = results
         .filter(result => result._id.user.toString() === userId)
         .map(result => {
-          console.log(result);
           const row = [result._id.project,result._id.task];
           dates.forEach(date => {
             const timeSpent = result.timeSpent.find(t => t.date === date);
@@ -275,7 +274,7 @@ exports.getProductivity = catchAsync(async (req, res, next) => {
   if(req.body.fromdate===req.body.todate)
   {
     toDate = new Date(new Date(req.body.todate).setDate(new Date( req.body.todate).getDate() + 1));                      
-    console.log(toDate);
+   
   }
  var teamIds='';
  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
@@ -339,11 +338,18 @@ for(var u = 0; u < appwebsiteusers.length; u++)
                 const appIsProductive = await Productivity.find(filterforproductivity);  
                 if(appIsProductive.length>0)
                 { 
-                    appWebsite.isProductive=appIsProductive[0].isProductive;
+                 if(appIsProductive[0].status==='approved')
+                  { 
+                       appWebsite.isProductive=true;
+                  }
+                  else
+                    {
+                      appWebsite.isProductive=false;
+                    }
                 } 
                 else
                 {
-                    appWebsite.isProductive="false";
+                    appWebsite.isProductive=false;
                 }
                 const appWebsitecount = await AppWebsite.find(filterforcount);  
                 if(appWebsitecount)
