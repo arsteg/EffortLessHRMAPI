@@ -158,6 +158,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
           // Assign a new id to the duplicated record (you can generate new id as you like)
           duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
           duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
+          duplicatedEmailTemplate.isDelete=false;
           return duplicatedEmailTemplate;
         });
         await EmailTemplate.insertMany(duplicatedEmailTemplateList);

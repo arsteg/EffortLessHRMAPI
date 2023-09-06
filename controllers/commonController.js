@@ -271,6 +271,7 @@ const htmlToText = require('html-to-text').htmlToText;
     newEmailTemplate.createdBy = req.cookies.userId;
     newEmailTemplate.updatedBy = req.cookies.userId;
     newEmailTemplate.company = req.cookies.companyId;
+    newEmailTemplate.isDelete=true;
     const result = await EmailTemplate.create(newEmailTemplate);
     res.status(200).json({
       status: 'success',
@@ -295,6 +296,9 @@ const htmlToText = require('html-to-text').htmlToText;
 
   exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {        
     const id = req.params.id;
+    const emailTemplate = await EmailTemplate.find({}).where('_id').equals(req.params.id).where('isDelete').equals(true); 
+    if (!emailTemplate) {
+    
     // Logic to delete an email template
     EmailTemplate.findByIdAndRemove(id)
       .then(() => {
@@ -302,7 +306,8 @@ const htmlToText = require('html-to-text').htmlToText;
       })
       .catch((error) => {
         res.status(500).json({ error: error.message });
-      });    
+      });   
+    } 
   });
 
   exports.getEmailTemplateById = catchAsync(async (req, res, next) => {        

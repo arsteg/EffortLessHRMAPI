@@ -1036,7 +1036,8 @@ router.delete('/TaskTag/:id', authController.protect, taskController.deleteTaskT
  *                              type: string
  *                              format: int64 
  *                          commentedAt:
- *                              type: Date
+ *                              type: string
+ *                              format: date
  *                          parent:
  *                              type: string
  *                              format: int64 

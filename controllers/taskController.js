@@ -1224,6 +1224,8 @@ exports.deleteTaskTagById = async (req, res) => {
 //Start Comment
 
 exports.createComment = catchAsync(async (req, res, next) => {    
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Comment Added Notification").where('company').equals(req.cookies.companyId); 
+ 
   const { content, author, task, commentedAt, parent, status, commentType } = req.body;
   // create a new Comment document
   const comment = new Comment({
@@ -1271,6 +1273,38 @@ exports.createComment = catchAsync(async (req, res, next) => {
     });  
   }
 }
+const contentNewUser = emailTemplate.contentData; 
+const plainTextContent = htmlToText(contentNewUser, {
+  wordwrap: 130 // Set the desired word wrap length
+});
+
+const newTaskUserList = await TaskUser.find({}).where('task').equals(newComment.task);  
+const currentTask = await Task.findById(newComment.task); 
+if(newTaskUserList)
+ {
+   for(var j = 0; j < newTaskUserList.length; j++) 
+   { 
+   const user = await User.findOne({ _id: newTaskUserList[j].user });        
+   if(user)
+   {
+        const emailTemplateNewUser = plainTextContent
+        .replace("{firstName}", user.firstName)    
+        .replace("{taskName}", currentTask.taskName)
+        .replace("{taskName1}", currentTask.taskName)
+        .replace("{date}", formatDateToDDMMYY(new Date()))
+        .replace("{company}", req.cookies.companyName)
+        .replace("{content}", newComment.content)
+        .replace("{author}", user.firstName+" "+user.lastName)
+        .replace("{lastName}", user.lastName);     
+        await sendEmail({
+              email: user.email,
+              subject:emailTemplate.Name,
+              message:emailTemplateNewUser
+            }); 
+       }     
+      
+      } 
+  }
   res.status(200).json({
     status: 'success',
     data: newComment

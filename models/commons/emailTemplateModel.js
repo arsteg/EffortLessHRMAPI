@@ -21,7 +21,7 @@ const emailTemplateSchema = new mongoose.Schema({
         type: Date,
         required: true    
       },
-      updatedOn: {
+     updatedOn: {
         type: Date,
         required: true    
       },  
@@ -33,10 +33,14 @@ const emailTemplateSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'//,        
       },
-      company: {
+     company: {
         type: mongoose.Schema.ObjectId,
         ref: 'Company',
         required: [true, 'Company must belong to a Company']
+      },  
+      isDelete: {
+        type: Boolean,
+        required: true    
       },    
 },{ collection: 'emailTemplate' })
 module.exports = mongoose.model("emailTemplate", emailTemplateSchema);
