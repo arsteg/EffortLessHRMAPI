@@ -1294,7 +1294,7 @@ if(newTaskUserList)
         .replace("{date}", formatDateToDDMMYY(new Date()))
         .replace("{company}", req.cookies.companyName)
         .replace("{content}", newComment.content)
-        .replace("{author}", user.firstName+" "+user.lastName)
+        .replace("{author}", user.firstName +" "+ user.lastName)
         .replace("{lastName}", user.lastName);     
         await sendEmail({
               email: user.email,
@@ -1351,7 +1351,41 @@ exports.updateComment = async (req, res) => {
 };
 
 exports.deleteComment = async (req, res) => {
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Comment Notification").where('company').equals(req.cookies.companyId); 
+  const comment = await Comment.findOne({ _id: req.params.id }); 
   try {
+     const contentNewUser = emailTemplate.contentData; 
+    const plainTextContent = htmlToText(contentNewUser, {
+      wordwrap: 130 // Set the desired word wrap length
+    });
+
+    const newTaskUserList = await TaskUser.find({}).where('task').equals(comment.task);  
+    const currentTask = await Task.findById(comment.task); 
+    if(newTaskUserList)
+    {
+      for(var j = 0; j < newTaskUserList.length; j++) 
+      { 
+          const user = await User.findOne({ _id: newTaskUserList[j].user });        
+          if(user)
+          {
+                const emailTemplateNewUser = plainTextContent
+                .replace("{firstName}", user.firstName)    
+                .replace("{taskName}", currentTask.taskName)
+                .replace("{taskName1}", currentTask.taskName)
+                .replace("{date}", formatDateToDDMMYY(new Date()))
+                .replace("{company}", req.cookies.companyName)
+                .replace("{content}", comment.content)
+                .replace("{author}", user.firstName +" "+ user.lastName)
+                .replace("{lastName}", user.lastName);     
+                await sendEmail({
+                      email: user.email,
+                      subject:emailTemplate.Name,
+                      message:emailTemplateNewUser
+                    }); 
+          }     
+          
+      } 
+    }
     console.log(`delete comment with id ${req.params.id}`);
     const result = await Comment.findByIdAndDelete(req.params.id);
     if(result){
