@@ -1,3 +1,8 @@
+var mongoose = require('mongoose');
+var AutoIncrement = require('mongoose-sequence')(mongoose);
+var Schema = mongoose.Schema;
+const validator = require('validator');
+
 var templateFieldsSchema = new Schema({
   tableName: {
     type: String
