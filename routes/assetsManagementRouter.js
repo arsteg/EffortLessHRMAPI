@@ -1284,12 +1284,31 @@ assetsManagementRouter.get('/assets/:id', assetsManagementController.getAsset);
  *           type: string
  *         description: ID of the asset
  *     requestBody:
- *       description: Updated asset details
+ *       description: VendorAsset details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/definitions/Asset'
+ *             type: object
+ *             properties:
+ *               assetType:
+ *                 type: string
+ *                 required: true
+ *               assetName:
+ *                 type: string
+ *                 required: true
+ *               purchaseDate:
+ *                 type: string
+ *                 format: date 
+ *               warrantyExpiry:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 required: true 
+ *               image:
+ *                 type: string
+ *                 required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated asset
