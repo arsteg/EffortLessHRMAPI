@@ -103,6 +103,34 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       new: false,
       runValidators: true
   });
+  console.log(updateUserPreference);
+  if(!updateUserPreference)
+  {
+      let startTime = moment(req.body.fromDate).toDate();
+      const endTime = moment(req.body.toDate).toDate();  
+      let recordCount=0;  
+      let result=[];
+      while( startTime<endTime){   
+        var newLog = {
+          user: updateUserPreference.user,
+          task: updateUserPreference.task,
+          project:updateUserPreference.project,
+          date : req.body.fromdate,
+          startTime: startTime,
+          endTime:moment(startTime).add(10, 'm').toDate(),     
+          keysPressed:0,
+          clicks:0,
+          scrolls:0,
+          filePath:"",     
+          ismanualTime:true
+        }
+        let logItem = await TimeLog.create(newLog);
+        result.push(logItem);
+        recordCount++;  
+        startTime = moment(startTime).add(10, 'm').toDate();      
+      }
+    }     
+  
     res.status(200).json({
         status: 'success',
         data: updateUserPreference
