@@ -47,10 +47,8 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
       if(user)
       {
         const contentNewUser = emailTemplate.contentData; 
-          const plainTextContent = htmlToText(contentNewUser, {
-            wordwrap: 130 // Set the desired word wrap length
-          });
-        const emailTemplateNewUser = plainTextContent
+        
+        const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", user.firstName)    
           .replace("{taskName}", task.taskName)
           .replace("{date}", formatDateToDDMMYY(new Date()))
@@ -100,10 +98,8 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
    {  
   const user = await User.findOne({ _id: newTaskUserList[0].user });     
   const contentNewUser = emailTemplate.contentData; 
-  const plainTextContent = htmlToText(contentNewUser, {
-    wordwrap: 130 // Set the desired word wrap length
-  });
-  const emailTemplateNewUser = plainTextContent
+
+  const emailTemplateNewUser = contentNewUser
   .replace("{firstName}", user.firstName)
     .replace("{taskName}", task.taskName)
     .replace("{date}", formatDateToDDMMYY(new Date()))
@@ -154,10 +150,8 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
      {  
     const user = await User.findOne({ _id: newTaskUserList[0].user });     
     const contentNewUser = emailTemplate.contentData; 
-    const plainTextContent = htmlToText(contentNewUser, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
-    const emailTemplateNewUser = plainTextContent
+    
+    const emailTemplateNewUser = contentNewUser
     .replace("{firstName}", user.firstName)
       .replace("{taskName}", task.taskName)
       .replace("{date}", formatDateToDDMMYY(new Date()))
@@ -617,10 +611,8 @@ if(taskList)
       const newUser = await User.findOne({ _id: newTaskUserItem.user });   
       const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
       const contentNewUser = templateNewUser.contentData; 
-      const plainTextContent = htmlToText(contentNewUser, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
-     const emailTemplateNewUser = plainTextContent
+     
+     const emailTemplateNewUser = contentNewUser
      .replace("{firstName}", newUser.firstName)
      .replace("{startDate}", newTask.startDate)
      .replace("{endDate}", newTask.endDate)
@@ -723,11 +715,8 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     { 
        const oldUser = await User.findOne({ _id:emailOldUser });         
         const templateOldUser = await EmailTemplate.findOne({}).where('Name').equals("Task Unassigned").where('company').equals(req.cookies.companyId);   
-        const contentOldUser = templateOldUser.contentData; 
-        const plainTextContent = htmlToText(contentOldUser, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
-       const emailTemplateOldUser = plainTextContent
+        const contentOldUser = templateOldUser.contentData;        
+       const emailTemplateOldUser = contentOldUser
         .replace("{firstName}", oldUser.firstName)
         .replace("{startDate}", task.startDate)
         .replace("{endDate}", task.endDate)
@@ -747,10 +736,8 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         const newUser= await User.findOne({ _id: newTaskUserItem.user });   
         const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
         const contentNewUser = templateNewUser.contentData; 
-         const plainTextContent = htmlToText(contentNewUser, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
-        const emailTemplateNewUser = plainTextContent
+       
+        const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", newUser.firstName)
         .replace("{startDate}", task.startDate)
         .replace("{endDate}", task.endDate)
@@ -782,10 +769,8 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
   const task = await Task.findOne({ _id: taskUser.task });
   const user = await User.findOne({ _id: taskUser.user });
   const contentNewUser = emailTemplate.contentData; 
-      const plainTextContent = htmlToText(contentNewUser, {
-        wordwrap: 130 // Set the desired word wrap length
-      });
-     const emailTemplateNewUser = plainTextContent
+     
+     const emailTemplateNewUser = contentNewUser
      .replace("{firstName}", user.firstName)
      .replace("{startDate}", task.startDate)
      .replace("{endDate}", task.endDate)
@@ -1274,10 +1259,6 @@ exports.createComment = catchAsync(async (req, res, next) => {
   }
 }
 const contentNewUser = emailTemplate.contentData; 
-const plainTextContent = htmlToText(contentNewUser, {
-  wordwrap: 130 // Set the desired word wrap length
-});
-
 const newTaskUserList = await TaskUser.find({}).where('task').equals(newComment.task);  
 const currentTask = await Task.findById(newComment.task); 
 if(newTaskUserList)
@@ -1287,7 +1268,7 @@ if(newTaskUserList)
    const user = await User.findOne({ _id: newTaskUserList[j].user });        
    if(user)
    {
-        const emailTemplateNewUser = plainTextContent
+        const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", user.firstName)    
         .replace("{taskName}", currentTask.taskName)
         .replace("{taskName1}", currentTask.taskName)

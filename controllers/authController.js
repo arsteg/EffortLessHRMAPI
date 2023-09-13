@@ -19,7 +19,6 @@ const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
-const htmlToText = require('html-to-text').htmlToText;
 
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -190,10 +189,8 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(companyId); 
   console.log(newUser);
   const template = emailTemplate.contentData;
-  const plainTextContent = htmlToText(template, {
-    wordwrap: 130 // Set the desired word wrap length
-  });
-  const message = plainTextContent
+ 
+  const message = template
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
   .replace("{company}",  req.cookies.companyName)
@@ -243,11 +240,8 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
 
   const template = emailTemplate.contentData; 
-  const plainTextContent = htmlToText(template, {
-    wordwrap: 130 // Set the desired word wrap length
-  });
-  console.log(newUser);
-  const message = plainTextContent
+ 
+  const message = template
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
   .replace("{company}", req.cookies.companyName)
@@ -374,10 +368,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Forgot Password").where('company').equals(companyId); 
 
   const template = emailTemplate.contentData; 
-  const plainTextContent = htmlToText(template, {
-    wordwrap: 130 // Set the desired word wrap length
-  });
-  const message = plainTextContent  
+  
+  const message = template  
   .replace("{firstName}", user.firstName)
   .replace("{url}", resetURL)
   .replace("{lastName}", user.lastName);

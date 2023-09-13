@@ -7,7 +7,7 @@ const RolePerms = require('../models/rolePermsModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
-const htmlToText = require('html-to-text').htmlToText;
+
  // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -317,13 +317,7 @@ const htmlToText = require('html-to-text').htmlToText;
       if (!emailTemplate) {
         return res.status(404).json({ error: 'Email template not found' });
       }   
-      else{
-       // const plainTextContent = emailTemplate[0].contentData;  
-        //emailTemplate[0].contentData = htmlToText(plainTextContent, {
-         // wordwrap: 130 // Set the desired word wrap length
-        //});
-      }
-       res.status(200).json(emailTemplate);
+        res.status(200).json(emailTemplate);
     } catch (error) {
      res.status(500).json({ error: 'Server error' });
     }
@@ -334,12 +328,6 @@ const htmlToText = require('html-to-text').htmlToText;
     try {
       const { companyId } = req.cookies.companyId;    
       const emailTemplates = await EmailTemplate.find({}).where('company').equals(req.cookies.companyId);  
-      /*for(var i = 0; i < emailTemplates.length; i++) {
-        const plainTextContent = emailTemplates[i].contentData;        
-        emailTemplates[i].contentData = htmlToText(plainTextContent, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
-      }*/
       res.status(200).json(emailTemplates);
     } catch (error) {
       res.status(500).json({ error: 'Server error' });

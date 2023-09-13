@@ -8,7 +8,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     from: 'hrmeffortless@gmail.com',
     to: options.email,
     subject: options.subject,
-    text: options.message
+    html: options.message
 }
   // 2) Actually send the email
  try {
