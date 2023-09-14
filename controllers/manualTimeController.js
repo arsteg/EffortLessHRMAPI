@@ -131,7 +131,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
           clicks:0,
           scrolls:0,
           filePath:"",     
-          ismanualTime:true
+          isManualTime:true
         }
         console.log(newLog);
         let logItem = await TimeLog.create(newLog);
