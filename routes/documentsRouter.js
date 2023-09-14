@@ -423,7 +423,7 @@ documentsRouter.post('/', documentsController.createDocument);
 
 /**
  * @swagger
- * /api/v1/documents/{id}:
+ * /api/v1/documents/document{id}:
  *   get:
  *     summary: Get a Document by ID
  *     tags: [Documents management]
@@ -442,7 +442,7 @@ documentsRouter.post('/', documentsController.createDocument);
  *       500:
  *         description: Internal server error
  */
-documentsRouter.get('/:id', documentsController.getDocument);
+documentsRouter.get('document/:id', documentsController.getDocument);
 
 /**
  * @swagger
@@ -895,39 +895,39 @@ documentsRouter.get('/documentUsers', documentsController.getAllDocumentUsers);
 
 /**
  * @swagger
- * /api/v1/documents/templateFields:
+ * /api/v1/documents/template:
  *   post:
- *     summary: Add a TemplateFields
+ *     summary: Add a Template
  *     tags: [Documents management]
  *     requestBody:
- *       description: TemplateFields details
+ *       description: Template details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               tableName:
+ *               name:
  *                 type: string
- *               fieldName:
+ *               content:
  *                 type: string
- *               company:
+ *               active:
  *                 type: string
  *     responses:
  *       201:
- *         description: TemplateFields successfully added
+ *         description: Template successfully added
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-documentsRouter.post('/templateFields', documentsController.addTemplateFields);
+documentsRouter.post('/template', documentsController.addTemplate);
 
 /**
  * @swagger
- * /api/v1/documents/templateFields/{id}:
+ * /api/v1/documents/template/{id}:
  *   get:
- *     summary: Get a TemplateFields by ID
+ *     summary: Get a Template by ID
  *     tags: [Documents management]
  *     parameters:
  *       - in: path
@@ -935,22 +935,22 @@ documentsRouter.post('/templateFields', documentsController.addTemplateFields);
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the TemplateFields
+ *         description: ID of the Template
  *     responses:
  *       200:
- *         description: Successful response with the TemplateFields
+ *         description: Successful response with the Template
  *       404:
- *         description: TemplateFields not found
+ *         description: Template not found
  *       500:
  *         description: Internal server error
  */
-documentsRouter.get('/templateFields/:id', documentsController.getTemplateFields);
+documentsRouter.get('/template/:id', documentsController.getTemplate);
 
 /**
  * @swagger
- * /api/v1/documents/templateFields/{id}:
+ * /api/v1/documents/template/{id}:
  *   put:
- *     summary: Update a TemplateFields by ID
+ *     summary: Update a Template by ID
  *     tags: [Documents management]
  *     parameters:
  *       - in: path
@@ -958,36 +958,36 @@ documentsRouter.get('/templateFields/:id', documentsController.getTemplateFields
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the TemplateFields
+ *         description: ID of the Template
  *     requestBody:
- *       description: New TemplateFields details
+ *       description: New Template details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               tableName:
+ *               name:
  *                 type: string
- *               fieldName:
+ *               content:
  *                 type: string
- *               company:
- *                 type: string
+ *               active:
+ *                 type: boolean
  *     responses:
  *       200:
- *         description: Successful response with the updated TemplateFields
+ *         description: Successful response with the updated Template
  *       404:
- *         description: TemplateFields not found
+ *         description: Template not found
  *       500:
  *         description: Internal server error
  */
-documentsRouter.put('/templateFields/:id', documentsController.updateTemplateFields);
+documentsRouter.put('/template/:id', documentsController.updateTemplate);
 
 /**
  * @swagger
- * /api/v1/documents/templateFields/{id}:
+ * /api/v1/documents/template/{id}:
  *   delete:
- *     summary: Delete a TemplateFields by ID
+ *     summary: Delete a Template by ID
  *     tags: [Documents management]
  *     parameters:
  *       - in: path
@@ -995,20 +995,20 @@ documentsRouter.put('/templateFields/:id', documentsController.updateTemplateFie
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the TemplateFields
+ *         description: ID of the Template
  *     responses:
  *       204:
- *         description: TemplateFields successfully deleted
+ *         description: Template successfully deleted
  *       404:
- *         description: TemplateFields not found
+ *         description: Template not found
  *       500:
  *         description: Internal server error
  */
-documentsRouter.delete('/templateFields/:id', documentsController.deleteTemplateFields);
+documentsRouter.delete('/template/:id', documentsController.deleteTemplate);
 
 /**
  * @swagger
- * /api/v1/documents/templateFields:
+ * /api/v1/documents/template:
  *   get:
  *     summary: Get all TemplateFields
  *     tags: [Documents management]
@@ -1018,7 +1018,7 @@ documentsRouter.delete('/templateFields/:id', documentsController.deleteTemplate
  *       500:
  *         description: Internal server error
  */
-documentsRouter.get('/templateFields', documentsController.getAllTemplateFields);
+documentsRouter.get('/template', documentsController.getAllTemplates);
 
 /**
  * @swagger

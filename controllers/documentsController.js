@@ -8,7 +8,7 @@ const CompanyPolicyDocumentUser = require(`../models/documents/companyPolicyDocu
 const DocumentAppliedTo = require(`../models/documents/documentAppliedTo`);
 const DocumentCategory =  require(`../models/documents/documentCategory`);
 const DocumentUsers = require(`../models/documents/documentUsers`);
-const TemplateFields = require(`../models/documents/templateFields`);
+const Template = require(`../models/documents/template`);
 const UserDocuments = require(`../models/documents/userDocuments`);
 //CompanyPolicyDocument
 
@@ -389,43 +389,45 @@ exports.getAllDocumentUsers = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.addTemplateFields = catchAsync(async (req, res, next) => {
-  const templateFields = await TemplateFields.create(req.body);
+exports.addTemplate = catchAsync(async (req, res, next) => {
+  req.body.company = req.cookies.companyId;
+  console.log(req.body);
+  const template = await Template.create(req.body);
   res.status(201).json({
       status: 'success',
-      data: templateFields
+      data: template
   });
 });
 
-exports.getTemplateFields = catchAsync(async (req, res, next) => {
-  const templateFields = await TemplateFields.findById(req.params.id);
-  if (!templateFields) {
-      return next(new AppError('No TemplateFields found with that ID', 404));
+exports.getTemplate = catchAsync(async (req, res, next) => {
+  const template = await Template.findById(req.params.id);
+  if (!template) {
+      return next(new AppError('No Template found with that ID', 404));
   }
   res.status(200).json({
       status: 'success',
-      data: templateFields
+      data: template
   });
 });
 
-exports.updateTemplateFields = catchAsync(async (req, res, next) => {
-  const templateFields = await TemplateFields.findByIdAndUpdate(req.params.id, req.body, {
+exports.updateTemplate = catchAsync(async (req, res, next) => {
+  const template = await Template.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
   });
-  if (!templateFields) {
-      return next(new AppError('No TemplateFields found with that ID', 404));
+  if (!template) {
+      return next(new AppError('No Template found with that ID', 404));
   }
   res.status(200).json({
       status: 'success',
-      data: templateFields
+      data: template
   });
 });
 
-exports.deleteTemplateFields = catchAsync(async (req, res, next) => {
-  const templateFields = await TemplateFields.findByIdAndDelete(req.params.id);
-  if (!templateFields) {
-      return next(new AppError('No TemplateFields found with that ID', 404));
+exports.deleteTemplate = catchAsync(async (req, res, next) => {
+  const template = await Template.findByIdAndDelete(req.params.id);
+  if (!template) {
+      return next(new AppError('No Template found with that ID', 404));
   }
   res.status(204).json({
       status: 'success',
@@ -433,11 +435,11 @@ exports.deleteTemplateFields = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllTemplateFields = catchAsync(async (req, res, next) => {
-  const allTemplateFields = await TemplateFields.find();
+exports.getAllTemplates = catchAsync(async (req, res, next) => {
+  const allTemplates = await Template.find({company : req.cookies.companyId});
   res.status(200).json({
       status: 'success',
-      data: allTemplateFields
+      data: allTemplates
   });
 });
 
