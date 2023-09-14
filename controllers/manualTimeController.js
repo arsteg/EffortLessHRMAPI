@@ -99,13 +99,15 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       return next(new AppError(`Project is required.`, 404));
     }
     
-    const updateUserPreference = await manualTimeRequest.findByIdAndUpdate(req.body.id, req.body, {
+    const updatemanualTimeRequest = await manualTimeRequest.findByIdAndUpdate(req.body.id, req.body, {
       new: false,
       runValidators: true
   });
-  console.log(updateUserPreference);
-  if(!updateUserPreference)
+  console.log(updatemanualTimeRequest);
+  if(!updatemanualTimeRequest)
   {
+    if(updatemanualTimeRequest.status==='approved')
+    {
       let startTime = moment(req.body.fromDate).toDate();
       const endTime = moment(req.body.toDate).toDate();  
       let recordCount=0;  
@@ -129,7 +131,8 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
         recordCount++;  
         startTime = moment(startTime).add(10, 'm').toDate();      
       }
-    }     
+    }    
+  } 
   
     res.status(200).json({
         status: 'success',
