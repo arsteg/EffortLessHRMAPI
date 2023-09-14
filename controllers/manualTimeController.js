@@ -105,20 +105,26 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       runValidators: true
   });
   console.log(updatemanualTimeRequest);
-  if(!updatemanualTimeRequest)
+  if(updatemanualTimeRequest)
   {
-    if(updatemanualTimeRequest.status==='approved')
+    console.log("called1");
+    console.log(updatemanualTimeRequest.status);
+    if(req.body.status==='approved')
     {
+      console.log("called2");
       let startTime = moment(req.body.fromDate).toDate();
       const endTime = moment(req.body.toDate).toDate();  
       let recordCount=0;  
-     
+      console.log(startTime);
+      console.log(endTime);
+      
       while( startTime<endTime){   
+        console.log("called");
         var newLog = {
           user: updatemanualTimeRequest.user,
           task: updatemanualTimeRequest.task,
           project:updatemanualTimeRequest.project,
-          date : req.body.fromdate,
+          date : req.body.fromDate,
           startTime: startTime,
           endTime:moment(startTime).add(10, 'm').toDate(),     
           keysPressed:0,
@@ -127,7 +133,9 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
           filePath:"",     
           ismanualTime:true
         }
+        console.log(newLog);
         let logItem = await TimeLog.create(newLog);
+        console.log(logItem);
         result.push(logItem);
         recordCount++;  
         startTime = moment(startTime).add(10, 'm').toDate();      
