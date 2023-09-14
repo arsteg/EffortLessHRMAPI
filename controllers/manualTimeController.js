@@ -114,9 +114,9 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       let result=[];
       while( startTime<endTime){   
         var newLog = {
-          user: updateUserPreference.user,
-          task: updateUserPreference.task,
-          project:updateUserPreference.project,
+          user: updatemanualTimeRequest.user,
+          task: updatemanualTimeRequest.task,
+          project:updatemanualTimeRequest.project,
           date : req.body.fromdate,
           startTime: startTime,
           endTime:moment(startTime).add(10, 'm').toDate(),     
@@ -136,7 +136,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
   
     res.status(200).json({
         status: 'success',
-        data: updateUserPreference
+        data: updatemanualTimeRequest
       });  
     });
 exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {      
