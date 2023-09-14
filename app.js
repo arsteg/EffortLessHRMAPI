@@ -106,4 +106,5 @@ app.use('/api/v1/genericsetting', genericSettingRoute );
 app.use('/api/v1/assetsManagement', assetsManagementRouter);
 app.use('/api/v1/documents', documentsRouter);
 
+
 module.exports = app;
