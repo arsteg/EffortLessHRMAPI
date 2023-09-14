@@ -83,6 +83,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
 
 exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {  
     const user = await User.findById(req.body.user);
+    let result=[];
     if (!user) {
       return next(new AppError(`There is no user with email ${user}}.`, 404));
     }  
@@ -111,7 +112,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       let startTime = moment(req.body.fromDate).toDate();
       const endTime = moment(req.body.toDate).toDate();  
       let recordCount=0;  
-      let result=[];
+     
       while( startTime<endTime){   
         var newLog = {
           user: updatemanualTimeRequest.user,
@@ -131,12 +132,14 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
         recordCount++;  
         startTime = moment(startTime).add(10, 'm').toDate();      
       }
+      
     }    
   } 
   
     res.status(200).json({
         status: 'success',
-        data: updatemanualTimeRequest
+        data: updatemanualTimeRequest,
+        log:result
       });  
     });
 exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {      
