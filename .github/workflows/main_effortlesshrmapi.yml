@@ -44,6 +44,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: node-app
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Reference your secret here
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
