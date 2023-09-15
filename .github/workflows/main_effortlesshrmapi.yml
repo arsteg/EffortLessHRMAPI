@@ -38,7 +38,7 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-      url: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BFE6D751B1CE46E1A39EE55FECEF02AC }}
+      url: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
     steps:
       - name: Download artifact from build job
