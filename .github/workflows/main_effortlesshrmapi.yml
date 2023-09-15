@@ -52,5 +52,5 @@ jobs:
         with:
           app-name: 'effortlesshrmapi'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BFE6D751B1CE46E1A39EE55FECEF02AC }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: .
