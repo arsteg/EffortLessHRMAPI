@@ -10,6 +10,7 @@ const DocumentCategory =  require(`../models/documents/documentCategory`);
 const DocumentUsers = require(`../models/documents/documentUsers`);
 const Template = require(`../models/documents/template`);
 const UserDocuments = require(`../models/documents/userDocuments`);
+const Document = require(`../models/documents/document`);
 //CompanyPolicyDocument
 
 exports.createCompanyPolicyDocument = catchAsync(async (req, res, next) => {  
