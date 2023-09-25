@@ -167,7 +167,7 @@ assetsManagementRouter.get('/allAssetTypes', assetsManagementController.getAllAs
  *       500:
  *         description: Internal server error
  */
-assetsManagementRouter.post('/assetAttributeValues', assetsManagementController.addAssetAttributeValue);
+assetsManagementRouter.post('/assetAttributeValues', assetsManagementController.createAssetAttributeValue);
 
 /**
  * @swagger
@@ -251,6 +251,29 @@ assetsManagementRouter.put('/assetAttributeValues/:id', assetsManagementControll
  *         description: Internal server error
  */
 assetsManagementRouter.delete('/assetAttributeValues/:id', assetsManagementController.deleteAssetAttributeValue);
+
+/**
+ * @swagger
+ * /api/v1/assetsManagement/assetAttributeValues/Asset/{assetId}:
+ *   delete:
+ *     summary: Delete an AssetAttributeValues by Asset ID
+ *     tags: [Assets Management]
+ *     parameters:
+ *       - in: path
+ *         name: assetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Asset
+ *     responses:
+ *       204:
+ *         description: AssetAttributeValue(s) successfully deleted
+ *       404:
+ *         description: AssetAttributeValue not found
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.delete('/assetAttributeValues/Asset/:assetId', assetsManagementController.deleteAssetAttributeValuesByAssetId);
 
 /**
  * @swagger
@@ -832,6 +855,28 @@ assetsManagementRouter.get('/customAttributes', assetsManagementController.getAl
  */
 assetsManagementRouter.post('/assetTypes/:id/customAttributes', assetsManagementController.addCustomAttributes);
 
+/**
+ * @swagger
+ * /api/v1/assetsManagement/assetTypes/{id}/customAttributes:
+ *   get:
+ *     summary: get asset Type customAttributes
+ *     tags: [Assets Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the assetType 
+ *     responses:
+ *       200:
+ *         description: Successfully added customAttributes
+ *       404:
+ *         description: AssetType not found
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.get('/assetTypes/:id/customAttributes', assetsManagementController.getAssetCustomAttributes);
 
 /**
  * @swagger

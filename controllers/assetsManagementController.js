@@ -114,11 +114,39 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.addAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.create(req.body);
-  res.status(201).json({
+exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
+  const assetAttributeValue = await AssetAttributeValue.findById(req.params.id);
+  if (!assetAttributeValue) {
+    return next(new AppError("AssetAttributeValue not found", 404));
+  }
+  res.status(200).json({
     status: "success",
     data: assetAttributeValue,
+  });
+});
+
+exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
+  const assetAttributeValue = await AssetAttributeValue.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  if (!assetAttributeValue) {
+    return next(new AppError("AssetAttributeValue not found", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    data: assetAttributeValue,
+  });
+});
+exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
+  const assetAttributeValues = await AssetAttributeValue.find();
+  res.status(200).json({
+    status: "success",
+    data: assetAttributeValues,
   });
 });
 
@@ -151,16 +179,14 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.findByIdAndDelete(
-    req.params.id
-  );
-  if (!assetAttributeValue) {
+exports.deleteAssetAttributeValuesByAssetId = catchAsync(async (req, res, next) => {
+  const assetAttributeValues = await AssetAttributeValue.deleteMany({assetId:req.params.assetId});
+  if (!assetAttributeValues) {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(204).json({
     status: "success",
-    data: null,
+    data: assetAttributeValues,
   });
 });
 
@@ -172,70 +198,51 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.create(req.body);
-  res.status(201).json({
-    status: "success",
-    data: assetAttributeValue,
-  });
-});
+exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {  
+  
+  console.log(`calling createAssetAttributeValue`);
 
-exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.findById(req.params.id);
-  if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
-  }
-  res.status(200).json({
-    status: "success",
-    data: assetAttributeValue,
-  });
-});
+  // Check if both assetId and attributeId exist
+  if (req.body.assetId && req.body.attributeId) {    
+    
+    const recordExists = await AssetAttributeValue.find({assetId:req.body.assetId, attributeId:req.body.attributeId});    
+    
+    const { assetId, attributeId, value } = req.body;
+    const filter = { assetId, attributeId };
+    const update = { value };    
 
-exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
+    if(recordExists && recordExists.length>0){
+            
+      console.log(recordExists);
+        // Update the existing record based on assetId and attributeId
+      
+      const assetAttributeValue = await AssetAttributeValue.findOneAndUpdate(
+        filter,
+        update,
+        { new: true } // Update the existing record, don't create a new one
+      );
+
+      res.status(200).json({
+        status: "success",
+        data: assetAttributeValue,
+      });
+
     }
-  );
-  if (!assetAttributeValue) {
+    else{
+      const assetAttributeValue = await AssetAttributeValue.findOneAndUpdate(
+        filter,
+        update,
+        { new: true, upsert: true } // Create a new record if it doesn't exist
+      );
+
+      res.status(201).json({
+        status: "success",
+        data: assetAttributeValue,
+      });
+    }    
+  } else {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
-  res.status(200).json({
-    status: "success",
-    data: assetAttributeValue,
-  });
-});
-
-exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.findByIdAndDelete(
-    req.params.id
-  );
-  if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
-  }
-  res.status(204).json({
-    status: "success",
-    data: null,
-  });
-});
-
-exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
-  const assetAttributeValues = await AssetAttributeValue.find();
-  res.status(200).json({
-    status: "success",
-    data: assetAttributeValues,
-  });
-});
-
-exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await AssetAttributeValue.create(req.body);
-  res.status(201).json({
-    status: "success",
-    data: assetAttributeValue,
-  });
 });
 
 exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
@@ -450,6 +457,17 @@ exports.addCustomAttributes = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: addedCustomAttributes,
+  });
+});
+
+exports.getAssetCustomAttributes = catchAsync(async (req, res, next) => {
+        
+  // Assuming req.body is an array of CustomAttribute objects
+  const customAttributes = await CustomAttribute.find({company:req.cookies.companyId,assetType:req.params.id});
+
+  res.status(200).json({
+    status: "success",
+    data: customAttributes,
   });
 });
 
@@ -693,72 +711,60 @@ exports.getAllAssets = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {
+exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {  
   
-  const assetTypeId = mongoose.Types.ObjectId(req.params.assetType);
-  
-  const assetsWithAttributes = await Asset.aggregate([
-    // Filter assets by the given assetType
-    {
-      $match: {
-        assetType: mongoose.Types.ObjectId(assetTypeId),
-      },
-    },
-    // Lookup to join with the AssetType collection (Optional, but might be useful)
-    {
-      $lookup: {
-        from: "AssetType",
-        localField: "assetType",
-        foreignField: "_id",
-        as: "assetTypeDetails",
-      },
-    },
-    // Lookup to join with the CustomAttribute collection
-    {
-      $lookup: {
-        from: "CustomAttribute",
-        let: { assetType: "$assetType" },
-        pipeline: [
-          { $match: { $expr: { $eq: ["$assetType", "$$assetType"] } } },
-          // Lookup to join with the AssetAttributeValue collection
-          {
-            $lookup: {
-              from: "AssetAttributeValue",
-              let: { attributeId: "$_id", assetId: "$_id" },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        { $eq: ["$attributeId", "$$attributeId"] },
-                        { $eq: ["$assetId", "$$assetId"] },
-                      ],
-                    },
-                  },
-                },
-                { $project: { value: 1 } },
-              ],
-              as: "attributeValue",
-            },
-          },
-          // If there's no matching AssetAttributeValue, set the value to null
-          {
-            $addFields: {
-              value: {
-                $ifNull: [{ $arrayElemAt: ["$attributeValue.value", 0] }, null],
-              },
-            },
-          },
-          { $project: { attributeValue: 0 } },
-        ],
-        as: "customAttributes",
-      },
-    },
-  ]);
+  const assetTypeId = mongoose.Types.ObjectId(req.params.assetType);  
+  // Find assets of the specified assetType
+  const assets = await Asset.find({ assetType:assetTypeId,company:req.cookies.companyId }).exec();
 
+  // Iterate through each asset and fetch custom attributes with their values
+  const assetsWithCustomAttributes = await Promise.all(
+    assets.map(async (asset) => {
+      // Find custom attributes for the asset's assetType
+      const customAttributes = await CustomAttribute.find({assetType:assetTypeId }).exec();
+
+      // Initialize an array to store custom attributes with values
+      const customAttributesWithValues = [];
+
+      // Fetch values for each custom attribute
+      for (const customAttribute of customAttributes) {
+        // Find the corresponding AssetAttributeValue, if it exists
+        const assetAttributeValue = await AssetAttributeValue.findOne({
+          assetId: asset._id,
+          attributeId: customAttribute._id,
+        }).exec();
+
+        // Add the custom attribute with its value (or null if not found)
+        customAttributesWithValues.push({
+          _id: customAttribute._id,
+          attributeName: customAttribute.attributeName,
+          assetType: customAttribute.assetType,
+          company: customAttribute.company,
+          description: customAttribute.description,
+          dataType: customAttribute.dataType,
+          isRequired: customAttribute.isRequired,
+          value: assetAttributeValue ? assetAttributeValue.value : null,
+        });
+      }
+
+      // Return the asset with custom attributes and values
+      return {
+        _id: asset._id,
+        assetType: asset.assetType,
+        company: asset.company,
+        assetName: asset.assetName,
+        purchaseDate: asset.purchaseDate,
+        warrantyExpiry: asset.warrantyExpiry,
+        status: asset.status,
+        image: asset.image,
+        assetTypeDetails: asset.assetTypeDetails,
+        customAttributes: customAttributesWithValues,
+      };
+    })
+  );
   res.status(200).json({
     status: "success",
-    data: assetsWithAttributes,
+    data: assetsWithCustomAttributes,
   });
 });
 
