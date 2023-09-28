@@ -693,6 +693,8 @@ exports.updateAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAsset = catchAsync(async (req, res, next) => {
+  const employeeAsset = await EmployeeAssets.find({Asset: req.params.id});
+  if(!employeeAsset){
   const asset = await Asset.findByIdAndDelete(req.params.id);
   if (!asset) {
     return next(new AppError("Asset not found", 404));
@@ -701,6 +703,13 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
     status: "success",
     data: null,
   });
+}
+  else{    
+    res.status(409).json({
+      status: "conflict",
+      data: 'Selected Asset has the assigned status.',
+    });
+  }
 });
 
 exports.getAllAssets = catchAsync(async (req, res, next) => {
