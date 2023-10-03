@@ -17,6 +17,7 @@ const htmlToText = require('html-to-text').htmlToText;
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
 const notification  = require('../controllers/notficationController');
+const { Console } = require('winston/lib/winston/transports');
 
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -98,7 +99,8 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
    {  
   const user = await User.findOne({ _id: newTaskUserList[0].user });     
   const contentNewUser = emailTemplate.contentData; 
-
+  const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
+      
   const emailTemplateNewUser = contentNewUser
   .replace("{firstName}", user.firstName)
     .replace("{taskName}", task.taskName)
@@ -106,7 +108,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
     .replace("{company}", req.cookies.companyName)
     .replace("{projectName}", task.project.projectName)
     .replace("{description}", task.description)
-    .replace("{priority}", task.priority)
+    .replace("{priority}", task.priority).replace("{taskURL}", taskURL)
     .replace("{lastName}", user.lastName); 
 
     if(user){   
@@ -150,6 +152,7 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
      {  
     const user = await User.findOne({ _id: newTaskUserList[0].user });     
     const contentNewUser = emailTemplate.contentData; 
+    const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
     
     const emailTemplateNewUser = contentNewUser
     .replace("{firstName}", user.firstName)
@@ -159,6 +162,7 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
       .replace("{projectName}", task.project.projectName)
       .replace("{description}", task.description)
       .replace("{priority}", task.priority)
+      .replace("{taskURL}",taskURL)
       .replace("{lastName}", user.lastName); 
   
       if(user){   
@@ -179,16 +183,9 @@ exports.updateFlex =  catchAsync(async (req, res, next) => {
 
 exports.getTask  = catchAsync(async (req, res, next) => {    
 const task = await Task.findById(req.params.id);
-// task.description = htmlToText(task.description, {
-//           wordwrap: 130 // Set the desired word wrap length
-//         });
-//  task.comment = htmlToText(task.comment, {
-//           wordwrap: 130 // Set the desired word wrap length
-//         });
+
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
-const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
- console.log("hii");
-  
+const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);    
 res.status(200).json({
   status: 'success',
   data: {
@@ -460,10 +457,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
       const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate comment priority status taskNumber parentTask');    
       if(task)
       {        
-        task.comment = htmlToText(task.comment, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
-     const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
+      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
       if(taskUser) 
         {
           task.TaskUsers=taskUser;
@@ -611,16 +605,18 @@ if(taskList)
       const newUser = await User.findOne({ _id: newTaskUserItem.user });   
       const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
       const contentNewUser = templateNewUser.contentData; 
-     
-     const emailTemplateNewUser = contentNewUser
-     .replace("{firstName}", newUser.firstName)
+      const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`;
+      const emailTemplateNewUser = contentNewUser
+     .replace("{firstName}", newUser.firstName).replace("{taskURL}", taskURL)
      .replace("{startDate}", newTask.startDate)
      .replace("{endDate}", newTask.endDate)
      .replace("{company}", req.cookies.companyName)
      .replace("{description}", newTask.description)
      .replace("{priority}", newTask.priority)
       .replace("{taskName}", newTask.taskName)
-      .replace("{lastName}", newUser.lastName);     
+      
+      .replace("{lastName}", newUser.lastName);    
+      console.log(emailTemplateNewUser); 
       await sendEmail({
         email: newUser.email,
         subject:templateNewUser.Name,
@@ -736,7 +732,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         const newUser= await User.findOne({ _id: newTaskUserItem.user });   
         const templateNewUser = await EmailTemplate.findOne({}).where('Name').equals("Task Assigned").where('company').equals(req.cookies.companyId);   
         const contentNewUser = templateNewUser.contentData; 
-       
+        const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
         const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", newUser.firstName)
         .replace("{startDate}", task.startDate)
@@ -745,7 +741,9 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         .replace("{company}", req.cookies.companyName)
         .replace("{description}", task.description)
         .replace("{priority}", task.priority)
-        .replace("{lastName}", newUser.lastName);     
+        .replace("{taskURL}", taskURL)
+        .replace("{lastName}", newUser.lastName);  
+           
         await sendEmail({
           email: newUser.email,
           subject:templateNewUser.Name,
@@ -1268,6 +1266,8 @@ if(newTaskUserList)
    const user = await User.findOne({ _id: newTaskUserList[j].user });        
    if(user)
    {
+    const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+  
         const emailTemplateNewUser = contentNewUser
         .replace("{firstName}", user.firstName)    
         .replace("{taskName}", currentTask.taskName)
@@ -1276,6 +1276,7 @@ if(newTaskUserList)
         .replace("{company}", req.cookies.companyName)
         .replace("{content}", newComment.content)
         .replace("{author}", user.firstName +" "+ user.lastName)
+        .replace("taskURL",taskURL)
         .replace("{lastName}", user.lastName);     
         await sendEmail({
               email: user.email,
@@ -1332,41 +1333,51 @@ exports.updateComment = async (req, res) => {
 };
 
 exports.deleteComment = async (req, res) => {
+  console.log("delete comment API Called");
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Comment Notification").where('company').equals(req.cookies.companyId); 
-  const comment = await Comment.findOne({ _id: req.params.id }); 
-  try {
-     const contentNewUser = emailTemplate.contentData; 
-    const plainTextContent = htmlToText(contentNewUser, {
-      wordwrap: 130 // Set the desired word wrap length
-    });
+  const comment = await Comment.findById(req.params.id);
+console.log(req.params.id);
+ 
 
+  try {
+   
+     const plainTextContent = emailTemplate.contentData; 
+    
+   
     const newTaskUserList = await TaskUser.find({}).where('task').equals(comment.task);  
     const currentTask = await Task.findById(comment.task); 
+    
     if(newTaskUserList)
     {
       for(var j = 0; j < newTaskUserList.length; j++) 
-      { 
-          const user = await User.findOne({ _id: newTaskUserList[j].user });        
+      { console.log(newTaskUserList[j].user._id);
+          const user = await User.findOne({ _id: newTaskUserList[j].user._id });        
           if(user)
           {
+            console.log(user.firstName);
+           
+            const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+
                 const emailTemplateNewUser = plainTextContent
                 .replace("{firstName}", user.firstName)    
                 .replace("{taskName}", currentTask.taskName)
-                .replace("{taskName1}", currentTask.taskName)
-                .replace("{date}", formatDateToDDMMYY(new Date()))
+                 .replace("{date}", formatDateToDDMMYY(new Date()))
                 .replace("{company}", req.cookies.companyName)
                 .replace("{content}", comment.content)
                 .replace("{author}", user.firstName +" "+ user.lastName)
-                .replace("{lastName}", user.lastName);     
+                .replace("{taskURL}",taskURL)
+                .replace("{lastName}", user.lastName); 
                 await sendEmail({
                       email: user.email,
                       subject:emailTemplate.Name,
                       message:emailTemplateNewUser
                     }); 
-          }     
+          }  
+
           
       } 
     }
+
     console.log(`delete comment with id ${req.params.id}`);
     const result = await Comment.findByIdAndDelete(req.params.id);
     if(result){
@@ -1380,10 +1391,7 @@ exports.deleteComment = async (req, res) => {
   }
 };
 
-exports.getAllComments = catchAsync(async (req, res, next) => {
-  
-  console.log(`Task id ${req.params.id}`);
-
+exports.getAllComments = catchAsync(async (req, res, next) => { 
   let comments = await Comment.find({task: req.params.id}); 
   res.status(200).json({
     status: 'success',
