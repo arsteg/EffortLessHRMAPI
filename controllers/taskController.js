@@ -330,13 +330,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
       if(taskUserList[i]){        
       const task = await Task.findById(taskUserList[i].task).select('id taskName startDate endDate description comment priority status taskNumber parentTask');    
       if(task)
-      { 
-        task.description = htmlToText(task.description, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
-        task.comment = htmlToText(task.comment, {
-          wordwrap: 130 // Set the desired word wrap length
-        });
+      {        
      const taskUser = await TaskUser.find({}).where('task').equals(task.id);    
       if(taskUser) 
         {

@@ -648,27 +648,28 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
         const projects = await TimeLog.find(filterProject).distinct('project');      
         if(projects.length>0) 
              {
-
                   for(var k = 0; k < projects.length; k++) 
                   {  
-                     
-                    const newLogInUSer = {};                       
-                    const allLogs = [];             
+                     const newLogInUSer = {};                       
+                     const allLogs = [];             
                       const dateFrom = new Date(req.body.fromdate).getDate();
                       const dateTo = new Date(req.body.todate).getDate();
                       let days = dateTo - dateFrom;     
                       const firstTimeLog = await TimeLog.find(filterProject).sort();      
                       newLogInUSer.StatTime=firstTimeLog[0].startTime;
                       for(var day = 0;day <= days; day++)
-                      {                 
-                        var tomorrow = new Date(new Date(req.body.fromdate).setDate(new Date(req.body.fromdate).getDate() + day));
-                        var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate()));    
+                      {      
+                        var tomorrow = new Date(req.body.fromdate); // Current date and time
+                        tomorrow.setDate(tomorrow.getDate() + day); // Set it to tomorrow
+                        var end = new Date(req.body.fromdate); // Current date and time
                         if(req.body.fromdate===req.body.todate)
                         {
-                        var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));    
-                        }                  
-                        let filterAll = {'user': users[i],'project':projects[k],'date' : {'$gte': tomorrow,'$lte': end}};                  
-                        const timeLogAll = await TimeLog.find(filterAll);                
+                        end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));    
+                        }  
+                        const tomorrowISO = tomorrow.toISOString().split('T')[0];
+                        const endISO = end.toISOString().split('T')[0]; 
+                        let filterAll = {'user': users[i],'project':projects[k],'date' : {'$gte': tomorrowISO,'$lte': endISO}};                  
+                        const timeLogAll = await TimeLog.find(filterAll);      
                         if(timeLogAll.length>0)    
                         {
                           for(var k1 = 0; k1 < timeLogAll.length; k1++) 

@@ -371,12 +371,15 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
  });
 
  exports.getTimesheetByUserIds = catchAsync(async (req, res, next) => {
-
   const userIds = req.body.userIds.split(','); // Get user IDs from query parameter
-  const startDate = new Date(req.body.startDate); // Get start date from query parameter
-  const endDate = new Date(req.body.endDate); // Get end date from query parameter
+  var startDate = new Date(req.body.startDate); // Get start date from query parameter
+  var endDate = new Date(req.body.endDate); // Get end date from query parameter
 
-  console.log(`userIds: ${userIds} startDate: ${startDate} endDate:${endDate}`);
+  const startDateISO = startDate.toISOString().split('T')[0];
+  const endDateISO = endDate.toISOString().split('T')[0]; 
+               
+ 
+  console.log(`userIds: ${userIds} startDate: ${startDateISO} endDate:${endDateISO}`);
   
 // Create a pipeline to aggregate time logs by project and date
 const pipeline = [
@@ -384,7 +387,7 @@ const pipeline = [
   {
     $match: {
       user: { $in: userIds.map(id => mongoose.Types.ObjectId(id)) },
-      date: { $gte: new Date(startDate), $lte: new Date(endDate) }
+      date: { $gte: new Date(startDateISO), $lte: new Date(endDateISO) }
     }
   },
   // Group time logs by user, project and date, and calculate the total time spent for each day
@@ -412,7 +415,7 @@ try {
   const results = await TimeLog.aggregate(pipeline);
 
   // Create an array of dates within the date range
-  const dates = getDatesInRange(startDate, endDate);
+  const dates = getDatesInRange(startDateISO, endDateISO);
 
   // Create a matrix of time spent by project and date for each user
   const matrix = {};
