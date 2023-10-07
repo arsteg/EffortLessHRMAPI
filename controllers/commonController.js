@@ -278,6 +278,21 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
       data:result 
     });  
   });
+  
+  exports.changeEmailTemplatesStatus = catchAsync(async (req, res, next) => {        
+    const id = req.params.id;
+    const updatedTemplate = req.body;
+    updatedTemplate.updatedOn= new Date();
+    updatedTemplate.updatedBy= req.cookies.userId;
+    // Logic to update an existing email template
+     EmailTemplate.findByIdAndUpdate(id, updatedTemplate, { new: true })
+      .then((updatedTemplate) => {
+        res.status(200).json(updatedTemplate);
+      })
+      .catch((error) => {
+        res.status(500).json({ error: error.message });
+      }); 
+    });
 
   exports.updateEmailTemplate = catchAsync(async (req, res, next) => {        
   const id = req.params.id;
@@ -296,9 +311,9 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
 
   exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {        
     const id = req.params.id;
-    const emailTemplate = await EmailTemplate.find({}).where('_id').equals(req.params.id).where('isDelete').equals(true); 
-    if (!emailTemplate) {
-    
+    const emailTemplate = await EmailTemplate.find({ _id: req.params.id, isDelete: true });    
+    if (!emailTemplate) {   
+      console.log("hiii");
     // Logic to delete an email template
     EmailTemplate.findByIdAndRemove(id)
       .then(() => {
@@ -308,6 +323,13 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
         res.status(500).json({ error: error.message });
       });   
     } 
+    else
+    {
+      res.status(200).json({
+        status: 'Not Authorized',
+        data:"System Defined template, User can't delete" 
+      });       
+    }
   });
 
   exports.getEmailTemplateById = catchAsync(async (req, res, next) => {        

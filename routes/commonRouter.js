@@ -59,7 +59,7 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
 
 /**
  * @swagger
- *  /api/v1/common/emailTemplates/{id}:
+ *  /api/v1/common/emailTemplates/changestatus/{id}:
  *   put:
  *     summary: Update an existing email template
  *     tags: [Email Templates]
@@ -79,19 +79,10 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
  *         application/json:
  *           schema:
  *             properties:
- *               Name:
- *                 type: string
- *               subject:
- *                 type: string
- *               templateType:
- *                 type: number
- *               contentData:
- *                 type: string
+ *               isDelete:
+ *                 type: boolean
  *             required:
- *               - Name
- *               - subject
- *               - templateType
- *               - contentData
+ *               - isDelete
  *     responses:
  *       200:
  *         description: The updated email template
@@ -100,7 +91,8 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
  *             schema:
  *               $ref: '#/components/schemas/EmailTemplate'
  */
-router.put('/emailTemplates/:id',  authController.protect, commonController.updateEmailTemplate)
+router.put('/emailTemplates/changestatus/:id',  authController.protect, commonController.changeEmailTemplatesStatus)
+
 
 /**
  * @swagger
