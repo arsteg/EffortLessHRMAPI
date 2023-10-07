@@ -662,7 +662,7 @@ exports.gettimeline = catchAsync(async (req, res, next) => {
                         var tomorrow = new Date(req.body.fromdate); // Current date and time
                         tomorrow.setDate(tomorrow.getDate() + day); // Set it to tomorrow
                         var end = new Date(req.body.fromdate); // Current date and time
-                        if(req.body.fromdate===req.body.todate)
+                        if(req.body.fromdate=== new Date())
                         {
                         end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));    
                         }  
@@ -739,14 +739,13 @@ exports.getattandance = catchAsync(async (req, res, next) => {
                             newLogInUSer.date= timeLogAll[0].date;                           
                             newLogInUSer.manual = manual;
                             newLogInUSer.total = newLogInUSer.manual + newLogInUSer.time;
-                             const totalTrackedTime = (newLogInUSer.manual + newLogInUSer.time)/60;
+                            const totalTrackedTime = (newLogInUSer.manual + newLogInUSer.time)/60;
                             const dailyHours = 8;
                             const startDate = new Date(req.body.fromdate);
                             const endDate = new Date(req.body.todate);                            
                             const timeDifference = endDate - startDate;
                             //const numberOfDays = timeDifference / (1000 * 60 * 60 * 24); // Convert milliseconds to days
                             const numberOfDays = calculateWeekdays(startDate, endDate, 1); // Count total weekdays
-
                             const percentage = calculatePercentage(totalTrackedTime, dailyHours, numberOfDays);
                             newLogInUSer.percetage=percentage.toFixed(2);
                      }
