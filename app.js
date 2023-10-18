@@ -29,8 +29,9 @@ var manualTimeRouter = require('./routes/manualTimeRouter');
 var settingsRouter = require('./routes/settingsRouter');
 var dashboardRouter = require('./routes/dashboardRoute');
 var genericSettingRoute = require('./routes/genericSettingRoute');
-var assetsManagementRouter = require('./routes/assetsManagementRouter')
-var documentsRouter = require('./routes/documentsRouter')
+var assetsManagementRouter = require('./routes/assetsManagementRouter');
+var documentsRouter = require('./routes/documentsRouter');
+var expenseRouter = require('./routes/expenseRouter');
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
@@ -52,7 +53,7 @@ app.use(cors(
                      // authenticated via either a session cookie
                      // or Authorization header. Otherwise the
                      // browser will block the response.
-  methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
+    methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
                                                // pre-flight OPTIONS requests
   }
 ));
@@ -105,6 +106,6 @@ app.use('/api/v1/dashboard', dashboardRouter );
 app.use('/api/v1/genericsetting', genericSettingRoute );
 app.use('/api/v1/assetsManagement', assetsManagementRouter);
 app.use('/api/v1/documents', documentsRouter);
-
+app.use('/api/v1/expense', expenseRouter);
 
 module.exports = app;
