@@ -317,6 +317,9 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
  *   post:
  *     summary: Add a new ExpenseApplicationFieldValue
  *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     requestBody:
  *       description: ExpenseApplicationFieldValue details
  *       required: true
@@ -351,6 +354,9 @@ router.post('/expense-application-field-values', authController.protect, expense
  *   get:
  *     summary: Get an ExpenseApplicationFieldValue by ID
  *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -374,6 +380,9 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
  *   put:
  *     summary: Update an ExpenseApplicationFieldValue by ID
  *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -411,6 +420,9 @@ router.put('/expense-application-field-values/:id', authController.protect, expe
  *   delete:
  *     summary: Delete an ExpenseApplicationFieldValue by ID
  *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -434,6 +446,9 @@ router.delete('/expense-application-field-values/:id', authController.protect, e
  *   get:
  *     summary: Get all ExpenseApplicationFieldValues based on ExpenseApplicationField
  *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: expenseApplicationFieldId
