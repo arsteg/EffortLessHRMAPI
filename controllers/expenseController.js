@@ -2,9 +2,10 @@
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const ExpenseCategory = require('../models/Expense/ExpenseCategory'); // Import ExpenseCategory model
-const ExpenseApplicationField = require('../models/Expense/ExpenseApplicationField')
-const ExpenseApplicationFieldValue = require('../models/Expense/ExpenseApplicationFieldValue')
-
+const ExpenseApplicationField = require('../models/Expense/ExpenseApplicationField');
+const ExpenseApplicationFieldValue = require('../models/Expense/ExpenseApplicationFieldValue');
+const ExpenseTemplate = require('../models/Expense/ExpenseTemplate');
+const ExpenseTemplateApplicableCategories= require('../models/Expense/ExpenseTemplateApplicableCategories');
 const AppError = require('../utils/appError');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
@@ -40,6 +41,7 @@ exports.getExpenseCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
+
   const expenseCategory = await ExpenseCategory.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -207,3 +209,126 @@ exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, 
     data: expenseApplicationFieldValues
   });
 });
+
+exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const expenseTemplate = await ExpenseTemplate.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: expenseTemplate
+  });
+});
+
+exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
+  const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
+  if (!expenseTemplate) {
+    return next(new AppError('Expense Template not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: expenseTemplate
+  });
+});
+
+exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
+  const expenseTemplate = await ExpenseTemplate.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!expenseTemplate) {
+    return next(new AppError('Expense Template not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: expenseTemplate
+  });
+});
+
+exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
+  const expenseTemplate = await ExpenseTemplate.findByIdAndDelete(req.params.id);
+  
+  if (!expenseTemplate) {
+    return next(new AppError('Expense Template not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
+  const expenseTemplates = await ExpenseTemplate.find();
+  res.status(200).json({
+    status: 'success',
+    data: expenseTemplates
+  });
+});
+
+exports.createExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
+  const { expenseTemplate, expenseCategory } = req.body;
+  const applicableCategories = await ExpenseTemplateApplicableCategories.create({ expenseTemplate, expenseCategory });
+  res.status(201).json({
+    status: 'success',
+    data: applicableCategories
+  });
+});
+
+exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findById(req.params.id);
+  if (!applicableCategories) {
+    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: applicableCategories
+  });
+});
+
+exports.updateExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
+  const { expenseTemplate, expenseCategory } = req.body;
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findByIdAndUpdate(
+    req.params.id,
+    { expenseTemplate, expenseCategory },
+    { new: true, runValidators: true }
+  );
+
+  if (!applicableCategories) {
+    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: applicableCategories
+  });
+});
+
+exports.deleteExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findByIdAndDelete(req.params.id);
+  if (!applicableCategories) {
+    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find();
+  res.status(200).json({
+    status: 'success',
+    data: applicableCategories
+  });
+});
+

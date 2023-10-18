@@ -466,4 +466,301 @@ router.delete('/expense-application-field-values/:id', authController.protect, e
  */
 router.get('/expense-application-fields-values-by-field/:expenseApplicationFieldId', authController.protect, expenseController.getExpenseApplicationFieldValuesByFieldId);
 
+/**
+ * @swagger
+ * /api/v1/expense/expense-templates:
+ *   post:
+ *     summary: Create a new Expense Template
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Expense Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               policyLabel:
+ *                 type: string
+ *                 required: true
+ *               approvalType:
+ *                 type: string
+ *                 required: true
+ *               downloadableFormats:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 required: true
+ *               advanceAmount:
+ *                 type: boolean
+ *               applyforSameCategorySamedate:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Expense Template successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/expense-templates', authController.protect, expenseController.createExpenseTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-templates/{id}:
+ *   get:
+ *     summary: Get an Expense Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Expense Template
+ *     responses:
+ *       200:
+ *         description: Successful response with the Expense Template
+ *       404:
+ *         description: Expense Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-templates/:id', authController.protect, expenseController.getExpenseTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-templates/{id}:
+ *   put:
+ *     summary: Update an Expense Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Expense Template
+ *     requestBody:
+ *       description: New Expense Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               policyLabel:
+ *                 type: string
+ *               approvalType:
+ *                 type: string
+ *               downloadableFormats:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               advanceAmount:
+ *                 type: boolean
+ *               applyforSameCategorySamedate:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Expense Template
+ *       404:
+ *         description: Expense Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/expense-templates/:id', authController.protect, expenseController.updateExpenseTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-templates/{id}:
+ *   delete:
+ *     summary: Delete an Expense Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Expense Template
+ *     responses:
+ *       204:
+ *         description: Expense Template successfully deleted
+ *       404:
+ *         description: Expense Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/expense-templates/:id', authController.protect, expenseController.deleteExpenseTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-templates:
+ *   get:
+ *     summary: Get all Expense Templates
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Expense Templates
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-templates', authController.protect, expenseController.getAllExpenseTemplates);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-template-applicable-categories:
+ *   post:
+ *     summary: Create a new ExpenseTemplateApplicableCategories
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: ExpenseTemplateApplicableCategories details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               expenseTemplate:
+ *                 type: string
+ *                 required: true
+ *               expenseCategory:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: ExpenseTemplateApplicableCategories successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/expense-template-applicable-categories', expenseController.createExpenseTemplateApplicableCategories);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-template-applicable-categories/{id}:
+ *   get:
+ *     summary: Get an ExpenseTemplateApplicableCategories by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseTemplateApplicableCategories
+ *     responses:
+ *       200:
+ *         description: Successful response with the ExpenseTemplateApplicableCategories
+ *       404:
+ *         description: ExpenseTemplateApplicableCategories not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-template-applicable-categories/:id', expenseController.getExpenseTemplateApplicableCategoriesById);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-template-applicable-categories/{id}:
+ *   put:
+ *     summary: Update an ExpenseTemplateApplicableCategories by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseTemplateApplicableCategories
+ *     requestBody:
+ *       description: New ExpenseTemplateApplicableCategories details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               expenseTemplate:
+ *                 type: string
+ *               expenseCategory:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated ExpenseTemplateApplicableCategories
+ *       404:
+ *         description: ExpenseTemplateApplicableCategories not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/expense-template-applicable-categories/:id', expenseController.updateExpenseTemplateApplicableCategories);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-template-applicable-categories/{id}:
+ *   delete:
+ *     summary: Delete an ExpenseTemplateApplicableCategories by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseTemplateApplicableCategories
+ *     responses:
+ *       204:
+ *         description: ExpenseTemplateApplicableCategories successfully deleted
+ *       404:
+ *         description: ExpenseTemplateApplicableCategories not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/expense-template-applicable-categories/:id', expenseController.deleteExpenseTemplateApplicableCategories);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-template-applicable-categories:
+ *   get:
+ *     summary: Get all ExpenseTemplateApplicableCategories
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with ExpenseTemplateApplicableCategories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-template-applicable-categories', expenseController.getAllExpenseTemplateApplicableCategories);
+
 module.exports = router;
