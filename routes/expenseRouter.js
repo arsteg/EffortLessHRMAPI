@@ -654,7 +654,7 @@ router.get('/expense-templates', authController.protect, expenseController.getAl
  *       500:
  *         description: Internal server error
  */
-router.post('/expense-template-applicable-categories', expenseController.createExpenseTemplateApplicableCategories);
+router.post('/expense-template-applicable-categories', authController.protect, expenseController.createExpenseTemplateApplicableCategories);
 
 /**
  * @swagger
@@ -680,7 +680,7 @@ router.post('/expense-template-applicable-categories', expenseController.createE
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-template-applicable-categories/:id', expenseController.getExpenseTemplateApplicableCategoriesById);
+router.get('/expense-template-applicable-categories/:id',authController.protect, expenseController.getExpenseTemplateApplicableCategoriesById);
 
 /**
  * @swagger
@@ -718,7 +718,7 @@ router.get('/expense-template-applicable-categories/:id', expenseController.getE
  *       500:
  *         description: Internal server error
  */
-router.put('/expense-template-applicable-categories/:id', expenseController.updateExpenseTemplateApplicableCategories);
+router.put('/expense-template-applicable-categories/:id',authController.protect, expenseController.updateExpenseTemplateApplicableCategories);
 
 /**
  * @swagger
@@ -744,7 +744,7 @@ router.put('/expense-template-applicable-categories/:id', expenseController.upda
  *       500:
  *         description: Internal server error
  */
-router.delete('/expense-template-applicable-categories/:id', expenseController.deleteExpenseTemplateApplicableCategories);
+router.delete('/expense-template-applicable-categories/:id',authController.protect, expenseController.deleteExpenseTemplateApplicableCategories);
 
 /**
  * @swagger
@@ -761,6 +761,158 @@ router.delete('/expense-template-applicable-categories/:id', expenseController.d
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-template-applicable-categories', expenseController.getAllExpenseTemplateApplicableCategories);
+router.get('/expense-template-applicable-categories', authController.protect, expenseController.getAllExpenseTemplateApplicableCategories);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-expense-assignments:
+ *   post:
+ *     summary: Create a new EmployeeExpenseAssignment
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeExpenseAssignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               expenseTemplate:
+ *                 type: string
+ *                 required: true
+ *               approver:
+ *                 type: string
+ *                 required: true
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: EmployeeExpenseAssignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-expense-assignments', authController.protect, expenseController.createEmployeeExpenseAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-expense-assignments/{id}:
+ *   get:
+ *     summary: Get an EmployeeExpenseAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the EmployeeExpenseAssignment
+ *     responses:
+ *       200:
+ *         description: Successful response with the EmployeeExpenseAssignment
+ *       404:
+ *         description: EmployeeExpenseAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-expense-assignments/:id', authController.protect, expenseController.getEmployeeExpenseAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-expense-assignments/{id}:
+ *   put:
+ *     summary: Update an EmployeeExpenseAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the EmployeeExpenseAssignment
+ *     requestBody:
+ *       description: New EmployeeExpenseAssignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *               expenseTemplate:
+ *                 type: string
+ *               approver:
+ *                 type: string
+ *               effectiveDate:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated EmployeeExpenseAssignment
+ *       404:
+ *         description: EmployeeExpenseAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-expense-assignments/:id', authController.protect, expenseController.updateEmployeeExpenseAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-expense-assignments/{id}:
+ *   delete:
+ *     summary: Delete an EmployeeExpenseAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the EmployeeExpenseAssignment
+ *     responses:
+ *       204:
+ *         description: EmployeeExpenseAssignment successfully deleted
+ *       404:
+ *         description: EmployeeExpenseAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-expense-assignments/:id', authController.protect, expenseController.deleteEmployeeExpenseAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-expense-assignments:
+ *   get:
+ *     summary: Get all EmployeeExpenseAssignments
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with EmployeeExpenseAssignments
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-expense-assignments', authController.protect, expenseController.getAllEmployeeExpenseAssignments);
 
 module.exports = router;

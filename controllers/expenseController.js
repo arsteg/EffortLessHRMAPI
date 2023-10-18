@@ -5,7 +5,8 @@ const ExpenseCategory = require('../models/Expense/ExpenseCategory'); // Import 
 const ExpenseApplicationField = require('../models/Expense/ExpenseApplicationField');
 const ExpenseApplicationFieldValue = require('../models/Expense/ExpenseApplicationFieldValue');
 const ExpenseTemplate = require('../models/Expense/ExpenseTemplate');
-const ExpenseTemplateApplicableCategories= require('../models/Expense/ExpenseTemplateApplicableCategories');
+const ExpenseTemplateApplicableCategories = require('../models/Expense/ExpenseTemplateApplicableCategories');
+const EmployeeExpenseAssignment = require('../models/Expense/EmployeeExpenseAssignment');
 const AppError = require('../utils/appError');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
@@ -332,3 +333,71 @@ exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
   });
 });
 
+exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: employeeExpenseAssignment,
+  });
+});
+
+exports.getEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.findById(req.params.id);
+  if (!employeeExpenseAssignment) {
+    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeExpenseAssignment,
+  });
+});
+
+exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!employeeExpenseAssignment) {
+    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeExpenseAssignment,
+  });
+});
+
+exports.deleteEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);
+
+  if (!employeeExpenseAssignment) {
+    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignments = await EmployeeExpenseAssignment.find();
+  res.status(200).json({
+    status: 'success',
+    data: employeeExpenseAssignments,
+  });
+});
