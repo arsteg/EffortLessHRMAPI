@@ -8,6 +8,8 @@ const ExpenseTemplate = require('../models/Expense/ExpenseTemplate');
 const ExpenseTemplateApplicableCategories = require('../models/Expense/ExpenseTemplateApplicableCategories');
 const EmployeeExpenseAssignment = require('../models/Expense/EmployeeExpenseAssignment');
 const ExpenseReport = require('../models/Expense/ExpenseReport');
+const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
+const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const AppError = require('../utils/appError');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
@@ -72,7 +74,7 @@ exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
-  const expenseCategories = await ExpenseCategory.find();
+  const expenseCategories = await ExpenseCategory.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: expenseCategories,
@@ -270,7 +272,7 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
-  const expenseTemplates = await ExpenseTemplate.find();
+  const expenseTemplates = await ExpenseTemplate.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: expenseTemplates
@@ -327,7 +329,7 @@ exports.deleteExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
 });
 
 exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.find();
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: applicableCategories
@@ -396,7 +398,7 @@ exports.deleteEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => {
-  const employeeExpenseAssignments = await EmployeeExpenseAssignment.find();
+  const employeeExpenseAssignments = await EmployeeExpenseAssignment.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: employeeExpenseAssignments,
@@ -461,9 +463,127 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
-  const expenseReports = await ExpenseReport.find();
+  const expenseReports = await ExpenseReport.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: expenseReports
   });
+});
+
+exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
+  const expenseReportExpense = await ExpenseReportExpense.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: expenseReportExpense
+  });
+});
+
+exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
+  const expenseReportExpense = await ExpenseReportExpense.findById(req.params.id);
+  if (!expenseReportExpense) {
+    return next(new AppError('Expense Report Expense not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: expenseReportExpense
+  });
+});
+
+exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
+  const expenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!expenseReportExpense) {
+    return next(new AppError('Expense Report Expense not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: expenseReportExpense
+  });
+});
+
+exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
+  const expenseReportExpense = await ExpenseReportExpense.findByIdAndDelete(req.params.id);
+  if (!expenseReportExpense) {
+    return next(new AppError('Expense Report Expense not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: expenseReportExpenses
+  });
+});
+
+exports.createExpenseAdvance = catchAsync(async (req, res, next) => {
+    // Extract companyId from req.cookies
+    const companyId = req.cookies.companyId;
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+    // Add companyId to the request body
+    req.body.company = companyId;
+    const expenseAdvance = await ExpenseAdvance.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: expenseAdvance
+    });
+});
+
+exports.getExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findById(req.params.id);
+    if (!expenseAdvance) {
+        return next(new AppError('ExpenseAdvance not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: expenseAdvance
+    });
+});
+
+exports.updateExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
+
+    if (!expenseAdvance) {
+        return next(new AppError('ExpenseAdvance not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: expenseAdvance
+    });
+});
+
+exports.deleteExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findByIdAndDelete(req.params.id);
+    
+    if (!expenseAdvance) {
+        return next(new AppError('ExpenseAdvance not found', 404));
+    }
+    
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
+
+exports.getAllExpenseAdvances = catchAsync(async (req, res, next) => {
+    const expenseAdvances = await ExpenseAdvance.find({}).where('company').equals(req.cookies.companyId);
+    res.status(200).json({
+        status: 'success',
+        data: expenseAdvances
+    });
 });

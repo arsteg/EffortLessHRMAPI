@@ -2,6 +2,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var expenseReportExpenseSchema = new Schema({
+  expenseReport: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'ExpenseReport',
+    required: true
+  },
   expenseCategory: {
     type: mongoose.Schema.ObjectId,
     ref: 'ExpenseCategory',
