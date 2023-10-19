@@ -915,4 +915,144 @@ router.delete('/employee-expense-assignments/:id', authController.protect, expen
  */
 router.get('/employee-expense-assignments', authController.protect, expenseController.getAllEmployeeExpenseAssignments);
 
+/**
+ * @swagger
+ * /api/v1/expense/expense-reports:
+ *   post:
+ *     summary: Create a new ExpenseReport
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: ExpenseReport details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                 type: string
+ *                 required: true
+ *               title:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: ExpenseReport successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/expense-reports', authController.protect, expenseController.createExpenseReport);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-reports/{id}:
+ *   get:
+ *     summary: Get an ExpenseReport by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseReport
+ *     responses:
+ *       200:
+ *         description: Successful response with the ExpenseReport
+ *       404:
+ *         description: ExpenseReport not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-reports/:id', authController.protect, expenseController.getExpenseReport);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-reports/{id}:
+ *   put:
+ *     summary: Update an ExpenseReport by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseReport
+ *     requestBody:
+ *       description: New ExpenseReport details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated ExpenseReport
+ *       404:
+ *         description: ExpenseReport not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/expense-reports/:id', authController.protect, expenseController.updateExpenseReport);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-reports/{id}:
+ *   delete:
+ *     summary: Delete an ExpenseReport by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseReport
+ *     responses:
+ *       204:
+ *         description: ExpenseReport successfully deleted
+ *       404:
+ *         description: ExpenseReport not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/expense-reports/:id', authController.protect, expenseController.deleteExpenseReport);
+
+/**
+ * @swagger
+ * /api/v1/expense/expense-reports:
+ *   get:
+ *     summary: Get all ExpenseReports
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with ExpenseReports
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-reports', authController.protect, expenseController.getAllExpenseReports);
+
 module.exports = router;
