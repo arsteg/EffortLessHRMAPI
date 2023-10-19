@@ -109,6 +109,7 @@ router.post('/productivity/update/:id',authController.protect,settingsController
  *
  */
 router.get('/productivity/Get/:id',authController.protect,settingsController.get);
+
 /**
  * @swagger
  * /api/v1/settings/Productivity/GetAll:
