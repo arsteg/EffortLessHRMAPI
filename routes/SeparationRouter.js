@@ -7,7 +7,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Separation Management
- *   description: API endpoints for managing expenses
+ *   description: API endpoints for managing separtions
  */
 
 /**
@@ -769,5 +769,150 @@ router.delete('/separation-template-settings/:id', authController.protect, separ
  *         description: Internal server error
  */
 router.get('/separation-template-settings', authController.protect, separationController.getAllSeparationTemplateSettings);
+
+/**
+ * @swagger
+ * /api/v1/separation/initiate-separation-requests:
+ *   post:
+ *     summary: Create a new Initiate Separation Request
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     requestBody:
+ *       description: Initiate Separation Request details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               separationType:
+ *                 type: string
+ *                 required: true
+ *               comments:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Initiate Separation Request successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/initiate-separation-requests', authController.protect, separationController.createInitiateSeparationRequest);
+
+/**
+ * @swagger
+ * /api/v1/separation/initiate-separation-requests/{id}:
+ *   get:
+ *     summary: Get an Initiate Separation Request by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Initiate Separation Request
+ *     responses:
+ *       200:
+ *         description: Successful response with the Initiate Separation Request
+ *       404:
+ *         description: Initiate Separation Request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/initiate-separation-requests/:id', authController.protect, separationController.getInitiateSeparationRequest);
+
+/**
+ * @swagger
+ * /api/v1/separation/initiate-separation-requests/{id}:
+ *   put:
+ *     summary: Update an Initiate Separation Request by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Initiate Separation Request
+ *     requestBody:
+ *       description: New Initiate Separation Request details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               separationType:
+ *                 type: string
+ *               comments:
+ *                 type: string
+ *               user:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Initiate Separation Request
+ *       404:
+ *         description: Initiate Separation Request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/initiate-separation-requests/:id',authController.protect, separationController.updateInitiateSeparationRequest);
+
+/**
+ * @swagger
+ * /api/v1/separation/initiate-separation-requests/{id}:
+ *   delete:
+ *     summary: Delete an Initiate Separation Request by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Initiate Separation Request
+ *     responses:
+ *       204:
+ *         description: Initiate Separation Request successfully deleted
+ *       404:
+ *         description: Initiate Separation Request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/initiate-separation-requests/:id',authController.protect, separationController.deleteInitiateSeparationRequest);
+
+/**
+ * @swagger
+ * /api/v1/separation/initiate-separation-requests:
+ *   get:
+ *     summary: Get all Initiate Separation Requests
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     responses:
+ *       200:
+ *         description: Successful response with Initiate Separation Requests
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/initiate-separation-requests',authController.protect, separationController.getAllInitiateSeparationRequests);
 
 module.exports = router;

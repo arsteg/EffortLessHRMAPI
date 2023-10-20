@@ -5,6 +5,7 @@ const ExitInterviewQuestion = require('../models/Separation/ExitInterviewQuestio
 const ExitInterviewQuestionOptions = require('../models/Separation/ExitInterviewQuestionOptions'); // Import SeparationType model
 const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterviewQuestionAnswers');
 const SeparationTemplateSettings = require('../models/Separation/SeparationTemplateSettings');
+const InitiateSeparationRequest = require('../models/Separation/InitiateSeparationRequest');
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
@@ -332,5 +333,61 @@ exports.getAllSeparationTemplateSettings = catchAsync(async (req, res, next) => 
   res.status(200).json({
     status: 'success',
     data: separationTemplateSettings,
+  });
+});
+
+exports.createInitiateSeparationRequest = catchAsync(async (req, res, next) => {
+  const initiateSeparationRequest = await InitiateSeparationRequest.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: initiateSeparationRequest,
+  });
+});
+
+exports.getInitiateSeparationRequest = catchAsync(async (req, res, next) => {
+  const initiateSeparationRequest = await InitiateSeparationRequest.findById(req.params.id).populate('user');
+  if (!initiateSeparationRequest) {
+    return next(new AppError('InitiateSeparationRequest not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: initiateSeparationRequest,
+  });
+});
+
+exports.updateInitiateSeparationRequest = catchAsync(async (req, res, next) => {
+  const initiateSeparationRequest = await InitiateSeparationRequest.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!initiateSeparationRequest) {
+    return next(new AppError('InitiateSeparationRequest not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: initiateSeparationRequest,
+  });
+});
+
+exports.deleteInitiateSeparationRequest = catchAsync(async (req, res, next) => {
+  const initiateSeparationRequest = await InitiateSeparationRequest.findByIdAndDelete(req.params.id);
+
+  if (!initiateSeparationRequest) {
+    return next(new AppError('InitiateSeparationRequest not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllInitiateSeparationRequests = catchAsync(async (req, res, next) => {
+  const initiateSeparationRequests = await InitiateSeparationRequest.find().populate('user');
+  res.status(200).json({
+    status: 'success',
+    data: initiateSeparationRequests,
   });
 });
