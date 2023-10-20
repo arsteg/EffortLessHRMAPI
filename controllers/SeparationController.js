@@ -4,7 +4,7 @@ const SeparationType = require('../models/Separation/SeparationType'); // Import
 const ExitInterviewQuestion = require('../models/Separation/ExitInterviewQuestion'); // Import SeparationType model
 const ExitInterviewQuestionOptions = require('../models/Separation/ExitInterviewQuestionOptions'); // Import SeparationType model
 const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterviewQuestionAnswers');
-
+const SeparationTemplateSettings = require('../models/Separation/SeparationTemplateSettings');
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
@@ -261,5 +261,76 @@ exports.getAllExitInterviewQuestionAnswersByUser = catchAsync(async (req, res, n
   res.status(200).json({
     status: 'success',
     data: exitInterviewQuestionAnswers,
+  });
+});
+
+exports.createSeparationTemplateSetting = catchAsync(async (req, res, next) => {
+     // Extract companyId from req.cookies
+     const companyId = req.cookies.companyId;
+     // Check if companyId exists in cookies
+     if (!companyId) {
+       return next(new AppError('Company ID not found in cookies', 400));
+     }
+     // Add companyId to the request body
+     req.body.company = companyId;
+  
+  const separationTemplateSetting = await SeparationTemplateSettings.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: separationTemplateSetting,
+  });
+});
+
+exports.getSeparationTemplateSetting = catchAsync(async (req, res, next) => {
+  const separationTemplateSetting = await SeparationTemplateSettings.findById(req.params.id);
+  if (!separationTemplateSetting) {
+    return next(new AppError('Separation Template Setting not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: separationTemplateSetting,
+  });
+});
+
+exports.updateSeparationTemplateSetting = catchAsync(async (req, res, next) => {
+  const separationTemplateSetting = await SeparationTemplateSettings.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!separationTemplateSetting) {
+    return next(new AppError('Separation Template Setting not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: separationTemplateSetting,
+  });
+});
+
+exports.deleteSeparationTemplateSetting = catchAsync(async (req, res, next) => {
+  const separationTemplateSetting = await SeparationTemplateSettings.findByIdAndDelete(
+    req.params.id
+  );
+
+  if (!separationTemplateSetting) {
+    return next(new AppError('Separation Template Setting not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllSeparationTemplateSettings = catchAsync(async (req, res, next) => {
+  const separationTemplateSettings = await SeparationTemplateSettings.find({}).where('company').equals(req.cookies.companyId);;
+  res.status(200).json({
+    status: 'success',
+    data: separationTemplateSettings,
   });
 });

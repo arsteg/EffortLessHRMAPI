@@ -625,5 +625,149 @@ router.get('/exit-interview-question-answers-by-question/:questionId', separatio
  */
 router.get('/exit-interview-question-answers-by-user/:userId', separationController.getAllExitInterviewQuestionAnswersByUser);
 
+/**
+ * @swagger
+ * /api/v1/separation/separation-template-settings:
+ *   post:
+ *     summary: Create a new Separation Template Setting
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     requestBody:
+ *       description: Separation Template Setting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               templateName:
+ *                 type: string
+ *                 required: true
+ *               noticePeriod:
+ *                 type: string
+ *                 required: true
+ *               leaveAllowedInNoticePeriod:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Separation Template Setting successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/separation-template-settings', authController.protect, separationController.createSeparationTemplateSetting);
+
+/**
+ * @swagger
+ * /api/v1/separation/separation-template-settings/{id}:
+ *   get:
+ *     summary: Get a Separation Template Setting by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Separation Template Setting
+ *     responses:
+ *       200:
+ *         description: Successful response with the Separation Template Setting
+ *       404:
+ *         description: Separation Template Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/separation-template-settings/:id', authController.protect, separationController.getSeparationTemplateSetting);
+
+/**
+ * @swagger
+ * /api/v1/separation/separation-template-settings/{id}:
+ *   put:
+ *     summary: Update a Separation Template Setting by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Separation Template Setting
+ *     requestBody:
+ *       description: New Separation Template Setting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               templateName:
+ *                 type: string
+ *               noticePeriod:
+ *                 type: string
+ *               leaveAllowedInNoticePeriod:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Separation Template Setting
+ *       404:
+ *         description: Separation Template Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/separation-template-settings/:id', authController.protect, separationController.updateSeparationTemplateSetting);
+
+/**
+ * @swagger
+ * /api/v1/separation/separation-template-settings/{id}:
+ *   delete:
+ *     summary: Delete a Separation Template Setting by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Separation Template Setting
+ *     responses:
+ *       204:
+ *         description: Separation Template Setting successfully deleted
+ *       404:
+ *         description: Separation Template Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/separation-template-settings/:id', authController.protect, separationController.deleteSeparationTemplateSetting);
+
+/**
+ * @swagger
+ * /api/v1/separation/separation-template-settings:
+ *   get:
+ *     summary: Get all Separation Template Settings
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     responses:
+ *       200:
+ *         description: Successful response with Separation Template Settings
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/separation-template-settings', authController.protect, separationController.getAllSeparationTemplateSettings);
 
 module.exports = router;
