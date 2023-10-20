@@ -3,6 +3,8 @@ const AppError = require('../utils/appError');
 const SeparationType = require('../models/Separation/SeparationType'); // Import SeparationType model
 const ExitInterviewQuestion = require('../models/Separation/ExitInterviewQuestion'); // Import SeparationType model
 const ExitInterviewQuestionOptions = require('../models/Separation/ExitInterviewQuestionOptions'); // Import SeparationType model
+const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterviewQuestionAnswers');
+
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
@@ -185,5 +187,79 @@ exports.getAllExitInterviewOptions = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: exitInterviewOptions,
+  });
+});
+
+
+exports.createExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
+  const { user, question, answer } = req.body;
+  const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.create({
+    user,
+    question,
+    answer,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: exitInterviewQuestionAnswer,
+  });
+});
+
+exports.getExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
+  const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findById(req.params.id);
+  if (!exitInterviewQuestionAnswer) {
+    return next(new AppError('Exit Interview Question Answer not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: exitInterviewQuestionAnswer,
+  });
+});
+
+exports.updateExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
+  const { user, question, answer } = req.body;
+  const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findByIdAndUpdate(
+    req.params.id,
+    { user, question, answer },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!exitInterviewQuestionAnswer) {
+    return next(new AppError('Exit Interview Question Answer not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: exitInterviewQuestionAnswer,
+  });
+});
+
+exports.deleteExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
+  const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findByIdAndDelete(req.params.id);
+  if (!exitInterviewQuestionAnswer) {
+    return next(new AppError('Exit Interview Question Answer not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllExitInterviewQuestionAnswersByQuestion = catchAsync(async (req, res, next) => {
+  const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('question').equals(req.params.questionId);
+  res.status(200).json({
+    status: 'success',
+    data: exitInterviewQuestionAnswers,
+  });
+});
+
+exports.getAllExitInterviewQuestionAnswersByUser = catchAsync(async (req, res, next) => {
+  const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('user').equals(req.params.userId);
+  res.status(200).json({
+    status: 'success',
+    data: exitInterviewQuestionAnswers,
   });
 });

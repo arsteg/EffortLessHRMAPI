@@ -449,4 +449,181 @@ router.delete('/exit-interview-options/:id', authController.protect, separationC
  */
 router.get('/exit-interview-options', authController.protect, separationController.getAllExitInterviewOptions);
 
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers:
+ *   post:
+ *     summary: Add a new Exit Interview Question Answer
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       description: Exit Interview Question Answer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               question:
+ *                 type: string
+ *                 required: true
+ *               answer:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Exit Interview Question Answer successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/exit-interview-question-answers', separationController.createExitInterviewQuestionAnswer);
+
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers/{id}:
+ *   get:
+ *     summary: Get an Exit Interview Question Answer by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Exit Interview Question Answer
+ *     responses:
+ *       200:
+ *         description: Successful response with the Exit Interview Question Answer
+ *       404:
+ *         description: Exit Interview Question Answer not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/exit-interview-question-answers/:id', separationController.getExitInterviewQuestionAnswer);
+
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers/{id}:
+ *   put:
+ *     summary: Update an Exit Interview Question Answer by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Exit Interview Question Answer
+ *     requestBody:
+ *       description: New Exit Interview Question Answer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *               question:
+ *                 type: string
+ *               answer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Exit Interview Question Answer
+ *       404:
+ *         description: Exit Interview Question Answer not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/exit-interview-question-answers/:id', separationController.updateExitInterviewQuestionAnswer);
+
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers/{id}:
+ *   delete:
+ *     summary: Delete an Exit Interview Question Answer by ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Exit Interview Question Answer
+ *     responses:
+ *       204:
+ *         description: Exit Interview Question Answer successfully deleted
+ *       404:
+ *         description: Exit Interview Question Answer not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/exit-interview-question-answers/:id', separationController.deleteExitInterviewQuestionAnswer);
+
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers-by-question/{questionId}:
+ *   get:
+ *     summary: Get all Exit Interview Question Answers
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Exit Interview Question
+ *     responses:
+ *       200:
+ *         description: Successful response with Exit Interview Question Answers
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/exit-interview-question-answers-by-question/:questionId', separationController.getAllExitInterviewQuestionAnswersByQuestion);
+
+/**
+ * @swagger
+ * /api/v1/separation/exit-interview-question-answers-by-user/{userId}:
+ *   get:
+ *     summary: Get all Exit Interview Question Answers
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Exit Interview Question
+ *     responses:
+ *       200:
+ *         description: Successful response with Exit Interview Question Answers
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/exit-interview-question-answers-by-user/:userId', separationController.getAllExitInterviewQuestionAnswersByUser);
+
+
 module.exports = router;
