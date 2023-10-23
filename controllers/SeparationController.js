@@ -6,6 +6,8 @@ const ExitInterviewQuestionOptions = require('../models/Separation/ExitInterview
 const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterviewQuestionAnswers');
 const SeparationTemplateSettings = require('../models/Separation/SeparationTemplateSettings');
 const InitiateSeparationRequest = require('../models/Separation/InitiateSeparationRequest');
+const SeparationRequest = require('../models/Separation/SeparationRequest'); // Import your SeparationRequest model
+
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
@@ -26,9 +28,6 @@ exports.createSeparationType = catchAsync(async (req, res, next) => {
 
 exports.getSeparationType = catchAsync(async (req, res, next) => {
   const separationType = await SeparationType.findById(req.params.id);
-  if (!separationType) {
-    return next(new AppError('SeparationType not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: separationType,
@@ -91,9 +90,6 @@ exports.createExitInterviewQuestion = catchAsync(async (req, res, next) => {
 
 exports.getExitInterviewQuestion = catchAsync(async (req, res, next) => {
   const exitInterviewQuestion = await ExitInterviewQuestion.findById(req.params.id);
-  if (!exitInterviewQuestion) {
-    return next(new AppError('ExitInterviewQuestion not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: exitInterviewQuestion
@@ -145,9 +141,6 @@ exports.createExitInterviewOptions = catchAsync(async (req, res, next) => {
 
 exports.getExitInterviewOptions = catchAsync(async (req, res, next) => {
   const exitInterviewOptions = await ExitInterviewQuestionOptions.findById(req.params.id);
-  if (!exitInterviewOptions) {
-    return next(new AppError('ExitInterviewQuestionOptions not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: exitInterviewOptions,
@@ -208,9 +201,6 @@ exports.createExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 
 exports.getExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
   const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findById(req.params.id);
-  if (!exitInterviewQuestionAnswer) {
-    return next(new AppError('Exit Interview Question Answer not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: exitInterviewQuestionAnswer,
@@ -284,9 +274,6 @@ exports.createSeparationTemplateSetting = catchAsync(async (req, res, next) => {
 
 exports.getSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   const separationTemplateSetting = await SeparationTemplateSettings.findById(req.params.id);
-  if (!separationTemplateSetting) {
-    return next(new AppError('Separation Template Setting not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: separationTemplateSetting,
@@ -346,9 +333,6 @@ exports.createInitiateSeparationRequest = catchAsync(async (req, res, next) => {
 
 exports.getInitiateSeparationRequest = catchAsync(async (req, res, next) => {
   const initiateSeparationRequest = await InitiateSeparationRequest.findById(req.params.id).populate('user');
-  if (!initiateSeparationRequest) {
-    return next(new AppError('InitiateSeparationRequest not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: initiateSeparationRequest,
@@ -391,3 +375,59 @@ exports.getAllInitiateSeparationRequests = catchAsync(async (req, res, next) => 
     data: initiateSeparationRequests,
   });
 });
+
+exports.createSeparationRequest = catchAsync(async (req, res, next) => {
+  const separationRequest = await SeparationRequest.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: separationRequest
+  });
+});
+
+exports.getSeparationRequest = catchAsync(async (req, res, next) => {
+  const separationRequest = await SeparationRequest.findById(req.params.id);
+  if (!separationRequest) {
+    return next(new AppError('Separation Request not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: separationRequest
+  });
+});
+
+exports.updateSeparationRequest = catchAsync(async (req, res, next) => {
+  const separationRequest = await SeparationRequest.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!separationRequest) {
+    return next(new AppError('Separation Request not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: separationRequest
+  });
+});
+
+exports.deleteSeparationRequest = catchAsync(async (req, res, next) => {
+  const separationRequest = await SeparationRequest.findByIdAndDelete(req.params.id);
+  if (!separationRequest) {
+    return next(new AppError('Separation Request not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllSeparationRequests = catchAsync(async (req, res, next) => {
+  const separationRequests = await SeparationRequest.find();
+  res.status(200).json({
+    status: 'success',
+    data: separationRequests
+  });
+});
+

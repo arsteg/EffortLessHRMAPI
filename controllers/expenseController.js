@@ -34,10 +34,6 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
 
 exports.getExpenseCategory = catchAsync(async (req, res, next) => {
   const expenseCategory = await ExpenseCategory.findById(req.params.id);
-  if (!expenseCategory) {
-    return next(new AppError('Expense category not found', 404));
-  }
-
   res.status(200).json({
     status: 'success',
     data: expenseCategory,
@@ -50,10 +46,6 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true,
  });
-
-  if (!expenseCategory) {
-    return next(new AppError('Expense category not found', 404));
-  }
 
   res.status(200).json({
     status: 'success',
@@ -98,9 +90,6 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
 
 exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
-    if (!expenseApplicationField) {
-      return next(new AppError('Expense application field not found', 404));
-    }
     res.status(200).json({
       status: 'success',
       data: expenseApplicationField,
@@ -144,10 +133,6 @@ exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next
     console.log("hello");
     const expenseApplicationFields = await ExpenseApplicationField.find({}).where('expenseCategory').equals(req.params.expenseCategoryId);
  
-    if (!expenseApplicationFields || expenseApplicationFields.length === 0) {
-      return next(new AppError('Expense application fields not found for the given category', 404));
-    }
-  
     res.status(200).json({
       status: 'success',
       data: expenseApplicationFields,
@@ -164,9 +149,6 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
 
 exports.getExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findById(req.params.id);
-  if (!expenseApplicationFieldValue) {
-    return next(new AppError('ExpenseApplicationFieldValue not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: expenseApplicationFieldValue
@@ -204,10 +186,7 @@ exports.deleteExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
 exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldId = req.params.expenseApplicationFieldId;
   const expenseApplicationFieldValues = await ExpenseApplicationFieldValue.find({ expenseApplicationField: expenseApplicationFieldId });
-  if (!expenseApplicationFieldValues || expenseApplicationFieldValues.length === 0) {
-    return next(new AppError('ExpenseApplicationFieldValues not found for the specified ExpenseApplicationField', 404));
-  }
-
+  
   res.status(200).json({
     status: 'success',
     data: expenseApplicationFieldValues
@@ -233,9 +212,6 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
 
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
-  if (!expenseTemplate) {
-    return next(new AppError('Expense Template not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: expenseTemplate
@@ -290,9 +266,6 @@ exports.createExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
 
 exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.findById(req.params.id);
-  if (!applicableCategories) {
-    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: applicableCategories
@@ -424,9 +397,6 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
 
 exports.getExpenseReport = catchAsync(async (req, res, next) => {
   const expenseReport = await ExpenseReport.findById(req.params.id);
-  if (!expenseReport) {
-    return next(new AppError('ExpenseReport not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: expenseReport
@@ -480,9 +450,6 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
 
 exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
   const expenseReportExpense = await ExpenseReportExpense.findById(req.params.id);
-  if (!expenseReportExpense) {
-    return next(new AppError('Expense Report Expense not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: expenseReportExpense
@@ -541,10 +508,7 @@ exports.createExpenseAdvance = catchAsync(async (req, res, next) => {
 });
 
 exports.getExpenseAdvance = catchAsync(async (req, res, next) => {
-    const expenseAdvance = await ExpenseAdvance.findById(req.params.id);
-    if (!expenseAdvance) {
-        return next(new AppError('ExpenseAdvance not found', 404));
-    }
+    const expenseAdvance = await ExpenseAdvance.findById(req.params.id);   
     res.status(200).json({
         status: 'success',
         data: expenseAdvance
@@ -555,12 +519,7 @@ exports.updateExpenseAdvance = catchAsync(async (req, res, next) => {
     const expenseAdvance = await ExpenseAdvance.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
-    });
-
-    if (!expenseAdvance) {
-        return next(new AppError('ExpenseAdvance not found', 404));
-    }
-
+    });  
     res.status(200).json({
         status: 'success',
         data: expenseAdvance
@@ -568,12 +527,7 @@ exports.updateExpenseAdvance = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseAdvance = catchAsync(async (req, res, next) => {
-    const expenseAdvance = await ExpenseAdvance.findByIdAndDelete(req.params.id);
-    
-    if (!expenseAdvance) {
-        return next(new AppError('ExpenseAdvance not found', 404));
-    }
-    
+    const expenseAdvance = await ExpenseAdvance.findByIdAndDelete(req.params.id);   
     res.status(204).json({
         status: 'success',
         data: null
