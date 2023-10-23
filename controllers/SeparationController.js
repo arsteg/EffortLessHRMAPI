@@ -386,9 +386,6 @@ exports.createSeparationRequest = catchAsync(async (req, res, next) => {
 
 exports.getSeparationRequest = catchAsync(async (req, res, next) => {
   const separationRequest = await SeparationRequest.findById(req.params.id);
-  if (!separationRequest) {
-    return next(new AppError('Separation Request not found', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: separationRequest
@@ -413,10 +410,6 @@ exports.updateSeparationRequest = catchAsync(async (req, res, next) => {
 
 exports.deleteSeparationRequest = catchAsync(async (req, res, next) => {
   const separationRequest = await SeparationRequest.findByIdAndDelete(req.params.id);
-  if (!separationRequest) {
-    return next(new AppError('Separation Request not found', 404));
-  }
-
   res.status(204).json({
     status: 'success',
     data: null
