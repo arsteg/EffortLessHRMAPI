@@ -73,20 +73,39 @@ exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
   });
 });
 
+
 exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
-    const { expenseCategory, fieldName, fieldType, isMandatory } = req.body;
-    const expenseApplicationField = await ExpenseApplicationField.create({
-      expenseCategory,
-      fieldName,
-      fieldType,
-      isMandatory,
-    });
-  
+    const { expenseCategory, fields } = req.body;
+
+    // Validate the incoming data
+    if (!expenseCategory || !Array.isArray(fields) || fields.length === 0) {
+        return res.status(400).json({
+            status: 'failure',
+            error: 'Invalid request data',
+        });
+    }
+
+    // Prepare an array to store the created fields
+    const createdFields = [];
+
+    // Iterate through the fields array and create ExpenseApplicationField records
+    for (const field of fields) {
+        const { fieldName, fieldType, isMandatory } = field;
+        const expenseApplicationField = await ExpenseApplicationField.create({
+            expenseCategory,
+            fieldName,
+            fieldType,
+            isMandatory,
+        });
+        createdFields.push(expenseApplicationField);
+    }
+
     res.status(201).json({
-      status: 'success',
-      data: expenseApplicationField,
+        status: 'success',
+        data: createdFields,
     });
 });
+
 
 exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);

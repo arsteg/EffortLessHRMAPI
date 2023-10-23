@@ -159,7 +159,7 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *     security: [{
  *         bearerAuth: []
  *     }]
- *     requestBody:
+*     requestBody:
  *       description: Expense application field details
  *       required: true
  *       content:
@@ -171,18 +171,25 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *                 type: string
  *                 description: ID of the expense category
  *                 required: true
- *               fieldName:
- *                 type: string
- *                 description: Name of the field
+ *               fields:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     fieldName:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     fieldType:
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
+ *                       required: true
+ *                     isMandatory:
+ *                       type: boolean
+ *                       description: Whether the field is mandatory or not
+ *                       required: true
  *                 required: true
- *               fieldType:
- *                 type: string
- *                 description: Type of the field (e.g., text, number, date)
- *                 required: true
- *               isMandatory:
- *                 type: boolean
- *                 description: Whether the field is mandatory or not
- *                 required: true
+ *                 description: Array of field objects
  *     responses:
  *       201:
  *         description: Expense application field successfully added
