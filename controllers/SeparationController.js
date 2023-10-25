@@ -51,6 +51,17 @@ exports.updateSeparationType = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteSeparationType = catchAsync(async (req, res, next) => {
+  const exitInterviewQuestion = await ExitInterviewQuestion.find({}).where('separationType').equals(req.params.id); 
+  const initiateSeparationRequest = await InitiateSeparationRequest.find({}).where('separationType').equals(req.params.id);  
+  const separationRequest = await SeparationRequest.find({}).where('separationType').equals(req.params.id);  
+ 
+  if (exitInterviewQuestion.length > 0 || initiateSeparationRequest > 0 || separationRequest > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Separation Type is already in use. Please delete related records before deleting the Separation Type.',
+    });
+  }
   const separationType = await SeparationType.findByIdAndDelete(req.params.id);
   if (!separationType) {
     return next(new AppError('SeparationType not found', 404));
@@ -113,8 +124,17 @@ exports.updateExitInterviewQuestion = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
-  const exitInterviewQuestion = await ExitInterviewQuestion.findByIdAndDelete(req.params.id);
-  if (!exitInterviewQuestion) {
+  const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('question').equals(req.params.id);  
+  if (exitInterviewQuestionAnswers.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Exit Interview Question is already in use. Please delete related records before deleting the Exit Interview Question.',
+    });
+  }
+  const exitInterviewQuestion = await ExitInterviewQuestion.findById(req.params.id);
+  await exitInterviewQuestion.remove();
+    if (!exitInterviewQuestion) {
     return next(new AppError('ExitInterviewQuestion not found', 404));
   }
   res.status(204).json({
@@ -229,6 +249,7 @@ exports.updateExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 });
 
 exports.deleteExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
+  
   const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findByIdAndDelete(req.params.id);
   if (!exitInterviewQuestionAnswer) {
     return next(new AppError('Exit Interview Question Answer not found', 404));
