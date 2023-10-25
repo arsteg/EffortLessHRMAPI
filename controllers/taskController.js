@@ -13,11 +13,11 @@ const CommonController  = require('../controllers/commonController');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
-const htmlToText = require('html-to-text').htmlToText;
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
 const notification  = require('../controllers/notficationController');
 const { Console } = require('winston/lib/winston/transports');
+const timeLog = require('../models/timeLog');
 
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -36,6 +36,13 @@ function formatDateToDDMMYY(date) {
   return `${day}/${month}/${year}`;
 }
 exports.deleteTask = catchAsync(async (req, res, next) => {
+  const timeLogExists = await timeLog.find({}).where('task').equals(req.params.id);  
+  if (timeLogExists.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'TimeLog is already added for the task, We can`t delete task.',
+    });
+  }
  // const newTaskUserList = await TaskUser.findOneAndDelete({}).where('task').equals(req.params.id);  
  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Task").where('company').equals(req.cookies.companyId); 
  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
@@ -74,7 +81,9 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
     }
   }
   //const newTaskAttachmentList = await TaskAttachments.findOneAndDelete({}).where('task').equals(req.params.id);
-  const document = await Task.findByIdAndDelete(req.params.id);
+
+const document = await Task.findById(req.params.id);
+await document.remove();
   res.status(204).json({
     status: 'success',
     data: null
@@ -1043,6 +1052,13 @@ exports.updateTag = catchAsync(async (req, res, next) => {
 });
   
 exports.deleteTagById = async (req, res) => {
+  const taskTag = await TaskTag.find({}).where('tag').equals(req.params.id);  
+  if (taskTag.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Tag is already added for the task, We can`t delete it.',
+    });
+  }
   try {
         const tag = await Tag.findByIdAndDelete(req.params.id);
         if (!tag) {

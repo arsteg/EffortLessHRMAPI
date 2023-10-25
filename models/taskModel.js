@@ -1,7 +1,9 @@
 var mongoose = require('mongoose');
 var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
-
+const taskAttachment = require('./taskAttachmentModel');
+const taskComment = require('./Task/taskCommentModel');
+const taskTag = require('./Task/taskTagModel');
 var taskModelSchema = new Schema({ 
   taskName: {
     type: String,
@@ -124,5 +126,11 @@ var taskModelSchema = new Schema({
     ref: 'Comments',
     foreignField: 'task', // tour field in review model pointing to this model
     localField: '_id' // id of current model
+  });
+  taskModelSchema.pre('remove', async function(next) { 
+    await taskAttachment.deleteMany({ task: this._id }); 
+    await taskComment.deleteMany({ task: this._id });   
+    await taskTag.deleteMany({ task: this._id });   
+    next(); // Continue with the delete operation
   });
 module.exports = mongoose.model('Task', taskModelSchema);
