@@ -1,10 +1,20 @@
 const Project = require('../models/projectModel');
 const catchAsync = require('../utils/catchAsync');
 const ProjectUser = require('../models/projectUserModel');
+const Task = require('../models/taskModel');
 const AppError = require('../utils/appError');
 exports.deleteProject = catchAsync(async (req, res, next) => {
-  const document = await Project.findByIdAndDelete(req.params.id);
-  const newProjectUserList = await ProjectUser.findOneAndDelete({}).where('project').equals(req.params.id);  
+
+  const task = await Task.find({}).where('project').equals(req.params.id);  
+  if (task.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Project is already in use. Please delete related records before deleting the Project.',
+    });
+  }
+  const document = await Project.findById(req.params.id);
+  await document.remove();
 
   if (!document) {
     return next(new AppError('No document found with that ID', 404));

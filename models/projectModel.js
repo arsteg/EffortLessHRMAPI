@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var AutoIncrement = require('mongoose-sequence')(mongoose);
 var Schema = mongoose.Schema;
-
+const projectUser = require('./projectUserModel');
 var projectModelSchema = new Schema({ 
   projectName: {
     type: String,
@@ -75,5 +75,10 @@ var projectModelSchema = new Schema({
     ref: 'ProjectUser',
     foreignField: 'project', // tour field in review model pointing to this model
     localField: '_id' // id of current model
+  });
+  projectModelSchema.pre('remove', async function(next) { 
+    // Now, remove ExpenseApplicationFieldValue documents associated with the removed ExpenseApplicationField records
+    await projectUser.deleteMany({ question: this._id }); 
+    next(); // Continue with the delete operation
   });
 module.exports = mongoose.model('Project', projectModelSchema);
