@@ -56,7 +56,8 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(req.params.id);
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseCategory').equals(req.params.id);  
-  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0) {
+  const expenseAdvance = await ExpenseAdvance.find({}).where('category').equals(req.params.id);  
+  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0 || expenseAdvance.length > 0) {
     return res.status(400).json({
       status: 'failed',
       data: null,
@@ -263,14 +264,16 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.id);;
-  if (applicableCategories) {
-     res.status(204).json({
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseTemplate').equals(req.params.id);  
+  if (employeeExpenseAssignment.length > 0 || expenseReportExpenses.length > 0) {
+    return res.status(400).json({
       status: 'failed',
       data: null,
-      message: 'Expense Template already is in use, need to delete Expense Template Applicable Categories first',
-    }); 
+      message: 'Expense Template is already in use. Please delete related records before deleting the Expense Template.',
+    });
   }
+  
   const expenseTemplate = await ExpenseTemplate.findByIdAndDelete(req.params.id);
   
   if (!expenseTemplate) {
@@ -464,6 +467,14 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
+   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.id);  
+  if (expenseReportExpenses.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Expense Report is already in use. Please delete related records before deleting the Expense Report.',
+    });
+  }
   const expenseReport = await ExpenseReport.findByIdAndDelete(req.params.id);
 
   if (!expenseReport) {
