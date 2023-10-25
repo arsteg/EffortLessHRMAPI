@@ -55,12 +55,13 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
 
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(req.params.id);
-  if (applicableCategories.length > 0) {
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseCategory').equals(req.params.id);  
+  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0) {
     return res.status(400).json({
       status: 'failed',
       data: null,
-      message: 'Expense Category already is in use, need to delete Expense Template Applicable Categories first',
-    }); 
+      message: 'Expense Category is already in use. Please delete related records before deleting the Expense Category.',
+    });
   }
 const expenseCategoryInstance = await ExpenseCategory.findById(req.params.id);
 await expenseCategoryInstance.remove();
@@ -292,6 +293,14 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
 
 exports.createExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
   const { expenseTemplate, expenseCategory } = req.body;
+  const isExistsApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(expenseCategory).where('expenseTemplate').equals(expenseTemplate);
+  if (isExistsApplicableCategories.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Expense Category is already Applicable to Expense Template.',
+    });
+  }  
   const applicableCategories = await ExpenseTemplateApplicableCategories.create({ expenseTemplate, expenseCategory });
   res.status(201).json({
     status: 'success',
