@@ -4,8 +4,13 @@ const AppError = require('../utils/appError.js');
 const APIFeatures = require('../utils/apiFeatures');
 const userSubordinate = require('../models/userSubordinateModel');
 const ProjectUsers = require('../models/projectUserModel');
+const TaskUsers = require('../models/taskUserModel');
 const Projects = require('../models/projectModel');
-
+const timeLog = require('../models/timeLog');
+const BrowserHistory= require('../models/appsWebsites/browserHistory');
+const Productivity = require('./../models/productivityModel');
+const AppWebsite = require('./../models/commons/appWebsiteModel');
+const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 exports.getAllUsers=catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
     let filter = { status: 'Active', company : req.cookies.companyId };
@@ -30,6 +35,26 @@ exports.getAllUsers=catchAsync(async (req, res, next) => {
   });
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
+  const timeLogExists = await timeLog.find({}).where('user').equals(req.params.id); 
+  const task = await TaskUsers.find({}).where('user').equals(req.params.id);  
+  const project = await ProjectUsers.find({}).where('user').equals(req.params.id);  
+  const browserHistory = await BrowserHistory.find({}).where('user').equals(req.params.id);  
+  const productivity = await Productivity.find({}).where('user').equals(req.params.id); 
+  const appWebsite = await AppWebsite.find({}).where('userReference').equals(req.params.id); 
+  const manualTimeRequest = await ManualTimeRequest.find({}).where('user').equals(req.params.id); 
+  const teamMember = await userSubordinate.find({}).where('userId').equals(req.params.id).where('subordinateUserId').equals(req.params.id);
+  if (browserHistory.length > 0 || manualTimeRequest.length > 0 || productivity.length > 0 || appWebsite.length > 0 || timeLogExists.length > 0 || task.length > 0 || project.length > 0 || teamMember.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'User is already in use, We can`t delete User.',
+    });
+  }
+  if (timeLogExists.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'TimeLog is already added for the task, We can`t delete task.',
+    });
+  }
     const document = await User.findByIdAndDelete(req.params.id);
     if (!document) {
       return next(new AppError('No document found with that ID', 404));

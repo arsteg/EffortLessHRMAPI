@@ -3,10 +3,15 @@ const catchAsync = require('../utils/catchAsync');
 const ProjectUser = require('../models/projectUserModel');
 const Task = require('../models/taskModel');
 const AppError = require('../utils/appError');
-exports.deleteProject = catchAsync(async (req, res, next) => {
+const AppWebsite = require('./../models/commons/appWebsiteModel');
+const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 
+exports.deleteProject = catchAsync(async (req, res, next) => {
+  
+  const appWebsite = await AppWebsite.find({}).where('projectReference').equals(req.params.id); 
+  const manualTimeRequest = await ManualTimeRequest.find({}).where('project').equals(req.params.id); 
   const task = await Task.find({}).where('project').equals(req.params.id);  
-  if (task.length > 0) {
+  if (task.length > 0 || appWebsite.length > 0 || manualTimeRequest.length > 0) {
     return res.status(400).json({
       status: 'failed',
       data: null,

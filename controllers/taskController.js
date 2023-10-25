@@ -18,6 +18,7 @@ const mongoose = require('mongoose');
 const notification  = require('../controllers/notficationController');
 const { Console } = require('winston/lib/winston/transports');
 const timeLog = require('../models/timeLog');
+const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -37,7 +38,8 @@ function formatDateToDDMMYY(date) {
 }
 exports.deleteTask = catchAsync(async (req, res, next) => {
   const timeLogExists = await timeLog.find({}).where('task').equals(req.params.id);  
-  if (timeLogExists.length > 0 ) {
+  const manualTimeRequest = await ManualTimeRequest.find({}).where('task').equals(req.params.id); 
+  if (timeLogExists.length > 0 ||manualTimeRequest.lenth > 0) {
     return res.status(400).json({
       status: 'failed',
       message: 'TimeLog is already added for the task, We can`t delete task.',
