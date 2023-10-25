@@ -54,12 +54,21 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
-  const expenseCategory = await ExpenseCategory.findByIdAndDelete(req.params.id);
-  if (!expenseCategory) {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(req.params.id);
+  if (applicableCategories.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Expense Category already is in use, need to delete Expense Template Applicable Categories first',
+    }); 
+  }
+const expenseCategoryInstance = await ExpenseCategory.findById(req.params.id);
+await expenseCategoryInstance.remove();
+  if (!expenseCategoryInstance) {
     return next(new AppError('Expense category not found', 404));
   }
 
-  res.status(204).json({
+  return res.status(204).json({
     status: 'success',
     data: null,
   });
@@ -136,12 +145,11 @@ exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
-    const expenseApplicationField = await ExpenseApplicationField.findByIdAndDelete(req.params.id);
-  
+    const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
+    await expenseApplicationField.remove();
     if (!expenseApplicationField) {
       return next(new AppError('Expense application field not found', 404));
-    }
-  
+    }  
     res.status(204).json({
       status: 'success',
       data: null,
@@ -254,6 +262,14 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.id);;
+  if (applicableCategories) {
+     res.status(204).json({
+      status: 'failed',
+      data: null,
+      message: 'Expense Template already is in use, need to delete Expense Template Applicable Categories first',
+    }); 
+  }
   const expenseTemplate = await ExpenseTemplate.findByIdAndDelete(req.params.id);
   
   if (!expenseTemplate) {
