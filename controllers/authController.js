@@ -550,6 +550,14 @@ res.status(200).json({
 });
 
 exports.deleteRole = catchAsync(async (req, res, next) => {  
+  const user = await User.find({}).where('role').equals(req.params.id);  
+  if (user.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Role is already in use. Please delete related records before deleting the Role.',
+    });
+  }
   const document = await Role.findByIdAndDelete(req.params.id);
   if (!document) {
     return next(new AppError('No document found with that ID', 404));
