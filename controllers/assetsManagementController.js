@@ -9,6 +9,7 @@ const EmployeeAssets = require("../models/AssetsManagement/employeeAssetsModel")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const mongoose = require("mongoose");
+const CustomAttributeModel = require("../models/AssetsManagement/CustomAttributeModel");
 
 exports.addAssetType = catchAsync(async (req, res, next) => {
   const response = new AssetType({
@@ -55,21 +56,22 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetType = catchAsync(async (req, res, next) => {
+
   // Check if any Asset references the AssetType
   const assetExists = await Asset.findOne({
     assetType: req.params.id,
     company: req.cookies.companyId,
   });
-  if (assetExists) {
-    return next(
-      new AppError(
-        "AssetType cannot be deleted as it is associated with existing assets",
-        400
-      )
-    );
+  const customAttributeModel = await  CustomAttributeModel.findOne({
+    assetType: req.params.id
+  });
+  if (assetExists.length > 0 || customAttributeModel.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'AssetType cannot be deleted as it is associated with existing assets',
+    });
   }
-
-  // If no assets reference the AssetType, delete all CustomAttributes related to that AssetType
+   // If no assets reference the AssetType, delete all CustomAttributes related to that AssetType
   await CustomAttribute.deleteMany({
     assetType: req.params.id,
     company: req.cookies.companyId,
@@ -275,6 +277,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
+ 
   const assetAttributeValue = await AssetAttributeValue.findByIdAndDelete(
     req.params.id
   );
@@ -336,6 +339,15 @@ exports.updateAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
+  const assets = await  Asset.findOne({
+    status: req.params.id
+  });
+  if (assets.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Asset Status cannot be deleted as it is associated with existing assets',
+    });
+  }
   const assetStatus = await AssetStatus.findByIdAndDelete(req.params.id);
   if (!assetStatus) {
     return next(new AppError("AssetStatus not found", 404));
@@ -396,6 +408,15 @@ exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
+  const assetAttributeValue = await  AssetAttributeValue.findOne({
+    attributeId: req.params.id
+  });
+  if (assetAttributeValue.length > 0) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Asset Attribute Value cannot be deleted as it is in use',
+    });
+  }
   const customAttribute = await CustomAttribute.findByIdAndDelete(
     req.params.id
   );
@@ -694,6 +715,12 @@ exports.updateAsset = catchAsync(async (req, res, next) => {
 
 exports.deleteAsset = catchAsync(async (req, res, next) => {
   const employeeAsset = await EmployeeAssets.find({Asset: req.params.id});
+  if (employeeAsset.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Asset cannot be deleted as it is in use',
+    });
+  }
   if(!employeeAsset){
   const asset = await Asset.findByIdAndDelete(req.params.id);
   if (!asset) {

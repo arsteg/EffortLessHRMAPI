@@ -50,6 +50,15 @@ exports.updateCompanyPolicyDocument = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCompanyPolicyDocument = catchAsync(async (req, res, next) => {
+  const companyPolicyDocumentAppliesTo = await CompanyPolicyDocumentAppliesTo.find({}).where('user').equals(req.params.id);  
+  const companyPolicyDocumentUser = await CompanyPolicyDocumentUser.find({}).where('user').equals(req.params.id);  
+  if (companyPolicyDocumentAppliesTo.length > 0 || companyPolicyDocumentUser > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      data: null,
+      message: 'Company Policy Document is already in use. Please delete related records before deleting the Company Policy Document.',
+    });
+  }
     const companyPolicyDocument = await CompanyPolicyDocument.findByIdAndDelete(req.params.id);
     
     if (!companyPolicyDocument) {
