@@ -218,6 +218,16 @@ exports.updateDocument = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteDocument = catchAsync(async (req, res, next) => {
+  
+  const documentUsers = await DocumentUsers.find({document: req.params.id});
+  const documentAppliedTo = await DocumentAppliedTo.find({document: req.params.id});
+
+  if (documentUsers.length > 0 || documentAppliedTo.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Document cannot be deleted as it is in use',
+    });
+  }
   const document = await Document.findByIdAndDelete(req.params.id);
   if (!document) {
     return next(new AppError('No document found with that ID', 404));
@@ -327,6 +337,14 @@ exports.updateDocumentCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteDocumentCategory = catchAsync(async (req, res, next) => {
+  const category = await Document.find({category: req.params.id});
+  if (category.length > 0 ) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Document Category cannot be deleted as it is in use',
+    });
+  }
+
   const documentCategory = await DocumentCategory.findByIdAndDelete(req.params.id);
   
   if (!documentCategory) {

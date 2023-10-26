@@ -13,5 +13,6 @@ var documentAppliedToSchema = new Schema({
       ref: 'User'
     }
   }, { collection: 'DocumentAppliedTo' });
+  
   module.exports = mongoose.model('DocumentAppliedTo', documentAppliedToSchema);
   
