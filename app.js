@@ -33,6 +33,7 @@ var assetsManagementRouter = require('./routes/assetsManagementRouter');
 var documentsRouter = require('./routes/documentsRouter');
 var expenseRouter = require('./routes/expenseRouter');
 var separationRouter = require('./routes/SeparationRouter');
+var attendanceRouter = require(`./routes/attendenceRouter`);
 
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
@@ -110,4 +111,6 @@ app.use('/api/v1/assetsManagement', assetsManagementRouter);
 app.use('/api/v1/documents', documentsRouter);
 app.use('/api/v1/expense', expenseRouter);
 app.use('/api/v1/separation', separationRouter);
+app.use('/api/v1/attendance', attendanceRouter);
+
 module.exports = app;
