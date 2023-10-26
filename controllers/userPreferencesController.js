@@ -102,7 +102,7 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
   });
 
   exports.getPreferenceOptionByCategory = catchAsync(async (req, res, next) => {
-    console.log(req.params);
+    
     const preferenceOption = await PreferenceOption.find({category:mongoose.Types.ObjectId(req.params.categoryId)});
     if (!preferenceOption) {
       return next(new AppError('Preference option not found', 404));

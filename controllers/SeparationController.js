@@ -73,8 +73,7 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllSeparationTypes = catchAsync(async (req, res, next) => {
-  console.log("hello");
+exports.getAllSeparationTypes = catchAsync(async (req, res, next) => { 
   const separationTypes = await SeparationType.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',

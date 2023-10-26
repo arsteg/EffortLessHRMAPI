@@ -8,7 +8,6 @@ app.set('email', __dirname + '/email');
 app.set('view engine', 'pug');
 const sendEmailLog = async options => {
 sgMail.setApiKey(process.env.SENDGRID_API_KEY); 
-console.log("test12345");
 // initialize nodemailer
 var html= pug.renderFile(__dirname+'/../email/'+'home.pug' , { managerName:options.data.managerName,name: options.data.name, total: options.data.total,logs:options.data.logs});
 const msg = {
@@ -18,7 +17,6 @@ const msg = {
     html: html
 }
 
-console.log(msg);
 sgMail
   .send(msg)
   .then((response) => {

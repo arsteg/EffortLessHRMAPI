@@ -8,8 +8,7 @@ const catchAsync = require('../utils/catchAsync');
 const { findById } = require("../models/item"); 
 
 exports.addNew = catchAsync(async (req, res, next) => {
-    console.log("hii");
-     try {       
+    try {       
             const createDocument = await genericSetting.create({
                 CategoryName:req.body.CategoryName,
                 ControlType:req.body.ControlType,
@@ -19,8 +18,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
                 company: req.cookies.companyId,
                 user: req.cookies.userId,
               }); 
-              console.log("hii1");
-              if(req.body.values!=null)
+             if(req.body.values!=null)
               {
                 for(var i = 0; i < req.body.values.length; i++) {
                     console.log(req.body.values.length);
@@ -30,7 +28,6 @@ exports.addNew = catchAsync(async (req, res, next) => {
                     });                  
                 }
               }
-              console.log("hii2");
               if(req.body.listData!=null)
               {
                 for(var i = 0; i < req.body.listData.length; i++) {
@@ -41,7 +38,6 @@ exports.addNew = catchAsync(async (req, res, next) => {
                     });                  
                 }
               }
-            console.log(createDocument._id);
         const documents = await genericSetting.findById(createDocument._id);
                 
         const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(documents._id);  
@@ -211,8 +207,7 @@ exports.getGenericSettingValue = catchAsync(async (req, res, next) => {
 });
 exports.getById = catchAsync(async (req, res, next) => {
     try {
-        console.log(req.params.id);
-        const documents = await genericSetting.findById(req.params.id);
+         const documents = await genericSetting.findById(req.params.id);
        
          const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(documents._id);  
          if(genericSettingValues) 
@@ -268,8 +263,6 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
     try 
     {
         let date = req.body.date;
-        // console.log(req.params.id);
-        // console.log(req.body.date);
         const getDocumentByDateAndId = await genericSetting
             .findById(req.params.id).where('date').equals(date);
 

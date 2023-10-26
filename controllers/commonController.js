@@ -313,7 +313,6 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
     const id = req.params.id;
     const emailTemplate = await EmailTemplate.find({ _id: req.params.id, isDelete: true });    
     if (!emailTemplate) {   
-      console.log("hiii");
     // Logic to delete an email template
     EmailTemplate.findByIdAndRemove(id)
       .then(() => {

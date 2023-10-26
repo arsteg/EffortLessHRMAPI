@@ -106,10 +106,7 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
       assetObj.customAttributes = customAttributes;
       return assetObj;
     })
-  );
-
-  console.log(allAssetTypes);
-
+  );  
   res.status(200).json({
     status: "success",
     data: allAssetTypes,
@@ -214,9 +211,7 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
     const update = { value };    
 
     if(recordExists && recordExists.length>0){
-            
-      console.log(recordExists);
-        // Update the existing record based on assetId and attributeId
+      // Update the existing record based on assetId and attributeId
       
       const assetAttributeValue = await AssetAttributeValue.findOneAndUpdate(
         filter,

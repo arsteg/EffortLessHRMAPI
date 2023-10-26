@@ -159,9 +159,7 @@ exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
 });
 
 exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next) => {
-    console.log("hello");
     const expenseApplicationFields = await ExpenseApplicationField.find({}).where('expenseCategory').equals(req.params.expenseCategoryId);
- 
     res.status(200).json({
       status: 'success',
       data: expenseApplicationFields,

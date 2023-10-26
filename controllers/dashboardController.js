@@ -337,7 +337,6 @@ exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {
   let inProgress = 0;
   let done = 0;
   let closed = 0;
-  console.log(userTasks);
   userTasks.forEach(task=>{    
    
     switch(task?.task?.status?.toUpperCase()){

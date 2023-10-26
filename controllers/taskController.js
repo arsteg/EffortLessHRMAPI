@@ -618,10 +618,8 @@ if(taskList)
      .replace("{company}", req.cookies.companyName)
      .replace("{description}", newTask.description)
      .replace("{priority}", newTask.priority)
-      .replace("{taskName}", newTask.taskName)
-      
-      .replace("{lastName}", newUser.lastName);    
-      console.log(emailTemplateNewUser); 
+      .replace("{taskName}", newTask.taskName)      
+      .replace("{lastName}", newUser.lastName);   
       await sendEmail({
         email: newUser.email,
         subject:templateNewUser.Name,
@@ -678,9 +676,8 @@ if(taskList)
 });
 
 exports.addTaskUser = catchAsync(async (req, res, next) => {   
-  console.log("hello");
-  var emailOldUser = null; 
-  const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
+ var emailOldUser = null; 
+ const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
  const task = await Task.findById(req.body.task);
   var newTaskUserItem = null;
   if (taskUsersExists.length > 0) {  
@@ -1110,8 +1107,6 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
 
 exports.getTags = async (req, res) => {
   try {       
-    console.log(`started getTags`);
-    console.log(`req.cookies.companyId: ${req.cookies.companyId}`);
     // Find all Tag documents that match the tag ids
     const tags = await Tag.find({ company: req.cookies.companyId });
 
@@ -1127,8 +1122,7 @@ exports.getTags = async (req, res) => {
 
 //Start Task Tags
 
-exports.createTaskTag = async (req, res) => {
-  console.log(req.body);
+exports.createTaskTag = async (req, res) => { 
   try {
     const taskTag = new TaskTag(req.body);
     await taskTag.save();
@@ -1140,8 +1134,7 @@ exports.createTaskTag = async (req, res) => {
 
 exports.getAllTaskTags = async (req, res) => {
   try {
-    const taskTags = await TaskTag.find();
-    console.log(taskTags);
+    const taskTags = await TaskTag.find();   
     res.send(taskTags);
   } catch (err) {
     res.status(500).send({ error: 'Server error' });
@@ -1170,7 +1163,6 @@ exports.getCommentsByTaskId = async (req, res) => {
       }
       return acc;
     }, []);
-    console.log(nestedComments);
   });
 };
 
@@ -1308,7 +1300,6 @@ if(newTaskUserList)
 exports.getAllTaskTags = async (req, res) => {
   try {
     const taskTags = await TaskTag.find();
-    console.log(taskTags);
     res.send(taskTags);
   } catch (err) {
     res.status(500).send({ error: 'Server error' });
@@ -1345,31 +1336,20 @@ exports.updateComment = async (req, res) => {
 };
 
 exports.deleteComment = async (req, res) => {
-  console.log("delete comment API Called");
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Delete Comment Notification").where('company').equals(req.cookies.companyId); 
   const comment = await Comment.findById(req.params.id);
-console.log(req.params.id);
- 
-
-  try {
-   
-     const plainTextContent = emailTemplate.contentData; 
-    
-   
+  try {   
+    const plainTextContent = emailTemplate.contentData;   
     const newTaskUserList = await TaskUser.find({}).where('task').equals(comment.task);  
-    const currentTask = await Task.findById(comment.task); 
-    
+    const currentTask = await Task.findById(comment.task);     
     if(newTaskUserList)
     {
       for(var j = 0; j < newTaskUserList.length; j++) 
-      { console.log(newTaskUserList[j].user._id);
+      {
           const user = await User.findOne({ _id: newTaskUserList[j].user._id });        
           if(user)
           {
-            console.log(user.firstName);
-           
-            const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
-
+                const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
                 const emailTemplateNewUser = plainTextContent
                 .replace("{firstName}", user.firstName)    
                 .replace("{taskName}", currentTask.taskName)
@@ -1389,8 +1369,6 @@ console.log(req.params.id);
           
       } 
     }
-
-    console.log(`delete comment with id ${req.params.id}`);
     const result = await Comment.findByIdAndDelete(req.params.id);
     if(result){
     res.status(200).json({ message: 'Comment deleted successfully' });

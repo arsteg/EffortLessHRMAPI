@@ -9,16 +9,13 @@ const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     var appWebsiteKey = req.body.appWebsite.split(".");
-    console.log(appWebsiteKey[0]);
     const getProductivity = await Productivity.find({}).where('key').equals(appWebsiteKey[0])
     let appWebsiteName="Default";
-    console.log(getProductivity);
       if(getProductivity.length>0)
       { 
         appWebsiteName= getProductivity[0].name;
       }
-     console.log(appWebsiteName);
-     try {       
+      try {       
             const createDocument = await appWebsite.create({
                 appWebsite:appWebsiteName,
                 ModuleName:req.body.ModuleName,
@@ -119,8 +116,6 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
     try 
     {
         let date = req.body.date;
-        // console.log(req.params.id);
-        // console.log(req.body.date);
         const getDocumentByDateAndId = await appWebsite
             .findById(req.params.id).where('date').equals(date);
 
@@ -157,9 +152,7 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
 
 exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
     try {
-        console.log(`getUserProductivityApps called`);
         const userId = req.params.userId;
-        console.log(userId);
         const productivityApps = await Productivity.find({company:req.cookies.companyId,user:userId});        
         res.status(200).json({
             status: 'success',
@@ -191,8 +184,6 @@ exports.getproductivityById = catchAsync(async (req, res, next) => {
 });
 
 exports.addProductivity = catchAsync(async (req, res, next) => {    
-    console.log(req.body);
-
     const productivityData = await Productivity.create(
         {
             icon: req.body.icon,            
@@ -293,10 +284,6 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
       // Construct new date objects with the extracted date parts
       const newStartDate = new Date(startYear, startMonth, startDay);
       const newEndDate = new Date(endYear, endMonth, endDay);
-
-      console.log('Start Date:', newStartDate);
-      console.log('End Date:', newEndDate);
-
       filters.lastVisitTime = {
         $gte: newStartDate,
         $lte: newEndDate

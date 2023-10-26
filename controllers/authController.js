@@ -97,7 +97,6 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   var company = await Company.findOne({companyName:req.body.companyName});
   var companyId = process.env.DEFAULT_COMPANY_Id;
   if(company === null){
-    console.log("Company Not Exsists");
     company = await Company.create({
     companyName: req.body.companyName,
     contactPerson: req.body.firstName + " "+ req.body.lastName,
@@ -164,7 +163,6 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   
   }
   const roles = await Role.find({ company: company._id });
-  console.log(roles);
   const role = await Role.findOne({
     company: company._id,
     Name: "Admin"
@@ -464,7 +462,6 @@ exports.sendLog = catchAsync(async (req, res, next) => {
       for (const timeLog of timeLogs) {       
           timeLog.startTime = timeLog.startTime.getHours();        
           } 
-       console.log(timeLogs);
        await sendEmailLog({
           email: userList[i].email,
           subject: 'Tracker Log',
@@ -697,7 +694,6 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
-  console.log(req.params.id);
   const rolePermission = await RolePermission.findByIdAndDelete(req.params.id);
   if (!rolePermission) {
     return next(new AppError('No Role Permission found with that ID', 404));

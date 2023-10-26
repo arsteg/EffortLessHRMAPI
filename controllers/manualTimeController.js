@@ -104,22 +104,15 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       new: false,
       runValidators: true
   });
-  console.log(updatemanualTimeRequest);
+  
   if(updatemanualTimeRequest)
   {
-    console.log("called1");
-    console.log(updatemanualTimeRequest.status);
     if(req.body.status==='approved')
     {
-      console.log("called2");
       let startTime = moment(req.body.fromDate).toDate();
       const endTime = moment(req.body.toDate).toDate();  
-      let recordCount=0;  
-      console.log(startTime);
-      console.log(endTime);
-      
+      let recordCount=0;        
       while( startTime<endTime){   
-        console.log("called");
         var newLog = {
           user: updatemanualTimeRequest.user,
           task: updatemanualTimeRequest.task,
@@ -132,15 +125,11 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
           scrolls:0,
           filePath:"",     
           isManualTime:true
-        }
-        console.log(newLog);
-        let logItem = await TimeLog.create(newLog);
-        console.log(logItem);
-        result.push(logItem);
+        }      
+        let logItem = await TimeLog.create(newLog);       
         recordCount++;  
         startTime = moment(startTime).add(10, 'm').toDate();      
-      }
-      
+      }      
     }    
   } 
   

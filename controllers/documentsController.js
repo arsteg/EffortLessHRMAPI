@@ -419,7 +419,6 @@ exports.getAllDocumentUsers = catchAsync(async (req, res, next) => {
 
 exports.addTemplate = catchAsync(async (req, res, next) => {
   req.body.company = req.cookies.companyId;
-  console.log(req.body);
   const template = await Template.create(req.body);
   res.status(201).json({
       status: 'success',
