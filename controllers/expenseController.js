@@ -87,7 +87,6 @@ exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
 
 exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     const { expenseCategory, fields } = req.body;
-
     // Validate the incoming data
     if (!expenseCategory || !Array.isArray(fields) || fields.length === 0) {
         return res.status(400).json({
@@ -95,10 +94,8 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
             error: 'Invalid request data',
         });
     }
-
     // Prepare an array to store the created fields
     const createdFields = [];
-
     // Iterate through the fields array and create ExpenseApplicationField records
     for (const field of fields) {
         const { fieldName, fieldType, isMandatory } = field;
@@ -110,7 +107,6 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
         });
         createdFields.push(expenseApplicationField);
     }
-
     res.status(201).json({
         status: 'success',
         data: createdFields,
@@ -167,11 +163,31 @@ exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next
 });
 
 exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
-  const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create(req.body);
+  const { expenseApplicationField , fields } = req.body;
+  // Validate the incoming data
+  if (!expenseApplicationField || !Array.isArray(fields) || fields.length === 0) {
+      return res.status(400).json({
+          status: 'failure',
+          error: 'Invalid request data',
+      });
+  }
+  // Prepare an array to store the created fields
+  const createdFields = [];
+  // Iterate through the fields array and create ExpenseApplicationField records
+  for (const field of fields) {
+      const { name, type, value } = field;
+      const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
+          expenseApplicationField,
+          name,
+          type,
+          value,
+      });
+      createdFields.push(expenseApplicationFieldValue);
+  }
   res.status(201).json({
-    status: 'success',
-    data: expenseApplicationFieldValue
-  });
+      status: 'success',
+      data: createdFields,
+  });  
 });
 
 exports.getExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {

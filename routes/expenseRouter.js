@@ -338,13 +338,25 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
  *               expenseApplicationField:
  *                 type: string
  *                 required: true
- *               Name:
- *                 type: string
- *               Type:
- *                 type: string
- *               Value:
- *                 type: string
+ *               fields:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     type:
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
+ *                       required: true
+ *                     value:
+ *                       type: boolean
+ *                       description: Whether the field is mandatory or not
+ *                       required: true
  *                 required: true
+ *                 description: Array of field objects
  *     responses:
  *       201:
  *         description: ExpenseApplicationFieldValue successfully added

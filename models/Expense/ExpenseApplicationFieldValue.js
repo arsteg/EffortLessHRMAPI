@@ -7,9 +7,9 @@ var expenseApplicationFieldValueSchema = new Schema({
     ref: 'ExpenseApplicationField',
     required: true
   },
-  Name: String,
-  Type: String,
-  Value: String // Store JSON string as a plain string
+  name: String,
+  type: String,
+  value: String // Store JSON string as a plain string
 }, { collection: 'ExpenseApplicationFieldValue' });
 
 module.exports = mongoose.model('ExpenseApplicationFieldValue', expenseApplicationFieldValueSchema);
