@@ -228,20 +228,13 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
 
 /**
  * @swagger
- * /api/v1/expense/expense-application-fields/{id}:
+ * /api/v1/expense/expense-application-fields:
  *   put:
  *     summary: Update an expense application field by ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the expense application field
  *     requestBody:
  *       description: New expense application field details
  *       required: true
@@ -250,12 +243,33 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
  *           schema:
  *             type: object
  *             properties:
- *               fieldName:
- *                 type: string
- *               fieldType:
- *                 type: string
- *               isMandatory:
- *                 type: boolean
+ *               fields:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     expenseCategory:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     fieldName:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     fieldType:
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
+ *                       required: true
+ *                     isMandatory:
+ *                       type: boolean
+ *                       description: Whether the field is mandatory or not
+ *                       required: true
+ *                 required: true
+ *                 description: Array of field objects
  *     responses:
  *       200:
  *         description: Successful response with the updated expense application field
@@ -264,7 +278,7 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
  *       500:
  *         description: Internal server error
  */
-router.put('/expense-application-fields/:id', authController.protect, expenseController.updateExpenseApplicationField);
+router.put('/expense-application-fields', authController.protect, expenseController.updateExpenseApplicationField);
 
 /**
  * @swagger
@@ -395,20 +409,13 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
 
 /**
  * @swagger
- * /api/v1/expense/expense-application-field-values/{id}:
+ * /api/v1/expense/expense-application-field-values:
  *   put:
  *     summary: Update an ExpenseApplicationFieldValue by ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseApplicationFieldValue
  *     requestBody:
  *       description: New ExpenseApplicationFieldValue details
  *       required: true
@@ -417,12 +424,33 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
  *           schema:
  *             type: object
  *             properties:
- *               Name:
- *                 type: string
- *               Type:
- *                 type: string
- *               Value:
- *                 type: string
+*               fields:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     expenseApplicationField:
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
+ *                       required: true
+ *                     name:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     type:
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
+ *                       required: true
+ *                     value:
+ *                       type: boolean
+ *                       description: Whether the field is mandatory or not
+ *                       required: true
+ *                 required: true
+ *                 description: Array of field objects
  *     responses:
  *       200:
  *         description: Successful response with the updated ExpenseApplicationFieldValue
@@ -431,7 +459,7 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
  *       500:
  *         description: Internal server error
  */
-router.put('/expense-application-field-values/:id', authController.protect, expenseController.updateExpenseApplicationFieldValue);
+router.put('/expense-application-field-values', authController.protect, expenseController.updateExpenseApplicationFieldValue);
 
 /**
  * @swagger

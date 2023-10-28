@@ -123,24 +123,35 @@ exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
-    const expenseApplicationField = await ExpenseApplicationField.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+  const fieldsToUpdate = req.body.fields; // Assuming the array of fields is in the 'fields' property of the request body
+  const updatedFields = [];
+
+  for (const field of fieldsToUpdate) {
+    const { id, expenseCategory, fieldName, fieldType, isMandatory } = field;
+
+    const updatedField = await ExpenseApplicationField.findByIdAndUpdate(
+      id, // Assuming 'id' is the identifier for the field
+      { expenseCategory, fieldName, fieldType, isMandatory },
       {
         new: true,
         runValidators: true,
       }
     );
-  
-    if (!expenseApplicationField) {
-      return next(new AppError('Expense application field not found', 404));
+
+    if (!updatedField) {
+      // Handle the case where the field with the given ID is not found
+      return next(new AppError(`Expense application field with ID ${id} not found`, 404));
     }
-  
-    res.status(200).json({
-      status: 'success',
-      data: expenseApplicationField,
-    });
+
+    updatedFields.push(updatedField);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedFields,
+  });
 });
+
 
 exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
@@ -199,20 +210,35 @@ exports.getExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
-  const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const fieldsToUpdate = req.body.fields; // Assuming the array of fields is in the 'fields' property of the request body
+  const updatedFields = [];
 
-  if (!expenseApplicationFieldValue) {
-    return next(new AppError('ExpenseApplicationFieldValue not found', 404));
+  for (const field of fieldsToUpdate) {
+    const { id, expenseApplicationField, name, type, value } = field;
+
+    const updatedField = await ExpenseApplicationFieldValue.findByIdAndUpdate(
+      id, // Assuming 'id' is the identifier for the field
+      { expenseApplicationField, name, type, value },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedField) {
+      // Handle the case where the ExpenseApplicationFieldValue with a specific ID is not found
+      return next(new AppError(`ExpenseApplicationFieldValue with ID ${id} not found`, 404));
+    }
+
+    updatedFields.push(updatedField);
   }
 
   res.status(200).json({
     status: 'success',
-    data: expenseApplicationFieldValue
+    data: updatedFields,
   });
 });
+
 
 exports.deleteExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findByIdAndDelete(req.params.id);
