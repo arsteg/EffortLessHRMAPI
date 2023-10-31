@@ -25,17 +25,8 @@ server.listen(port, () => {
 server.on('upgrade', (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit('connection', ws, request);
-  });
-  const allowedOrigin = 'https://effortlesshrmapi.azurewebsites.net';
-  if (request.headers.origin === allowedOrigin) {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-    });
-  } else {
-    socket.destroy();
-  }
+  }); 
 });
-
 
 // WebSocket connection event
 wss.on('connection', (ws, request) => {
