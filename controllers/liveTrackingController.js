@@ -9,7 +9,28 @@ const wss = new WebSocket.Server({ noServer: true });
 const http = require('http');
 // Store connected clients
 const clients = new Map();
+const cors = require('cors'); // Import the cors package
 
+
+var allowedOrigin ="http://localhost:4200";
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigin= "http://localhost:4200";
+} else if (process.env.NODE_ENV === 'production') {                        
+  allowedOrigin= "https://effort-less-hrm-web.vercel.app";
+}
+//app.use(compression);
+app.use(cors(
+  {
+    "origin": allowedOrigin,
+    credentials: true, // This MUST be "true" if your endpoint is
+                     // authenticated via either a session cookie
+                     // or Authorization header. Otherwise the
+                     // browser will block the response.
+    methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
+                                               // pre-flight OPTIONS requests
+  }
+));
+app.options('*', cors());
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
