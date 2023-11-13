@@ -20,10 +20,7 @@ const attendanceRouter = express.Router();
  *             properties:
  *               mode:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Attendance mode successfully created
@@ -79,9 +76,7 @@ attendanceRouter.get('/attendance-modes/:id', authController.protect, attendance
  *             type: object
  *             properties:
  *               mode:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated attendance mode
@@ -453,9 +448,7 @@ attendanceRouter.get('/attendance-assignments', authController.protect, attendan
  *               comment:
  *                 type: string
  *               user:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       201:
  *         description: DutyRequest successfully created
@@ -521,9 +514,7 @@ attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceCon
  *               comment:
  *                 type: string
  *               user:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated DutyRequest
@@ -596,9 +587,7 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *               canSelectOnDutyReason:
  *                 type: boolean
  *               shiftAssignmentsBasedOnRoster:
- *                 type: boolean
- *               company:
- *                 type: string
+ *                 type: boolean 
  *     responses:
  *       201:
  *         description: GeneralSettings successfully created
@@ -607,21 +596,14 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/general-settings', authController.protect, attendanceController.createGeneralSettings);
+attendanceRouter.post('/general-settings',  attendanceController.createGeneralSettings);
 
 /**
  * @swagger
  * /api/v1/attendance/general-settings/{id}:
  *   get:
  *     summary: Get a GeneralSettings by ID
- *     tags: [Attendance Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the GeneralSettings
+ *     tags: [Attendance Management] 
  *     responses:
  *       200:
  *         description: Successful response with the GeneralSettings
@@ -630,7 +612,7 @@ attendanceRouter.post('/general-settings', authController.protect, attendanceCon
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/general-settings/:id', authController.protect, attendanceController.getGeneralSettings);
+attendanceRouter.get('/general-settings/:id', attendanceController.getGeneralSettings);
 
 /**
  * @swagger
@@ -658,9 +640,7 @@ attendanceRouter.get('/general-settings/:id', authController.protect, attendance
  *               canSelectOnDutyReason:
  *                 type: boolean
  *               shiftAssignmentsBasedOnRoster:
- *                 type: boolean
- *               company:
- *                 type: string
+ *                 type: boolean 
  *     responses:
  *       200:
  *         description: Successful response with the updated GeneralSettings
@@ -730,10 +710,7 @@ attendanceRouter.get('/general-settings', authController.protect, attendanceCont
  *                 required: true
  *               canSubmitForMultipleDays:
  *                 type: boolean
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: OnDutyTemplate successfully created
@@ -793,9 +770,7 @@ attendanceRouter.get('/:id', authController.protect, attendanceController.getOnD
  *               isCommentMandatory:
  *                 type: boolean
  *               canSubmitForMultipleDays:
- *                 type: boolean
- *               company:
- *                 type: string
+ *                 type: boolean 
  *     responses:
  *       200:
  *         description: Successful response with the updated OnDutyTemplate
@@ -870,10 +845,7 @@ attendanceRouter.get('/', authController.protect, attendanceController.getAllOnD
  *                 type: string
  *               customMultiplier:
  *                 type: number
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Overtime Information successfully created
@@ -937,9 +909,7 @@ attendanceRouter.get('/overtime-information/:id', authController.protect, attend
  *               attendanceShift:
  *                 type: string
  *               customMultiplier:
- *                 type: number
- *               company:
- *                 type: string
+ *                 type: number 
  *     responses:
  *       200:
  *         description: Successful response with the updated Overtime Information
@@ -1009,10 +979,7 @@ attendanceRouter.get('/overtime-information', authController.protect, attendance
  *             properties:
  *               label:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Regularization Reason successfully created
@@ -1068,9 +1035,7 @@ attendanceRouter.get('/regularization-reasons/:id', authController.protect, atte
  *             type: object
  *             properties:
  *               label:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated Regularization Reason
@@ -1153,9 +1118,7 @@ attendanceRouter.get('/regularization-reasons', authController.protect, attendan
  *                 type: string
  *                 required: true
  *               comment:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *               user:
  *                 type: string
  *     responses:
@@ -1230,9 +1193,7 @@ attendanceRouter.post(
    *               reason:
    *                 type: string
    *               comment:
-   *                 type: string
-   *               company:
-   *                 type: string
+   *                 type: string   
    *               user:
    *                 type: string
    *     responses:
@@ -1336,10 +1297,7 @@ attendanceRouter.post(
  *                 required: true
  *               OTtypeApplicable:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true  
  *     responses:
  *       201:
  *         description: Rounding information successfully created
@@ -1415,9 +1373,7 @@ attendanceRouter.post(
    *               roundingValue:
    *                 type: number
    *               OTtypeApplicable:
-   *                 type: string
-   *               company:
-   *                 type: string
+   *                 type: string   
    *     responses:
    *       200:
    *         description: Successful response with the updated rounding information
@@ -1518,10 +1474,7 @@ attendanceRouter.post(
  *                 required: true
  *               OTtypeApplicable:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Rounding information successfully created
@@ -1597,9 +1550,7 @@ attendanceRouter.post(
    *               roundingValue:
    *                 type: number
    *               OTtypeApplicable:
-   *                 type: string
-   *               company:
-   *                 type: string
+   *                 type: string   
    *     responses:
    *       200:
    *         description: Successful response with the updated rounding information
@@ -2087,10 +2038,6 @@ attendanceRouter.get('/', authController.protect, attendanceController.getAllUse
  *                 type: string
  *                 format: uuid
  *                 required: true
- *               company:
- *                 type: string
- *                 format: uuid
- *                 required: true
  *     responses:
  *       201:
  *         description: UserOnDutyTemplate added successfully
@@ -2152,10 +2099,7 @@ attendanceRouter.get('/user-on-duty-templates/:id', authController.protect, atte
  *                 format: uuid
  *               onDutyTemplate:
  *                 type: string
- *                 format: uuid
- *               company:
- *                 type: string
- *                 format: uuid
+ *                 format: uuid 
  *     responses:
  *       200:
  *         description: Successful response with the updated UserOnDutyTemplate

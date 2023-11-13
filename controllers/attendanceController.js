@@ -20,6 +20,15 @@ const AppError = require('../utils/appError');
 
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+ 
   const attendanceMode = await AttendanceMode.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -84,6 +93,15 @@ exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
 
 // Create a new Attendance Template
 exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+ 
   const attendanceTemplate = await AttendanceTemplate.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -202,6 +220,15 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
 
 // Create a new DutyRequest
 exports.createDutyRequest = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+ 
   const dutyRequest = await DutyRequest.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -262,7 +289,24 @@ exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
 });
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
-  const generalSettings = await GeneralSettings.create(req.body);
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  req.body.company = companyId;
+  const filter = { company: companyId };
+  const update = req.body;
+
+  const options = {
+    new: true, // Return the updated document
+    upsert: true, // Create the document if it doesn't exist
+    setDefaultsOnInsert: true, // Apply default values specified in the schema
+  };
+
+  const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
+
   res.status(201).json({
     status: 'success',
     data: generalSettings,
@@ -270,7 +314,9 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
 });
 
 exports.getGeneralSettings = catchAsync(async (req, res, next) => {
-  const generalSettings = await GeneralSettings.findById(req.params.id);
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  const generalSettings = await GeneralSettings.find({company:companyId});
   if (!generalSettings) {
     return next(new AppError('GeneralSettings not found', 404));
   }
