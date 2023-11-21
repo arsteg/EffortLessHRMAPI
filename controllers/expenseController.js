@@ -335,20 +335,33 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
 });
 
 exports.createExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const { expenseTemplate, expenseCategory } = req.body;
-  const isExistsApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(expenseCategory).where('expenseTemplate').equals(expenseTemplate);
-  if (isExistsApplicableCategories.length > 0) {
-    return res.status(400).json({
-      status: 'failed',
-      data: null,
-      message: 'Expense Category is already Applicable to Expense Template.',
-    });
-  }  
-  const applicableCategories = await ExpenseTemplateApplicableCategories.create({ expenseTemplate, expenseCategory });
-  res.status(201).json({
-    status: 'success',
-    data: applicableCategories
+  const { expenseTemplate, expenseCategories } = req.body;
+
+// Check if any of the expense categories already exist for the given template
+const isExistsApplicableCategories = await ExpenseTemplateApplicableCategories.find({})
+  .where('expenseCategory')
+  .in(expenseCategories) // Use `in` to check multiple categories
+  .where('expenseTemplate')
+  .equals(expenseTemplate);
+
+if (isExistsApplicableCategories.length > 0) {
+  return res.status(400).json({
+    status: 'failed',
+    data: null,
+    message: 'One or more Expense Categories are already Applicable to Expense Template.',
   });
+}
+
+// Create ExpenseTemplateApplicableCategories for each category in the array
+const createdApplicableCategories = await Promise.all(
+  expenseCategories.map(async (category) => {
+    return ExpenseTemplateApplicableCategories.create({ expenseTemplate, expenseCategory: category });
+  })
+);
+res.status(201).json({
+  status: 'success',
+  data: createdApplicableCategories,
+});
 });
 
 exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {
