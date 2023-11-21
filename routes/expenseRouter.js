@@ -690,8 +690,10 @@ router.get('/expense-templates', authController.protect, expenseController.getAl
  *               expenseTemplate:
  *                 type: string
  *                 required: true
- *               expenseCategory:
- *                 type: string
+ *               expenseCategories:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *                 required: true
  *     responses:
  *       201:
