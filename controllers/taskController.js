@@ -963,8 +963,8 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   var taskList = [];
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;// Default limit of 10, you can adjust this as per your needs.
-
+  const limit = parseInt(req.body.next) || Number.MAX_SAFE_INTEGER;// Default limit of 10, you can adjust this as per your needs.
+  
   const tasksWithProjectId = await Task.find({}).where('project').equals(req.body.projectId);
   // Extract the task ids from the tasks found in the previous step
   const taskIdsWithProjectId = tasksWithProjectId.map((task) => task._id);
