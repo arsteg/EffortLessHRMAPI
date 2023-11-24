@@ -409,6 +409,14 @@ exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
   });
 });
 
+exports.getAllExpenseTemplateApplicableCategoriesByTemplateId = catchAsync(async (req, res, next) => {
+  const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.expenseTemplateId);
+  res.status(200).json({
+    status: 'success',
+    data: expenseTemplateApplicableCategories,
+  });
+});
+
 exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;

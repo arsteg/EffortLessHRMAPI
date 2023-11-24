@@ -814,6 +814,32 @@ router.get('/expense-template-applicable-categories', authController.protect, ex
 
 /**
  * @swagger
+ * /api/v1/expense/expense-template-applicable-categories/{expenseTemplateId}:
+ *   get:
+ *     summary: Get all expense application fields by category ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: expenseTemplateId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the expense template
+ *     responses:
+ *       200:
+ *         description: Successful response with expense application template & categories
+ *       404:
+ *         description: Expense application category templates not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-template-applicable-categories/:expenseTemplateId', authController.protect, expenseController.getAllExpenseTemplateApplicableCategoriesByTemplateId);
+
+/**
+ * @swagger
  * /api/v1/expense/employee-expense-assignments:
  *   post:
  *     summary: Create a new EmployeeExpenseAssignment
