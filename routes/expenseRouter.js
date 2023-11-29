@@ -366,8 +366,8 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
  *                     value:
- *                       type: boolean
- *                       description: Whether the field is mandatory or not
+ *                       type: string
+ *                       description:: Type of the field (e.g., text, number, date)
  *                       required: true
  *                 required: true
  *                 description: Array of field objects
@@ -446,8 +446,8 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
  *                     value:
- *                       type: boolean
- *                       description: Whether the field is mandatory or not
+ *                       type: string
+ *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
  *                 required: true
  *                 description: Array of field objects
@@ -814,9 +814,9 @@ router.get('/expense-template-applicable-categories', authController.protect, ex
 
 /**
  * @swagger
- * /api/v1/expense/expense-template-applicable-categories/{expenseTemplateId}:
+ * /api/v1/expense/expense-template-applicable-categories-by-template/{expenseTemplateId}:
  *   get:
- *     summary: Get all expense application fields by category ID
+ *     summary: Get an ExpenseTemplateApplicableCategories by expenseTemplateId
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
@@ -827,16 +827,16 @@ router.get('/expense-template-applicable-categories', authController.protect, ex
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the expense template
+ *         description: expenseTemplateId of the ExpenseTemplateApplicableCategories
  *     responses:
  *       200:
- *         description: Successful response with expense application template & categories
+ *         description: Successful response with the ExpenseTemplateApplicableCategories
  *       404:
- *         description: Expense application category templates not found
+ *         description: ExpenseTemplateApplicableCategories not found
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-template-applicable-categories/:expenseTemplateId', authController.protect, expenseController.getAllExpenseTemplateApplicableCategoriesByTemplateId);
+router.get('/expense-template-applicable-categories-by-template/:expenseTemplateId',authController.protect, expenseController.getAllApplicableCategoriesByTemplateId);
 
 /**
  * @swagger

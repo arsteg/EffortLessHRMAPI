@@ -408,8 +408,14 @@ exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
     data: applicableCategories
   });
 });
-
-exports.getAllExpenseTemplateApplicableCategoriesByTemplateId = catchAsync(async (req, res, next) => {
+exports.getAllExpenseTemplateApplicableCategories1 = catchAsync(async (req, res, next) => {
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: applicableCategories
+  });
+});
+exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, next) => {  
   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.expenseTemplateId);
   res.status(200).json({
     status: 'success',
