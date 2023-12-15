@@ -352,7 +352,7 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
  *               expenseApplicationField:
  *                 type: string
  *                 required: true
- *               fields:
+ *               fieldValue:
  *                 type: array
  *                 items:
  *                   type: object

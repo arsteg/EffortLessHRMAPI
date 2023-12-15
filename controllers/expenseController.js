@@ -174,9 +174,9 @@ exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next
 });
 
 exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
-  const { expenseApplicationField , fields } = req.body;
+  const { expenseApplicationField , fieldValue } = req.body;
   // Validate the incoming data
-  if (!expenseApplicationField || !Array.isArray(fields) || fields.length === 0) {
+  if (!expenseApplicationField || !Array.isArray(fieldValue) || fieldValue.length === 0) {
       return res.status(400).json({
           status: 'failure',
           error: 'Invalid request data',
@@ -185,7 +185,7 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   // Prepare an array to store the created fields
   const createdFields = [];
   // Iterate through the fields array and create ExpenseApplicationField records
-  for (const field of fields) {
+  for (const field of fieldValue) {
       const { name, type, value } = field;
       const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
           expenseApplicationField,
