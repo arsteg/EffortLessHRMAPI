@@ -188,6 +188,16 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *                       type: boolean
  *                       description: Whether the field is mandatory or not
  *                       required: true
+ *                     fieldvalues :
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           value:
+ *                             type: string
+ *                             description: Field value
+ *                             required: true
+  *                       description: Array of field values
  *                 required: true
  *                 description: Array of field objects
  *     responses:
@@ -357,15 +367,7 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
  *                 items:
  *                   type: object
  *                   properties:
- *                     name:
- *                       type: string
- *                       description: Name of the field
- *                       required: true
- *                     type:
- *                       type: string
- *                       description: Type of the field (e.g., text, number, date)
- *                       required: true
- *                     value:
+  *                     value:
  *                       type: string
  *                       description:: Type of the field (e.g., text, number, date)
  *                       required: true
@@ -434,14 +436,6 @@ router.get('/expense-application-field-values/:id', authController.protect, expe
  *                       description: Name of the field
  *                       required: true
  *                     expenseApplicationField:
- *                       type: string
- *                       description: Type of the field (e.g., text, number, date)
- *                       required: true
- *                     name:
- *                       type: string
- *                       description: Name of the field
- *                       required: true
- *                     type:
  *                       type: string
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true

@@ -98,13 +98,26 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     const createdFields = [];
     // Iterate through the fields array and create ExpenseApplicationField records
     for (const field of fields) {
-        const { fieldName, fieldType, isMandatory } = field;
+        const { fieldName, fieldType, isMandatory,fieldvalues } = field;
         const expenseApplicationField = await ExpenseApplicationField.create({
             expenseCategory,
             fieldName,
             fieldType,
             isMandatory,
         });
+        const createdFieldValues = [];
+        if (fieldvalues && Array.isArray(fieldvalues) && fieldvalues.length > 0) {
+          
+          for (const valueItem of fieldvalues) {
+              const { value } = valueItem;
+              const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
+                  fieldId: expenseApplicationField._id, // Assuming _id is the ID of the newly created field
+                  value
+              });
+              createdFieldValues.push(expenseApplicationFieldValue);
+          }
+          expenseApplicationField.values = createdFieldValues;
+      }
         createdFields.push(expenseApplicationField);
     }
     res.status(201).json({
@@ -186,11 +199,9 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   const createdFields = [];
   // Iterate through the fields array and create ExpenseApplicationField records
   for (const field of fieldValue) {
-      const { name, type, value } = field;
+      const {value } = field;
       const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
           expenseApplicationField,
-          name,
-          type,
           value,
       });
       createdFields.push(expenseApplicationFieldValue);
@@ -214,11 +225,11 @@ exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   const updatedFields = [];
 
   for (const field of fieldsToUpdate) {
-    const { id, expenseApplicationField, name, type, value } = field;
+    const { id, expenseApplicationField, value } = field;
 
     const updatedField = await ExpenseApplicationFieldValue.findByIdAndUpdate(
       id, // Assuming 'id' is the identifier for the field
-      { expenseApplicationField, name, type, value },
+      { expenseApplicationField, value },
       {
         new: true,
         runValidators: true,

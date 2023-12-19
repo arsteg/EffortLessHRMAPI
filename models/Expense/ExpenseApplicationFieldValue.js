@@ -7,8 +7,6 @@ var expenseApplicationFieldValueSchema = new Schema({
     ref: 'ExpenseApplicationField',
     required: true
   },
-  name: String,
-  type: String,
   value: String // Store JSON string as a plain string
 }, { collection: 'ExpenseApplicationFieldValue' });
 
