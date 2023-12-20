@@ -78,7 +78,7 @@ var projectModelSchema = new Schema({
   });
   projectModelSchema.pre('remove', async function(next) { 
     // Now, remove ExpenseApplicationFieldValue documents associated with the removed ExpenseApplicationField records
-    await projectUser.deleteMany({ question: this._id }); 
+    await projectUser.deleteMany({ project: this._id }); 
     next(); // Continue with the delete operation
   });
 module.exports = mongoose.model('Project', projectModelSchema);
