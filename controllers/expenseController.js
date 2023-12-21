@@ -18,7 +18,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
   
     // Validate if company value exists in cookies
     if (!company) {
-      return res.status(400).json({
+      return res.status(500).json({
         status: 'failure',
         message: 'Company information missing in cookies',
       });
@@ -26,7 +26,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const expenseCategoryExists = await ExpenseCategory.findOne({ label: label });
     if(expenseCategoryExists)
     {
-      res.status(400).json({
+      res.status(500).json({
       status: 'failure',
       message: 'Label already in use for another category',
     });
@@ -51,7 +51,7 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
   const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: req.params.id });
   if(expenseCategoryExists)
   {
-      res.status(400).json({
+      res.status(500).json({
       status: 'failure',
       message: 'Label already in use for another category',
     });
