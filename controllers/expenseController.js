@@ -23,7 +23,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
         message: 'Company information missing in cookies',
       });
     }
-    const expenseCategoryExists = await ExpenseCategory.find({}).where('label').equals(label);
+    const expenseCategoryExists = await ExpenseCategory.findOne({ label: label });
     if(expenseCategoryExists)
     {
       res.status(200).json({
@@ -48,7 +48,7 @@ exports.getExpenseCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
-  const expenseCategoryExists = await ExpenseCategory.find({}).where('label').equals(req.body.label).where('_id').ne(req.params.id);
+  const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: req.params.id });
   if(expenseCategoryExists)
   {
       res.status(200).json({
