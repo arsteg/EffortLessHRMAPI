@@ -612,10 +612,19 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
 
  exports.getSubordinates = catchAsync(async (req, res, next) => {  
   const ids = await userSubordinate.find({}).distinct("subordinateUserId").where('userId' ).equals(req.params.id);   
-    res.status(201).json({
-      status: 'success',
-      data: ids
-    });    
+   
+  const activeUsers = await User.find({
+    _id: { $in: ids },
+    active: true
+  });
+  
+  const activeUserIds = activeUsers.map(user => user._id);
+  
+  res.status(201).json({
+    status: 'success',
+    data: activeUserIds
+  });
+      
  });
 
  exports.deleteSubordinates = catchAsync(async (req, res, next) => {  

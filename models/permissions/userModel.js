@@ -125,17 +125,18 @@ userSchema.pre(/^find/,async function(next) {
   next();
 });
 
-userSchema.virtual('userSubordinate', {
+userSchema.virtual('userSubordinateAsUser', {
   ref: 'userSubordinate',
-  foreignField: 'userId', // tour field in review model pointing to this model
-  localField: '_id' // id of current model
+  foreignField: 'userId',
+  localField: '_id'
 });
 
-userSchema.virtual('userSubordinate', {
+userSchema.virtual('userSubordinateAsSubordinate', {
   ref: 'userSubordinate',
-  foreignField: 'subordinateUserId', // tour field in review model pointing to this model
-  localField: '_id' // id of current model
+  foreignField: 'subordinateUserId',
+  localField: '_id'
 });
+
 userSchema.virtual('genericSetting', {
   ref: 'GenericSetting',
   foreignField: 'user', // tour field in review model pointing to this model
