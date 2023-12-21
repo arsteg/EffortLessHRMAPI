@@ -8,8 +8,7 @@ var expenseApplicationFieldSchema = new Schema({
     required: true
   },
   fieldName: String,
-  fieldType: String,
-  isMandatory: Boolean
+  fieldType: String
 }, { collection: 'ExpenseApplicationField' });
 // Pre hook to remove related ExpenseApplicationFieldValue records
 expenseApplicationFieldSchema.pre('remove', async function(next) {

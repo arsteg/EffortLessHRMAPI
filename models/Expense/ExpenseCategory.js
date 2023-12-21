@@ -4,7 +4,8 @@ const ExpenseApplicationField = require('./ExpenseApplicationField');
 
 var expenseCategorySchema = new Schema({
   type: String,
-  label: String,
+  label: String,  
+  isMandatory: Boolean,
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema

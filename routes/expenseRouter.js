@@ -33,6 +33,10 @@ const router = express.Router();
  *               label:
  *                 type: string
  *                 required: true
+ *               isMandatory:
+ *                 type: boolean
+ *                 description: Whether the field is mandatory or not
+ *                 required: true
  *     responses:
  *       201:
  *         description: Expense category successfully created
@@ -97,6 +101,10 @@ router.get('/expense-categories/:id', authController.protect, expenseController.
  *                 type: string
  *               label:
  *                 type: string
+ *               isMandatory:
+ *                 type: boolean
+ *                 description: Whether the field is mandatory or not
+ *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated expense category
@@ -184,10 +192,6 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *                       type: string
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
- *                     isMandatory:
- *                       type: boolean
- *                       description: Whether the field is mandatory or not
- *                       required: true
  *                     fieldvalues :
  *                       type: array
  *                       items:
@@ -273,10 +277,6 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
  *                     fieldType:
  *                       type: string
  *                       description: Type of the field (e.g., text, number, date)
- *                       required: true
- *                     isMandatory:
- *                       type: boolean
- *                       description: Whether the field is mandatory or not
  *                       required: true
  *                 required: true
  *                 description: Array of field objects

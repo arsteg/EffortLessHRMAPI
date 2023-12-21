@@ -13,7 +13,7 @@ const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const AppError = require('../utils/appError');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
-    const { type, label } = req.body;
+    const { type, label , isMandatory} = req.body;
     const company = req.cookies.companyId;
   
     // Validate if company value exists in cookies
@@ -23,8 +23,15 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
         message: 'Company information missing in cookies',
       });
     }
-  
-    const expenseCategory = await ExpenseCategory.create({ type, label, company });
+    const expenseCategoryExists = await ExpenseCategory.find({}).where('label').equals(label);
+    if(expenseCategoryExists)
+    {
+      res.status(200).json({
+      status: 'failure',
+      message: 'Label already in use for another category',
+    });
+  }
+    const expenseCategory = await ExpenseCategory.create({ type, label,isMandatory,company });
   
     res.status(201).json({
       status: 'success',
@@ -41,7 +48,15 @@ exports.getExpenseCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
-
+  const expenseCategoryExists = await ExpenseCategory.find({}).where('label').equals(req.body.label).where('_id').ne(req.params.id);
+  if(expenseCategoryExists)
+  {
+      res.status(200).json({
+      status: 'success',
+      status: 'failure',
+      message: 'Label already in use for another category',
+    });
+  }
   const expenseCategory = await ExpenseCategory.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
