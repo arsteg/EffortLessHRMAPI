@@ -23,20 +23,25 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
         message: 'Company information missing in cookies',
       });
     }
-    const expenseCategoryExists = await ExpenseCategory.findOne({ label: label });
-    if(expenseCategoryExists)
+    else
     {
-      res.status(500).json({
-      status: 'failure',
-      message: 'Label already in use for another category',
-    });
+      const expenseCategoryExists = await ExpenseCategory.findOne({ label: label });
+      if(expenseCategoryExists)
+      {
+        res.status(500).json({
+          status: 'failure',
+          message: 'Label already in use for another category',
+        });
+      }
+      else{
+      const expenseCategory = await ExpenseCategory.create({ type, label,isMandatory,company });
+    
+        res.status(201).json({
+          status: 'success',
+          data: expenseCategory,
+        });
+      }
   }
-    const expenseCategory = await ExpenseCategory.create({ type, label,isMandatory,company });
-  
-    res.status(201).json({
-      status: 'success',
-      data: expenseCategory,
-    });
  });  
 
 exports.getExpenseCategory = catchAsync(async (req, res, next) => {
@@ -56,15 +61,18 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
       message: 'Label already in use for another category',
     });
   }
-  const expenseCategory = await ExpenseCategory.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
- });
+  else
+  {
+      const expenseCategory = await ExpenseCategory.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+     });
 
-  res.status(200).json({
-    status: 'success',
-    data: expenseCategory,
-  });
+      res.status(200).json({
+        status: 'success',
+        data: expenseCategory,
+      });
+  }
 });
 
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
