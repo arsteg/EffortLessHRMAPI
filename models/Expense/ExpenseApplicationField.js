@@ -7,6 +7,7 @@ var expenseApplicationFieldSchema = new Schema({
     ref: 'ExpenseCategory',
     required: true
   },
+  ExpenseApplicationFieldValues:[],
   fieldName: String,
   fieldType: String
 }, { collection: 'ExpenseApplicationField' });

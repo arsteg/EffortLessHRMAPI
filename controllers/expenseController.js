@@ -201,11 +201,25 @@ exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
 });
 
 exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next) => {
-    const expenseApplicationFields = await ExpenseApplicationField.find({}).where('expenseCategory').equals(req.params.expenseCategoryId);
-    res.status(200).json({
-      status: 'success',
-      data: expenseApplicationFields,
-    });
+  const expenseApplicationFields = await ExpenseApplicationField.find({})
+  .where('expenseCategory').equals(req.params.expenseCategoryId);
+
+  if(expenseApplicationFields) {
+    for(var i = 0; i < expenseApplicationFields.length; i++) {
+      const expenseApplicationFieldValues = await ExpenseApplicationFieldValue.find({})
+        .where('expenseApplicationField').equals(expenseApplicationFields[i]._id);
+
+      if(expenseApplicationFieldValues && expenseApplicationFieldValues.length) {
+        expenseApplicationFields[i].ExpenseApplicationFieldValues = expenseApplicationFieldValues;
+      } else {
+        expenseApplicationFields[i].ExpenseApplicationFieldValues = null;
+      }
+    }
+  }
+res.status(200).json({
+  status: 'success',
+  data: expenseApplicationFields,
+});
 });
 
 exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
