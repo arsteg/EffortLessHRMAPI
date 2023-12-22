@@ -192,7 +192,7 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *                       type: string
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
- *                     fieldvalues :
+ *                     expenseApplicationFieldValues :
  *                       type: array
  *                       items:
  *                         type: object

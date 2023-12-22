@@ -120,17 +120,16 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     const createdFields = [];
     // Iterate through the fields array and create ExpenseApplicationField records
     for (const field of fields) {
-        const { fieldName, fieldType, isMandatory,fieldvalues } = field;
+        const { fieldName, fieldType,expenseApplicationFieldValues } = field;
         const expenseApplicationField = await ExpenseApplicationField.create({
             expenseCategory,
             fieldName,
-            fieldType,
-            isMandatory,
+            fieldType,            
         });
         const createdFieldValues = [];
-        if (fieldvalues && Array.isArray(fieldvalues) && fieldvalues.length > 0) {
+        if (expenseApplicationFieldValues && Array.isArray(expenseApplicationFieldValues) && expenseApplicationFieldValues.length > 0) {
           
-          for (const valueItem of fieldvalues) {
+          for (const valueItem of expenseApplicationFieldValues) {
               const { value } = valueItem;
               const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
                   expenseApplicationField: expenseApplicationField._id, // Assuming _id is the ID of the newly created field
