@@ -133,8 +133,8 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
           for (const valueItem of fieldvalues) {
               const { value } = valueItem;
               const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.create({
-                  fieldId: expenseApplicationField._id, // Assuming _id is the ID of the newly created field
-                  value
+                  expenseApplicationField: expenseApplicationField._id, // Assuming _id is the ID of the newly created field
+                  value: value
               });
               createdFieldValues.push(expenseApplicationFieldValue);
           }
