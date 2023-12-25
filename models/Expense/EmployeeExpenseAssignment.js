@@ -12,10 +12,15 @@ var employeeExpenseAssignmentSchema = new Schema({
     ref: 'ExpenseTemplate',
     required: true
   },
-  approver: {
+  primaryApprover: {
     type: mongoose.Schema.ObjectId,
     ref: 'User', // Replace 'User' with the actual user reference schema
-    required: true
+    required: false
+  },
+  secondaryApprover: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User', // Replace 'User' with the actual user reference schema
+    required: false
   },
   effectiveDate: Date,
   company: {

@@ -486,6 +486,15 @@ router.get('/expense-application-fields-values-by-field/:expenseApplicationField
  *               policyLabel:
  *                 type: string
  *                 required: true
+ *               approvalLevel:
+ *                 type: string
+ *                 required: true
+ *               firstApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               secondApprovalEmployee:
+ *                 type: string
+ *                 required: false
  *               approvalType:
  *                 type: string
  *                 required: true
@@ -560,6 +569,15 @@ router.get('/expense-templates/:id', authController.protect, expenseController.g
  *             properties:
  *               policyLabel:
  *                 type: string
+ *               approvalLevel:
+ *                 type: string
+ *                 required: true
+ *               firstApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               secondApprovalEmployee:
+ *                 type: string
+ *                 required: false
  *               approvalType:
  *                 type: string
  *               downloadableFormats:
@@ -814,9 +832,12 @@ router.get('/expense-template-applicable-categories-by-template/:expenseTemplate
  *               expenseTemplate:
  *                 type: string
  *                 required: true
- *               approver:
+ *               primaryApprover:
  *                 type: string
- *                 required: true
+ *                 required: false
+ *               secondaryApprover:
+ *                 type: string
+ *                 required: false
  *               effectiveDate:
  *                 type: string
  *                 format: date
