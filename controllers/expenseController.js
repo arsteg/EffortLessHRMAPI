@@ -11,6 +11,7 @@ const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const AppError = require('../utils/appError');
+const mongoose = require("mongoose");
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -476,10 +477,26 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    if (!companyId) {
      return next(new AppError('Company ID not found in cookies', 400));
    }
- 
    // Add companyId to the request body
    req.body.company = companyId;
-  const employeeExpenseAssignment = await EmployeeExpenseAssignment.create(req.body);
+   const employeeExpenseAssignmentExists = await EmployeeExpenseAssignment.find({}).where('user').equals(req.body.user).where('expenseTemplate').equals(req.body.expenseTemplate);
+   console.log(employeeExpenseAssignmentExists);
+   
+   var employeeExpenseAssignment;
+   if (employeeExpenseAssignmentExists.length<=0) {
+      employeeExpenseAssignment = await EmployeeExpenseAssignment.create(req.body);
+   }
+   else{
+      employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndUpdate(
+      employeeExpenseAssignmentExists[0]._id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );   
+   }
+  
   res.status(201).json({
     status: 'success',
     data: employeeExpenseAssignment,
@@ -496,7 +513,16 @@ exports.getEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
     data: employeeExpenseAssignment,
   });
 });
-
+exports.getEmployeeExpenseAssignmentByUser = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('user').equals(req.params.userId);
+  if (!employeeExpenseAssignment) {
+    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeExpenseAssignment,
+  });
+});
 exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndUpdate(
     req.params.id,

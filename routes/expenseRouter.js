@@ -879,6 +879,32 @@ router.get('/employee-expense-assignments/:id', authController.protect, expenseC
 
 /**
  * @swagger
+ * /api/v1/expense/employee-expense-assignments-by-user/{userId}:
+ *   get:
+ *     summary: Get an EmployeeExpenseAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the EmployeeExpenseAssignment
+ *       404:
+ *         description: EmployeeExpenseAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-expense-assignments-by-user/:userId', authController.protect, expenseController.getEmployeeExpenseAssignmentByUser);
+
+/**
+ * @swagger
  * /api/v1/expense/employee-expense-assignments/{id}:
  *   put:
  *     summary: Update an EmployeeExpenseAssignment by ID
