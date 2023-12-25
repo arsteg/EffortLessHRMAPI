@@ -209,9 +209,9 @@ exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next
         .where('expenseApplicationField').equals(expenseApplicationFields[i]._id);
 
       if(expenseApplicationFieldValues && expenseApplicationFieldValues.length) {
-        expenseApplicationFields[i].ExpenseApplicationFieldValues = expenseApplicationFieldValues;
+        expenseApplicationFields[i].expenseApplicationFieldValues = expenseApplicationFieldValues;
       } else {
-        expenseApplicationFields[i].ExpenseApplicationFieldValues = null;
+        expenseApplicationFields[i].expenseApplicationFieldValues = null;
       }
     }
   }

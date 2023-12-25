@@ -9,7 +9,7 @@ var expenseApplicationFieldSchema = new Schema({
   },
   fieldName: String,
   fieldType: String,  
-  ExpenseApplicationFieldValues:[]
+  expenseApplicationFieldValues:[]
 }, { collection: 'ExpenseApplicationField' });
 // Pre hook to remove related ExpenseApplicationFieldValue records
 expenseApplicationFieldSchema.pre('remove', async function(next) {
