@@ -75,6 +75,33 @@ router.get('/expense-categories/:id', authController.protect, expenseController.
 
 /**
  * @swagger
+ * /api/v1/expense/expense-categories-by-employee/{userId}:
+ *   get:
+ *     summary: Get an expense category by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the expense category
+ *     responses:
+ *       200:
+ *         description: Successful response with the expense category
+ *       404:
+ *         description: Expense category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-categories-by-employee/:userId', authController.protect, expenseController.getExpenseCategoryByEmployee);
+
+
+/**
+ * @swagger
  * /api/v1/expense/expense-categories/{id}:
  *   put:
  *     summary: Update an expense category by ID

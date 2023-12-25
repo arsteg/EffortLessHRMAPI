@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var employeeExpenseAssignmentSchema = new Schema({
-  user:{
+  user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: [true, 'User must belong to a User']

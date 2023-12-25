@@ -52,6 +52,48 @@ exports.getExpenseCategory = catchAsync(async (req, res, next) => {
     data: expenseCategory,
   });
 });
+exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
+  try {
+    const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({
+      user: req.params.userId
+    }).populate({
+      path: 'expenseTemplate',
+      populate: {
+        path: 'company',
+        model: 'Company'
+      }
+    });
+    if (userExpenseAssignment.length===0) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Expense assignment not found for the given user.'
+      });
+    }
+
+   // Retrieve applicable categories for the expense template
+    const templateCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(userExpenseAssignment.expenseTemplate._id.toString());
+ 
+    // Extract category IDs from the applicable categories
+    const categoryIds = templateCategories.map(tc => tc.expenseCategory);
+    
+    // Retrieve expense categories based on company and applicable category IDs
+    const expenseCategories = await ExpenseCategory.find({
+      company: req.cookies.companyId,
+      _id: { $in: categoryIds }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: expenseCategories
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
 
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
   const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: req.params.id });
