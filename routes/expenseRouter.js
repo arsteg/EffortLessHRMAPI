@@ -344,47 +344,6 @@ router.get('/expense-application-fields-by-expence-category/:expenseCategoryId',
 
 /**
  * @swagger
- * /api/v1/expense/expense-application-field-values:
- *   post:
- *     summary: Add a new ExpenseApplicationFieldValue
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: ExpenseApplicationFieldValue details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               expenseApplicationField:
- *                 type: string
- *                 required: true
- *               expenseApplicationFieldValues:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
-  *                     value:
- *                       type: string
- *                       description:: Type of the field (e.g., text, number, date)
- *                       required: true
- *                 required: true
- *                 description: Array of field objects
- *     responses:
- *       201:
- *         description: ExpenseApplicationFieldValue successfully added
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/expense-application-field-values', authController.protect, expenseController.createExpenseApplicationFieldValue);
-
-/**
- * @swagger
  * /api/v1/expense/expense-application-field-values/{id}:
  *   get:
  *     summary: Get an ExpenseApplicationFieldValue by ID
