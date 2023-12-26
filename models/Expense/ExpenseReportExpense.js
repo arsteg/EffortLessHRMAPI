@@ -16,6 +16,12 @@ var expenseReportExpenseSchema = new Schema({
     type: Date,
     required: true
   },
+  type: {
+    type: String
+  },
+  quantity: {
+    type: Number
+  },
   amount: {
     type: Number,
     required: true

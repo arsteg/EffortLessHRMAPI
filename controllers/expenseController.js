@@ -5,7 +5,7 @@ const ExpenseCategory = require('../models/Expense/ExpenseCategory'); // Import 
 const ExpenseApplicationField = require('../models/Expense/ExpenseApplicationField');
 const ExpenseApplicationFieldValue = require('../models/Expense/ExpenseApplicationFieldValue');
 const ExpenseTemplate = require('../models/Expense/ExpenseTemplate');
-const ExpenseTemplateApplicableCategories = require('../models/Expense/ExpenseTemplateApplicableCategories');
+const ExpenseTemplateApplicableCategories = require('../models/Expense/ExpenseTemplateCategory');
 const EmployeeExpenseAssignment = require('../models/Expense/EmployeeExpenseAssignment');
 const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
@@ -198,35 +198,118 @@ exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
     });
 });
 
+
+// Method to update or create ExpenseApplicationField
 exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
-  const fieldsToUpdate = req.body.fields; // Assuming the array of fields is in the 'fields' property of the request body
-  const updatedFields = [];
+  const { fields } = req.body;
 
-  for (const field of fieldsToUpdate) {
-    const { id, expenseCategory, fieldName, fieldType, isMandatory } = field;
-
-    const updatedField = await ExpenseApplicationField.findByIdAndUpdate(
-      id, // Assuming 'id' is the identifier for the field
-      { expenseCategory, fieldName, fieldType, isMandatory },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (!updatedField) {
-      // Handle the case where the field with the given ID is not found
-      return next(new AppError(`Expense application field with ID ${id} not found`, 404));
-    }
-
-    updatedFields.push(updatedField);
+  // Validate incoming data
+  if (!fields || !Array.isArray(fields) || fields.length === 0) {
+    return next(new AppError('Invalid request data', 400));
   }
 
-  res.status(200).json({
-    status: 'success',
-    data: updatedFields,
-  });
+  try {
+    // Iterate through fields to update or create records
+    const updatedFields = await Promise.all(
+      fields.map(async (field) => {
+        const { id, expenseCategory, fieldName, fieldType, expenseApplicationFieldValues } = field;
+
+        if (id) {
+          // If id exists, update the existing record
+          const updatedField = await ExpenseApplicationField.findByIdAndUpdate(
+            id,
+            { $set: { expenseCategory, fieldName, fieldType, expenseApplicationFieldValues } },
+            { new: true }
+          );
+
+          if (!updatedField) {
+            throw new AppError(`Expense application field with ID ${id} not found`, 404);
+          }
+
+          // Update or create ExpenseApplicationFieldValue records
+          await updateOrCreateFieldValues(id, expenseApplicationFieldValues);
+
+          return updatedField;
+        } else {
+          // If id doesn't exist, create a new record
+          const newField = new ExpenseApplicationField({
+            expenseCategory,
+            fieldName,
+            fieldType,
+            expenseApplicationFieldValues,
+          });
+
+          const createdField = await newField.save();
+
+          // Update or create ExpenseApplicationFieldValue records
+          await updateOrCreateFieldValues(createdField._id, expenseApplicationFieldValues);
+
+          return createdField;
+        }
+      })
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: updatedFields,
+      message: 'Expense application field(s) successfully updated or created',
+    });
+  } catch (err) {
+    if (err instanceof AppError) {
+      return next(err);
+    } else {
+      return next(new AppError('Internal server error', 500));
+    }
+  }
 });
+
+// Helper function to update or create ExpenseApplicationFieldValue records
+async function updateOrCreateFieldValues(fieldId, fieldValues) {
+  if (!fieldValues || fieldValues.length === 0) {
+    // If no values passed, delete all existing values for the field
+    await ExpenseApplicationFieldValue.deleteMany({ expenseApplicationField: fieldId });
+    return;
+  }
+  // Get existing field values for the field
+  const existingFieldValues = await ExpenseApplicationFieldValue.find({ expenseApplicationField: fieldId });
+
+  // Extract IDs of existing field values
+  const existingValueIds = existingFieldValues.map((value) => value._id.toString());
+
+  // Extract IDs of new field values
+  const newValueIds = fieldValues.map((value) => value.id).filter(Boolean);
+
+  // Identify IDs to be deleted (old values not present in the request)
+  const valuesToDelete = existingValueIds.filter((valueId) => !newValueIds.includes(valueId));
+
+  // Delete old values
+  await ExpenseApplicationFieldValue.deleteMany({ _id: { $in: valuesToDelete } });
+
+  // Update or create new values
+  await Promise.all(
+    fieldValues.map(async (valueObj) => {
+      const { id, value } = valueObj;
+
+      if (id) {
+        // If id exists, update the existing record
+        await ExpenseApplicationFieldValue.findByIdAndUpdate(
+          id,
+          { $set: { value } },
+          { new: true }
+        );
+      } else {
+        // If id doesn't exist, create a new record
+        const newFieldValue = new ExpenseApplicationFieldValue({
+          expenseApplicationField: fieldId,
+          value,
+        });
+
+        await newFieldValue.save();
+      }
+    })
+  );
+}
+
 
 
 exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
@@ -422,34 +505,49 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const { expenseTemplate, expenseCategories } = req.body;
+exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
+   const { expenseTemplate, expenseCategories } = req.body;
 
-// Check if any of the expense categories already exist for the given template
-const isExistsApplicableCategories = await ExpenseTemplateApplicableCategories.find({})
-  .where('expenseCategory')
-  .in(expenseCategories) // Use `in` to check multiple categories
-  .where('expenseTemplate')
-  .equals(expenseTemplate);
+  // Validate incoming data
+  if (!expenseTemplate || !expenseCategories || !Array.isArray(expenseCategories) || expenseCategories.length === 0) {
+    return next(new AppError('Invalid request data', 400));
+  }
+  try {
+    // Iterate through expenseCategories to create or update records
+    const updatedCategories = await Promise.all(
+      expenseCategories.map(async (category) => {
+        // Check if the category already exists
+        const existingCategory = await ExpenseTemplateApplicableCategories.findOne({
+          expenseCategory: category.expenseCategory,
+          expenseTemplate,
+        });
 
-if (isExistsApplicableCategories.length > 0) {
-  return res.status(400).json({
-    status: 'failed',
-    data: null,
-    message: 'One or more Expense Categories are already Applicable to Expense Template.',
-  });
-}
+        if (existingCategory) {
+          // If the category exists, update it
+          return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
+            existingCategory._id,
+            { $set: { ...category } },
+            { new: true }
+          );
+        } else {
+          // If the category doesn't exist, create a new one
+          const newCategory = new ExpenseTemplateApplicableCategories({
+            expenseTemplate,
+            ...category,
+          });
+          return newCategory.save();
+        }
+      })
+    );
 
-// Create ExpenseTemplateApplicableCategories for each category in the array
-const createdApplicableCategories = await Promise.all(
-  expenseCategories.map(async (category) => {
-    return ExpenseTemplateApplicableCategories.create({ expenseTemplate, expenseCategory: category });
-  })
-);
-res.status(201).json({
-  status: 'success',
-  data: createdApplicableCategories,
-});
+    res.status(201).json({
+      status: 'success',
+      data: updatedCategories,
+      message: 'ExpenseTemplateApplicableCategories successfully created or updated',
+    });
+  } catch (err) {
+    return next(new AppError('Internal server error', 500));
+  }
 });
 
 exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {

@@ -99,7 +99,6 @@ router.get('/expense-categories/:id', authController.protect, expenseController.
  */
 router.get('/expense-categories-by-employee/:userId', authController.protect, expenseController.getExpenseCategoryByEmployee);
 
-
 /**
  * @swagger
  * /api/v1/expense/expense-categories/{id}:
@@ -243,32 +242,6 @@ router.post('/expense-application-fields', authController.protect, expenseContro
 
 /**
  * @swagger
- * /api/v1/expense/expense-application-fields/{id}:
- *   get:
- *     summary: Get an expense application field by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the expense application field
- *     responses:
- *       200:
- *         description: Successful response with the expense application field
- *       404:
- *         description: Expense application field not found
- *       500:
- *         description: Internal server error
- */
-router.get('/expense-application-fields/:id', authController.protect, expenseController.getExpenseApplicationField);
-
-/**
- * @swagger
  * /api/v1/expense/expense-application-fields:
  *   put:
  *     summary: Update an expense application field by ID
@@ -305,6 +278,20 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
  *                       type: string
  *                       description: Type of the field (e.g., text, number, date)
  *                       required: true
+ *                     expenseApplicationFieldValues :
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Name of the field
+ *                             required: true
+ *                           value:
+ *                             type: string
+ *                             description: Field value
+ *                             required: true
+  *                       description: Array of field values
  *                 required: true
  *                 description: Array of field objects
  *     responses:
@@ -316,32 +303,6 @@ router.get('/expense-application-fields/:id', authController.protect, expenseCon
  *         description: Internal server error
  */
 router.put('/expense-application-fields', authController.protect, expenseController.updateExpenseApplicationField);
-
-/**
- * @swagger
- * /api/v1/expense/expense-application-fields/{id}:
- *   delete:
- *     summary: Delete an expense application field by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the expense application field
- *     responses:
- *       204:
- *         description: Expense application field successfully deleted
- *       404:
- *         description: Expense application field not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/expense-application-fields/:id', authController.protect, expenseController.deleteExpenseApplicationField);
 
 /**
  * @swagger
@@ -368,104 +329,6 @@ router.delete('/expense-application-fields/:id', authController.protect, expense
  *         description: Internal server error
  */
 router.get('/expense-application-fields-by-expence-category/:expenseCategoryId', authController.protect, expenseController.getExpenseApplicationFieldsByCategory);
-
-/**
- * @swagger
- * /api/v1/expense/expense-application-field-values/{id}:
- *   get:
- *     summary: Get an ExpenseApplicationFieldValue by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseApplicationFieldValue
- *     responses:
- *       200:
- *         description: Successful response with the ExpenseApplicationFieldValue
- *       404:
- *         description: ExpenseApplicationFieldValue not found
- *       500:
- *         description: Internal server error
- */
-router.get('/expense-application-field-values/:id', authController.protect, expenseController.getExpenseApplicationFieldValue);
-
-/**
- * @swagger
- * /api/v1/expense/expense-application-field-values:
- *   put:
- *     summary: Update an ExpenseApplicationFieldValue by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: New ExpenseApplicationFieldValue details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
-*               fields:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       description: Name of the field
- *                       required: true
- *                     expenseApplicationField:
- *                       type: string
- *                       description: Type of the field (e.g., text, number, date)
- *                       required: true
- *                     value:
- *                       type: string
- *                       description: Type of the field (e.g., text, number, date)
- *                       required: true
- *                 required: true
- *                 description: Array of field objects
- *     responses:
- *       200:
- *         description: Successful response with the updated ExpenseApplicationFieldValue
- *       404:
- *         description: ExpenseApplicationFieldValue not found
- *       500:
- *         description: Internal server error
- */
-router.put('/expense-application-field-values', authController.protect, expenseController.updateExpenseApplicationFieldValue);
-
-/**
- * @swagger
- * /api/v1/expense/expense-application-field-values/{id}:
- *   delete:
- *     summary: Delete an ExpenseApplicationFieldValue by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseApplicationFieldValue
- *     responses:
- *       204:
- *         description: ExpenseApplicationFieldValue successfully deleted
- *       404:
- *         description: ExpenseApplicationFieldValue not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/expense-application-field-values/:id', authController.protect, expenseController.deleteExpenseApplicationFieldValue);
 
 /**
  * @swagger
@@ -691,7 +554,40 @@ router.get('/expense-templates', authController.protect, expenseController.getAl
  *               expenseCategories:
  *                 type: array
  *                 items:
- *                   type: string
+ *                   type: object
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       required: true
+ *                     isMaximumAmountPerExpenseSet:
+ *                       type: boolean
+ *                       required: true
+ *                       default: false
+ *                     maximumAmountPerExpense:
+ *                       type: number
+ *                     isMaximumAmountWithoutReceiptSet:
+ *                       type: boolean
+ *                       required: true
+ *                       default: false
+ *                     maximumAmountWithoutReceipt:
+ *                       type: number
+ *                     maximumExpensesCanApply:
+ *                       type: number
+ *                     isTimePeroidSet:
+ *                       type: boolean
+ *                       required: true
+ *                       default: false
+ *                     timePeroid:
+ *                       type: string
+ *                     expiryDay:
+ *                       type: number
+ *                     isEmployeeCanAddInTotalDirectly:
+ *                       type: boolean
+ *                       required: true
+ *                       default: false
+ *                     ratePerDay:
+ *                       type: number
+ *                 description: Array of field objects
  *                 required: true
  *     responses:
  *       201:
@@ -701,114 +597,7 @@ router.get('/expense-templates', authController.protect, expenseController.getAl
  *       500:
  *         description: Internal server error
  */
-router.post('/expense-template-applicable-categories', authController.protect, expenseController.createExpenseTemplateApplicableCategories);
-
-/**
- * @swagger
- * /api/v1/expense/expense-template-applicable-categories/{id}:
- *   get:
- *     summary: Get an ExpenseTemplateApplicableCategories by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseTemplateApplicableCategories
- *     responses:
- *       200:
- *         description: Successful response with the ExpenseTemplateApplicableCategories
- *       404:
- *         description: ExpenseTemplateApplicableCategories not found
- *       500:
- *         description: Internal server error
- */
-router.get('/expense-template-applicable-categories/:id',authController.protect, expenseController.getExpenseTemplateApplicableCategoriesById);
-
-/**
- * @swagger
- * /api/v1/expense/expense-template-applicable-categories/{id}:
- *   put:
- *     summary: Update an ExpenseTemplateApplicableCategories by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseTemplateApplicableCategories
- *     requestBody:
- *       description: New ExpenseTemplateApplicableCategories details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               expenseTemplate:
- *                 type: string
- *               expenseCategory:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated ExpenseTemplateApplicableCategories
- *       404:
- *         description: ExpenseTemplateApplicableCategories not found
- *       500:
- *         description: Internal server error
- */
-router.put('/expense-template-applicable-categories/:id',authController.protect, expenseController.updateExpenseTemplateApplicableCategories);
-
-/**
- * @swagger
- * /api/v1/expense/expense-template-applicable-categories/{id}:
- *   delete:
- *     summary: Delete an ExpenseTemplateApplicableCategories by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the ExpenseTemplateApplicableCategories
- *     responses:
- *       204:
- *         description: ExpenseTemplateApplicableCategories successfully deleted
- *       404:
- *         description: ExpenseTemplateApplicableCategories not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/expense-template-applicable-categories/:id',authController.protect, expenseController.deleteExpenseTemplateApplicableCategories);
-
-/**
- * @swagger
- * /api/v1/expense/expense-template-applicable-categories:
- *   get:
- *     summary: Get all ExpenseTemplateApplicableCategories
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with ExpenseTemplateApplicableCategories
- *       500:
- *         description: Internal server error
- */
-router.get('/expense-template-applicable-categories', authController.protect, expenseController.getAllExpenseTemplateApplicableCategories);
+router.post('/expense-template-applicable-categories', authController.protect, expenseController.createExpenseTemplateCategories);
 
 /**
  * @swagger
