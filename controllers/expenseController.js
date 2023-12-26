@@ -87,7 +87,6 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
       data: expenseCategories
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       status: 'error',
       message: 'Internal server error'
@@ -522,8 +521,6 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    // Add companyId to the request body
    req.body.company = companyId;
    const employeeExpenseAssignmentExists = await EmployeeExpenseAssignment.find({}).where('user').equals(req.body.user).where('expenseTemplate').equals(req.body.expenseTemplate);
-   console.log(employeeExpenseAssignmentExists);
-   
    var employeeExpenseAssignment;
    if (employeeExpenseAssignmentExists.length<=0) {
       employeeExpenseAssignment = await EmployeeExpenseAssignment.create(req.body);
