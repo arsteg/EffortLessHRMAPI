@@ -46,6 +46,6 @@ var expenseTemplateCategoriesSchema = new Schema({
   ratePerDay: {
     type: Number
   },
-}, { collection: 'ExpenseTemplateApplicableCategories' });
+}, { collection: 'ExpenseTemplateCategories' });
 
 module.exports = mongoose.model('ExpenseTemplateCategories', expenseTemplateCategoriesSchema);

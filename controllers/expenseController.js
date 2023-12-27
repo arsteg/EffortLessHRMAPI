@@ -1079,22 +1079,54 @@ res.status(200).json({
 });
 });
 
-exports.createAdvanceTemplate = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
+exports.createAdvanceTemplate = async (req, res, next) => {
+  try {
+    // Extract data from the request body
+    const {
+      policyLabel,
+      approvalType,
+      approvalLevel,
+      firstApprovalEmployee,
+      secondApprovalEmployee,
+      expenseCategories,
+    } = req.body;
 
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const advanceTemplate = await AdvanceTemplate.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: advanceTemplate
-  });
-});
+    // Create the AdvanceTemplate document
+    const advanceTemplate = await AdvanceTemplate.create({
+      policyLabel,
+      approvalType,
+      approvalLevel,
+      firstApprovalEmployee,
+      secondApprovalEmployee,
+      company: req.user.company, // Assuming user information is available in req.user
+    });
+
+    // Create the AdvanceTemplateCategories documents
+    if (expenseCategories && expenseCategories.length > 0) {
+      const createdCategories = await AdvanceTemplateCategories.insertMany(
+        expenseCategories.map(category => ({
+          advanceTemplate: advanceTemplate._id,
+          advanceCategory: category.advanceCategory,
+        }))
+      );
+      advanceTemplate.expenseCategories = createdCategories.map(category => category._id);
+      await advanceTemplate.save();
+    }
+
+    // Send a success response
+    res.status(201).json({
+      status: 'success',
+      data: advanceTemplate,
+    });
+  } catch (error) {
+    // Handle errors and send an error response
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
 
 exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
   const advanceTemplate = await AdvanceTemplate.findById(req.params.id);

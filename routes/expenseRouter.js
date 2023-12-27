@@ -1503,6 +1503,14 @@ router.get('/advance-categories', authController.protect, expenseController.getA
  *               approvalType:
  *                 type: string
  *                 required: true
+ *               expenseCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       required: true
  *     responses:
  *       201:
  *         description: Advance Template successfully created
@@ -1576,6 +1584,14 @@ router.get('/advance-templates/:id', authController.protect, expenseController.g
  *                 required: false
  *               approvalType:
  *                 type: string
+ *               expenseCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated Advance Template
