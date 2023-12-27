@@ -11,6 +11,8 @@ const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
 const ExpenseReportExpenseFields = require('../models/Expense/ExpenseReportExpenseFields');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
+const AdvanceCategory = require('../models/Expense/AdvanceCategory'); // Import ExpenseCategory model
+
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 
@@ -94,7 +96,6 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
   }
 });
 
-
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
   const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: { $ne: req.params.id }});
   if(expenseCategoryExists)
@@ -149,7 +150,6 @@ exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     const { expenseCategory, fields } = req.body;
     // Validate the incoming data
@@ -190,7 +190,6 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     });
 });
 
-
 exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
     res.status(200).json({
@@ -198,7 +197,6 @@ exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
       data: expenseApplicationField,
     });
 });
-
 
 // Method to update or create ExpenseApplicationField
 exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
@@ -990,4 +988,89 @@ exports.getAllExpenseAdvances = catchAsync(async (req, res, next) => {
         status: 'success',
         data: expenseAdvances
     });
+});
+
+exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
+  const { label} = req.body;
+  const company = req.cookies.companyId;
+
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  else
+  {
+    const advanceCategoryExists = await AdvanceCategory.findOne({ label: label });
+    if(advanceCategoryExists)
+    {
+      res.status(500).json({
+        status: 'failure',
+        message: 'Label already in use for another category',
+      });
+    }
+    else{
+    const advanceCategory = await AdvanceCategory.create({ label,company });
+  
+      res.status(201).json({
+        status: 'success',
+        data: advanceCategory,
+      });
+    }
+}
+});  
+
+exports.getAdvanceCategory = catchAsync(async (req, res, next) => {
+const advanceCategory = await AdvanceCategory.findById(req.params.id);
+res.status(200).json({
+  status: 'success',
+  data: advanceCategory,
+});
+});
+
+exports.updateAdvanceCategory = catchAsync(async (req, res, next) => {
+const advanceCategoryExists = await AdvanceCategory.findOne({ label: req.body.label, _id: { $ne: req.params.id }});
+if(advanceCategoryExists)
+{
+    res.status(500).json({
+    status: 'failure',
+    message: 'Label already in use for another category',
+  });
+}
+else
+{
+    const advanceCategory = await AdvanceCategory.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+   });
+
+    res.status(200).json({
+      status: 'success',
+      data: advanceCategory,
+    });
+}
+});
+
+exports.deleteAdvanceCategory = catchAsync(async (req, res, next) => {
+
+const advanceCategoryInstance = await AdvanceCategory.findById(req.params.id);
+await advanceCategoryInstance.remove();
+if (!advanceCategoryInstance) {
+  return next(new AppError('Expense category not found', 404));
+}
+
+return res.status(204).json({
+  status: 'success',
+  data: null,
+});
+});
+
+exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
+const advanceCategories = await AdvanceCategory.find({}).where('company').equals(req.cookies.companyId);
+res.status(200).json({
+  status: 'success',
+  data: advanceCategories,
+});
 });

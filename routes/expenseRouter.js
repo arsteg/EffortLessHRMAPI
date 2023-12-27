@@ -1334,4 +1334,139 @@ router.delete('/expense-advances/:id', authController.protect, expenseController
  */
 router.get('/expense-advances', authController.protect, expenseController.getAllExpenseAdvances);
 
+/**
+ * @swagger
+ * /api/v1/expense/advance-categories:
+ *   post:
+ *     summary: Create a new advance category
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Advance category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Advance category successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/advance-categories', authController.protect, expenseController.createAdvanceCategory);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-categories/{id}:
+ *   get:
+ *     summary: Get an advance category by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the advance category
+ *     responses:
+ *       200:
+ *         description: Successful response with the advance category
+ *       404:
+ *         description: Advance category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-categories/:id', authController.protect, expenseController.getAdvanceCategory);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-categories/{id}:
+ *   put:
+ *     summary: Update an advance category by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the advance category
+ *     requestBody:
+ *       description: New advance category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated advance category
+ *       404:
+ *         description: Advance category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/advance-categories/:id', authController.protect, expenseController.updateAdvanceCategory);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-categories/{id}:
+ *   delete:
+ *     summary: Delete an advance category by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the advance category
+ *     responses:
+ *       204:
+ *         description: Advance category successfully deleted
+ *       404:
+ *         description: Advance category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/advance-categories/:id', authController.protect, expenseController.deleteAdvanceCategory);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-categories:
+ *   get:
+ *     summary: Get all advance categories
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with advance categories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-categories', authController.protect, expenseController.getAllAdvanceCategories);
+
 module.exports = router;
