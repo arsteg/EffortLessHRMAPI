@@ -11,7 +11,11 @@ const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
 const ExpenseReportExpenseFields = require('../models/Expense/ExpenseReportExpenseFields');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
-const AdvanceCategory = require('../models/Expense/AdvanceCategory'); // Import ExpenseCategory model
+const AdvanceCategory = require('../models/Expense/AdvanceCategory'); 
+const AdvanceTemplate = require('../models/Expense/AdvanceTemplate'); 
+
+
+// Import ExpenseCategory model
 
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
@@ -1073,4 +1077,67 @@ res.status(200).json({
   status: 'success',
   data: advanceCategories,
 });
+});
+
+exports.createAdvanceTemplate = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const advanceTemplate = await AdvanceTemplate.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: advanceTemplate
+  });
+});
+
+exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
+  const advanceTemplate = await AdvanceTemplate.findById(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    data: advanceTemplate
+  });
+});
+
+exports.updateAdvanceTemplate = catchAsync(async (req, res, next) => {
+  const advanceTemplate = await AdvanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!advanceTemplate) {
+    return next(new AppError('Expense Template not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: advanceTemplate
+  });
+});
+
+exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => { 
+  
+  const advanceTemplate = await AdvanceTemplate.findByIdAndDelete(req.params.id);
+  
+  if (!advanceTemplate) {
+    return next(new AppError('Expense Template not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
+  const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: advanceTemplates
+  });
 });

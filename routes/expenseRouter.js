@@ -405,6 +405,7 @@ router.get('/expense-application-fields-values-by-field/:expenseApplicationField
  *         description: Internal server error
  */
 router.delete('/expense-application-field-values/:id', authController.protect, expenseController.deleteExpenseApplicationFieldValue);
+
 /**
  * @swagger
  * /api/v1/expense/expense-templates:
@@ -1468,5 +1469,165 @@ router.delete('/advance-categories/:id', authController.protect, expenseControll
  *         description: Internal server error
  */
 router.get('/advance-categories', authController.protect, expenseController.getAllAdvanceCategories);
+
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-templates:
+ *   post:
+ *     summary: Create a new advance Template
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: advance Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               policyLabel:
+ *                 type: string
+ *                 required: true
+ *               approvalLevel:
+ *                 type: string
+ *                 required: true
+ *               firstApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               secondApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               approvalType:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Advance Template successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/advance-templates', authController.protect, expenseController.createAdvanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-templates/{id}:
+ *   get:
+ *     summary: Get an Advance Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Advance Template
+ *     responses:
+ *       200:
+ *         description: Successful response with the Advance Template
+ *       404:
+ *         description: Advance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-templates/:id', authController.protect, expenseController.getAdvanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-templates/{id}:
+ *   put:
+ *     summary: Update an Advance Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Advance Template
+ *     requestBody:
+ *       description: New Advance Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               policyLabel:
+ *                 type: string
+ *               approvalLevel:
+ *                 type: string
+ *                 required: true
+ *               firstApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               secondApprovalEmployee:
+ *                 type: string
+ *                 required: false
+ *               approvalType:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Advance Template
+ *       404:
+ *         description: Advance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/advance-templates/:id', authController.protect, expenseController.updateAdvanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-templates/{id}:
+ *   delete:
+ *     summary: Delete an Advance Template by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Advance Template
+ *     responses:
+ *       204:
+ *         description: Advance Template successfully deleted
+ *       404:
+ *         description: Advance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/advance-templates/:id', authController.protect, expenseController.deleteAdvanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/expense/advance-templates:
+ *   get:
+ *     summary: Get all Advance Templates
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Expense Templates
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-templates', authController.protect, expenseController.getAllAdvanceTemplates);
+
 
 module.exports = router;
