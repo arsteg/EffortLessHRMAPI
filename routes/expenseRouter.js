@@ -329,6 +329,31 @@ router.put('/expense-application-fields', authController.protect, expenseControl
  *         description: Internal server error
  */
 router.get('/expense-application-fields-by-expence-category/:expenseCategoryId', authController.protect, expenseController.getExpenseApplicationFieldsByCategory);
+/**
+ * @swagger
+ * /api/v1/expense/expense-application-fields/{id}:
+ *   delete:
+ *     summary: Delete an expense application field by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the expense application field
+ *     responses:
+ *       204:
+ *         description: Expense application field successfully deleted
+ *       404:
+ *         description: Expense application field not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/expense-application-fields/:id', authController.protect, expenseController.deleteExpenseApplicationField);
 
 /**
  * @swagger
