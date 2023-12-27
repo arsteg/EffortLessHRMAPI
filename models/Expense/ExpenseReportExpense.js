@@ -16,12 +16,6 @@ var expenseReportExpenseSchema = new Schema({
     type: Date,
     required: true
   },
-  type: {
-    type: String
-  },
-  quantity: {
-    type: Number
-  },
   amount: {
     type: Number,
     required: true
@@ -40,11 +34,8 @@ var expenseReportExpenseSchema = new Schema({
   documentLink: {
     type: String
   },
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Cancelled', 'Rejected'],
-    default: 'Pending'
-  }
+  expenseReportExpenseFields:[]
+ 
 }, { collection: 'ExpenseReportExpense' });
 
 module.exports = mongoose.model('ExpenseReportExpense', expenseReportExpenseSchema);

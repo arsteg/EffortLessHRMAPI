@@ -669,32 +669,6 @@ router.post('/employee-expense-assignments', authController.protect, expenseCont
 
 /**
  * @swagger
- * /api/v1/expense/employee-expense-assignments/{id}:
- *   get:
- *     summary: Get an EmployeeExpenseAssignment by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the EmployeeExpenseAssignment
- *     responses:
- *       200:
- *         description: Successful response with the EmployeeExpenseAssignment
- *       404:
- *         description: EmployeeExpenseAssignment not found
- *       500:
- *         description: Internal server error
- */
-router.get('/employee-expense-assignments/:id', authController.protect, expenseController.getEmployeeExpenseAssignment);
-
-/**
- * @swagger
  * /api/v1/expense/employee-expense-assignments-by-user/{userId}:
  *   get:
  *     summary: Get an EmployeeExpenseAssignment by ID
@@ -718,50 +692,6 @@ router.get('/employee-expense-assignments/:id', authController.protect, expenseC
  *         description: Internal server error
  */
 router.get('/employee-expense-assignments-by-user/:userId', authController.protect, expenseController.getEmployeeExpenseAssignmentByUser);
-
-/**
- * @swagger
- * /api/v1/expense/employee-expense-assignments/{id}:
- *   put:
- *     summary: Update an EmployeeExpenseAssignment by ID
- *     tags: [Expense Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the EmployeeExpenseAssignment
- *     requestBody:
- *       description: New EmployeeExpenseAssignment details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               user:
- *                 type: string
- *               expenseTemplate:
- *                 type: string
- *               approver:
- *                 type: string
- *               effectiveDate:
- *                 type: string
- *               company:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated EmployeeExpenseAssignment
- *       404:
- *         description: EmployeeExpenseAssignment not found
- *       500:
- *         description: Internal server error
- */
-router.put('/employee-expense-assignments/:id', authController.protect, expenseController.updateEmployeeExpenseAssignment);
 
 /**
  * @swagger
@@ -829,6 +759,55 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *               title:
  *                 type: string
  *                 required: true
+ *               expenseReportExpenses:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     incurredDate:
+ *                       type: string
+ *                       format: date
+ *                       required: true
+ *                     amount:
+ *                       type: number
+ *                       description: Name of the field
+ *                       required: true
+ *                     isReimbursable:
+ *                       type: boolean
+ *                       description: Name of the field
+ *                       required: true
+ *                     isBillable:
+ *                       type: boolean
+ *                       description: Name of the field
+ *                       required: true
+ *                     reason:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     documentLink:
+ *                       type: string
+ *                       description: Name of the field
+ *                       required: true
+ *                     expenseReportExpenseFields :
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           expenseApplicationField:
+ *                             type: string
+ *                             description: Field value
+ *                             required: true
+ *                           value:
+ *                             type: string
+ *                             description: Field value
+ *                             required: true
+ *                       description: Array of field values
+ *                 required: true
+ *                 description: Array of field objects
  *     responses:
  *       201:
  *         description: ExpenseReport successfully created

@@ -9,6 +9,7 @@ const ExpenseTemplateApplicableCategories = require('../models/Expense/ExpenseTe
 const EmployeeExpenseAssignment = require('../models/Expense/EmployeeExpenseAssignment');
 const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
+const ExpenseReportExpenseFields = require('../models/Expense/ExpenseReportExpenseFields');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
@@ -52,30 +53,27 @@ exports.getExpenseCategory = catchAsync(async (req, res, next) => {
     data: expenseCategory,
   });
 });
+
 exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
   try {
     const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({
       user: req.params.userId
-    }).populate({
-      path: 'expenseTemplate',
-      populate: {
-        path: 'company',
-        model: 'Company'
-      }
     });
-    if (userExpenseAssignment.length===0) {
+   
+   
+    if (!userExpenseAssignment) {
       return res.status(404).json({
         status: 'failure',
         message: 'Expense assignment not found for the given user.'
       });
     }
 
-   // Retrieve applicable categories for the expense template
+    // Retrieve applicable categories for the expense template
     const templateCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(userExpenseAssignment.expenseTemplate._id.toString());
- 
+
     // Extract category IDs from the applicable categories
     const categoryIds = templateCategories.map(tc => tc.expenseCategory);
-    
+
     // Retrieve expense categories based on company and applicable category IDs
     const expenseCategories = await ExpenseCategory.find({
       company: req.cookies.companyId,
@@ -84,9 +82,11 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      data: expenseCategories
+      data: expenseCategories,
+      details: templateCategories
     });
   } catch (error) {
+    console.error(error); // Log the error for debugging
     res.status(500).json({
       status: 'error',
       message: 'Internal server error'
@@ -94,8 +94,9 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
   }
 });
 
+
 exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
-  const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: req.params.id });
+  const expenseCategoryExists = await ExpenseCategory.findOne({ label: req.body.label, _id: { $ne: req.params.id }});
   if(expenseCategoryExists)
   {
       res.status(500).json({
@@ -702,20 +703,58 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 });
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
+  // Extract data from the request body
+  const { employee, title, expenseReportExpenses } = req.body;
 
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const expenseReport = await ExpenseReport.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: expenseReport
-  });
+  try {
+    // Create ExpenseReport
+    const expenseReport = await ExpenseReport.create({
+      employee,
+      title,
+      company: req.cookies.companyId,
+      status: 'Level 1 Approval Pending' // Assuming company ID is stored in cookies
+    });
+
+    // Create ExpenseReportExpenses and associated ExpenseReportExpenseFields
+    const createdExpenses = await Promise.all(
+      expenseReportExpenses.map(async (expenseData) => {
+        const { expenseCategory, incurredDate, amount, isReimbursable, isBillable, reason, documentLink, expenseReportExpenseFields } = expenseData;
+        const expense = await ExpenseReportExpense.create({
+          expenseReport: expenseReport._id,
+          expenseCategory,
+          incurredDate,
+          amount,
+          isReimbursable: isReimbursable || true,
+          isBillable: isBillable || false,
+          reason,
+          documentLink
+        });
+        // Create ExpenseReportExpenseFields for each expense
+        if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {
+          expense.expenseReportExpenseFields = await ExpenseReportExpenseFields.insertMany(
+            expenseReportExpenseFields.map((field) => ({
+              expenseReportExpense: expense._id,
+              expenseApplicationField: field.expenseApplicationField,
+              value: field.value,
+            }))
+          );
+        }
+        return expense;
+      })
+    );
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        expenseReport,
+        expenses: createdExpenses,
+      },
+      message: 'ExpenseReport successfully created',
+    });
+  } catch (error) {
+    console.error(error);
+    next(new AppError('Internal server error', 500));
+  }
 });
 
 exports.getExpenseReport = catchAsync(async (req, res, next) => {

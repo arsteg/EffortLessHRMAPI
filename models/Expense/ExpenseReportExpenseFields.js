@@ -11,7 +11,8 @@ var expenseReportExpenseFieldsSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'ExpenseApplicationField',
     required: true
-  }
+  },
+  value: String  
 }, { collection: 'ExpenseReportExpenseFields' });
 
 module.exports = mongoose.model('ExpenseReportExpenseFields', expenseReportExpenseFieldsSchema);
