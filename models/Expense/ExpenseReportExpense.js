@@ -38,4 +38,13 @@ var expenseReportExpenseSchema = new Schema({
  
 }, { collection: 'ExpenseReportExpense' });
 
+// Pre hook to remove related ExpenseApplicationFieldValue records
+expenseReportExpenseSchema.pre('remove', async function(next) {
+  const ExpenseReportExpenseFields = require('./ExpenseReportExpenseFields'); // Import the ExpenseApplicationFieldValue model
+
+  // Remove related ExpenseApplicationFieldValue records
+  await ExpenseReportExpenseFields.deleteMany({ expenseReportExpense: this._id });
+
+  next(); // Continue with the delete operation
+});
 module.exports = mongoose.model('ExpenseReportExpense', expenseReportExpenseSchema);

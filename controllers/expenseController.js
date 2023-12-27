@@ -716,7 +716,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
     });
 
     // Create ExpenseReportExpenses and associated ExpenseReportExpenseFields
-    const createdExpenses = await Promise.all(
+    expenseReport.expenseReportExpense = await Promise.all(
       expenseReportExpenses.map(async (expenseData) => {
         const { expenseCategory, incurredDate, amount, isReimbursable, isBillable, reason, documentLink, expenseReportExpenseFields } = expenseData;
         const expense = await ExpenseReportExpense.create({
@@ -746,8 +746,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
     res.status(201).json({
       status: 'success',
       data: {
-        expenseReport,
-        expenses: createdExpenses,
+        expenseReport
       },
       message: 'ExpenseReport successfully created',
     });
@@ -758,11 +757,12 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
 });
 
 exports.getExpenseReport = catchAsync(async (req, res, next) => {
-  const expenseReport = await ExpenseReport.findById(req.params.id);
-  res.status(200).json({
-    status: 'success',
-    data: expenseReport
-  });
+const expenseReport = await ExpenseReport.findById(req.params.id);
+
+res.status(200).json({
+  status: 'success',
+  data: expenseReport,
+});
 });
 
 exports.updateExpenseReport = catchAsync(async (req, res, next) => {
@@ -811,15 +811,41 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
 });
 
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
+  // Create ExpenseReportExpense
   const expenseReportExpense = await ExpenseReportExpense.create(req.body);
+
+  // Create ExpenseReportExpenseFields if provided
+  if (req.body.expenseReportExpenseFields && req.body.expenseReportExpenseFields.length > 0) {
+    const expenseReportExpenseFields = req.body.expenseReportExpenseFields.map((field) => ({
+      expenseReportExpense: expenseReportExpense._id,
+      expenseApplicationField: field.expenseApplicationField,
+      value: field.value,
+    }));
+
+    await ExpenseReportExpenseFields.insertMany(expenseReportExpenseFields);
+  }
+
   res.status(201).json({
     status: 'success',
-    data: expenseReportExpense
+    data: expenseReportExpense,
   });
 });
 
+
 exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
   const expenseReportExpense = await ExpenseReportExpense.findById(req.params.id);
+  if(expenseReportExpense)
+  {        
+ const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpense._id);    
+  if(expenseReportExpenseFields) 
+    {
+      expenseReportExpense.expenseReportExpenseFields=expenseReportExpenseFields;
+    }
+    else{
+      expenseReportExpense.expenseReportExpenseFields=null;
+    }
+  
+  }
   res.status(200).json({
     status: 'success',
     data: expenseReportExpense
@@ -827,20 +853,61 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
-  const expenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
+  const { id } = req.params;
+
+  // Update ExpenseReportExpense
+  const updatedExpenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(id, req.body, {
+    new: true, // Return the updated document
+    runValidators: true, // Run Mongoose validators
   });
 
-  if (!expenseReportExpense) {
-    return next(new AppError('Expense Report Expense not found', 404));
+  if (!updatedExpenseReportExpense) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'Expense Report Expense not found',
+    });
+  }
+
+  // Update or create ExpenseReportExpenseFields
+  const { expenseReportExpenseFields } = req.body;
+
+  if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {
+    const updatedFields = await Promise.all(
+      expenseReportExpenseFields.map(async (field) => {
+        if (field.id) {
+          // If ID is present, update existing ExpenseReportExpenseFields
+          return ExpenseReportExpenseFields.findByIdAndUpdate(field.id, {
+            expenseApplicationField: field.expenseApplicationField,
+            value: field.value,
+          });
+        } else {
+          // If ID is not present, create new ExpenseReportExpenseFields
+          return ExpenseReportExpenseFields.create({
+            expenseReportExpense: id,
+            expenseApplicationField: field.expenseApplicationField,
+            value: field.value,
+          });
+        }
+      })
+    );
+
+    // Remove ExpenseReportExpenseFields not present in the request
+    const fieldIdsToUpdate = updatedFields.map((field) => field._id);
+    await ExpenseReportExpenseFields.deleteMany({
+      expenseReportExpense: id,
+      _id: { $nin: fieldIdsToUpdate },
+    });
+  } else {
+    // If no expenseReportExpenseFields in the request, delete all existing ones
+    await ExpenseReportExpenseFields.deleteMany({ expenseReportExpense: id });
   }
 
   res.status(200).json({
     status: 'success',
-    data: expenseReportExpense
+    data: updatedExpenseReportExpense,
   });
 });
+
 
 exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
   const expenseReportExpense = await ExpenseReportExpense.findByIdAndDelete(req.params.id);
@@ -855,6 +922,19 @@ exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
 
 exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('company').equals(req.cookies.companyId);
+  if(expenseReportExpenses) 
+  {
+      for(var i = 0; i < expenseReportExpenses.length; i++) {     
+      const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+      if(expenseReportExpenseFields) 
+        {
+          expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+        }
+        else{
+          expenseReportExpenses[i].expenseReportExpenseFields=null;
+        }
+      }
+   }  
   res.status(200).json({
     status: 'success',
     data: expenseReportExpenses

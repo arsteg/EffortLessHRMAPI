@@ -1016,6 +1016,20 @@ router.get('/expense-reports', authController.protect, expenseController.getAllE
  *               documentLink:
  *                 type: string
  *                 description: Link to the document related to the expense
+ *               expenseReportExpenseFields :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       expenseApplicationField:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       201:
  *         description: Expense Report Expense successfully created
@@ -1095,6 +1109,24 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                 type: string
  *               documentLink:
  *                 type: string
+ *               expenseReportExpenseFields :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       expenseApplicationField:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       200:
  *         description: Successful response with the updated Expense Report Expense
