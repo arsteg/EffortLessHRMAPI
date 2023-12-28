@@ -1425,6 +1425,33 @@ router.get('/advance-categories/:id', authController.protect, expenseController.
 
 /**
  * @swagger
+ * /api/v1/expense/advance-categories-by-user/{userId}:
+ *   get:
+ *     summary: Get an advance category by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the advance category
+ *     responses:
+ *       200:
+ *         description: Successful response with the advance category
+ *       404:
+ *         description: Advance category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-categories-by-user/:userId', authController.protect, expenseController.getAdvanceCategoryByEmployee);
+
+
+/**
+ * @swagger
  * /api/v1/expense/advance-categories/{id}:
  *   put:
  *     summary: Update an advance category by ID

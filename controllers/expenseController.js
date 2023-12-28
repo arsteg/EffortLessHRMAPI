@@ -20,6 +20,7 @@ const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssi
 
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
+const AdvanceTemplateCategory = require('../models/Expense/AdvanceTemplateCategory');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -978,6 +979,39 @@ exports.getAdvance = catchAsync(async (req, res, next) => {
         status: 'success',
         data: advance
     });
+});
+
+
+exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
+  try {
+    const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findOne({
+      user: req.params.userId
+    });
+   
+   
+    if (!employeeAdvanceAssignment) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Expense assignment not found for the given user.'
+      });
+    }
+
+    // Retrieve applicable categories for the expense template
+    const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate._id.toString());
+
+   
+
+    res.status(200).json({
+      status: 'success',     
+      details: templateCategories
+    });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
 });
 
 exports.updateAdvance = catchAsync(async (req, res, next) => {
