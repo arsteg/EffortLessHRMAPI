@@ -17,7 +17,8 @@ var advanceTemplateSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema
     required: true
-  }
-}, { collection: 'AdvanceTemplate' });
+  },
+  advanceCategories: []
+  }, { collection: 'AdvanceTemplate' });
 
 module.exports = mongoose.model('AdvanceTemplate', advanceTemplateSchema);

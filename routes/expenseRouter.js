@@ -939,6 +939,12 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
  *                 type: string
  *               title:
  *                 type: string
+ *               Status:
+ *                 type: string 
+ *               primaryApprovalReason:
+ *                 type: string 
+ *               secondaryApprovalReason:
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated ExpenseReport
@@ -1206,45 +1212,48 @@ router.get('/expenseReportExpenses', authController.protect, expenseController.g
 
 /**
  * @swagger
- * /api/v1/expense/expense-advances:
+ * /api/v1/expense/advance:
  *   post:
- *     summary: Add a new ExpenseAdvance
+ *     summary: Add a new Advance
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
  *     requestBody:
- *       description: ExpenseAdvance details
+ *       description: Advance details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
+ *               employee:
+ *                 type: string
+ *                 required: true
  *               category:
  *                 type: string
- *                 description: ID of the expense category associated with the expense advance
+ *                 description: ID of the expense category associated with the advance
  *               amount:
  *                 type: number
- *                 description: Amount of the expense advance
+ *                 description: Amount of the advance
  *               comment:
  *                 type: string
- *                 description: Additional comments about the expense advance
+ *                 description: Additional comments about the advance
  *     responses:
  *       201:
- *         description: ExpenseAdvance successfully created
+ *         description: Advance successfully created
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-router.post('/expense-advances', authController.protect, expenseController.createExpenseAdvance);
+router.post('/advance', authController.protect, expenseController.createAdvance);
 
 /**
  * @swagger
- * /api/v1/expense/expense-advances/{id}:
+ * /api/v1/expense/advance/{id}:
  *   get:
- *     summary: Get an ExpenseAdvance by ID
+ *     summary: Get an Advance by ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
@@ -1255,22 +1264,22 @@ router.post('/expense-advances', authController.protect, expenseController.creat
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the ExpenseAdvance
+ *         description: ID of the Advance
  *     responses:
  *       200:
- *         description: Successful response with the ExpenseAdvance
+ *         description: Successful response with the Advance
  *       404:
- *         description: ExpenseAdvance not found
+ *         description: Advance not found
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-advances/:id', authController.protect, expenseController.getExpenseAdvance);
+router.get('/advance/:id', authController.protect, expenseController.getAdvance);
 
 /**
  * @swagger
- * /api/v1/expense/expense-advances/{id}:
+ * /api/v1/expense/advance/{id}:
  *   put:
- *     summary: Update an ExpenseAdvance by ID
+ *     summary: Update an Advance by ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
@@ -1281,15 +1290,18 @@ router.get('/expense-advances/:id', authController.protect, expenseController.ge
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the ExpenseAdvance
+ *         description: ID of the Advance
  *     requestBody:
- *       description: New ExpenseAdvance details
+ *       description: New Advance details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
+ *               employee:
+ *                 type: string
+ *                 required: true
  *               category:
  *                 type: string
  *               amount:
@@ -1297,8 +1309,11 @@ router.get('/expense-advances/:id', authController.protect, expenseController.ge
  *               comment:
  *                 type: string
  *               Status:
- *                 type: string
- *                 enum: [Remaining, Pending, Approved, Paid]
+ *                 type: string 
+ *               primaryApprovalReason:
+ *                 type: string 
+ *               secondaryApprovalReason:
+ *                 type: string                 
  *     responses:
  *       200:
  *         description: Successful response with the updated ExpenseAdvance
@@ -1307,11 +1322,11 @@ router.get('/expense-advances/:id', authController.protect, expenseController.ge
  *       500:
  *         description: Internal server error
  */
-router.put('/expense-advances/:id', authController.protect, expenseController.updateExpenseAdvance);
+router.put('/advance/:id', authController.protect, expenseController.updateAdvance);
 
 /**
  * @swagger
- * /api/v1/expense/expense-advances/{id}:
+ * /api/v1/expense/advance/{id}:
  *   delete:
  *     summary: Delete an ExpenseAdvance by ID
  *     tags: [Expense Management]
@@ -1333,13 +1348,13 @@ router.put('/expense-advances/:id', authController.protect, expenseController.up
  *       500:
  *         description: Internal server error
  */
-router.delete('/expense-advances/:id', authController.protect, expenseController.deleteExpenseAdvance);
+router.delete('/advance/:id', authController.protect, expenseController.deleteAdvance);
 
 /**
  * @swagger
- * /api/v1/expense/expense-advances:
+ * /api/v1/expense/advance:
  *   get:
- *     summary: Get all ExpenseAdvances
+ *     summary: Get all Advances
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
@@ -1350,7 +1365,7 @@ router.delete('/expense-advances/:id', authController.protect, expenseController
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-advances', authController.protect, expenseController.getAllExpenseAdvances);
+router.get('/advance', authController.protect, expenseController.getAllAdvances);
 
 /**
  * @swagger
@@ -1601,12 +1616,12 @@ router.get('/advance-templates/:id', authController.protect, expenseController.g
  *                 required: false
  *               approvalType:
  *                 type: string
- *               expenseCategories:
+ *               advanceCategories:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     expenseCategory:
+ *                     advanceCategory:
  *                       type: string
  *                       required: true
  *     responses:
@@ -1662,5 +1677,115 @@ router.delete('/advance-templates/:id', authController.protect, expenseControlle
  */
 router.get('/advance-templates', authController.protect, expenseController.getAllAdvanceTemplates);
 
+/**
+ * @swagger
+ * /api/v1/expense/employee-advance-assignments:
+ *   post:
+ *     summary: Create a new EmployeeAdvanceAssignment
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeAdvanceAssignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               advanceTemplate:
+ *                 type: string
+ *                 required: true
+ *               primaryApprover:
+ *                 type: string
+ *                 required: false
+ *               secondaryApprover:
+ *                 type: string
+ *                 required: false
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: AdvanceExpenseAssignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-advance-assignments', authController.protect, expenseController.createEmployeeAdvanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-advance-assignments-by-user/{userId}:
+ *   get:
+ *     summary: Get an EmployeeadvanceAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the EmployeeAdvanceAssignment
+ *       404:
+ *         description: EmployeeAdvanceAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-advance-assignments-by-user/:userId', authController.protect, expenseController.getEmployeeAdvanceAssignmentByUser);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-advance-assignments/{id}:
+ *   delete:
+ *     summary: Delete an EmployeeAdvanceAssignment by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the EmployeeAdvanceAssignment
+ *     responses:
+ *       204:
+ *         description: EmployeeAdvanceAssignment successfully deleted
+ *       404:
+ *         description: EmployeeAdvanceAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-advance-assignments/:id', authController.protect, expenseController.deleteEmployeeAdvanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/expense/employee-advance-assignments:
+ *   get:
+ *     summary: Get all EmployeeAdvanceAssignments
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with EmployeeAdvanceAssignments
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-advance-assignments', authController.protect, expenseController.getAllEmployeeAdvanceAssignments);
 
 module.exports = router;
