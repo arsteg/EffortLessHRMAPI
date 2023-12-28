@@ -1,7 +1,12 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var expenseAdvanceSchema = new Schema({
+var advanceReportSchema = new Schema({
+  employee: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User', // Assuming User schema for employee
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
@@ -9,7 +14,7 @@ var expenseAdvanceSchema = new Schema({
   },
   category: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ExpenseCategory',
+    ref: 'AdvanceCategory',
     required: true
   },
   amount: {
@@ -24,6 +29,6 @@ var expenseAdvanceSchema = new Schema({
     enum: ['Remaining', 'Pending', 'Approved', 'Paid'],
     default: 'Remaining'
   }
-}, { collection: 'ExpenseAdvance' });
+}, { collection: 'AdvanceReport.' });
 
-module.exports = mongoose.model('ExpenseAdvance', expenseAdvanceSchema);
+module.exports = mongoose.model('AdvanceReport',advanceReportSchema);
