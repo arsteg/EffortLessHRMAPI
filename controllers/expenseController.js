@@ -10,19 +10,15 @@ const EmployeeExpenseAssignment = require('../models/Expense/EmployeeExpenseAssi
 const ExpenseReport = require('../models/Expense/ExpenseReport');
 const ExpenseReportExpense = require('../models/Expense/ExpenseReportExpense');
 const ExpenseReportExpenseFields = require('../models/Expense/ExpenseReportExpenseFields');
-const Advance = require('../models/Expense/AdvanceReport');
+const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const AdvanceCategory = require('../models/Expense/AdvanceCategory'); 
 const AdvanceTemplate = require('../models/Expense/AdvanceTemplate'); 
-const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCategory'); 
-const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment');
-
 
 
 // Import ExpenseCategory model
 
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
-const AdvanceTemplateCategory = require('../models/Expense/AdvanceTemplateCategory');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -130,7 +126,8 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(req.params.id);
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseCategory').equals(req.params.id);  
-  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0) {
+  const expenseAdvance = await ExpenseAdvance.find({}).where('category').equals(req.params.id);  
+  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0 || expenseAdvance.length > 0) {
     return res.status(400).json({
       status: 'failed',
       data: null,
@@ -946,7 +943,7 @@ exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createAdvance = catchAsync(async (req, res, next) => {
+exports.createExpenseAdvance = catchAsync(async (req, res, next) => {
     // Extract companyId from req.cookies
     const companyId = req.cookies.companyId;
     // Check if companyId exists in cookies
@@ -955,45 +952,45 @@ exports.createAdvance = catchAsync(async (req, res, next) => {
     }
     // Add companyId to the request body
     req.body.company = companyId;
-    const advance = await Advance.create(req.body);
+    const expenseAdvance = await ExpenseAdvance.create(req.body);
     res.status(201).json({
         status: 'success',
-        data: advance
+        data: expenseAdvance
     });
 });
 
-exports.getAdvance = catchAsync(async (req, res, next) => {
-    const advance = await Advance.findById(req.params.id);   
+exports.getExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findById(req.params.id);   
     res.status(200).json({
         status: 'success',
-        data: advance
+        data: expenseAdvance
     });
 });
 
-exports.updateAdvance = catchAsync(async (req, res, next) => {
-    const advance = await Advance.findByIdAndUpdate(req.params.id, req.body, {
+exports.updateExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
     });  
     res.status(200).json({
         status: 'success',
-        data: advance
+        data: expenseAdvance
     });
 });
 
-exports.deleteAdvance = catchAsync(async (req, res, next) => {
-    const advance = await Advance.findByIdAndDelete(req.params.id);   
+exports.deleteExpenseAdvance = catchAsync(async (req, res, next) => {
+    const expenseAdvance = await ExpenseAdvance.findByIdAndDelete(req.params.id);   
     res.status(204).json({
         status: 'success',
         data: null
     });
 });
 
-exports.getAllAdvances = catchAsync(async (req, res, next) => {
-    const advance = await Advance.find({}).where('company').equals(req.cookies.companyId);
+exports.getAllExpenseAdvances = catchAsync(async (req, res, next) => {
+    const expenseAdvances = await ExpenseAdvance.find({}).where('company').equals(req.cookies.companyId);
     res.status(200).json({
         status: 'success',
-        data: advance
+        data: expenseAdvances
     });
 });
 
@@ -1091,7 +1088,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       approvalLevel,
       firstApprovalEmployee,
       secondApprovalEmployee,
-      advanceCategories,
+      expenseCategories,
     } = req.body;
 
     // Create the AdvanceTemplate document
@@ -1101,18 +1098,18 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       approvalLevel,
       firstApprovalEmployee,
       secondApprovalEmployee,
-      company: req.cookies.companyId, // Assuming user information is available in req.user
+      company: req.user.company, // Assuming user information is available in req.user
     });
 
     // Create the AdvanceTemplateCategories documents
-    if (advanceCategories && advanceCategories.length > 0) {
+    if (expenseCategories && expenseCategories.length > 0) {
       const createdCategories = await AdvanceTemplateCategories.insertMany(
-        advanceCategories.map(category => ({
+        expenseCategories.map(category => ({
           advanceTemplate: advanceTemplate._id,
           advanceCategory: category.advanceCategory,
         }))
       );
-      advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
+      advanceTemplate.expenseCategories = createdCategories.map(category => category._id);
       await advanceTemplate.save();
     }
 
@@ -1133,91 +1130,27 @@ exports.createAdvanceTemplate = async (req, res, next) => {
 
 exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
   const advanceTemplate = await AdvanceTemplate.findById(req.params.id);
-  if(advanceTemplate) {
-    for(var i = 0; i < advanceTemplate.length; i++) {
-      const AdvanceTemplateCategories = await AdvanceTemplateCategory.find({})
-        .where('advanceTemplate').equals(advanceTemplate._id);
-
-      if(AdvanceTemplateCategories && AdvanceTemplateCategories.length) {
-        advanceTemplate.advanceCategories = AdvanceTemplateCategories;
-      } else {
-        advanceTemplate.advanceCategories = null;
-      }
-    }
-  }
   res.status(200).json({
     status: 'success',
     data: advanceTemplate
   });
 });
 
-// Implement updateAdvanceTemplate function
-exports.updateAdvanceTemplate = async (req, res, next) => {
-  try {
-    const { id } = req.params;
+exports.updateAdvanceTemplate = catchAsync(async (req, res, next) => {
+  const advanceTemplate = await AdvanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
 
-    // Find the AdvanceTemplate by ID
-    const advanceTemplate = await AdvanceTemplate.findById(id);
-
-    if (!advanceTemplate) {
-      return res.status(404).json({
-        status: 'failure',
-        message: 'Advance Template not found',
-      });
-    }
-
-    // Extract updated data from the request body
-    const {
-      policyLabel,
-      approvalLevel,
-      firstApprovalEmployee,
-      secondApprovalEmployee,
-      approvalType,
-      advanceCategories,
-    } = req.body;
-
-    // Update AdvanceTemplate fields
-    advanceTemplate.policyLabel = policyLabel || advanceTemplate.policyLabel;
-    advanceTemplate.approvalLevel = approvalLevel || advanceTemplate.approvalLevel;
-    advanceTemplate.firstApprovalEmployee =
-      firstApprovalEmployee || advanceTemplate.firstApprovalEmployee;
-    advanceTemplate.secondApprovalEmployee =
-      secondApprovalEmployee || advanceTemplate.secondApprovalEmployee;
-    advanceTemplate.approvalType = approvalType || advanceTemplate.approvalType;
-
-    // Save the updated AdvanceTemplate
-    await advanceTemplate.save();
-    console.log(advanceCategories);
-    // Update expense categories
-    if (advanceCategories && advanceCategories.length > 0) {
-      // Delete old expense categories for this template
-      await AdvanceTemplateCategories.deleteMany({ advanceTemplate: advanceTemplate._id });
-
-      // Create and add new expense categories for this template
-      const createdCategories = await AdvanceTemplateCategories.insertMany(
-        advanceCategories.map(category => ({
-          advanceTemplate: advanceTemplate._id,
-          advanceCategory: category.advanceCategory,
-        }))
-      );
-      advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
-      await advanceTemplate.save();
-    }
-
-    // Send a success response
-    res.status(200).json({
-      status: 'success',
-      data: advanceTemplate,
-    });
-  } catch (error) {
-    // Handle errors and send an error response
-    console.error(error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
+  if (!advanceTemplate) {
+    return next(new AppError('Expense Template not found', 404));
   }
-};
+
+  res.status(200).json({
+    status: 'success',
+    data: advanceTemplate
+  });
+});
 
 exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => { 
   
@@ -1235,115 +1168,8 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
   const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId);
-  if(advanceTemplates) {
-    for(var i = 0; i < advanceTemplates.length; i++) {
-      const AdvanceTemplateCategories = await AdvanceTemplateCategory.find({})
-        .where('advanceTemplate').equals(advanceTemplates[i]._id);
-
-      if(AdvanceTemplateCategories && AdvanceTemplateCategories.length) {
-        advanceTemplates[i].advanceCategories = AdvanceTemplateCategories;
-      } else {
-        advanceTemplates[i].advanceCategories = null;
-      }
-    }
-  }
   res.status(200).json({
     status: 'success',
     data: advanceTemplates
   });
-});
-
-
-exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user).where('advanceTemplate').equals(req.body.advanceTemplate);
-  var employeeAdvanceAssignment;
-  if (employeeAdvanceAssignmentExists.length<=0) {
-    employeeAdvanceAssignment = await EmployeeAdvanceAssignment.create(req.body);
-  }
-  else{
-    employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndUpdate(
-      employeeAdvanceAssignmentExists[0]._id,
-     req.body,
-     {
-       new: true,
-       runValidators: true,
-     }
-   );   
-  }
- 
- res.status(201).json({
-   status: 'success',
-   data: employeeAdvanceAssignment,
- });
-});
-
-exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findById(req.params.id);
- if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
- }
- res.status(200).json({
-   status: 'success',
-   data: employeeAdvanceAssignment,
- });
-});
-
-exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.params.userId);
- if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
- }
- res.status(200).json({
-   status: 'success',
-   data: employeeAdvanceAssignment,
- });
-});
-
-exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndUpdate(
-   req.params.id,
-   req.body,
-   {
-     new: true,
-     runValidators: true,
-   }
- );
-
- if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
- }
-
- res.status(200).json({
-   status: 'success',
-   data: employeeAdvanceAssignment,
- });
-});
-
-exports.deleteEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
-
- if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
- }
-
- res.status(204).json({
-   status: 'success',
-   data: null,
- });
-});
-
-exports.getAllEmployeeAdvanceAssignments = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignments = await EmployeeAdvanceAssignment.find({}).where('company').equals(req.cookies.companyId);
- res.status(200).json({
-   status: 'success',
-   data: employeeAdvanceAssignments,
- });
 });
