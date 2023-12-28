@@ -677,6 +677,23 @@ router.get('/expense-template-applicable-categories-by-template/:expenseTemplate
 
 /**
  * @swagger
+ * /api/v1/expense/expense-template-applicable-categories:
+ *   get:
+ *     summary: Get all ExpenseTemplateApplicableCategories
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with ExpenseTemplateApplicableCategories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-template-applicable-categories', authController.protect, expenseController.getAllExpenseTemplateApplicableCategories);
+
+/**
+ * @swagger
  * /api/v1/expense/employee-expense-assignments:
  *   post:
  *     summary: Create a new EmployeeExpenseAssignment
