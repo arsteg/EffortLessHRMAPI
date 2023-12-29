@@ -329,6 +329,7 @@ router.put('/expense-application-fields', authController.protect, expenseControl
  *         description: Internal server error
  */
 router.get('/expense-application-fields-by-expence-category/:expenseCategoryId', authController.protect, expenseController.getExpenseApplicationFieldsByCategory);
+
 /**
  * @swagger
  * /api/v1/expense/expense-application-fields/{id}:
@@ -380,6 +381,7 @@ router.delete('/expense-application-fields/:id', authController.protect, expense
  *         description: Internal server error
  */
 router.get('/expense-application-fields-values-by-field/:expenseApplicationFieldId', authController.protect, expenseController.getExpenseApplicationFieldValuesByFieldId);
+
 /**
  * @swagger
  * /api/v1/expense/expense-application-field-values/{id}:
@@ -1449,7 +1451,6 @@ router.get('/advance-categories/:id', authController.protect, expenseController.
  */
 router.get('/advance-categories-by-user/:userId', authController.protect, expenseController.getAdvanceCategoryByEmployee);
 
-
 /**
  * @swagger
  * /api/v1/expense/advance-categories/{id}:
@@ -1528,7 +1529,6 @@ router.delete('/advance-categories/:id', authController.protect, expenseControll
  *         description: Internal server error
  */
 router.get('/advance-categories', authController.protect, expenseController.getAllAdvanceCategories);
-
 
 /**
  * @swagger
