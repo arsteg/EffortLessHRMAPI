@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var includeSchema = new Schema({
+var planOfferSchema = new Schema({
   plan: {
     type: mongoose.Schema.ObjectId,
     ref: 'Plan',
@@ -12,6 +12,6 @@ var includeSchema = new Schema({
     ref: 'Offer',
     required: true
   }
-  }, { collection: 'Include' });
+  }, { collection: 'PlanOffer' });
 
-module.exports = mongoose.model('Include', includeSchema);
+module.exports = mongoose.model('PlanOffer', planOfferSchema);

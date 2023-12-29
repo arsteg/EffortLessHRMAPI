@@ -484,7 +484,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
  *       500:
  *         description: Internal server error
  */
-router.post('/option-included', authController.protect, pricingController.addOptionToPlan);
+router.post('/option-included', authController.protect, pricingController.addOptionInclusionDetails);
 
 /**
  * @swagger
@@ -510,7 +510,7 @@ router.post('/option-included', authController.protect, pricingController.addOpt
  *       500:
  *         description: Internal server error
  */
-router.delete('/option-included/:id', authController.protect, pricingController.removeOptionFromPlan);
+router.delete('/option-included/:id', authController.protect, pricingController.removeOptionInclusionDetails);
 
 /**
  * @swagger
@@ -814,7 +814,7 @@ router.get('/option-included', authController.protect, pricingController.getAllO
  *       500:
  *         description: Internal server error
  */
-router.post('/include', authController.protect, pricingController.addPlanToOffer);
+router.post('/include', authController.protect, pricingController.addIncludeDetails);
 
 /**
  * @swagger
@@ -840,7 +840,7 @@ router.post('/include', authController.protect, pricingController.addPlanToOffer
  *       500:
  *         description: Internal server error
  */
-router.delete('/include/:id', authController.protect, pricingController.removePlanFromOffer);
+router.delete('/include/:id', authController.protect, pricingController.removeIncludeDetails);
 
 /**
  * @swagger
@@ -1213,5 +1213,292 @@ router.get('/user-group-type', authController.protect, pricingController.getAllU
   *         description: Internal server error
   */
  router.get('/prerequisites', authController.protect, pricingController.getAllPrerequisitesDetails);
+
+ 
+ /**
+ * @swagger
+ * /api/v1/pricing/company-plan:
+ *   post:
+ *     summary: Add a CompanyPlan 
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: CompanyPlan details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               company:
+ *                 type: string
+ *                 description: ID of the company
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: CompanyPlan successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/company-plan', authController.protect, pricingController.addCompanyPlan);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/company-plan/{id}:
+  *   delete:
+  *     summary: Remove a CompanyPlan
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the CompanyPlan Details
+  *     responses:
+  *       204:
+  *         description: Plan successfully removed from the offer
+  *       404:
+  *         description: CompanyPlan Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.delete('/company-plan/:id', authController.protect, pricingController.removeCompanyPlan);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/company-plan/{id}:
+  *   get:
+  *     summary: Get CompanyPlan Details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the CompanyPlan Details
+  *     responses:
+  *       200:
+  *         description: Successful response with the CompanyPlan Details
+  *       404:
+  *         description: CompanyPlan Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/company-plan/:id', authController.protect, pricingController.getCompanyPlanDetails);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/company-plan/{id}:
+  *   put:
+  *     summary: Update CompanyPlan details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the CompanyPlan Details
+  *     requestBody:
+  *       description: New CompanyPlan details
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               plan:
+  *                 type: string
+  *               copany:
+  *                 type: string
+  *     responses:
+  *       200:
+  *         description: Successful response with the updated CompanyPlan Details
+  *       404:
+  *         description: CompanyPlan Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/company-plan/:id', authController.protect, pricingController.updateCompanyPlanDetails);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/company-plan:
+  *   get:
+  *     summary: Get all CompanyPlan details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with all CompanyPlan details
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/company-plan', authController.protect, pricingController.getAllCompanyPlan);
+
+ 
+ /**
+ * @swagger
+ * /api/v1/pricing/plan-offer:
+ *   post:
+ *     summary: Add a plan to an offer
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Plan Offer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               offer:
+ *                 type: string
+ *                 description: ID of the offer
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Plan successfully added to the offer
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/plan-offer', authController.protect, pricingController.addPlanToOffer);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-offer/{id}:
+ *   delete:
+ *     summary: Remove a plan from an offer
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan Offer Details
+ *     responses:
+ *       204:
+ *         description: Plan successfully removed from the offer
+ *       404:
+ *         description: Plan Offer Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/plan-offer/:id', authController.protect, pricingController.removePanFromOffer);
+
+/**
+ * @swagger
+ * /api/v1/pricing/include/{id}:
+ *   get:
+ *     summary: Get Include Details by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan Offer Details
+ *     responses:
+ *       200:
+ *         description: Successful response with the Plan Offer Details
+ *       404:
+ *         description: Plan Offer Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/plan-offer/:id', authController.protect, pricingController.getPlanOfferDetails);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-offer/{id}:
+ *   put:
+ *     summary: Update plan offer details by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan Offer Details
+ *     requestBody:
+ *       description: New plan offer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan:
+ *                 type: string
+ *               offer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Plan Offer Details
+ *       404:
+ *         description: Plan Offer Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/plan-offer/:id', authController.protect, pricingController.updatePlanOfferDetails);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-offer:
+ *   get:
+ *     summary: Get all plan offer details
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with all plan offer details
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/plan-offer', authController.protect, pricingController.getAllPlanOfferDetails);
+
 
 module.exports = router;

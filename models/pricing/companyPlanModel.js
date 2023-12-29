@@ -1,17 +1,17 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var includeSchema = new Schema({
+var companyPlanSchema = new Schema({
   plan: {
     type: mongoose.Schema.ObjectId,
     ref: 'Plan',
     required: true
   },
-  offer: {
+  company: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Offer',
+    ref: 'Company',
     required: true
   }
-  }, { collection: 'Include' });
+  }, { collection: 'CompanyPlan' });
 
-module.exports = mongoose.model('Include', includeSchema);
+module.exports = mongoose.model('CompanyPlan', companyPlanSchema);

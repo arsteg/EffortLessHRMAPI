@@ -8,6 +8,9 @@ const Include = require('../models/pricing/includeModel');
 const UserGroupType = require('../models/pricing/userGroupTypeModel');
 const catchAsync = require('../utils/catchAsync');
 const Prerequisites = require('../models/pricing/prerequisitesModel');
+const CompanyPlan = require('../models/pricing/companyPlanModel');
+const PlanOffer = require('../models/pricing/planOfferModel');
+const Company = require('../models/companyModel');
 
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
@@ -254,7 +257,7 @@ res.status(200).json({
 });
 
 // Add an option to a plan
-exports.addOptionToPlan = async (req, res, next) => {
+exports.addOptionInclusionDetails = async (req, res, next) => {
   try {
     const { plan, option, dateAdded, dateRemoved } = req.body;
 
@@ -291,7 +294,7 @@ exports.addOptionToPlan = async (req, res, next) => {
 };
 
 // Remove an option from a plan
-exports.removeOptionFromPlan = async (req, res, next) => {
+exports.removeOptionInclusionDetails = async (req, res, next) => {
   try {
     const optionIncludedId = req.params.id;
 
@@ -494,7 +497,7 @@ exports.updateOfferDetails = catchAsync(async (req, res, next) => {
 
 
 // Add a plan to an offer
-exports.addPlanToOffer = catchAsync(async (req, res, next) => {
+exports.addIncludeDetails = catchAsync(async (req, res, next) => {
   const { plan, offer } = req.body;
 
   // Check if the plan and offer exist
@@ -521,7 +524,7 @@ exports.addPlanToOffer = catchAsync(async (req, res, next) => {
 });
 
 // Remove a plan from an offer
-exports.removePlanFromOffer = catchAsync(async (req, res, next) => {
+exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
   const includeId = req.params.id;
 
   // Check if the Include entry exists
@@ -750,7 +753,17 @@ exports.getAllUserGroupTypes = async (req, res, next) => {
 exports.addPrerequisites = catchAsync(async (req, res, next) => {
   const { plan, offer } = req.body;
 
-  // Check if the plan and offer exist
+  // Check if the Prerequisites exist for the given plan and offer
+  const existingPrerequisites = await Prerequisites.findOne({ plan, offer });
+
+  if (existingPrerequisites) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Prerequisites already exist for the given plan and offer',
+    });
+  }
+
+  // Check if the Plan and Offer exist
   const existingPlan = await Plan.findById(plan);
   const existingOffer = await Offer.findById(offer);
 
@@ -818,6 +831,28 @@ exports.getPrerequisitesDetails = catchAsync(async (req, res, next) => {
 
 // Update prerequisites details by ID
 exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
+  const { plan, offer } = req.body;
+
+  // Check if the Prerequisites exist for the given plan and offer
+  const existingPrerequisites = await Prerequisites.findOne({ plan, offer });
+
+  if (existingPrerequisites) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Prerequisites already exist for the given plan and offer',
+    });
+  }
+
+  // Check if the Plan and Offer exist
+  const existingPlan = await Plan.findById(plan);
+  const existingOffer = await Offer.findById(offer);
+
+  if (!existingPlan || !existingOffer) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid plan or offer ID',
+    });
+  }
   const prerequisites = await Prerequisites.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -844,5 +879,236 @@ exports.getAllPrerequisitesDetails = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: prerequisitesDetails,
+  });
+});
+
+// Add a CompanyPlan 
+exports.addCompanyPlan = catchAsync(async (req, res, next) => {
+ const { plan, company } = req.body;
+ // Check if the CompanyPlan exists for the given plan and company
+ const existingCompanyPlan = await CompanyPlan.findOne({ plan, company });
+
+ if (existingCompanyPlan) {
+   return res.status(400).json({
+     status: 'failure',
+     message: 'Company plan already exists for the given plan and company',
+   });
+ }
+  // Check if the CompanyPlan exist
+  const existingPlan = await Plan.findById(plan);
+  const existingcompany = await Company.findById(company);
+
+  if (!existingPlan || !existingcompany) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid plan or offer ID',
+    });
+  }
+
+  // Create Include entry
+  const companyPlan = await CompanyPlan.create({
+    plan,
+    company,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: companyPlan,
+  });
+});
+
+// Remove a plan from an offer
+exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
+  const companyPlanId = req.params.id;
+
+  // Check if the Include entry exists
+  const companyPlan = await CompanyPlan.findById(companyPlanId);
+
+  if (!companyPlan) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'CompanyPlan Details not found',
+    });
+  }
+
+  // Delete prerequisites entry
+  await companyPlan.findByIdAndDelete(companyPlanId);
+
+  res.status(204).json({
+    status: 'success',
+    message: 'CompanyPlan successfully removed',
+  });
+});
+
+// Get prerequisites Details by ID
+exports.getCompanyPlanDetails = catchAsync(async (req, res, next) => {
+  const companyPlanId = req.params.id;
+
+  // Find Include entry by ID
+  const companyPlan = await CompanyPlan.findById(companyPlanId);
+
+  if (!companyPlan) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'CompanyPlan Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: companyPlan,
+  });
+});
+
+// Update prerequisites details by ID
+exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
+  const { plan, company } = req.body;
+  // Check if the CompanyPlan exists for the given plan and company
+  const existingCompanyPlan = await CompanyPlan.findOne({ plan, company });
+ 
+  if (existingCompanyPlan) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Company plan already exists for the given plan and company',
+    });
+  }
+   // Check if the CompanyPlan exist
+   const existingPlan = await Plan.findById(plan);
+   const existingcompany = await Company.findById(company);
+ 
+   if (!existingPlan || !existingcompany) {
+     return res.status(400).json({
+       status: 'failure',
+       message: 'Invalid plan or offer ID',
+     });
+   }
+  const companyPlan = await CompanyPlan.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!companyPlan) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'CompanyPlan Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: companyPlan,
+  });
+});
+
+// Get all prerequisites details
+exports.getAllCompanyPlan = catchAsync(async (req, res, next) => {
+  const companyPlans = await CompanyPlan.find();
+
+  res.status(200).json({
+    status: 'success',
+    data: companyPlans,
+  });
+});
+
+
+// Add a plan to an offer
+exports.addPlanToOffer = catchAsync(async (req, res, next) => {
+  const { plan, offer } = req.body;
+
+  // Check if the plan and offer exist
+  const existingPlan = await Plan.findById(plan);
+  const existingOffer = await Offer.findById(offer);
+
+  if (!existingPlan || !existingOffer) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid plan or offer ID',
+    });
+  }
+
+  // Create Include entry
+  const planOffer = await PlanOffer.create({
+    plan,
+    offer,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: planOffer,
+  });
+});
+
+// Remove a plan from an offer
+exports.removePanFromOffer = catchAsync(async (req, res, next) => {
+  const planOfferId = req.params.id;
+
+  // Check if the Include entry exists
+  const planOffer = await PlanOffer.findById(planOfferId);
+
+  if (!planOffer) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'PlanOffer Details not found',
+    });
+  }
+
+  // Delete Include entry
+  await PlanOffer.findByIdAndDelete(planOfferId);
+
+  res.status(204).json({
+    status: 'success',
+    message: 'Plan successfully removed from the offer',
+  });
+});
+
+// Get Include Details by ID
+exports.getPlanOfferDetails = catchAsync(async (req, res, next) => {
+  const planOfferId = req.params.id;
+
+  // Find Include entry by ID
+  const planOffer = await PlanOffer.findById(planOfferId);
+
+  if (!planOffer) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'PlanOffer Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: planOffer,
+  });
+});
+
+// Update include details by ID
+exports.updatePlanOfferDetails = catchAsync(async (req, res, next) => {
+  const planOffer = await PlanOffer.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!include) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'PlanOffer Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: planOffer,
+  });
+});
+
+// Get all include details
+exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
+  const planOffer = await PlanOffer.find();
+
+  res.status(200).json({
+    status: 'success',
+    data: planOffer,
   });
 });
