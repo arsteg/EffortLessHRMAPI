@@ -13,10 +13,6 @@ var softwareSchema = new Schema({
   accessLink: {
     type: String,
     required: true
-  },
-  company: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Company'
   }
 }, { collection: 'Software' });
 

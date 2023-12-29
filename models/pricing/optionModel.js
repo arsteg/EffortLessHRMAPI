@@ -5,10 +5,6 @@ var optionSchema = new Schema({
   name: {
     type: String,
     required: true
-  }, 
-  company: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Company'
   }
 }, { collection: 'Option' });
 

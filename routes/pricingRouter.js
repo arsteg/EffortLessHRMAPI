@@ -179,7 +179,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
  *       500:
  *         description: Internal server error
  */
- router.post('/option', authController.protect, pricingController.createOption);
+ router.post('/option', authController.protect, pricingController.createPlan);
 
  /**
   * @swagger
@@ -205,7 +205,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/option/:id', authController.protect, pricingController.getOption);
+ router.get('/option/:id', authController.protect, pricingController.getPlan);
  
  /**
   * @swagger
@@ -242,7 +242,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.put('/option/:id', authController.protect, pricingController.updateOption);
+ router.put('/option/:id', authController.protect, pricingController.updatePlan);
  
  /**
   * @swagger
@@ -268,7 +268,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.delete('/option/:id', authController.protect, pricingController.deleteOption);
+ router.delete('/option/:id', authController.protect, pricingController.deletePlan);
  
  /**
   * @swagger
@@ -285,6 +285,161 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/option', authController.protect, pricingController.getAllOption);
+ router.get('/option', authController.protect, pricingController.getAllPlan);
+
+ 
+ /**
+ * @swagger
+ * /api/v1/pricing/plan:
+ *   post:
+ *     summary: Create a new plan entry
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: plan details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               software:
+ *                 type: string
+ *                 required: true
+ *               currentprice:
+ *                 type: number
+ *                 required: true
+ *               IsActive:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Plan entry successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/plan', authController.protect, pricingController.createPlan);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/plan/{id}:
+  *   get:
+  *     summary: Get an Plan Details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Option Details
+  *     responses:
+  *       200:
+  *         description: Successful response with the Plan Details
+  *       404:
+  *         description: Plan Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/plan/:id', authController.protect, pricingController.getPlan);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/plan/{id}:
+  *   put:
+  *     summary: Update an plan by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Plan
+  *     requestBody:
+  *       description: New plan details
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               name:
+  *                 type: string
+  *                 required: true
+  *               software:
+  *                 type: string
+  *                 required: true
+  *               currentprice:
+  *                 type: number
+  *                 required: true
+  *               IsActive:
+  *                 type: boolean
+  *                 required: true
+  *     responses:
+  *       200:
+  *         description: Successful response with the updated plan
+  *       404:
+  *         description: plan not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/plan/:id', authController.protect, pricingController.updatePlan);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/plan/{id}:
+  *   delete:
+  *     summary: Delete an Plan Details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Plan Details
+  *     responses:
+  *       204:
+  *         description: Plan Details successfully deleted
+  *       404:
+  *         description: Plan Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.delete('/plan/:id', authController.protect, pricingController.deletePlan);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/plan:
+  *   get:
+  *     summary: Get all plan details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with plan
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/plan', authController.protect, pricingController.getAllPlan);
  
 module.exports = router;
