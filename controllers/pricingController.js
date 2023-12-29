@@ -7,6 +7,7 @@ const Offer = require('../models/pricing/offerModel');
 const Include = require('../models/pricing/includeModel');
 const UserGroupType = require('../models/pricing/userGroupTypeModel');
 const catchAsync = require('../utils/catchAsync');
+const Prerequisites = require('../models/pricing/prerequisitesModel');
 
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
@@ -743,3 +744,105 @@ exports.getAllUserGroupTypes = async (req, res, next) => {
     });
   }
 };
+
+
+// Add a plan to an offer
+exports.addPrerequisites = catchAsync(async (req, res, next) => {
+  const { plan, offer } = req.body;
+
+  // Check if the plan and offer exist
+  const existingPlan = await Plan.findById(plan);
+  const existingOffer = await Offer.findById(offer);
+
+  if (!existingPlan || !existingOffer) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid plan or offer ID',
+    });
+  }
+
+  // Create Include entry
+  const prerequisites = await Prerequisites.create({
+    plan,
+    offer,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: prerequisites,
+  });
+});
+
+// Remove a plan from an offer
+exports.removePrerequisites = catchAsync(async (req, res, next) => {
+  const prerequisitesId = req.params.id;
+
+  // Check if the Include entry exists
+  const prerequisites = await Prerequisites.findById(prerequisitesId);
+
+  if (!prerequisites) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'prerequisites Details not found',
+    });
+  }
+
+  // Delete prerequisites entry
+  await prerequisites.findByIdAndDelete(prerequisitesId);
+
+  res.status(204).json({
+    status: 'success',
+    message: 'prerequisites successfully removed',
+  });
+});
+
+// Get prerequisites Details by ID
+exports.getPrerequisitesDetails = catchAsync(async (req, res, next) => {
+  const prerequisiteId = req.params.id;
+
+  // Find Include entry by ID
+  const prerequisites = await Prerequisites.findById(prerequisiteId);
+
+  if (!prerequisites) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'prerequisites Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: prerequisites,
+  });
+});
+
+// Update prerequisites details by ID
+exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
+  const prerequisites = await Prerequisites.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!prerequisites) {
+    return res.status(404).json({
+      status: 'failure',
+      message: 'prerequisites Details not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: prerequisites,
+  });
+});
+
+// Get all prerequisites details
+exports.getAllPrerequisitesDetails = catchAsync(async (req, res, next) => {
+  const prerequisitesDetails = await Prerequisites.find();
+
+  res.status(200).json({
+    status: 'success',
+    data: prerequisitesDetails,
+  });
+});

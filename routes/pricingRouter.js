@@ -1071,4 +1071,147 @@ router.put('/user-group-type/:id', authController.protect, pricingController.upd
  */
 router.get('/user-group-type', authController.protect, pricingController.getAllUserGroupTypes);
 
+
+ /**
+ * @swagger
+ * /api/v1/pricing/prerequisites:
+ *   post:
+ *     summary: Add a Prerequisites 
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Prerequisites details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               offer:
+ *                 type: string
+ *                 description: ID of the offer
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Prerequisites successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/prerequisites', authController.protect, pricingController.addPrerequisites);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/prerequisites/{id}:
+  *   delete:
+  *     summary: Remove a Prerequisites
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Prerequisites Details
+  *     responses:
+  *       204:
+  *         description: Plan successfully removed from the offer
+  *       404:
+  *         description: Prerequisites Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.delete('/prerequisites/:id', authController.protect, pricingController.removePrerequisites);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/prerequisites/{id}:
+  *   get:
+  *     summary: Get Prerequisites Details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Prerequisites Details
+  *     responses:
+  *       200:
+  *         description: Successful response with the Prerequisites Details
+  *       404:
+  *         description: Prerequisites Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/prerequisites/:id', authController.protect, pricingController.getPrerequisitesDetails);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/prerequisites/{id}:
+  *   put:
+  *     summary: Update prerequisites details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Prerequisites Details
+  *     requestBody:
+  *       description: New Prerequisites details
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               plan:
+  *                 type: string
+  *               offer:
+  *                 type: string
+  *     responses:
+  *       200:
+  *         description: Successful response with the updated Prerequisites Details
+  *       404:
+  *         description: Prerequisites Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/prerequisites/:id', authController.protect, pricingController.updatePrerequisitesDetails);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/prerequisites:
+  *   get:
+  *     summary: Get all prerequisites details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with all Prerequisites details
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/prerequisites', authController.protect, pricingController.getAllPrerequisitesDetails);
+
 module.exports = router;
