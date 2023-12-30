@@ -1500,5 +1500,238 @@ router.put('/plan-offer/:id', authController.protect, pricingController.updatePl
  */
 router.get('/plan-offer', authController.protect, pricingController.getAllPlanOfferDetails);
 
+/**
+ * @swagger
+ * /api/v1/pricing/subscription:
+ *   post:
+ *     summary: Add an subscription
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Subscription details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userGroupType:
+ *                 type: string
+ *                 description: ID of the userGroupType
+ *                 required: true
+ *               currentPlanId:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               subscriptionAfterTrial:
+ *                 type: string
+ *                 description: ID of the option
+ *                 required: true
+ *               trialPeriodStartDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was added
+ *                 required: true
+ *               trialPeriodEndDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *               offer:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               offerStartDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was added
+ *                 required: true
+ *               offerEndDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *               dateSubscribed:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was added
+ *                 required: true
+ *               validTo:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *               dateUnsubscribed:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: subscription successfully Added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/subscription', authController.protect, pricingController.addSubscriptionDetails);
+
+/**
+  * @swagger
+  * /api/v1/pricing/subscription/{id}:
+  *   delete:
+  *     summary: Remove an subscription
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the subscription Details
+  *     responses:
+  *       204:
+  *         description: subscription removed
+  *       404:
+  *         description: subscription Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.delete('/subscription/:id', authController.protect, pricingController.removeSubscriptionDetails);
+ 
+/**
+  * @swagger
+  * /api/v1/pricing/subscription/{id}:
+  *   get:
+  *     summary: Getsubscription Details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of thesubscription Details
+  *     responses:
+  *       200:
+  *         description: Successful response with thesubscription Details
+  *       404:
+  *         description: subscription not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/subscription/:id', authController.protect, pricingController.getSubscriptionDetailsById);
+ 
+/**
+  * @swagger
+  * /api/v1/pricing/subscription/{id}:
+  *   put:
+  *     summary: Update subscription details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the subscription Details
+  *     requestBody:
+  *       description: Subscription details
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               userGroupType:
+  *                 type: string
+  *                 description: ID of the userGroupType
+  *                 required: true
+  *               currentPlanId:
+  *                 type: string
+  *                 description: ID of the plan
+  *                 required: true
+  *               subscriptionAfterTrial:
+  *                 type: string
+  *                 description: ID of the option
+  *                 required: true
+  *               trialPeriodStartDate:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was added
+  *                 required: true
+  *               trialPeriodEndDate:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was removed
+  *                 required: true
+  *               offer:
+  *                 type: string
+  *                 description: ID of the plan
+  *                 required: true
+  *               offerStartDate:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was added
+  *                 required: true
+  *               offerEndDate:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was removed
+  *                 required: true
+  *               dateSubscribed:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was added
+  *                 required: true
+  *               validTo:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was removed
+  *                 required: true
+  *               dateUnsubscribed:
+  *                 type: string
+  *                 format: date
+  *                 description: Date when the option was removed
+  *                 required: true
+  *     responses:
+  *       200:
+  *         description: Successful response with the updated subscription Details
+  *       404:
+  *         description: subscription Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/subscription/:id', authController.protect, pricingController.updateSubscriptionDetails);
+ 
+/**
+  * @swagger
+  * /api/v1/pricing/subscription:
+  *   get:
+  *     summary: Get all subscription details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with all subscription details
+  *       500:
+  *         description: Internal server error
+  */
+router.get('/subscription', authController.protect, pricingController.getAllSubscriptionDetails);
+
+
 
 module.exports = router;

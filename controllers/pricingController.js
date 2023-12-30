@@ -11,7 +11,8 @@ const Prerequisites = require('../models/pricing/prerequisitesModel');
 const CompanyPlan = require('../models/pricing/companyPlanModel');
 const PlanOffer = require('../models/pricing/planOfferModel');
 const Company = require('../models/companyModel');
-
+const Subscription= require('../models/pricing/subscriptionModel');
+const mongoose = require('mongoose');
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
     const softwareExists = await Software.findOne({ name: name});
@@ -1112,3 +1113,203 @@ exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
     data: planOffer,
   });
 });
+
+exports.addSubscriptionDetails = async (req, res) => {
+  try {
+    // Basic validation for required fields
+    if (!req.body.currentPlanId || !req.body.offer || !req.body.userGroupType) {
+      return res.status(400).json({ error: 'Plan, offer, and userGroupType are required fields' });
+    }
+
+    // Check if userGroupType ID is valid
+    const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
+    if (!isValidUserGroupType) {
+      return res.status(400).json({ error: 'Invalid userGroupType ID' });
+    }
+
+    // Check if offer ID is valid
+    const isValidOffer = await Offer.findById(req.body.offer);
+    if (!isValidOffer) {
+      return res.status(400).json({ error: 'Invalid offer ID' });
+    }
+
+    // Check if currentPlanId ID is valid
+    const isValidCurrentPlan = await Plan.findById(req.body.currentPlanId);
+    if (!isValidCurrentPlan) {
+      return res.status(400).json({ error: 'Invalid currentPlanId ID' });
+    }
+
+    // Create a new subscription instance
+    const newSubscription = new Subscription({
+      userGroupType: req.body.userGroupType,
+      trialPeriodStartDate: req.body.trialPeriodStartDate,
+      trialPeriodEndDate: req.body.trialPeriodEndDate,
+      subscriptionAfterTrial: req.body.subscriptionAfterTrial,
+      currentPlanId: req.body.currentPlanId,
+      offer: req.body.offer,
+      offerStartDate: req.body.offerStartDate,
+      offerEndDate: req.body.offerEndDate,
+      dateSubscribed: req.body.dateSubscribed,
+      validTo: req.body.validTo,
+      dateUnsubscribed: req.body.dateUnsubscribed,
+    });
+
+    // Save the new subscription to the database
+    const savedSubscription = await newSubscription.save();
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        subscription: savedSubscription,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.removeSubscriptionDetails = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Find and remove the subscription
+    const removedSubscription = await Subscription.findByIdAndRemove(subscriptionId);
+
+    if (!removedSubscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.getSubscriptionDetailsById = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+    console.log(subscriptionId);
+    // Find the subscription by ID
+    const subscription = await Subscription.findById(subscriptionId);
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscription,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.updateSubscriptionDetails = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Additional validation for plan, offer, and userGroupType IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(req.body.plan) ||
+      !mongoose.Types.ObjectId.isValid(req.body.offer) ||
+      !mongoose.Types.ObjectId.isValid(req.body.userGroupType)
+    ) {
+      return res.status(400).json({ error: 'Invalid plan, offer, or userGroupType ID' });
+    }
+
+    // Check if userGroupType ID is valid
+    const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
+    if (!isValidUserGroupType) {
+      return res.status(400).json({ error: 'Invalid userGroupType ID' });
+    }
+
+    // Check if offer ID is valid
+    const isValidOffer = await Offer.findById(req.body.offer);
+    if (!isValidOffer) {
+      return res.status(400).json({ error: 'Invalid offer ID' });
+    }
+
+    // Check if plan ID is valid
+    const isValidPlan = await Plan.findById(req.body.plan);
+    if (!isValidPlan) {
+      return res.status(400).json({ error: 'Invalid plan ID' });
+    }
+
+    // Find the subscription by ID and update
+    const updatedSubscription = await Subscription.findByIdAndUpdate(
+      subscriptionId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSubscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscription: updatedSubscription,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.getAllSubscriptionDetails = async (req, res) => {
+  try {
+    // Fetch all subscriptions
+    const subscriptions = await Subscription.find();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscriptions,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};

@@ -14,6 +14,6 @@ var userGroupTypeSchema = new Schema({
     type: Number,
     required: true
   }
-}, { collection: 'userGroupType' });
+}, { collection: 'UserGroupType' });
 
-module.exports = mongoose.model('userGroupType', userGroupTypeSchema);
+module.exports = mongoose.model('UserGroupType', userGroupTypeSchema);
