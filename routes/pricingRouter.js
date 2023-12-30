@@ -1898,4 +1898,214 @@ router.delete('/plan-history/:id',  authController.protect, pricingController.de
  */
 router.get('/plan-history',  authController.protect, pricingController.getAllPlanHistories);
 
+/**
+ * @swagger
+ * /api/v1/pricing/invoice:
+ *   post:
+ *     summary: Create a new Invoice
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Invoice details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               subscription:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               planHistory:
+ *                 type: string
+ *                 description: ID of the option
+ *                 required: true
+ *               invoicePeriodStartDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               invoicePeriodEndDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               description:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               amount:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               dueDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               IsPaid:
+ *                 type: boolean
+ *                 description: ID of the plan
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Invoice successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/invoice',  authController.protect, pricingController.createInvoice);
+
+/**
+ * @swagger
+ * /api/v1/pricing/invoice/{id}:
+ *   get:
+ *     summary: Get invoice by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Invoice
+ *     responses:
+ *       200:
+ *         description: Successful response with the Invoice
+ *       404:
+ *         description: Invoice not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/invoice/:id',  authController.protect, pricingController.getInvoiceById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/invoice/{id}:
+ *   put:
+ *     summary: Update invoice by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Invoice
+ *     requestBody:
+ *       description: Invoice details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               subscription:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               planHistory:
+ *                 type: string
+ *                 description: ID of the option
+ *                 required: true
+ *               invoicePeriodStartDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               invoicePeriodEndDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               description:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               amount:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               dueDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date
+ *                 required: true
+ *               IsPaid:
+ *                 type: boolean
+ *                 description: ID of the plan
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Invoice
+ *       404:
+ *         description: Plan History not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/invoice/:id',  authController.protect, pricingController.updateInvoiceById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/invoice/{id}:
+ *   delete:
+ *     summary: Delete invoice by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Invoice
+ *     responses:
+ *       204:
+ *         description: Invoice successfully deleted
+ *       404:
+ *         description: Invoice not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/invoice/:id',  authController.protect, pricingController.deleteInvoiceById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/invoice:
+ *   get:
+ *     summary: Get all invoices
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with all invoices
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/invoice',  authController.protect, pricingController.getAllInvoices);
+
 module.exports = router;

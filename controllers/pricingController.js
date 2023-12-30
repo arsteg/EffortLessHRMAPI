@@ -13,6 +13,7 @@ const PlanOffer = require('../models/pricing/planOfferModel');
 const Company = require('../models/companyModel');
 const Subscription= require('../models/pricing/subscriptionModel');
 const PlanHistory = require('../models/pricing/planHistoryModel');
+const Invoice= require('../models/pricing/invoiceModel');
 const mongoose = require('mongoose');
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
@@ -1512,3 +1513,218 @@ exports.getAllPlanHistories = async (req, res) => {
     });
   }
 };
+// Controller method
+exports.createInvoice = async (req, res) => {
+  try {
+    // Validate if the provided subscription ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(req.body.subscription)) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Check if the subscription with the provided ID exists
+    const existingSubscription = await Subscription.findById(req.body.subscription);
+    if (!existingSubscription) {
+      return res.status(400).json({ error: 'Subscription not found' });
+    }
+
+    // Validate if the provided plan history ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(req.body.planHistory)) {
+      return res.status(400).json({ error: 'Invalid plan history ID' });
+    }
+
+    // Check if the plan history with the provided ID exists
+    const existingPlanHistory = await PlanHistory.findById(req.body.planHistory);
+    if (!existingPlanHistory) {
+      return res.status(400).json({ error: 'Plan history not found' });
+    }
+
+    // Create a new invoice
+    const newInvoice = new Invoice({
+      date: req.body.date,
+      subscription: req.body.subscription,
+      planHistory: req.body.planHistory,
+      invoicePeriodStartDate: req.body.invoicePeriodStartDate,
+      invoicePeriodEndDate: req.body.invoicePeriodEndDate,
+      description: req.body.description,
+      amount: req.body.amount,
+      dueDate: req.body.dueDate,
+      IsPaid: req.body.IsPaid,
+    });
+
+    // Save the new invoice to the database
+    const savedInvoice = await newInvoice.save();
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        invoice: savedInvoice,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Controller method
+exports.getInvoiceById = async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+      return res.status(400).json({ error: 'Invalid invoice ID' });
+    }
+
+    // Check if the invoice with the provided ID exists
+    const invoice = await Invoice.findById(invoiceId)
+      .populate('subscription', 'planHistory')
+      .exec();
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        invoice: invoice,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+// Controller method
+exports.updateInvoiceById = async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+      return res.status(400).json({ error: 'Invalid invoice ID' });
+    }
+
+    // Check if the invoice with the provided ID exists
+    const existingInvoice = await Invoice.findById(invoiceId);
+    if (!existingInvoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    // Validate if the provided subscriptionId is a valid MongoDB ID
+    if (
+      req.body.subscriptionId &&
+      !mongoose.Types.ObjectId.isValid(req.body.subscriptionId)
+    ) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Check if the subscription with the provided ID exists
+    if (req.body.subscriptionId) {
+      const existingSubscription = await Subscription.findById(
+        req.body.subscriptionId
+      );
+      if (!existingSubscription) {
+        return res.status(400).json({ error: 'Subscription not found' });
+      }
+    }
+
+    // Validate if the provided planHistoryId is a valid MongoDB ID
+    if (
+      req.body.planHistoryId &&
+      !mongoose.Types.ObjectId.isValid(req.body.planHistoryId)
+    ) {
+      return res.status(400).json({ error: 'Invalid plan history ID' });
+    }
+
+    // Check if the plan history with the provided ID exists
+    if (req.body.planHistoryId) {
+      const existingPlanHistory = await PlanHistory.findById(
+        req.body.planHistoryId
+      );
+      if (!existingPlanHistory) {
+        return res.status(404).json({ error: 'Plan history not found' });
+      }
+    }
+
+    // Update the invoice by ID
+    const updatedInvoice = await Invoice.findByIdAndUpdate(
+      invoiceId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        invoice: updatedInvoice,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+// Controller method
+exports.deleteInvoiceById = async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+      return res.status(400).json({ error: 'Invalid invoice ID' });
+    }
+
+    // Check if the invoice with the provided ID exists
+    const existingInvoice = await Invoice.findById(invoiceId);
+    if (!existingInvoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    // Delete the invoice by ID
+    await Invoice.findByIdAndDelete(invoiceId);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Controller method
+exports.getAllInvoices = async (req, res) => {
+  try {
+    // Fetch all invoices
+    const invoices = await Invoice.find();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        invoices,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+ 
