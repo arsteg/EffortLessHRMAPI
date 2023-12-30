@@ -1732,6 +1732,170 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
   */
 router.get('/subscription', authController.protect, pricingController.getAllSubscriptionDetails);
 
+/**
+ * @swagger
+ * /api/v1/pricing/plan-history:
+ *   post:
+ *     summary: Create a new plan history
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Option inclusion details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               planId:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               subscriptionId:
+ *                 type: string
+ *                 description: ID of the option
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was added
+ *                 required: true
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Plan history successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/plan-history',  authController.protect, pricingController.createPlanHistory);
 
+/**
+ * @swagger
+ * /api/v1/pricing/plan-history/{id}:
+ *   get:
+ *     summary: Get plan history by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan History
+ *     responses:
+ *       200:
+ *         description: Successful response with the Plan History
+ *       404:
+ *         description: Plan History not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/plan-history/:id',  authController.protect, pricingController.getPlanHistoryById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-history/{id}:
+ *   put:
+ *     summary: Update plan history by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan History
+ *     requestBody:
+ *       description: Option inclusion details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               planId:
+ *                 type: string
+ *                 description: ID of the plan
+ *                 required: true
+ *               subscriptionId:
+ *                 type: string
+ *                 description: ID of the option
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was added
+ *                 required: true
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date when the option was removed
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Plan History
+ *       404:
+ *         description: Plan History not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/plan-history/:id',  authController.protect, pricingController.updatePlanHistoryById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-history/{id}:
+ *   delete:
+ *     summary: Delete plan history by ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan History
+ *     responses:
+ *       204:
+ *         description: Plan History successfully deleted
+ *       404:
+ *         description: Plan History not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/plan-history/:id',  authController.protect, pricingController.deletePlanHistoryById);
+
+/**
+ * @swagger
+ * /api/v1/pricing/plan-history:
+ *   get:
+ *     summary: Get all plan histories
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with all plan histories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/plan-history',  authController.protect, pricingController.getAllPlanHistories);
 
 module.exports = router;

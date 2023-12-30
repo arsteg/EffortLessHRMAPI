@@ -12,6 +12,7 @@ const CompanyPlan = require('../models/pricing/companyPlanModel');
 const PlanOffer = require('../models/pricing/planOfferModel');
 const Company = require('../models/companyModel');
 const Subscription= require('../models/pricing/subscriptionModel');
+const PlanHistory = require('../models/pricing/planHistoryModel');
 const mongoose = require('mongoose');
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
@@ -1303,6 +1304,204 @@ exports.getAllSubscriptionDetails = async (req, res) => {
       status: 'success',
       data: {
         subscriptions,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.createPlanHistory = async (req, res) => {
+  try {
+    // Assuming req.body contains the necessary data for creating a new plan history
+    const { subscriptionId, planId, startDate, endDate } = req.body;
+console.log("hello");
+    // Validate if the provided IDs are valid MongoDB IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(subscriptionId) ||
+      !mongoose.Types.ObjectId.isValid(planId)
+    ) {
+      return res.status(400).json({ error: 'Invalid subscriptionId or planId' });
+    }
+
+    // Check if the subscription with the provided ID exists
+    const existingSubscription = await Subscription.findById(subscriptionId);
+    if (!existingSubscription) {
+      return res.status(400).json({ error: 'Subscription not found' });
+    }
+
+    // Check if the plan with the provided ID exists
+    const existingPlan = await Plan.findById(planId);
+    if (!existingPlan) {
+      return res.status(400).json({ error: 'Plan not found' });
+    }
+
+    // Create a new plan history
+    const newPlanHistory = await PlanHistory.create({
+      subscription: subscriptionId,
+      plan: planId,
+      startDate,
+      endDate,
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        planHistory: newPlanHistory,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.getPlanHistoryById = async (req, res) => {
+  try {
+    const planHistoryId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
+      return res.status(400).json({ error: 'Invalid plan history ID' });
+    }
+
+    // Find the plan history by ID
+    const planHistory = await PlanHistory.findById(planHistoryId);
+
+    if (!planHistory) {
+      return res.status(404).json({ error: 'Plan history not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        planHistory,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.updatePlanHistoryById = async (req, res) => {
+  try {
+    const planHistoryId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
+      return res.status(400).json({ error: 'Invalid plan history ID' });
+    }
+
+    // Check if the plan history with the provided ID exists
+    const existingPlanHistory = await PlanHistory.findById(planHistoryId);
+    if (!existingPlanHistory) {
+      return res.status(404).json({ error: 'Plan history not found' });
+    }
+
+    // Validate if the provided planId is a valid MongoDB ID
+    if (req.body.planId && !mongoose.Types.ObjectId.isValid(req.body.planId)) {
+      return res.status(400).json({ error: 'Invalid plan ID' });
+    }
+
+    // Check if the plan with the provided ID exists
+    if (req.body.planId) {
+      const existingPlan = await Plan.findById(req.body.planId);
+      if (!existingPlan) {
+        return res.status(400).json({ error: 'Plan not found' });
+      }
+    }
+
+    // Validate if the provided subscriptionId is a valid MongoDB ID
+    if (
+      req.body.subscriptionId &&
+      !mongoose.Types.ObjectId.isValid(req.body.subscriptionId)
+    ) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Check if the subscription with the provided ID exists
+    if (req.body.subscriptionId) {
+      const existingSubscription = await Subscription.findById(
+        req.body.subscriptionId
+      );
+      if (!existingSubscription) {
+        return res.status(400).json({ error: 'Subscription not found' });
+      }
+    }
+
+    // Update the plan history by ID
+    const updatedPlanHistory = await PlanHistory.findByIdAndUpdate(
+      planHistoryId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        planHistory: updatedPlanHistory,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.deletePlanHistoryById = async (req, res) => {
+  try {
+    const planHistoryId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
+      return res.status(400).json({ error: 'Invalid plan history ID' });
+    }
+
+    // Check if the plan history with the provided ID exists
+    const existingPlanHistory = await PlanHistory.findById(planHistoryId);
+    if (!existingPlanHistory) {
+      return res.status(404).json({ error: 'Plan history not found' });
+    }
+
+    // Delete the plan history by ID
+    await PlanHistory.findByIdAndDelete(planHistoryId);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.getAllPlanHistories = async (req, res) => {
+  try {
+    // Retrieve all plan histories
+    const allPlanHistories = await PlanHistory.find();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        planHistories: allPlanHistories,
       },
     });
   } catch (err) {
