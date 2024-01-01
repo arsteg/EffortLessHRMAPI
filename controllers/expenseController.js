@@ -439,22 +439,80 @@ exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, 
 });
 
 exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
+  const { expenseCategories, ...expenseTemplateData } = req.body;
+  if (!Array.isArray(expenseCategories) || expenseCategories.length === 0) {
+    return next(new AppError('Expense Category Not Exists in Request', 400));
+  }
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
-
+  for (const category of expenseCategories) {
+    const result = await ExpenseCategory.findById(category.expenseCategory);
+    console.log(result);
+     if (!result) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid Category',
+      });
+    }
+  }
   // Add companyId to the request body
-  req.body.company = companyId;
-  const expenseTemplate = await ExpenseTemplate.create(req.body);
+  expenseTemplateData.company = companyId;
+  const expenseTemplate = await ExpenseTemplate.create(expenseTemplateData);
+  await createExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
+
   res.status(201).json({
     status: 'success',
     data: expenseTemplate
   });
 });
 
+async function validateExpenseCategory(category) {
+  try {
+    const result = await ExpenseCategory.findById(category);
+     if (!result) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid Category',
+      });
+    }
+  } catch (err) {
+    return err.errors || {}; // Handle potential exception during validation
+  }
+}
+async function createExpenseTemplateCategories(expenseTemplateId, expenseCategories) {
+  try {
+    const updatedCategories = await Promise.all(
+      expenseCategories.map(async (category) => {
+        const existingCategory = await ExpenseTemplateApplicableCategories.findOne({
+          expenseCategory: category.expenseCategory,
+          expenseTemplate: expenseTemplateId,
+        });
+
+        if (existingCategory) {
+          return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
+            existingCategory._id,
+            { $set: { ...category } },
+            { new: true }
+          );
+        } else {
+          const newCategory = new ExpenseTemplateApplicableCategories({
+            expenseTemplate: expenseTemplateId,
+            ...category,
+          });
+          return newCategory.save();
+        }
+      })
+    );
+
+    return updatedCategories;
+  } catch (err) {
+    throw new AppError('Internal server error', 500);
+  }
+}
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
   res.status(200).json({
@@ -512,44 +570,28 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
 
 exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
    const { expenseTemplate, expenseCategories } = req.body;
-
+console.log("hello");
   // Validate incoming data
   if (!expenseTemplate || !expenseCategories || !Array.isArray(expenseCategories) || expenseCategories.length === 0) {
     return next(new AppError('Invalid request data', 400));
   }
+  for (const category of expenseCategories) {
+    console.log(category);
+      const result = await ExpenseCategory.findById(category.expenseCategory);
+      console.log(result);
+       if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Category',
+        });
+      
+    }
+  }
+  console.log("hello2");
   try {
     // Iterate through expenseCategories to create or update records
-    const updatedCategories = await Promise.all(
-      expenseCategories.map(async (category) => {
-        // Check if the category already exists
-        const existingCategory = await ExpenseTemplateApplicableCategories.findOne({
-          expenseCategory: category.expenseCategory,
-          expenseTemplate,
-        });
+    await createExpenseTemplateCategories(expenseTemplate, expenseCategories);
 
-        if (existingCategory) {
-          // If the category exists, update it
-          return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
-            existingCategory._id,
-            { $set: { ...category } },
-            { new: true }
-          );
-        } else {
-          // If the category doesn't exist, create a new one
-          const newCategory = new ExpenseTemplateApplicableCategories({
-            expenseTemplate,
-            ...category,
-          });
-          return newCategory.save();
-        }
-      })
-    );
-
-    res.status(201).json({
-      status: 'success',
-      data: updatedCategories,
-      message: 'ExpenseTemplateApplicableCategories successfully created or updated',
-    });
   } catch (err) {
     return next(new AppError('Internal server error', 500));
   }

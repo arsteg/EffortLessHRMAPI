@@ -449,6 +449,15 @@ router.delete('/expense-application-field-values/:id', authController.protect, e
  *                 type: boolean
  *               applyforSameCategorySamedate:
  *                 type: boolean
+ *               expenseCategories:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   required: true
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       required: true
  *     responses:
  *       201:
  *         description: Expense Template successfully created
