@@ -440,6 +440,21 @@ exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, 
 
 exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   const { expenseCategories, ...expenseTemplateData } = req.body;
+
+  // Check if policyLabel is provided
+  if (!expenseTemplateData.policyLabel) {
+    return next(new AppError('Policy Label is required', 400));
+  }
+
+  // Check if policyLabel already exists
+  const existingTemplate = await ExpenseTemplate.findOne({ 'policyLabel': expenseTemplateData.policyLabel });
+
+  if (existingTemplate) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Policy Label already exists',
+    });
+  }
   if (!Array.isArray(expenseCategories) || expenseCategories.length === 0) {
     return next(new AppError('Expense Category Not Exists in Request', 400));
   }
@@ -462,27 +477,17 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   expenseTemplateData.company = companyId;
   const expenseTemplate = await ExpenseTemplate.create(expenseTemplateData);
-  await createExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
-
+  
+  const expenseTemplateCategories =  await createExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
+ 
   res.status(201).json({
     status: 'success',
-    data: expenseTemplate
+    data: expenseTemplate,
+    categories: expenseTemplateCategories
   });
 });
 
-async function validateExpenseCategory(category) {
-  try {
-    const result = await ExpenseCategory.findById(category);
-     if (!result) {
-      return res.status(400).json({
-        status: 'failure',
-        message: 'Invalid Category',
-      });
-    }
-  } catch (err) {
-    return err.errors || {}; // Handle potential exception during validation
-  }
-}
+
 async function createExpenseTemplateCategories(expenseTemplateId, expenseCategories) {
   try {
     const updatedCategories = await Promise.all(
@@ -522,7 +527,26 @@ exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
-  const expenseTemplate = await ExpenseTemplate.findByIdAndUpdate(req.params.id, req.body, {
+  const { expenseCategories, ...expenseTemplateData } = req.body;
+
+  // Check if policyLabel is provided
+  if (!expenseTemplateData.policyLabel) {
+    return next(new AppError('Policy Label is required', 400));
+  }
+
+  // Check if policyLabel already exists
+  const existingTemplate = await ExpenseTemplate.findOne({ 'policyLabel': expenseTemplateData.policyLabel ,_id: { $ne: req.params.id }});
+
+  if (existingTemplate) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Policy Label already exists',
+    });
+  }
+  if (!Array.isArray(expenseCategories) || expenseCategories.length === 0) {
+    return next(new AppError('Expense Category Not Exists in Request', 400));
+  }
+  const expenseTemplate = await ExpenseTemplate.findByIdAndUpdate(req.params.id, expenseTemplateData, {
     new: true,
     runValidators: true
   });
@@ -531,12 +555,47 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('Expense Template not found', 404));
   }
 
+  const updatedCategories = await updateOrCreateExpenseTemplateCategories(req.params.id, req.body.expenseCategories);
+
   res.status(200).json({
     status: 'success',
-    data: expenseTemplate
+    data: { expenseTemplate: expenseTemplate, expenseCategories: updatedCategories },
   });
 });
+async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, updatedCategories) {
+  const existingCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
 
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+    const existingCategory = existingCategories.find(
+      (existing) => existing.expenseCategory === category.expenseCategory
+    );
+
+    if (!existingCategory) {
+     // Create new category
+      const newCategory = new ExpenseTemplateApplicableCategories({
+        expenseTemplate: expenseTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+
+  const updatedCategoriesResult = await Promise.all(updatedCategoriesPromises);
+
+  // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory)
+  );
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return ExpenseTemplateApplicableCategories.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+
+  return updatedCategoriesResult;
+}
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseTemplate').equals(req.params.id);  
@@ -575,26 +634,22 @@ console.log("hello");
   if (!expenseTemplate || !expenseCategories || !Array.isArray(expenseCategories) || expenseCategories.length === 0) {
     return next(new AppError('Invalid request data', 400));
   }
-  for (const category of expenseCategories) {
-    console.log(category);
+  for (const category of expenseCategories) {    
       const result = await ExpenseCategory.findById(category.expenseCategory);
-      console.log(result);
-       if (!result) {
+      if (!result) {
         return res.status(400).json({
           status: 'failure',
           message: 'Invalid Category',
-        });
-      
+        });      
     }
   }
-  console.log("hello2");
-  try {
-    // Iterate through expenseCategories to create or update records
-    await createExpenseTemplateCategories(expenseTemplate, expenseCategories);
-
-  } catch (err) {
-    return next(new AppError('Internal server error', 500));
-  }
+  // Iterate through expenseCategories to create or update records
+  const expenseTemplateCategories =  await createExpenseTemplateCategories(mongoose.Types.ObjectId(expenseTemplate), expenseCategories);
+    res.status(201).json({
+      status: 'success',
+      data: expenseTemplateCategories     
+    });
+  
 });
 
 exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {

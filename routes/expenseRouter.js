@@ -452,7 +452,7 @@ router.delete('/expense-application-field-values/:id', authController.protect, e
  *               expenseCategories:
  *                 type: array
  *                 items:
- *                   type: string
+ *                   type: object
  *                   required: true
  *                   properties:
  *                     expenseCategory:
@@ -539,6 +539,15 @@ router.get('/expense-templates/:id', authController.protect, expenseController.g
  *                 type: boolean
  *               applyforSameCategorySamedate:
  *                 type: boolean
+ *               expenseCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     expenseCategory:
+ *                       type: string
+ *                       required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated Expense Template
