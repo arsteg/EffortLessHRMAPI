@@ -19,6 +19,7 @@ const notification  = require('../controllers/notficationController');
 const { Console } = require('winston/lib/winston/transports');
 const timeLog = require('../models/timeLog');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
+const Project = require('../models/projectModel');
 
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -92,54 +93,15 @@ await document.remove();
   });
 });
 
-exports.updateTask =  catchAsync(async (req, res, next) => {
-  const filter = { _id: req.params.id }; // Replace with your actual filter criteria
-  const document = await Task.findOneAndUpdate(filter, req.body, {
-    new: false, // If not found - add new
-    runValidators: true // Validate data
-  });
-  if (!document) {
-    return next(new AppError('No document found with that ID', 404));
-  }
-  else
-  {
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Task Notification").where('company').equals(req.cookies.companyId); 
-  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
-  const task = await Task.findById(req.params.id);  
-  if(task)
-   {  
-  const user = await User.findOne({ _id: newTaskUserList[0].user });     
-  const contentNewUser = emailTemplate.contentData; 
-  const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
-      
-  const emailTemplateNewUser = contentNewUser
-  .replace("{firstName}", user.firstName)
-    .replace("{taskName}", task.taskName)
-    .replace("{date}", formatDateToDDMMYY(new Date()))
-    .replace("{company}", req.cookies.companyName)
-    .replace("{projectName}", task.project.projectName)
-    .replace("{description}", task.description)
-    .replace("{priority}", task.priority).replace("{taskURL}", taskURL)
-    .replace("{lastName}", user.lastName); 
+exports.updateTask =  catchAsync(async (req, res, next) => {    
+  const existingProject = await Project.findById(req.body.project);
 
-    if(user){   
-            await sendEmail({
-                email: user.email,
-                subject:emailTemplate.Name,
-                message:emailTemplateNewUser
-              });  
-          }  
+  if (!existingProject) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid project',
+    });
   }
-  res.status(201).json({
-    status: 'success',
-    data: {
-      data: document
-    }
-  });
-  }
-});
-
-exports.updateFlex =  catchAsync(async (req, res, next) => {    
   const updates = {};  
   Object.keys(req.body).forEach((key) => {
     updates[key] = req.body[key];
@@ -363,6 +325,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
     }
   });
 });
+
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   const teamIdsArray = [req.body.userId];
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
@@ -484,8 +447,6 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
     res.status(200).json({
@@ -497,6 +458,15 @@ exports.getTaskUser  = catchAsync(async (req, res, next) => {
 });
 
 exports.updateTaskUser =  catchAsync(async (req, res, next) => {
+  const existingUser = await User.findById(req.body.user);
+  const existingTask = await Task.findById(req.body.task);
+
+  if (!existingUser || !existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid user / task',
+    });
+  }
   const taskUsersexists = await TaskUser.find({}).where('_id').equals(req.params.id).where('user').equals(req.body.user);  
   
   if (taskUsersexists.length>0) {
@@ -560,7 +530,15 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
 });
 
 exports.addTask = catchAsync(async (req, res, next) => { 
+  const existingUser = await User.findById(req.body.user);
+  const existingProject = await Project.findById(req.body.project);
 
+  if (!existingUser || !existingProject) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid user / project',
+    });
+  }
   // Upload Capture image on block blob client 
 var taskNumber=0;
 const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.body.project);  
@@ -631,6 +609,10 @@ if(taskList)
   if(req.body.taskAttachments!=null)
   {
   for(var i = 0; i < req.body.taskAttachments.length; i++) {
+    if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || !req.body.taskAttachments[i].file
+      ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
+      return res.status(400).json({ error: 'All attachment properties must be provided' });
+    }
     const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
    // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -676,6 +658,15 @@ if(taskList)
 });
 
 exports.addTaskUser = catchAsync(async (req, res, next) => {   
+  const existingUser = await User.findById(req.body.user);
+  const existingTask = await Task.findById(req.body.task);
+
+  if (!existingUser || !existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid user / task',
+    });
+  }
  var emailOldUser = null; 
  const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');    
  const task = await Task.findById(req.body.task);
@@ -798,10 +789,21 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 });
 
 exports.addTaskAttachment = catchAsync(async (req, res, next) => { 
+  const existingTask = await Task.findById(req.body.taskId);
 
+  if (!existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid task',
+    });
+  }
   // Upload Capture image on block blob client 
-for(var i = 0; i < req.body.taskAttachments.length; i++) {
-    
+  for(var i = 0; i < req.body.taskAttachments.length; i++) {
+  
+  if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || !req.body.taskAttachments[i].file
+    ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
+    return res.status(400).json({ error: 'All attachment properties must be provided' });
+  }
   const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
   // Get a block blob client
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -936,7 +938,6 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
     }
   });  
 });
-
 
 exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {    
   const taskList = await Task.find({}).where('parentTask').equals(req.params.taskId); 
@@ -1123,6 +1124,17 @@ exports.getTags = async (req, res) => {
 //Start Task Tags
 
 exports.createTaskTag = async (req, res) => { 
+ 
+  const existingTask = await Task.findById(req.body.task);
+  const existingTag = await Tag.findById(req.body.tag);
+
+  if (!existingTask||!existingTag) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid task / tag',
+    });
+  }
+ 
   try {
     const taskTag = new TaskTag(req.body);
     await taskTag.save();
@@ -1179,6 +1191,15 @@ exports.getTaskTagById = async (req, res) => {
 };
 
 exports.updateTaskTagById = async (req, res) => {
+  const existingTask = await Task.findById(req.body.task);
+  const existingTag = await Tag.findById(req.body.tag);
+
+  if (!existingTask||!existingTag) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid task / tag',
+    });
+  }
   try {
     const taskTag = await TaskTag.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -1210,7 +1231,14 @@ exports.deleteTaskTagById = async (req, res) => {
 
 //Start Comment
 
-exports.createComment = catchAsync(async (req, res, next) => {    
+exports.createComment = catchAsync(async (req, res, next) => {
+  const existingTask = await Task.findById(req.body.task);
+  if (!existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid task',
+    });
+  }
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Comment Added Notification").where('company').equals(req.cookies.companyId); 
  
   const { content, author, task, commentedAt, parent, status, commentType } = req.body;
@@ -1228,6 +1256,10 @@ exports.createComment = catchAsync(async (req, res, next) => {
   if(req.body.taskAttachments!=null)
   {
   for(var i = 0; i < req.body.taskAttachments.length; i++) {
+    if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || !req.body.taskAttachments[i].file
+      ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
+      return res.status(400).json({ error: 'All attachment properties must be provided' });
+    }
     const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
     // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -1319,6 +1351,13 @@ exports.getCommentById = async (req, res) => {
 };
 
 exports.updateComment = async (req, res) => {
+  const existingTask = await Task.findById(req.body.task);
+  if (!existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'Invalid task',
+    });
+  }
   const document = await Comment.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data

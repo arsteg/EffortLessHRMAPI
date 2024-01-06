@@ -301,7 +301,7 @@ router.post('/newtask',authController.protect,taskController.addTask);
  *                          type: object
  *
  */
-router.put('/update/:id',authController.protect,taskController.updateFlex);
+router.put('/update/:id',authController.protect,taskController.updateTask);
 
  /**
  * @swagger
