@@ -122,6 +122,7 @@ router.post('/new',authController.protect,errorLogController.saveErrorLog);
  *
  */
  router.get('/:id',authController.protect,errorLogController.getErrorLog);
+ 
  /**
   * @swagger
   * /api/v1/errorlogs/{id}:
@@ -164,6 +165,7 @@ router.post('/new',authController.protect,errorLogController.saveErrorLog);
   *
   */
  router.patch('/:id',authController.protect,errorLogController.updateErrorLog);
+ 
  /**
   * @swagger
   * /api/v1/errorlogs/{id}:
