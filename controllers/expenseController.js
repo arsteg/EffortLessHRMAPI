@@ -128,8 +128,8 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
 exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseCategory').equals(req.params.id);
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseCategory').equals(req.params.id);  
-  const expenseAdvance = await ExpenseAdvance.find({}).where('category').equals(req.params.id);  
-  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0 || expenseAdvance.length > 0) {
+  
+  if (applicableCategories.length > 0 || expenseReportExpenses.length > 0) {
     return res.status(400).json({
       status: 'failed',
       data: null,
