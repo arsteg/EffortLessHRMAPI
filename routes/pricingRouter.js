@@ -1421,9 +1421,9 @@ router.delete('/plan-offer/:id', authController.protect, pricingController.remov
 
 /**
  * @swagger
- * /api/v1/pricing/include/{id}:
+ * /api/v1/pricing/plan-offer/{id}:
  *   get:
- *     summary: Get Include Details by ID
+ *     summary: Get Plan Offer Details by ID
  *     tags: [Pricing Management]
  *     security: [{
  *         bearerAuth: []
@@ -2107,5 +2107,103 @@ router.delete('/invoice/:id',  authController.protect, pricingController.deleteI
  *         description: Internal server error
  */
 router.get('/invoice',  authController.protect, pricingController.getAllInvoices);
+ 
+ /**
+ * @swagger
+ * /api/v1/pricing/user-in-group:
+ *   post:
+ *     summary: Add a users in a Group
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Group User details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userGroupType:
+ *                 type: string
+ *                 description: ID of the UserGroupType
+ *                 required: true
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of user IDs
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: users successfully added to the userGroup
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/user-in-group', authController.protect, pricingController.addUsersInGroup);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/user-in-group:
+  *   put:
+  *     summary: Update user details for a UserGroupType
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the Plan Offer Details
+  *     requestBody:
+  *       description: user details for User Group Details
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               userGroupType:
+  *                 type: string
+  *                 description: ID of the UserGroupType
+  *                 required: true
+  *               users:
+  *                 type: array
+  *                 items:
+  *                   type: string
+  *                 description: Array of user IDs
+  *                 required: true
+  *     responses:
+  *       200:
+  *         description: Successful response with the users in userGroupType
+  *       404:
+  *         description: User Group Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/user-in-group/:id', authController.protect, pricingController.UpdateUsersInGroup);
+ 
+ /**
+  * @swagger
+  * /api/v1/pricing/user-in-group:
+  *   get:
+  *     summary: Get users for a UserGroupType
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with all users
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/user-in-group/:userGroupId', authController.protect, pricingController.getUsersByGroup);
 
 module.exports = router;

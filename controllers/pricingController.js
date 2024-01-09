@@ -1728,3 +1728,139 @@ exports.getAllInvoices = async (req, res) => {
   }
 };
  
+// Add a users in Group
+exports.addUsersInGroup = catchAsync(async (req, res, next) => {
+  try {
+    const { userGroupType, users } = req.body;
+
+    // Validate if userGroupType and users are present in the request
+    if (!userGroupType || !users || !Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ error: 'Invalid request payload' });
+    }
+
+    // Check if the UserGroupType exists
+    const existingUserGroupType = await UserGroupType.findById(userGroupType);
+    if (!existingUserGroupType) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid UserGroupType ID',
+      });
+    }
+
+    // Check if all provided user IDs exist
+    const invalidUserIds = [];
+    for (const userId of users) {
+      const existingUser = await User.findById(userId);
+      if (!existingUser) {
+        invalidUserIds.push(userId);
+      }
+    }
+
+    if (invalidUserIds.length > 0) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid user IDs: ' + invalidUserIds.join(', '),
+      });
+    }
+
+    // Create a new UserInGroup instance with the provided data
+    const userInGroup = new UserInGroup({
+      userGroup: userGroupType,
+      users: users
+    });
+
+    // Save the new UserInGroup instance to the database
+    await userInGroup.save();
+
+    res.status(201).json({ message: 'Users successfully added to the userGroup' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+ 
+// Update a users in Group
+exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
+  try {
+    const userInGroupId = req.params.id;
+    const { userGroupType, users } = req.body;
+
+    // Validate if userGroupType and users are present in the request
+    if (!userGroupType || !users || !Array.isArray(users)) {
+      return res.status(400).json({ error: 'Invalid request payload' });
+    }
+
+    // Check if the UserInGroup instance exists
+    const existingUserInGroup = await UserInGroup.findById(userInGroupId);
+    if (!existingUserInGroup) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'User Group Details not found',
+      });
+    }
+
+    // Check if the provided UserGroupType ID exists
+    const existingUserGroupType = await UserGroupType.findById(userGroupType);
+    if (!existingUserGroupType) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid UserGroupType ID',
+      });
+    }
+
+    // Remove users that are in the database but not in the request
+    const usersToRemove = existingUserInGroup.users.filter(userId => !users.includes(userId));
+    if (usersToRemove.length > 0) {
+      existingUserInGroup.users = existingUserInGroup.users.filter(userId => !usersToRemove.includes(userId));
+    }
+
+    // Add new users from the request that are not already in the database
+    const usersToAdd = users.filter(userId => !existingUserInGroup.users.includes(userId));
+    if (usersToAdd.length > 0) {
+      existingUserInGroup.users = existingUserInGroup.users.concat(usersToAdd);
+    }
+
+    // Update the UserGroupType ID
+    existingUserInGroup.userGroup = userGroupType;
+
+    // Save the updated UserInGroup instance to the database
+    await existingUserInGroup.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Users in UserGroupType successfully updated',
+      data: existingUserInGroup,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get a users from Group
+exports.getUsersByGroup = catchAsync(async (req, res, next) => {
+  try {
+    const userInGroupId = req.params.id;
+
+    // Check if the UserInGroup instance exists
+    const existingUserInGroup = await UserInGroup.findById(userInGroupId);
+    if (!existingUserInGroup) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'User Group Details not found',
+      });
+    }
+
+    // Fetch user details based on the UserGroupType
+    const users = await User.find({ _id: { $in: existingUserInGroup.users } });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Users retrieved successfully',
+      data: users,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
