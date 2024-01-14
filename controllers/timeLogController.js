@@ -450,30 +450,6 @@ try {
     
  });
   
-// Convert stream to text
-async function streamToText(readable) {
-  readable.setEncoding('utf8');
-  let data = '';
-  for await (const chunk of readable) {
-    data += chunk;
-  }
-  return data;
-}
-
-
-async function streamToString(readableStream) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    readableStream.on("data", (data) => {
-      chunks.push(data.toString());
-    });
-    readableStream.on("end", () => {
-      resolve(chunks.join(""));
-    });
-    readableStream.on("error", reject);
-  });
-}
-
 // Helper function to get an array of dates within a date range
 function getDatesInRange(startDate, endDate) {
   const dates = [];
