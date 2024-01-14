@@ -14,7 +14,10 @@ const Company = require('../models/companyModel');
 const Subscription= require('../models/pricing/subscriptionModel');
 const PlanHistory = require('../models/pricing/planHistoryModel');
 const Invoice= require('../models/pricing/invoiceModel');
+const User = require('../models/permissions/userModel');
+const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
+
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
     const softwareExists = await Software.findOne({ name: name});
@@ -1852,7 +1855,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     }
 
     // Fetch user details based on the UserGroupType
-    const users = await User.find({ _id: { $in: existingUserInGroup.users } });
+    const users = await User.find({ _id: { $in: existingUserInGroup.user } });
 
     res.status(200).json({
       status: 'success',
