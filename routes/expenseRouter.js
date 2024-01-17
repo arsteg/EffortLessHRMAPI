@@ -1580,12 +1580,12 @@ router.get('/advance-categories', authController.protect, expenseController.getA
  *               approvalType:
  *                 type: string
  *                 required: true
- *               expenseCategories:
+ *               advanceCategories:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     expenseCategory:
+ *                     advanceCategory:
  *                       type: string
  *                       required: true
  *     responses:

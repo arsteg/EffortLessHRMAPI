@@ -1232,7 +1232,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       approvalLevel,
       firstApprovalEmployee,
       secondApprovalEmployee,
-      expenseCategories,
+      advanceCategories,
     } = req.body;
 
     // Create the AdvanceTemplate document
@@ -1246,14 +1246,14 @@ exports.createAdvanceTemplate = async (req, res, next) => {
     });
 
     // Create the AdvanceTemplateCategories documents
-    if (expenseCategories && expenseCategories.length > 0) {
+    if (advanceCategories && advanceCategories.length > 0) {
       const createdCategories = await AdvanceTemplateCategories.insertMany(
-        expenseCategories.map(category => ({
+        advanceCategories.map(category => ({
           advanceTemplate: advanceTemplate._id,
           advanceCategory: category.advanceCategory,
         }))
       );
-      advanceTemplate.expenseCategories = createdCategories.map(category => category._id);
+      advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
       await advanceTemplate.save();
     }
 
