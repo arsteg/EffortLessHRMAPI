@@ -20,7 +20,8 @@ var expenseTemplateSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema
     required: true
-  }
+  },
+  applicableCategories:[]
 }, { collection: 'ExpenseTemplate' });
 
 module.exports = mongoose.model('ExpenseTemplate', expenseTemplateSchema);

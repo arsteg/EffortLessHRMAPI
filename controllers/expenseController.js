@@ -520,7 +520,9 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
 }
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
-  res.status(200).json({
+  const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.id);
+  expenseTemplate.applicableCategories=expenseTemplateApplicableCategories;
+    res.status(200).json({
     status: 'success',
     data: expenseTemplate
   });
@@ -621,6 +623,20 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   const expenseTemplates = await ExpenseTemplate.find({}).where('company').equals(req.cookies.companyId);
+  if(expenseTemplates)
+  {
+   for(var i = 0; i < expenseTemplates.length; i++) {     
+   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('task').equals(expenseTemplates[i]._id);  
+   if(expenseTemplateApplicableCategories) 
+      {
+        expenseTemplates[i].applicableCategories=expenseTemplateApplicableCategories;
+      }
+      else{
+        expenseTemplates[i].applicableCategories=null;
+      }
+   }
+  }
+  
   res.status(200).json({
     status: 'success',
     data: expenseTemplates
