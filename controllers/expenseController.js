@@ -15,7 +15,7 @@ const AdvanceCategory = require('../models/Expense/AdvanceCategory');
 const AdvanceTemplate = require('../models/Expense/AdvanceTemplate'); 
 const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCategory'); 
 const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment')
-
+const { ObjectId } = require('mongodb');
 // Import ExpenseCategory model
 
 const AppError = require('../utils/appError');
@@ -496,7 +496,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
           expenseCategory: category.expenseCategory,
           expenseTemplate: expenseTemplateId,
         });
-
+console.log("hello1");
         if (existingCategory) {
           return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
             existingCategory._id,
@@ -569,10 +569,10 @@ async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, update
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
     const existingCategory = existingCategories.find(
-      (existing) => existing.expenseCategory === category.expenseCategory
+      (existing) => existing.expenseCategory.equals(category.expenseCategory)
     );
-
     if (!existingCategory) {
      // Create new category
       const newCategory = new ExpenseTemplateApplicableCategories({
@@ -582,21 +582,20 @@ async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, update
       return newCategory.save();
     }
   });
-
-  const updatedCategoriesResult = await Promise.all(updatedCategoriesPromises);
-
-  // Remove categories not present in the updated list
+    // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory)
+    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory.toString())
   );
+  
 
   const removalPromises = categoriesToRemove.map(async (category) => {
     return ExpenseTemplateApplicableCategories.findByIdAndRemove(category._id);
   });
 
   await Promise.all(removalPromises);
+  const finalCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
 
-  return updatedCategoriesResult;
+  return finalCategories;
 }
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
