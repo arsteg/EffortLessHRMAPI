@@ -306,7 +306,7 @@ router.put('/expense-application-fields', authController.protect, expenseControl
 
 /**
  * @swagger
- * /api/v1/expense/expense-application-fields-by-expence-category/{expenseCategoryId}:
+ * /api/v1/expense/expense-application-fields-by-expense-category/{expenseCategoryId}:
  *   get:
  *     summary: Get all expense application fields by category ID
  *     tags: [Expense Management]
@@ -328,7 +328,7 @@ router.put('/expense-application-fields', authController.protect, expenseControl
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-application-fields-by-expence-category/:expenseCategoryId', authController.protect, expenseController.getExpenseApplicationFieldsByCategory);
+router.get('/expense-application-fields-by-expense-category/:expenseCategoryId', authController.protect, expenseController.getExpenseApplicationFieldsByCategory);
 
 /**
  * @swagger
