@@ -66,14 +66,13 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
   try {
     const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({
       user: req.params.userId
-    });
+    });   
    
-   
-    if (!userExpenseAssignment) {
-      return res.status(404).json({
-        status: 'failure',
-        message: 'Expense assignment not found for the given user.'
-      });
+    if (!userExpenseAssignment) {      
+      res.status(200).json({
+        status: 'success',
+        data: userExpenseAssignment,
+      });      
     }
 
     // Retrieve applicable categories for the expense template
