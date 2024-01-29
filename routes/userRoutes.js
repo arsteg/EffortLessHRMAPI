@@ -145,6 +145,35 @@ router.post('/login', authController.login);
  *
  */
 router.get('/getUsersByCompany/:companyId',authController.protect,userController.getUsersByCompany);
+/**
+ * @swagger
+ * /api/v1/users/getusers:
+ *  post:
+ *      tags:
+ *          - User Management
+ *      summary: "Get User by userId"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:                   
+ *                          userId:
+ *                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
 router.post('/getusers',userController.getUsers);
 /**
  * @swagger
@@ -393,11 +422,6 @@ router.delete('/deleteuser/:id',userController.deleteUser);
  *      security: [{
  *         bearerAuth: []
  *     }]
- *      parameters:
- *        - name: id
- *          in: path
- *          description: User Id
- *          required: true 
  *      produces:
  *          - application/json
  *      responses:

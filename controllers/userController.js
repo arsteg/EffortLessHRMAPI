@@ -62,7 +62,7 @@ exports.updateUser =  catchAsync(async (req, res, next) => {
   });
 
 exports.getUser = catchAsync(async (req, res, next) => {       
-  const users = await User.findById(req.body.id);   
+  const users = await User.findById(req.body.id).where('status').equals('Active')
   res.status(200).json({
     status: 'success',
     data: {
@@ -72,8 +72,11 @@ exports.getUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {    
-  const users = await User.find({}).where('company').equals(req.params.companyId);  
-  res.status(200).json({
+  const users = await User.find({
+    'status': { $ne: 'Deleted' },
+    'company': req.params.companyId
+  });
+   res.status(200).json({
     status: 'success',
     data: {
       users: users
@@ -135,11 +138,12 @@ exports.createUser = catchAsync(async (req, res, next) => {
 
 exports.getMe = (req, res, next) => {  
   req.params.id = req.user.id;
+  req.query.status = 'Active'; 
   next();
 };
 
-exports.getUsers = catchAsync(async (req, res, next) => {  
-  var users = await User.find({'_id': {$in: req.body.userId }});  
+exports.getUsers = catchAsync(async (req, res, next) => {
+  var users = await User.find({'_id': {$in: req.body.userId }, 'status': { $ne: 'Deleted' }});  
   res.status(200).json({
     status: 'success',
     data: users
@@ -150,7 +154,7 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
   let managers =[]; 
   let list = await userSubordinate.distinct('userId').find({'subordinateUserId': {$in: req.params.id}});  
   for(let i=0;i<list.length;i++){
-      let manager =  await User.findOne({'_id': {$in: list[i].userId}});  
+      let manager =  await User.findOne({'_id': {$in: list[i].userId}, 'status': { $ne: 'Deleted' }});  
       if(manager){
         managers.push({id:manager.id, name:`${manager?.firstName} ${manager?.lastName}`});
     }
@@ -164,8 +168,11 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
 exports.getUserProjects = catchAsync(async (req, res, next) => {
   let projects =[];
   let projectUsers = await ProjectUsers.find({}).where('user').equals(req.params.id);  
-  for(let i =0; i<projectUsers.length;i++ ){          
+  for(let i =0; i<projectUsers.length;i++ ){  
+    let user =  await User.findOne({'_id': {$in: projectUsers[i].user}, 'status': { $ne: 'Deleted' }});  
+    if(user){    
        projects.push(projectUsers[i].project);
+    }
   }
   res.status(200).json({
     status: 'success',

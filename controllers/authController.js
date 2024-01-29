@@ -276,7 +276,13 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError(`Incorrect email or password.`, 401));
   }
-  
+  const userValid = await User.findOne({
+    email,
+    'status': { $ne: 'Deleted' }
+  }).select('+password');
+  if (!userValid || !(await user.correctPassword(password, userValid.password))) {
+    return next(new AppError(`Deleted User.`, 401));
+  }
    // 3) If everything ok, send token to client
   createAndSendToken(user, 200, res);
 });
