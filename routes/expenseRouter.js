@@ -1230,6 +1230,36 @@ router.delete('/expenseReportExpenses/:id', authController.protect, expenseContr
  */
 router.get('/expenseReportExpenses', authController.protect, expenseController.getAllExpenseReportExpenses);
 
+
+/**
+ * @swagger
+ * /api/v1/expense/expenseReportExpensesByExpenseReport/{expenseReportId}:
+ *   get:
+ *     summary: Get an Expense Report Expenses by expense Report Id
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: expenseReportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Expense Report
+ *     responses:
+ *       200:
+ *         description: Successful response with the Expense Report Expense
+ *       404:
+ *         description: Expense Report Expense not found
+ *       401:
+ *         description: Unauthorized request
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expenseReportExpensesByExpenseReport/:expenseReportId', authController.protect, expenseController.getAllExpenseReportExpensesByExpenseReport);
+
+
 /**
  * @swagger
  * /api/v1/expense/advance:

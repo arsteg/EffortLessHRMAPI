@@ -1068,6 +1068,27 @@ exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res, next) => {
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.expenseReportId);
+  if(expenseReportExpenses) 
+  {
+      for(var i = 0; i < expenseReportExpenses.length; i++) {     
+      const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+      if(expenseReportExpenseFields) 
+        {
+          expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+        }
+        else{
+          expenseReportExpenses[i].expenseReportExpenseFields=null;
+        }
+      }
+   }  
+  res.status(200).json({
+    status: 'success',
+    data: expenseReportExpenses
+  });
+});
+
 exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('company').equals(req.cookies.companyId);
   if(expenseReportExpenses) 
@@ -1088,7 +1109,6 @@ exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
     data: expenseReportExpenses
   });
 });
-
 exports.createAdvance = catchAsync(async (req, res, next) => {
     // Extract companyId from req.cookies
     const companyId = req.cookies.companyId;
