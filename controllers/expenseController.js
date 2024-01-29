@@ -873,7 +873,21 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
 
 exports.getExpenseReport = catchAsync(async (req, res, next) => {
 const expenseReport = await ExpenseReport.findById(req.params.id);
-
+const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.id);
+  if(expenseReportExpenses) 
+  {
+      for(var i = 0; i < expenseReportExpenses.length; i++) {     
+      const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+      if(expenseReportExpenseFields) 
+        {
+          expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+        }
+        else{
+          expenseReportExpenses[i].expenseReportExpenseFields=null;
+        }
+      }
+      expenseReport.expenseReportExpense=expenseReportExpenses;
+   }  
 res.status(200).json({
   status: 'success',
   data: expenseReport,
@@ -919,6 +933,25 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
 
 exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   const expenseReports = await ExpenseReport.find({}).where('company').equals(req.cookies.companyId);
+  for(var j = 0; j < expenseReports.length; j++) {     
+     {
+      const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);
+      if(expenseReportExpenses) 
+      {
+          for(var i = 0; i < expenseReportExpenses.length; i++) {     
+          const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+          if(expenseReportExpenseFields) 
+            {
+              expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+            }
+            else{
+              expenseReportExpenses[i].expenseReportExpenseFields=null;
+            }
+          }
+        }
+          expenseReports[j].expenseReportExpense=expenseReportExpenses;
+      }  
+  }
   res.status(200).json({
     status: 'success',
     data: expenseReports
