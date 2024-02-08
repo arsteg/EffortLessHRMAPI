@@ -35,6 +35,7 @@ var expenseRouter = require('./routes/expenseRouter');
 var separationRouter = require('./routes/SeparationRouter');
 var attendanceRouter = require(`./routes/attendenceRouter`);
 var pricingRouter = require(`./routes/pricingRouter`);
+var interviewsRouter = require(`./routes/interviewProcessRouter`);
 
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
@@ -114,6 +115,8 @@ app.use('/api/v1/expense', expenseRouter);
 app.use('/api/v1/separation', separationRouter);
 app.use('/api/v1/attendance', attendanceRouter);
 app.use('/api/v1/pricing', pricingRouter);
+app.use('/api/v1/interviews', interviewsRouter);
+
 
 
 module.exports = app;
