@@ -846,6 +846,8 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *               title:
  *                 type: string
  *                 required: true
+ *               status:
+ *                 type: string 
  *               expenseReportExpenses:
  *                 type: array
  *                 items:
@@ -959,7 +961,7 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
  *                 type: string
  *               title:
  *                 type: string
- *               Status:
+ *               status:
  *                 type: string 
  *               primaryApprovalReason:
  *                 type: string 

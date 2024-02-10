@@ -819,16 +819,16 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
-  const { employee, title, expenseReportExpenses } = req.body;
+  const { employee, title, status, expenseReportExpenses } = req.body;
 
   try {
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({
       employee,
       title,
-      company: req.cookies.companyId,
-      status: 'Level 1 Approval Pending' // Assuming company ID is stored in cookies
-    });
+      status,
+      company: req.cookies.companyId
+      });
 
     // Create ExpenseReportExpenses and associated ExpenseReportExpenseFields
     expenseReport.expenseReportExpense = await Promise.all(
