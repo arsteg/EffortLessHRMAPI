@@ -125,14 +125,7 @@ router.delete('/application-status/:id', interviewProcessController.deleteApplic
  * /api/v1/interviews/application-status:
  *   get:
  *     summary: Get all application statuses for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: query
- *         name: company
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with application statuses
