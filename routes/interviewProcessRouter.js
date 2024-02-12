@@ -454,10 +454,7 @@ router.get('/candidate-application-status/company/:companyId', interviewProcessC
  *                 type: string
  *               isRequired:
  *                 type: boolean
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *             example:
  *               fieldName: "Experience"
  *               fieldType: "Number"
@@ -573,17 +570,10 @@ router.delete('/candidate-data-fields/:id', interviewProcessController.deleteCan
 
 /**
  * @swagger
- * /api/v1/interviews/candidate-data-fields/company/{companyId}:
+ * /api/v1/interviews/candidate-data-fields/:
  *   get:
  *     summary: Get all CandidateDataFields for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with CandidateDataFields
@@ -593,7 +583,7 @@ router.delete('/candidate-data-fields/:id', interviewProcessController.deleteCan
  *         description: Internal server error
  */
 //router.get('/candidate-data-fields/company/:companyId', authController.protect, interviewProcessController.getAllCandidateDataFieldsByCompany);
-router.get('/candidate-data-fields/company/:companyId', interviewProcessController.getAllCandidateDataFieldsByCompany);
+router.get('/candidate-data-fields/', interviewProcessController.getAllCandidateDataFieldsByCompany);
 
 /**
  * @swagger

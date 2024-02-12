@@ -2,7 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const ErrorLog = require('../models/errorLogModel');
 const ApplicationStatus = require(`../models/InterviewProcess/applicationStatus`);
-
+const CandidateDataField = require(`../models/InterviewProcess/candidateDataField`);
 /**
  * Create a new application status
  */
@@ -236,8 +236,21 @@ exports.getAllCandidateApplicationStatusForCompany = catchAsync(async (req, res,
 });
 
 
-exports.addCandidateDataField = catchAsync(async (req, res, next) => {
-  const candidateDataField = await CandidateDataField.create(req.body);
+exports.addCandidateDataField = catchAsync(async (req, res, next) => {  
+
+  const candidateDataField = await CandidateDataField.create({
+    fieldName:req.body.fieldName,
+    fieldType:req.body.fieldType,
+    subType:req.body.subType,    
+    isRequired:req.body.isRequired,
+    company: req.cookies.companyId,    
+    createdOn : new Date(),
+    updatedOn : new Date(),
+    createdBy: req.cookies.userId, 
+    updatedBy: req.cookies.userId     
+  });
+  
+
   res.status(201).json({
     status: 'success',
     data: candidateDataField,
@@ -285,7 +298,7 @@ exports.deleteCandidateDataField = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCandidateDataFieldsByCompany = catchAsync(async (req, res, next) => {
-  const candidateDataFields = await CandidateDataField.find({ company: req.params.companyId });
+  const candidateDataFields = await CandidateDataField.find({ company: req.cookies.companyId });
 
   if (candidateDataFields.length === 0) {
     return next(new AppError('No CandidateDataFields found for the company', 404));
