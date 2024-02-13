@@ -3,6 +3,7 @@ const factory = require('./handlerFactory');
 const ErrorLog = require('../models/errorLogModel');
 const ApplicationStatus = require(`../models/InterviewProcess/applicationStatus`);
 const CandidateDataField = require(`../models/InterviewProcess/candidateDataField`);
+const FeedbackFieldValue = require(`../models/InterviewProcess/feedbackFieldValue`);
 /**
  * Create a new application status
  */
@@ -562,7 +563,6 @@ exports.getAllFeedbackFieldValuesByCompany = catchAsync(async (req, res, next) =
   if (feedbackFieldValues.length === 0) {
     return next(new AppError('No FeedbackFieldValues found for the company', 404));
   }
-
   res.status(200).json({
     status: 'success',
     data: feedbackFieldValues,
