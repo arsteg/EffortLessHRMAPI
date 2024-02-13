@@ -524,9 +524,7 @@ router.get('/candidate-data-fields/:id', interviewProcessController.getCandidate
  *               subType:
  *                 type: string
  *               isRequired:
- *                 type: boolean
- *               company:
- *                 type: string
+ *                 type: boolean 
  *             example:
  *               fieldName: "Updated Experience"
  *               fieldType: "Number"
