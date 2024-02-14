@@ -9,7 +9,7 @@ const router = express.Router();
  *  post:
  *      tags:
  *          - Zoom Integration
- *      summary: "Register New User"   
+ *      summary: "Create Meeting"   
  *      requestBody:
  *          content:
  *              application/json:
@@ -46,5 +46,36 @@ const router = express.Router();
  *
  */
 router.post('/createmeeting', zoomController.createZoomMeeting);
+
+/**
+ * @swagger
+ * /api/v1/zoom/createmeetingsingture:
+ *  post:
+ *      tags:
+ *          - Zoom Integration
+ *      summary: "Create Singture to join meeting"   
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          meetingNumber:
+ *                              type: string
+ *                          role:
+ *                              type: number
+ *              
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/createmeetingsingture', zoomController.createMeetingSingture);
 
 module.exports = router;

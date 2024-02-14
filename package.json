@@ -50,7 +50,8 @@
     "websocket": "^1.0.34",
     "winston": "^3.10.0",
     "winston-mongodb": "^5.1.1",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",    
+    "jsrsasign": "^10.5.25"
   },
   "engines": {
     "node": ">=14.0.0"

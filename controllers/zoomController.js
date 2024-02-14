@@ -1,6 +1,7 @@
 const axios = require('axios');
 const qs = require('qs');
-
+const crypto = require('crypto');
+const KJUR = require('jsrsasign');
 exports.createZoomMeeting = async (req, res, next) => {
     try
     {      
@@ -21,7 +22,7 @@ exports.createZoomMeeting = async (req, res, next) => {
         };
       
         try {
-          const response = await axios.post('https://zoom.us/oauth/token', oAuthData, config);
+          const response = await axios.post(process.env.AUTH_TOKEN_URL, oAuthData, config);
           if (response.status === 200) {
              access_token= response.data.access_token;
           } else {
@@ -69,3 +70,38 @@ exports.createZoomMeeting = async (req, res, next) => {
         console.log(e)
     }
 }
+exports.createMeetingSingture = async (req, res, next) => {
+  try
+  {      
+      const APPKEY = process.env.CLIENTID; // Assuming ZOOM_CLIENT_ID is stored in environment variables
+      const APPSECREAT = process.env.CLIENTSECRET; // Assuming ZOOM_CLIENT_SECRET is stored in environment variables   
+      const currentTimeUTC = new Date(); 
+      const iat = Math.round(currentTimeUTC.getTime() / 1000) - 30;
+      const exp = iat + 60 * 60 * 2;
+      const oHeader = { alg: 'HS256', typ: 'JWT' }
+      const oPayload = {
+        sdkKey: APPKEY,
+        mn: req.body.meetingNumber,
+        role: req.body.role,
+        iat: iat,
+        exp: exp,
+        appKey: APPKEY,
+        tokenExp: iat + 60 * 60 * 2
+      }
+    
+      const sHeader = JSON.stringify(oHeader)
+      const sPayload = JSON.stringify(oPayload)
+      const signature = KJUR.jws.JWS.sign('HS256', sHeader, sPayload, APPSECREAT);   
+
+      res.status(200).json({
+          status: 'success',
+          data: {
+            signature:signature
+          }
+      });
+
+  }catch (e) {
+      console.log(e)
+  }
+}
+
