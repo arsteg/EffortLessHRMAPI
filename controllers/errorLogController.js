@@ -34,6 +34,7 @@ const ErrorLog = require('../models/errorLogModel');
   });
   // Save Permission
   exports.saveErrorLog = catchAsync(async (req, res, next) => {    
+    const newErrorLog=null;
    /* const newErrorLog = await ErrorLog.create({      
       error:req.body.error,
       details:req.body.details,
@@ -44,14 +45,14 @@ const ErrorLog = require('../models/errorLogModel');
       updatedBy: req.cookies.userId,
       status:"Active"
     }); 
-    
+     */
     res.status(200).json({
       status: 'success',
       data: {
         ErrorLog:newErrorLog
       }
     }); 
-    */
+   
   });
   exports.deleteErrorLog = catchAsync(async (req, res, next) => {  
     const document = await ErrorLog.findByIdAndDelete(req.params.id);

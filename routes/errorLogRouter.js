@@ -58,6 +58,7 @@ router.get('/errorloglist',authController.protect,errorLogController.getErrorLog
  */
 
 router.get('/errorloglist/:userId',authController.protect,errorLogController.getErrorLogListByUser);
+
 /**
  * @swagger
  * /api/v1/errorlogs/new:

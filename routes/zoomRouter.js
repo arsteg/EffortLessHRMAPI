@@ -1,7 +1,7 @@
 const express = require('express');
 const zoomController = require('./../controllers/zoomController');
 const router = express.Router();
-
+const authController = require('../controllers/authController');
 // Auth routes
 /**
  * @swagger
@@ -10,6 +10,9 @@ const router = express.Router();
  *      tags:
  *          - Zoom Integration
  *      summary: "Create Meeting"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }] 
  *      requestBody:
  *          content:
  *              application/json:
@@ -45,7 +48,7 @@ const router = express.Router();
  *                          type: object
  *
  */
-router.post('/createmeeting', zoomController.createZoomMeeting);
+router.post('/createmeeting', authController.protect, zoomController.createZoomMeeting);
 
 /**
  * @swagger
@@ -54,6 +57,9 @@ router.post('/createmeeting', zoomController.createZoomMeeting);
  *      tags:
  *          - Zoom Integration
  *      summary: "Create Singture to join meeting"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }] 
  *      requestBody:
  *          content:
  *              application/json:
@@ -76,6 +82,6 @@ router.post('/createmeeting', zoomController.createZoomMeeting);
  *                          type: object
  *
  */
-router.post('/createmeetingsingture', zoomController.createMeetingSingture);
+router.post('/createmeetingsingture', authController.protect, zoomController.createMeetingSingture);
 
 module.exports = router;
