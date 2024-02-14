@@ -4,7 +4,6 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
 const { v1: uuidv1} = require('uuid');
 const { Stream } = require('nodemailer/lib/xoauth2');
-const  FileAPI = require('file-api');
 const sendEmail = require('../utils/email');
 const User = require('../models/permissions/userModel');
 const Project = require('../models/projectModel');

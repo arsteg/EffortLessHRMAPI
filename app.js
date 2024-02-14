@@ -1,7 +1,7 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
-var itemRouter = require('./routes/item');
+var zoomRouter = require('./routes/zoomRouter');
 var tourRouter = require('./routes/tourRoutes');
 var userRouter = require('./routes/userRoutes');
 var timeLogRouter = require('./routes/timeLogRoutes');
@@ -116,7 +116,6 @@ app.use('/api/v1/separation', separationRouter);
 app.use('/api/v1/attendance', attendanceRouter);
 app.use('/api/v1/pricing', pricingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
-
-
+app.use('/api/v1/zoom', zoomRouter);
 
 module.exports = app;

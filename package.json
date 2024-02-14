@@ -20,6 +20,7 @@
   "homepage": "https://github.com/fedosejev/restful-api-express-mongoose",
   "dependencies": {
     "@azure/storage-blob": "^12.9.0",
+    "axios": "^1.6.7",
     "@sendgrid/mail": "^7.6.2",
     "assert": "^2.0.0",
     "azure-storage": "^2.10.7",

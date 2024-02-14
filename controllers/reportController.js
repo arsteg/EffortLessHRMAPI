@@ -91,7 +91,7 @@ if(req.body.users!='' && req.body.projects!='')
                 }
              
        }   
-       newLogInUSer.logs=newLogAll;
+       newLogInUSer.logs = newLogAll;
        timeLogsAll.push(newLogInUSer);
    }
  

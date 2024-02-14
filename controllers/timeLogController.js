@@ -5,9 +5,7 @@ const AppError = require('../utils/appError.js');
 const { v1: uuidv1} = require('uuid');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { Stream } = require('nodemailer/lib/xoauth2');
-const  FileAPI = require('file-api');
 var moment = require('moment'); 
-const timeLog = require('../models/timeLog');
 const userSubordinate = require('../models/userSubordinateModel');
   // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;

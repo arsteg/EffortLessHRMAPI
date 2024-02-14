@@ -797,12 +797,14 @@ exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+  
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);
 
   if (!employeeExpenseAssignment) {
     return next(new AppError('EmployeeExpenseAssignment not found', 404));
   }
 
+  
   res.status(204).json({
     status: 'success',
     data: null,
