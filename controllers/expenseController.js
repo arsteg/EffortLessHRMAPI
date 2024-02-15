@@ -1160,11 +1160,11 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
         message: 'Expense assignment not found for the given user.'
       });
     }
-
+console.log(employeeAdvanceAssignment);
     // Retrieve applicable categories for the expense template
-    const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate._id.toString());
+    const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate);
 
-   
+   console.log(templateCategories);
 
     res.status(200).json({
       status: 'success',     
