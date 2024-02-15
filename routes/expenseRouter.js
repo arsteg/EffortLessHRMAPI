@@ -1421,6 +1421,30 @@ router.get('/advance', authController.protect, expenseController.getAllAdvances)
 
 /**
  * @swagger
+ * /api/v1/expense/advance-summary-by-employee/{userId}:
+ *   get:
+ *     summary: Get Advances Summary By Employee
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee
+ *     responses:
+ *       200:
+ *         description: Successful response with advances
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/advance-summary-by-employee/:userId', authController.protect, expenseController.getAdvanceSummaryByEmployee);
+
+/**
+ * @swagger
  * /api/v1/expense/advance-categories:
  *   post:
  *     summary: Create a new advance category
@@ -1479,7 +1503,7 @@ router.get('/advance-categories/:id', authController.protect, expenseController.
  * @swagger
  * /api/v1/expense/advance-categories-by-user/{userId}:
  *   get:
- *     summary: Get an advance category by ID
+ *     summary: Get an advance category by employee ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []

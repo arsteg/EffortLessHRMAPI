@@ -1147,7 +1147,6 @@ exports.getAdvance = catchAsync(async (req, res, next) => {
     });
 });
 
-
 exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
   try {
     const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findOne({
@@ -1207,6 +1206,31 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
     });
 });
 
+exports.getAdvanceSummaryByEmployee = catchAsync(async (req, res, next) => {
+  try {
+    const expenseAdvancelist = await Advance.findOne({
+      employee: req.params.userId
+    });
+   
+   
+    if (!expenseAdvancelist) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Expense Advance not found for the given user.'
+      });
+    }
+    res.status(200).json({
+      status: 'success',     
+      details: expenseAdvancelist
+    });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
 exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
   const { label} = req.body;
   const company = req.cookies.companyId;
