@@ -21,6 +21,7 @@ const { ObjectId } = require('mongodb');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const AdvanceTemplateCategory = require('../models/Expense/AdvanceTemplateCategory');
+const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -798,13 +799,17 @@ exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 
 exports.deleteEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
   
-  const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);
-
-  if (!employeeExpenseAssignment) {
-    return next(new AppError('EmployeeExpenseAssignment not found', 404));
-  }
-
-  
+//validation
+const userExpenseAssignment = await EmployeeExpenseAssignment.findById(req.params.id);   
+if (!userExpenseAssignment) {
+  return next(new AppError('EmployeeExpenseAssignment not found', 404));
+}
+const expenseReport = await ExpenseReport.find({}).where('employee').equals(userExpenseAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
+;
+if (expenseReport) {
+  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+}
+ await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);  
   res.status(204).json({
     status: 'success',
     data: null,
@@ -1544,7 +1549,7 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findById(req.params.id);
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
+   return next(new AppError('EmployeeAdavanceAssignment not found', 404));
  }
  res.status(200).json({
    status: 'success',
@@ -1555,7 +1560,7 @@ exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) => {
  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.params.userId);
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
+   return next(new AppError('EmployeeAdvanceAssignment not found', 404));
  }
  res.status(200).json({
    status: 'success',
@@ -1574,7 +1579,7 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
  );
 
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
+   return next(new AppError('EmployeeAdvanceAssignment not found', 404));
  }
 
  res.status(200).json({
@@ -1584,11 +1589,18 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
+  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findById(req.params.id);   
+if (!employeeAdvanceAssignment) {
+  return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+}
+const advanceReport = await ExpenseAdvance.find({}).where('employee').equals(employeeAdvanceAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
+;
+if (advanceReport) {
+  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+}
+await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
 
- if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeExpenseAssignment not found', 404));
- }
+ 
 
  res.status(204).json({
    status: 'success',
