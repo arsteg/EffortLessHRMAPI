@@ -1337,7 +1337,19 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       secondApprovalEmployee,
       company: req.user.company, // Assuming user information is available in req.user
     });
-
+    if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
+      return next(new AppError('Advance Category Not Exists in Request', 400));
+    }
+    for (const category of advanceCategories) {
+      const result = await AdvanceCategory.findById(category.advanceCategory);
+      console.log(result);
+       if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Category',
+        });
+      }
+    }
     // Create the AdvanceTemplateCategories documents
     if (advanceCategories && advanceCategories.length > 0) {
       const createdCategories = await AdvanceTemplateCategories.insertMany(
@@ -1421,7 +1433,19 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
 
     // Save the updated AdvanceTemplate
     await advanceTemplate.save();
-    console.log(advanceCategories);
+    if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
+      return next(new AppError('Advance Category Not Exists in Request', 400));
+    }
+    for (const category of advanceCategories) {
+      const result = await AdvanceCategory.findById(category.advanceCategory);
+      console.log(result);
+       if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Category',
+        });
+      }
+    }
     // Update expense categories
     if (advanceCategories && advanceCategories.length > 0) {
       // Delete old expense categories for this template
