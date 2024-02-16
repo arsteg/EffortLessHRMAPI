@@ -40,6 +40,10 @@ var timeLogSchema = new Schema({
     type: Number,
     required: false
   },
+  allKeysPressed: {
+    type: String,
+    required: false
+  },
   clicks: {
     type: Number,
     required: false

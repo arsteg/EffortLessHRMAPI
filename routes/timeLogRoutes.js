@@ -111,6 +111,8 @@ router.get('/', authController.protect, timeLogController.getLog);
 *                              type: string
 *                          keysPressed:
 *                              type: string
+*                          allKeysPressed:
+*                              type: string
 *                          clicks:
 *                              type: string
 *                          scrolls:

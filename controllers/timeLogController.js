@@ -72,6 +72,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     endTime:req.body.endTime,
     filePath:blobName,
     keysPressed:req.body.keysPressed,
+    allKeysPressed:req.body.allKeysPressed,
     clicks:req.body.clicks,
     scrolls:req.body.scrolls,
     url:url,
