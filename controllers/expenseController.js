@@ -1213,10 +1213,7 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
 
 exports.getAdvanceSummaryByEmployee = catchAsync(async (req, res, next) => {
   try {
-    const expenseAdvancelist = await Advance.findOne({
-      employee: req.params.userId
-    });
-   
+    const expenseAdvancelist = await Advancefind({}).where('employee').equals(req.params.userId);    
    
     if (!expenseAdvancelist) {
       return res.status(404).json({
