@@ -1,73 +1,100 @@
-
 const catchAsync = require('../utils/catchAsync');
-const factory = require('./handlerFactory');
-const ErrorLog = require('../models/errorLogModel');
-const Leave = require('../models/leaveModel');
-  // Save Permission List
-  exports.getLeaveList = catchAsync(async (req, res, next) => {    
-    const leaveList = await Leave.find({}).all();  
-    res.status(200).json({
-      status: 'success',
-      data: {
-        leaveList: leaveList
-      }
-    });  
-  });
-  exports.getLeaveByUser = catchAsync(async (req, res, next) => {    
-    const leaveList = await Leave.find({}).where('createdBy').equals(req.params.userId).where('company').equals(req.cookies.companyId);  
-    res.status(200).json({
-      status: 'success',
-      data: {
-        leaveList: leaveList
-      }
-    });  
-  });
-  
-  exports.getLeave = catchAsync(async (req, res, next) => {    
-    const leave = await Leave.find({}).where('_id').equals(req.params.id).where('company').equals(req.cookies.companyId); 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        errorLogList: leave
-      }
-    });  
-  });
-  // Save Permission
-  exports.saveLeave = catchAsync(async (req, res, next) => {    
-    const newLeave = await Leave.create({      
-      user:req.body.user,
-      LeaveType:req.body.LeaveType,     
-      Date:req.body.Date,
-      Note:req.body.Note,
-      createdOn: new Date(Date.now()),
-      updatedOn: new Date(Date.now()),
-      company:req.cookies.companyId,
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId,
-      status:"Pending"
+const GeneralSetting = require('../models/Leave/GeneralSettingModel');
+const LeaveCategory = require("../models/Leave/LeaveCategoryModel");
 
-    });  
+exports.createGeneralSetting = catchAsync(async (req, res, next) => {
+  // Retrieve companyId from cookies
+  const company = req.cookies.companyId;
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        ErrorLog:newLeave
-      }
-    }); 
-  });
-  exports.deleteLeave = catchAsync(async (req, res, next) => {  
-    const document = await Leave.findByIdAndDelete(req.params.id);
-    if (!document) {
-      return next(new AppError('No document found with that ID', 404));
-    }
-    res.status(204).json({
-      status: 'success',
-      data: null
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
     });
-  });
-  
-  exports.updateLeave = factory.updateOne(Leave);
-  
-  
-  
+  }
 
+  // Create the general setting with the companyId
+  const generalSettingData = { ...req.body, company }; // Assuming req.body contains the general setting data
+  const generalSetting = await GeneralSetting.create(generalSettingData);
+
+  res.status(201).json({
+    status: 'success',
+    data: generalSetting
+  });
+});
+
+
+exports.getGeneralSetting = catchAsync(async (req, res, next) => {
+  const generalSetting = await GeneralSetting.findById(req.params.id);
+  if (!generalSetting) {
+    return next(new AppError('GeneralSetting not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: generalSetting
+  });
+});
+
+exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
+  const generalSetting = await GeneralSetting.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!generalSetting) {
+    return next(new AppError('GeneralSetting not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: generalSetting
+  });
+});
+exports.createLeaveCategory = catchAsync(async (req, res, next) => {
+  // Retrieve companyId from cookies
+  const company = req.cookies.companyId;
+
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+
+  // Create the general setting with the companyId
+  const leaveCategoryData = { ...req.body, company }; // Assuming req.body contains the general setting data
+  const leaveCategory = await LeaveCategory.create(leaveCategoryData);
+  res.status(201).json({
+    status: 'success',
+    data: leaveCategory
+  });
+});
+
+exports.getLeaveCategory = catchAsync(async (req, res, next) => {
+  const leaveCategory = await LeaveCategory.findById(req.params.id);
+  if (!leaveCategory) {
+    return next(new AppError('Leave category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: leaveCategory
+  });
+});
+
+exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
+  const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!leaveCategory) {
+    return next(new AppError('Leave category not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: leaveCategory
+  });
+});

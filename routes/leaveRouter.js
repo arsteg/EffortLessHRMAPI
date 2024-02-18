@@ -1,209 +1,335 @@
 const express = require('express');
-const errorLogController = require('../controllers/errorLogController');
 const leaveController = require('../controllers/leaveController');
-const authController = require('../controllers/authController');
 const router = express.Router();
 
-// Error Log Router
+// GeneralSetting routes
 /**
  * @swagger
- * /api/v1/leave/leavelist:
- *  get:
- *      tags:
- *          - Leave Management
- *      summary: "Get all Leaves"
- *      security: [{
- *         bearerAuth: []
- *     }]
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
+ * /api/v1/leave/general-settings:
+ *   post:
+ *     summary: Add a GeneralSetting
+ *     tags: [Leave Management]
+ *     requestBody:
+ *       description: GeneralSetting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               leaveCycleStart:
+ *                 type: string
+ *                 required: true
+ *               isAdminAccessLeaveApproveReject:
+ *                 type: boolean
+ *                 required: true
+ *               canSupervisorAddLeaveAdjustment:
+ *                 type: boolean
+ *                 required: true
+ *               isDailyLeaveAccrualsRun:
+ *                 type: boolean
+ *                 required: true
+ *               initialBalanceSetDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               isFreezeInitialBalancesOnceFirstAccrualRun:
+ *                 type: boolean
+ *                 required: true
+ *               shortLeaveApplicationLimit:
+ *                 type: number
+ *                 required: true
+ *               maxDurationForShortLeaveApplicationInMin:
+ *                 type: number
+ *               band:
+ *                 type: string
+ *               fullDayMinHour:
+ *                 type: number
+ *               halfDayMinHour:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: GeneralSetting successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
  */
-
-router.get('/leavelist',authController.protect,leaveController.getLeaveList);
+router.post('/general-settings', leaveController.createGeneralSetting);
 
 /**
  * @swagger
- * /api/v1/leave/leavelist/{userId}:
- *  get:
- *      tags:
- *          - Leave Management
- *      summary: "Get all Leave"
- *      security: [{
- *         bearerAuth: []
- *     }] 
- *      parameters:
- *       - name: userId
- *         in: path
- *         description: User ID
+ * /api/v1/leave/general-settings/{id}:
+ *   get:
+ *     summary: Get a GeneralSetting by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *           format: int64
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
+ *         description: ID of the GeneralSetting
+ *     responses:
+ *       200:
+ *         description: Successful response with the GeneralSetting
+ *       404:
+ *         description: GeneralSetting not found
+ *       500:
+ *         description: Internal server error
  */
-
-router.get('/leavelist/:userId',authController.protect,leaveController.getLeaveByUser);
-/**
- * @swagger
- * /api/v1/leave/new:
- *  post:
- *      tags:
- *          - Leave Management
- *      summary: "Apply Leave"   
- *      security: [{
- *         bearerAuth: []
- *     }]      
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          user:
- *                              type: string
- *                          LeaveType:
- *                              type: string
- *                          Note:
- *                              type: string
- *                          Date:
- *                              type: string
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
- */
-router.post('/new',authController.protect,leaveController.saveLeave);
+router.get('/general-settings/:id', leaveController.getGeneralSetting);
 
 /**
  * @swagger
- * /api/v1/leave/{id}:
- *  get:
- *      tags:
- *          - Leave Management
- *      summary: "Get Leave based on LeaveId"
- *      security: [{
- *         bearerAuth: []
- *     }]
- *      parameters:
- *       - name: id
- *         in: path
- *         description: Leave Id
+ * /api/v1/leave/general-settings/{id}:
+ *   put:
+ *     summary: Update a GeneralSetting by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *           format: int64
- *                
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
+ *         description: ID of the GeneralSetting
+ *     requestBody:
+ *       description: New GeneralSetting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               leaveCycleStart:
+ *                 type: string
+ *               isAdminAccessLeaveApproveReject:
+ *                 type: boolean
+ *               canSupervisorAddLeaveAdjustment:
+ *                 type: boolean
+ *               isDailyLeaveAccrualsRun:
+ *                 type: boolean
+ *               initialBalanceSetDate:
+ *                 type: string
+ *                 format: date
+ *               isFreezeInitialBalancesOnceFirstAccrualRun:
+ *                 type: boolean
+ *               shortLeaveApplicationLimit:
+ *                 type: number
+ *               maxDurationForShortLeaveApplicationInMin:
+ *                 type: number
+ *               band:
+ *                 type: string
+ *               fullDayMinHour:
+ *                 type: number
+ *               halfDayMinHour:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated GeneralSetting
+ *       404:
+ *         description: GeneralSetting not found
+ *       500:
+ *         description: Internal server error
  */
- router.get('/:id',authController.protect,leaveController.getLeave);
- /**
-  * @swagger
-  * /api/v1/leave/{id}:
-  *  patch:
-  *      tags:
-  *          - Leave Management
-  *      summary: "Update Leave based on LeaveId"   
-  *      security: [{
-  *         bearerAuth: []
-  *     }]
-  *      parameters:
-  *       - name: id
-  *         in: path
-  *         description: Leave Id
-  *         required: true
-  *         schema:
-  *           type: string
-  *           format: int64
-  *           
-  *      requestBody:
-  *          content:
-  *              application/json:
-  *                  schema:
-  *                      type: object
-  *                      properties:
-  *                          user:
-  *                              type: string
-  *                          LeaveType:
-  *                              type: string
-  *                          Note:
-  *                              type: string
-  *                          Date:
-  *                              type: string
-  * 
-  *      produces:
-  *          - application/json
-  *      responses:
-  *          200:
-  *              description: "Success"
-  *              content:
-  *                  application/json:
-  *                      schema:
-  *                          type: object
-  *
-  */
- router.patch('/:id',authController.protect,leaveController.updateLeave);
- /**
-  * @swagger
-  * /api/v1/leave/{id}:
-  *  delete:
-  *      tags:
-  *          - Leave Management
-  *      summary: "Delete Leave based on Leave Id"   
-  *      security: [{
-  *         bearerAuth: []
-  *     }]
-  *      parameters:
-  *       - name: id
-  *         in: path
-  *         description: Leave Id
-  *         required: true
-  *         schema:
-  *           type: string
-  *           format: int64
-  *      produces:
-  *          - application/json
-  *      responses:
-  *          200:
-  *              description: "Success"
-  *              content:
-  *                  application/json:
-  *                      schema:
-  *                          type: object
-  *
-  */
- router.delete('/:id',authController.protect,leaveController.deleteLeave);
+router.put('/general-settings/:id', leaveController.updateGeneralSetting);
 
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories:
+ *   post:
+ *     summary: Create a new leave category
+ *     tags: [Leave Management]
+ *     requestBody:
+ *       description: Leave category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               leaveType:
+ *                 type: string
+ *                 required: true
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               abbreviation:
+ *                 type: string
+ *                 required: true
+ *               canEmployeeApply:
+ *                 type: boolean
+ *                 required: true
+ *               isHalfDayTypeOfLeave:
+ *                 type: boolean
+ *               submitBefore:
+ *                 type: number
+ *               displayLeaveBalanceInPayslip:
+ *                 type: boolean
+ *               leaveAccrualPeriod:
+ *                 type: string
+ *                 required: true
+ *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
+ *                 type: boolean
+ *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
+ *                 type: boolean
+ *               isEligibleForLeaveEncashmentDuringRollover:
+ *                 type: boolean
+ *               isDocumentRequired:
+ *                 type: boolean
+ *               isDocumentMandatory:
+ *                 type: boolean
+ *               isEligibleForEncashmentRecoveryDuringFNF:
+ *                 type: boolean
+ *                 required: true
+ *               isWeeklyOffHolidayPartHalfDayIncludedDaTaken:
+ *                 type: boolean
+ *               policyWithRegardsToCarryoverLimits:
+ *                 type: string
+ *                 required: true
+ *               isEmployeesAllowedToNegativeLeaveBalance:
+ *                 type: boolean
+ *                 required: true
+ *               isRoundOffLeaveAccrualNearestPointFiveUnit:
+ *                 type: boolean
+ *                 required: true
+ *               isIntraCycleLapseApplicableForThisCategory:
+ *                 type: boolean
+ *                 required: true
+ *               minimumNumberOfDaysAllowed:
+ *                 type: number
+ *               isProRateFirstMonthAccrualForNewJoinees:
+ *                 type: string
+ *               maximumNumberConsecutiveLeaveDaysAllowed:
+ *                 type: number
+ *               dayOfTheMonthEmployeeNeedJoinToGetCreditForThatMonth:
+ *                 type: number
+ *               dayOfMonthEmployeeNeedToResignToGetCreditforTheMonth:
+ *                 type: number
+ *               isPaidLeave:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Leave category successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/leave-categories', leaveController.createLeaveCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories/{id}:
+ *   get:
+ *     summary: Get a leave category by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the leave category
+ *     responses:
+ *       200:
+ *         description: Successful response with the leave category
+ *       404:
+ *         description: Leave category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-categories/:id', leaveController.getLeaveCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories/{id}:
+ *   put:
+ *     summary: Update a leave category by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the leave category
+ *     requestBody:
+ *       description: New leave category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               leaveType:
+ *                 type: string
+ *                 required: true
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               abbreviation:
+ *                 type: string
+ *                 required: true
+ *               canEmployeeApply:
+ *                 type: boolean
+ *                 required: true
+ *               isHalfDayTypeOfLeave:
+ *                 type: boolean
+ *               submitBefore:
+ *                 type: number
+ *               displayLeaveBalanceInPayslip:
+ *                 type: boolean
+ *               leaveAccrualPeriod:
+ *                 type: string
+ *                 required: true
+ *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
+ *                 type: boolean
+ *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
+ *                 type: boolean
+ *               isEligibleForLeaveEncashmentDuringRollover:
+ *                 type: boolean
+ *               isDocumentRequired:
+ *                 type: boolean
+ *               isDocumentMandatory:
+ *                 type: boolean
+ *               isEligibleForEncashmentRecoveryDuringFNF:
+ *                 type: boolean
+ *                 required: true
+ *               isWeeklyOffHolidayPartHalfDayIncludedDaTaken:
+ *                 type: boolean
+ *               policyWithRegardsToCarryoverLimits:
+ *                 type: string
+ *                 required: true
+ *               isEmployeesAllowedToNegativeLeaveBalance:
+ *                 type: boolean
+ *                 required: true
+ *               isRoundOffLeaveAccrualNearestPointFiveUnit:
+ *                 type: boolean
+ *                 required: true
+ *               isIntraCycleLapseApplicableForThisCategory:
+ *                 type: boolean
+ *                 required: true
+ *               minimumNumberOfDaysAllowed:
+ *                 type: number
+ *               isProRateFirstMonthAccrualForNewJoinees:
+ *                 type: string
+ *               maximumNumberConsecutiveLeaveDaysAllowed:
+ *                 type: number
+ *               dayOfTheMonthEmployeeNeedJoinToGetCreditForThatMonth:
+ *                 type: number
+ *               dayOfMonthEmployeeNeedToResignToGetCreditforTheMonth:
+ *                 type: number
+ *               isPaidLeave:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated leave category
+ *       404:
+ *         description: Leave category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/leave-categories/:id', leaveController.updateLeaveCategory);
 
 module.exports = router;
