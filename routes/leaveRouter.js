@@ -1,5 +1,6 @@
 const express = require('express');
 const leaveController = require('../controllers/leaveController');
+const authController = require('../controllers/authController');
 const router = express.Router();
 
 // GeneralSetting routes
@@ -55,7 +56,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/general-settings', leaveController.createGeneralSetting);
+router.post('/general-settings', authController.protect, leaveController.createGeneralSetting);
 
 /**
  * @swagger
@@ -78,7 +79,7 @@ router.post('/general-settings', leaveController.createGeneralSetting);
  *       500:
  *         description: Internal server error
  */
-router.get('/general-settings/:id', leaveController.getGeneralSetting);
+router.get('/general-settings/:id', authController.protect, leaveController.getGeneralSetting);
 
 /**
  * @swagger
@@ -132,7 +133,7 @@ router.get('/general-settings/:id', leaveController.getGeneralSetting);
  *       500:
  *         description: Internal server error
  */
-router.put('/general-settings/:id', leaveController.updateGeneralSetting);
+router.put('/general-settings/:id', authController.protect, leaveController.updateGeneralSetting);
 
 /**
  * @swagger
@@ -216,7 +217,7 @@ router.put('/general-settings/:id', leaveController.updateGeneralSetting);
  *       500:
  *         description: Internal server error
  */
-router.post('/leave-categories', leaveController.createLeaveCategory);
+router.post('/leave-categories', authController.protect, leaveController.createLeaveCategory);
 
 /**
  * @swagger
@@ -239,7 +240,7 @@ router.post('/leave-categories', leaveController.createLeaveCategory);
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-categories/:id', leaveController.getLeaveCategory);
+router.get('/leave-categories/:id', authController.protect, leaveController.getLeaveCategory);
 
 /**
  * @swagger
@@ -330,6 +331,23 @@ router.get('/leave-categories/:id', leaveController.getLeaveCategory);
  *       500:
  *         description: Internal server error
  */
-router.put('/leave-categories/:id', leaveController.updateLeaveCategory);
+router.put('/leave-categories/:id', authController.protect, leaveController.updateLeaveCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories:
+ *   get:
+ *     summary: Get all Leave Category
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Leave Category
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-categories', authController.protect, leaveController.getAllLeaveCategory);
 
 module.exports = router;

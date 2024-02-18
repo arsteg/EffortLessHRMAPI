@@ -98,3 +98,14 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
     data: leaveCategory
   });
 });
+
+exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
+  const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId);
+  if (!leaveCategory) {
+    return next(new AppError('Leave category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: leaveCategory
+  });
+});
