@@ -826,7 +826,7 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
-  const { employee, title, status, expenseReportExpenses } = req.body;
+  const { employee, title, status,amount, expenseReportExpenses } = req.body;
 
   try {
     // Create ExpenseReport
@@ -834,6 +834,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
       employee,
       title,
       status,
+      amount,
       company: req.cookies.companyId
       });
 
