@@ -938,6 +938,32 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
 
 /**
  * @swagger
+ * /api/v1/expense/expense-reports-by-user/{userId}:
+ *   get:
+ *     summary: Get an ExpenseReport by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ExpenseReport
+ *     responses:
+ *       200:
+ *         description: Successful response with the ExpenseReport
+ *       404:
+ *         description: ExpenseReport not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-reports-by-user/:userId', authController.protect, expenseController.getExpenseReportsByUser);
+
+/**
+ * @swagger
  * /api/v1/expense/expense-reports/{id}:
  *   put:
  *     summary: Update an ExpenseReport by ID
