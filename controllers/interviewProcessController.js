@@ -4,19 +4,25 @@ const ErrorLog = require('../models/errorLogModel');
 const ApplicationStatus = require(`../models/InterviewProcess/applicationStatus`);
 const CandidateDataField = require(`../models/InterviewProcess/candidateDataField`);
 const FeedbackFieldValue = require(`../models/InterviewProcess/feedbackFieldValue`);
+const Candidate = require(`../models/InterviewProcess/candidate`);
+const CandidateApplicationStatus = require(`../models/InterviewProcess/candidateApplicationStatus`);
+const  CandidateDataFieldValue = require(`../models/InterviewProcess/candidateDataFieldValue`);
+const CandidateInterviewDetails = require(`../models/InterviewProcess/candidateInterviewDetails`);
+const FeedbackField = require(`../models/InterviewProcess/feedbackField`);
+
 /**
  * Create a new application status
  */
 exports.createApplicationStatus = catchAsync(async (req, res, next) => {
-  const { name } = req.body;
-  const company=req.cookies.companyId;
-
-  const existingStatus = await ApplicationStatus.findOne({ name, company });
+  
+  const existingStatus = await ApplicationStatus.findOne({ name:req.body.name, company:req.cookies.companyId });
   if (existingStatus) {
     return next(new AppError('Application status already exists for this company', 400));
   }
   
-  const newStatus = await ApplicationStatus.create({ name, company, 
+  const newStatus = await ApplicationStatus.create({ 
+    name:req.body.name,
+    company:req.cookies.companyId, 
     createdOn : new Date(),
     updatedOn : new Date(),
     createdBy: req.cookies.userId, 
@@ -103,6 +109,7 @@ exports.addCandidate = catchAsync(async (req, res, next) => {
     name,
     email,
     phoneNumber,
+    company: req.cookies.companyId, 
     createdOn : new Date(),
     updatedOn : new Date(),
     createdBy: req.cookies.userId, 
@@ -170,7 +177,7 @@ exports.deleteCandidate = catchAsync(async (req, res, next) => {
  * Get all candidates for a company
  */
 exports.getAllCandidates = catchAsync(async (req, res, next) => {
-  const candidates = await Candidate.find({ company: req.user.company });
+  const candidates = await Candidate.find({ company: req.cookies.companyId});
 
   res.status(200).json({
     status: 'success',
@@ -181,7 +188,15 @@ exports.getAllCandidates = catchAsync(async (req, res, next) => {
 //Candidate application API's
 
 exports.createCandidateApplicationStatus = catchAsync(async (req, res, next) => {
-  const candidateApplicationStatus = await CandidateApplicationStatus.create(req.body);
+  const candidateApplicationStatus = await CandidateApplicationStatus.create({
+    candidate: req.body.candidate,
+    status:req.body.status,
+    company: req.cookies.companyId, 
+    createdOn : new Date(),
+    updatedOn : new Date(),
+    createdBy: req.cookies.userId, 
+    updatedBy: req.cookies.userId     
+  });
   res.status(201).json({
     status: 'success',
     data: candidateApplicationStatus
@@ -229,7 +244,7 @@ exports.deleteCandidateApplicationStatus = catchAsync(async (req, res, next) => 
 });
 
 exports.getAllCandidateApplicationStatusForCompany = catchAsync(async (req, res, next) => {
-  const candidateApplicationStatusList = await CandidateApplicationStatus.find({ company: req.params.companyId });
+  const candidateApplicationStatusList = await CandidateApplicationStatus.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
     data: candidateApplicationStatusList
@@ -313,7 +328,17 @@ exports.getAllCandidateDataFieldsByCompany = catchAsync(async (req, res, next) =
 
 
 exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
-  const candidateDataFieldValue = await CandidateDataFieldValue.create(req.body);
+  const candidateDataFieldValue = await CandidateDataFieldValue.create({
+    candidateDataField:req.body.candidateDataField,
+    fieldValue:req.body.fieldValue,
+    fieldType:req.body.fieldType,
+    candidate:req.body.candidate,
+    company: req.cookies.companyId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId
+  });
   res.status(201).json({
     status: 'success',
     data: candidateDataFieldValue,
@@ -361,7 +386,7 @@ exports.deleteCandidateDataFieldValue = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCandidateDataFieldValuesByCompany = catchAsync(async (req, res, next) => {
-  const candidateDataFieldValues = await CandidateDataFieldValue.find({ company: req.params.companyId });
+  const candidateDataFieldValues = await CandidateDataFieldValue.find({ company: req.cookies.companyId });
 
   if (candidateDataFieldValues.length === 0) {
     return next(new AppError('No CandidateDataFieldValues found for the company', 404));
@@ -375,7 +400,17 @@ exports.getAllCandidateDataFieldValuesByCompany = catchAsync(async (req, res, ne
 
 
 exports.addCandidateInterviewDetails = catchAsync(async (req, res, next) => {
-  const candidateInterviewDetails = await CandidateInterviewDetails.create(req.body);
+  const candidateInterviewDetails = await CandidateInterviewDetails.create({
+    candidate:req.body.candidate,
+    interviewDateTime:req.body.interviewDateTime,
+    scheduledBy:req.body.scheduledBy,
+    zoomLink:req.body.zoomLink,
+    interviewer:req.body.interviewer,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId
+  });
   res.status(201).json({
     status: 'success',
     data: candidateInterviewDetails,
@@ -430,7 +465,7 @@ exports.deleteCandidateInterviewDetails = catchAsync(async (req, res, next) => {
 
 exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, next) => {
   const candidateInterviewDetails = await CandidateInterviewDetails.find({
-    company: req.params.companyId,
+    company: req.cookies.companyId,
   });
 
   if (candidateInterviewDetails.length === 0) {
@@ -445,7 +480,17 @@ exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, n
 
 
 exports.addFeedbackField = catchAsync(async (req, res, next) => {
-  const feedbackField = await FeedbackField.create(req.body);
+  const feedbackField = await FeedbackField.create({
+    fieldName:req.body.fieldName,
+    fieldType:req.body.fieldType,
+    subType:req.body.subType,
+    isRequired:req.body.isRequired,
+    company: req.cookies.companyId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId
+  });
   res.status(201).json({
     status: 'success',
     data: feedbackField,
@@ -494,7 +539,7 @@ exports.deleteFeedbackField = catchAsync(async (req, res, next) => {
 
 exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
   const feedbackFields = await FeedbackField.find({
-    company: req.params.companyId,
+    company: req.cookies.companyId,
   });
 
   if (feedbackFields.length === 0) {
@@ -566,7 +611,7 @@ exports.deleteFeedbackFieldValue = catchAsync(async (req, res, next) => {
 
 exports.getAllFeedbackFieldValuesByCompany = catchAsync(async (req, res, next) => {
   const feedbackFieldValues = await FeedbackFieldValue.find({
-    company: req.params.companyId,
+    company: req.cookies.companyId,
   });
 
   if (feedbackFieldValues.length === 0) {

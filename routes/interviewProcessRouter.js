@@ -157,10 +157,7 @@ router.get('/application-status', interviewProcessController.getAllApplicationSt
  *                 required: true
  *               phoneNumber:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Candidate successfully added
@@ -222,9 +219,7 @@ router.get('/candidates/:id', interviewProcessController.getCandidate);
  *               email:
  *                 type: string
  *               phoneNumber:
- *                 type: string
- *               company:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated candidate
@@ -301,13 +296,7 @@ router.get('/candidates', interviewProcessController.getAllCandidates);
  *                 required: true
  *               status:
  *                 type: string
- *                 required: true
- *               createdBy:
- *                 type: string
- *                 required: true
- *               updatedBy:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *     responses:
  *       201:
  *         description: Candidate Application Status successfully added
@@ -366,11 +355,7 @@ router.get('/candidate-application-status/:id',interviewProcessController.getCan
  *               candidate:
  *                 type: string
  *               status:
- *                 type: string
- *               createdBy:
- *                 type: string
- *               updatedBy:
- *                 type: string
+ *                 type: string 
  *     responses:
  *       200:
  *         description: Successful response with the updated Candidate Application Status
@@ -408,17 +393,10 @@ router.delete('/candidate-application-status/:id', interviewProcessController.de
 
 /**
  * @swagger
- * /api/v1/interviews/candidate-application-status/company/{companyId}:
+ * /api/v1/interviews/candidate-application-status:
  *   get:
  *     summary: Get all Candidate Application Status for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with Candidate Application Status for the company
@@ -428,7 +406,7 @@ router.delete('/candidate-application-status/:id', interviewProcessController.de
  *         description: Internal server error
  */
 //router.get('/candidate-application-status/company/:companyId', authController.protect, interviewProcessController.getAllCandidateApplicationStatusForCompany);
-router.get('/candidate-application-status/company/:companyId', interviewProcessController.getAllCandidateApplicationStatusForCompany);
+router.get('/candidate-application-status', interviewProcessController.getAllCandidateApplicationStatusForCompany);
 
 /**
  * @swagger
@@ -613,24 +591,12 @@ router.get('/candidate-data-fields/', interviewProcessController.getAllCandidate
  *                 required: true
  *               candidate:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
- *               createdBy:
- *                 type: string
- *                 required: true
- *               updatedBy:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *             example:
  *               candidateDataField: "606a3f17a33e5d4c87a6ea1f"
  *               fieldValue: "Some value"
  *               fieldType: "String"
- *               candidate: "606a3f17a33e5d4c87a6ea2f"
- *               company: "606a3f17a33e5d4c87a6ea3f"
- *               createdBy: "606a3f17a33e5d4c87a6ea4f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea4f"
+ *               candidate: "606a3f17a33e5d4c87a6ea2f" 
  *     responses:
  *       201:
  *         description: CandidateDataFieldValue successfully added
@@ -694,21 +660,12 @@ router.get('/candidate-data-field-values/:id', interviewProcessController.getCan
  *               fieldType:
  *                 type: string
  *               candidate:
- *                 type: string
- *               company:
- *                 type: string
- *               createdBy:
- *                 type: string
- *               updatedBy:
- *                 type: string
+ *                 type: string 
  *             example:
  *               candidateDataField: "606a3f17a33e5d4c87a6ea1f"
  *               fieldValue: "Updated value"
  *               fieldType: "String"
- *               candidate: "606a3f17a33e5d4c87a6ea2f"
- *               company: "606a3f17a33e5d4c87a6ea3f"
- *               createdBy: "606a3f17a33e5d4c87a6ea4f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea4f"
+ *               candidate: "606a3f17a33e5d4c87a6ea2f" 
  *     responses:
  *       200:
  *         description: Successful response with the updated CandidateDataFieldValue
@@ -746,17 +703,10 @@ router.delete('/candidate-data-field-values/:id', interviewProcessController.del
 
 /**
  * @swagger
- * /api/v1/interviews/candidate-data-field-values/company/{companyId}:
+ * /api/v1/interviews/candidate-data-field-values:
  *   get:
  *     summary: Get all CandidateDataFieldValues for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with CandidateDataFieldValues
@@ -766,7 +716,7 @@ router.delete('/candidate-data-field-values/:id', interviewProcessController.del
  *         description: Internal server error
  */
 //router.get('/candidate-data-field-values/company/:companyId', authController.protect, interviewProcessController.getAllCandidateDataFieldValuesByCompany);
-router.get('/candidate-data-field-values/company/:companyId', interviewProcessController.getAllCandidateDataFieldValuesByCompany);
+router.get('/candidate-data-field-values', interviewProcessController.getAllCandidateDataFieldValuesByCompany);
 
 /**
  * @swagger
@@ -803,21 +753,13 @@ router.get('/candidate-data-field-values/company/:companyId', interviewProcessCo
  *                 type: string
  *               interviewer:
  *                 type: string
- *                 required: true
- *               createdBy:
- *                 type: string
- *                 required: true
- *               updatedBy:
- *                 type: string
- *                 required: true
+ *                 required: true 
  *             example:
  *               candidate: "606a3f17a33e5d4c87a6ea2f"
  *               interviewDateTime: "2024-02-08T12:00:00Z"
  *               scheduledBy: "606a3f17a33e5d4c87a6ea4f"
  *               zoomLink: "https://zoom.us/example"
- *               interviewer: "606a3f17a33e5d4c87a6ea5f"
- *               createdBy: "606a3f17a33e5d4c87a6ea6f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea6f"
+ *               interviewer: "606a3f17a33e5d4c87a6ea5f" 
  *     responses:
  *       201:
  *         description: CandidateInterviewDetails successfully added
@@ -884,19 +826,13 @@ router.get('/candidate-interview-details/:id', interviewProcessController.getCan
  *               zoomLink:
  *                 type: string
  *               interviewer:
- *                 type: string
- *               createdBy:
- *                 type: string
- *               updatedBy:
- *                 type: string
+ *                 type: string 
  *             example:
  *               candidate: "606a3f17a33e5d4c87a6ea2f"
  *               interviewDateTime: "2024-02-08T15:00:00Z"
  *               scheduledBy: "606a3f17a33e5d4c87a6ea4f"
  *               zoomLink: "https://zoom.us/updated-example"
- *               interviewer: "606a3f17a33e5d4c87a6ea5f"
- *               createdBy: "606a3f17a33e5d4c87a6ea6f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea6f"
+ *               interviewer: "606a3f17a33e5d4c87a6ea5f" 
  *     responses:
  *       200:
  *         description: Successful response with the updated CandidateInterviewDetails
@@ -905,7 +841,6 @@ router.get('/candidate-interview-details/:id', interviewProcessController.getCan
  *       500:
  *         description: Internal server error
  */
-router.put('/candidate-interview-details/:id', authController.protect, interviewProcessController.updateCandidateInterviewDetails);
 router.put('/candidate-interview-details/:id', interviewProcessController.updateCandidateInterviewDetails);
 
 /**
@@ -934,17 +869,10 @@ router.delete('/candidate-interview-details/:id', interviewProcessController.del
 
 /**
  * @swagger
- * /api/v1/interviews/candidate-interview-details/company/{companyId}:
+ * /api/v1/interviews/candidate-interview-details:
  *   get:
  *     summary: Get all CandidateInterviewDetails for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with CandidateInterviewDetails
@@ -954,7 +882,7 @@ router.delete('/candidate-interview-details/:id', interviewProcessController.del
  *         description: Internal server error
  */
 //router.get('/candidate-interview-details/company/:companyId', authController.protect, interviewProcessController.getAllCandidateInterviewDetailsByCompany);
-router.get('/candidate-interview-details/company/:companyId', interviewProcessController.getAllCandidateInterviewDetailsByCompany);
+router.get('/candidate-interview-details', interviewProcessController.getAllCandidateInterviewDetailsByCompany);
 
 /**
  * @swagger
@@ -986,24 +914,12 @@ router.get('/candidate-interview-details/company/:companyId', interviewProcessCo
  *               subType:
  *                 type: string
  *               isRequired:
- *                 type: boolean
- *               company:
- *                 type: string
- *                 required: true
- *               createdBy:
- *                 type: string
- *                 required: true
- *               updatedBy:
- *                 type: string
- *                 required: true
+ *                 type: boolean 
  *             example:
  *               fieldName: "Example Field"
  *               fieldType: "Text"
  *               subType: "Single Line"
- *               isRequired: true
- *               company: "606a3f17a33e5d4c87a6ea2f"
- *               createdBy: "606a3f17a33e5d4c87a6ea4f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea5f"
+ *               isRequired: true 
  *     responses:
  *       201:
  *         description: FeedbackField successfully added
@@ -1067,21 +983,12 @@ router.get('/feedback-fields/:id', interviewProcessController.getFeedbackField);
  *               subType:
  *                 type: string
  *               isRequired:
- *                 type: boolean
- *               company:
- *                 type: string
- *               createdBy:
- *                 type: string
- *               updatedBy:
- *                 type: string
+ *                 type: boolean 
  *             example:
  *               fieldName: "Updated Example Field"
  *               fieldType: "Text"
  *               subType: "Multi Line"
- *               isRequired: false
- *               company: "606a3f17a33e5d4c87a6ea2f"
- *               createdBy: "606a3f17a33e5d4c87a6ea4f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea5f"
+ *               isRequired: false 
  *     responses:
  *       200:
  *         description: Successful response with the updated FeedbackField
@@ -1119,17 +1026,10 @@ router.delete('/feedback-fields/:id', interviewProcessController.deleteFeedbackF
 
 /**
  * @swagger
- * /api/v1/interviews/feedback-fields/company/{companyId}:
+ * /api/v1/interviews/feedback-fields:
  *   get:
  *     summary: Get all FeedbackFields for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with FeedbackFields
@@ -1139,7 +1039,7 @@ router.delete('/feedback-fields/:id', interviewProcessController.deleteFeedbackF
  *         description: Internal server error
  */
 //router.get('/feedback-fields/company/:companyId', authController.protect, interviewProcessController.getAllFeedbackFieldsByCompany);
-router.get('/feedback-fields/company/:companyId', interviewProcessController.getAllFeedbackFieldsByCompany);
+router.get('/feedback-fields', interviewProcessController.getAllFeedbackFieldsByCompany);
 
 /**
  * @swagger
@@ -1173,10 +1073,7 @@ router.get('/feedback-fields/company/:companyId', interviewProcessController.get
  *             example:
  *               feedbackField: "606a3f17a33e5d4c87a6ea2f"
  *               fieldValue: "Example Value"
- *               fieldType: "Text"
- *               company: "606a3f17a33e5d4c87a6ea2f"
- *               createdBy: "606a3f17a33e5d4c87a6ea4f"
- *               updatedBy: "606a3f17a33e5d4c87a6ea5f"
+ *               fieldType: "Text" 
  *     responses:
  *       201:
  *         description: FeedbackFieldValue successfully added
@@ -1238,20 +1135,11 @@ router.get('/feedback-field-values/:id', interviewProcessController.getFeedbackF
  *               fieldValue:
  *                 type: string
  *               fieldType:
- *                 type: string
- *               company:
- *                 type: string
- *               createdBy:
- *                 type: string
- *               updatedBy:
- *                 type: string
+ *                 type: string 
  *             example:
  *               feedbackField: "Updated Field ID"
  *               fieldValue: "Updated Example Value"
- *               fieldType: "Updated Text"
- *               company: "Updated Company ID"
- *               createdBy: "Updated User ID"
- *               updatedBy: "Updated User ID"
+ *               fieldType: "Updated Text" 
  *     responses:
  *       200:
  *         description: Successful response with the updated FeedbackFieldValue
@@ -1289,17 +1177,10 @@ router.delete('/feedback-field-values/:id', interviewProcessController.deleteFee
 
 /**
  * @swagger
- * /api/v1/interviews/feedback-field-values/company/{companyId}:
+ * /api/v1/interviews/feedback-field-values:
  *   get:
  *     summary: Get all FeedbackFieldValues for a company
- *     tags: [Interview Process]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *     tags: [Interview Process] 
  *     responses:
  *       200:
  *         description: Successful response with FeedbackFieldValues
@@ -1308,7 +1189,6 @@ router.delete('/feedback-field-values/:id', interviewProcessController.deleteFee
  *       500:
  *         description: Internal server error
  */
-//router.get('/feedback-field-values/company/:companyId', authController.protect, interviewProcessController.getAllFeedbackFieldValuesByCompany);
-router.get('/feedback-field-values/company/:companyId', interviewProcessController.getAllFeedbackFieldValuesByCompany);
+router.get('/feedback-field-values', interviewProcessController.getAllFeedbackFieldValuesByCompany);
 
 module.exports = router;
