@@ -244,11 +244,11 @@ exports.addCandidateDataField = catchAsync(async (req, res, next) => {
     fieldType:req.body.fieldType,
     subType:req.body.subType,    
     isRequired:req.body.isRequired,
-    company: req.cookies.companyId,    
-    createdOn : new Date(),
-    updatedOn : new Date(),
-    createdBy: req.cookies.userId, 
-    updatedBy: req.cookies.userId     
+    company: req.cookies.companyId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId
   });
   
 
@@ -507,8 +507,17 @@ exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
-  const feedbackFieldValue = await FeedbackFieldValue.create(req.body);
+exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {  
+  const feedbackFieldValue = await FeedbackFieldValue.create({
+    feedbackField: req.body.feedbackField,
+    fieldValue: req.body.fieldValue,
+    fieldType: req.body.fieldType,    
+    company: req.cookies.companyId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId
+  });
   res.status(201).json({
     status: 'success',
     data: feedbackFieldValue,

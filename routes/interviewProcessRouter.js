@@ -459,8 +459,7 @@ router.get('/candidate-application-status/company/:companyId', interviewProcessC
  *               fieldName: "Experience"
  *               fieldType: "Number"
  *               subType: "Years"
- *               isRequired: true
- *               company: "606a3f17a33e5d4c87a6ea1f"
+ *               isRequired: true 
  *     responses:
  *       201:
  *         description: CandidateDataField successfully added
@@ -529,8 +528,7 @@ router.get('/candidate-data-fields/:id', interviewProcessController.getCandidate
  *               fieldName: "Updated Experience"
  *               fieldType: "Number"
  *               subType: "Months"
- *               isRequired: false
- *               company: "606a3f17a33e5d4c87a6ea1f"
+ *               isRequired: false 
  *     responses:
  *       200:
  *         description: Successful response with the updated CandidateDataField
@@ -1171,16 +1169,7 @@ router.get('/feedback-fields/company/:companyId', interviewProcessController.get
  *                 type: string
  *                 required: true
  *               fieldType:
- *                 type: string
- *               company:
- *                 type: string
- *                 required: true
- *               createdBy:
- *                 type: string
- *                 required: true
- *               updatedBy:
- *                 type: string
- *                 required: true
+ *                 type: string 
  *             example:
  *               feedbackField: "606a3f17a33e5d4c87a6ea2f"
  *               fieldValue: "Example Value"
