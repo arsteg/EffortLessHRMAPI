@@ -31,8 +31,7 @@ const leaveCategorySchema = new Schema({
     default: false
   },
   leaveAccrualPeriod: {
-    type: String,
-    required: true
+    type: String
   },
   isAnnualHolidayLeavePartOfNumberOfDaysTaken: {
     type: Boolean,

@@ -169,7 +169,6 @@ router.put('/general-settings/:id', authController.protect, leaveController.upda
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *                 required: true
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
@@ -283,7 +282,6 @@ router.get('/leave-categories/:id', authController.protect, leaveController.getL
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *                 required: true
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
@@ -349,5 +347,274 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
  *         description: Internal server error
  */
 router.get('/leave-categories', authController.protect, leaveController.getAllLeaveCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-templates:
+ *   post:
+ *     summary: Create a new LeaveTemplate
+ *     tags: [Leave Management]
+ *     requestBody:
+ *       description: LeaveTemplate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               approvalLevel:
+ *                 type: string
+ *                 required: true
+ *               approvalType:
+ *                 type: string
+ *                 required: true
+ *               primaryApprover:
+ *                 type: string
+ *                 required: true
+ *               secondaryApprover:
+ *                 type: string
+ *                 required: true
+ *               isCommentMandatory:
+ *                 type: boolean
+ *                 required: true
+ *               clubbingRestrictions:
+ *                 type: boolean
+ *                 required: true
+ *               weeklyOffClubTogether:
+ *                 type: boolean
+ *                 required: true
+ *               holidayClubTogether:
+ *                 type: boolean
+ *                 required: true
+ *               leaveCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     category:
+ *                       type: string
+ *                       required: true
+ *                     clubbedCategory:
+ *                       type: string
+ *                       required: true
+ *               cubbingRestrictionCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     category:
+ *                       type: string
+ *                       required: true
+ *     responses:
+ *       201:
+ *         description: LeaveTemplate successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/leave-templates', authController.protect, leaveController.createLeaveTemplate);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-templates/{id}:
+ *   get:
+ *     summary: Get a LeaveTemplate by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the LeaveTemplate
+ *     responses:
+ *       200:
+ *         description: Successful response with the LeaveTemplate
+ *       404:
+ *         description: LeaveTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-templates/:id', authController.protect, leaveController.getLeaveTemplate);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-templates/{id}:
+ *   put:
+ *     summary: Update a LeaveTemplate by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the LeaveTemplate
+ *     requestBody:
+ *       description: New LeaveTemplate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               approvalLevel:
+ *                 type: string
+ *               approvalType:
+ *                 type: string
+ *               primaryApprover:
+ *                 type: string
+ *               secondaryApprover:
+ *                 type: string
+ *               isCommentMandatory:
+ *                 type: boolean
+ *               clubbingRestrictions:
+ *                 type: boolean
+ *               weeklyOffClubTogether:
+ *                 type: boolean
+ *               holidayClubTogether:
+ *                 type: boolean
+ *               leaveCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     category:
+ *                       type: string
+ *                       required: true
+ *                     clubbedCategory:
+ *                       type: string
+ *                       required: true
+ *               cubbingRestrictionCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     category:
+ *                       type: string
+ *                       required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated LeaveTemplate
+ *       404:
+ *         description: LeaveTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/leave-templates/:id', authController.protect, leaveController.updateLeaveTemplate);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-templates:
+ *   get:
+ *     summary: Get all LeaveTemplates
+ *     tags: [Leave Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with LeaveTemplates
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-templates', authController.protect, leaveController.getAllLeaveTemplates);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-template-categories:
+ *   post:
+ *     summary: Create a new LeaveTemplateCategory
+ *     tags: [Leave Management]
+ *     requestBody:
+ *       description: LeaveTemplateCategory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LeaveTemplateCategory'
+ *     responses:
+ *       201:
+ *         description: LeaveTemplateCategory successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/leave-template-categories', leaveController.createLeaveTemplateCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-template-categories/{id}:
+ *   get:
+ *     summary: Get a LeaveTemplateCategory by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the LeaveTemplateCategory
+ *     responses:
+ *       200:
+ *         description: Successful response with the LeaveTemplateCategory
+ *       404:
+ *         description: LeaveTemplateCategory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-template-categories/:id', leaveController.getLeaveTemplateCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-template-categories/{id}:
+ *   put:
+ *     summary: Update a LeaveTemplateCategory by ID
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the LeaveTemplateCategory
+ *     requestBody:
+ *       description: New LeaveTemplateCategory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LeaveTemplateCategory'
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated LeaveTemplateCategory
+ *       404:
+ *         description: LeaveTemplateCategory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/leave-template-categories/:id', leaveController.updateLeaveTemplateCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-template-categories:
+ *   get:
+ *     summary: Get all LeaveTemplateCategories
+ *     tags: [Leave Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with LeaveTemplateCategories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-template-categories', leaveController.getAllLeaveTemplateCategories);
 
 module.exports = router;
