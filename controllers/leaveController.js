@@ -26,6 +26,21 @@ exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   });
 });
 
+
+exports.getGeneralSettingByCompany = catchAsync(async (req, res, next) => {
+  const generalSetting = await GeneralSetting.findOne({
+    company: req.cookies.companyId
+  });   
+ ;
+  if (!generalSetting) {
+    return next(new AppError('GeneralSetting not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: generalSetting
+  });
+});
+
 exports.getGeneralSetting = catchAsync(async (req, res, next) => {
   const generalSetting = await GeneralSetting.findById(req.params.id);
   if (!generalSetting) {

@@ -14,7 +14,8 @@ const Advance = require('../models/Expense/ExpenseAdvance');
 const AdvanceCategory = require('../models/Expense/AdvanceCategory'); 
 const AdvanceTemplate = require('../models/Expense/AdvanceTemplate'); 
 const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCategory'); 
-const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment')
+const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment');
+const userSubordinate = require('../models/userSubordinateModel');
 const { ObjectId } = require('mongodb');
 // Import ExpenseCategory model
 
@@ -942,6 +943,55 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
 
 exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
   const expenseReports = await ExpenseReport.find({}).where('employee').equals(req.params.userId);
+  for(var j = 0; j < expenseReports.length; j++) {     
+     {
+      const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);
+      if(expenseReportExpenses) 
+      {
+          for(var i = 0; i < expenseReportExpenses.length; i++) {     
+          const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+          if(expenseReportExpenseFields) 
+            {
+              expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+            }
+            else{
+              expenseReportExpenses[i].expenseReportExpenseFields=null;
+            }
+          }
+        }
+          expenseReports[j].expenseReportExpense=expenseReportExpenses;
+      }  
+  }
+  res.status(200).json({
+    status: 'success',
+    data: expenseReports
+  });
+});
+
+exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  console.log(teamIdsArray);
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+console.log(objectIdArray);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const expenseReports = await ExpenseReport.find({
+    employee: { $in: objectIdArray }
+});
   for(var j = 0; j < expenseReports.length; j++) {     
      {
       const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);

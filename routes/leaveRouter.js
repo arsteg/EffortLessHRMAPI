@@ -9,6 +9,9 @@ const router = express.Router();
  * /api/v1/leave/general-settings:
  *   post:
  *     summary: Add a GeneralSetting
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     requestBody:
  *       description: GeneralSetting details
@@ -63,6 +66,9 @@ router.post('/general-settings', authController.protect, leaveController.createG
  * /api/v1/leave/general-settings/{id}:
  *   get:
  *     summary: Get a GeneralSetting by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -83,9 +89,31 @@ router.get('/general-settings/:id', authController.protect, leaveController.getG
 
 /**
  * @swagger
+ * /api/v1/leave/general-settings-by-company:
+ *   get:
+ *     summary: Get a GeneralSetting by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     tags: [Leave Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with the GeneralSetting
+ *       404:
+ *         description: GeneralSetting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/general-settings-by-company', authController.protect, leaveController.getGeneralSettingByCompany);
+
+/**
+ * @swagger
  * /api/v1/leave/general-settings/{id}:
  *   put:
  *     summary: Update a GeneralSetting by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -140,6 +168,9 @@ router.put('/general-settings/:id', authController.protect, leaveController.upda
  * /api/v1/leave/leave-categories:
  *   post:
  *     summary: Create a new leave category
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     requestBody:
  *       description: Leave category details
@@ -223,6 +254,9 @@ router.post('/leave-categories', authController.protect, leaveController.createL
  * /api/v1/leave/leave-categories/{id}:
  *   get:
  *     summary: Get a leave category by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -246,6 +280,9 @@ router.get('/leave-categories/:id', authController.protect, leaveController.getL
  * /api/v1/leave/leave-categories/{id}:
  *   put:
  *     summary: Update a leave category by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -336,10 +373,10 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
  * /api/v1/leave/leave-categories:
  *   get:
  *     summary: Get all Leave Category
- *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
- *     }]
+ *     }] 
+ *     tags: [Leave Management]
  *     responses:
  *       200:
  *         description: Successful response with Leave Category
@@ -353,6 +390,9 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
  * /api/v1/leave/leave-templates:
  *   post:
  *     summary: Create a new LeaveTemplate
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     requestBody:
  *       description: LeaveTemplate details
@@ -425,6 +465,9 @@ router.post('/leave-templates', authController.protect, leaveController.createLe
  * /api/v1/leave/leave-templates/{id}:
  *   get:
  *     summary: Get a LeaveTemplate by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -448,6 +491,9 @@ router.get('/leave-templates/:id', authController.protect, leaveController.getLe
  * /api/v1/leave/leave-templates/{id}:
  *   put:
  *     summary: Update a LeaveTemplate by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -518,6 +564,9 @@ router.put('/leave-templates/:id', authController.protect, leaveController.updat
  * /api/v1/leave/leave-templates:
  *   get:
  *     summary: Get all LeaveTemplates
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     responses:
  *       200:
@@ -532,6 +581,9 @@ router.get('/leave-templates', authController.protect, leaveController.getAllLea
  * /api/v1/leave/leave-template-categories:
  *   post:
  *     summary: Create a new LeaveTemplateCategory
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     requestBody:
  *       description: LeaveTemplateCategory details
@@ -555,6 +607,9 @@ router.post('/leave-template-categories', leaveController.createLeaveTemplateCat
  * /api/v1/leave/leave-template-categories/{id}:
  *   get:
  *     summary: Get a LeaveTemplateCategory by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -578,6 +633,9 @@ router.get('/leave-template-categories/:id', leaveController.getLeaveTemplateCat
  * /api/v1/leave/leave-template-categories/{id}:
  *   put:
  *     summary: Update a LeaveTemplateCategory by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
@@ -608,6 +666,9 @@ router.put('/leave-template-categories/:id', leaveController.updateLeaveTemplate
  * /api/v1/leave/leave-template-categories:
  *   get:
  *     summary: Get all LeaveTemplateCategories
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     tags: [Leave Management]
  *     responses:
  *       200:
