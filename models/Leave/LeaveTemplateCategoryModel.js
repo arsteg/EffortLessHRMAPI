@@ -8,56 +8,51 @@ var leaveTemplateCategorySchema = new Schema({
     required: true
   },
   leaveCategory: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'LeaveCategory',
     required: true
   },
   limitNumberOfTimesApply: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false
   },
   maximumNumbersEmployeeCanApply: {
     type: Number,
-    required: true
+    required: true,
+    default: '0'
   },
   maximumNumbersEmployeeCanApplyType: {
-    type: String,
-    required: false // No requirement specified for this field
+    type: String
   },
   dealWithNewlyJoinedEmployee: {
-    type: String,
-    required: true
+    type: String
   },
   daysToCompleteToBecomeEligibleForLeave: {
-    type: Number,
-    required: true
+    type: Number
   },
   isEmployeeGetCreditedTheEntireAmount: {
     type: Boolean,
-    required: true
+    default: false
   },
   extendLeaveCategory: {
     type: Boolean,
-    required: true
+    default: false
   },
   extendMaximumDayNumber: {
-    type: Number,
-    required: true
+    type: Number
   },
   extendFromCategory: {
-    type: String,
-    required: true
+    type: String
   },
   negativeBalanceCap: {
-    type: Number,
-    required: false // No requirement specified for this field
+    type: Number
   },
   annualAccrualRatePerPeriod: {
-    type: Number,
-    required: true
+    type: Number
   },
   categoryApplicable: {
-    type: String,
-    required: true
+    type: String
   }
 }, { collection: 'LeaveTemplateCategory' });
 

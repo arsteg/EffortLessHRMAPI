@@ -47,9 +47,12 @@ var leaveTemplateSchema = new Schema({
     }
   },
   company: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company', // Assuming the reference is to a Company schema
     required: true
-  }
+  },
+  applicableCategories:[],
+  clubbingRestrictions:[]
 }, { collection: 'LeaveTemplate' });
 
 module.exports = mongoose.model('LeaveTemplate', leaveTemplateSchema);

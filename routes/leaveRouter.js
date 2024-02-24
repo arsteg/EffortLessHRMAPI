@@ -435,10 +435,7 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
  *                   type: object
  *                   required: true
  *                   properties:
- *                     category:
- *                       type: string
- *                       required: true
- *                     clubbedCategory:
+ *                     leaveCategory:
  *                       type: string
  *                       required: true
  *               cubbingRestrictionCategories:
@@ -447,7 +444,10 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
  *                   type: object
  *                   required: true
  *                   properties:
- *                     category:
+ *                     leaveCategory:
+ *                       type: string
+ *                       required: true
+ *                     clubbedLeaveCategory:
  *                       type: string
  *                       required: true
  *     responses:
@@ -534,10 +534,7 @@ router.get('/leave-templates/:id', authController.protect, leaveController.getLe
  *                   type: object
  *                   required: true
  *                   properties:
- *                     category:
- *                       type: string
- *                       required: true
- *                     clubbedCategory:
+ *                     leaveCategory:
  *                       type: string
  *                       required: true
  *               cubbingRestrictionCategories:
@@ -546,7 +543,10 @@ router.get('/leave-templates/:id', authController.protect, leaveController.getLe
  *                   type: object
  *                   required: true
  *                   properties:
- *                     category:
+ *                     leaveCategory:
+ *                       type: string
+ *                       required: true
+ *                     clubbedLeaveCategory:
  *                       type: string
  *                       required: true
  *     responses:
