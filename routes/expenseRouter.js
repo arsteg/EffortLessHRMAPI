@@ -906,10 +906,11 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *                       type: string
  *                       description: Name of the field
  *                       required: true
- *                     documentLink:
- *                       type: string
- *                       description: Name of the field
- *                       required: true
+ *                     expenseAttachments:
+ *                        type: array
+ *                        items:
+ *                          type: string
+ *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *                     expenseReportExpenseFields :
  *                       type: array
  *                       items:

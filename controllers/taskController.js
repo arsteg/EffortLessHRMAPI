@@ -643,7 +643,7 @@ if(taskList)
       url:url
     });  
   }
-}
+  }
 
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id); 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);  

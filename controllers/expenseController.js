@@ -17,13 +17,23 @@ const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCate
 const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment');
 const userSubordinate = require('../models/userSubordinateModel');
 const { ObjectId } = require('mongodb');
+const { v1: uuidv1} = require('uuid');
 // Import ExpenseCategory model
-
+const { BlobServiceClient } = require('@azure/storage-blob');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const AdvanceTemplateCategory = require('../models/Expense/AdvanceTemplateCategory');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 
+// AZURE STORAGE CONNECTION DETAILS
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+if (!AZURE_STORAGE_CONNECTION_STRING) {
+throw Error("Azure Storage Connection string not found");
+}
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  AZURE_STORAGE_CONNECTION_STRING
+);
+const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
     const company = req.cookies.companyId;
@@ -876,7 +886,30 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
     // Create ExpenseReportExpenses and associated ExpenseReportExpenseFields
     expenseReport.expenseReportExpense = await Promise.all(
       expenseReportExpenses.map(async (expenseData) => {
-        const { expenseCategory, incurredDate, amount, isReimbursable, isBillable, reason, documentLink, expenseReportExpenseFields } = expenseData;
+        const { expenseCategory, incurredDate, amount, isReimbursable, isBillable, reason, expenseAttachments, expenseReportExpenseFields } = expenseData;
+        if(expenseAttachments!=null)
+        {
+        for(var i = 0; i < expenseAttachments.length; i++) {
+          if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
+            ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
+            return res.status(400).json({ error: 'All attachment properties must be provided' });
+          }
+          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
+         // Get a block blob client
+          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+          console.log("\nUploading to Azure storage as blob:\n\t", );
+          // Upload data to the blob
+          var FileString =  expenseAttachments[i].file;
+          const buffer = new Buffer.from(FileString, 'base64');
+          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
+          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
+          console.log(
+            "Blob was uploaded successfully. requestId: ",
+            uploadBlobResponse.requestId
+          );
+        
+        }
+        }
         const expense = await ExpenseReportExpense.create({
           expenseReport: expenseReport._id,
           expenseCategory,
