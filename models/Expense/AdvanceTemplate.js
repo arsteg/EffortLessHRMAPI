@@ -3,8 +3,16 @@ var Schema = mongoose.Schema;
 
 var advanceTemplateSchema = new Schema({
   policyLabel: String,
-  approvalType: String,
-  approvalLevel: String, 
+  approvalType: {
+    type: String,
+    enum: ['employee-wise,template-wise'],
+    default: 'employee-wise'
+  },
+  approvalLevel: {
+    type: String,
+    enum: ['1','2'],
+    default: '1'
+  }, 
   firstApprovalEmployee: {
     type: mongoose.Schema.ObjectId,
     ref: 'User', // Assuming the reference is to a Company schema  

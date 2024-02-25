@@ -782,6 +782,32 @@ router.get('/employee-expense-assignments-by-user/:userId', authController.prote
 
 /**
  * @swagger
+ * /api/v1/expense/employee-expense-applicable-setting/{userId}:
+ *   get:
+ *     summary: Get an Employee Expense Applicable Setting by ID
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Expense Aplicable Setting
+ *       404:
+ *         description: Employee Expense Applicable Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-expense-applicable-setting/:userId', authController.protect, expenseController.getApplicableExpenseSettingByUser);
+
+/**
+ * @swagger
  * /api/v1/expense/employee-expense-assignments/{id}:
  *   delete:
  *     summary: Delete an EmployeeExpenseAssignment by ID

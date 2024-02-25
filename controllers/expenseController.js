@@ -736,9 +736,16 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    }
    // Add companyId to the request body
    req.body.company = companyId;
-   const employeeExpenseAssignmentExists = await EmployeeExpenseAssignment.find({}).where('user').equals(req.body.user).where('expenseTemplate').equals(req.body.expenseTemplate);
+   const employeeExpenseAssignmentExists = await EmployeeExpenseAssignment.find({}).where('user').equals(req.body.user);
    var employeeExpenseAssignment;
-   if (employeeExpenseAssignmentExists.length<=0) {
+   const expenseTemplate=await ExpenseTemplate.findById(req.body.expenseTemplate);   
+   if (expenseTemplate && expenseTemplate.approvalType == "template-wise")
+   {    
+         req.body.primaryApprover = expenseTemplate.firstApprovalEmployee;
+         req.body.secondaryApprover = expenseTemplate.secondApprovalEmployee;      
+   }  
+   if (employeeExpenseAssignmentExists.length<=0) {   
+      
       employeeExpenseAssignment = await EmployeeExpenseAssignment.create(req.body);
    }
    else{
@@ -778,7 +785,34 @@ exports.getEmployeeExpenseAssignmentByUser = catchAsync(async (req, res, next) =
     data: employeeExpenseAssignment,
   });
 });
+
+exports.getApplicableExpenseSettingByUser = catchAsync(async (req, res, next) => {
+  const employeeExpenseAssignment = await EmployeeExpenseAssignment.findOne({user:req.params.userId});
+  if (!employeeExpenseAssignment) {
+    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  }
+  const expenseTemplate = await ExpenseTemplate.findById(employeeExpenseAssignment.expenseTemplate);   
+  const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(employeeExpenseAssignment.expenseTemplate);
+  expenseTemplate.applicableCategories = expenseTemplateApplicableCategories;
+
+  res.status(200).json({
+    status: 'success',
+    data: expenseTemplate,
+  });
+});
 exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
+
+const expenseReport = await ExpenseReport.find({}).where('employee').equals( req.body.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
+  ;
+  if (expenseReport) {
+    return next(new AppError('Expenses Need to close first before delete assignment', 404));
+  }
+  const expenseTemplate=await ExpenseTemplate.findById(req.body.expenseTemplate);   
+  if (expenseTemplate && expenseTemplate.approvalType == "template-wise")
+      {    
+            req.body.primaryApprover = expenseTemplate.firstApprovalEmployee;
+            req.body.secondaryApprover = expenseTemplate.secondApprovalEmployee;      
+      }  
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -805,7 +839,7 @@ const userExpenseAssignment = await EmployeeExpenseAssignment.findById(req.param
 if (!userExpenseAssignment) {
   return next(new AppError('EmployeeExpenseAssignment not found', 404));
 }
-const expenseReport = await ExpenseReport.find({}).where('employee').equals(userExpenseAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
+const expenseReport = await ExpenseReport.find({}).where('employee').equals(userExpenseAssignment.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
 ;
 if (expenseReport) {
   return next(new AppError('Expenses Need to close first before delete assignment', 404));

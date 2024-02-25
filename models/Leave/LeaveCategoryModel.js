@@ -97,7 +97,11 @@ const leaveCategorySchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',
     required: true
-  }
+  },
+  isSystemGenerated: {
+    type: Boolean,
+    default: false
+  },
 }, { collection: 'LeaveCategory' });
 
 module.exports = mongoose.model('LeaveCategory', leaveCategorySchema);
