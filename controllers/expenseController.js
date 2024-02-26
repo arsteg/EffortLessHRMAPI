@@ -787,9 +787,7 @@ exports.getEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 });
 exports.getEmployeeExpenseAssignmentByUser = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('user').equals(req.params.userId);
-  if (!employeeExpenseAssignment) {
-    return next(new AppError('EmployeeExpenseAssignment not found', 404));
-  }
+  
   res.status(200).json({
     status: 'success',
     data: employeeExpenseAssignment,
@@ -798,13 +796,13 @@ exports.getEmployeeExpenseAssignmentByUser = catchAsync(async (req, res, next) =
 
 exports.getApplicableExpenseSettingByUser = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.findOne({user:req.params.userId});
-  if (!employeeExpenseAssignment) {
-    return next(new AppError('EmployeeExpenseAssignment not found', 404));
-  }
-  const expenseTemplate = await ExpenseTemplate.findById(employeeExpenseAssignment.expenseTemplate);   
+  var expenseTemplate=[];
+  if (employeeExpenseAssignment) {
+   
+  expenseTemplate = await ExpenseTemplate.findById(employeeExpenseAssignment.expenseTemplate);   
   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(employeeExpenseAssignment.expenseTemplate);
   expenseTemplate.applicableCategories = expenseTemplateApplicableCategories;
-
+  }
   res.status(200).json({
     status: 'success',
     data: expenseTemplate,
