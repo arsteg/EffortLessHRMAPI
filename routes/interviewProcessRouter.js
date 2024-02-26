@@ -1143,7 +1143,6 @@ router.get('/feedback-field-values/:id', interviewProcessController.getFeedbackF
  *               fieldType:
  *                 type: string 
  *             example:
- *               feedbackField: "Updated Candidate ID" 
  *               feedbackField: "Updated Field ID"
  *               fieldValue: "Updated Example Value"
  *               fieldType: "Updated Text" 
