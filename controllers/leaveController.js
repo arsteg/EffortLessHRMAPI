@@ -175,9 +175,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
   // Check if leaveCategories is provided and valid
   if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
     return next(new AppError('Leave Categories are required', 400));
-  }
-
- 
+  } 
 
   // Add company to the request body
   leaveTemplateData.company = companyId;
@@ -220,9 +218,9 @@ exports.getLeaveTemplate = async (req, res, next) => {
             return;
         }
         const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
-        leaveTemplate.applicableCategories=leaveTemplateCategories;
+        leaveTemplate.applicableCategories = leaveTemplateCategories;
         const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
-        leaveTemplate.clubbingRestrictions=leaveClubbingRestrictions;
+        leaveTemplate.clubbingRestrictions = leaveClubbingRestrictions;
         res.status(200).json({
             status: 'success',
             data: leaveTemplate
@@ -261,27 +259,27 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
     try {
         const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId);;
         if(leaveTemplates)
-  {
-   for(var i = 0; i < leaveTemplates.length; i++) {   
-    const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
-    if(leaveTemplateCategories) 
-    {
-      leaveTemplates[i].applicableCategories=leaveTemplateCategories;
-    }
-    else{
-      leaveTemplates[i].applicableCategories=null;
-    }
-    const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
-   
-    if(leaveClubbingRestrictions) 
-      {
-        leaveTemplates[i].clubbingRestrictions=leaveClubbingRestrictions;
-      }
-      else{
-        leaveTemplates[i].clubbingRestrictions=null;
-      }
-   }
-  }
+        {
+        for(var i = 0; i < leaveTemplates.length; i++) {   
+          const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
+          if(leaveTemplateCategories) 
+          {
+            leaveTemplates[i].applicableCategories=leaveTemplateCategories;
+          }
+          else{
+            leaveTemplates[i].applicableCategories=null;
+          }
+          const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
+        
+          if(leaveClubbingRestrictions) 
+            {
+              leaveTemplates[i].clubbingRestrictions = leaveClubbingRestrictions;
+            }
+            else{
+              leaveTemplates[i].clubbingRestrictions = null;
+            }
+        }
+        }
         res.status(200).json({
             status: 'success',
             data: leaveTemplates

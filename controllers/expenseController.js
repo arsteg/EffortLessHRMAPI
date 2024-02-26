@@ -1113,6 +1113,27 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
 
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
   // Create ExpenseReportExpense
+  const expenseAttachments = req.body.expenseAttachments;
+  for(var i = 0; i < expenseAttachments.length; i++) {
+          if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
+            ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
+            return res.status(400).json({ error: 'All attachment properties must be provided' });
+          }
+          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
+         // Get a block blob client
+          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+          console.log("\nUploading to Azure storage as blob:\n\t", );
+          // Upload data to the blob
+          var FileString =  expenseAttachments[i].file;
+          const buffer = new Buffer.from(FileString, 'base64');
+          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
+          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
+          console.log(
+            "Blob was uploaded successfully. requestId: ",
+            uploadBlobResponse.requestId
+          );
+        req.body.documentLink=expenseAttachments;
+        }
   const expenseReportExpense = await ExpenseReportExpense.create(req.body);
 
   // Create ExpenseReportExpenseFields if provided
@@ -1155,7 +1176,27 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-
+  const expenseAttachments = req.body.expenseAttachments;
+  for(var i = 0; i < expenseAttachments.length; i++) {
+          if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
+            ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
+            return res.status(400).json({ error: 'All attachment properties must be provided' });
+          }
+          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
+         // Get a block blob client
+          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+          console.log("\nUploading to Azure storage as blob:\n\t", );
+          // Upload data to the blob
+          var FileString =  expenseAttachments[i].file;
+          const buffer = new Buffer.from(FileString, 'base64');
+          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
+          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
+          console.log(
+            "Blob was uploaded successfully. requestId: ",
+            uploadBlobResponse.requestId
+          );
+        req.body.documentLink=expenseAttachments;
+        }
   // Update ExpenseReportExpense
   const updatedExpenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(id, req.body, {
     new: true, // Return the updated document

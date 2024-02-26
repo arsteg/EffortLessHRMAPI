@@ -1139,9 +1139,11 @@ router.get('/expense-reports', authController.protect, expenseController.getAllE
  *               reason:
  *                 type: string
  *                 description: Reason for the expense
- *               documentLink:
- *                 type: string
- *                 description: Link to the document related to the expense
+ *               expenseAttachments:
+ *                  type: array
+ *                  items:
+ *                     type: string
+ *                     example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               expenseReportExpenseFields :
  *                  type: array
  *                  items:
@@ -1233,8 +1235,11 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                 type: boolean
  *               reason:
  *                 type: string
- *               documentLink:
- *                 type: string
+ *               expenseAttachments:
+ *                  type: array
+ *                  items:
+ *                     type: string
+ *                     example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               expenseReportExpenseFields :
  *                  type: array
  *                  items:
