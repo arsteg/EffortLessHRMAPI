@@ -14,6 +14,11 @@ var feedbackFieldValueSchema = new Schema({
   fieldType: {
     type: String
   },
+  candidate: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Candidate',
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

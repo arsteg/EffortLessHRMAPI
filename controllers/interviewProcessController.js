@@ -555,6 +555,7 @@ exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
 exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {  
   const feedbackFieldValue = await FeedbackFieldValue.create({
     feedbackField: req.body.feedbackField,
+    candidate:req.body.candidate,
     fieldValue: req.body.fieldValue,
     fieldType: req.body.fieldType,    
     company: req.cookies.companyId,

@@ -1062,6 +1062,9 @@ router.get('/feedback-fields', interviewProcessController.getAllFeedbackFieldsBy
  *           schema:
  *             type: object
  *             properties:
+ *               candidate:
+ *                 type: string
+ *                 required: true 
  *               feedbackField:
  *                 type: string
  *                 required: true
@@ -1071,6 +1074,7 @@ router.get('/feedback-fields', interviewProcessController.getAllFeedbackFieldsBy
  *               fieldType:
  *                 type: string 
  *             example:
+ *               candidate: "606a3f17a33e5d4c87a6ea2f" 
  *               feedbackField: "606a3f17a33e5d4c87a6ea2f"
  *               fieldValue: "Example Value"
  *               fieldType: "Text" 
@@ -1130,6 +1134,8 @@ router.get('/feedback-field-values/:id', interviewProcessController.getFeedbackF
  *           schema:
  *             type: object
  *             properties:
+ *               candidate:
+ *                 type: string 
  *               feedbackField:
  *                 type: string
  *               fieldValue:
@@ -1137,6 +1143,7 @@ router.get('/feedback-field-values/:id', interviewProcessController.getFeedbackF
  *               fieldType:
  *                 type: string 
  *             example:
+ *               feedbackField: "Updated Candidate ID" 
  *               feedbackField: "Updated Field ID"
  *               fieldValue: "Updated Example Value"
  *               fieldType: "Updated Text" 
