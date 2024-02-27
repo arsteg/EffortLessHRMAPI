@@ -1112,6 +1112,7 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
   // Create ExpenseReportExpense
   const expenseAttachments = req.body.expenseAttachments;
+  var documentLink;
   for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
@@ -1130,7 +1131,7 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
             "Blob was uploaded successfully. requestId: ",
             uploadBlobResponse.requestId
           );
-        req.body.documentLink=expenseAttachments;
+        req.body.documentLink=documentLink;
         }
   const expenseReportExpense = await ExpenseReportExpense.create(req.body);
 
@@ -1175,6 +1176,7 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const expenseAttachments = req.body.expenseAttachments;
+  var documentLink;
   for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
@@ -1193,7 +1195,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
             "Blob was uploaded successfully. requestId: ",
             uploadBlobResponse.requestId
           );
-        req.body.documentLink=expenseAttachments;
+        req.body.documentLink=documentLink;
         }
   // Update ExpenseReportExpense
   const updatedExpenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(id, req.body, {
