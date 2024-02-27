@@ -447,7 +447,7 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
  *                     leaveCategory:
  *                       type: string
  *                       required: true
- *                     clubbedLeaveCategory:
+ *                     restrictedclubbedLeaveCategory:
  *                       type: string
  *                       required: true
  *     responses:
@@ -546,7 +546,7 @@ router.get('/leave-templates/:id', authController.protect, leaveController.getLe
  *                     leaveCategory:
  *                       type: string
  *                       required: true
- *                     clubbedLeaveCategory:
+ *                     restrictedclubbedLeaveCategory:
  *                       type: string
  *                       required: true
  *     responses:

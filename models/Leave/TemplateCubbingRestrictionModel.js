@@ -11,7 +11,7 @@ var templateCubbingRestrictionSchema = new Schema({
     type: String,
     required: true
   },
-  clubbedCategory: {
+  restrictedClubbedCategory: {
     type: String,
     required: true
   }

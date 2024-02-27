@@ -192,7 +192,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
   createdClubbingRestrictions = await TemplateCubbingRestriction.insertMany(cubbingRestrictionCategories.map(category => ({
     leaveTemplate: leaveTemplate._id,
     category: category.leaveCategory,
-    clubbedCategory: category.clubbedLeaveCategory
+    restrictedClubbedCategory: category.restrictedclubbedLeaveCategory
    })));
  }
  leaveTemplate.applicableCategories=createdCategories;
