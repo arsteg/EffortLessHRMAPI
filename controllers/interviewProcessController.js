@@ -185,6 +185,56 @@ exports.getAllCandidates = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllCandidatesWithData = async (req, res) => {
+  const result = [];
+  try {
+    // Populate candidates with their associated data fields
+    const candidates = await Candidate.find({ company: req.cookies.companyId });
+
+    // Iterate through each candidate
+    for (const candidate of candidates) {
+      const dataFields = await CandidateDataField.find({ company: req.cookies.companyId });
+      candidate.candidateDataFields = []; // Initialize array for this candidate's data fields
+
+      // Iterate through each data field for the candidate
+      for (const dataField of dataFields) {
+        const fieldValue = await CandidateDataFieldValue.findOne({
+          candidate: candidate._id,
+          candidateDataField: dataField._id,
+        });
+
+        // Push the field values for this data field into the candidate's array
+        candidate.candidateDataFields.push({
+          _id: dataField._id,
+          fieldName: dataField.fieldName,
+          fieldValue: fieldValue ? fieldValue.fieldValue : '',
+          fieldType: dataField.fieldType,
+          isRequired:dataField.isRequired
+        });        
+      }
+      // Push the candidate object with associated data fields to the result array
+      result.push({
+        _id: candidate._id,
+        name: candidate.name,
+        email: candidate.email,
+        phoneNumber: candidate.phoneNumber,
+        // ... (include other candidate properties as needed)
+        candidateDataFields: candidate.candidateDataFields,
+      });
+    }
+
+    res.status(201).json({
+      status: 'success',
+      data: result,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+
 //Candidate application API's
 
 exports.createCandidateApplicationStatus = catchAsync(async (req, res, next) => {
