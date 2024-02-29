@@ -127,6 +127,42 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
+const leaveCategory = await LeaveCategory.findById(req.params.id);   
+if (!leaveCategory) {
+  return next(new AppError('Leave Category not found', 404));
+}
+//add validation for use categroy
+if(leaveCategory.isSystemGenerated){
+  return next(new AppError('Leave Category Sytem Generated, you can not delete found', 404));
+}
+else
+{
+await LeaveCategory.findByIdAndDelete(req.params.id);
+ res.status(204).json({
+   status: 'success',
+   data: null,
+ });
+}
+});
+
+exports.deleteLeaveTemplate = catchAsync(async (req, res, next) => {
+  const leaveTemplate = await EmployeeAdvanceAssignment.findById(req.params.id);   
+if (!employeeAdvanceAssignment) {
+  return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+}
+const advanceReport = await ExpenseAdvance.find({}).where('employee').equals(employeeAdvanceAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
+;
+if (advanceReport) {
+  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+}
+await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
+ res.status(204).json({
+   status: 'success',
+   data: null,
+ });
+});
+
 async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
   try {
     const createdCategories = await Promise.all(
@@ -204,8 +240,6 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
     data: leaveTemplate
   });
 });
-
-
 
 exports.getLeaveTemplate = async (req, res, next) => {
     try {
@@ -336,4 +370,3 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
         data: leaveTemplateCategories
     });
 });
-

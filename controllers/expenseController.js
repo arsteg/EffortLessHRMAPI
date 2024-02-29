@@ -1783,9 +1783,6 @@ if (advanceReport) {
   return next(new AppError('Expenses Need to close first before delete assignment', 404));
 }
 await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
-
- 
-
  res.status(204).json({
    status: 'success',
    data: null,
