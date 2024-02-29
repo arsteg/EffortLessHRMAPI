@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var generalSettingSchema = new Schema({  
+var leaveGeneralSettingSchema = new Schema({  
   leaveCycleStart: {
     type: String,
     required: true
@@ -46,6 +46,6 @@ var generalSettingSchema = new Schema({
     type: String,
     required: true
   }
-}, { collection: 'GeneralSetting' });
+}, { collection: 'LeaveGeneralSetting' });
 
-module.exports = mongoose.model('GeneralSetting', generalSettingSchema);
+module.exports = mongoose.model('LeaveGeneralSetting', leaveGeneralSettingSchema);

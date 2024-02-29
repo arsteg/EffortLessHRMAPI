@@ -1,5 +1,5 @@
 const catchAsync = require('../utils/catchAsync');
-const GeneralSetting = require('../models/Leave/GeneralSettingModel');
+const GeneralSetting = require('../models/Leave/LeaveGeneralSettingModel');
 const LeaveCategory = require("../models/Leave/LeaveCategoryModel");
 const LeaveTemplate = require('../models/Leave/LeaveTemplateModel');
 const LeaveTemplateCategory = require('../models/Leave/LeaveTemplateCategoryModel');
