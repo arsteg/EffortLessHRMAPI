@@ -42,6 +42,12 @@ var leaveGeneralSettingSchema = new Schema({
   halfDayMinHour: {
     type: Number
   },
+  fullDayMinMinutes: {
+    type: Number
+  },
+  halfDayMinMinutes: {
+    type: Number
+  },
   company: {
     type: String,
     required: true

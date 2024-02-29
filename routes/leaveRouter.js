@@ -51,6 +51,10 @@ const router = express.Router();
  *                 type: number
  *               halfDayMinHour:
  *                 type: number
+ *               fullDayMinMinutes:
+ *                 type: number
+ *               halfDayMinMinutes:
+ *                 type: number
  *     responses:
  *       201:
  *         description: GeneralSetting successfully added
@@ -152,6 +156,10 @@ router.get('/general-settings-by-company', authController.protect, leaveControll
  *               fullDayMinHour:
  *                 type: number
  *               halfDayMinHour:
+ *                 type: number
+ *               fullDayMinMinutes:
+ *                 type: number
+ *               halfDayMinMinutes:
  *                 type: number
  *     responses:
  *       200:
@@ -384,6 +392,33 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
  *         description: Internal server error
  */
 router.get('/leave-categories', authController.protect, leaveController.getAllLeaveCategory);
+
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories-by-template/{templateId}:
+ *   get:
+ *     summary: Get a leave category by ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: templateId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Template Id of the leave category
+ *     responses:
+ *       200:
+ *         description: Successful response with the leave category
+ *       404:
+ *         description: Leave category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-categories-by-template/:templateId', authController.protect, leaveController.getLeaveCategoryByTemplate);
+
 
 /**
  * @swagger

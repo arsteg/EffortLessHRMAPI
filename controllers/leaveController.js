@@ -100,6 +100,17 @@ exports.getLeaveCategory = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getLeaveCategoryByTemplate = catchAsync(async (req, res, next) => {
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.templateId);
+  if (!leaveTemplateCategory) {
+    return next(new AppError('Leave category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: leaveTemplateCategory
+  });
+});
+
 exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
