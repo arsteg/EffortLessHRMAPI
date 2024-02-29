@@ -272,6 +272,22 @@ router.get('/candidates', interviewProcessController.getAllCandidates);
 
 /**
  * @swagger
+ * /api/v1/interviews/candidatesWithData:
+ *   get:
+ *     summary: Get all candidates for a company with data
+ *     tags: [Interview Process]
+ *     responses:
+ *       200:
+ *         description: Successful response with candidates
+ *       500:
+ *         description: Internal server error
+ */
+//router.get('/candidates', authController.protect, interviewProcessController.getAllCandidates);
+router.get('/candidatesWithData', interviewProcessController.getAllCandidatesWithData);
+
+
+/**
+ * @swagger
  * tags:
  *   name: Interview Process
  *   description: API endpoints for Candidate Application Status
