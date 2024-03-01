@@ -5,6 +5,7 @@ const LeaveTemplate = require('../models/Leave/LeaveTemplateModel');
 const LeaveTemplateCategory = require('../models/Leave/LeaveTemplateCategoryModel');
 const AppError = require('../utils/appError');
 const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestrictionModel');
+const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -158,16 +159,16 @@ await LeaveCategory.findByIdAndDelete(req.params.id);
 });
 
 exports.deleteLeaveTemplate = catchAsync(async (req, res, next) => {
-  const leaveTemplate = await EmployeeAdvanceAssignment.findById(req.params.id);   
-if (!employeeAdvanceAssignment) {
-  return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+  const leaveTemplateExists = await LeaveTemplate.findById(req.params.id);   
+if (!leaveTemplateExists) {
+  return next(new AppError('EmployeeLeaveAssignment not found', 404));
 }
-const advanceReport = await ExpenseAdvance.find({}).where('employee').equals(employeeAdvanceAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
-;
-if (advanceReport) {
-  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+const employeeLeaveAssignment = await EmployeeLeaveAssignment.find({}).where('user').equals(leaveTemplateExists.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
+console.log(employeeLeaveAssignment);
+if (employeeLeaveAssignment.length>0) {
+  return next(new AppError('Leave Need to close first before delete assignment', 404));
 }
-await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
+await LeaveTemplate.findByIdAndDelete(req.params.id);
  res.status(204).json({
    status: 'success',
    data: null,

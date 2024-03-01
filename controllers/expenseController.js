@@ -812,7 +812,7 @@ exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 
 const expenseReport = await ExpenseReport.find({}).where('employee').equals( req.body.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
   ;
-  if (expenseReport) {
+  if (expenseReport.length>0) {
     return next(new AppError('Expenses Need to close first before delete assignment', 404));
   }
   const expenseTemplate=await ExpenseTemplate.findById(req.body.expenseTemplate);   
@@ -849,7 +849,7 @@ if (!userExpenseAssignment) {
 }
 const expenseReport = await ExpenseReport.find({}).where('employee').equals(userExpenseAssignment.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
 ;
-if (expenseReport) {
+if (expenseReport.length>0) {
   return next(new AppError('Expenses Need to close first before delete assignment', 404));
 }
  await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);  
@@ -1779,7 +1779,7 @@ if (!employeeAdvanceAssignment) {
 }
 const advanceReport = await ExpenseAdvance.find({}).where('employee').equals(employeeAdvanceAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
 ;
-if (advanceReport) {
+if (advanceReport.length>0) {
   return next(new AppError('Expenses Need to close first before delete assignment', 404));
 }
 await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
