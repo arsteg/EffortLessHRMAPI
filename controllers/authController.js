@@ -293,7 +293,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // It is a standard to send header in this format
   // Key: Authorization
   // Value: Bearer <TOKEN_VALUE>
-  let token;  
+  let token;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')

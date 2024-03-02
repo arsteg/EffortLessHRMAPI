@@ -678,7 +678,56 @@ router.delete('/leave-template/:id', authController.protect, leaveController.del
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LeaveTemplateCategory'
+ *             type: object
+ *             properties:
+ *               leaveTemplate:
+ *                 type: string
+ *                 required: true
+ *                 description: ID of the leave template
+ *               leaveCategories:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                      leaveCategory:
+ *                        type: string
+ *                        description: ID of the leave category
+ *                      limitNumberOfTimesApply:
+ *                        type: boolean
+ *                        description: Whether there's a limit on the number of times the employee can apply for leave
+ *                      maximumNumbersEmployeeCanApply:
+ *                        type: integer
+ *                        description: Maximum number of times an employee can apply for leave
+ *                      maximumNumbersEmployeeCanApplyType:
+ *                        type: string
+ *                        description: Type of maximum number of times an employee can apply for leave
+ *                      dealWithNewlyJoinedEmployee:
+ *                        type: string
+ *                        description: Method to deal with newly joined employees regarding leave
+ *                      daysToCompleteToBecomeEligibleForLeave:
+ *                        type: integer
+ *                        description: Number of days required to become eligible for leave
+ *                      isEmployeeGetCreditedTheEntireAmount:
+ *                        type: boolean
+ *                        description: Whether the employee gets credited the entire amount of leave
+ *                      extendLeaveCategory:
+ *                        type: boolean
+ *                        description: Whether leave category can be extended
+ *                      extendMaximumDayNumber:
+ *                        type: integer
+ *                        description: Maximum number of days leave category can be extended
+ *                      extendFromCategory:
+ *                        type: string
+ *                        description: Category from which leave can be extended
+ *                      negativeBalanceCap:
+ *                        type: integer
+ *                        description: Negative balance cap for leave
+ *                      annualAccrualRatePerPeriod:
+ *                        type: integer
+ *                        description: Annual accrual rate per period for leave
+ *                      categoryApplicable:
+ *                        type: string
+ *                        description: Applicable category for leave
  *     responses:
  *       201:
  *         description: LeaveTemplateCategory successfully created
@@ -691,7 +740,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
 
 /**
  * @swagger
- * /api/v1/leave/leave-template-categories/{id}:
+ * /api/v1/leave/leave-template-categories/{leaveTemplateId}:
  *   get:
  *     summary: Get a LeaveTemplateCategory by ID
  *     security: [{
@@ -700,7 +749,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
  *     tags: [Leave Management]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: leaveTemplateId
  *         required: true
  *         schema:
  *           type: string
@@ -713,40 +762,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-template-categories/:id',authController.protect, leaveController.getLeaveTemplateCategory);
-
-/**
- * @swagger
- * /api/v1/leave/leave-template-categories/{id}:
- *   put:
- *     summary: Update a LeaveTemplateCategory by ID
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     tags: [Leave Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the LeaveTemplateCategory
- *     requestBody:
- *       description: New LeaveTemplateCategory details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/LeaveTemplateCategory'
- *     responses:
- *       200:
- *         description: Successful response with the updated LeaveTemplateCategory
- *       404:
- *         description: LeaveTemplateCategory not found
- *       500:
- *         description: Internal server error
- */
-router.put('/leave-template-categories/:id',authController.protect, leaveController.updateLeaveTemplateCategory);
+router.get('/leave-template-categories/:leaveTemplateId',authController.protect, leaveController.getLeaveTemplateCategoryByTemplate);
 
 /**
  * @swagger

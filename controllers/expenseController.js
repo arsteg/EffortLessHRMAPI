@@ -655,7 +655,6 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
 
 exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
    const { expenseTemplate, expenseCategories } = req.body;
-console.log("hello");
   // Validate incoming data
   if (!expenseTemplate || !expenseCategories || !Array.isArray(expenseCategories) || expenseCategories.length === 0) {
     return next(new AppError('Invalid request data', 400));

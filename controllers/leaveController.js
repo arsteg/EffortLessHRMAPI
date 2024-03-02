@@ -6,6 +6,7 @@ const LeaveTemplateCategory = require('../models/Leave/LeaveTemplateCategoryMode
 const AppError = require('../utils/appError');
 const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestrictionModel');
 const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
+const mongoose = require("mongoose");
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -69,6 +70,7 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
     data: generalSetting
   });
 });
+
 exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
   const company = req.cookies.companyId;
@@ -281,6 +283,43 @@ exports.getLeaveTemplate = async (req, res, next) => {
 
 exports.updateLeaveTemplate = async (req, res, next) => {
     try {
+      const { leaveCategories,cubbingRestrictionCategories, ...leaveTemplateData } = req.body;
+
+      // Check if policyLabel is provided
+      if (!leaveTemplateData.label) {
+        return next(new AppError('Label is required', 400));
+      }
+    
+      // Check if policyLabel already exists
+      const existingTemplate = await LeaveTemplate.findOne({ 'label': expenseTemplateData.Label ,_id: { $ne: req.params.id }});
+    
+      if (existingTemplate) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Leave Template Label already exists',
+        });
+      }
+      if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
+        return next(new AppError('Leave Category Not Exists in Request', 400));
+      }
+        // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  for (const category of leaveCategories) {
+    const result = await LeaveCategory.findById(category.leaveCategory);
+    console.log(result);
+     if (!result) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid Category',
+      });
+    }
+  }
+
+  
         const leaveTemplate = await LeaveTemplate.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!leaveTemplate) {
             res.status(404).json({
@@ -289,6 +328,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
             });
             return;
         }
+        leaveTemplate.leaveCategories = await updateOrCreateLeaveTemplateCategories(req.params.id, req.body.leaveCategories);
         res.status(200).json({
             status: 'success',
             data: leaveTemplate
@@ -301,9 +341,43 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     }
 };
 
+async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCategories) {
+  const existingCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.leaveCategory.equals(category.leaveCategory)
+    );
+    if (!existingCategory) {
+     // Create new category
+      const newCategory = new LeaveTemplateCategory({
+        leaveTemplate: leaveTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.leaveCategory === existing.leaveCategory.toString())
+  );
+  
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return LeaveTemplateCategory.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
+  return finalCategories;
+
+}
+
 exports.getAllLeaveTemplates = async (req, res, next) => {
     try {
-        const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId);;
+        const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId);
         if(leaveTemplates)
         {
         for(var i = 0; i < leaveTemplates.length; i++) {   
@@ -340,31 +414,64 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
 
 // Create a new LeaveTemplateCategory
 exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
-    const leaveTemplateCategory = await LeaveTemplateCategory.create(req.body);
+  
+  const { leaveTemplate, leaveCategories } = req.body;
+  // Validate incoming data
+  if (!leaveTemplate || !leaveCategories || !Array.isArray(leaveCategories) || leaveCategories.length === 0) {
+    return next(new AppError('Invalid request data', 400));
+  }
+  for (const category of leaveCategories) {    
+      const result = await LeaveCategory.findById(category.leaveCategory);
+      if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Category',
+        });      
+    }
+  }
+  // Iterate through expenseCategories to create or update records
+  const leaveTemplateCategories =  await createLeaveTemplateCategories(mongoose.Types.ObjectId(leaveTemplate), leaveCategories);
     res.status(201).json({
-        status: 'success',
-        data: leaveTemplateCategory
+      status: 'success',
+      data: leaveTemplateCategories     
     });
+
 });
+
+async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
+  try {
+    const updatedCategories = await Promise.all(
+      leaveCategories.map(async (category) => {
+        const existingCategory = await LeaveTemplateCategory.findOne({
+          leaveCategory: category.leaveCategory,
+          leaveTemplate: leaveTemplateId,
+        });
+
+        if (existingCategory) {
+          return LeaveTemplateCategory.findByIdAndUpdate(
+            existingCategory._id,
+            { $set: { ...category } },
+            { new: true }
+          );
+        } else {
+          const newCategory = new LeaveTemplateCategory({
+            leaveTemplate: leaveTemplateId,
+            ...category,
+          });
+          return newCategory.save();
+        }
+      })
+    );
+
+    return updatedCategories;
+  } catch (err) {
+    throw new AppError('Internal server error', 500);
+  }
+}
 
 // Get a LeaveTemplateCategory by ID
-exports.getLeaveTemplateCategory = catchAsync(async (req, res, next) => {
-    const leaveTemplateCategory = await LeaveTemplateCategory.findById(req.params.id);
-    if (!leaveTemplateCategory) {
-        return next(new AppError('LeaveTemplateCategory not found', 404));
-    }
-    res.status(200).json({
-        status: 'success',
-        data: leaveTemplateCategory
-    });
-});
-
-// Update a LeaveTemplateCategory by ID
-exports.updateLeaveTemplateCategory = catchAsync(async (req, res, next) => {
-    const leaveTemplateCategory = await LeaveTemplateCategory.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    });
+exports.getLeaveTemplateCategoryByTemplate = catchAsync(async (req, res, next) => {
+    const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.leaveTemplateId);;
     if (!leaveTemplateCategory) {
         return next(new AppError('LeaveTemplateCategory not found', 404));
     }
@@ -376,7 +483,7 @@ exports.updateLeaveTemplateCategory = catchAsync(async (req, res, next) => {
 
 // Get all LeaveTemplateCategories
 exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
-    const leaveTemplateCategories = await LeaveTemplateCategory.find();
+    const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('company').equals(req.cookies.companyId);
     res.status(200).json({
         status: 'success',
         data: leaveTemplateCategories
