@@ -773,4 +773,113 @@ router.get('/leave-template-categories/:leaveTemplateId',authController.protect,
  */
 router.get('/leave-template-categories',authController.protect, leaveController.getAllLeaveTemplateCategories);
 
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-assignments:
+ *   post:
+ *     summary: Create a new EmployeeLeaveAssignment
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeLeaveAssignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               leaveTemplate:
+ *                 type: string
+ *                 required: true
+ *               primaryApprover:
+ *                 type: string
+ *                 required: false
+ *               secondaryApprover:
+ *                 type: string
+ *                 required: false
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveAssignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-leave-assignments', authController.protect, leaveController.createEmployeeLeaveAssignment);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-assignments-by-user/{userId}:
+ *   get:
+ *     summary: Get an EmployeeLeaveAssignment by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the EmployeeLeaveAssignment
+ *       404:
+ *         description: EmployeeLeaveAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-assignments-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveAssignmentByUser);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-assignments/{id}:
+ *   delete:
+ *     summary: Delete an EmployeeLeaveAssignment by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the EmployeeLeaveAssignment
+ *     responses:
+ *       204:
+ *         description: EmployeeLeaveAssignment successfully deleted
+ *       404:
+ *         description: EmployeeLeaveAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-leave-assignments/:id', authController.protect, leaveController.deleteEmployeeLeaveAssignment);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-assignments:
+ *   get:
+ *     summary: Get all EmployeeLeaveAssignments
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with EmployeeLeaveAssignments
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-assignments', authController.protect, leaveController.getAllEmployeeLeaveAssignments);
+
 module.exports = router;

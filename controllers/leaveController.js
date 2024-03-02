@@ -291,7 +291,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       }
     
       // Check if policyLabel already exists
-      const existingTemplate = await LeaveTemplate.findOne({ 'label': expenseTemplateData.Label ,_id: { $ne: req.params.id }});
+      const existingTemplate = await LeaveTemplate.findOne({ 'label': LeaveTemplateData.Label ,_id: { $ne: req.params.id }});
     
       if (existingTemplate) {
         return res.status(400).json({
@@ -437,7 +437,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
         });      
     }
   }
-  // Iterate through expenseCategories to create or update records
+  // Iterate through LeaveCategories to create or update records
   const leaveTemplateCategories =  await createLeaveTemplateCategories(mongoose.Types.ObjectId(leaveTemplate), leaveCategories);
     res.status(201).json({
       status: 'success',
@@ -496,4 +496,103 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
         status: 'success',
         data: leaveTemplateCategories
     });
+});
+
+exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const employeeLeaveAssignmentExists = await EmployeeLeaveAssignment.find({}).where('user').equals(req.body.user);
+  var employeeLeaveAssignment;
+  const leaveTemplate=await LeaveTemplate.findById(req.body.leaveTemplate);   
+  if (leaveTemplate && leaveTemplate.approvalType == "template-wise")
+  {    
+        req.body.primaryApprover = leaveTemplate.primaryApprover;
+        req.body.secondaryApprover = leaveTemplate.primaryApprover;      
+  }  
+  if (employeeLeaveAssignmentExists.length<=0) {   
+     
+     employeeLeaveAssignment = await EmployeeLeaveAssignment.create(req.body);
+  }
+  else{
+    employeeLeaveAssignment = await EmployeeLeaveAssignment.findByIdAndUpdate(
+      employeeLeaveAssignmentExists[0]._id,
+     req.body,
+     {
+       new: true,
+       runValidators: true,
+     }
+   );   
+  }
+ 
+ res.status(201).json({
+   status: 'success',
+   data: employeeLeaveAssignment,
+ });
+});
+
+exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
+ const employeeLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);
+ if (!employeeLeaveAssignment) {
+   return next(new AppError('EmployeeLeaveAssignment not found', 404));
+ }
+ res.status(200).json({
+   status: 'success',
+   data: employeeLeaveAssignment,
+ });
+});
+exports.getEmployeeLeaveAssignmentByUser = catchAsync(async (req, res, next) => {
+ const employeeLeaveAssignment = await EmployeeLeaveAssignment.find({}).where('user').equals(req.params.userId);
+ 
+ res.status(200).json({
+   status: 'success',
+   data: employeeLeaveAssignment,
+ });
+});
+
+exports.getApplicableLeaveSettingByUser = catchAsync(async (req, res, next) => {
+ const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({user:req.params.userId});
+ var leaveTemplate=[];
+ if (employeeLeaveAssignment) {
+  
+ leaveTemplate = await LeaveTemplate.findById(employeeLeaveAssignment.leaveTemplate);   
+ const LeaveTemplateApplicableCategories = await LeaveTemplateApplicableCategories.find({}).where('LeaveTemplate').equals(employeeLeaveAssignment.LeaveTemplate);
+ LeaveTemplate.applicableCategories = LeaveTemplateApplicableCategories;
+ }
+ res.status(200).json({
+   status: 'success',
+   data: LeaveTemplate,
+ });
+});
+
+exports.deleteEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
+ 
+//validation
+const userLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);   
+if (!userLeaveAssignment) {
+ return next(new AppError('EmployeeLeaveAssignment not found', 404));
+}
+const LeaveReport = await LeaveReport.find({}).where('employee').equals(userLeaveAssignment.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
+;
+if (LeaveReport.length>0) {
+ return next(new AppError('Leaves Need to close first before delete assignment', 404));
+}
+await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);  
+ res.status(204).json({
+   status: 'success',
+   data: null,
+ });
+});
+
+exports.getAllEmployeeLeaveAssignments = catchAsync(async (req, res, next) => {
+ const employeeLeaveAssignments = await EmployeeLeaveAssignment.find({}).where('company').equals(req.cookies.companyId);
+ res.status(200).json({
+   status: 'success',
+   data: employeeLeaveAssignments,
+ });
 });
