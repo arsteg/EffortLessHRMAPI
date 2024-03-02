@@ -474,22 +474,16 @@ router.delete('/leave-categories/:id', authController.protect, leaveController.d
  *                 required: true
  *               primaryApprover:
  *                 type: string
- *                 required: true
  *               secondaryApprover:
  *                 type: string
- *                 required: true
  *               isCommentMandatory:
  *                 type: boolean
- *                 required: true
  *               clubbingRestrictions:
  *                 type: boolean
- *                 required: true
  *               weeklyOffClubTogether:
  *                 type: boolean
- *                 required: true
  *               holidayClubTogether:
  *                 type: boolean
- *                 required: true
  *               leaveCategories:
  *                 type: array
  *                 items:
@@ -503,7 +497,6 @@ router.delete('/leave-categories/:id', authController.protect, leaveController.d
  *                 type: array
  *                 items:
  *                   type: object
- *                   required: true
  *                   properties:
  *                     leaveCategory:
  *                       type: string
@@ -602,7 +595,6 @@ router.get('/leave-templates/:id', authController.protect, leaveController.getLe
  *                 type: array
  *                 items:
  *                   type: object
- *                   required: true
  *                   properties:
  *                     leaveCategory:
  *                       type: string

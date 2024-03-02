@@ -17,34 +17,31 @@ var leaveTemplateSchema = new Schema({
   primaryApprover: {
     type: String,
     required: function() {
-      return this.approvalType === 'some_approval_type'; // Adjust the condition based on your actual logic
+      return this.approvalType === 'template-wise'; // Adjust the condition based on your actual logic
     }
   },
   secondaryApprover: {
     type: String,
     required: function() {
-      return this.approvalType === 'some_other_approval_type'; // Adjust the condition based on your actual logic
+      return this.approvalType === 'template-wise'; // Adjust the condition based on your actual logic
     }
   },
   isCommentMandatory: {
     type: Boolean,
-    required: true
+    default: false
   },
   clubbingRestrictions: {
     type: Boolean,
-    required: true
+    default: false
   },
   weeklyOffClubTogether: {
     type: Boolean,
-    required: function() {
-      return this.clubbingRestrictions;
-    }
+    default:false
+    
   },
   holidayClubTogether: {
     type: Boolean,
-    required: function() {
-      return this.clubbingRestrictions;
-    }
+   default:false
   },
   company: {
     type: mongoose.Schema.ObjectId,
