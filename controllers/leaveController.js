@@ -303,21 +303,17 @@ exports.updateLeaveTemplate = async (req, res, next) => {
         return next(new AppError('Leave Category Not Exists in Request', 400));
       }
         // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  for (const category of leaveCategories) {
-    const result = await LeaveCategory.findById(category.leaveCategory);
-    console.log(result);
-     if (!result) {
-      return res.status(400).json({
-        status: 'failure',
-        message: 'Invalid Category',
-      });
-    }
-  }
+ 
+      for (const category of leaveCategories) {
+        const result = await LeaveCategory.findById(category.leaveCategory);
+        console.log(result);
+        if (!result) {
+          return res.status(400).json({
+            status: 'failure',
+            message: 'Invalid Category',
+          });
+        }
+      }
 
   
         const leaveTemplate = await LeaveTemplate.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -329,6 +325,18 @@ exports.updateLeaveTemplate = async (req, res, next) => {
             return;
         }
         leaveTemplate.leaveCategories = await updateOrCreateLeaveTemplateCategories(req.params.id, req.body.leaveCategories);
+       
+        await TemplateCubbingRestriction.deleteMany({
+           leaveCategory: leaveTemplate._id,
+        });
+        if (Array.isArray(cubbingRestrictionCategories)) {  
+          // Create TemplateCubbingRestriction instances
+          leaveTemplate.clubbingRestrictions = await TemplateCubbingRestriction.insertMany(cubbingRestrictionCategories.map(category => ({
+            leaveTemplate: leaveTemplate._id,
+            category: category.leaveCategory,
+            restrictedClubbedCategory: category.restrictedclubbedLeaveCategory
+           })));
+         }
         res.status(200).json({
             status: 'success',
             data: leaveTemplate
