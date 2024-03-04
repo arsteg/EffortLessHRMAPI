@@ -835,7 +835,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
       url: url
     });    
   
-
+  }
   if(req.body.comment!="")
   {  
     const newTaskAttachmentList = await TaskAttachments.find({}).where('comment').equals(req.body.comment);  
@@ -857,8 +857,6 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     }
   });
   }
-
-}
 });
 
 exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
