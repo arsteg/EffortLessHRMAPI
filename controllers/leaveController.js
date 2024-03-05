@@ -7,6 +7,7 @@ const AppError = require('../utils/appError');
 const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestrictionModel');
 const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
 const mongoose = require("mongoose");
+const LeaveGrant = require('../models/Leave/LeaveGrantModel');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -291,7 +292,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       }
     
       // Check if policyLabel already exists
-      const existingTemplate = await LeaveTemplate.findOne({ 'label': LeaveTemplateData.Label ,_id: { $ne: req.params.id }});
+      const existingTemplate = await LeaveTemplate.findOne({ 'label': leaveTemplateData.Label ,_id: { $ne: req.params.id }});
     
       if (existingTemplate) {
         return res.status(400).json({
@@ -596,3 +597,69 @@ exports.getAllEmployeeLeaveAssignments = catchAsync(async (req, res, next) => {
    data: employeeLeaveAssignments,
  });
 });
+
+exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {  
+ // Extract companyId from req.cookies
+ const companyId = req.cookies.companyId;
+ // Check if companyId exists in cookies
+ if (!companyId) {
+   return next(new AppError('Company ID not found in cookies', 400));
+ }
+ const {
+  users,    
+  ...grantData
+} = req.body;
+if (!Array.isArray(users) || users.length === 0) {
+  return next(new AppError('users are required', 400));
+} 
+var leavsGrants=[];
+for(var i = 0; i < users.length; i++) {
+  const leavegrantExits = await LeaveGrant.findOne({
+    employee: users[i].user,
+    date:grantData.date
+  });   
+ ;
+  if (!leavegrantExits) {
+    return next(new AppError('Leave alredy Granted for Same user on same date', 404));
+  }
+  // Add company to the request body
+  grantData.company = companyId;
+  grantData.employee=users[i].user;
+  grantData.usedOn=grantData.date;
+  grantData.appliedOn=new Date();
+  // Create LeaveTemplate instance
+  const leaveGrant = await LeaveGrant.create(grantData);  
+  leavsGrants.push(leaveGrant);
+}
+  // Send success response
+  res.status(201).json({
+    status: 'success',
+    data: leavsGrants
+  });
+});
+
+exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
+   const leaveGrants = await LeaveGrant.find({}).where('employee').equals(req.params.userId);
+  res.status(200).json({
+    status: 'success',
+    data: leaveGrants,
+  });
+ });
+ 
+ exports.deleteEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
+  
+
+ await LeaveGrant.findByIdAndDelete(req.params.id);  
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+ });
+ 
+ exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
+  const leaveGrants = await LeaveGrant.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: leaveGrants,
+  });
+ });

@@ -844,8 +844,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
       data: {
         taskAttachmentList:newTaskAttachmentList
       }
-    });
- 
+    }); 
   }
   else
   {

@@ -773,7 +773,6 @@ router.get('/leave-template-categories/:leaveTemplateId',authController.protect,
  */
 router.get('/leave-template-categories',authController.protect, leaveController.getAllLeaveTemplateCategories);
 
-
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-assignments:
@@ -881,5 +880,152 @@ router.delete('/employee-leave-assignments/:id', authController.protect, leaveCo
  *         description: Internal server error
  */
 router.get('/employee-leave-assignments', authController.protect, leaveController.getAllEmployeeLeaveAssignments);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-grant:
+ *   post:
+ *     summary: Create a new EmployeeLeaveGrant
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeLeaveGrant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       required: true
+ *               status:
+ *                 type: string
+ *                 required: true
+ *               level1Reason:
+ *                 type: string
+ *                 required: true
+ *               level2Reason:
+ *                 type: string
+ *                 required: true
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               comment:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveAssignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-leave-grant', authController.protect, leaveController.createEmployeeLeaveGrant);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-grant-by-user/{userId}:
+ *   get:
+ *     summary: Get an Employee Leave Grant by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Leave Grant
+ *       404:
+ *         description: Employee Leave Grant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-grant-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveGrantByUser);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-grant/{id}:
+ *   delete:
+ *     summary: Delete an Employee Leave Grant by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Leave Grant
+ *     responses:
+ *       204:
+ *         description: Employee Leave Grant successfully deleted
+ *       404:
+ *         description: Employee Leave Grant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-leave-grant/:id', authController.protect, leaveController.deleteEmployeeLeaveGrant);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-grant:
+ *   get:
+ *     summary: Get all Employee Leave Grant
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Employee Leave Grant
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-grant', authController.protect, leaveController.getAllEmployeeLeaveGrant);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-grant-by-user/{userId}:
+ *   get:
+ *     summary: Get an Employee Leave Grant by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Leave Grant
+ *       404:
+ *         description: Employee Leave Grant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-grant/:id', authController.protect, leaveController.getAllEmployeeLeaveGrant);
 
 module.exports = router;
