@@ -663,3 +663,11 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
     data: leaveGrants,
   });
  });
+
+ exports.getEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
+  const leaveGrants = await LeaveGrant.findById(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    data: leaveGrants,
+  });
+ });

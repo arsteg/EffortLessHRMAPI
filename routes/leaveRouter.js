@@ -977,7 +977,7 @@ router.get('/employee-leave-grant', authController.protect, leaveController.getA
 
 /**
  * @swagger
- * /api/v1/Leave/employee-leave-grant-by-user/{userId}:
+ * /api/v1/Leave/employee-leave-grant/{id}:
  *   get:
  *     summary: Get an Employee Leave Grant by ID
  *     tags: [Leave Management]
@@ -986,19 +986,19 @@ router.get('/employee-leave-grant', authController.protect, leaveController.getA
  *     }]
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: userId of the User
+ *         description: id of the Leave Grant
  *     responses:
  *       200:
- *         description: Successful response with the Employee Leave Grant
+ *         description: Successful response with the Leave Grant
  *       404:
- *         description: Employee Leave Grant not found
+ *         description: Leave Grant not found
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-grant/:id', authController.protect, leaveController.getAllEmployeeLeaveGrant);
+router.get('/employee-leave-grant/:id', authController.protect, leaveController.getEmployeeLeaveGrant);
 
 module.exports = router;
