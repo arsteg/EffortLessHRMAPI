@@ -395,33 +395,6 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
 
 /**
  * @swagger
- * /api/v1/leave/leave-categories-by-template/{templateId}:
- *   get:
- *     summary: Get a leave category by ID
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     tags: [Leave Management]
- *     parameters:
- *       - in: path
- *         name: templateId
- *         required: true
- *         schema:
- *           type: string
- *         description: Template Id of the leave category
- *     responses:
- *       200:
- *         description: Successful response with the leave category
- *       404:
- *         description: Leave category not found
- *       500:
- *         description: Internal server error
- */
-router.get('/leave-categories-by-template/:templateId', authController.protect, leaveController.getLeaveCategoryByTemplate);
-
-
-/**
- * @swagger
  * /api/v1/leave/leave-categories/{id}:
  *   delete:
  *     summary: Delete an Leave Category by ID
@@ -732,7 +705,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
 
 /**
  * @swagger
- * /api/v1/leave/leave-template-categories/{leaveTemplateId}:
+ * /api/v1/leave/leave-template-categories-by-template/{leaveTemplateId}:
  *   get:
  *     summary: Get a LeaveTemplateCategory by ID
  *     security: [{
@@ -754,7 +727,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-template-categories/:leaveTemplateId',authController.protect, leaveController.getLeaveTemplateCategoryByTemplate);
+router.get('/leave-template-categories-by-template/:leaveTemplateId',authController.protect, leaveController.getLeaveTemplateCategoryByTemplate);
 
 /**
  * @swagger
