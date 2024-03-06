@@ -141,7 +141,16 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
     data: leaveCategory
   });
 });
-
+exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
+  const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId);
+  if (!leaveCategory) {
+    return next(new AppError('Leave category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: leaveCategory
+  });
+});
 exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
 const leaveCategory = await LeaveCategory.findById(req.params.id);   
 if (!leaveCategory) {
@@ -578,11 +587,7 @@ const userLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id
 if (!userLeaveAssignment) {
  return next(new AppError('EmployeeLeaveAssignment not found', 404));
 }
-const LeaveReport = await LeaveReport.find({}).where('employee').equals(userLeaveAssignment.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
-;
-if (LeaveReport.length>0) {
- return next(new AppError('Leaves Need to close first before delete assignment', 404));
-}
+
 await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);  
  res.status(204).json({
    status: 'success',
@@ -671,3 +676,4 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
     data: leaveGrants,
   });
  });
+

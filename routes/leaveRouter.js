@@ -392,6 +392,31 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
  *         description: Internal server error
  */
 router.get('/leave-categories', authController.protect, leaveController.getAllLeaveCategory);
+/**
+ * @swagger
+ * /api/v1/leave/leave-categories-by-user/{userId}:
+ *   get:
+ *     summary: Get a leave category by UserId
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the leave category
+ *     responses:
+ *       200:
+ *         description: Successful response with the leave category
+ *       404:
+ *         description: Leave category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-categories-by-user/:userId', authController.protect, leaveController.getLeaveCategory);
 
 /**
  * @swagger
