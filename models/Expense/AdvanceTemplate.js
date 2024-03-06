@@ -4,8 +4,7 @@ var Schema = mongoose.Schema;
 var advanceTemplateSchema = new Schema({
   policyLabel: String,
   approvalType: {
-    type: String,
-    enum: ['employee-wise,template-wise'],
+    type: String,   
     default: 'employee-wise'
   },
   approvalLevel: {
