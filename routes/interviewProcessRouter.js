@@ -1059,6 +1059,24 @@ router.get('/feedback-fields', interviewProcessController.getAllFeedbackFieldsBy
 
 /**
  * @swagger
+ * /api/v1/interviews/feedback-fields-with-data:
+ *   get:
+ *     summary: Get all FeedbackFields with data
+ *     tags: [Interview Process] 
+ *     responses:
+ *       200:
+ *         description: Successful response with FeedbackFields
+ *       404:
+ *         description: No FeedbackFields found for the company
+ *       500:
+ *         description: Internal server error
+ */
+//router.get('/feedback-fields/company/:companyId', authController.protect, interviewProcessController.getAllFeedbackFieldsByCompany);
+router.get('/feedback-fields-with-data', interviewProcessController.getAllCandidatesFeedbackData);
+
+
+/**
+ * @swagger
  * tags:
  *   name: Interview Process
  *   description: API endpoints for managing FeedbackFieldValue
