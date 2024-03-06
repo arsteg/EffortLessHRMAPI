@@ -206,6 +206,7 @@ exports.getAllCandidatesWithData = async (req, res) => {
         // Push the field values for this data field into the candidate's array
         candidate.candidateDataFields.push({
           _id: dataField._id,
+          dataFieldValue: fieldValue,
           fieldName: dataField.fieldName,
           fieldValue: fieldValue ? fieldValue.fieldValue : '',
           fieldType: dataField.fieldType,
@@ -393,6 +394,49 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     status: 'success',
     data: candidateDataFieldValue,
   });
+});
+
+exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
+  const { candidateDataField, fieldValue, fieldType, candidate } = req.body;
+  const company = req.cookies.companyId;
+  const userId = req.cookies.userId;
+
+  // Check if document already exists
+  const existingRecord = await CandidateDataFieldValue.findOne({
+    candidateDataField,
+    candidate,
+  });
+
+  if (existingRecord) {
+    // Update existing record
+    existingRecord.fieldValue = fieldValue;
+    existingRecord.updatedOn = new Date();
+    existingRecord.updatedBy = userId;
+    await existingRecord.save();
+    res.status(200).json({
+      status: 'success',
+      message: 'Record updated successfully',
+      data: existingRecord,
+    });
+  } else {
+    // Create new record
+    const newRecord = await CandidateDataFieldValue.create({
+      candidateDataField,
+      fieldValue,
+      fieldType,
+      candidate,
+      company,
+      createdOn: new Date(),
+      updatedOn: new Date(),
+      createdBy: userId,
+      updatedBy: userId,
+    });
+    res.status(201).json({
+      status: 'success',
+      message: 'Record created successfully',
+      data: newRecord,
+    });
+  }
 });
 
 exports.getCandidateDataFieldValue = catchAsync(async (req, res, next) => {
