@@ -1026,4 +1026,211 @@ router.get('/employee-leave-grant', authController.protect, leaveController.getA
  */
 router.get('/employee-leave-grant/:id', authController.protect, leaveController.getEmployeeLeaveGrant);
 
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application:
+ *   post:
+ *     summary: Create a new EmployeeLeaveApplication
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeLeaveApplication details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                type: string
+ *                required: true
+ *               leaveCategory:
+ *                 type: string
+ *                 required: true
+ *               level1Reason:
+ *                 type: string
+ *                 required: true
+ *               level2Reason:
+ *                 type: string
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               comment:
+ *                 type: string
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 required: true
+ *               isHalfDayOption:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveApplication successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-leave-application', authController.protect, leaveController.createEmployeeLeaveApplication);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application/{id}:
+ *   put:
+ *     summary: Create a new EmployeeLeaveApplication
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: EmployeeLeaveApplication details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                type: string
+ *                required: true
+ *               leaveCategory:
+ *                 type: string
+ *                 required: true
+ *               level1Reason:
+ *                 type: string
+ *                 required: true
+ *               level2Reason:
+ *                 type: string
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               comment:
+ *                 type: string
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 required: true
+ *               isHalfDayOption:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveApplication successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-leave-application/:id', authController.protect, leaveController.updateEmployeeLeaveApplication);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application-by-user/{userId}:
+ *   get:
+ *     summary: Get an Employee Leave Application by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Leave Grant
+ *       404:
+ *         description: Employee Leave Entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-application-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveApplicationByUser);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application/{id}:
+ *   delete:
+ *     summary: Delete an Employee Leave Application by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Leave Application
+ *     responses:
+ *       204:
+ *         description: Employee Leave Application successfully deleted
+ *       404:
+ *         description: Employee Leave Application not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-leave-application/:id', authController.protect, leaveController.deleteEmployeeLeaveApplication);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application:
+ *   get:
+ *     summary: Get all Employee Leave Entry
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Employee Leave Entry
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-application', authController.protect, leaveController.getAllEmployeeLeaveApplication);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application/{id}:
+ *   get:
+ *     summary: Get an Employee Leave Application by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: id of the Leave Application
+ *     responses:
+ *       200:
+ *         description: Successful response with the Leave Application
+ *       404:
+ *         description: Leave Entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-application/:id', authController.protect, leaveController.getEmployeeLeaveApplication);
+
 module.exports = router;

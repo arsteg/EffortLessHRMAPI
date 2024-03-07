@@ -8,6 +8,8 @@ const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestr
 const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
 const mongoose = require("mongoose");
 const LeaveGrant = require('../models/Leave/LeaveGrantModel');
+const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
+ 
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -676,4 +678,120 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
     data: leaveGrants,
   });
  });
-
+ 
+ exports.createEmployeeLeaveApplication = async (req, res, next) => {
+     try {
+         const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status } = req.body;
+         
+         const newLeaveApplication = await LeaveApplication.create({
+             employee,
+             leaveCategory,
+             level1Reason,
+             level2Reason,
+             startDate,
+             endDate,
+             comment,
+             isHalfDayOption,
+             status,
+             company: req.cookies.companyId // Assuming companyId is stored in cookies
+         });
+         
+         res.status(201).json({
+             status: 'success',
+             data: newLeaveApplication
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
+     try {
+         const { id } = req.params;
+         const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(id, req.body, {
+             new: true,
+             runValidators: true
+         });
+ 
+         if (!updatedLeaveApplication) {
+             return next(new AppError('Employee Leave Application not found', 404));
+         }
+ 
+         res.status(200).json({
+             status: 'success',
+             data: updatedLeaveApplication
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
+     try {
+         const { userId } = req.params;
+         const leaveApplications = await LeaveApplication.find({ employee: userId });
+ 
+         if (leaveApplications.length === 0) {
+             return next(new AppError('Employee Leave Applications not found', 404));
+         }
+ 
+         res.status(200).json({
+             status: 'success',
+             data: leaveApplications
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
+     try {
+         const { id } = req.params;
+         console.log(id);
+         const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);
+ 
+         if (!deletedLeaveApplication) {
+             return next(new AppError('Employee Leave Application not found', 404));
+         }
+ 
+         res.status(204).json({
+             status: 'success',
+             data: null
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
+     try {
+         const leaveApplications = await LeaveApplication.find({ company: req.cookies.companyId });
+ 
+         res.status(200).json({
+             status: 'success',
+             data: leaveApplications
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ exports.getEmployeeLeaveApplication = async (req, res, next) => {
+     try {
+         const { id } = req.params;
+         const leaveApplication = await LeaveApplication.findById(id);
+ 
+         if (!leaveApplication) {
+             return next(new AppError('Leave Application not found', 404));
+         }
+ 
+         res.status(200).json({
+             status: 'success',
+             data: leaveApplication
+         });
+     } catch (error) {
+         next(error);
+     }
+ };
+ 
+ 
