@@ -1231,4 +1231,102 @@ router.delete('/feedback-field-values/:id', interviewProcessController.deleteFee
  */
 router.get('/feedback-field-values', interviewProcessController.getAllFeedbackFieldValuesByCompany);
 
+/**
+ * @swagger
+ * /api/v1/interviews/interviewer:
+ *   post:
+ *     summary: Add a new Interviewer
+ *     tags: [Interview Process]
+ *     requestBody:
+ *       description: Interviewer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               interviewer:
+ *                 type: string
+ *                 required: true 
+ *     responses:
+ *       201:
+ *         description: Interviewer successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/interviewer', interviewProcessController.createInterviewer);
+
+/**
+ * @swagger
+ * /api/v1/interviews/Interviewer:
+ *   get:
+ *     summary: Get all Interviewers
+ *     tags: [Interview Process]
+ *     responses:
+ *       200:
+ *         description: Successful response with Interviewers
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/interviewer', interviewProcessController.getAllInterviewers);
+
+/**
+ * @swagger
+ * /api/v1/interviews/Interviewer/{id}:
+ *   put:
+ *     summary: Update an Interviewer by ID
+ *     tags: [Interview Process]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Interviewer
+ *     requestBody:
+ *       description: New Interviewer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               interviewer:
+ *                 type: string 
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Interviewer
+ *       404:
+ *         description: Interviewer not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/interviewer/:id', interviewProcessController.updateInterviewer);
+
+/**
+ * @swagger
+ * /api/v1/interviews/Interviewer/{id}:
+ *   delete:
+ *     summary: Delete an Interviewer by ID
+ *     tags: [Interview Process]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Interviewer
+ *     responses:
+ *       204:
+ *         description: Interviewer successfully deleted
+ *       404:
+ *         description: Interviewer not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/interviewer/:id', interviewProcessController.deleteInterviewer);
+
+
 module.exports = router;
