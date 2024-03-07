@@ -758,7 +758,16 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
          if (leaveApplications.length === 0) {
              return next(new AppError('Employee Leave Applications not found', 404));
          }
- 
+         for(var i = 0; i < leaveApplications.length; i++) {   
+          const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
+          if(halfDays) 
+          {
+            leaveApplications[i].halfDays=halfDays;
+          }
+          else{
+            leaveApplications[i].halfDays=null;
+          }
+        }
          res.status(200).json({
              status: 'success',
              data: leaveApplications
@@ -790,7 +799,16 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
  exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const leaveApplications = await LeaveApplication.find({ company: req.cookies.companyId });
- 
+         for(var i = 0; i < leaveApplications.length; i++) {   
+          const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
+          if(halfDays) 
+          {
+            leaveApplications[i].halfDays=halfDays;
+          }
+          else{
+            leaveApplications[i].halfDays=null;
+          }
+        }
          res.status(200).json({
              status: 'success',
              data: leaveApplications
@@ -804,7 +822,15 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
      try {
          const { id } = req.params;
          const leaveApplication = await LeaveApplication.findById(id);
- 
+           const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplication._id);
+          if(halfDays) 
+          {
+            leaveApplication.halfDays=halfDays;
+          }
+          else{
+            leaveApplication.halfDays=null;
+          }
+        
          if (!leaveApplication) {
              return next(new AppError('Leave Application not found', 404));
          }

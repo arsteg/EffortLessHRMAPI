@@ -1102,6 +1102,13 @@ router.post('/employee-leave-application', authController.protect, leaveControll
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Leave Application
  *     requestBody:
  *       description: EmployeeLeaveApplication details
  *       required: true
