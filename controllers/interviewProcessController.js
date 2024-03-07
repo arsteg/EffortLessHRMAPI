@@ -837,7 +837,12 @@ exports.createInterviewer = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllInterviewers = catchAsync(async (req, res, next) => {
-  const interviewers = await Interviewer.find();
+  const interviewers = await Interviewer.find().populate('interviewer', { // Specify projection for nested candidate details
+    _id: 1,
+    firstName: 1,
+    lastName: 1,
+    email: 1,    
+  });
   res.status(200).json({
     status: 'success',
     data: interviewers,
