@@ -9,7 +9,7 @@ const CandidateApplicationStatus = require(`../models/InterviewProcess/candidate
 const  CandidateDataFieldValue = require(`../models/InterviewProcess/candidateDataFieldValue`);
 const CandidateInterviewDetails = require(`../models/InterviewProcess/candidateInterviewDetails`);
 const FeedbackField = require(`../models/InterviewProcess/feedbackField`);
-
+const Interviewer = require(`../models/InterviewProcess/interviewer`);
 /**
  * Create a new application status
  */
@@ -558,8 +558,36 @@ exports.deleteCandidateInterviewDetails = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, next) => {
+  const projection = {
+    _id: 1, // Include _id explicitly
+    candidate: 1, // Include candidate details (projection can be nested here)
+    interviewDateTime: 1,
+    scheduledBy: 1,
+    zoomLink: 1,
+    interviewer: 1,
+  };
+
   const candidateInterviewDetails = await CandidateInterviewDetails.find({
     company: req.cookies.companyId,
+  }, projection)
+  .populate('candidate', { // Specify projection for nested candidate details
+    _id: 1,
+    name: 1,
+    email: 1,
+    phoneNumber: 1,    
+  })
+  .populate('interviewer', { // Specify projection for nested interviewer details
+    _id: 1,
+    firstName: 1,
+    lastName: 1,
+    email: 1,
+    jobTitle: 1, // Include jobTitle if needed
+  })
+  .populate('scheduledBy', { // Specify projection for nested scheduledBy details
+    _id: 1,
+    firstName: 1,
+    lastName: 1,
+    email: 1,
   });
 
   if (candidateInterviewDetails.length === 0) {
@@ -571,7 +599,6 @@ exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, n
     data: candidateInterviewDetails,
   });
 });
-
 
 exports.addFeedbackField = catchAsync(async (req, res, next) => {
   const feedbackField = await FeedbackField.create({
@@ -791,5 +818,55 @@ exports.getAllFeedbackFieldValuesByCompany = catchAsync(async (req, res, next) =
   res.status(200).json({
     status: 'success',
     data: feedbackFieldValues,
+  });
+});
+
+exports.createInterviewer = catchAsync(async (req, res, next) => {
+  const interviewer = await Interviewer.create({
+      interviewer: req.body.interviewer,    
+      company: req.cookies.companyId,
+      createdOn: new Date(),
+      updatedOn: new Date(),
+      createdBy: req.cookies.userId,
+      updatedBy: req.cookies.userId
+  });
+  res.status(201).json({
+    status: 'success',
+    data: interviewer,
+  });
+});
+
+exports.getAllInterviewers = catchAsync(async (req, res, next) => {
+  const interviewers = await Interviewer.find();
+  res.status(200).json({
+    status: 'success',
+    data: interviewers,
+  });
+});
+
+exports.updateInterviewer = catchAsync(async (req, res, next) => {
+  const interviewer = await Interviewer.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!interviewer) {
+    return next(new AppError('Interviewer not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: interviewer,
+  });
+});
+
+exports.deleteInterviewer = catchAsync(async (req, res, next) => {
+  const interviewer = await Interviewer.findByIdAndDelete(req.params.id);
+  if (!interviewer) {
+    return next(new AppError('Interviewer not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
   });
 });
