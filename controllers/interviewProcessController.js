@@ -646,22 +646,98 @@ exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllCandidatesFeedbackData = async (req, res) => {  
+  const result = [];
+  try {
+    // Populate candidates with their associated data fields
+    const candidates = await Candidate.find({ company: req.cookies.companyId });
+
+    // Iterate through each candidate
+    for (const candidate of candidates) {
+      const feedbackFields = await FeedbackField.find({ company: req.cookies.companyId });
+      candidate.feedbackFields = [];
+
+      // Iterate through each feedback field for the candidate
+      for (const feedbackField of feedbackFields) {
+        console.log(`feedbackField._id: ${feedbackField._id}`);
+        const feedbackFieldValue = await FeedbackFieldValue.findOne({
+          candidate: candidate._id,
+          feedbackField: feedbackField._id,
+        });
+
+        // Push the feedback field values for this field into the candidate's array
+        candidate.feedbackFields.push({
+          _id: feedbackField._id || null, // Use fieldValue._id if exists, otherwise set to null          
+          feedbackFieldValue:feedbackFieldValue,
+          fieldName: feedbackField.fieldName,
+          fieldValue: feedbackFieldValue?.fieldValue ? feedbackFieldValue?.fieldValue : '',
+          fieldType: feedbackField.fieldType,
+          isRequired: feedbackField.isRequired
+        });
+      }
+      // Push the candidate object with associated feedback fields to the result array
+      result.push({
+        _id: candidate._id,
+        name: candidate.name,
+        email: candidate.email,
+        phoneNumber: candidate.phoneNumber,
+        feedbackFields: candidate.feedbackFields,
+      });
+        }
+
+    res.status(201).json({
+      status: 'success',
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {  
-  const feedbackFieldValue = await FeedbackFieldValue.create({
-    feedbackField: req.body.feedbackField,
-    candidate:req.body.candidate,
-    fieldValue: req.body.fieldValue,
-    fieldType: req.body.fieldType,    
-    company: req.cookies.companyId,
-    createdOn: new Date(),
-    updatedOn: new Date(),
-    createdBy: req.cookies.userId,
-    updatedBy: req.cookies.userId
+  
+  const {feedbackField, fieldValue, fieldType, candidate } = req.body;
+  const company = req.cookies.companyId;
+  const userId = req.cookies.userId;
+
+  // Check if document already exists
+  const existingRecord = await FeedbackFieldValue.findOne({
+    feedbackField,
+    candidate,
   });
-  res.status(201).json({
-    status: 'success',
-    data: feedbackFieldValue,
-  });
+
+  if (existingRecord) {
+    // Update existing record
+    existingRecord.fieldValue = fieldValue;
+    existingRecord.updatedOn = new Date();
+    existingRecord.updatedBy = userId;
+    await existingRecord.save();
+    res.status(200).json({
+      status: 'success',
+      message: 'Record updated successfully',
+      data: existingRecord,
+    });
+  } else {
+    // Create new record
+    const newRecord = await FeedbackFieldValue.create({      
+      feedbackField: feedbackField,
+      candidate:req.body.candidate,
+      fieldValue: req.body.fieldValue,
+      fieldType: req.body.fieldType,    
+      company: req.cookies.companyId,
+      createdOn: new Date(),
+      updatedOn: new Date(),
+      createdBy: req.cookies.userId,
+      updatedBy: req.cookies.userId
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Record created successfully',
+      data: newRecord,
+    });
+  }
 });
 
 exports.getFeedbackFieldValue = catchAsync(async (req, res, next) => {
