@@ -146,10 +146,11 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
                 });  
             }  
     }}
+  const getTask = await Task.findById(req.params.id);
   res.status(201).json({
     status: 'success',
     data: {
-      data: task
+      data: getTask
     }
   });
 });

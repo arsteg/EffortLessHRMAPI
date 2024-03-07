@@ -9,7 +9,7 @@ const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignment
 const mongoose = require("mongoose");
 const LeaveGrant = require('../models/Leave/LeaveGrantModel');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
- 
+const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -681,7 +681,7 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
  
  exports.createEmployeeLeaveApplication = async (req, res, next) => {
      try {
-         const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status } = req.body;
+         const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status,haldDays } = req.body;
          
          const newLeaveApplication = await LeaveApplication.create({
              employee,
@@ -695,7 +695,17 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
              status,
              company: req.cookies.companyId // Assuming companyId is stored in cookies
          });
-         
+         var createdHalfDays=null;
+         // Check if haldDays is provided and valid
+         if (Array.isArray(haldDays)) {  
+          // Create haldDays instances
+          createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
+            leaveApplication: newLeaveApplication._id,
+            date: haldDay.date,
+            dayHalf: haldDay.dayHalf
+           })));
+         }
+         newLeaveApplication.halfDays=createdHalfDays;
          res.status(201).json({
              status: 'success',
              data: newLeaveApplication
@@ -708,11 +718,25 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
  exports.updateEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const { id } = req.params;
+         const { haldDays, ...leaveApplicationData } = req.body;
+
          const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(id, req.body, {
              new: true,
              runValidators: true
          });
- 
+         await LeaveApplicationHalfDay.deleteMany({
+          leaveCategory: updatedLeaveApplication._id,
+       });
+        // Check if haldDays is provided and valid
+        if (Array.isArray(haldDays)) {  
+          // Create haldDays instances
+          createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
+            leaveApplication: updatedLeaveApplication._id,
+            date: haldDay.date,
+            dayHalf: haldDay.dayHalf
+           })));
+         }
+         updatedLeaveApplication.halfDays=createdHalfDays;
          if (!updatedLeaveApplication) {
              return next(new AppError('Employee Leave Application not found', 404));
          }

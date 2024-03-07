@@ -1072,6 +1072,17 @@ router.get('/employee-leave-grant/:id', authController.protect, leaveController.
  *               isHalfDayOption:
  *                 type: boolean
  *                 required: true
+ *               haldDays:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     date:
+ *                       type: string
+ *                       required: true
+ *                     dayHalf:
+ *                       type: string
+ *                       required: true
  *     responses:
  *       201:
  *         description: EmployeeLeaveApplication successfully created
@@ -1128,6 +1139,17 @@ router.post('/employee-leave-application', authController.protect, leaveControll
  *               isHalfDayOption:
  *                 type: boolean
  *                 required: true
+ *               haldDays:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     date:
+ *                       type: string
+ *                       required: true
+ *                     dayHalf:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       201:
  *         description: EmployeeLeaveApplication successfully created

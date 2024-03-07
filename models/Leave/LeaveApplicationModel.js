@@ -42,7 +42,8 @@ var leaveApplicationSchema = new Schema({
   company: {
     type: String,
     required: true
-  }
+  },
+  halfDays:[],
 }, { collection: 'LeaveApplication' });
 
 module.exports = mongoose.model('LeaveApplication', leaveApplicationSchema);
