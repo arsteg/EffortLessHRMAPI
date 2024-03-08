@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 const LeaveGrant = require('../models/Leave/LeaveGrantModel');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
+const User = require('../models/permissions/userModel');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -652,7 +653,50 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
     data: leaveGrants,
   });
  });
- 
+
+ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
+  try {
+      const { id } = req.params;
+      const { user, status, level1Reason, level2Reason, date, comment } = req.body;
+
+      // Check if the leave grant exists
+      const leaveGrant = await LeaveGrant.findById(id);
+      if (!leaveGrant) {
+          return next(new AppError('Employee Leave Grant not found', 404));
+      }
+
+      // Check if the user is valid
+      const existingUser = await User.findById(user);
+      if (!existingUser) {
+          return next(new AppError('Invalid user', 400));
+      }
+
+      // Check if a LeaveGrant with the same date for the same user already exists
+      const existingLeaveGrant = await LeaveGrant.findOne({ user, date });
+      if (existingLeaveGrant && existingLeaveGrant._id.toString() !== id) {
+          return next(new AppError('Leave Grant for the same user and date already exists', 400));
+      }
+
+      // Update the leave grant fields
+      leaveGrant.employee = user;
+      leaveGrant.status = status;
+      leaveGrant.level1Reason = level1Reason;
+      leaveGrant.level2Reason = level2Reason;
+      leaveGrant.date = date;
+      leaveGrant.comment = comment;
+
+      // Save the updated leave grant
+      await leaveGrant.save();
+
+      res.status(200).json({
+          status: 'success',
+          data: leaveGrant
+      });
+  } catch (error) {
+      next(error);
+  }
+};
+
  exports.deleteEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   
 

@@ -985,6 +985,59 @@ router.delete('/employee-leave-grant/:id', authController.protect, leaveControll
 
 /**
  * @swagger
+ * /api/v1/Leave/employee-leave-grant/{id}:
+ *   put:
+ *     summary: Update a new EmployeeLeaveGrant
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Leave Grant
+ *     requestBody:
+ *       description: EmployeeLeaveGrant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 required: true
+ *               level1Reason:
+ *                 type: string
+ *                 required: true
+ *               level2Reason:
+ *                 type: string
+ *                 required: true
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 required: false
+ *               comment:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveAssignment successfully updated
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-leave-grant/:id', authController.protect, leaveController.updateEmployeeLeaveGrant);
+
+/**
+ * @swagger
  * /api/v1/Leave/employee-leave-grant:
  *   get:
  *     summary: Get all Employee Leave Grant
