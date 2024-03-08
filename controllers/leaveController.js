@@ -11,6 +11,7 @@ const LeaveGrant = require('../models/Leave/LeaveGrantModel');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const User = require('../models/permissions/userModel');
+ const ShortLeave = require("../models/Leave/ShortLeaveModel");
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -888,4 +889,118 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
      }
  };
  
+exports.addShortLeave = async (req, res, next) => {
+    try {
+        const company = req.cookies.companyId; // Get company from cookies
+        req.body.company = company; // Set company in the request body
+        const shortLeave = await ShortLeave.create(req.body);
+        res.status(201).json({
+            status: 'success',
+            data: shortLeave
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.getShortLeave = async (req, res, next) => {
+    try {
+        const shortLeave = await ShortLeave.findById(req.params.id);
+        if (!shortLeave) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'ShortLeave not found'
+            });
+        } else {
+            res.status(200).json({
+                status: 'success',
+                data: shortLeave
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.updateShortLeave = async (req, res, next) => {
+    try {
+        const shortLeave = await ShortLeave.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!shortLeave) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'ShortLeave not found'
+            });
+        } else {
+            res.status(200).json({
+                status: 'success',
+                data: shortLeave
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.deleteShortLeave = async (req, res, next) => {
+    try {
+        const shortLeave = await ShortLeave.findByIdAndDelete(req.params.id);
+        if (!shortLeave) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'ShortLeave not found'
+            });
+        } else {
+            res.status(204).json({
+                status: 'success',
+                data: null
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.getShortLeaveByUser = async (req, res, next) => {
+    try {
+        const shortLeaves = await ShortLeave.find({ employee: req.params.userId});
+            res.status(200).json({
+                status: 'success',
+                data: shortLeaves
+            });        
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.getAllShortLeave = async (req, res, next) => {
+  try {
+      const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId})
+          res.status(200).json({
+              status: 'success',
+              data: shortLeaves
+          });
+      
+  } catch (err) {
+      res.status(500).json({
+          status: 'failure',
+          message: err.message
+      });
+  }
+};
+
  

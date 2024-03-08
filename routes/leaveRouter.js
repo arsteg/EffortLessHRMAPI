@@ -1315,4 +1315,204 @@ router.get('/employee-leave-application', authController.protect, leaveControlle
  */
 router.get('/employee-leave-application/:id', authController.protect, leaveController.getEmployeeLeaveApplication);
 
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave:
+ *   post:
+ *     summary: Add a ShortLeave
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: ShortLeave details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                 type: string
+ *                 required: true
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               startTime:
+ *                 type: string
+ *                 format: date-time
+ *                 required: true
+ *               endTime:
+ *                 type: string
+ *                 format: date-time
+ *                 required: true
+ *               durationInMinutes:
+ *                 type: number
+ *                 required: true
+ *               comments:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 required: true
+ *               level1Reason:
+ *                 type: string
+ *               level2Reason:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: ShortLeave successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/short-leave', authController.protect, leaveController.addShortLeave);
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave/{id}:
+ *   get:
+ *     summary: Get a ShortLeave by ID
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShortLeave
+ *     responses:
+ *       200:
+ *         description: Successful response with the ShortLeave
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/short-leave/:id', authController.protect, leaveController.getShortLeave);
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave/{id}:
+ *   put:
+ *     summary: Update a ShortLeave by ID
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShortLeave
+ *     requestBody:
+ *       description: New ShortLeave details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               startTime:
+ *                 type: string
+ *                 format: date-time
+ *               endTime:
+ *                 type: string
+ *                 format: date-time
+ *               durationInMinutes:
+ *                 type: number
+ *               comments:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               level1Reason:
+ *                 type: string
+ *               level2Reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated ShortLeave
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/short-leave/:id', authController.protect, leaveController.updateShortLeave);
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave/{id}:
+ *   delete:
+ *     summary: Delete a ShortLeave by ID
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShortLeave
+ *     responses:
+ *       204:
+ *         description: ShortLeave successfully deleted
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/short-leave/:id', authController.protect, leaveController.deleteShortLeave);
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave-by-user/{userId}:
+ *   get:
+ *     summary: Get a ShortLeave by User ID
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the ShortLeave
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/short-leave-by-user/:userId', authController.protect, leaveController.getShortLeaveByUser);
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave:
+ *   get:
+ *     summary: Get a ShortLeave
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with the ShortLeave
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/short-leave', authController.protect, leaveController.getAllShortLeave);
 module.exports = router;
