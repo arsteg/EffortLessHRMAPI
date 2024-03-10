@@ -1515,4 +1515,41 @@ router.get('/short-leave-by-user/:userId', authController.protect, leaveControll
  *         description: Internal server error
  */
 router.get('/short-leave', authController.protect, leaveController.getAllShortLeave);
+
+/**
+ * @swagger
+ * /api/v1/leave/get-leave-balance:
+ *  post:
+ *      tags: [Leave Management]
+ *      summary: "Get Leave Balance"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]    
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         user:
+ *                              type: string
+ *                              required: true
+ *                         cycle:
+ *                              type: string
+ *                              required: true
+ *                         category:
+ *                              type: string
+ *                              required: true    
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/get-leave-balance', authController.protect, leaveController.getLeaveBalance);
 module.exports = router;

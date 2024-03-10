@@ -1006,14 +1006,25 @@ exports.getAllShortLeave = async (req, res, next) => {
   }
 };
 
+exports.getLeaveBalance = async (req, res, next) => {
+  try {
+      const leaveAssigned = await LeaveAssigned.find({ company: req.cookies.companyId}).where('employee').equals(req.body.user).where('cycle').equals(req.body.cycle).where('category').equals(req.body.category);
+          res.status(200).json({
+              status: 'success',
+              data: leaveAssigned
+          });
+      
+  } catch (err) {
+      res.status(500).json({
+          status: 'failure',
+          message: err.message
+      });
+  }
+};
+
 exports.assignLeavesByJobs = async () => {
 console.log("Called");
-
-
-
 const users = await User.find({}); 
-
-
 if(users.length > 0)
 {
   for (const user of users) {  
