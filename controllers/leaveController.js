@@ -12,6 +12,7 @@ const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const User = require('../models/permissions/userModel');
  const ShortLeave = require("../models/Leave/ShortLeaveModel");
+ const LeaveAssigned= require("../models/Leave/LeaveAssignedModel");
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -146,15 +147,17 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   });
 });
 exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
-  const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId);
-  if (!leaveCategory) {
-    return next(new AppError('Leave category not found', 404));
-  }
+  
+  const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
+ 
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate);
+
   res.status(200).json({
     status: 'success',
-    data: leaveCategory
+    data: leaveTemplateCategory
   });
 });
+
 exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
 const leaveCategory = await LeaveCategory.findById(req.params.id);   
 if (!leaveCategory) {
@@ -458,7 +461,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
       data: leaveTemplateCategories     
     });
 
-});
+  });
 
 async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
   try {
@@ -1003,4 +1006,186 @@ exports.getAllShortLeave = async (req, res, next) => {
   }
 };
 
- 
+exports.assignLeavesByJobs = async () => {
+console.log("Called");
+
+
+
+const users = await User.find({}); 
+
+
+if(users.length > 0)
+{
+  for (const user of users) {  
+   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(user._id.toString());
+
+if(employeeLeaveAssignment)
+{
+  console.log(employeeLeaveAssignment.leaveTemplate.toString());
+  
+      console.log("Called2");
+      const leaveTemplateCategory = await LeaveTemplateCategory.findOne({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate.toString());
+      if (leaveTemplateCategory) {
+      console.log("Called4");
+       const leaveCategory =await  LeaveCategory.findById("65e5d2a0ef825624d35ffd0e");
+      
+       const cycle = "JANUARY_2023-DECEMBER_2024";
+       const employee = user._id.toString();
+       const category=leaveCategory._id;
+       const type = leaveCategory.leaveAccrualPeriod;
+       const createdOn = new Date();
+       const startMonth = createdOn.getMonth();        
+       const openingBalance = 0;
+       const leaveApplied = 0;      
+       const leaveRemaining = 0;
+       const closingBalance = 0;
+       const leaveTaken=0;
+        if(leaveCategory.leaveAccrualPeriod === "Monthly")
+       {        
+       
+       const endMonth=createdOn.getMonth();     
+       const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
+     
+       const leaveAssigned = await LeaveAssigned.create({
+          cycle,
+          employee,
+          category,
+          type,
+          createdOn,
+          startMonth,
+          endMonth,
+          openingBalance,
+          leaveApplied,
+          accruedBalance,
+          leaveRemaining,
+          closingBalance,
+          leaveTaken,
+          company: req.cookies.companyId // Assuming companyId is stored in cookies
+      });
+       }
+       if(leaveCategory.leaveAccrualPeriod === "Annually")
+       {
+        
+        const endMonth=createdOn.getMonth();
+        endMonth.setMonth(startMonth.getMonth() + 12);      
+        const accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;       
+        const leaveAssigned =  LeaveAssigned.create({
+           cycle,
+           employee,
+           category,
+           type,
+           createdOn,
+           startMonth,
+           endMonth,
+           openingBalance,
+           leaveApplied,
+           accruedBalance,
+           leaveRemaining,
+           closingBalance,
+           leaveTaken,
+           company: req.cookies.companyId // Assuming companyId is stored in cookies
+       });
+        
+       }
+       if(leaveCategory.leaveAccrualPeriod === "semi-annually")
+       {            
+       
+       const endMonth = startMonth + 6;    
+       console.log(leaveTemplateCategory);
+       const accruedBalance= 2;//leaveTemplateCategory.accrualRatePerPeriod;
+       console.log("Semi annually called" + "cycle"+cycle+"employee"+employee._id+"category"+category+"type"+type+"createdOn"+createdOn+"startMonth"+startMonth+
+       "endMonth"+endMonth+"openingBalance"+openingBalance+"leaveApplied"+leaveApplied+"accruedBalance"+accruedBalance+"leaveRemaining"+leaveRemaining
+       +"closingBalance"+ closingBalance +"leaveTaken"+leaveTaken);
+       const existingLeaveAssignment = await LeaveAssigned.findOne({
+        employee: employee,
+        category: category,
+        startMonth: startMonth,
+        endMonth: endMonth
+        
+    });
+   
+    if (existingLeaveAssignment) {
+        console.log('Leave assignment already exists for this employee, category');
+        // Handle the case where the leave assignment already exists
+    }
+     else 
+    {
+      const leaveAssigned =await LeaveAssigned.create({
+           cycle,
+           employee,
+           category,
+           type,
+           createdOn,
+           startMonth,
+           endMonth,
+           openingBalance,
+           leaveApplied,
+           accruedBalance,
+           leaveRemaining,
+           closingBalance,
+           leaveTaken,
+           company: leaveCategory.company.toString() // Assuming companyId is stored in cookies
+       });
+     //  console.log(leaveAssigned);
+      }
+       
+       }
+       if(leaveCategory.leaveAccrualPeriod==="Bi-Monthly")
+       {
+        const endMonth=createdOn.getMonth();       
+        const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;       
+        const leaveAssigned =  LeaveAssigned.create({
+           cycle,
+           employee,
+           category,
+           type,
+           createdOn,
+           startMonth,
+           endMonth,
+           openingBalance,
+           leaveApplied,
+           accruedBalance,
+           leaveRemaining,
+           closingBalance,
+           leaveTaken,
+           company: req.cookies.companyId // Assuming companyId is stored in cookies
+       });
+        
+       }
+       if(leaveCategory.leaveAccrualPeriod==="Quaterly")
+       {
+
+        const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
+        const endMonth=createdOn.getMonth();
+        endMonth.setMonth(startMonth.getMonth() + 4);
+        const leaveAssigned =  LeaveAssigned.create({
+           cycle,
+           employee,
+           category,
+           type,
+           createdOn,
+           startMonth,
+           endMonth,
+           openingBalance,
+           leaveApplied,
+           accruedBalance,
+           leaveRemaining,
+           closingBalance,
+           leaveTaken,
+           company: req.cookies.companyId // Assuming companyId is stored in cookies
+       });
+       }
+    }
+  
+  }
+}
+}
+//loop for employee
+//gettempalte for emplyee
+//get cetgories from levaeteplatecategory based on template
+//loop for categories
+// from categories based on monthly/yearly need to create AssignedTemplate
+
+console.log("hello");
+  
+}

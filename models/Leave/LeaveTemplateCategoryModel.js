@@ -48,8 +48,9 @@ var leaveTemplateCategorySchema = new Schema({
   negativeBalanceCap: {
     type: Number
   },
-  annualAccrualRatePerPeriod: {
-    type: Number
+  accrualRatePerPeriod: {
+    type: Number,
+    default:0
   },
   categoryApplicable: {
     type: String

@@ -416,7 +416,7 @@ router.get('/leave-categories', authController.protect, leaveController.getAllLe
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-categories-by-user/:userId', authController.protect, leaveController.getLeaveCategory);
+router.get('/leave-categories-by-user/:userId', authController.protect, leaveController.getAllLeaveCategoryByUser);
 
 /**
  * @swagger
@@ -712,7 +712,7 @@ router.delete('/leave-template/:id', authController.protect, leaveController.del
  *                      negativeBalanceCap:
  *                        type: integer
  *                        description: Negative balance cap for leave
- *                      annualAccrualRatePerPeriod:
+ *                      accrualRatePerPeriod:
  *                        type: integer
  *                        description: Annual accrual rate per period for leave
  *                      categoryApplicable:

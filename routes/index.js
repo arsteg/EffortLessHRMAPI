@@ -1,5 +1,6 @@
 var express = require('express');
 const authController = require('./../controllers/authController');
+const leaveController = require('./../controllers/leaveController');
 const cron = require("node-cron");
 var routes = express();
 app = express();
@@ -18,4 +19,6 @@ authController.sendLog();
   
   task.start();
   */
+  
+ 
 module.exports = routes;

@@ -23,6 +23,8 @@ const AppError = require('./utils/appError');
 var recruitmentRouter = require('./routes/recruitmentRouter');
 var app = express();
 const cookieParser = require("cookie-parser");
+const cron = require("node-cron");
+const leaveController = require('./controllers/leaveController');
 //app.use(express.json({ lmit: '5000mb' }));
 const path = require('path');
 var manualTimeRouter = require('./routes/manualTimeRouter');
@@ -43,7 +45,6 @@ const loggingMiddleware = require('./Logger/loggingMiddleware');
 
 var notificationRoute = require('./routes/notificationRoute');
 app.use(loggingMiddleware);
-
 var allowedOrigin ="http://localhost:4200";
 if (process.env.NODE_ENV === 'development') {
   allowedOrigin= "http://localhost:4200";
@@ -117,5 +118,16 @@ app.use('/api/v1/attendance', attendanceRouter);
 app.use('/api/v1/pricing', pricingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/zoom', zoomRouter);
+ //execute on 1st day of each month
+ cron.schedule('0 0 1 * *', () => {
+  console.log('+ script to add default holidays1...');
+//  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
+});
+
+//execute at every minute
+cron.schedule('* * * * *', async () => {
+  console.log('Running script to add default holidays2...');
+ // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
+});
 
 module.exports = app;
