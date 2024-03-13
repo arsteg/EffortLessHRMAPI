@@ -14,6 +14,10 @@ const generalSettingsSchema = new Schema({
     type: Boolean,
     required: true,
   },
+  regularizationRequestandLeaveApplicationBlockedForUser:{
+    type: Boolean,
+    required: true,
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

@@ -631,7 +631,8 @@ for(var i = 0; i < users.length; i++) {
     date:grantData.date
   });   
  ;
-  if (!leavegrantExits) {
+ console.log(leavegrantExits);
+  if (leavegrantExits!==null) {
     return next(new AppError('Leave alredy Granted for Same user on same date', 404));
   }
   // Add company to the request body
@@ -1034,12 +1035,11 @@ if(employeeLeaveAssignment)
 {
   console.log(employeeLeaveAssignment.leaveTemplate.toString());
   
-      console.log("Called2");
-      const leaveTemplateCategory = await LeaveTemplateCategory.findOne({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate.toString());
-      if (leaveTemplateCategory) {
-      console.log("Called4");
-       const leaveCategory =await  LeaveCategory.findById("65e5d2a0ef825624d35ffd0e");
-      
+        console.log("Called2");
+        const leaveTemplateCategory = await LeaveTemplateCategory.findOne({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate.toString());
+        if (leaveTemplateCategory) {
+        console.log("Called4");
+       const leaveCategory =await  LeaveCategory.findById("65e5d2a0ef825624d35ffd0e");      
        const cycle = "JANUARY_2023-DECEMBER_2024";
        const employee = user._id.toString();
        const category=leaveCategory._id;
@@ -1160,12 +1160,10 @@ if(employeeLeaveAssignment)
            closingBalance,
            leaveTaken,
            company: req.cookies.companyId // Assuming companyId is stored in cookies
-       });
-        
+       });        
        }
        if(leaveCategory.leaveAccrualPeriod==="Quaterly")
        {
-
         const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
         const endMonth=createdOn.getMonth();
         endMonth.setMonth(startMonth.getMonth() + 4);
@@ -1185,7 +1183,7 @@ if(employeeLeaveAssignment)
            leaveTaken,
            company: req.cookies.companyId // Assuming companyId is stored in cookies
        });
-       }
+      }
     }
   
   }

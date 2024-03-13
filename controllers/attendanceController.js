@@ -18,6 +18,60 @@ const UserRegularizationReason = require('../models/attendance/userRegularizatio
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+exports.createGeneralSettings = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  req.body.company = companyId;
+  const filter = { company: companyId };
+  const update = req.body;
+
+  const options = {
+    new: true, // Return the updated document
+    upsert: true, // Create the document if it doesn't exist
+    setDefaultsOnInsert: true, // Apply default values specified in the schema
+  };
+
+  const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
+
+  res.status(201).json({
+    status: 'success',
+    data: generalSettings,
+  });
+});
+
+exports.getGeneralSettings = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  const generalSettings = await GeneralSettings.find({company:companyId});
+  if (!generalSettings) {
+    return next(new AppError('GeneralSettings not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: generalSettings,
+  });
+});
+
+exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
+  const generalSettings = await GeneralSettings.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!generalSettings) {
+    return next(new AppError('GeneralSettings not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: generalSettings,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -288,80 +342,8 @@ exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createGeneralSettings = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  req.body.company = companyId;
-  const filter = { company: companyId };
-  const update = req.body;
 
-  const options = {
-    new: true, // Return the updated document
-    upsert: true, // Create the document if it doesn't exist
-    setDefaultsOnInsert: true, // Apply default values specified in the schema
-  };
 
-  const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
-
-  res.status(201).json({
-    status: 'success',
-    data: generalSettings,
-  });
-});
-
-exports.getGeneralSettings = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  const generalSettings = await GeneralSettings.find({company:companyId});
-  if (!generalSettings) {
-    return next(new AppError('GeneralSettings not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: generalSettings,
-  });
-});
-
-exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
-  const generalSettings = await GeneralSettings.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!generalSettings) {
-    return next(new AppError('GeneralSettings not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: generalSettings,
-  });
-});
-
-exports.deleteGeneralSettings = catchAsync(async (req, res, next) => {
-  const generalSettings = await GeneralSettings.findByIdAndDelete(req.params.id);
-
-  if (!generalSettings) {
-    return next(new AppError('GeneralSettings not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllGeneralSettings = catchAsync(async (req, res, next) => {
-  const generalSettings = await GeneralSettings.find();
-  res.status(200).json({
-    status: 'success',
-    data: generalSettings,
-  });
-});
 
 exports.createOnDutyReason = catchAsync(async (req, res, next) => {
   const onDutyReason = await OnDutyReason.create(req.body);
