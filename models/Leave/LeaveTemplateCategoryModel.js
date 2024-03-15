@@ -55,6 +55,10 @@ var leaveTemplateCategorySchema = new Schema({
   categoryApplicable: {
     type: String
   },
+  isReadyForApply: {
+    type: Boolean,
+    default:false
+  },
   templateApplicableCategoryEmployee:[]
 }, { collection: 'LeaveTemplateCategory' });
 

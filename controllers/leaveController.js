@@ -151,8 +151,8 @@ exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
   
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
  
-  const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate);
-
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate,isReadyForApply: true});
+ 
   res.status(200).json({
     status: 'success',
     data: leaveTemplateCategory
@@ -480,9 +480,9 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
       data: leaveTemplateCategories     
     });
 
-  });
+});
 
-  async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
+async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
     try {
       const updatedCategories = await Promise.all(
         leaveCategories.map(async (category) => {
@@ -497,6 +497,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
   
           let categoryResult;
           if (existingCategory) {
+            grantData.isReadyForApply=true;
             categoryResult = await LeaveTemplateCategory.findByIdAndUpdate(
               existingCategory._id,
               { $set: { ...grantData } },
@@ -535,8 +536,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
     } catch (err) {
       throw new AppError('Internal server error', 500);
     }
-  }
-  
+}
 
 // Get a LeaveTemplateCategory by ID
 exports.getLeaveTemplateCategoryByTemplate = catchAsync(async (req, res, next) => {
@@ -761,6 +761,7 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
           status: 'success',
           data: leaveGrant
       });
+
   } catch (error) {
       next(error);
   }
