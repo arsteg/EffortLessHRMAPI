@@ -718,6 +718,15 @@ router.delete('/leave-template/:id', authController.protect, leaveController.del
  *                      categoryApplicable:
  *                        type: string
  *                        description: Applicable category for leave
+ *                      users:
+ *                        type: array
+ *                        items:
+ *                            type: object
+ *                            required: true
+ *                            properties:
+ *                              user:
+ *                                type: string
+ *                                required: true 
  *     responses:
  *       201:
  *         description: LeaveTemplateCategory successfully created

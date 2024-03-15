@@ -12,7 +12,8 @@ const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const User = require('../models/permissions/userModel');
  const ShortLeave = require("../models/Leave/ShortLeaveModel");
- const LeaveAssigned= require("../models/Leave/LeaveAssignedModel");
+ const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+ const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -464,59 +465,114 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
   }
   // Iterate through LeaveCategories to create or update records
   const leaveTemplateCategories =  await createLeaveTemplateCategories(mongoose.Types.ObjectId(leaveTemplate), leaveCategories);
-    res.status(201).json({
+  for(var i = 0; i < leaveTemplateCategories.length; i++) {   
+    const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[i]._id);
+    if(templateApplicableCategoryEmployee) 
+    {
+      leaveTemplateCategories[i].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+    }
+    else{
+      leaveTemplateCategories[i].templateApplicableCategoryEmployee=null;
+    }
+  }  
+  res.status(201).json({
       status: 'success',
       data: leaveTemplateCategories     
     });
 
   });
 
-async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
-  try {
-    const updatedCategories = await Promise.all(
-      leaveCategories.map(async (category) => {
-        const existingCategory = await LeaveTemplateCategory.findOne({
-          leaveCategory: category.leaveCategory,
-          leaveTemplate: leaveTemplateId,
-        });
-
-        if (existingCategory) {
-          return LeaveTemplateCategory.findByIdAndUpdate(
-            existingCategory._id,
-            { $set: { ...category } },
-            { new: true }
-          );
-        } else {
-          const newCategory = new LeaveTemplateCategory({
+  async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
+    try {
+      const updatedCategories = await Promise.all(
+        leaveCategories.map(async (category) => {
+          const {
+            users,
+            ...grantData
+          } = category;
+          const existingCategory = await LeaveTemplateCategory.findOne({
+            leaveCategory: category.leaveCategory,
             leaveTemplate: leaveTemplateId,
-            ...category,
           });
-          return newCategory.save();
-        }
-      })
-    );
-
-    return updatedCategories;
-  } catch (err) {
-    throw new AppError('Internal server error', 500);
+  
+          let categoryResult;
+          if (existingCategory) {
+            categoryResult = await LeaveTemplateCategory.findByIdAndUpdate(
+              existingCategory._id,
+              { $set: { ...grantData } },
+              { new: true }
+            );
+          } else {
+            const newCategory = new LeaveTemplateCategory({
+              leaveTemplate: leaveTemplateId,
+              ...grantData,
+            });
+            categoryResult = await newCategory.save();
+          }
+  
+          const userOperations = users.map(async (user) => {
+            console.log(user);
+            const filter = {
+              leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
+              user: user.user
+            };
+            const update = {
+              leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
+              user: user.user
+            };
+            const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+  
+            return TemplateApplicableCategoryEmployee.findOneAndUpdate(filter, update, options);
+          });
+  
+          await Promise.all(userOperations);
+  
+          return categoryResult;
+        })
+      );
+  
+      return updatedCategories;
+    } catch (err) {
+      throw new AppError('Internal server error', 500);
+    }
   }
-}
+  
 
 // Get a LeaveTemplateCategory by ID
 exports.getLeaveTemplateCategoryByTemplate = catchAsync(async (req, res, next) => {
-    const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.leaveTemplateId);;
-    if (!leaveTemplateCategory) {
+    const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.leaveTemplateId);;
+    if (!leaveTemplateCategories) {
         return next(new AppError('LeaveTemplateCategory not found', 404));
     }
+    for(var i = 0; i < leaveTemplateCategories.length; i++) {   
+      const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[i]._id);
+      if(templateApplicableCategoryEmployee) 
+      {
+        leaveTemplateCategories[i].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+      }
+      else{
+        leaveTemplateCategories[i].templateApplicableCategoryEmployee=null;
+      }
+    }  
     res.status(200).json({
         status: 'success',
-        data: leaveTemplateCategory
+        data: leaveTemplateCategories
     });
 });
 
 // Get all LeaveTemplateCategories
 exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
     const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('company').equals(req.cookies.companyId);
+    for(var i = 0; i < leaveTemplateCategories.length; i++) {   
+      const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[i]._id);
+      if(templateApplicableCategoryEmployee) 
+      {
+        leaveTemplateCategories[i].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+      }
+      else{
+        leaveTemplateCategories[i].templateApplicableCategoryEmployee=null;
+      }
+    }  
     res.status(200).json({
         status: 'success',
         data: leaveTemplateCategories

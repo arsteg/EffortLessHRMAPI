@@ -7,8 +7,9 @@ var templateApplicableCategoryEmployeeSchema = new Schema({
     ref: 'LeaveTemplateCategory',
     required: true
   },
-  userType: {
-    type: String,
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'user',
     required: true
   }
 }, { collection: 'TemplateApplicableCategoryEmployee' });

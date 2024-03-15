@@ -54,7 +54,8 @@ var leaveTemplateCategorySchema = new Schema({
   },
   categoryApplicable: {
     type: String
-  }
+  },
+  templateApplicableCategoryEmployee:[]
 }, { collection: 'LeaveTemplateCategory' });
 
 module.exports = mongoose.model('LeaveTemplateCategory', leaveTemplateCategorySchema);
