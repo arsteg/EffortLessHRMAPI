@@ -6,6 +6,20 @@ const regularizationReasonSchema = new Schema({
     type: String,
     required: true,
   },
+  isFrequecyRestriction: {
+    type: Boolean,
+    required: true,
+  },
+  limit: {
+    type: Number
+  },
+  applicableEmployee:{
+    type: String,
+    required:true
+  },
+  frequency: {
+    type: String
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

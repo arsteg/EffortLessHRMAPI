@@ -123,6 +123,27 @@ attendanceRouter.put('/general-settings/:id', authController.protect, attendance
  *               label:
  *                 type: string
  *                 required: true 
+ *               isFrequecyRestriction:
+ *                 type: boolean
+ *                 required: true 
+ *               limit:
+ *                 type: number
+ *                 required: true 
+ *               frequency:
+ *                 type: string
+ *                 required: true 
+ *               applicableEmployee:
+ *                 type: string
+ *                 required: true
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       201:
  *         description: Regularization Reason successfully created
@@ -184,7 +205,29 @@ attendanceRouter.get('/regularization-reasons/:id', authController.protect, atte
  *             type: object
  *             properties:
  *               label:
- *                 type: string 
+ *                 type: string
+ *                 required: true 
+ *               isFrequecyRestriction:
+ *                 type: boolean
+ *                 required: true 
+ *               limit:
+ *                 type: number
+ *                 required: true 
+ *               frequency:
+ *                 type: string
+ *                 required: true 
+ *               applicableEmployee:
+ *                 type: string
+ *                 required: true
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated Regularization Reason
@@ -239,46 +282,56 @@ attendanceRouter.delete('/regularization-reasons/:id', authController.protect, a
 attendanceRouter.get('/regularization-reasons', authController.protect, attendanceController.getAllRegularizationReasons);
 
 
-//  User Regularization Reasons
+
+//Duty Reasons
 
 /**
  * @swagger
- * /api/v1/attendance/user-regularization-reasons:
+ * /api/v1/attendance/duty-reasons:
  *   post:
- *     summary: Create a new UserRegularizationReason
+ *     summary: Create a new Duty Reason
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
  *     requestBody:
- *       description: UserRegularizationReason details
+ *       description: Duty Reason details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               user:
+ *               label:
+ *                 type: string
+ *                 required: true 
+ *               applicableEmployee:
  *                 type: string
  *                 required: true
- *               regularizationReason:
- *                 type: string
- *                 required: true
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       201:
- *         description: UserRegularizationReason successfully created
+ *         description: Duty Reason successfully created
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/user-regularization-reasons', authController.protect, attendanceController.createUserRegularizationReason);
+attendanceRouter.post('/duty-reasons', authController.protect, attendanceController.createOnDutyReason);
 
 /**
  * @swagger
- * /api/v1/attendance/user-regularization-reasons/{id}:
+ * /api/v1/attendance/duty-reasons/{id}:
  *   get:
- *     summary: Get a UserRegularizationReason by ID
+ *     summary: Get a Duty Reason by ID
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
@@ -289,57 +342,71 @@ attendanceRouter.post('/user-regularization-reasons', authController.protect, at
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the UserRegularizationReason
+ *         description: ID of the Duty Reason
  *     responses:
  *       200:
- *         description: Successful response with the UserRegularizationReason
+ *         description: Successful response with the Duty Reason
  *       404:
- *         description: UserRegularizationReason not found
+ *         description: Duty Reason not found
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/user-regularization-reasons/:id', authController.protect, attendanceController.getUserRegularizationReason);
+attendanceRouter.get('/duty-reasons/:id', authController.protect, attendanceController.getOnDutyReason);
 
 /**
  * @swagger
- * /api/v1/attendance/user-regularization-reasons/{id}:
+ * /api/v1/attendance/duty-reasons/{id}:
  *   put:
- *     summary: Update a UserRegularizationReason by ID
+ *     summary: Update a Duty Reason by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the UserRegularizationReason
+ *         description: ID of the Duty Reason
  *     requestBody:
- *       description: New UserRegularizationReason details
+ *       description: New Duty Reason details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               user:
+ *               label:
  *                 type: string
- *               regularizationReason:
+ *                 required: true 
+ *               applicableEmployee:
  *                 type: string
+ *                 required: true
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       200:
- *         description: Successful response with the updated UserRegularizationReason
+ *         description: Successful response with the updated Duty Reason
  *       404:
- *         description: UserRegularizationReason not found
+ *         description: Duty Reason not found
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/user-regularization-reasons/:id', authController.protect, attendanceController.updateUserRegularizationReason);
+attendanceRouter.put('/duty-reasons/:id', authController.protect, attendanceController.updateOnDutyReason);
 
 /**
  * @swagger
- * /api/v1/attendance/user-regularization-reasons/{id}:
+ * /api/v1/attendance/duty-reasons/{id}:
  *   delete:
- *     summary: Delete a UserRegularizationReason by ID
+ *     summary: Delete a Duty Reason by ID
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
@@ -350,32 +417,34 @@ attendanceRouter.put('/user-regularization-reasons/:id', authController.protect,
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the UserRegularizationReason
+ *         description: ID of the Duty Reason
  *     responses:
  *       204:
- *         description: UserRegularizationReason successfully deleted
+ *         description: Duty Reason successfully deleted
  *       404:
- *         description: UserRegularizationReason not found
+ *         description: Duty Reason not found
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/user-regularization-reasons/:id', authController.protect, attendanceController.deleteUserRegularizationReason);
+attendanceRouter.delete('/duty-reasons/:id', authController.protect, attendanceController.deleteOnDutyReason);
 
 /**
  * @swagger
- * /api/v1/attendance/user-regularization-reasons:
+ * /api/v1/attendance/duty-reasons:
  *   get:
- *     summary: Get all UserRegularizationReasons
+ *     summary: Get all Duty Reasons
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     responses:
  *       200:
- *         description: Successful response with UserRegularizationReasons
+ *         description: Successful response with Duty Reasons
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/user-regularization-reasons', authController.protect, attendanceController.getAllUserRegularizationReasons);
+attendanceRouter.get('/duty-reasons', authController.protect, attendanceController.getAllOnDutyReasons);
 
-//Duty Reason
 // DutyRequest routes
 /**
  * @swagger
@@ -2317,147 +2386,6 @@ attendanceRouter.post(
   attendanceRouter.get('/', authController.protect, attendanceController.getAllShiftTemplateAssignments);
   
   
-// UserOnDutyReason routes
-/**
- * @swagger
- * /api/v1/attendance/userOnDutyReason:
- *   post:
- *     summary: Create a new UserOnDutyReason
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: UserOnDutyReason details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               user:
- *                 type: string
- *                 required: true
- *               onDutyReason:
- *                 type: string
- *                 required: true
- *     responses:
- *       201:
- *         description: UserOnDutyReason successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/', authController.protect, attendanceController.createUserOnDutyReason);
-
-/**
- * @swagger
- * /api/v1/attendance/userOnDutyReason/{id}:
- *   get:
- *     summary: Get a UserOnDutyReason by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the UserOnDutyReason
- *     responses:
- *       200:
- *         description: Successful response with the UserOnDutyReason
- *       404:
- *         description: UserOnDutyReason not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/:id', authController.protect, attendanceController.getUserOnDutyReason);
-
-/**
- * @swagger
- * /api/v1/attendance/userOnDutyReason/{id}:
- *   put:
- *     summary: Update a UserOnDutyReason by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the UserOnDutyReason
- *     requestBody:
- *       description: New UserOnDutyReason details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               user:
- *                 type: string
- *               onDutyReason:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated UserOnDutyReason
- *       404:
- *         description: UserOnDutyReason not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/:id', authController.protect, attendanceController.updateUserOnDutyReason);
-
-/**
- * @swagger
- * /api/v1/attendance/userOnDutyReason/{id}:
- *   delete:
- *     summary: Delete a UserOnDutyReason by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the UserOnDutyReason
- *     responses:
- *       204:
- *         description: UserOnDutyReason successfully deleted
- *       404:
- *         description: UserOnDutyReason not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/:id', authController.protect, attendanceController.deleteUserOnDutyReason);
-
-/**
- * @swagger
- * /api/v1/attendance/userOnDutyReason:
- *   get:
- *     summary: Get all UserOnDutyReasons
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with UserOnDutyReasons
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/', authController.protect, attendanceController.getAllUserOnDutyReasons);
-
 
  
 module.exports = attendanceRouter;

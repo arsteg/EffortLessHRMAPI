@@ -6,6 +6,10 @@ const onDutyReasonSchema = new Schema({
     type: String,
     required: true,
   },
+  applicableEmployee:{
+    type: String,
+    required:true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

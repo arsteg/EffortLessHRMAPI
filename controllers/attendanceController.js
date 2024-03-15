@@ -72,6 +72,116 @@ exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.createRegularizationReason = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId; // Get company from cookies
+  req.body.company = company; // Set company in the request body
+  const regularizationReason = await RegularizationReason.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: regularizationReason
+  });
+});
+
+exports.getRegularizationReason = catchAsync(async (req, res, next) => {
+  const regularizationReason = await RegularizationReason.findById(req.params.id);
+  if (!regularizationReason) {
+    return next(new AppError('Regularization Reason not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: regularizationReason
+  });
+});
+
+exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
+  const regularizationReason = await RegularizationReason.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!regularizationReason) {
+    return next(new AppError('Regularization Reason not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: regularizationReason
+  });
+});
+
+exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
+  const regularizationReason = await RegularizationReason.findByIdAndDelete(req.params.id);
+  if (!regularizationReason) {
+    return next(new AppError('Regularization Reason not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
+  const regularizationReasons = await RegularizationReason.find();
+  res.status(200).json({
+    status: 'success',
+    data: regularizationReasons
+  });
+});
+
+exports.createOnDutyReason = catchAsync(async (req, res, next) => {
+  const onDutyReason = await OnDutyReason.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: onDutyReason,
+  });
+});
+
+exports.getOnDutyReason = catchAsync(async (req, res, next) => {
+  const onDutyReason = await OnDutyReason.findById(req.params.id);
+  if (!onDutyReason) {
+    return next(new AppError('OnDutyReason not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: onDutyReason,
+  });
+});
+
+exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
+  const onDutyReason = await OnDutyReason.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!onDutyReason) {
+    return next(new AppError('OnDutyReason not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: onDutyReason,
+  });
+});
+
+exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
+  const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
+  if (!onDutyReason) {
+    return next(new AppError('OnDutyReason not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
+  const onDutyReasons = await OnDutyReason.find();
+  res.status(200).json({
+    status: 'success',
+    data: onDutyReasons,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -345,59 +455,7 @@ exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
 
 
 
-exports.createOnDutyReason = catchAsync(async (req, res, next) => {
-  const onDutyReason = await OnDutyReason.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: onDutyReason,
-  });
-});
 
-exports.getOnDutyReason = catchAsync(async (req, res, next) => {
-  const onDutyReason = await OnDutyReason.findById(req.params.id);
-  if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: onDutyReason,
-  });
-});
-
-exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
-  const onDutyReason = await OnDutyReason.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: onDutyReason,
-  });
-});
-
-exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
-  const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
-  if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
-  const onDutyReasons = await OnDutyReason.find();
-  res.status(200).json({
-    status: 'success',
-    data: onDutyReasons,
-  });
-});
 
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
   const onDutyTemplate = await OnDutyTemplate.create(req.body);
@@ -508,59 +566,6 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
 });
 
 
-exports.createRegularizationReason = catchAsync(async (req, res, next) => {
-  const regularizationReason = await RegularizationReason.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: regularizationReason
-  });
-});
-
-exports.getRegularizationReason = catchAsync(async (req, res, next) => {
-  const regularizationReason = await RegularizationReason.findById(req.params.id);
-  if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: regularizationReason
-  });
-});
-
-exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
-  const regularizationReason = await RegularizationReason.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: regularizationReason
-  });
-});
-
-exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
-  const regularizationReason = await RegularizationReason.findByIdAndDelete(req.params.id);
-  if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
-});
-
-exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
-  const regularizationReasons = await RegularizationReason.find();
-  res.status(200).json({
-    status: 'success',
-    data: regularizationReasons
-  });
-});
 
 exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
   const regularizationRequest = await RegularizationRequest.create(req.body);
@@ -803,60 +808,6 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createUserOnDutyReason = catchAsync(async (req, res, next) => {
-  const { user, onDutyReason } = req.body;
-  const userOnDutyReason = await UserOnDutyReason.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: userOnDutyReason,
-  });
-});
-
-exports.getUserOnDutyReason = catchAsync(async (req, res, next) => {
-  const userOnDutyReason = await UserOnDutyReason.findById(req.params.id);
-  if (!userOnDutyReason) {
-    return next(new AppError('UserOnDutyReason not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyReason,
-  });
-});
-
-exports.updateUserOnDutyReason = catchAsync(async (req, res, next) => {
-  const userOnDutyReason = await UserOnDutyReason.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!userOnDutyReason) {
-    return next(new AppError('UserOnDutyReason not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyReason,
-  });
-});
-
-exports.deleteUserOnDutyReason = catchAsync(async (req, res, next) => {
-  const userOnDutyReason = await UserOnDutyReason.findByIdAndDelete(req.params.id);
-  if (!userOnDutyReason) {
-    return next(new AppError('UserOnDutyReason not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllUserOnDutyReasons = catchAsync(async (req, res, next) => {
-  const userOnDutyReasons = await UserOnDutyReason.find();
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyReasons,
-  });
-});
 
 
 // Create a UserOnDutyTemplate
@@ -921,92 +872,4 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
 });
 
 
-exports.createUserRegularizationReason = catchAsync(async (req, res, next) => {
-  try {
-    const { user, regularizationReason } = req.body;
-
-    // Check if the UserRegularizationReason already exists
-    const existingUserRegularizationReason = await UserRegularizationReason.findOne({ user, regularizationReason });
-
-    if (existingUserRegularizationReason) {
-      return next(new AppError('UserRegularizationReason already exists', 400));
-    }
-
-    const newUserRegularizationReason = await UserRegularizationReason.create(req.body);
-
-    res.status(201).json({
-      status: 'success',
-      data: newUserRegularizationReason,
-    });
-  } catch (error) {
-    return next(new AppError('Failed to create UserRegularizationReason', 500));
-  }
-});
-
-exports.getUserRegularizationReason = catchAsync(async (req, res, next) => {
-  try {
-    const userRegularizationReason = await UserRegularizationReason.findById(req.params.id);
-
-    if (!userRegularizationReason) {
-      return next(new AppError('UserRegularizationReason not found', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: userRegularizationReason,
-    });
-  } catch (error) {
-    return next(new AppError('Failed to retrieve UserRegularizationReason', 500));
-  }
-});
-
-exports.updateUserRegularizationReason = catchAsync(async (req, res, next) => {
-  try {
-    const userRegularizationReason = await UserRegularizationReason.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!userRegularizationReason) {
-      return next(new AppError('UserRegularizationReason not found', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: userRegularizationReason,
-    });
-  } catch (error) {
-    return next(new AppError('Failed to update UserRegularizationReason', 500));
-  }
-});
-
-exports.deleteUserRegularizationReason = catchAsync(async (req, res, next) => {
-  try {
-    const userRegularizationReason = await UserRegularizationReason.findByIdAndDelete(req.params.id);
-
-    if (!userRegularizationReason) {
-      return next(new AppError('UserRegularizationReason not found', 404));
-    }
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  } catch (error) {
-    return next(new AppError('Failed to delete UserRegularizationReason', 500));
-  }
-});
-
-exports.getAllUserRegularizationReasons = catchAsync(async (req, res, next) => {
-  try {
-    const userRegularizationReasons = await UserRegularizationReason.find();
-
-    res.status(200).json({
-      status: 'success',
-      data: userRegularizationReasons,
-    });
-  } catch (error) {
-    return next(new AppError('Failed to retrieve UserRegularizationReasons', 500));
-  }
-});
 

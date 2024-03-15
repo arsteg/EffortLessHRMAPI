@@ -169,11 +169,19 @@ if(leaveCategory.isSystemGenerated){
 }
 else
 {
-await LeaveCategory.findByIdAndDelete(req.params.id);
- res.status(204).json({
-   status: 'success',
-   data: null,
- });
+  
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveCategory').equals(req.params.id);
+  if(leaveTemplateCategory!==null){
+    return next(new AppError('Leave Category Added against Leave empalte, you can not delete found', 404));
+  }
+  else
+  {
+    await LeaveCategory.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }
 }
 });
 
@@ -530,7 +538,7 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   if (leaveTemplate && leaveTemplate.approvalType == "template-wise")
   {    
         req.body.primaryApprover = leaveTemplate.primaryApprover;
-        req.body.secondaryApprover = leaveTemplate.primaryApprover;      
+        req.body.secondaryApprover = leaveTemplate.secondaryApprover;      
   }  
   if (employeeLeaveAssignmentExists.length<=0) {   
      
