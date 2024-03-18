@@ -15,5 +15,8 @@ const onDutyReasonSchema = new Schema({
     ref: 'Company',
     required: true,
   },
+  userOnDutyReason: []
 }, { collection: 'OnDutyReason' });
+
+module .exports = mongoose.model('OnDutyReason', onDutyReasonSchema);
 

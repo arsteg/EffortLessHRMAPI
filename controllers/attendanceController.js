@@ -17,6 +17,7 @@ const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -222,59 +223,154 @@ exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
 });
 
 exports.createOnDutyReason = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId; // Get company from cookies
+  req.body.company = company; // Set company in the request body
+
   const onDutyReason = await OnDutyReason.create(req.body);
+  const users = req.body.users;
+ 
+  // Iterate through the users array and add unique user IDs to uniqueUsers array
+  const uniqueUsers = new Set(); // Using a Set to store unique user IDs
+
+  // Iterate through the users array and add unique user IDs to uniqueUsers set
+  for (const val of users) {
+    const userId = val.user; // Get the user ID from the object
+    if (!uniqueUsers.has(userId)) { // Check if user ID already exists
+      uniqueUsers.add(userId);
+    }
+  }
+  // Iterate through the users array and create UserRegularizationReason for each user
+  const userOnDutyReasons = [];
+  for (const user of uniqueUsers) {
+    const userOnDutyReason = await UserOnDutyReason.create({
+      user: user,
+      onDutyReason: onDutyReason._id // Assuming regularizationReason is the newly created document
+    });
+    userOnDutyReasons.push(userOnDutyReason);
+  }
+  console.log(userOnDutyReasons);
+  onDutyReason.userOnDutyReason=userOnDutyReasons;
   res.status(201).json({
     status: 'success',
-    data: onDutyReason,
+    data: onDutyReason
   });
 });
 
 exports.getOnDutyReason = catchAsync(async (req, res, next) => {
   const onDutyReason = await OnDutyReason.findById(req.params.id);
+
   if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
+    return next(new AppError('OnDuty Reason not found', 404));
   }
+  if(onDutyReason) 
+      {
+        
+         
+          const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);  
+          if(userOnDutyReasons) 
+            {
+              onDutyReason.userOnDutyReason = userOnDutyReasons;
+            }
+            else{
+              onDutyReason.userOnDutyReason=null;
+            }
+          
+      }
   res.status(200).json({
     status: 'success',
-    data: onDutyReason,
+    data: onDutyReason
   });
 });
 
 exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
+  const isOnDutyReason = await OnDutyReason.findById(req.params.id);
+
+  if (!isOnDutyReason) {
+    return next(new AppError('On Duty Reason not found', 404));
+  }
+
+  // Extract the user IDs from the request body
+  const { users: allUsers } = req.body;
+
+  // Iterate through the users array and add unique user IDs to newUsers Set
+  const newUsers = new Set();
+  for (const val of allUsers) {
+    const userId = val.user; // Get the user ID from the object
+    newUsers.add(userId);
+  }
+  console.log(newUsers);
+  // Retrieve the existing users associated with the regularization reason
+  const existingUsers = await UserOnDutyReason.find({ onDutyReason: isOnDutyReason._id });
+  console.log(existingUsers);
+  // Extract the existing user IDs
+  const existingUserIds = existingUsers.map(user => user.user.toString());
+
+  // Find users to be removed (existing users not present in the request)
+  const usersToRemove = existingUsers.filter(user => !newUsers.has(user.user.toString()));
+
+  // Remove the users to be removed
+  await Promise.all(usersToRemove.map(async user => await user.remove()));
+
+  // Find new users to be added (users in the request not already associated)
+  const newUsersToAdd = Array.from(newUsers).filter(userId => !existingUserIds.includes(userId));
+
+  // Add new users
+  const userOnDutyReasons = await Promise.all(newUsersToAdd.map(async userId => {
+    return await UserOnDutyReason.create({
+      user: userId,
+      onDutyReason: isOnDutyReason._id
+    });
+  }));
+  
   const onDutyReason = await OnDutyReason.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true,
+    runValidators: true
   });
 
   if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
+    return next(new AppError('Regularization Reason not found', 404));
   }
 
+  onDutyReason.userOnDutyReason =  await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
   res.status(200).json({
     status: 'success',
-    data: onDutyReason,
+    data: onDutyReason
   });
 });
+
 
 exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
   const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
   if (!onDutyReason) {
-    return next(new AppError('OnDutyReason not found', 404));
+    return next(new AppError('OnDutyReason Reason not found', 404));
   }
   res.status(204).json({
     status: 'success',
-    data: null,
+    data: null
   });
 });
 
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
-  const onDutyReasons = await OnDutyReason.find();
+  const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId);;
+  if(onDutyReasons) 
+      {
+        
+          for(var i = 0; i < onDutyReasons.length; i++) {     
+          const userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReasons[i]._id);  
+          if(userOnDutyReason) 
+            {
+              onDutyReasons[i].userOnDutyReason = userOnDutyReason;
+            }
+            else{
+              onDutyReasons[i].userOnDutyReason=null;
+            }
+          }
+      }
   res.status(200).json({
     status: 'success',
-    data: onDutyReasons,
+    data: onDutyReasons
   });
 });
-
 // Create a new Attendance Template
 exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
