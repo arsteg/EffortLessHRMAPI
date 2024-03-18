@@ -1073,7 +1073,7 @@ console.log(objectIdArray);
           }
         }
           expenseReports[j].expenseReportExpense=expenseReportExpenses;
-      }  
+      }
   }
   res.status(200).json({
     status: 'success',

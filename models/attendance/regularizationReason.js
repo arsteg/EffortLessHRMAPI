@@ -25,6 +25,7 @@ const regularizationReasonSchema = new Schema({
     ref: 'Company',
     required: true,
   },
+  userRegularizationReasons: []
 }, { collection: 'RegularizationReason' });
 
 module .exports = mongoose.model('RegularizationReason', regularizationReasonSchema);

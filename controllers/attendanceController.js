@@ -75,7 +75,30 @@ exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
 exports.createRegularizationReason = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId; // Get company from cookies
   req.body.company = company; // Set company in the request body
+
   const regularizationReason = await RegularizationReason.create(req.body);
+  const users = req.body.users;
+ 
+  // Iterate through the users array and add unique user IDs to uniqueUsers array
+  const uniqueUsers = new Set(); // Using a Set to store unique user IDs
+
+  // Iterate through the users array and add unique user IDs to uniqueUsers set
+  for (const val of users) {
+    const userId = val.user; // Get the user ID from the object
+    if (!uniqueUsers.has(userId)) { // Check if user ID already exists
+      uniqueUsers.add(userId);
+    }
+  }
+  // Iterate through the users array and create UserRegularizationReason for each user
+  const userRegularizationReasons = [];
+  for (const user of uniqueUsers) {
+    const userRegularizationReason = await UserRegularizationReason.create({
+      user: user,
+      regularizationReason: regularizationReason._id // Assuming regularizationReason is the newly created document
+    });
+    userRegularizationReasons.push(userRegularizationReason);
+  }
+  regularizationReason.userRegularizationReasons=userRegularizationReasons;
   res.status(201).json({
     status: 'success',
     data: regularizationReason
@@ -84,9 +107,24 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
 
 exports.getRegularizationReason = catchAsync(async (req, res, next) => {
   const regularizationReason = await RegularizationReason.findById(req.params.id);
+
   if (!regularizationReason) {
     return next(new AppError('Regularization Reason not found', 404));
   }
+  if(regularizationReason) 
+      {
+        
+         
+          const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);  
+          if(userRegularizationReasons) 
+            {
+              regularizationReason.userRegularizationReasons = userRegularizationReasons;
+            }
+            else{
+              regularizationReason.userRegularizationReasons=null;
+            }
+          
+      }
   res.status(200).json({
     status: 'success',
     data: regularizationReason
@@ -94,6 +132,45 @@ exports.getRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
+  const isRegularizationReason = await RegularizationReason.findById(req.params.id);
+
+  if (!isRegularizationReason) {
+    return next(new AppError('Regularization Reason not found', 404));
+  }
+
+  // Extract the user IDs from the request body
+  const { users: allUsers } = req.body;
+
+  // Iterate through the users array and add unique user IDs to newUsers Set
+  const newUsers = new Set();
+  for (const val of allUsers) {
+    const userId = val.user; // Get the user ID from the object
+    newUsers.add(userId);
+  }
+  console.log(newUsers);
+  // Retrieve the existing users associated with the regularization reason
+  const existingUsers = await UserRegularizationReason.find({ regularizationReason: isRegularizationReason._id });
+  console.log(existingUsers);
+  // Extract the existing user IDs
+  const existingUserIds = existingUsers.map(user => user.user.toString());
+
+  // Find users to be removed (existing users not present in the request)
+  const usersToRemove = existingUsers.filter(user => !newUsers.has(user.user.toString()));
+
+  // Remove the users to be removed
+  await Promise.all(usersToRemove.map(async user => await user.remove()));
+
+  // Find new users to be added (users in the request not already associated)
+  const newUsersToAdd = Array.from(newUsers).filter(userId => !existingUserIds.includes(userId));
+
+  // Add new users
+  const userRegularizationReasons = await Promise.all(newUsersToAdd.map(async userId => {
+    return await UserRegularizationReason.create({
+      user: userId,
+      regularizationReason: isRegularizationReason._id
+    });
+  }));
+  
   const regularizationReason = await RegularizationReason.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -103,11 +180,13 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
     return next(new AppError('Regularization Reason not found', 404));
   }
 
+  regularizationReason.userRegularizationReasons =  await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);;
   res.status(200).json({
     status: 'success',
     data: regularizationReason
   });
 });
+
 
 exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
   const regularizationReason = await RegularizationReason.findByIdAndDelete(req.params.id);
@@ -121,7 +200,21 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
-  const regularizationReasons = await RegularizationReason.find();
+  const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId);;
+  if(regularizationReasons) 
+      {
+        
+          for(var i = 0; i < regularizationReasons.length; i++) {     
+          const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReasons[i]._id);  
+          if(userRegularizationReasons) 
+            {
+              regularizationReasons[i].userRegularizationReasons = userRegularizationReasons;
+            }
+            else{
+              regularizationReasons[i].userRegularizationReasons=null;
+            }
+          }
+      }
   res.status(200).json({
     status: 'success',
     data: regularizationReasons
