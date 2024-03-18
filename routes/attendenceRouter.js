@@ -27,8 +27,8 @@ const attendanceRouter = express.Router();
  *                 type: boolean
  *               shiftAssignmentsBasedOnRoster:
  *                 type: boolean 
- *               regularizationRequestandLeaveApplicationBlockedForUser:
- *                 type:boolean
+ *               IsRegularizationandLeaveBlockedForUser:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: GeneralSettings successfully created
@@ -89,7 +89,7 @@ attendanceRouter.get('/general-settings-by-company',authController.protect, atte
  *               shiftAssignmentsBasedOnRoster:
  *                 type: boolean
  *               regularizationRequestandLeaveApplicationBlockedForUser:
- *                 type:boolean
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Successful response with the updated GeneralSettings
@@ -603,6 +603,160 @@ attendanceRouter.delete('/duty-requests/:id', authController.protect, attendance
  */
 attendanceRouter.get('/duty-requests', authController.protect, attendanceController.getAllDutyRequests);
 
+//Attendance Template
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates:
+ *   post:
+ *     summary: Create a new Attendance Template
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Attendance Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               attendanceMode:
+ *                 type: string
+ *                 required: true
+ *               missingCheckInCheckoutHandlingMode:
+ *                 type: string
+ *                 required: true
+ *               missingCheckinCheckoutAttendanceProcessMode:
+ *                 type: string
+ *                 required: true
+ *               minimumHoursRequiredPerWeek:
+ *                 type: number
+ *                 required: true
+ *               notifyEmployeeMinHours:
+ *                 type: boolean
+ *                 required: true
+ *               isShortTimeLeaveDeductible:
+ *                 type: boolean
+ *                 required: true
+ *               weeklyoffDays:
+ *                 type: object
+ *                 properties:
+ *                   weekOffIsHalfDay:
+ *                     type: boolean 
+ *                   sendNotificationToSupervisors:
+ *                     type: boolean 
+ *     responses:
+ *       201:
+ *         description: Attendance Template successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/attendance-templates', authController.protect, attendanceController.createAttendanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates/{id}:
+ *   put:
+ *     summary: Update an Attendance Template by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template
+ *     requestBody:
+ *       description: New Attendance Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               attendanceMode:
+ *                 type: string
+ *               missingCheckInCheckoutHandlingMode:
+ *                 type: string
+ *               missingCheckinCheckoutAttendanceProcessMode:
+ *                 type: string
+ *               minimumHoursRequiredPerWeek:
+ *                 type: number
+ *               notifyEmployeeMinHours:
+ *                 type: boolean
+ *               isShortTimeLeaveDeductible:
+ *                 type: boolean
+ *               weeklyoffDays:
+ *                 type: object
+ *                 properties:
+ *                   weekOffIsHalfDay:
+ *                     type: boolean 
+ *                   sendNotificationToSupervisors:
+ *                     type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Attendance Template
+ *       404:
+ *         description: Attendance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/attendance-templates/:id', authController.protect, attendanceController.updateAttendanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates/{id}:
+ *   delete:
+ *     summary: Delete an Attendance Template by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template
+ *     responses:
+ *       204:
+ *         description: Attendance Template successfully deleted
+ *       404:
+ *         description: Attendance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/attendance-templates/:id', authController.protect, attendanceController.deleteAttendanceTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates:
+ *   get:
+ *     summary: Get all Attendance Templates
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Attendance Templates
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-templates', authController.protect, attendanceController.getAllAttendanceTemplates);
+
 // UserOnDutyTemplate routes
 /**
  * @swagger
@@ -914,164 +1068,6 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  */
 attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
 
-/**
- * @swagger
- * tags:
- *   name: Attendance Management
- */
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-templates:
- *   post:
- *     summary: Create a new Attendance Template
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Attendance Template details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               label:
- *                 type: string
- *                 required: true
- *               attendanceMode:
- *                 type: string
- *                 required: true
- *               missingCheckInCheckoutHandlingMode:
- *                 type: string
- *                 required: true
- *               missingCheckinCheckoutAttendanceProcessMode:
- *                 type: string
- *                 required: true
- *               minimumHoursRequiredPerWeek:
- *                 type: number
- *                 required: true
- *               notifyEmployeeMinHours:
- *                 type: boolean
- *                 required: true
- *               isShortTimeLeaveDeductible:
- *                 type: boolean
- *                 required: true
- *               weeklyoffDays:
- *                 type: object
- *                 properties:
- *                   weekOffIsHalfDay:
- *                     type: boolean 
- *                   sendNotificationToSupervisors:
- *                     type: boolean 
- *     responses:
- *       201:
- *         description: Attendance Template successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/attendance-templates', authController.protect, attendanceController.createAttendanceTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-templates/{id}:
- *   put:
- *     summary: Update an Attendance Template by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template
- *     requestBody:
- *       description: New Attendance Template details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               label:
- *                 type: string
- *               attendanceMode:
- *                 type: string
- *               missingCheckInCheckoutHandlingMode:
- *                 type: string
- *               missingCheckinCheckoutAttendanceProcessMode:
- *                 type: string
- *               minimumHoursRequiredPerWeek:
- *                 type: number
- *               notifyEmployeeMinHours:
- *                 type: boolean
- *               isShortTimeLeaveDeductible:
- *                 type: boolean
- *               weeklyoffDays:
- *                 type: object
- *                 properties:
- *                   weekOffIsHalfDay:
- *                     type: boolean 
- *                   sendNotificationToSupervisors:
- *                     type: boolean
- *     responses:
- *       200:
- *         description: Successful response with the updated Attendance Template
- *       404:
- *         description: Attendance Template not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/attendance-templates/:id', authController.protect, attendanceController.updateAttendanceTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-templates/{id}:
- *   delete:
- *     summary: Delete an Attendance Template by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template
- *     responses:
- *       204:
- *         description: Attendance Template successfully deleted
- *       404:
- *         description: Attendance Template not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/attendance-templates/:id', authController.protect, attendanceController.deleteAttendanceTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-templates:
- *   get:
- *     summary: Get all Attendance Templates
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with Attendance Templates
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-templates', authController.protect, attendanceController.getAllAttendanceTemplates);
 
 /**
  * @swagger

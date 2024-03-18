@@ -107,7 +107,10 @@ const userSchema = new mongoose.Schema({
   updatedOn: {
     type: Date,
     required: true    
-  }  
+  },
+  personalEmail: {
+    type: String
+  },
 },
 {
  toJSON: { virtuals: true }, // Use virtuals when outputing as JSON

@@ -14,7 +14,7 @@ const generalSettingsSchema = new Schema({
     type: Boolean,
     required: true,
   },
-  regularizationRequestandLeaveApplicationBlockedForUser:{
+  IsRegularizationandLeaveBlockedForUser:{
     type: Boolean,
     required: true,
   },

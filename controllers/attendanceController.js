@@ -182,6 +182,74 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
   });
 });
 
+// Create a new Attendance Template
+exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+ 
+  const attendanceTemplate = await AttendanceTemplate.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: attendanceTemplate,
+  });
+});
+
+// Get an Attendance Template by ID
+exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
+  const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
+  if (!attendanceTemplate) {
+    return next(new AppError('Attendance Template not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: attendanceTemplate,
+  });
+});
+
+// Update an Attendance Template by ID
+exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
+  const attendanceTemplate = await AttendanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!attendanceTemplate) {
+    return next(new AppError('Attendance Template not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: attendanceTemplate,
+  });
+});
+
+// Delete an Attendance Template by ID
+exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
+  const attendanceTemplate = await AttendanceTemplate.findByIdAndDelete(req.params.id);
+  if (!attendanceTemplate) {
+    return next(new AppError('Attendance Template not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+// Get all Attendance Templates
+exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
+  const attendanceTemplates = await AttendanceTemplate.find();
+  res.status(200).json({
+    status: 'success',
+    data: attendanceTemplates,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -249,77 +317,6 @@ exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: attendanceModes,
-  });
-});
-
-
-
-
-// Create a new Attendance Template
-exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  // Add companyId to the request body
-  req.body.company = companyId;
- 
-  const attendanceTemplate = await AttendanceTemplate.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: attendanceTemplate,
-  });
-});
-
-// Get an Attendance Template by ID
-exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
-  const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
-  if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: attendanceTemplate,
-  });
-});
-
-// Update an Attendance Template by ID
-exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
-  const attendanceTemplate = await AttendanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: attendanceTemplate,
-  });
-});
-
-// Delete an Attendance Template by ID
-exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
-  const attendanceTemplate = await AttendanceTemplate.findByIdAndDelete(req.params.id);
-  if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-// Get all Attendance Templates
-exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
-  const attendanceTemplates = await AttendanceTemplate.find();
-  res.status(200).json({
-    status: 'success',
-    data: attendanceTemplates,
   });
 });
 
