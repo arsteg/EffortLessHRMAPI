@@ -4,37 +4,56 @@ const Schema = mongoose.Schema;
 const roundingInformationSchema = new Schema({
   roundingPatternName: {
     type: String,
-    required: true,
+    required: true
   },
   roundingPatternCode: {
     type: String,
-    required: true,
+    required: true
   },
   shift: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Shift',
+    type: String,
+    required: true
   },
   roundingPatternMethod: {
     type: String,
-    required: true,
+    required: true
   },
   roundingPattern: {
     type: String,
-    required: true,
+    required: true
   },
   roundingValue: {
     type: Number,
-    required: true,
+    required: true
   },
-  OTtypeApplicable: {
+  OTtypeApplicablePreOT: {
     type: String,
-    required: true,
+    required: true
   },
-  company: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Company',
-    required: true,
+  PreOTValueMinutes: {
+    type: String,
+    required: true
   },
+  PreOTValueHour: {
+    type: String,
+    required: true
+  },
+  OTtypeApplicablePostOT: {
+    type: String,
+    required: true
+  },
+  PostOTValueHour: {
+    type: String,
+    required: true
+  },
+  PostOTValueMinutes: {
+    type: String,
+    required: true
+  },
+  OTtypeApplicableWeekOff: {
+    type: String,
+    required: true
+  }
 }, { collection: 'RoundingInformation' });
 
 module.exports = mongoose.model('RoundingInformation', roundingInformationSchema);

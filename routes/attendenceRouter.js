@@ -610,9 +610,8 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *   post:
  *     summary: Create a new Attendance Template
  *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       description: Attendance Template details
  *       required: true
@@ -623,32 +622,88 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *             properties:
  *               label:
  *                 type: string
- *                 required: true
+ *                 description: The label of the attendance template.
+ *                 example: My Attendance Template
  *               attendanceMode:
  *                 type: string
- *                 required: true
+ *                 description: The mode of attendance.
+ *                 example: Online
  *               missingCheckInCheckoutHandlingMode:
  *                 type: string
- *                 required: true
+ *                 description: The mode of handling missing check-ins and check-outs.
+ *                 example: Manual
  *               missingCheckinCheckoutAttendanceProcessMode:
  *                 type: string
- *                 required: true
+ *                 description: The mode of processing missing check-ins and check-outs.
+ *                 example: Automatic
  *               minimumHoursRequiredPerWeek:
  *                 type: number
- *                 required: true
+ *                 description: The minimum number of hours required per week.
+ *                 example: 40
  *               notifyEmployeeMinHours:
  *                 type: boolean
- *                 required: true
+ *                 description: Whether to notify employees if minimum hours are not met.
+ *                 example: true
  *               isShortTimeLeaveDeductible:
  *                 type: boolean
- *                 required: true
- *               weeklyoffDays:
- *                 type: object
- *                 properties:
- *                   weekOffIsHalfDay:
- *                     type: boolean 
- *                   sendNotificationToSupervisors:
- *                     type: boolean 
+ *                 description: Whether short time leave is deductible.
+ *                 example: true
+ *               weeklyOfDays:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days of the week for weekly offs.
+ *                 example: ["Monday", "Wednesday"]
+ *               weklyofHalfDay:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days of the week for weekly half days.
+ *                 example: ["Friday"]
+ *               alternateWeekOffRoutine:
+ *                 type: string
+ *                 description: Alternate week off routine.
+ *                 example: Routine A
+ *               daysForAlternateWeekOffRoutine:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days for alternate week off routine.
+ *                 example: ["Sunday", "Thursday"]
+ *               isNotificationToSupervisors:
+ *                 type: boolean
+ *                 description: Whether to send notifications to supervisors.
+ *                 example: true
+ *               isCommentMandatoryForRegularisation:
+ *                 type: boolean
+ *                 description: Whether comment is mandatory for regularization.
+ *                 example: false
+ *               departmentDesignations:
+ *                 type: string
+ *                 description: Department designations.
+ *                 example: Designation A
+ *               approversType:
+ *                 type: string
+ *                 description: Type of approvers.
+ *                 example: Type A
+ *               approvalLevel:
+ *                 type: string
+ *                 description: Approval level.
+ *                 example: Level A
+ *               primaryApprover:
+ *                 type: string
+ *                 description: Primary approver.
+ *                 example: null
+ *               secondaryApprover:
+ *                 type: string
+ *                 description: Secondary approver.
+ *                 example: null
+ *               leveCategoryHierarchyForAbsentHalfDay:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Leave category hierarchy for absent half day.
+ *                 example: ["Category A", "Category B"]
  *     responses:
  *       201:
  *         description: Attendance Template successfully created
@@ -657,6 +712,7 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *       500:
  *         description: Internal server error
  */
+
 attendanceRouter.post('/attendance-templates', authController.protect, attendanceController.createAttendanceTemplate);
 
 /**
@@ -676,7 +732,7 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *           type: string
  *         description: ID of the Attendance Template
  *     requestBody:
- *       description: New Attendance Template details
+ *       description: Attendance Template details
  *       required: true
  *       content:
  *         application/json:
@@ -685,25 +741,88 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *             properties:
  *               label:
  *                 type: string
+ *                 description: The label of the attendance template.
+ *                 example: My Attendance Template
  *               attendanceMode:
  *                 type: string
+ *                 description: The mode of attendance.
+ *                 example: Online
  *               missingCheckInCheckoutHandlingMode:
  *                 type: string
+ *                 description: The mode of handling missing check-ins and check-outs.
+ *                 example: Manual
  *               missingCheckinCheckoutAttendanceProcessMode:
  *                 type: string
+ *                 description: The mode of processing missing check-ins and check-outs.
+ *                 example: Automatic
  *               minimumHoursRequiredPerWeek:
  *                 type: number
+ *                 description: The minimum number of hours required per week.
+ *                 example: 40
  *               notifyEmployeeMinHours:
  *                 type: boolean
+ *                 description: Whether to notify employees if minimum hours are not met.
+ *                 example: true
  *               isShortTimeLeaveDeductible:
  *                 type: boolean
- *               weeklyoffDays:
- *                 type: object
- *                 properties:
- *                   weekOffIsHalfDay:
- *                     type: boolean 
- *                   sendNotificationToSupervisors:
- *                     type: boolean
+ *                 description: Whether short time leave is deductible.
+ *                 example: true
+ *               weeklyOfDays:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days of the week for weekly offs.
+ *                 example: ["Monday", "Wednesday"]
+ *               weklyofHalfDay:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days of the week for weekly half days.
+ *                 example: ["Friday"]
+ *               alternateWeekOffRoutine:
+ *                 type: string
+ *                 description: Alternate week off routine.
+ *                 example: Routine A
+ *               daysForAlternateWeekOffRoutine:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Days for alternate week off routine.
+ *                 example: ["Sunday", "Thursday"]
+ *               isNotificationToSupervisors:
+ *                 type: boolean
+ *                 description: Whether to send notifications to supervisors.
+ *                 example: true
+ *               isCommentMandatoryForRegularisation:
+ *                 type: boolean
+ *                 description: Whether comment is mandatory for regularization.
+ *                 example: false
+ *               departmentDesignations:
+ *                 type: string
+ *                 description: Department designations.
+ *                 example: Designation A
+ *               approversType:
+ *                 type: string
+ *                 description: Type of approvers.
+ *                 example: Type A
+ *               approvalLevel:
+ *                 type: string
+ *                 description: Approval level.
+ *                 example: Level A
+ *               primaryApprover:
+ *                 type: string
+ *                 description: Primary approver.
+ *                 example: null
+ *               secondaryApprover:
+ *                 type: string
+ *                 description: Secondary approver.
+ *                 example: null
+ *               leveCategoryHierarchyForAbsentHalfDay:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Leave category hierarchy for absent half day.
+ *                 example: ["Category A", "Category B"]
  *     responses:
  *       200:
  *         description: Successful response with the updated Attendance Template
