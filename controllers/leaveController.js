@@ -841,6 +841,7 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
          await LeaveApplicationHalfDay.deleteMany({
           leaveCategory: updatedLeaveApplication._id,
        });
+       var createdHalfDays=null;
         // Check if haldDays is provided and valid
         if (Array.isArray(haldDays)) {  
           // Create haldDays instances

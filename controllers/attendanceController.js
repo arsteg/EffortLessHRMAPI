@@ -18,7 +18,8 @@ const UserRegularizationReason = require('../models/attendance/userRegularizatio
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const userOnDutyReason = require('../models/attendance/userOnDutyReason');
-
+const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
+const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -436,6 +437,76 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: attendanceTemplates,
+  });
+});
+
+exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
+  // Check if the attendanceTemplate exists
+  const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
+  if (!templateExists) {
+    return next(new AppError('Invalid attendanceTemplate', 400));
+  }
+  const attendanceRegularization = await AttendanceRegularization.create(req.body);
+  res.status(201).json({
+    status: "success",
+    data: attendanceRegularization
+  });
+});
+
+exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
+  const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
+  if (!attendanceRegularization) {
+    return next(new AppError("Attendance Regularization not found", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    data: attendanceRegularization
+  });
+});
+
+exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
+   // Check if the attendanceTemplate exists
+   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
+   if (!templateExists) {
+     return next(new AppError('Invalid attendanceTemplate', 400));
+   }
+   const attendanceRegularization = await AttendanceRegularization.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true
+    }
+  );
+
+  if (!attendanceRegularization) {
+    return next(new AppError("Attendance Regularization not found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: attendanceRegularization
+  });
+});
+
+exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
+  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.params.companyId });
+  res.status(200).json({
+    status: "success",
+    data: attendanceRegularizations
+  });
+});
+
+exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
+  const attendanceRegularization = await AttendanceRegularization.findByIdAndDelete(req.params.id);
+
+  if (!attendanceRegularization) {
+    return next(new AppError("Attendance Regularization not found", 404));
+  }
+
+  res.status(204).json({
+    status: "success",
+    data: null
   });
 });
 

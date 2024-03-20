@@ -704,6 +704,15 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *                   type: string
  *                 description: Leave category hierarchy for absent half day.
  *                 example: ["Category A", "Category B"]
+ *               IPDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     IP:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       201:
  *         description: Attendance Template successfully created
@@ -823,6 +832,15 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *                   type: string
  *                 description: Leave category hierarchy for absent half day.
  *                 example: ["Category A", "Category B"]
+ *               IPDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     IP:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated Attendance Template
@@ -875,6 +893,181 @@ attendanceRouter.delete('/attendance-templates/:id', authController.protect, att
  *         description: Internal server error
  */
 attendanceRouter.get('/attendance-templates', authController.protect, attendanceController.getAllAttendanceTemplates);
+
+//Attdance Template Regulrization
+/**
+ * @swagger
+ * /api/v1/attendance/regularizations:
+ *   post:
+ *     summary: Add a new Attendance Regularization
+ *     tags: [Attendance Management]
+ *     requestBody:
+ *       description: Attendance Regularization details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               canEmpRegularizeOwnAttendance:
+ *                 type: string
+ *               canSupervisorsRegularizeSubordinatesAttendance:
+ *                 type: string
+ *               canAdminEditRegularizeAttendance:
+ *                 type: string
+ *               shouldWeeklyEmailNotificationToBeSent:
+ *                 type: string
+ *               whoReceiveWeeklyEmailNotification:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               isRestrictLocationForCheckInCheckOutUsingMobile:
+ *                 type: string
+ *               howAssignLocationsForEachEmployee:
+ *                 type: string
+ *               enableLocationCaptureFromMobile:
+ *                 type: string
+ *               geoLocationAPIProvider:
+ *                 type: string
+ *               googleAPIKey:
+ *                 type: string
+ *               isFacialFingerprintRecognitionFromMobile:
+ *                 type: string
+ *               attendanceTemplate:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Attendance Regularization successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/regularizations', attendanceController.addAttendanceRegularization);
+
+/**
+ * @swagger
+ * /api/v1/attendance/regularizations/{id}:
+ *   get:
+ *     summary: Get an Attendance Regularization by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Regularization
+ *     responses:
+ *       200:
+ *         description: Successful response with the Attendance Regularization
+ *       404:
+ *         description: Attendance Regularization not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceRegularization);
+
+/**
+ * @swagger
+ * /api/v1/attendance/regularizations/{id}:
+ *   put:
+ *     summary: Update an Attendance Regularization by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Regularization
+ *     requestBody:
+ *       description: Attendance Regularization details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               canEmpRegularizeOwnAttendance:
+ *                 type: string
+ *               canSupervisorsRegularizeSubordinatesAttendance:
+ *                 type: string
+ *               canAdminEditRegularizeAttendance:
+ *                 type: string
+ *               shouldWeeklyEmailNotificationToBeSent:
+ *                 type: string
+ *               whoReceiveWeeklyEmailNotification:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               isRestrictLocationForCheckInCheckOutUsingMobile:
+ *                 type: string
+ *               howAssignLocationsForEachEmployee:
+ *                 type: string
+ *               enableLocationCaptureFromMobile:
+ *                 type: string
+ *               geoLocationAPIProvider:
+ *                 type: string
+ *               googleAPIKey:
+ *                 type: string
+ *               isFacialFingerprintRecognitionFromMobile:
+ *                 type: string
+ *               attendanceTemplate:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Attendance Regularization
+ *       404:
+ *         description: Attendance Regularization not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/regularizations/:id', attendanceController.updateAttendanceRegularization);
+
+/**
+ * @swagger
+ * /api/v1/attendance/regularizations/company/{companyId}:
+ *   get:
+ *     summary: Get all Attendance Regularizations by Company ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the company
+ *     responses:
+ *       200:
+ *         description: Successful response with Attendance Regularizations
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/regularizations/company/:companyId', attendanceController.getAllAttendanceRegularizationsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/attendance/regularizations/{id}:
+ *   delete:
+ *     summary: Delete an Attendance Regularization by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Regularization
+ *     responses:
+ *       204:
+ *         description: Attendance Regularization successfully deleted
+ *       404:
+ *         description: Attendance Regularization not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/regularizations/:id', attendanceController.deleteAttendanceRegularization);
 
 // UserOnDutyTemplate routes
 /**
