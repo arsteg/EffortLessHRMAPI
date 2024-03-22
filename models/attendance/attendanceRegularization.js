@@ -49,7 +49,9 @@ var attendanceRegularizationSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'AttendanceTemplate',
     required: true
-  }
+  },
+  AttendanceRegularizationRestrictedLocations: [],
+  AttendanceRegularizationRestrictedIPDetails: []
 }, { collection: 'AttendanceRegularization' });
 
 module.exports = mongoose.model('AttendanceRegularization', attendanceRegularizationSchema);

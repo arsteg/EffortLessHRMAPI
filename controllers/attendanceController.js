@@ -20,6 +20,8 @@ const AppError = require('../utils/appError');
 const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
+const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
+
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -264,18 +266,15 @@ exports.getOnDutyReason = catchAsync(async (req, res, next) => {
     return next(new AppError('OnDuty Reason not found', 404));
   }
   if(onDutyReason) 
-      {
-        
-         
-          const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);  
+      {      
+         const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);  
           if(userOnDutyReasons) 
             {
               onDutyReason.userOnDutyReason = userOnDutyReasons;
             }
             else{
               onDutyReason.userOnDutyReason=null;
-            }
-          
+            }          
       }
   res.status(200).json({
     status: 'success',
@@ -446,18 +445,74 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
   if (!templateExists) {
     return next(new AppError('Invalid attendanceTemplate', 400));
   }
+
+  // Check if AttendanceRegularization with the same attendanceTemplate already exists
+  const existingRegularization = await AttendanceRegularization.findOne({ attendanceTemplate: req.body.attendanceTemplate });
+  if (existingRegularization) {
+    return next(new AppError('AttendanceRegularization with this attendanceTemplate already exists', 400));
+  }
+
+  // Create the main AttendanceRegularization document
   const attendanceRegularization = await AttendanceRegularization.create(req.body);
+
+  // Insert IP addresses and location details into AttendanceRegularizationRestrictedIP model
+  if (req.body.IPDetails && req.body.IPDetails.length > 0) {
+    const IPDetails = req.body.IPDetails.map(ip => ({
+      attendanceRegularization: attendanceRegularization._id,
+      IP: ip.IP
+    }));
+    console.log(IPDetails);
+    attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = await AttendanceRegularizationRestrictedIP.insertMany(IPDetails);
+    
+  }
+
+  // Insert restrictLocationDetails into AttendanceRegularizationRestrictedIP model
+  if (req.body.restrictLocationDetails && req.body.restrictLocationDetails.length > 0) {
+  
+    const locationDetails = req.body.restrictLocationDetails.map(location => ({
+      attendanceRegularization: attendanceRegularization._id,
+      Location: location.Location,
+      Latitude: location.Latitude,
+      Longitude: location.Longitude,
+      Radius: location.Radius
+    }));
+    console.log(locationDetails);
+    attendanceRegularization.AttendanceRegularizationRestrictedLocations = await AttendanceRegularizationRestrictedLocation.insertMany(locationDetails);
+    
+  }
+
   res.status(201).json({
     status: "success",
     data: attendanceRegularization
   });
 });
 
+
 exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
   if (!attendanceRegularization) {
     return next(new AppError("Attendance Regularization not found", 404));
   }
+  if(attendanceRegularization) 
+  {  
+      const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+      if(attendanceRegularizationRestrictedIP) 
+        {
+          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+        }
+        else{
+          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
+        }
+        const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+      if(attendanceRegularizationRestrictedLocation) 
+        {
+          attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+        }
+        else{
+          attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
+        }
+  }
+
   res.status(200).json({
     status: "success",
     data: attendanceRegularization
@@ -465,12 +520,14 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
-   // Check if the attendanceTemplate exists
-   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
-   if (!templateExists) {
-     return next(new AppError('Invalid attendanceTemplate', 400));
-   }
-   const attendanceRegularization = await AttendanceRegularization.findByIdAndUpdate(
+  // Check if the attendanceTemplate exists
+  const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
+  if (!templateExists) {
+    return next(new AppError('Invalid attendanceTemplate', 400));
+  }
+
+  // Update existing record
+  const attendanceRegularization = await AttendanceRegularization.findByIdAndUpdate(
     req.params.id,
     req.body,
     {
@@ -483,14 +540,87 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
     return next(new AppError("Attendance Regularization not found", 404));
   }
 
+  // Update or create IP records
+  if (req.body.IPDetails && req.body.IPDetails.length > 0) {
+    await Promise.all(req.body.IPDetails.map(async (ipDetail) => {
+      const existingIP = await AttendanceRegularizationRestrictedIP.findOne({ IP: ipDetail.IP });
+      if (existingIP) {
+        // Update existing IP record
+        await AttendanceRegularizationRestrictedIP.findByIdAndUpdate(existingIP._id, ipDetail);
+      } else {
+        // Create new IP record
+        await AttendanceRegularizationRestrictedIP.create(ipDetail);
+      }
+    }));
+  }
+
+  // Update or create location records
+  if (req.body.restrictLocationDetails && req.body.restrictLocationDetails.length > 0) {
+    await Promise.all(req.body.restrictLocationDetails.map(async (locationDetail) => {
+      const existingLocation = await AttendanceRegularizationRestrictedLocation.findOne({ Location: locationDetail.Location });
+      if (existingLocation) {
+        // Update existing location record
+        await AttendanceRegularizationRestrictedLocation.findByIdAndUpdate(existingLocation._id, locationDetail);
+      } else {
+        // Create new location record
+        await AttendanceRegularizationRestrictedLocation.create(locationDetail);
+      }
+    }));
+  }
+
+  // Remove records from the database that are not present in the arrays
+  await Promise.all([
+    AttendanceRegularizationRestrictedIP.deleteMany({ IP: { $nin: req.body.IPDetails.map(ip => ip.IP) } }),
+    AttendanceRegularizationRestrictedLocation.deleteMany({ Location: { $nin: req.body.restrictLocationDetails.map(location => location.Location) } })
+  ]);
+
+  const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+  if(attendanceRegularizationRestrictedIP) 
+    {
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+    }
+    else{
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
+    }
+    const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+  if(attendanceRegularizationRestrictedLocation) 
+    {
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+    }
+    else{
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
+    }
   res.status(200).json({
     status: "success",
     data: attendanceRegularization
   });
 });
 
+
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
-  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.params.companyId });
+  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId });
+  if(attendanceRegularizations) 
+  {
+    
+      for(var i = 0; i < attendanceRegularizations.length; i++) {     
+        const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);  
+        if(attendanceRegularizationRestrictedIP) 
+          {
+            attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+          }
+          else{
+            attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails=null;
+          }
+          const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);  
+        if(attendanceRegularizationRestrictedLocation) 
+          {
+            attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+          }
+          else{
+            attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations=null;
+          }      
+      }
+  }
   res.status(200).json({
     status: "success",
     data: attendanceRegularizations
@@ -708,11 +838,6 @@ exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
     data: dutyRequests
   });
 });
-
-
-
-
-
 
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
   const onDutyTemplate = await OnDutyTemplate.create(req.body);

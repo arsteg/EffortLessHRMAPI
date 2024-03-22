@@ -832,15 +832,6 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *                   type: string
  *                 description: Leave category hierarchy for absent half day.
  *                 example: ["Category A", "Category B"]
- *               IPDetails:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     IP:
- *                       type: string
- *                       required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated Attendance Template
@@ -915,6 +906,17 @@ attendanceRouter.get('/attendance-templates', authController.protect, attendance
  *                 type: string
  *               canAdminEditRegularizeAttendance:
  *                 type: string
+ *               isIPrestrictedEmployeeCheckInCheckOut:
+ *                 type: string
+ *               IPDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     IP:
+ *                       type: string
+ *                       required: true 
  *               shouldWeeklyEmailNotificationToBeSent:
  *                 type: string
  *               whoReceiveWeeklyEmailNotification:
@@ -923,6 +925,24 @@ attendanceRouter.get('/attendance-templates', authController.protect, attendance
  *                   type: string
  *               isRestrictLocationForCheckInCheckOutUsingMobile:
  *                 type: string
+ *               restrictLocationDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     Location:
+ *                       type: string
+ *                       required: true 
+ *                     Latitude:
+ *                       type: string
+ *                       required: true 
+ *                     Longitude:
+ *                       type: string
+ *                       required: true 
+ *                     Radius:
+ *                       type: string
+ *                       required: true  
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
@@ -994,7 +1014,18 @@ attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceR
  *               canSupervisorsRegularizeSubordinatesAttendance:
  *                 type: string
  *               canAdminEditRegularizeAttendance:
+ *                 type: string 
+ *               isIPrestrictedEmployeeCheckInCheckOut:
  *                 type: string
+ *               IPDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     IP:
+ *                       type: string
+ *                       required: true 
  *               shouldWeeklyEmailNotificationToBeSent:
  *                 type: string
  *               whoReceiveWeeklyEmailNotification:
@@ -1003,6 +1034,24 @@ attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceR
  *                   type: string
  *               isRestrictLocationForCheckInCheckOutUsingMobile:
  *                 type: string
+ *               restrictLocationDetails:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     Location:
+ *                       type: string
+ *                       required: true 
+ *                     Latitude:
+ *                       type: string
+ *                       required: true 
+ *                     Longitude:
+ *                       type: string
+ *                       required: true 
+ *                     Radius:
+ *                       type: string
+ *                       required: true  
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
@@ -1027,24 +1076,17 @@ attendanceRouter.put('/regularizations/:id', attendanceController.updateAttendan
 
 /**
  * @swagger
- * /api/v1/attendance/regularizations/company/{companyId}:
+ * /api/v1/attendance/regularizations-by-company:
  *   get:
  *     summary: Get all Attendance Regularizations by Company ID
  *     tags: [Attendance Management]
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
  *     responses:
  *       200:
  *         description: Successful response with Attendance Regularizations
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularizations/company/:companyId', attendanceController.getAllAttendanceRegularizationsByCompany);
+attendanceRouter.get('/regularizations-by-company', attendanceController.getAllAttendanceRegularizationsByCompany);
 
 /**
  * @swagger
