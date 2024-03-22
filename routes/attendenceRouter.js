@@ -445,164 +445,6 @@ attendanceRouter.delete('/duty-reasons/:id', authController.protect, attendanceC
  */
 attendanceRouter.get('/duty-reasons', authController.protect, attendanceController.getAllOnDutyReasons);
 
-// DutyRequest routes
-/**
- * @swagger
- * /api/v1/attendance/duty-requests:
- *   post:
- *     summary: Create a new DutyRequest
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: DutyRequest details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               onDutyReason:
- *                 type: string
- *                 required: true
- *               startDate:
- *                 type: string
- *                 format: date
- *                 required: true
- *               endDate:
- *                 type: string
- *                 format: date
- *                 required: true
- *               comment:
- *                 type: string
- *               user:
- *                 type: string 
- *     responses:
- *       201:
- *         description: DutyRequest successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/duty-requests', authController.protect, attendanceController.createDutyRequest);
-
-/**
- * @swagger
- * /api/v1/attendance/duty-requests/{id}:
- *   get:
- *     summary: Get a DutyRequest by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the DutyRequest
- *     responses:
- *       200:
- *         description: Successful response with the DutyRequest
- *       404:
- *         description: DutyRequest not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceController.getDutyRequest);
-
-/**
- * @swagger
- * /api/v1/attendance/duty-requests/{id}:
- *   put:
- *     summary: Update a DutyRequest by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the DutyRequest
- *     requestBody:
- *       description: New DutyRequest details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               onDutyReason:
- *                 type: string
- *               startDate:
- *                 type: string
- *                 format: date
- *               endDate:
- *                 type: string
- *                 format: date
- *               comment:
- *                 type: string
- *               user:
- *                 type: string 
- *     responses:
- *       200:
- *         description: Successful response with the updated DutyRequest
- *       404:
- *         description: DutyRequest not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/duty-requests/:id', authController.protect, attendanceController.updateDutyRequest);
-
-/**
- * @swagger
- * /api/v1/attendance/duty-requests/{id}:
- *   delete:
- *     summary: Delete a DutyRequest by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the DutyRequest
- *     responses:
- *       204:
- *         description: DutyRequest successfully deleted
- *       404:
- *         description: DutyRequest not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/duty-requests/:id', authController.protect, attendanceController.deleteDutyRequest);
-
-/**
- * @swagger
- * /api/v1/attendance/duty-requests:
- *   get:
- *     summary: Get all DutyRequests
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with DutyRequests
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/duty-requests', authController.protect, attendanceController.getAllDutyRequests);
-
 //Attendance Template
 /**
  * @swagger
@@ -704,15 +546,6 @@ attendanceRouter.get('/duty-requests', authController.protect, attendanceControl
  *                   type: string
  *                 description: Leave category hierarchy for absent half day.
  *                 example: ["Category A", "Category B"]
- *               IPDetails:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     IP:
- *                       type: string
- *                       required: true 
  *     responses:
  *       201:
  *         description: Attendance Template successfully created
@@ -1111,6 +944,158 @@ attendanceRouter.get('/regularizations-by-company', attendanceController.getAllA
  */
 attendanceRouter.delete('/regularizations/:id', attendanceController.deleteAttendanceRegularization);
 
+//Attandance Assignment
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-assignments:
+ *   post:
+ *     summary: Create a new Attendance Template Assignment
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Attendance Template Assignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employee:
+ *                 type: string
+ *                 required: true
+ *               attandanceTemplate:
+ *                 type: string
+ *                 required: true
+ *               effectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               primaryApprover:
+ *                 type: string
+ *               secondaryApprover:
+ *                 type: string 
+ *     responses:
+ *       201:
+ *         description: Attendance Template Assignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/attendance-assignments', authController.protect, attendanceController.createAttendanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-assignments/{id}:
+ *   get:
+ *     summary: Get an Attendance Template Assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template Assignment
+ *     responses:
+ *       200:
+ *         description: Successful response with the Attendance Template Assignment
+ *       404:
+ *         description: Attendance Template Assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-assignments/:id', authController.protect, attendanceController.getAttendanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-assignments/{id}:
+ *   put:
+ *     summary: Update an Attendance Template Assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template Assignment
+ *     requestBody:
+ *       description: New Attendance Template Assignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               primaryApprovar:
+ *                 type: string
+ *               secondaryApprovar:
+ *                 type: string 
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Attendance Template Assignment
+ *       404:
+ *         description: Attendance Template Assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/attendance-assignments/:id', authController.protect, attendanceController.updateAttendanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-assignments/{id}:
+ *   delete:
+ *     summary: Delete an Attendance Template Assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template Assignment
+ *     responses:
+ *       204:
+ *         description: Attendance Template Assignment successfully deleted
+ *       404:
+ *         description: Attendance Template Assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/attendance-assignments/:id', authController.protect, attendanceController.deleteAttendanceAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-assignments:
+ *   get:
+ *     summary: Get all Attendance Template Assignments
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Attendance Template Assignments
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-assignments', authController.protect, attendanceController.getAllAttendanceAssignments);
+
+
+
 // UserOnDutyTemplate routes
 /**
  * @swagger
@@ -1421,147 +1406,6 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  *         description: Internal server error
  */
 attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
-
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-assignments:
- *   post:
- *     summary: Create a new Attendance Template Assignment
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Attendance Template Assignment details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               employee:
- *                 type: string
- *                 required: true
- *               template:
- *                 type: string
- *                 required: true
- *     responses:
- *       201:
- *         description: Attendance Template Assignment successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/attendance-assignments', authController.protect, attendanceController.createAttendanceAssignment);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-assignments/{id}:
- *   get:
- *     summary: Get an Attendance Template Assignment by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template Assignment
- *     responses:
- *       200:
- *         description: Successful response with the Attendance Template Assignment
- *       404:
- *         description: Attendance Template Assignment not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-assignments/:id', authController.protect, attendanceController.getAttendanceAssignment);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-assignments/{id}:
- *   put:
- *     summary: Update an Attendance Template Assignment by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template Assignment
- *     requestBody:
- *       description: New Attendance Template Assignment details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               employee:
- *                 type: string
- *               template:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated Attendance Template Assignment
- *       404:
- *         description: Attendance Template Assignment not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/attendance-assignments/:id', authController.protect, attendanceController.updateAttendanceAssignment);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-assignments/{id}:
- *   delete:
- *     summary: Delete an Attendance Template Assignment by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template Assignment
- *     responses:
- *       204:
- *         description: Attendance Template Assignment successfully deleted
- *       404:
- *         description: Attendance Template Assignment not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/attendance-assignments/:id', authController.protect, attendanceController.deleteAttendanceAssignment);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-assignments:
- *   get:
- *     summary: Get all Attendance Template Assignments
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with Attendance Template Assignments
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-assignments', authController.protect, attendanceController.getAllAttendanceAssignments);
 
 
 
@@ -2735,7 +2579,163 @@ attendanceRouter.post(
    */
   attendanceRouter.get('/', authController.protect, attendanceController.getAllShiftTemplateAssignments);
   
-  
+// DutyRequest routes
+/**
+ * @swagger
+ * /api/v1/attendance/duty-requests:
+ *   post:
+ *     summary: Create a new DutyRequest
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: DutyRequest details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               onDutyReason:
+ *                 type: string
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               comment:
+ *                 type: string
+ *               user:
+ *                 type: string 
+ *     responses:
+ *       201:
+ *         description: DutyRequest successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/duty-requests', authController.protect, attendanceController.createDutyRequest);
+
+/**
+ * @swagger
+ * /api/v1/attendance/duty-requests/{id}:
+ *   get:
+ *     summary: Get a DutyRequest by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the DutyRequest
+ *     responses:
+ *       200:
+ *         description: Successful response with the DutyRequest
+ *       404:
+ *         description: DutyRequest not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceController.getDutyRequest);
+
+/**
+ * @swagger
+ * /api/v1/attendance/duty-requests/{id}:
+ *   put:
+ *     summary: Update a DutyRequest by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the DutyRequest
+ *     requestBody:
+ *       description: New DutyRequest details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               onDutyReason:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *               comment:
+ *                 type: string
+ *               user:
+ *                 type: string 
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated DutyRequest
+ *       404:
+ *         description: DutyRequest not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/duty-requests/:id', authController.protect, attendanceController.updateDutyRequest);
+
+/**
+ * @swagger
+ * /api/v1/attendance/duty-requests/{id}:
+ *   delete:
+ *     summary: Delete a DutyRequest by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the DutyRequest
+ *     responses:
+ *       204:
+ *         description: DutyRequest successfully deleted
+ *       404:
+ *         description: DutyRequest not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/duty-requests/:id', authController.protect, attendanceController.deleteDutyRequest);
+
+/**
+ * @swagger
+ * /api/v1/attendance/duty-requests:
+ *   get:
+ *     summary: Get all DutyRequests
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with DutyRequests
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/duty-requests', authController.protect, attendanceController.getAllDutyRequests);  
 
  
 module.exports = attendanceRouter;

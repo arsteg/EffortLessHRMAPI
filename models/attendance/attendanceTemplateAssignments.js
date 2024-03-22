@@ -6,10 +6,26 @@ const attendanceTemplateAssignmentsSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
   },
-  template: {
+  attandanceTemplate: {
     type: mongoose.Schema.ObjectId,
     ref: 'AttendanceTemplate',
   },
+  primaryApprover: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+  },
+  secondaryApprover: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+  },
+  effectiveFrom: {
+    type: Date
+  },
+  company: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company', // Assuming the reference is to a Company schema
+    required: true
+  }
 }, { collection: 'AttendanceTemplateAssignments' });
 
 module.exports = mongoose.model('AttendanceTemplateAssignments', attendanceTemplateAssignmentsSchema);

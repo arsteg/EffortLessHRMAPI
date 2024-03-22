@@ -17,6 +17,8 @@ const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const User = require('../models/permissions/userModel');
+
 const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
@@ -640,6 +642,113 @@ exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
   });
 });
 
+// Create a new Attendance Template Assignment
+exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
+  // Check if the attendanceTemplate exists
+  const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attandanceTemplate });
+  if (!attendanceTemplate) {
+    return next(new AppError('Invalid attendanceTemplate', 400));
+  }
+
+  let primaryApprover = req.body.primaryApprover;
+  let secondaryApprover = req.body.secondaryApprover;
+
+  // If approval type is "template-wise", retrieve primary and secondary approvers from attendanceTemplate
+  if (attendanceTemplate.approvalType === "template-wise") {
+    primaryApprover = attendanceTemplate.primaryApprover;
+    secondaryApprover = attendanceTemplate.primaryApprover;
+  }
+// Check if the employee exists
+  const employee = await User.findById(req.body.employee);
+  if (!employee) {
+    return next(new AppError('Invalid employee', 400));
+  }
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   req.body.company = companyId;
+  
+   await AttendanceTemplateAssignments.deleteMany({ employee: req.body.employee });
+
+  // Create the attendance assignment
+  const attendanceAssignment = await AttendanceTemplateAssignments.create({
+    employee: req.body.employee,
+    attandanceTemplate: req.body.attandanceTemplate,
+    effectiveFrom: req.body.effectiveFrom,
+    primaryApprover: primaryApprover,
+    secondaryApprover: secondaryApprover,
+    company: req.body.company
+  });
+
+  res.status(201).json({
+    status: "success",
+    data: attendanceAssignment
+  });
+});
+
+
+// Get an Attendance Template Assignment by ID
+exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
+  const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
+  if (!attendanceAssignment) {
+    return next(new AppError('Attendance Template Assignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: attendanceAssignment,
+  });
+});
+
+// Update an Attendance Template Assignment by ID
+exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
+  // Check if the attendance assignment exists
+  const attendanceAssignment = await AttendanceAssignment.findById(req.params.id);
+  if (!attendanceAssignment) {
+    return next(new AppError('Attendance Template Assignment not found', 404));
+  }
+
+  // Update only primary and secondary approvers if provided in the request body
+  if (req.body.primaryApprovar !== undefined) {
+    attendanceAssignment.primaryApprovar = req.body.primaryApprovar;
+  }
+  if (req.body.secondaryApprovar !== undefined) {
+    attendanceAssignment.secondaryApprovar = req.body.secondaryApprovar;
+  }
+
+  // Save the updated assignment
+  await attendanceAssignment.save();
+
+  res.status(200).json({
+    status: "success",
+    data: attendanceAssignment
+  });
+});
+
+
+// Delete an Attendance Template Assignment by ID
+exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
+  const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
+  if (!attendanceAssignment) {
+    return next(new AppError('Attendance Template Assignment not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+// Get all Attendance Template Assignments
+exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
+  const attendanceAssignments = await AttendanceTemplateAssignments.find();
+  res.status(200).json({
+    status: 'success',
+    data: attendanceAssignments,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -707,65 +816,6 @@ exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: attendanceModes,
-  });
-});
-
-// Create a new Attendance Template Assignment
-exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
-  const attendanceAssignment = await AttendanceTemplateAssignments.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: attendanceAssignment,
-  });
-});
-
-// Get an Attendance Template Assignment by ID
-exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
-  const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
-  if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: attendanceAssignment,
-  });
-});
-
-// Update an Attendance Template Assignment by ID
-exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
-  const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: attendanceAssignment,
-  });
-});
-
-// Delete an Attendance Template Assignment by ID
-exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
-  const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
-  if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-// Get all Attendance Template Assignments
-exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
-  const attendanceAssignments = await AttendanceTemplateAssignments.find();
-  res.status(200).json({
-    status: 'success',
-    data: attendanceAssignments,
   });
 });
 
