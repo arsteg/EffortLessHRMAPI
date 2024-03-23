@@ -1501,6 +1501,198 @@ attendanceRouter.delete('/overtime-information/:id', authController.protect, att
  */
 attendanceRouter.get('/overtime-information', authController.protect, attendanceController.getAllOvertimeInformation);
 
+// OnDutyTemplate routes
+/**
+ * @swagger
+ * /api/v1/attendance/on-duty-templates:
+ *   post:
+ *     summary: Create a new OnDutyTemplate
+ *     tags: [Attendance Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: OnDutyTemplate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               isCommentMandatory:
+ *                 type: boolean
+ *                 required: true
+ *               canSubmitForMultipleDays:
+ *                 type: boolean
+ *                 required: true
+ *               ApprovalLevel:
+ *                 type: string
+ *               FirstApproverCommentsMandatoryforApproval:
+ *                 type: string
+ *               SecondApproverCommentsMandatoryforApproval:
+ *                 type: string
+ *               FirstApproverCommentsMandatoryforRejection:
+ *                 type: string
+ *               SecondApproverCommentsMandatoryforRejection:
+ *                 type: string
+ *               IntitiateDutyRequestBy:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               ApprovarType:
+ *                 type: string
+ *               FirstLevelApprovar:
+ *                 type: string
+ *                 default: null
+ *               SecondLevelApprovar:
+ *                 type: string
+ *                 default: null
+ *     responses:
+ *       201:
+ *         description: OnDutyTemplate successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/on-duty-templates/', authController.protect, attendanceController.createOnDutyTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/on-duty-templates/{id}:
+ *   get:
+ *     summary: Get an OnDutyTemplate by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the OnDutyTemplate
+ *     responses:
+ *       200:
+ *         description: Successful response with the OnDutyTemplate
+ *       404:
+ *         description: OnDutyTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/on-duty-templates/:id', authController.protect, attendanceController.getOnDutyTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/on-duty-templates/{id}:
+ *   put:
+ *     summary: Update an OnDutyTemplate by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the OnDutyTemplate
+ *     requestBody:
+ *       description: New OnDutyTemplate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               isCommentMandatory:
+ *                 type: boolean
+ *                 required: true
+ *               canSubmitForMultipleDays:
+ *                 type: boolean
+ *                 required: true
+ *               ApprovalLevel:
+ *                 type: string
+ *               FirstApproverCommentsMandatoryforApproval:
+ *                 type: string
+ *               SecondApproverCommentsMandatoryforApproval:
+ *                 type: string
+ *               FirstApproverCommentsMandatoryforRejection:
+ *                 type: string
+ *               SecondApproverCommentsMandatoryforRejection:
+ *                 type: string
+ *               IntitiateDutyRequestBy:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               ApprovarType:
+ *                 type: string
+ *               FirstLevelApprovar:
+ *                 type: string
+ *                 default: null
+ *               SecondLevelApprovar:
+ *                 type: string
+ *                 default: null
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated OnDutyTemplate
+ *       404:
+ *         description: OnDutyTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/on-duty-templates/:id', authController.protect, attendanceController.updateOnDutyTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/on-duty-templates/{id}:
+ *   delete:
+ *     summary: Delete an OnDutyTemplate by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the OnDutyTemplate
+ *     responses:
+ *       204:
+ *         description: OnDutyTemplate successfully deleted
+ *       404:
+ *         description: OnDutyTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/on-duty-templates/:id', authController.protect, attendanceController.deleteOnDutyTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/on-duty-templates:
+ *   get:
+ *     summary: Get all OnDutyTemplates
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with OnDutyTemplates
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/on-duty-templates/', authController.protect, attendanceController.getAllOnDutyTemplates);
+
 
 // UserOnDutyTemplate routes
 /**
@@ -1786,154 +1978,6 @@ attendanceRouter.delete('/attendance-modes/:id', authController.protect, attenda
  *         description: Internal server error
  */
 attendanceRouter.get('/attendance-modes', authController.protect, attendanceController.getAllAttendanceModes);
-
-
-// OnDutyTemplate routes
-/**
- * @swagger
- * /api/v1/attendance/onDutyTemplates:
- *   post:
- *     summary: Create a new OnDutyTemplate
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: OnDutyTemplate details
- *       required: true
- *       content:
-
-*         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 required: true
- *               isCommentMandatory:
- *                 type: boolean
- *                 required: true
- *               canSubmitForMultipleDays:
- *                 type: boolean
- *                 required: true 
- *     responses:
- *       201:
- *         description: OnDutyTemplate successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/', authController.protect, attendanceController.createOnDutyTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/onDutyTemplates/{id}:
- *   get:
- *     summary: Get an OnDutyTemplate by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the OnDutyTemplate
- *     responses:
- *       200:
- *         description: Successful response with the OnDutyTemplate
- *       404:
- *         description: OnDutyTemplate not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/:id', authController.protect, attendanceController.getOnDutyTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/onDutyTemplates/{id}:
- *   put:
- *     summary: Update an OnDutyTemplate by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the OnDutyTemplate
- *     requestBody:
- *       description: New OnDutyTemplate details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               isCommentMandatory:
- *                 type: boolean
- *               canSubmitForMultipleDays:
- *                 type: boolean 
- *     responses:
- *       200:
- *         description: Successful response with the updated OnDutyTemplate
- *       404:
- *         description: OnDutyTemplate not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/:id', authController.protect, attendanceController.updateOnDutyTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/onDutyTemplates/{id}:
- *   delete:
- *     summary: Delete an OnDutyTemplate by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the OnDutyTemplate
- *     responses:
- *       204:
- *         description: OnDutyTemplate successfully deleted
- *       404:
- *         description: OnDutyTemplate not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/:id', authController.protect, attendanceController.deleteOnDutyTemplate);
-
-/**
- * @swagger
- * /api/v1/attendance/onDutyTemplates:
- *   get:
- *     summary: Get all OnDutyTemplates
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with OnDutyTemplates
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/', authController.protect, attendanceController.getAllOnDutyTemplates);
 
 /**
  * @swagger

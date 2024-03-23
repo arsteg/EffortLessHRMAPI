@@ -1,24 +1,50 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-const onDutyTemplateSchema = new Schema({
+var onDutyTemplateSchema = new Schema({
   name: {
     type: String,
-    required: true,
+    required: true
   },
   isCommentMandatory: {
     type: Boolean,
-    required: true,
+    required: true
   },
   canSubmitForMultipleDays: {
     type: Boolean,
-    required: true,
+    required: true
   },
-  company: {
+  ApprovalLevel: {
+    type: String
+  },
+  FirstApproverCommentsMandatoryforApproval: {
+    type: String
+  },
+  SecondApproverCommentsMandatoryforApproval: {
+    type: String
+  },
+  FirstApproverCommentsMandatoryforRejection: {
+    type: String
+  },
+  SecondApproverCommentsMandatoryforRejection: {
+    type: String
+  },
+  IntitiateDutyRequestBy: {
+    type: [String]
+  },
+  ApprovarType: {
+    type: String
+  },
+  FirstLevelApprovar: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Company',
-    required: true,
+    ref: 'User',
+    required: false
   },
+  SecondLevelApprovar: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  }
 }, { collection: 'OnDutyTemplate' });
 
 module.exports = mongoose.model('OnDutyTemplate', onDutyTemplateSchema);
