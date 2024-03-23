@@ -883,6 +883,164 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
   });
 });
 
+
+exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const onDutyTemplate = await OnDutyTemplate.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: onDutyTemplate,
+  });
+});
+
+exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
+  const onDutyTemplate = await OnDutyTemplate.findById(req.params.id);
+  if (!onDutyTemplate) {
+    return next(new AppError('OnDutyTemplate not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: onDutyTemplate,
+  });
+});
+
+exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
+  const onDutyTemplate = await OnDutyTemplate.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!onDutyTemplate) {
+    return next(new AppError('OnDutyTemplate not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: onDutyTemplate,
+  });
+});
+
+exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
+  const onDutyTemplate = await OnDutyTemplate.findByIdAndDelete(req.params.id);
+  if (!onDutyTemplate) {
+    return next(new AppError('OnDutyTemplate not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
+  const onDutyTemplates = await OnDutyTemplate.find();
+  res.status(200).json({
+    status: 'success',
+    data: onDutyTemplates,
+  });
+});
+
+
+// Create a UserOnDutyTemplate
+exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   // Add companyId to the request body
+   req.body.company = companyId;
+   // Check if the user exists
+   const userExists = await User.exists({ _id: req.body.user });
+   if (!userExists) {
+     return next(new AppError('User not found', 404));
+   }
+ 
+   // Check if the duty template exists
+   const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
+   if (!dutyTemplateExists) {
+     return next(new AppError('Duty template not found', 404));
+   }
+   await UserOnDutyTemplate.deleteMany({ user: req.body.user });
+  const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: userOnDutyTemplate,
+  });
+});
+
+// Get a UserOnDutyTemplate by ID
+exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+  const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
+  if (!userOnDutyTemplate) {
+    return next(new AppError('UserOnDutyTemplate not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: userOnDutyTemplate,
+  });
+});
+
+// Update a UserOnDutyTemplate by ID
+exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+  // Check if the user on duty template exists
+  const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
+  if (!userOnDutyTemplate) {
+    return next(new AppError('UserOnDutyTemplate not found', 404));
+  }
+
+  // Check if the duty template exists
+  const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
+  if (!dutyTemplateExists) {
+    return next(new AppError('Duty template not found', 404));
+  }
+
+  // Update the user on duty template, excluding the user field
+  const updatedUserOnDutyTemplate = await UserOnDutyTemplate.findByIdAndUpdate(req.params.id, {
+    ...req.body,
+    user: userOnDutyTemplate.user // Exclude updating the user field
+  }, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedUserOnDutyTemplate,
+  });
+});
+
+
+// Delete a UserOnDutyTemplate by ID
+exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+  const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndDelete(req.params.id);
+
+  if (!userOnDutyTemplate) {
+    return next(new AppError('UserOnDutyTemplate not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+// Get all UserOnDutyTemplates
+exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
+  const userOnDutyTemplates = await UserOnDutyTemplate.find();
+  res.status(200).json({
+    status: 'success',
+    data: userOnDutyTemplates,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1020,60 +1178,6 @@ exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: dutyRequests
-  });
-});
-
-exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const onDutyTemplate = await OnDutyTemplate.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: onDutyTemplate,
-  });
-});
-
-exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const onDutyTemplate = await OnDutyTemplate.findById(req.params.id);
-  if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: onDutyTemplate,
-  });
-});
-
-exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const onDutyTemplate = await OnDutyTemplate.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: onDutyTemplate,
-  });
-});
-
-exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const onDutyTemplate = await OnDutyTemplate.findByIdAndDelete(req.params.id);
-  if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const onDutyTemplates = await OnDutyTemplate.find();
-  res.status(200).json({
-    status: 'success',
-    data: onDutyTemplates,
   });
 });
 
@@ -1251,66 +1355,5 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: shiftTemplateAssignments
-  });
-});
-
-// Create a UserOnDutyTemplate
-exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: userOnDutyTemplate,
-  });
-});
-
-// Get a UserOnDutyTemplate by ID
-exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
-  if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyTemplate,
-  });
-});
-
-// Update a UserOnDutyTemplate by ID
-exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyTemplate,
-  });
-});
-
-// Delete a UserOnDutyTemplate by ID
-exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndDelete(req.params.id);
-
-  if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-// Get all UserOnDutyTemplates
-exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplates = await UserOnDutyTemplate.find();
-  res.status(200).json({
-    status: 'success',
-    data: userOnDutyTemplates,
   });
 });

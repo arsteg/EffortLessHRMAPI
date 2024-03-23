@@ -18,16 +18,16 @@ var onDutyTemplateSchema = new Schema({
     type: String
   },
   FirstApproverCommentsMandatoryforApproval: {
-    type: String
+    type: Boolean
   },
   SecondApproverCommentsMandatoryforApproval: {
-    type: String
+    type: Boolean
   },
   FirstApproverCommentsMandatoryforRejection: {
-    type: String
+    type: Boolean
   },
   SecondApproverCommentsMandatoryforRejection: {
-    type: String
+    type: Boolean
   },
   IntitiateDutyRequestBy: {
     type: [String]
@@ -44,6 +44,11 @@ var onDutyTemplateSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: false
+  },
+  company: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company',
+    required: true,
   }
 }, { collection: 'OnDutyTemplate' });
 

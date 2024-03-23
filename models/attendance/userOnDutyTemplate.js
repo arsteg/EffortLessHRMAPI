@@ -11,6 +11,18 @@ const userOnDutyTemplateSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'OnDutyTemplate',
     required: true,
+  }, 
+  effectiveFrom: {
+    type: Date,
+    required: true
+  },
+  primaryApprovar: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
+  secondaryApprovar: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
   },
   company: {
     type: mongoose.Schema.ObjectId,

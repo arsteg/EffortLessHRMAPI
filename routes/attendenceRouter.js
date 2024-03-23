@@ -1530,13 +1530,13 @@ attendanceRouter.get('/overtime-information', authController.protect, attendance
  *               ApprovalLevel:
  *                 type: string
  *               FirstApproverCommentsMandatoryforApproval:
- *                 type: string
+ *                 type: bool
  *               SecondApproverCommentsMandatoryforApproval:
- *                 type: string
+ *                 type: bool
  *               FirstApproverCommentsMandatoryforRejection:
- *                 type: string
+ *                 type: bool
  *               SecondApproverCommentsMandatoryforRejection:
- *                 type: string
+ *                 type: bool
  *               IntitiateDutyRequestBy:
  *                 type: array
  *                 items:
@@ -1621,13 +1621,13 @@ attendanceRouter.get('/on-duty-templates/:id', authController.protect, attendanc
  *               ApprovalLevel:
  *                 type: string
  *               FirstApproverCommentsMandatoryforApproval:
- *                 type: string
+ *                 type: bool
  *               SecondApproverCommentsMandatoryforApproval:
- *                 type: string
+ *                 type: bool
  *               FirstApproverCommentsMandatoryforRejection:
- *                 type: string
+ *                 type: bool
  *               SecondApproverCommentsMandatoryforRejection:
- *                 type: string
+ *                 type: bool
  *               IntitiateDutyRequestBy:
  *                 type: array
  *                 items:
@@ -1714,12 +1714,20 @@ attendanceRouter.get('/on-duty-templates/', authController.protect, attendanceCo
  *             properties:
  *               user:
  *                 type: string
- *                 format: uuid
  *                 required: true
  *               onDutyTemplate:
  *                 type: string
- *                 format: uuid
  *                 required: true
+ *               effectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               primaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               secondaryApprovar:
+ *                 type: string
+ *                 default: null
  *     responses:
  *       201:
  *         description: UserOnDutyTemplate added successfully
@@ -1745,7 +1753,6 @@ attendanceRouter.post('/user-on-duty-templates', authController.protect, attenda
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the UserOnDutyTemplate
  *     responses:
  *       200:
@@ -1772,7 +1779,6 @@ attendanceRouter.get('/user-on-duty-templates/:id', authController.protect, atte
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the UserOnDutyTemplate
  *     requestBody:
  *       description: New UserOnDutyTemplate details
@@ -1782,12 +1788,19 @@ attendanceRouter.get('/user-on-duty-templates/:id', authController.protect, atte
  *           schema:
  *             type: object
  *             properties:
- *               user:
- *                 type: string
- *                 format: uuid
  *               onDutyTemplate:
  *                 type: string
- *                 format: uuid 
+ *                 required: true
+ *               effectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               primaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               secondaryApprovar:
+ *                 type: string
+ *                 default: null
  *     responses:
  *       200:
  *         description: Successful response with the updated UserOnDutyTemplate
@@ -1813,7 +1826,6 @@ attendanceRouter.put('/user-on-duty-templates/:id', authController.protect, atte
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the UserOnDutyTemplate
  *     responses:
  *       204:
