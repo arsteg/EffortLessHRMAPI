@@ -539,9 +539,8 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   );
 
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));
-  }
-
+    return next(new AppError("Attendance Regularization not found", 404));       
+  }             
   // Update or create IP records
   if (req.body.IPDetails && req.body.IPDetails.length > 0) {
     await Promise.all(req.body.IPDetails.map(async (ipDetail) => {
@@ -749,6 +748,141 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
   });
 });
 
+
+exports.createRoundingInformation = catchAsync(async (req, res, next) => {
+  console.log("hiii");
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const roundingInformation = await RoundingInformation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: roundingInformation,
+  });
+});
+
+exports.getRoundingInformation = catchAsync(async (req, res, next) => {
+  const roundingInformation = await RoundingInformation.findById(req.params.id);
+  if (!roundingInformation) {
+    return next(new AppError('Rounding information not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: roundingInformation,
+  });
+});
+
+exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
+  const roundingInformation = await RoundingInformation.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!roundingInformation) {
+    return next(new AppError('Rounding information not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: roundingInformation,
+  });
+});
+
+exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
+  const roundingInformation = await RoundingInformation.findByIdAndDelete(
+    req.params.id
+  );
+
+  if (!roundingInformation) {
+    return next(new AppError('Rounding information not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
+  const roundingInformation = await RoundingInformation.find({ company: req.cookies.companyId });
+  res.status(200).json({
+    status: 'success',
+    data: roundingInformation,
+  });
+});
+
+exports.createOvertimeInformation = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const overtimeInformation = await OvertimeInformation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: overtimeInformation,
+  });
+});
+
+exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
+  const overtimeInformation = await OvertimeInformation.findById(req.params.id);
+  if (!overtimeInformation) {
+    return next(new AppError('Overtime Information not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: overtimeInformation,
+  });
+});
+
+exports.updateOvertimeInformation = catchAsync(async (req, res, next) => {
+  const overtimeInformation = await OvertimeInformation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!overtimeInformation) {
+    return next(new AppError('Overtime Information not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: overtimeInformation,
+  });
+});
+
+exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
+  const overtimeInformation = await OvertimeInformation.findByIdAndDelete(req.params.id);
+  if (!overtimeInformation) {
+    return next(new AppError('Overtime Information not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
+  console.log("hii");
+  const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId });
+  res.status(200).json({
+    status: 'success',
+    data: overtimeInformation,
+  });
+});
+
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -943,62 +1077,6 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
-
-exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.findById(req.params.id);
-  if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
-
-exports.updateOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
-
-exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.findByIdAndDelete(req.params.id);
-  if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.find();
-  res.status(200).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
-
-
-
 exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
   const regularizationRequest = await RegularizationRequest.create(req.body);
   res.status(201).json({
@@ -1060,70 +1138,6 @@ exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
     data: regularizationRequests,
   });
 });
-
-
-exports.createRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: roundingInformation,
-  });
-});
-
-exports.getRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.findById(req.params.id);
-  if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: roundingInformation,
-  });
-});
-
-exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: roundingInformation,
-  });
-});
-
-exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.findByIdAndDelete(
-    req.params.id
-  );
-
-  if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.find();
-  res.status(200).json({
-    status: 'success',
-    data: roundingInformation,
-  });
-});
-
 
 exports.createShift = catchAsync(async (req, res, next) => {
   const shift = await Shift.create(req.body);
@@ -1240,8 +1254,6 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 // Create a UserOnDutyTemplate
 exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
@@ -1302,6 +1314,3 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
     data: userOnDutyTemplates,
   });
 });
-
-
-

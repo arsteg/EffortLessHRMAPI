@@ -281,8 +281,6 @@ attendanceRouter.delete('/regularization-reasons/:id', authController.protect, a
  */
 attendanceRouter.get('/regularization-reasons', authController.protect, attendanceController.getAllRegularizationReasons);
 
-
-
 //Duty Reasons
 
 /**
@@ -718,6 +716,33 @@ attendanceRouter.delete('/attendance-templates/:id', authController.protect, att
  */
 attendanceRouter.get('/attendance-templates', authController.protect, attendanceController.getAllAttendanceTemplates);
 
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates/{id}:
+ *   get:
+ *     summary: Get an Attendance Template by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template
+ *     responses:
+ *       200:
+ *         description: Successful response with the Attendance Template
+ *       404:
+ *         description: Attendance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
+
+
 //Attdance Template Regulrization
 /**
  * @swagger
@@ -1094,6 +1119,387 @@ attendanceRouter.delete('/attendance-assignments/:id', authController.protect, a
  */
 attendanceRouter.get('/attendance-assignments', authController.protect, attendanceController.getAllAttendanceAssignments);
 
+//Rounding Information
+/**
+ * @swagger
+ * /api/v1/attendance/rounding-information:
+ *   post:
+ *     summary: Create a new rounding information
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Rounding information details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               roundingPatternName:
+ *                 type: string
+ *                 required: true
+ *               roundingPatternCode:
+ *                 type: string
+ *                 required: true
+ *               shift:
+ *                 type: string
+ *                 required: true
+ *               roundingPatternMethod:
+ *                 type: string
+ *                 required: true
+ *               roundingPattern:
+ *                 type: string
+ *                 required: true
+ *               roundingValue:
+ *                 type: number
+ *                 required: true
+ *               OTtypeApplicable:
+ *                 type: string
+ *                 required: true  
+ *               OTtypeApplicablePreOT:
+ *                 type: string
+ *                 required: true
+ *               PreOTValueMinutes:
+ *                 type: string
+ *               PreOTValueHour:
+ *                 type: string
+ *               OTtypeApplicablePostOT:
+ *                 type: string
+ *                 required: true
+ *               PostOTValueHour:
+ *                 type: string
+ *               PostOTValueMinutes:
+ *                 type: string
+ *               OTtypeApplicableWeekOFf:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Rounding information successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/rounding-information',authController.protect,attendanceController.createRoundingInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/rounding-information/{id}:
+ *   get:
+ *     summary: Get a rounding information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the rounding information
+ *     responses:
+ *       200:
+ *         description: Successful response with the rounding information
+ *       404:
+ *         description: Rounding information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/rounding-information/:id',authController.protect,attendanceController.getRoundingInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/rounding-information/{id}:
+ *   put:
+ *     summary: Update a rounding information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the rounding information
+ *     requestBody:
+ *       description: New rounding information details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               roundingPatternName:
+ *                 type: string
+ *               roundingPatternCode:
+ *                 type: string
+ *               shift:
+ *                 type: string
+ *               roundingPatternMethod:
+ *                 type: string
+ *               roundingPattern:
+ *                 type: string
+ *               roundingValue:
+ *                 type: number
+ *               OTtypeApplicable:
+ *                 type: string   
+ *               OTtypeApplicablePreOT:
+ *                 type: string
+ *                 required: true
+ *               PreOTValueMinutes:
+ *                 type: string
+ *               PreOTValueHour:
+ *                 type: string
+ *               OTtypeApplicablePostOT:
+ *                 type: string
+ *                 required: true
+ *               PostOTValueHour:
+ *                 type: string
+ *               PostOTValueMinutes:
+ *                 type: string
+ *               OTtypeApplicableWeekOFf:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated rounding information
+ *       404:
+ *         description: Rounding information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/rounding-information/:id',authController.protect,attendanceController.updateRoundingInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/rounding-information/{id}:
+ *   delete:
+ *     summary: Delete a rounding information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the rounding information
+ *     responses:
+ *       204:
+ *         description: Rounding information successfully deleted
+ *       404:
+ *         description: Rounding information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/rounding-information/:id',authController.protect,attendanceController.deleteRoundingInformation);
+
+//Overtime Information
+
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-information:
+ *   post:
+ *     summary: Create a new Overtime Information
+ *     tags: [Attendance Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Overtime Information details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               Name:
+ *                 type: string
+ *                 required: true
+ *               OvertimeInformation:
+ *                 type: string
+ *                 required: true
+ *               BaseType:
+ *                 type: string
+ *               AttandanceShift:
+ *                 type: string
+ *               FromTimeHour:
+ *                 type: string
+ *                 required: true
+ *               FromTimeMinutes:
+ *                 type: string
+ *                 required: true
+ *               FromTimeTT:
+ *                 type: string
+ *                 required: true
+ *               ToTimeHour:
+ *                 type: string
+ *                 required: true
+ *               ToTimeMinutes:
+ *                 type: string
+ *                 required: true
+ *               ToTimeTT:
+ *                 type: string
+ *                 required: true
+ *               CutomMultiplier:
+ *                 type: number
+ *                 required: true
+ *               CalculationType:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Overtime Information successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/overtime-information', authController.protect, attendanceController.createOvertimeInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-information/{id}:
+ *   get:
+ *     summary: Get an Overtime Information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Overtime Information
+ *     responses:
+ *       200:
+ *         description: Successful response with the Overtime Information
+ *       404:
+ *         description: Overtime Information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/overtime-information/:id', authController.protect, attendanceController.getOvertimeInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-information/{id}:
+ *   put:
+ *     summary: Update an Overtime Information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Overtime Information
+ *     requestBody:
+ *       description: New Overtime Information details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               Name:
+ *                 type: string
+ *                 required: true
+ *               OvertimeInformation:
+ *                 type: string
+ *                 required: true
+ *               BaseType:
+ *                 type: string
+ *               AttandanceShift:
+ *                 type: string
+ *               FromTimeHour:
+ *                 type: string
+ *                 required: true
+ *               FromTimeMinutes:
+ *                 type: string
+ *                 required: true
+ *               FromTimeTT:
+ *                 type: string
+ *                 required: true
+ *               ToTimeHour:
+ *                 type: string
+ *                 required: true
+ *               ToTimeMinutes:
+ *                 type: string
+ *                 required: true
+ *               ToTimeTT:
+ *                 type: string
+ *                 required: true
+ *               CutomMultiplier:
+ *                 type: number
+ *                 required: true
+ *               CalculationType:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Overtime Information
+ *       404:
+ *         description: Overtime Information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/overtime-information/:id', authController.protect, attendanceController.updateOvertimeInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-information/{id}:
+ *   delete:
+ *     summary: Delete an Overtime Information by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Overtime Information
+ *     responses:
+ *       204:
+ *         description: Overtime Information successfully deleted
+ *       404:
+ *         description: Overtime Information not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/overtime-information/:id', authController.protect, attendanceController.deleteOvertimeInformation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-information:
+ *   get:
+ *     summary: Get all Overtime Information
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Overtime Information
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/overtime-information', authController.protect, attendanceController.getAllOvertimeInformation);
 
 
 // UserOnDutyTemplate routes
@@ -1381,33 +1787,6 @@ attendanceRouter.delete('/attendance-modes/:id', authController.protect, attenda
  */
 attendanceRouter.get('/attendance-modes', authController.protect, attendanceController.getAllAttendanceModes);
 
-/**
- * @swagger
- * /api/v1/attendance/attendance-templates/{id}:
- *   get:
- *     summary: Get an Attendance Template by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Attendance Template
- *     responses:
- *       200:
- *         description: Successful response with the Attendance Template
- *       404:
- *         description: Attendance Template not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
-
-
 
 // OnDutyTemplate routes
 /**
@@ -1555,162 +1934,6 @@ attendanceRouter.delete('/:id', authController.protect, attendanceController.del
  *         description: Internal server error
  */
 attendanceRouter.get('/', authController.protect, attendanceController.getAllOnDutyTemplates);
-
-// OvertimeInformation routes
-/**
- * @swagger
- * /api/v1/attendance/overtime-information:
- *   post:
- *     summary: Create a new Overtime Information
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Overtime Information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 required: true
- *               roundingPattern:
- *                 type: string
- *                 required: true
- *               baseType:
- *                 type: string
- *               attendanceShift:
- *                 type: string
- *               customMultiplier:
- *                 type: number
- *                 required: true 
- *     responses:
- *       201:
- *         description: Overtime Information successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/overtime-information', authController.protect, attendanceController.createOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information/{id}:
- *   get:
- *     summary: Get an Overtime Information by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Overtime Information
- *     responses:
- *       200:
- *         description: Successful response with the Overtime Information
- *       404:
- *         description: Overtime Information not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/overtime-information/:id', authController.protect, attendanceController.getOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information/{id}:
- *   put:
- *     summary: Update an Overtime Information by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Overtime Information
- *     requestBody:
- *       description: New Overtime Information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               roundingPattern:
- *                 type: string
- *               baseType:
- *                 type: string
- *               attendanceShift:
- *                 type: string
- *               customMultiplier:
- *                 type: number 
- *     responses:
- *       200:
- *         description: Successful response with the updated Overtime Information
- *       404:
- *         description: Overtime Information not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/overtime-information/:id', authController.protect, attendanceController.updateOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information/{id}:
- *   delete:
- *     summary: Delete an Overtime Information by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Overtime Information
- *     responses:
- *       204:
- *         description: Overtime Information successfully deleted
- *       404:
- *         description: Overtime Information not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/overtime-information/:id', authController.protect, attendanceController.deleteOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information:
- *   get:
- *     summary: Get all Overtime Information
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with Overtime Information
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/overtime-information', authController.protect, attendanceController.getAllOvertimeInformation);
-
-
 
 /**
  * @swagger
@@ -1897,393 +2120,7 @@ attendanceRouter.post(
     authController.protect,
     attendanceController.getAllRegularizationRequests
   );
-  
-  
-/**
- * @swagger
- * tags:
- *   name: Attendance Management
- *   description: APIs for managing rounding information
- */
-
-/**
- * @swagger
- * /api/v1/attendance/rounding-information:
- *   post:
- *     summary: Create a new rounding information
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Rounding information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               roundingPatternName:
- *                 type: string
- *                 required: true
- *               roundingPatternCode:
- *                 type: string
- *                 required: true
- *               shift:
- *                 type: string
- *                 required: true
- *               roundingPatternMethod:
- *                 type: string
- *                 required: true
- *               roundingPattern:
- *                 type: string
- *                 required: true
- *               roundingValue:
- *                 type: number
- *                 required: true
- *               OTtypeApplicable:
- *                 type: string
- *                 required: true  
- *     responses:
- *       201:
- *         description: Rounding information successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post(
-    '/rounding-information',
-    authController.protect,
-    attendanceController.createRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   get:
-   *     summary: Get a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     responses:
-   *       200:
-   *         description: Successful response with the rounding information
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.getRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   put:
-   *     summary: Update a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     requestBody:
-   *       description: New rounding information details
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               roundingPatternName:
-   *                 type: string
-   *               roundingPatternCode:
-   *                 type: string
-   *               shift:
-   *                 type: string
-   *               roundingPatternMethod:
-   *                 type: string
-   *               roundingPattern:
-   *                 type: string
-   *               roundingValue:
-   *                 type: number
-   *               OTtypeApplicable:
-   *                 type: string   
-   *     responses:
-   *       200:
-   *         description: Successful response with the updated rounding information
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.put(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.updateRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   delete:
-   *     summary: Delete a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     responses:
-   *       204:
-   *         description: Rounding information successfully deleted
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.delete(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.deleteRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information:
-   *   get:
-   *     summary: Get all rounding information
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     responses:
-   *       200:
-   *         description: Successful response with rounding information
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get(
-    '/rounding-information',
-    authController.protect,
-    attendanceController.getAllRoundingInformation
-  );
-
-  /**
- * @swagger
- * tags:
- *   name: Attendance Management
- *   description: APIs for managing rounding information
- */
-
-/**
- * @swagger
- * /api/v1/attendance/rounding-information:
- *   post:
- *     summary: Create a new rounding information
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Rounding information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               roundingPatternName:
- *                 type: string
- *                 required: true
- *               roundingPatternCode:
- *                 type: string
- *                 required: true
- *               shift:
- *                 type: string
- *                 required: true
- *               roundingPatternMethod:
- *                 type: string
- *                 required: true
- *               roundingPattern:
- *                 type: string
- *                 required: true
- *               roundingValue:
- *                 type: number
- *                 required: true
- *               OTtypeApplicable:
- *                 type: string
- *                 required: true 
- *     responses:
- *       201:
- *         description: Rounding information successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post(
-    '/rounding-information',
-    authController.protect,
-    attendanceController.createRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   get:
-   *     summary: Get a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     responses:
-   *       200:
-   *         description: Successful response with the rounding information
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.getRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   put:
-   *     summary: Update a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     requestBody:
-   *       description: New rounding information details
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               roundingPatternName:
-   *                 type: string
-   *               roundingPatternCode:
-   *                 type: string
-   *               shift:
-   *                 type: string
-   *               roundingPatternMethod:
-   *                 type: string
-   *               roundingPattern:
-   *                 type: string
-   *               roundingValue:
-   *                 type: number
-   *               OTtypeApplicable:
-   *                 type: string   
-   *     responses:
-   *       200:
-   *         description: Successful response with the updated rounding information
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.put(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.updateRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information/{id}:
-   *   delete:
-   *     summary: Delete a rounding information by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the rounding information
-   *     responses:
-   *       204:
-   *         description: Rounding information successfully deleted
-   *       404:
-   *         description: Rounding information not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.delete(
-    '/rounding-information/:id',
-    authController.protect,
-    attendanceController.deleteRoundingInformation
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/rounding-information:
-   *   get:
-   *     summary: Get all rounding information
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     responses:
-   *       200:
-   *         description: Successful response with rounding information
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get(
-    '/rounding-information',
-    authController.protect,
-    attendanceController.getAllRoundingInformation
-  );
-  
-
+    
 /**
  * @swagger
  * tags:

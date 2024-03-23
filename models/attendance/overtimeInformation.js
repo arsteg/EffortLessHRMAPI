@@ -2,24 +2,53 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const overtimeInformationSchema = new Schema({
-  name: {
+  Name: {
     type: String,
-    required: true,
+    required: true
   },
-  roundingPattern: {
+  OvertimeInformation: {
     type: String,
-    required: true,
+    required: true
   },
-  baseType: {
+  BaseType: {
     type: String,
+    required: true
   },
-  attendanceShift: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Shift',
+  AttandanceShift: {
+    type: String,
+    required: true
   },
-  customMultiplier: {
+  FromTimeHour: {
+    type: String,
+    required: true
+  },
+  FromTimeMinutes: {
+    type: String,
+    required: true
+  },
+  FromTimeTT: {
+    type: String,
+    required: true
+  },
+  ToTimeHour: {
+    type: String,
+    required: true
+  },
+  ToTimeMinutes: {
+    type: String,
+    required: true
+  },
+  ToTimeTT: {
+    type: String,
+    required: true
+  },
+  CutomMultiplier: {
     type: Number,
-    required: true,
+    required: true
+  },
+  CalculationType: {
+    type: String,
+    required: true
   },
   company: {
     type: mongoose.Schema.ObjectId,

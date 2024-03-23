@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-const roundingInformationSchema = new Schema({
+var roundingInformationSchema = new Schema({
   roundingPatternName: {
     type: String,
     required: true
@@ -31,26 +31,22 @@ const roundingInformationSchema = new Schema({
     required: true
   },
   PreOTValueMinutes: {
-    type: String,
-    required: true
+    type: String
   },
   PreOTValueHour: {
-    type: String,
-    required: true
+    type: String
   },
   OTtypeApplicablePostOT: {
     type: String,
     required: true
   },
   PostOTValueHour: {
-    type: String,
-    required: true
+    type: String
   },
   PostOTValueMinutes: {
-    type: String,
-    required: true
+    type: String
   },
-  OTtypeApplicableWeekOff: {
+  OTtypeApplicableWeekOFf: {
     type: String,
     required: true
   }
