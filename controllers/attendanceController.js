@@ -340,7 +340,6 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
   const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
   if (!onDutyReason) {
@@ -489,7 +488,6 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
   if (!attendanceRegularization) {
@@ -597,7 +595,6 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
   const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId });
   if(attendanceRegularizations) 
@@ -688,7 +685,6 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   });
 });
 
-
 // Get an Attendance Template Assignment by ID
 exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
   const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
@@ -726,7 +722,6 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
   });
 });
 
-
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
@@ -747,7 +742,6 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
     data: attendanceAssignments,
   });
 });
-
 
 exports.createRoundingInformation = catchAsync(async (req, res, next) => {
   console.log("hiii");
@@ -883,7 +877,6 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
@@ -945,7 +938,6 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
     data: onDutyTemplates,
   });
 });
-
 
 // Create a UserOnDutyTemplate
 exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
@@ -1017,7 +1009,6 @@ exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
-
 // Delete a UserOnDutyTemplate by ID
 exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndDelete(req.params.id);
@@ -1038,6 +1029,71 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: userOnDutyTemplates,
+  });
+});
+
+exports.createShift = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const shift = await Shift.create(req.body); 
+
+  res.status(201).json({
+    status: 'success',
+    data: shift,
+  });
+});
+
+exports.getShift = catchAsync(async (req, res, next) => {
+  const shift = await Shift.findById(req.params.id);
+  if (!shift) {
+    return next(new AppError('Shift not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: shift,
+  });
+});
+
+exports.updateShift = catchAsync(async (req, res, next) => {
+  const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!shift) {
+    return next(new AppError('Shift not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: shift,
+  });
+});
+
+exports.deleteShift = catchAsync(async (req, res, next) => {
+  const shift = await Shift.findByIdAndDelete(req.params.id);
+
+  if (!shift) {
+    return next(new AppError('Shift not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllShifts = catchAsync(async (req, res, next) => {
+  const shifts = await Shift.find();
+  res.status(200).json({
+    status: 'success',
+    data: shifts,
   });
 });
 
@@ -1240,62 +1296,6 @@ exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,
-  });
-});
-
-exports.createShift = catchAsync(async (req, res, next) => {
-  const shift = await Shift.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: shift,
-  });
-});
-
-exports.getShift = catchAsync(async (req, res, next) => {
-  const shift = await Shift.findById(req.params.id);
-  if (!shift) {
-    return next(new AppError('Shift not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: shift,
-  });
-});
-
-exports.updateShift = catchAsync(async (req, res, next) => {
-  const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!shift) {
-    return next(new AppError('Shift not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: shift,
-  });
-});
-
-exports.deleteShift = catchAsync(async (req, res, next) => {
-  const shift = await Shift.findByIdAndDelete(req.params.id);
-
-  if (!shift) {
-    return next(new AppError('Shift not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllShifts = catchAsync(async (req, res, next) => {
-  const shifts = await Shift.find();
-  res.status(200).json({
-    status: 'success',
-    data: shifts,
   });
 });
 

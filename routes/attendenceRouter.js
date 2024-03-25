@@ -1530,13 +1530,13 @@ attendanceRouter.get('/overtime-information', authController.protect, attendance
  *               ApprovalLevel:
  *                 type: string
  *               FirstApproverCommentsMandatoryforApproval:
- *                 type: bool
+ *                 type: boolean
  *               SecondApproverCommentsMandatoryforApproval:
- *                 type: bool
+ *                 type: boolean
  *               FirstApproverCommentsMandatoryforRejection:
- *                 type: bool
+ *                 type: boolean
  *               SecondApproverCommentsMandatoryforRejection:
- *                 type: bool
+ *                 type: boolean
  *               IntitiateDutyRequestBy:
  *                 type: array
  *                 items:
@@ -1621,13 +1621,13 @@ attendanceRouter.get('/on-duty-templates/:id', authController.protect, attendanc
  *               ApprovalLevel:
  *                 type: string
  *               FirstApproverCommentsMandatoryforApproval:
- *                 type: bool
+ *                 type: boolean
  *               SecondApproverCommentsMandatoryforApproval:
- *                 type: bool
+ *                 type: boolean
  *               FirstApproverCommentsMandatoryforRejection:
- *                 type: bool
+ *                 type: boolean
  *               SecondApproverCommentsMandatoryforRejection:
- *                 type: bool
+ *                 type: boolean
  *               IntitiateDutyRequestBy:
  *                 type: array
  *                 items:
@@ -1854,6 +1854,301 @@ attendanceRouter.delete('/user-on-duty-templates/:id', authController.protect, a
  */
 attendanceRouter.get('/user-on-duty-templates', authController.protect, attendanceController.getAllUserOnDutyTemplates);
 
+//Shift routes
+    
+/**
+ * @swagger
+ * /api/v1/attendance/shifts:
+ *   post:
+ *     summary: Create a new shift
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Shift details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Name of the shift.
+ *               dashboardColor:
+ *                 type: string
+ *                 description: Color code for the shift on the dashboard.
+ *               isOffShift:
+ *                 type: boolean
+ *                 description: Indicates if the shift is an off shift.
+ *               shiftType:
+ *                 type: string
+ *                 description: Type of the shift (e.g., morning, evening).
+ *               startTimeHour:
+ *                 type: string
+ *                 description: Hour of the starting time of the shift.
+ *               startTimeMinutes:
+ *                 type: string
+ *                 description: Minutes of the starting time of the shift.
+ *               endTimeHour:
+ *                 type: string
+ *                 description: Hour of the ending time of the shift.
+ *               endTimeMinutes:
+ *                 type: string
+ *                 description: Minutes of the ending time of the shift.
+ *               minhoursPerDayToGetCreditForFullDayHour:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a full day (hours part).
+ *               minhoursPerDayToGetCreditForFullDayMinutes:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a full day (minutes part).
+ *               isCheckoutTimeNextDay:
+ *                 type: boolean
+ *                 description: Indicates if the checkout time extends to the next day.
+ *               isLatestDepartureTimeNextDay:
+ *                 type: boolean
+ *                 description: Indicates if the latest departure time extends to the next day.
+ *               earliestArrival:
+ *                 type: string
+ *                 description: Time of earliest arrival for the shift.
+ *               latestDeparture:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Latest departure time for the shift.
+ *               firstHalfDuration:
+ *                 type: string
+ *                 description: Duration of the first half of the shift.
+ *               secondHalfDuration:
+ *                 type: string
+ *                 description: Duration of the second half of the shift.
+ *               company:
+ *                 type: string
+ *                 description: Reference to the company associated with the shift.
+ *               isLateComingAllowed:
+ *                 type: boolean
+ *                 description: Indicates if late coming is allowed for the shift.
+ *               noOfDaysLateComing:
+ *                 type: number
+ *                 description: Number of days late coming is allowed for the shift.
+ *               graceTimeLimitForLateComing:
+ *                 type: number
+ *                 description: Grace time limit for late coming in minutes.
+ *               willLateComingDeductfromPresentDays:
+ *                 type: boolean
+ *                 description: Indicates if late coming will deduct from present days.
+ *               numberOflateComingDaysAllowed:
+ *                 type: number
+ *                 description: Number of late coming days allowed.
+ *               numberOfDaysToBeDeducted:
+ *                 type: string
+ *                 description: Number of days to be deducted for late coming.
+ *               maximumTimeLimitForLateComing:
+ *                 type: number
+ *                 description: Maximum time limit for late coming in minutes.
+ *               isEarlyGoingAllowed:
+ *                 type: boolean
+ *                 description: Indicates if early going is allowed for the shift.
+ *               enterNumberOfDaysForEarlyGoing:
+ *                 type: number
+ *                 description: Number of days early going is allowed.
+ *               graceTimeLimitForEarlyGoing:
+ *                 type: number
+ *                 description: Grace time limit for early going in minutes.
+ *     responses:
+ *       201:
+ *         description: Shift successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/shifts', authController.protect, attendanceController.createShift);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shifts/{id}:
+ *   get:
+ *     summary: Get a shift by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the shift
+ *     responses:
+ *       200:
+ *         description: Successful response with the shift
+ *       404:
+ *         description: Shift not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/shifts/:id', authController.protect, attendanceController.getShift);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shifts/{id}:
+ *   put:
+ *     summary: Update a shift by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the shift
+ *     requestBody:
+ *       description: Shift details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Name of the shift.
+ *               dashboardColor:
+ *                 type: string
+ *                 description: Color code for the shift on the dashboard.
+ *               isOffShift:
+ *                 type: boolean
+ *                 description: Indicates if the shift is an off shift.
+ *               shiftType:
+ *                 type: string
+ *                 description: Type of the shift (e.g., morning, evening).
+ *               startTimeHour:
+ *                 type: string
+ *                 description: Hour of the starting time of the shift.
+ *               startTimeMinutes:
+ *                 type: string
+ *                 description: Minutes of the starting time of the shift.
+ *               endTimeHour:
+ *                 type: string
+ *                 description: Hour of the ending time of the shift.
+ *               endTimeMinutes:
+ *                 type: string
+ *                 description: Minutes of the ending time of the shift.
+ *               minhoursPerDayToGetCreditForFullDayHour:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a full day (hours part).
+ *               minhoursPerDayToGetCreditForFullDayMinutes:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a full day (minutes part).
+ *               isCheckoutTimeNextDay:
+ *                 type: boolean
+ *                 description: Indicates if the checkout time extends to the next day.
+ *               isLatestDepartureTimeNextDay:
+ *                 type: boolean
+ *                 description: Indicates if the latest departure time extends to the next day.
+ *               earliestArrival:
+ *                 type: string
+ *                 description: Time of earliest arrival for the shift.
+ *               latestDeparture:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Latest departure time for the shift.
+ *               firstHalfDuration:
+ *                 type: string
+ *                 description: Duration of the first half of the shift.
+ *               secondHalfDuration:
+ *                 type: string
+ *                 description: Duration of the second half of the shift.
+ *               company:
+ *                 type: string
+ *                 description: Reference to the company associated with the shift.
+ *               isLateComingAllowed:
+ *                 type: boolean
+ *                 description: Indicates if late coming is allowed for the shift.
+ *               noOfDaysLateComing:
+ *                 type: number
+ *                 description: Number of days late coming is allowed for the shift.
+ *               graceTimeLimitForLateComing:
+ *                 type: number
+ *                 description: Grace time limit for late coming in minutes.
+ *               willLateComingDeductfromPresentDays:
+ *                 type: boolean
+ *                 description: Indicates if late coming will deduct from present days.
+ *               numberOflateComingDaysAllowed:
+ *                 type: number
+ *                 description: Number of late coming days allowed.
+ *               numberOfDaysToBeDeducted:
+ *                 type: string
+ *                 description: Number of days to be deducted for late coming.
+ *               maximumTimeLimitForLateComing:
+ *                 type: number
+ *                 description: Maximum time limit for late coming in minutes.
+ *               isEarlyGoingAllowed:
+ *                 type: boolean
+ *                 description: Indicates if early going is allowed for the shift.
+ *               enterNumberOfDaysForEarlyGoing:
+ *                 type: number
+ *                 description: Number of days early going is allowed.
+ *               graceTimeLimitForEarlyGoing:
+ *                 type: number
+ *                 description: Grace time limit for early going in minutes.
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated shift
+ *       404:
+ *         description: Shift not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/shifts/:id', authController.protect, attendanceController.updateShift);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shifts/{id}:
+ *   delete:
+ *     summary: Delete a shift by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the shift
+ *     responses:
+ *       204:
+ *         description: Shift successfully deleted
+ *       404:
+ *         description: Shift not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/shifts/:id', authController.protect, attendanceController.deleteShift);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shifts:
+ *   get:
+ *     summary: Get all shifts
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with shifts
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/shifts', authController.protect, attendanceController.getAllShifts);
 
 // AttendanceMode routes
 /**
@@ -1993,12 +2288,6 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
 
 /**
  * @swagger
- * tags:
- *   name: Attendance Management
- */
-
-/**
- * @swagger
  * /api/v1/attendance/regularizationRequests:
  *   post:
  *     summary: Create a new Regularization Request
@@ -2069,11 +2358,7 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get(
-    '/regularizationRequests/:id',
-    authController.protect,
-    attendanceController.getRegularizationRequest
-  );
+  attendanceRouter.get('/regularizationRequests/:id',authController.protect,attendanceController.getRegularizationRequest);
   
   /**
    * @swagger
@@ -2120,11 +2405,7 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.put(
-    '/regularizationRequests/:id',
-    authController.protect,
-    attendanceController.updateRegularizationRequest
-  );
+  attendanceRouter.put('/regularizationRequests/:id',authController.protect,attendanceController.updateRegularizationRequest);
   
   /**
    * @swagger
@@ -2150,11 +2431,7 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.delete(
-    '/regularizationRequests/:id',
-    authController.protect,
-    attendanceController.deleteRegularizationRequest
-  );
+  attendanceRouter.delete('/regularizationRequests/:id',authController.protect,attendanceController.deleteRegularizationRequest);
   
   /**
    * @swagger
@@ -2171,145 +2448,7 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get(
-    '/regularizationRequests',
-    authController.protect,
-    attendanceController.getAllRegularizationRequests
-  );
-    
-/**
- * @swagger
- * tags:
- *   name: Attendance Management
- *   description: API endpoints for managing shifts
- */
-
-/**
- * @swagger
- * /api/v1/attendance/shifts:
- *   post:
- *     summary: Create a new shift
- *     tags: [Attendance Management]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       description: Shift details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Shift'
- *     responses:
- *       201:
- *         description: Shift successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/shifts', authController.protect, attendanceController.createShift);
-
-/**
- * @swagger
- * /api/v1/attendance/shifts/{id}:
- *   get:
- *     summary: Get a shift by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the shift
- *     responses:
- *       200:
- *         description: Successful response with the shift
- *       404:
- *         description: Shift not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/shifts/:id', authController.protect, attendanceController.getShift);
-
-/**
- * @swagger
- * /api/v1/attendance/shifts/{id}:
- *   put:
- *     summary: Update a shift by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the shift
- *     requestBody:
- *       description: New shift details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Shift'
- *     responses:
- *       200:
- *         description: Successful response with the updated shift
- *       404:
- *         description: Shift not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/shifts/:id', authController.protect, attendanceController.updateShift);
-
-/**
- * @swagger
- * /api/v1/attendance/shifts/{id}:
- *   delete:
- *     summary: Delete a shift by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the shift
- *     responses:
- *       204:
- *         description: Shift successfully deleted
- *       404:
- *         description: Shift not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/shifts/:id', authController.protect, attendanceController.deleteShift);
-
-/**
- * @swagger
- * /api/v1/attendance/shifts:
- *   get:
- *     summary: Get all shifts
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with shifts
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/shifts', authController.protect, attendanceController.getAllShifts);
+  attendanceRouter.get('/regularizationRequests',authController.protect,attendanceController.getAllRegularizationRequests);
 
 
 // Swagger annotation: Define the Tag and URL prefix
