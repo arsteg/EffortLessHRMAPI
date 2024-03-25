@@ -50,6 +50,10 @@ var attendanceRegularizationSchema = new Schema({
     ref: 'AttendanceTemplate',
     required: true
   },
+  company: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company',
+  },
   AttendanceRegularizationRestrictedLocations: [],
   AttendanceRegularizationRestrictedIPDetails: []
 }, { collection: 'AttendanceRegularization' });

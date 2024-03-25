@@ -2150,6 +2150,156 @@ attendanceRouter.delete('/shifts/:id', authController.protect, attendanceControl
  */
 attendanceRouter.get('/shifts', authController.protect, attendanceController.getAllShifts);
 
+ // Shift Template Assignment
+
+ /**
+ * @swagger
+ * /api/v1/attendance/shift-template-assignments:
+ *   post:
+ *     summary: Create a new ShiftTemplateAssignment
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: ShiftTemplateAssignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               template:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: ShiftTemplateAssignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+ attendanceRouter.post('/shift-template-assignments',authController.protect,attendanceController.createShiftTemplateAssignment);
+  
+  /**
+   * @swagger
+   * /api/v1/attendance/shift-template-assignments/{id}:
+   *   get:
+   *     summary: Get a ShiftTemplateAssignment by ID
+   *     tags: [Attendance Management]
+   *     security: [{
+   *         bearerAuth: []
+   *     }]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID of the ShiftTemplateAssignment
+   *     responses:
+   *       200:
+   *         description: Successful response with the ShiftTemplateAssignment
+   *       404:
+   *         description: ShiftTemplateAssignment not found
+   *       500:
+   *         description: Internal server error
+   */
+  attendanceRouter.get('/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
+  
+  /**
+   * @swagger
+   * /api/v1/attendance/shift-template-assignments/{id}:
+   *   put:
+   *     summary: Update a ShiftTemplateAssignment by ID
+   *     tags: [Attendance Management]
+   *     security: [{
+   *         bearerAuth: []
+   *     }]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID of the ShiftTemplateAssignment
+   *     requestBody:
+   *       description: New ShiftTemplateAssignment details
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               template:
+   *                 type: string
+   *               user:
+   *                 type: string
+   *               startDate:
+   *                 type: string
+   *                 format: date
+   *     responses:
+   *       200:
+   *         description: Successful response with the updated ShiftTemplateAssignment
+   *       404:
+   *         description: ShiftTemplateAssignment not found
+   *       500:
+   *         description: Internal server error
+   */
+  attendanceRouter.put('/shift-template-assignments/:id', authController.protect, attendanceController.updateShiftTemplateAssignment);
+  
+  /**
+   * @swagger
+   * /api/v1/attendance/shift-template-assignments/{id}:
+   *   delete:
+   *     summary: Delete a ShiftTemplateAssignment by ID
+   *     tags: [Attendance Management]
+   *     security: [{
+   *          bearerAuth: []
+   *     }]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID of the ShiftTemplateAssignment
+   *     responses:
+   *       204:
+   *         description: ShiftTemplateAssignment successfully deleted
+   *       404:
+   *         description: ShiftTemplateAssignment not found
+   *       500:
+   *         description: Internal server error
+   */
+  attendanceRouter.delete('/shift-template-assignments/:id', authController.protect, attendanceController.deleteShiftTemplateAssignment);
+  
+  /**
+   * @swagger
+   * /api/v1/attendance/shift-template-assignments:
+   *   get:
+   *     summary: Get all ShiftTemplateAssignments
+   *     tags: [Attendance Management]
+   *     security: [{
+   *         bearerAuth: []
+   *     }]
+   *     responses:
+   *       200:
+   *         description: Successful response with ShiftTemplateAssignments
+   *       500:
+   *         description: Internal server error
+   */
+  attendanceRouter.get('/shift-template-assignments', authController.protect, attendanceController.getAllShiftTemplateAssignments);
+  
+
 // AttendanceMode routes
 /**
  * @swagger
@@ -2328,13 +2478,9 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post(
-    '/regularizationRequests',
-    authController.protect,
-    attendanceController.createRegularizationRequest
-  );
+attendanceRouter.post('/regularizationRequests',authController.protect,attendanceController.createRegularizationRequest);
   
-  /**
+ /**
    * @swagger
    * /api/v1/attendance/regularizationRequests/{id}:
    *   get:
@@ -2358,9 +2504,9 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get('/regularizationRequests/:id',authController.protect,attendanceController.getRegularizationRequest);
+attendanceRouter.get('/regularizationRequests/:id',authController.protect,attendanceController.getRegularizationRequest);
   
-  /**
+/**
    * @swagger
    * /api/v1/attendance/regularizationRequests/{id}:
    *   put:
@@ -2405,9 +2551,9 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.put('/regularizationRequests/:id',authController.protect,attendanceController.updateRegularizationRequest);
+attendanceRouter.put('/regularizationRequests/:id',authController.protect,attendanceController.updateRegularizationRequest);
   
-  /**
+/**
    * @swagger
    * /api/v1/attendance/regularizationRequests/{id}:
    *   delete:
@@ -2431,9 +2577,9 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.delete('/regularizationRequests/:id',authController.protect,attendanceController.deleteRegularizationRequest);
+attendanceRouter.delete('/regularizationRequests/:id',authController.protect,attendanceController.deleteRegularizationRequest);
   
-  /**
+/**
    * @swagger
    * /api/v1/attendance/regularizationRequests:
    *   get:
@@ -2448,169 +2594,8 @@ attendanceRouter.post(
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get('/regularizationRequests',authController.protect,attendanceController.getAllRegularizationRequests);
+attendanceRouter.get('/regularizationRequests',authController.protect,attendanceController.getAllRegularizationRequests);
 
-
-// Swagger annotation: Define the Tag and URL prefix
-/**
- * @swagger
- * tags:
- *   name: Attendance Management
- *   description: API endpoints for Shift Template Assignments
- * /api/v1/attendance/shift-template-assignments:
- */
-
-/**
- * @swagger
- * /api/v1/attendance/shift-template-assignments:
- *   post:
- *     summary: Create a new ShiftTemplateAssignment
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: ShiftTemplateAssignment details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               template:
- *                 type: string
- *                 required: true
- *               user:
- *                 type: string
- *                 required: true
- *               startDate:
- *                 type: string
- *                 format: date
- *                 required: true
- *     responses:
- *       201:
- *         description: ShiftTemplateAssignment successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post(
-    '/',
-    authController.protect,
-    attendanceController.createShiftTemplateAssignment
-  );
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   get:
-   *     summary: Get a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     responses:
-   *       200:
-   *         description: Successful response with the ShiftTemplateAssignment
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get('/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   put:
-   *     summary: Update a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     requestBody:
-   *       description: New ShiftTemplateAssignment details
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               template:
-   *                 type: string
-   *               user:
-   *                 type: string
-   *               startDate:
-   *                 type: string
-   *                 format: date
-   *     responses:
-   *       200:
-   *         description: Successful response with the updated ShiftTemplateAssignment
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.put('/:id', authController.protect, attendanceController.updateShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   delete:
-   *     summary: Delete a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *          bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     responses:
-   *       204:
-   *         description: ShiftTemplateAssignment successfully deleted
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.delete('/:id', authController.protect, attendanceController.deleteShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments:
-   *   get:
-   *     summary: Get all ShiftTemplateAssignments
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     responses:
-   *       200:
-   *         description: Successful response with ShiftTemplateAssignments
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get('/', authController.protect, attendanceController.getAllShiftTemplateAssignments);
-  
 // DutyRequest routes
 /**
  * @swagger

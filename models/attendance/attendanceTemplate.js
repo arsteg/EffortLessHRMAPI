@@ -79,6 +79,10 @@ const attendanceTemplateSchema = new Schema({
   leveCategoryHierarchyForAbsentHalfDay: {
     type: [String], // Assuming LeaveCategory is a string
     required: true
+  },
+  company: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company',
   }
 }, { collection: 'AttendanceTemplate' });
 

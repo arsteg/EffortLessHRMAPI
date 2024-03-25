@@ -206,7 +206,7 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
-  const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId);;
+  const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId);
   if(regularizationReasons) 
       {
         
@@ -352,7 +352,7 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
-  const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId);;
+  const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId);
   if(onDutyReasons) 
       {
         
@@ -433,7 +433,7 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
 
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
-  const attendanceTemplates = await AttendanceTemplate.find();
+  const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: attendanceTemplates,
@@ -441,6 +441,15 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
 });
 
 exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
+  
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
   // Check if the attendanceTemplate exists
   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
   if (!templateExists) {
@@ -640,6 +649,7 @@ exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
 
 // Create a new Attendance Template Assignment
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
+  
   // Check if the attendanceTemplate exists
   const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attandanceTemplate });
   if (!attendanceTemplate) {
@@ -736,7 +746,7 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
-  const attendanceAssignments = await AttendanceTemplateAssignments.find();
+  const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',
     data: attendanceAssignments,
@@ -744,7 +754,6 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
 });
 
 exports.createRoundingInformation = catchAsync(async (req, res, next) => {
-  console.log("hiii");
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
    // Check if companyId exists in cookies
@@ -868,8 +877,7 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
-  console.log("hii");
+exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => { 
   const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
@@ -932,7 +940,7 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const onDutyTemplates = await OnDutyTemplate.find();
+  const onDutyTemplates = await OnDutyTemplate.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
     data: onDutyTemplates,
@@ -1025,7 +1033,7 @@ exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 // Get all UserOnDutyTemplates
 exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplates = await UserOnDutyTemplate.find();
+  const userOnDutyTemplates = await UserOnDutyTemplate.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
     data: userOnDutyTemplates,
@@ -1090,10 +1098,79 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllShifts = catchAsync(async (req, res, next) => {
-  const shifts = await Shift.find();
+  const shifts = await Shift.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
     data: shifts,
+  });
+});
+
+//Shift Assignment API
+
+// Create a new ShiftTemplateAssignment
+exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: shiftTemplateAssignment
+  });
+});
+
+// Get a ShiftTemplateAssignment by ID
+exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  const shiftTemplateAssignment = await ShiftTemplateAssignment.findById(req.params.id);
+  if (!shiftTemplateAssignment) {
+    return next(new AppError('ShiftTemplateAssignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: shiftTemplateAssignment
+  });
+});
+
+// Update a ShiftTemplateAssignment by ID
+exports.updateShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  const shiftTemplateAssignment = await ShiftTemplateAssignment.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!shiftTemplateAssignment) {
+    return next(new AppError('ShiftTemplateAssignment not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: shiftTemplateAssignment
+  });
+});
+
+// Delete a ShiftTemplateAssignment by ID
+exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  const shiftTemplateAssignment = await ShiftTemplateAssignment.findByIdAndDelete(req.params.id);
+  if (!shiftTemplateAssignment) {
+    return next(new AppError('ShiftTemplateAssignment not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Get all ShiftTemplateAssignments
+exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
+  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId });
+  res.status(200).json({
+    status: 'success',
+    data: shiftTemplateAssignments
   });
 });
 
@@ -1296,64 +1373,5 @@ exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,
-  });
-});
-
-// Create a new ShiftTemplateAssignment
-exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: shiftTemplateAssignment
-  });
-});
-
-// Get a ShiftTemplateAssignment by ID
-exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignment = await ShiftTemplateAssignment.findById(req.params.id);
-  if (!shiftTemplateAssignment) {
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: shiftTemplateAssignment
-  });
-});
-
-// Update a ShiftTemplateAssignment by ID
-exports.updateShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignment = await ShiftTemplateAssignment.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!shiftTemplateAssignment) {
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: shiftTemplateAssignment
-  });
-});
-
-// Delete a ShiftTemplateAssignment by ID
-exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignment = await ShiftTemplateAssignment.findByIdAndDelete(req.params.id);
-  if (!shiftTemplateAssignment) {
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
-});
-
-// Get all ShiftTemplateAssignments
-exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignments = await ShiftTemplateAssignment.find();
-  res.status(200).json({
-    status: 'success',
-    data: shiftTemplateAssignments
   });
 });
