@@ -2213,7 +2213,7 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get('/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
+  attendanceRouter.get('/shift-template-assignments/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
   
   /**
    * @swagger
