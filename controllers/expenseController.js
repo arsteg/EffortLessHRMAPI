@@ -326,8 +326,6 @@ async function updateOrCreateFieldValues(fieldId, fieldValues) {
   );
 }
 
-
-
 exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
     await expenseApplicationField.remove();
@@ -529,6 +527,7 @@ console.log("hello1");
     throw new AppError('Internal server error', 500);
   }
 }
+
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.id);
@@ -1003,7 +1002,6 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
     data: null
   });
 });
-
 
 exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
   const expenseReports = await ExpenseReport.find({}).where('employee').equals(req.params.userId);

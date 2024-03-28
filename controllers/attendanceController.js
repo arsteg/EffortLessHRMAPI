@@ -1167,7 +1167,9 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 
 // Get all ShiftTemplateAssignments
 exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
+  conole.log("called");
   const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId });
+  conole.log("called2");
   res.status(200).json({
     status: 'success',
     data: shiftTemplateAssignments

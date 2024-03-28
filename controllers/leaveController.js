@@ -14,7 +14,8 @@ const User = require('../models/permissions/userModel');
  const ShortLeave = require("../models/Leave/ShortLeaveModel");
  const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
  const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
-
+ const userSubordinate = require('../models/userSubordinateModel');
+ const { ObjectId } = require('mongodb');
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
   const company = req.cookies.companyId;
@@ -723,6 +724,37 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
   });
  });
 
+exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  console.log(teamIdsArray);
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+console.log(objectIdArray);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const leaveGrants = await LeaveGrant.find({
+    employee: { $in: objectIdArray }
+});
+ 
+  res.status(200).json({
+    status: 'success',
+    data: leaveGrants
+  });
+});
+
  exports.updateEmployeeLeaveGrant = async (req, res, next) => {
   try {
       const { id } = req.params;
@@ -891,7 +923,49 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
          next(error);
      }
  };
+  
+exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  console.log(teamIdsArray);
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+console.log(objectIdArray);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const leaveApplications = await LeaveApplication.find({
+    employee: { $in: objectIdArray }
+});
+
+for(var i = 0; i < leaveApplications.length; i++) {   
+  const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
+  if(halfDays) 
+  {
+    leaveApplications[i].halfDays=halfDays;
+  }
+  else{
+    leaveApplications[i].halfDays=null;
+  }
+}
  
+  res.status(200).json({
+    status: 'success',
+    data: leaveApplications
+  });
+});
+
  exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const { id } = req.params;
@@ -1057,6 +1131,38 @@ exports.getShortLeaveByUser = async (req, res, next) => {
     }
 };
 
+
+exports.getShortLeaveByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  console.log(teamIdsArray);
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+console.log(objectIdArray);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const shortLeaves = await ShortLeave.find({
+    employee: { $in: objectIdArray }
+});
+ 
+  res.status(200).json({
+    status: 'success',
+    data: shortLeaves
+  });
+});
+
 exports.getAllShortLeave = async (req, res, next) => {
   try {
       const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId})
@@ -1088,6 +1194,36 @@ exports.getLeaveBalance = async (req, res, next) => {
       });
   }
 };
+
+exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
+  var teamIdsArray = [];
+  var teamIds;
+  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
+  if(ids.length > 0)    
+      { 
+        for(var i = 0; i < ids.length; i++) 
+          {    
+              teamIdsArray.push(ids[i]);        
+          }
+    }
+  console.log(teamIdsArray);
+  if(teamIds==null)    
+    {
+       teamIdsArray.push(req.cookies.userId);
+    } 
+   
+    const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+  const leaveBalances = await LeaveAssigned.find({
+    employee: { $in: objectIdArray }
+});
+ 
+  res.status(200).json({
+    status: 'success',
+    data: leaveBalances
+  });
+});
 
 exports.assignLeavesByJobs = async () => {
 console.log("Called");

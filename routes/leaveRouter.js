@@ -968,6 +968,26 @@ router.get('/employee-leave-grant-by-user/:userId', authController.protect, leav
 
 /**
  * @swagger
+ * /api/v1/Leave/employee-leave-grant-by-team:
+ *   get:
+ *     summary: Get an Employee Leave Grant by Team
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Leave Grant
+ *       404:
+ *         description: Employee Leave Grant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-grant-by-team', authController.protect, leaveController.getEmployeeLeaveGrantByTeam);
+
+
+/**
+ * @swagger
  * /api/v1/Leave/employee-leave-grant/{id}:
  *   delete:
  *     summary: Delete an Employee Leave Grant by ID
@@ -1255,6 +1275,27 @@ router.put('/employee-leave-application/:id', authController.protect, leaveContr
  */
 router.get('/employee-leave-application-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveApplicationByUser);
 
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-application-by-team:
+ *   get:
+ *     summary: Get an Employee Leave Application by ID
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Leave Grant
+ *       404:
+ *         description: Employee Leave Entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-leave-application-by-team', authController.protect, leaveController.getEmployeeLeaveApplicationByTeam);
+
+
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-application/{id}:
@@ -1507,6 +1548,26 @@ router.delete('/short-leave/:id', authController.protect, leaveController.delete
  */
 router.get('/short-leave-by-user/:userId', authController.protect, leaveController.getShortLeaveByUser);
 
+
+/**
+ * @swagger
+ * /api/v1/leave/short-leave-by-team:
+ *   get:
+ *     summary: Get a ShortLeave by Team
+ *     tags: [Leave Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with the ShortLeave
+ *       404:
+ *         description: ShortLeave not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/short-leave-by-team', authController.protect, leaveController.getShortLeaveByTeam);
+
+
 /**
  * @swagger
  * /api/v1/leave/short-leave:
@@ -1561,4 +1622,27 @@ router.get('/short-leave', authController.protect, leaveController.getAllShortLe
  *
  */
 router.post('/get-leave-balance', authController.protect, leaveController.getLeaveBalance);
+
+/**
+ * @swagger
+ * /api/v1/leave/get-leave-balance-by-team:
+ *  post:
+ *      tags: [Leave Management]
+ *      summary: "Get Leave Balance"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]     
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/get-leave-balance-by-team', authController.protect, leaveController.getLeaveBalanceByTeam);
+
 module.exports = router;
