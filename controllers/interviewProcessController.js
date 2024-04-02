@@ -866,9 +866,14 @@ exports.updateInterviewer = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteInterviewer = catchAsync(async (req, res, next) => {
-  const interviewer = await Interviewer.findByIdAndDelete(req.params.id);
-  if (!interviewer) {
+  const interviewer  = req.params.id; // Extract the interviewer value from request params  
+  const deletedCount = await Interviewer.deleteOne({ interviewer }); // Use deleteOne with a query for deletion 
+  if (deletedCount.deletedCount === 0) {
     return next(new AppError('Interviewer not found', 404));
+    res.status(404).json({
+      status: 'failed',
+      data: 'Interviewer not found'
+    });
   }
   res.status(204).json({
     status: 'success',
