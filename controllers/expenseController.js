@@ -1564,18 +1564,16 @@ exports.createAdvanceTemplate = async (req, res, next) => {
 };
 
 exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
+ 
   const advanceTemplate = await AdvanceTemplate.findById(req.params.id);
-  if(advanceTemplate) {
-    for(var i = 0; i < advanceTemplate.length; i++) {
-      const AdvanceTemplateCategories = await AdvanceTemplateCategory.find({})
-        .where('advanceTemplate').equals(advanceTemplate._id);
-
-      if(AdvanceTemplateCategories && AdvanceTemplateCategories.length) {
-        advanceTemplate.advanceCategories = AdvanceTemplateCategories;
+  if(advanceTemplate) {  
+       const advanceTemplateCategories = await AdvanceTemplateCategory.find({})
+        .where('advanceTemplate').equals(advanceTemplate._id);    
+      if(advanceTemplateCategories && advanceTemplateCategories.length) {
+        advanceTemplate.advanceCategories = advanceTemplateCategories;
       } else {
         advanceTemplate.advanceCategories = null;
-      }
-    }
+      }    
   }
   res.status(200).json({
     status: 'success',

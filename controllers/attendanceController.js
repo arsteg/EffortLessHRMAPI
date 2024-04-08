@@ -2,7 +2,7 @@ const Company = require('../models/companyModel');
 const AttendanceMode = require('../models/attendance/attendanceMode');
 const AttendanceTemplate = require('../models/attendance/attendanceTemplate');
 const AttendanceTemplateAssignments = require('../models/attendance/attendanceTemplateAssignments');
-const DutyRequest = require('../models/attendance/dutyRequest');
+const EmployeeOnDutyRequest = require('../models/attendance/EmployeeOnDutyRequest');
 const GeneralSettings = require('../models/attendance/generalSettings');
 const OnDutyReason = require("../models/attendance/onDutyReason");
 const OnDutyTemplate = require('../models/attendance/onDutyTemplate');
@@ -15,6 +15,7 @@ const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssig
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
+const EmployeeOnDutyShift= require('../models/attendance/EmployeeOnDutyShift');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const User = require('../models/permissions/userModel');
@@ -23,6 +24,7 @@ const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
 const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
+
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -372,6 +374,78 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
     data: onDutyReasons
   });
 });
+
+
+// Create a new attendance mode
+exports.createAttendanceMode = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+ 
+  const attendanceMode = await AttendanceMode.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: attendanceMode,
+  });
+});
+
+// Get an attendance mode by ID
+exports.getAttendanceMode = catchAsync(async (req, res, next) => {
+  const attendanceMode = await AttendanceMode.findById(req.params.id);
+  if (!attendanceMode) {
+    return next(new AppError('Attendance mode not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: attendanceMode,
+  });
+});
+
+// Update an attendance mode by ID
+exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
+  const attendanceMode = await AttendanceMode.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!attendanceMode) {
+    return next(new AppError('Attendance mode not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: attendanceMode,
+  });
+});
+
+// Delete an attendance mode by ID
+exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
+  const attendanceMode = await AttendanceMode.findByIdAndDelete(req.params.id);
+
+  if (!attendanceMode) {
+    return next(new AppError('Attendance mode not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+// Get all attendance modes
+exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
+  const attendanceModes = await AttendanceMode.find();
+  res.status(200).json({
+    status: 'success',
+    data: attendanceModes,
+  });
+});
+
 // Create a new Attendance Template
 exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1174,76 +1248,6 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   });
 });
 
-// Create a new attendance mode
-exports.createAttendanceMode = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  // Add companyId to the request body
-  req.body.company = companyId;
- 
-  const attendanceMode = await AttendanceMode.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: attendanceMode,
-  });
-});
-
-// Get an attendance mode by ID
-exports.getAttendanceMode = catchAsync(async (req, res, next) => {
-  const attendanceMode = await AttendanceMode.findById(req.params.id);
-  if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: attendanceMode,
-  });
-});
-
-// Update an attendance mode by ID
-exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
-  const attendanceMode = await AttendanceMode.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: attendanceMode,
-  });
-});
-
-// Delete an attendance mode by ID
-exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
-  const attendanceMode = await AttendanceMode.findByIdAndDelete(req.params.id);
-
-  if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-// Get all attendance modes
-exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
-  const attendanceModes = await AttendanceMode.find();
-  res.status(200).json({
-    status: 'success',
-    data: attendanceModes,
-  });
-});
-
 // Create a new DutyRequest
 exports.createDutyRequest = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1255,10 +1259,23 @@ exports.createDutyRequest = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
  
-  const dutyRequest = await DutyRequest.create(req.body);
+  const employeeOnDutyRequest = await EmployeeOnDutyRequest.create(req.body);
+  if (req.body.onDutyShift && req.body.employeeOnDutyShift.length > 0) {
+    const employeeOnDutyShift = req.body.employeeOnDutyShift.map(shift => ({
+      employeeOnDutyRequest: employeeOnDutyRequest._id,
+      shiftDuration: shift.shiftDuration,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      remarks: shift.remarks,
+
+    }));
+    console.log(IPDetails);
+    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
+    
+  }
   res.status(201).json({
     status: 'success',
-    data: dutyRequest
+    data: employeeOnDutyRequest
   });
 });
 
@@ -1268,6 +1285,7 @@ exports.getDutyRequest = catchAsync(async (req, res, next) => {
   if (!dutyRequest) {
     return next(new AppError('DutyRequest not found', 404));
   }
+
   res.status(200).json({
     status: 'success',
     data: dutyRequest

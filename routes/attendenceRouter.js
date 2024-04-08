@@ -443,6 +443,143 @@ attendanceRouter.delete('/duty-reasons/:id', authController.protect, attendanceC
  */
 attendanceRouter.get('/duty-reasons', authController.protect, attendanceController.getAllOnDutyReasons);
 
+// AttendanceMode routes
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-modes:
+ *   post:
+ *     summary: Create a new attendance mode
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Attendance mode details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mode:
+ *                 type: string
+ *                 required: true 
+ *     responses:
+ *       201:
+ *         description: Attendance mode successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/attendance-modes', authController.protect, attendanceController.createAttendanceMode);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-modes/{id}:
+ *   get:
+ *     summary: Get an attendance mode by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the attendance mode
+ *     responses:
+ *       200:
+ *         description: Successful response with the attendance mode
+ *       404:
+ *         description: Attendance mode not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-modes/:id', authController.protect, attendanceController.getAttendanceMode);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-modes/{id}:
+ *   put:
+ *     summary: Update an attendance mode by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the attendance mode
+ *     requestBody:
+ *       description: New attendance mode details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mode:
+ *                 type: string 
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated attendance mode
+ *       404:
+ *         description: Attendance mode not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/attendance-modes/:id', authController.protect, attendanceController.updateAttendanceMode);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-modes/{id}:
+ *   delete:
+ *     summary: Delete an attendance mode by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the attendance mode
+ *     responses:
+ *       204:
+ *         description: Attendance mode successfully deleted
+ *       404:
+ *         description: Attendance mode not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/attendance-modes/:id', authController.protect, attendanceController.deleteAttendanceMode);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-modes:
+ *   get:
+ *     summary: Get all attendance modes
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with attendance modes
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendance-modes', authController.protect, attendanceController.getAllAttendanceModes);
+
+
 //Attendance Template
 /**
  * @swagger
@@ -2298,143 +2435,6 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
    *         description: Internal server error
    */
   attendanceRouter.get('/shift-template-assignments', authController.protect, attendanceController.getAllShiftTemplateAssignments);
-  
-
-// AttendanceMode routes
-/**
- * @swagger
- * /api/v1/attendance/attendance-modes:
- *   post:
- *     summary: Create a new attendance mode
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Attendance mode details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               mode:
- *                 type: string
- *                 required: true 
- *     responses:
- *       201:
- *         description: Attendance mode successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/attendance-modes', authController.protect, attendanceController.createAttendanceMode);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-modes/{id}:
- *   get:
- *     summary: Get an attendance mode by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the attendance mode
- *     responses:
- *       200:
- *         description: Successful response with the attendance mode
- *       404:
- *         description: Attendance mode not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-modes/:id', authController.protect, attendanceController.getAttendanceMode);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-modes/{id}:
- *   put:
- *     summary: Update an attendance mode by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the attendance mode
- *     requestBody:
- *       description: New attendance mode details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               mode:
- *                 type: string 
- *     responses:
- *       200:
- *         description: Successful response with the updated attendance mode
- *       404:
- *         description: Attendance mode not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/attendance-modes/:id', authController.protect, attendanceController.updateAttendanceMode);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-modes/{id}:
- *   delete:
- *     summary: Delete an attendance mode by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the attendance mode
- *     responses:
- *       204:
- *         description: Attendance mode successfully deleted
- *       404:
- *         description: Attendance mode not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/attendance-modes/:id', authController.protect, attendanceController.deleteAttendanceMode);
-
-/**
- * @swagger
- * /api/v1/attendance/attendance-modes:
- *   get:
- *     summary: Get all attendance modes
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     responses:
- *       200:
- *         description: Successful response with attendance modes
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/attendance-modes', authController.protect, attendanceController.getAllAttendanceModes);
 
 /**
  * @swagger
@@ -2627,8 +2627,27 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *                 required: true
  *               comment:
  *                 type: string
- *               user:
- *                 type: string 
+ *               onDutyShift:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     onDutyRequest:
+ *                       type: string
+ *                       required: true 
+ *                     shiftDuration:
+ *                       type: string
+ *                       required: true 
+ *                     statrTime:
+ *                       type: string
+ *                       required: true 
+ *                     endTime:
+ *                       type: string
+ *                       required: true  
+ *                     remarks:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       201:
  *         description: DutyRequest successfully created
@@ -2699,8 +2718,24 @@ attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceCon
  *                 format: date
  *               comment:
  *                 type: string
- *               user:
- *                 type: string 
+ *               employeeOnDutyShifts:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     employeeOnShiftDuration:
+ *                       type: string
+ *                       required: true 
+ *                     statrTime:
+ *                       type: string
+ *                       required: true 
+ *                     endTime:
+ *                       type: string
+ *                       required: true  
+ *                     remarks:
+ *                       type: string
+ *                       required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated DutyRequest

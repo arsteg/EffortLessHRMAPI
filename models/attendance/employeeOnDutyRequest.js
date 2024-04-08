@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const dutyRequestSchema = new Schema({
+const employeeOnDutyRequestSchema = new Schema({
   onDutyReason: {
     type: mongoose.Schema.ObjectId,
     ref: 'OnDutyReason',
@@ -17,15 +17,12 @@ const dutyRequestSchema = new Schema({
   },
   comment: {
     type: String,
-  },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-  },
+  }, 
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
   },
-}, { collection: 'DutyRequest' });
+  employeeOnDutyShifts: []
+}, { collection: 'EmployeeOnDutyRequest' });
 
-module.exports = mongoose.model('DutyRequest', dutyRequestSchema);
+module.exports = mongoose.model('EmployeeOnDutyRequest', employeeOnDutyRequestSchema);
