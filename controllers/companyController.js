@@ -178,8 +178,8 @@ exports.deleteHoliday = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllHolidays = catchAsync(async (req, res, next) => {
-  const holidayCalendars = await HolidayCalendar.find({}).where('company').equals(req.cookies.companyId);
+exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
+  const holidayCalendars = await HolidayCalendar.find({}).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year);
   if(holidayCalendars)
       {        
           for(var i = 0; i < holidayCalendars.length; i++) {     

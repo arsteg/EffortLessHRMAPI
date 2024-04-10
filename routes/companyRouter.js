@@ -31,6 +31,8 @@ const router = express.Router();
  *                 type: boolean
  *               holidaysAppliesFor:
  *                 type: string
+ *               year:
+ *                 type: string
  *               users:
  *                 type: array
  *                 items:
@@ -109,6 +111,8 @@ router.get('/holiday/:id', authController.protect, companyController.getHoliday)
  *                 type: boolean
  *               holidaysAppliesFor:
  *                 type: string
+ *               year:
+ *                 type: string
  *               users:
  *                 type: array
  *                 items:
@@ -156,12 +160,19 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
 
 /**
  * @swagger
- * /api/v1/company/holiday:
+ * /api/v1/company/holiday-by-year:
  *   get:
- *     summary: Get a Holiday
+ *     summary: Get a Holiday by Year
  *     tags: [Company Management]
  *     security: 
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Year of the Holidays
  *     responses:
  *       200:
  *         description: Successful response with the Holiday
@@ -170,7 +181,7 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  *       500:
  *         description: Internal server error
  */
-router.get('/holiday', authController.protect, companyController.getAllHolidays);
+router.get('/holiday-by-year', authController.protect, companyController.getAllHolidaysByYear);
   
 
 // Country Router

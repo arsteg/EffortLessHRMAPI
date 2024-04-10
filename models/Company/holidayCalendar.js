@@ -22,6 +22,10 @@ var holidayCalendarSchema = new Schema({
     type: String,
     required: true
   },
+  year: {
+    type: String,
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema
