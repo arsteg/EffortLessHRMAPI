@@ -259,7 +259,12 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       )
     );
   }
-
+  res.status(200).json({
+    status: 'success',
+    data: {
+      User:newUser
+    }
+  }); 
  // createAndSendToken(newUser, 201, res);
 });
 exports.login = catchAsync(async (req, res, next) => {
