@@ -975,7 +975,21 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
   if (!expenseReport) {
     return next(new AppError('ExpenseReport not found', 404));
   }
-
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.id);
+  if(expenseReportExpenses) 
+  {
+      for(var i = 0; i < expenseReportExpenses.length; i++) {     
+      const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
+      if(expenseReportExpenseFields) 
+        {
+          expenseReportExpenses[i].expenseReportExpenseFields = expenseReportExpenseFields;
+        }
+        else{
+          expenseReportExpenses[i].expenseReportExpenseFields=null;
+        }
+      }
+      expenseReport.expenseReportExpense=expenseReportExpenses;
+   }  
   res.status(200).json({
     status: 'success',
     data: expenseReport
