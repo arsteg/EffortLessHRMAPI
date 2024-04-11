@@ -48,8 +48,11 @@ app.use(loggingMiddleware);
 var allowedOrigin ="http://localhost:4200";
 if (process.env.NODE_ENV === 'development') {
   allowedOrigin= "http://localhost:4200";
-} else if (process.env.NODE_ENV === 'production') {                        
+} else if (process.env.NODE_ENV === 'test') {                        
   allowedOrigin= "https://effort-less-hrm-web.vercel.app";
+}
+else if (process.env.NODE_ENV === 'production') {                        
+  allowedOrigin= "https://effortlesshrm.com";
 }
 //app.use(compression);
 app.use(cors(
@@ -71,8 +74,11 @@ app.set("email", path.join(__dirname, "email"));
 app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     res.header("Access-Control-Allow-Origin", "http://localhost:4200");     
-  } else if (process.env.NODE_ENV === 'production') {
+  } else if (process.env.NODE_ENV === 'test') {
     res.header("Access-Control-Allow-Origin", "https://effort-less-hrm-web.vercel.app");     
+  }
+  else if (process.env.NODE_ENV === 'production') {
+    res.header("Access-Control-Allow-Origin", "https://effortlesshrm.com");     
   } else {
     console.log('Unknown environment');
   }  
