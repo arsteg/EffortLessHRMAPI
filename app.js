@@ -44,12 +44,54 @@ const loggingMiddleware = require('./Logger/loggingMiddleware');
 
 var notificationRoute = require('./routes/notificationRoute');
 app.use(loggingMiddleware);
-var allowedOrigin ="http://localhost:4200";
+
+// var allowedOrigin ="http://localhost:4200";
+// if (process.env.NODE_ENV === 'development') {
+//   allowedOrigin= "http://localhost:4200";
+// } else if (process.env.NODE_ENV === 'production') {                        
+//   allowedOrigin= "https://effort-less-hrm-web.vercel.app";
+// }
+// //app.use(compression);
+// app.use(cors(
+//   {
+//     "origin": allowedOrigin,
+//     credentials: true, // This MUST be "true" if your endpoint is
+//                      // authenticated via either a session cookie
+//                      // or Authorization header. Otherwise the
+//                      // browser will block the response.
+//     methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
+//                                                // pre-flight OPTIONS requests
+//   }
+// ));
+// app.options('*', cors());
+// app.set("view engine", "pug");
+// app.set("email", path.join(__dirname, "email"));
+
+// // Each request will contain requested time
+// app.use((req, res, next) => {
+//   if (process.env.NODE_ENV === 'development') {
+//     res.header("Access-Control-Allow-Origin", "http://localhost:4200");     
+//   } else if (process.env.NODE_ENV === 'production') {
+//     res.header("Access-Control-Allow-Origin", "https://effort-less-hrm-web.vercel.app");     
+//   } else {
+//     console.log('Unknown environment');
+//   }  
+  
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   res.header("Access-Control-Allow-Methods", "POST,GET,PUT,OPTIONS,DELETE,PATCH");
+  
+//   next(); // run next middleware in stack
+// });
+
+
+var allowedOrigin = "http://localhost:4200";
+
 if (process.env.NODE_ENV === 'development') {
-  allowedOrigin= "http://localhost:4200";
+  allowedOrigin = "http://localhost:4200";
 } else if (process.env.NODE_ENV === 'production') {                        
-  allowedOrigin= "https://effort-less-hrm-web.vercel.app";
+  allowedOrigin = ["https://effort-less-hrm-web.vercel.app", "https://effortlesshrm.com"];
 }
+
 //app.use(compression);
 app.use(cors(
   {
@@ -71,7 +113,7 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     res.header("Access-Control-Allow-Origin", "http://localhost:4200");     
   } else if (process.env.NODE_ENV === 'production') {
-    res.header("Access-Control-Allow-Origin", "https://effort-less-hrm-web.vercel.app");     
+    res.header("Access-Control-Allow-Origin", allowedOrigin.join(','));     
   } else {
     console.log('Unknown environment');
   }  
