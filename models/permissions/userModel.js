@@ -63,7 +63,6 @@ const userSchema = new mongoose.Schema({
     ref: 'Role',
     required: [true, 'Role must belong to a Role']
   },
-
   password: {
     type: String,
     required: [true, 'Please provide a password'],
@@ -111,6 +110,60 @@ const userSchema = new mongoose.Schema({
   personalEmail: {
     type: String
   },
+  mobile: {
+    type: String
+  },
+  emergancyContactName: {
+    type: String
+  },
+  emergancyContactNumber: {
+    type: String
+  },
+  Gender: {
+    type: String
+  },
+  DOB: {
+    type: Date
+  },
+  MaritalStatus: {
+    type: String
+  },
+  MarraigeAniversary: {
+    type: Date
+  },
+  PassportDetails: {
+    type: String
+  },
+  Pancard: {
+    type: String
+  },
+  AadharNumber: {
+    type: String
+  },
+  Disability: {
+    type: String
+  },
+  FatherHusbandName: {
+    type: String
+  },
+  NoOfChildren: {
+    type: String
+  },
+  BankName: {
+    type: String
+  },
+  BankAccountNumber: {
+    type: String
+  },
+  BankIFSCCode: {
+    type: String
+  },
+  BankBranch: {
+    type: String
+  },
+  BankAddress: {
+    type: String
+  }
 },
 {
  toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
