@@ -3,6 +3,8 @@ const Role = require('../models/permissions/roleModel');
 const catchAsync = require('../utils/catchAsync');
 const HolidayCalendar = require('../models/Company/holidayCalendar');
 const HolidayapplicableEmployee=require('../models/Company/HolidayApplicableEmployee');
+const Zone = require('../models/Company/Zone');
+
 const AppError = require('../utils/appError');
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
@@ -53,6 +55,14 @@ res.status(200).json({
 });
 exports.createHoliday = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
   req.body.company = company; // Set company in the request body
 
   const holidayCalendar = await HolidayCalendar.create(req.body);
@@ -198,3 +208,97 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
     data: holidayCalendars
   });
 });
+
+exports.createZone = async (req, res, next) => {
+  try {
+    const company = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  req.body.company = company; // Set company in the request body
+  
+    const zone = await Zone.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: zone
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getZone = async (req, res, next) => {
+  try {
+    const zone = await Zone.findById(req.params.id);
+    if (!zone) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Zone not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: zone
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateZone = async (req, res, next) => {
+  try {
+    const zone = await Zone.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!zone) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Zone not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: zone
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getZonesByCompanyId = async (req, res, next) => {
+  try {
+    const zones = await Zone.find({ companyId: req.cookies.company });
+    res.status(200).json({
+      status: 'success',
+      data: zones
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteZone = async (req, res, next) => {
+  try {
+    const zone = await Zone.findByIdAndDelete(req.params.id);
+    if (!zone) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Zone not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (error) {
+    next(error);
+  }
+};

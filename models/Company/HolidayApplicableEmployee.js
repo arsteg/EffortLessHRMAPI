@@ -6,12 +6,12 @@ var holidayapplicableEmployeeSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'HolidayCalendar',  // Assuming the reference is to a Company schema
     required: true
-  },
-  user: {
+ },
+ user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',  // Assuming the reference is to a Company schema
     required: true
-  }
+ }
 }, { collection: 'HolidayapplicableEmployee' });
 
 module.exports = mongoose.model('HolidayapplicableEmployee', holidayapplicableEmployeeSchema);

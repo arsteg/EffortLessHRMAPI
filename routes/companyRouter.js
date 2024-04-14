@@ -132,7 +132,7 @@ router.get('/holiday/:id', authController.protect, companyController.getHoliday)
  */
 router.put('/holiday/:id', authController.protect, companyController.updateHoliday);
 
-/**npm start
+/**
  * 
  * @swagger
  * /api/v1/company/holiday/{id}:
@@ -183,9 +183,155 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  */
 router.get('/holiday-by-year', authController.protect, companyController.getAllHolidaysByYear);
   
+/**
+ * @swagger
+ * /api/v1/company/zones:
+ *   post:
+ *     summary: Add a new zone
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Zone details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               zoneCode:
+ *                 type: string
+ *               zoneName:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Zone successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/zones',authController.protect, companyController.createZone);
+
+/**
+ * @swagger
+ * /api/v1/company/zones/{id}:
+ *   get:
+ *     summary: Get a zone by ID
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the zone
+ *     responses:
+ *       200:
+ *         description: Successful response with the zone
+ *       404:
+ *         description: Zone not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/zones/:id',authController.protect, companyController.getZone);
+
+/**
+ * @swagger
+ * /api/v1/company/zones/{id}:
+ *   put:
+ *     summary: Update a zone by ID
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the zone
+ *     requestBody:
+ *       description: New zone details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               zoneCode:
+ *                 type: string
+ *               zoneName:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated zone
+ *       404:
+ *         description: Zone not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/zones/:id',authController.protect, companyController.updateZone);
+
+/**
+ * @swagger
+ * /api/v1/company/zones:
+ *   get:
+ *     summary: Get all zones by companyId
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with zones
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/zones',authController.protect, companyController.getZonesByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/zones/{id}:
+ *   delete:
+ *     summary: Delete a zone by ID
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the zone
+ *     responses:
+ *       204:
+ *         description: Zone successfully deleted
+ *       404:
+ *         description: Zone not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/zones/:id',authController.protect, companyController.deleteZone);
 
 // Country Router
-router.get('/companylist',companyController.getCompanyList);
+router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);
 
 router
