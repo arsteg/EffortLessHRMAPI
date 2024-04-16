@@ -91,9 +91,9 @@ router.get('/holiday/:id', authController.protect, companyController.getHoliday)
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the ShortLeave
+ *         description: ID of the Holiday
  *     requestBody:
- *       description: New ShortLeave details
+ *       description: New Holiday details
  *       required: true
  *       content:
  *         application/json:
@@ -329,6 +329,208 @@ router.get('/zones',authController.protect, companyController.getZonesByCompanyI
  *         description: Internal server error
  */
 router.delete('/zones/:id',authController.protect, companyController.deleteZone);
+
+
+/**
+ * @swagger
+ * /api/v1/company/locations:
+ *   post:
+ *     summary: Add a new location
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+  *     requestBody:
+ *       description: Location details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               locationCode:
+ *                 type: string
+ *                 description: The code of the location
+ *                 required: true
+ *               country:
+ *                 type: string
+ *                 description: The country of the location
+ *                 required: true
+ *               state:
+ *                 type: string
+ *                 description: The state of the location
+ *                 required: true
+ *               city:
+ *                 type: string
+ *                 description: The city of the location
+ *                 required: true
+ *               organization:
+ *                 type: string
+ *                 description: The organization of the location
+ *                 required: true
+ *               providentFundRegistrationCode:
+ *                 type: string
+ *                 description: The provident fund registration code of the location
+ *               esicRegistrationCode:
+ *                 type: string
+ *                 description: The ESIC registration code of the location
+ *               professionalTaxRegistrationCode:
+ *                 type: string
+ *                 description: The professional tax registration code of the location
+ *               lwfRegistrationCode:
+ *                 type: string
+ *                 description: The LWF registration code of the location
+ *               taxDeclarationApprovers:
+ *                 type: array
+ *                 description: The IDs of users who can approve tax declarations
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Location successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/locations', authController.protect, companyController.addLocation);
+
+/**
+ * @swagger
+ * /api/v1/company/locations/{id}:
+ *   get:
+ *     summary: Get a location by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the location
+ *     responses:
+ *       200:
+ *         description: Successful response with the location
+ *       404:
+ *         description: Location not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/locations/:id', authController.protect, companyController.getLocation);
+
+/**
+ * @swagger
+ * /api/v1/company/locations/{id}:
+ *   put:
+ *     summary: Update a location by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the location
+ *     requestBody:
+ *       description: New location details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               locationCode:
+ *                 type: string
+ *                 description: The code of the location
+ *                 required: true
+ *               country:
+ *                 type: string
+ *                 description: The country of the location
+ *                 required: true
+ *               state:
+ *                 type: string
+ *                 description: The state of the location
+ *                 required: true
+ *               city:
+ *                 type: string
+ *                 description: The city of the location
+ *                 required: true
+ *               organization:
+ *                 type: string
+ *                 description: The organization of the location
+ *                 required: true
+ *               providentFundRegistrationCode:
+ *                 type: string
+ *                 description: The provident fund registration code of the location
+ *               esicRegistrationCode:
+ *                 type: string
+ *                 description: The ESIC registration code of the location
+ *               professionalTaxRegistrationCode:
+ *                 type: string
+ *                 description: The professional tax registration code of the location
+ *               lwfRegistrationCode:
+ *                 type: string
+ *                 description: The LWF registration code of the location
+ *               taxDeclarationApprovers:
+ *                 type: array
+ *                 description: The IDs of users who can approve tax declarations
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated location
+ *       404:
+ *         description: Location not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/locations/:id', authController.protect, companyController.updateLocation);
+
+/**
+ * @swagger
+ * /api/v1/company/locations-by-company:
+ *   get:
+ *     summary: Get all locations by companyId
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with locations
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/locations-by-company', authController.protect, companyController.getAllLocationsByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/locations/{id}:
+ *   delete:
+ *     summary: Delete a location by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the location
+ *     responses:
+ *       204:
+ *         description: Location successfully deleted
+ *       404:
+ *         description: Location not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/locations/:id', authController.protect, companyController.deleteLocation);
+
+module.exports = router;
 
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);

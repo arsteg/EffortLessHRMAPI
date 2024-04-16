@@ -4,7 +4,7 @@ const catchAsync = require('../utils/catchAsync');
 const HolidayCalendar = require('../models/Company/holidayCalendar');
 const HolidayapplicableEmployee=require('../models/Company/HolidayApplicableEmployee');
 const Zone = require('../models/Company/Zone');
-
+const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
@@ -302,3 +302,71 @@ exports.deleteZone = async (req, res, next) => {
     next(error);
   }
 };
+// Add a Location
+exports.addLocation = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  req.body.company = company; // Set company in the request body
+  
+  const location = await Location.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: location
+  });
+});
+
+// Get a Location
+exports.getLocation = catchAsync(async (req, res, next) => {
+  const location = await Location.findById(req.params.id);
+  if (!location) {
+    return next(new AppError('Location not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: location
+  });
+});
+
+// Update a Location
+exports.updateLocation = catchAsync(async (req, res, next) => {
+  const location = await Location.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!location) {
+    return next(new AppError('Location not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: location
+  });
+});
+
+// Get All Locations by companyId
+exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.company;
+  const locations = await Location.find({ companyId });
+  res.status(200).json({
+    status: 'success',
+    data: locations
+  });
+});
+
+// Delete a Location
+exports.deleteLocation = catchAsync(async (req, res, next) => {
+  const location = await Location.findByIdAndDelete(req.params.id);
+  if (!location) {
+    return next(new AppError('Location not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
