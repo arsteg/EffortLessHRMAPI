@@ -928,6 +928,136 @@ router.get('/designations-by-company',authController.protect, companyController.
  */
 router.delete('/designations/:id',authController.protect, companyController.deleteDesignation);
 
+/**
+ * @swagger
+ * /api/v1/company/bands:
+ *   post:
+ *     summary: Add a new band
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Band details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               band:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Band successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/bands',authController.protect, companyController.createBand);
+
+/**
+ * @swagger
+ * /api/v1/company/bands/{id}:
+ *   get:
+ *     summary: Get a band by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the band
+ *     responses:
+ *       200:
+ *         description: Successful response with the band
+ *       404:
+ *         description: Band not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/bands/:id',authController.protect, companyController.getBand);
+
+/**
+ * @swagger
+ * /api/v1/company/bands/{id}:
+ *   put:
+ *     summary: Update a band by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the band
+ *     requestBody:
+ *       description: New band details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               band:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated band
+ *       404:
+ *         description: Band not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/bands/:id',authController.protect, companyController.updateBand);
+
+/**
+ * @swagger
+ * /api/v1/company/bands-by-company:
+ *   get:
+ *     summary: Get all bands by companyId
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with bands
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/bands-by-company',authController.protect, companyController.getAllBandsByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/bands/{id}:
+ *   delete:
+ *     summary: Delete a band by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the band
+ *     responses:
+ *       204:
+ *         description: Band successfully deleted
+ *       404:
+ *         description: Band not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/bands/:id',authController.protect, companyController.deleteBand);
+
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);

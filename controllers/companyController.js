@@ -9,6 +9,8 @@ const AppError = require('../utils/appError');
 const Department = require("../models/Company/Deparment");
 const SubDepartment = require('../models/Company/SubDepartment');
 const Designation = require("../models/Company/Designation");
+const Band = require("../models/Company/Band");
+
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
   if (!document) {
@@ -617,3 +619,110 @@ exports.deleteDesignation = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+exports.createBand = async (req, res, next) => {
+  try {
+    const company = req.cookies.companyId; // Get company from cookies
+  
+    // Validate if company value exists in cookies
+    if (!company) {
+      return res.status(500).json({
+        status: 'failure',
+        message: 'Company information missing in cookies',
+      });
+    }
+    req.body.company = company; // Set company in the request body
+    const band = await Band.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: band
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'failure',
+      message: error.message
+    });
+  }
+};
+
+// Get a Band
+exports.getBand = async (req, res, next) => {
+  try {
+    const band = await Band.findById(req.params.id);
+    if (!band) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Band not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: band
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failure',
+      message: error.message
+    });
+  }
+};
+
+// Update a Band
+exports.updateBand = async (req, res, next) => {
+  try {
+    const band = await Band.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!band) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Band not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: band
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failure',
+      message: error.message
+    });
+  }
+};
+
+// Get All Band by companyId
+exports.getAllBandsByCompanyId = async (req, res, next) => {
+  try {
+    const bands = await Band.find({}).where('company').equals(req.cookies.companyId);
+    res.status(200).json({
+      status: 'success',
+      data: bands
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failure',
+      message: error.message
+    });
+  }
+};
+
+// Delete Band
+exports.deleteBand = async (req, res, next) => {
+  try {
+    const band = await Band.findByIdAndDelete(req.params.id);
+    if (!band) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Band not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failure',
+      message: error.message
+    });
+  }
+};
