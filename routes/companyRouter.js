@@ -1058,6 +1058,141 @@ router.get('/bands-by-company',authController.protect, companyController.getAllB
  */
 router.delete('/bands/:id',authController.protect, companyController.deleteBand);
 
+/**
+ * @swagger
+ * /api/v1/company/signatories:
+ *   post:
+ *     summary: Add a new signatory
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Signatory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               designation:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Signatory successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/signatories', authController.protect, companyController.createSignatory);
+
+/**
+ * @swagger
+ * /api/v1/company/signatories/{id}:
+ *   get:
+ *     summary: Get a signatory by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the signatory
+ *     responses:
+ *       200:
+ *         description: Successful response with the signatory
+ *       404:
+ *         description: Signatory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/signatories/:id', authController.protect, companyController.getSignatory);
+
+/**
+ * @swagger
+ * /api/v1/company/signatories/{id}:
+ *   put:
+ *     summary: Update a signatory by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the signatory
+ *     requestBody:
+ *       description: New signatory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               designation:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated signatory
+ *       404:
+ *         description: Signatory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/signatories/:id', authController.protect, companyController.updateSignatory);
+
+/**
+ * @swagger
+ * /api/v1/company/signatories-by-company:
+ *   get:
+ *     summary: Get all signatories by companyId
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with signatories
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/signatories-by-company', authController.protect, companyController.getAllSignatoriesByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/signatories/{id}:
+ *   delete:
+ *     summary: Delete a signatory by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the signatory
+ *     responses:
+ *       204:
+ *         description: Signatory successfully deleted
+ *       404:
+ *         description: Signatory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/signatories/:id', authController.protect, companyController.deleteSignatory);
+
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);

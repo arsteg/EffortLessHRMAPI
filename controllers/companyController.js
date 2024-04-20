@@ -10,6 +10,7 @@ const Department = require("../models/Company/Deparment");
 const SubDepartment = require('../models/Company/SubDepartment');
 const Designation = require("../models/Company/Designation");
 const Band = require("../models/Company/Band");
+const Signatory = require("../models/Company/Signatory");
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
@@ -354,9 +355,8 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
 });
 
 // Get All Locations by companyId
-exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-  const locations = await Location.find({ companyId });
+exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => { 
+  const locations = await Location.find({ company: req.cookies.companyId });
   res.status(200).json({
     status: 'success',
     data: locations
@@ -723,6 +723,117 @@ exports.deleteBand = async (req, res, next) => {
     res.status(500).json({
       status: 'failure',
       message: error.message
+    });
+  }
+};
+
+// Add a new signatory
+exports.createSignatory = async (req, res, next) => {
+  try {
+    const company = req.cookies.companyId; // Get company from cookies
+  
+    // Validate if company value exists in cookies
+    if (!company) {
+      return res.status(500).json({
+        status: 'failure',
+        message: 'Company information missing in cookies',
+      });
+    }
+    req.body.company = company; // Set company in the request body
+    const signatory = await Signatory.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: signatory
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+// Get a signatory by ID
+exports.getSignatory = async (req, res, next) => {
+  try {
+    const signatory = await Signatory.findById(req.params.id);
+    if (!signatory) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Signatory not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: signatory
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+// Update a signatory by ID
+exports.updateSignatory = async (req, res, next) => {
+  try {
+    const signatory = await Signatory.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+    if (!signatory) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Signatory not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: signatory
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+// Get all signatories by companyId
+exports.getAllSignatoriesByCompanyId = async (req, res, next) => {
+  try {
+    const signatories = await Signatory.find({ company: req.cookies.companyId });
+    res.status(200).json({
+      status: 'success',
+      data: signatories
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+// Delete a signatory by ID
+exports.deleteSignatory = async (req, res, next) => {
+  try {
+    const signatory = await Signatory.findByIdAndDelete(req.params.id);
+    if (!signatory) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'Signatory not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
     });
   }
 };
