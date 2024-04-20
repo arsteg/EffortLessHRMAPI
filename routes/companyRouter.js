@@ -798,6 +798,136 @@ router.get('/subDepartments', authController.protect, companyController.getAllSu
  */
 router.delete('/subDepartments/:id', authController.protect, companyController.deleteSubDepartment);
 
+/**
+ * @swagger
+ * /api/v1/company/designations:
+ *   post:
+ *     summary: Add a new designation
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Designation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               designation:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Designation successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/designations',authController.protect, companyController.createDesignation);
+
+/**
+ * @swagger
+ * /api/v1/company/designations/{id}:
+ *   get:
+ *     summary: Get a designation by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the designation
+ *     responses:
+ *       200:
+ *         description: Successful response with the designation
+ *       404:
+ *         description: Designation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/designations/:id',authController.protect, companyController.getDesignation);
+
+/**
+ * @swagger
+ * /api/v1/company/designations/{id}:
+ *   put:
+ *     summary: Update a designation by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the designation
+ *     requestBody:
+ *       description: New designation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               designation:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated designation
+ *       404:
+ *         description: Designation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/designations/:id',authController.protect, companyController.updateDesignation);
+
+/**
+ * @swagger
+ * /api/v1/company/designations-by-company:
+ *   get:
+ *     summary: Get all designations by company ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with designations
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/designations-by-company',authController.protect, companyController.getAllDesignationsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/company/designations/{id}:
+ *   delete:
+ *     summary: Delete a designation by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the designation
+ *     responses:
+ *       204:
+ *         description: Designation successfully deleted
+ *       404:
+ *         description: Designation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/designations/:id',authController.protect, companyController.deleteDesignation);
+
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);

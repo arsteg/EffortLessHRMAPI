@@ -8,7 +8,7 @@ const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
 const Department = require("../models/Company/Deparment");
 const SubDepartment = require('../models/Company/SubDepartment');
-
+const Designation = require("../models/Company/Designation");
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
   if (!document) {
@@ -552,3 +552,68 @@ exports.deleteSubDepartment = async (req, res, next) => {
         });
     }
 };
+exports.createDesignation = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  req.body.company = company; // Set company in the request body
+  const designation = await Designation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: designation
+  });
+});
+
+exports.getDesignation = catchAsync(async (req, res, next) => {
+  const designation = await Designation.findById(req.params.id);
+  if (!designation) {
+    return next(new AppError('Designation not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: designation
+  });
+});
+
+exports.updateDesignation = catchAsync(async (req, res, next) => {
+  const designation = await Designation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!designation) {
+    return next(new AppError('Designation not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: designation
+  });
+});
+
+exports.getAllDesignationsByCompany = catchAsync(async (req, res, next) => {
+  const designations = await Designation.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: designations
+  });
+});
+
+exports.deleteDesignation = catchAsync(async (req, res, next) => {
+  const designation = await Designation.findByIdAndDelete(req.params.id);
+  
+  if (!designation) {
+    return next(new AppError('Designation not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
