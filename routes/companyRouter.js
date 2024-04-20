@@ -663,6 +663,140 @@ router.get('/departments-by-company', authController.protect, companyController.
  */
 router.delete('/departments/:id', authController.protect, companyController.deleteDepartment);
 
+/**
+ * @swagger
+ * /api/v1/company/subDepartments:
+ *   post:
+ *     summary: Add a new SubDepartment
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: SubDepartment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               subDepartmentName:
+ *                 type: string
+ *                 required: true
+ *               subDepartmentCode:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: SubDepartment successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/subDepartments', authController.protect, companyController.createSubDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/subDepartments/{id}:
+ *   get:
+ *     summary: Get a SubDepartment by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the SubDepartment
+ *     responses:
+ *       200:
+ *         description: Successful response with the SubDepartment
+ *       404:
+ *         description: SubDepartment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/subDepartments/:id', authController.protect, companyController.getSubDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/subDepartments/{id}:
+ *   put:
+ *     summary: Update a SubDepartment by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the SubDepartment
+ *     requestBody:
+ *       description: New SubDepartment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               subDepartmentName:
+ *                 type: string
+ *               subDepartmentCode:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated SubDepartment
+ *       404:
+ *         description: SubDepartment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/subDepartments/:id', authController.protect, companyController.updateSubDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/subDepartments:
+ *   get:
+ *     summary: Get all SubDepartments by companyId
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with SubDepartments
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/subDepartments', authController.protect, companyController.getAllSubDepartmentsByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/subDepartments/{id}:
+ *   delete:
+ *     summary: Delete a SubDepartment by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the SubDepartment
+ *     responses:
+ *       204:
+ *         description: SubDepartment successfully deleted
+ *       404:
+ *         description: SubDepartment not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/subDepartments/:id', authController.protect, companyController.deleteSubDepartment);
 
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);

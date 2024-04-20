@@ -7,6 +7,7 @@ const Zone = require('../models/Company/Zone');
 const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
 const Department = require("../models/Company/Deparment");
+const SubDepartment = require('../models/Company/SubDepartment');
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
@@ -440,3 +441,114 @@ exports.deleteDepartment = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+// controllers/companyController.js
+
+exports.createSubDepartment = async (req, res, next) => {
+    try {
+      const company = req.cookies.companyId; // Get company from cookies
+  
+      // Validate if company value exists in cookies
+      if (!company) {
+        return res.status(500).json({
+          status: 'failure',
+          message: 'Company information missing in cookies',
+        });
+      }
+      req.body.company = company; // Set company in the request body
+        const subDepartment = await SubDepartment.create(req.body);
+        res.status(201).json({
+            status: 'success',
+            data: subDepartment
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.getSubDepartment = async (req, res, next) => {
+    try {
+        const subDepartment = await SubDepartment.findById(req.params.id);
+        if (!subDepartment) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'SubDepartment not found'
+            });
+        } else {
+            res.status(200).json({
+                status: 'success',
+                data: subDepartment
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.updateSubDepartment = async (req, res, next) => {
+    try {
+        const subDepartment = await SubDepartment.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        if (!subDepartment) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'SubDepartment not found'
+            });
+        } else {
+            res.status(200).json({
+                status: 'success',
+                data: subDepartment
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.getAllSubDepartmentsByCompanyId = async (req, res, next) => {
+    try {
+        const subDepartments = await SubDepartment.find({}).where('company').equals(req.cookies.companyId);
+        res.status(200).json({
+            status: 'success',
+            data: subDepartments
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
+
+exports.deleteSubDepartment = async (req, res, next) => {
+    try {
+        const subDepartment = await SubDepartment.findByIdAndDelete(req.params.id);
+        if (!subDepartment) {
+            res.status(404).json({
+                status: 'failure',
+                message: 'SubDepartment not found'
+            });
+        } else {
+            res.status(204).json({
+                status: 'success',
+                data: null
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            status: 'failure',
+            message: err.message
+        });
+    }
+};
