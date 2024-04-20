@@ -530,7 +530,139 @@ router.get('/locations-by-company', authController.protect, companyController.ge
  */
 router.delete('/locations/:id', authController.protect, companyController.deleteLocation);
 
-module.exports = router;
+/**
+ * @swagger
+ * /api/v1/company/departments:
+ *   post:
+ *     summary: Add a new department
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Department details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               departmentName:
+ *                 type: string
+ *               departmentCode:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Department successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/departments', authController.protect, companyController.createDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/departments/{id}:
+ *   get:
+ *     summary: Get a department by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the department
+ *     responses:
+ *       200:
+ *         description: Successful response with the department
+ *       404:
+ *         description: Department not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/departments/:id', authController.protect, companyController.getDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/departments/{id}:
+ *   put:
+ *     summary: Update a department by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the department
+ *     requestBody:
+ *       description: New department details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               departmentName:
+ *                 type: string
+ *               departmentCode:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated department
+ *       404:
+ *         description: Department not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/departments/:id', authController.protect, companyController.updateDepartment);
+
+/**
+ * @swagger
+ * /api/v1/company/departments-by-company:
+ *   get:
+ *     summary: Get all departments
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with departments
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/departments-by-company', authController.protect, companyController.getAllDepartmentsByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/company/departments/{id}:
+ *   delete:
+ *     summary: Delete a department by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the department
+ *     responses:
+ *       204:
+ *         description: Department successfully deleted
+ *       404:
+ *         description: Department not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/departments/:id', authController.protect, companyController.deleteDepartment);
+
 
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);

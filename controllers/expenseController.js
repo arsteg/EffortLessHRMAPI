@@ -16,6 +16,7 @@ const AdvanceTemplate = require('../models/Expense/AdvanceTemplate');
 const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCategory'); 
 const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment');
 const userSubordinate = require('../models/userSubordinateModel');
+const ExpenseTemplateCategoryFieldValues = require('../models/Expense/ExpenseTemplateCategoryFieldValues');
 const { ObjectId } = require('mongodb');
 const { v1: uuidv1} = require('uuid');
 // Import ExpenseCategory model
@@ -424,7 +425,6 @@ exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   });
 });
 
-
 exports.deleteExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findByIdAndDelete(req.params.id);
   if (!expenseApplicationFieldValue) {
@@ -505,19 +505,33 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
           expenseCategory: category.expenseCategory,
           expenseTemplate: expenseTemplateId,
         });
-console.log("hello1");
+
         if (existingCategory) {
+          const insertedFields = await insertFields(existingCategory, category.fields);
+
+          // Update the existing category document with newly inserted fields
           return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
             existingCategory._id,
-            { $set: { ...category } },
+            { $set: { ...category, expenseTemplateCategoryFieldValues: insertedFields } },
             { new: true }
           );
         } else {
+          // Create a new category document
           const newCategory = new ExpenseTemplateApplicableCategories({
             expenseTemplate: expenseTemplateId,
             ...category,
           });
-          return newCategory.save();
+
+          // Insert new fields into ExpenseTemplateCategoryFieldValues collection
+          const insertedFields = await insertFields(newCategory, category.fields);
+
+          // Update the new category document with the inserted fields
+          newCategory.expenseTemplateCategoryFieldValues = insertedFields;
+
+          // Save the new category document
+          await newCategory.save();
+
+          return newCategory;
         }
       })
     );
@@ -527,6 +541,30 @@ console.log("hello1");
     throw new AppError('Internal server error', 500);
   }
 }
+
+async function insertFields(category, fields) {
+  console.log(category);
+  await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category.expenseCategory });
+
+  if (fields.length === 0) {
+    return []; // Return an empty array if there are no fields to insert
+  } else {
+    // Insert new fields into ExpenseTemplateCategoryFieldValues collection
+    return ExpenseTemplateCategoryFieldValues.insertMany(fields.map(field => ({ expenseTemplateCategory: category.expenseCategory, ...field })));
+  }
+}
+
+// Example usage in Express.js route
+app.post('/createExpenseTemplateCategories', async (req, res) => {
+  const { expenseTemplateId, expenseCategories } = req.body;
+  try {
+    const updatedCategories = await createExpenseTemplateCategories(expenseTemplateId, expenseCategories);
+    res.json(updatedCategories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
@@ -676,62 +714,48 @@ exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
   
 });
 
-exports.getExpenseTemplateApplicableCategoriesById = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findById(req.params.id);
-  res.status(200).json({
-    status: 'success',
-    data: applicableCategories
-  });
-});
-
-exports.updateExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const { expenseTemplate, expenseCategory } = req.body;
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findByIdAndUpdate(
-    req.params.id,
-    { expenseTemplate, expenseCategory },
-    { new: true, runValidators: true }
-  );
-
-  if (!applicableCategories) {
-    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: applicableCategories
-  });
-});
-
-exports.deleteExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findByIdAndDelete(req.params.id);
-  if (!applicableCategories) {
-    return next(new AppError('ExpenseTemplateApplicableCategories not found', 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
-});
-
 exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
   const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('company').equals(req.cookies.companyId);
+  if(applicableCategories) 
+      {
+        
+          for(var i = 0; i < applicableCategories.length; i++) {     
+            
+          const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i].expenseCategory);  
+          if(expenseTemplateCategoryFieldValues) 
+            {
+              applicableCategories[i].expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
+            }
+            else{
+              applicableCategories[i].expenseTemplateCategoryFieldValues=null;
+            }
+          }
+      }
   res.status(200).json({
     status: 'success',
     data: applicableCategories
   });
 });
-exports.getAllExpenseTemplateApplicableCategories1 = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('company').equals(req.cookies.companyId);
-  res.status(200).json({
-    status: 'success',
-    data: applicableCategories
-  });
-});
+
 exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, next) => {  
-  const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.expenseTemplateId);
-  res.status(200).json({
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.expenseTemplateId);
+  if(applicableCategories) 
+  {
+    
+      for(var i = 0; i < applicableCategories.length; i++) {    
+        console.log(applicableCategories[i].expenseCategory); 
+      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i].expenseCategory);  
+      if(expenseTemplateCategoryFieldValues) 
+        {
+          applicableCategories[i].expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
+        }
+        else{
+          applicableCategories[i].expenseTemplateCategoryFieldValues=null;
+        }
+      }
+  } res.status(200).json({
     status: 'success',
-    data: expenseTemplateApplicableCategories,
+    data: applicableCategories,
   });
 });
 

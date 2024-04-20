@@ -657,6 +657,21 @@ router.get('/expense-templates', authController.protect, expenseController.getAl
  *                       default: false
  *                     ratePerDay:
  *                       type: number
+ *                     fields:
+ *                       type: array
+ *                       items:
+ *                        type: object
+ *                        required: true
+ *                        properties:
+ *                           label:
+ *                             type: string
+ *                             required: true 
+ *                           type:
+ *                             type: string
+ *                             required: true 
+ *                           rate:
+ *                             type: number
+ *                             required: false 
  *                 description: Array of field objects
  *                 required: true
  *     responses:

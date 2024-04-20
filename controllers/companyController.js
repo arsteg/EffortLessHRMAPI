@@ -6,6 +6,7 @@ const HolidayapplicableEmployee=require('../models/Company/HolidayApplicableEmpl
 const Zone = require('../models/Company/Zone');
 const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
+const Department = require("../models/Company/Deparment");
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
@@ -275,7 +276,7 @@ exports.updateZone = async (req, res, next) => {
 
 exports.getZonesByCompanyId = async (req, res, next) => {
   try {
-    const zones = await Zone.find({ companyId: req.cookies.company });
+    const zones = await Zone.find({ company: req.cookies.companyId });
     res.status(200).json({
       status: 'success',
       data: zones
@@ -351,7 +352,7 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
 
 // Get All Locations by companyId
 exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.company;
+  const companyId = req.cookies.companyId;
   const locations = await Location.find({ companyId });
   res.status(200).json({
     status: 'success',
@@ -364,6 +365,75 @@ exports.deleteLocation = catchAsync(async (req, res, next) => {
   const location = await Location.findByIdAndDelete(req.params.id);
   if (!location) {
     return next(new AppError('Location not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Add a Department
+exports.createDepartment = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  req.body.company = company; // Set company in the request body
+  const { departmentName, departmentCode} = req.body;
+  const department = await Department.create({ departmentName, departmentCode, company });
+  res.status(201).json({
+    status: 'success',
+    data: department
+  });
+});
+
+// Get a Department
+exports.getDepartment = catchAsync(async (req, res, next) => {
+  const department = await Department.findById(req.params.id);
+  if (!department) {
+    return next(new AppError('Department not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: department
+  });
+});
+
+// Update a Department
+exports.updateDepartment = catchAsync(async (req, res, next) => {
+  const department = await Department.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!department) {
+    return next(new AppError('Department not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: department
+  });
+});
+
+// Get All Departments by CompanyId
+exports.getAllDepartmentsByCompanyId = catchAsync(async (req, res, next) => {
+  console.log("hii");
+  const departments = await Department.find({}).where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: departments
+  });
+});
+
+// Delete Department
+exports.deleteDepartment = catchAsync(async (req, res, next) => {
+  const department = await Department.findByIdAndDelete(req.params.id);
+  if (!department) {
+    return next(new AppError('Department not found', 404));
   }
   res.status(204).json({
     status: 'success',
