@@ -18,6 +18,20 @@ const employeeOnDutyRequestSchema = new Schema({
   comment: {
     type: String,
   }, 
+  primaryApprovarComment: {
+    type: String,
+  }, 
+  primaryApprovar: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
+  secondaryApprovarComment: {
+    type: String,
+  },
+  secondaryApprovar: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

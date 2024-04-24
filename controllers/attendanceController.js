@@ -15,7 +15,7 @@ const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssig
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
-const EmployeeOnDutyShift= require('../models/attendance/EmployeeOnDutyShift');
+const EmployeeOnDutyShift= require('../models/attendance/employeeOnDutyShift');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const User = require('../models/permissions/userModel');
@@ -1062,6 +1062,18 @@ exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get a UserOnDutyTemplate by ID
+exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
+  const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.params.user });
+  if (!userOnDutyTemplate) {
+    return next(new AppError('UserOnDutyTemplate not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: userOnDutyTemplate,
+  });
+});
+
 // Update a UserOnDutyTemplate by ID
 exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   // Check if the user on duty template exists
@@ -1249,29 +1261,35 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
 });
 
 // Create a new DutyRequest
-exports.createDutyRequest = catchAsync(async (req, res, next) => {
+exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.body.user });
+  if (!userOnDutyTemplate) {
+    return next(new AppError('UserOnDutyTemplate not assigned for current user', 404));
+  }
+  console.log("hii1");
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
+  console.log("hii2");
   // Add companyId to the request body
   req.body.company = companyId;
- 
+ //self
   const employeeOnDutyRequest = await EmployeeOnDutyRequest.create(req.body);
-  if (req.body.onDutyShift && req.body.employeeOnDutyShift.length > 0) {
-    const employeeOnDutyShift = req.body.employeeOnDutyShift.map(shift => ({
+  if (req.body.onDutyShift && req.body.onDutyShift.length > 0) {
+    const employeeOnDutyShift = req.body.onDutyShift.map(shift => ({
       employeeOnDutyRequest: employeeOnDutyRequest._id,
+      date: shift.date,
+      shift: shift.shift,
       shiftDuration: shift.shiftDuration,
       startTime: shift.startTime,
       endTime: shift.endTime,
       remarks: shift.remarks,
 
-    }));
-    console.log(IPDetails);
-    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
-    
+    }));   
+    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);    
   }
   res.status(201).json({
     status: 'success',
@@ -1280,8 +1298,19 @@ exports.createDutyRequest = catchAsync(async (req, res, next) => {
 });
 
 // Get a DutyRequest by ID
-exports.getDutyRequest = catchAsync(async (req, res, next) => {
-  const dutyRequest = await DutyRequest.findById(req.params.id);
+exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  const dutyRequest = await EmployeeOnDutyRequest.findById(req.params.id);
+  if(dutyRequest) 
+  {  
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequest._id);  
+      if(employeeOnDutyShifts) 
+        {
+          dutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
+        }
+        else{
+          dutyRequest.employeeOnDutyShifts=null;
+        }
+ }
   if (!dutyRequest) {
     return next(new AppError('DutyRequest not found', 404));
   }
@@ -1293,8 +1322,8 @@ exports.getDutyRequest = catchAsync(async (req, res, next) => {
 });
 
 // Update a DutyRequest by ID
-exports.updateDutyRequest = catchAsync(async (req, res, next) => {
-  const dutyRequest = await DutyRequest.findByIdAndUpdate(req.params.id, req.body, {
+exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  const dutyRequest = await EmployeeOnDutyRequest.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
@@ -1310,8 +1339,8 @@ exports.updateDutyRequest = catchAsync(async (req, res, next) => {
 });
 
 // Delete a DutyRequest by ID
-exports.deleteDutyRequest = catchAsync(async (req, res, next) => {
-  const dutyRequest = await DutyRequest.findByIdAndDelete(req.params.id);
+exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  const dutyRequest = await EmployeeOnDutyRequest.findByIdAndDelete(req.params.id);
   
   if (!dutyRequest) {
     return next(new AppError('DutyRequest not found', 404));
@@ -1324,8 +1353,8 @@ exports.deleteDutyRequest = catchAsync(async (req, res, next) => {
 });
 
 // Get all DutyRequests
-exports.getAllDutyRequests = catchAsync(async (req, res, next) => {
-  const dutyRequests = await DutyRequest.find();
+exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
+  const dutyRequests = await EmployeeOnDutyRequest.find();
   res.status(200).json({
     status: 'success',
     data: dutyRequests

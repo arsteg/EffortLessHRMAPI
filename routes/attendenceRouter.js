@@ -1903,6 +1903,32 @@ attendanceRouter.get('/user-on-duty-templates/:id', authController.protect, atte
 
 /**
  * @swagger
+ * /api/v1/attendance/user-on-duty-templates-by-user/{id}:
+ *   get:
+ *     summary: Get a UserOnDutyTemplate by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userIs of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the UserOnDutyTemplate
+ *       404:
+ *         description: UserOnDutyTemplate not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/user-on-duty-templates-by-user/:id', authController.protect, attendanceController.getUserOnDutyTemplateByUser);
+
+/**
+ * @swagger
  * /api/v1/attendance/user-on-duty-templates/{id}:
  *   put:
  *     summary: Update a UserOnDutyTemplate by ID
@@ -2599,7 +2625,7 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
 // DutyRequest routes
 /**
  * @swagger
- * /api/v1/attendance/duty-requests:
+ * /api/v1/attendance/employee-duty-requests:
  *   post:
  *     summary: Create a new DutyRequest
  *     tags: [Attendance Management]
@@ -2627,24 +2653,41 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *                 required: true
  *               comment:
  *                 type: string
+ *               primaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               primaryApprovarComment:
+ *                 type: string
+ *                 default: ""
+ *               secondaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               secondaryApprovarComment:
+ *                 type: string
+ *                 default: ""
  *               onDutyShift:
  *                 type: array
  *                 items:
  *                   type: object
  *                   required: true
  *                   properties:
- *                     onDutyRequest:
+ *                     date:
+ *                       type: string
+ *                       required: true
+ *                     shift:
  *                       type: string
  *                       required: true 
  *                     shiftDuration:
  *                       type: string
  *                       required: true 
- *                     statrTime:
+ *                     startTime:
  *                       type: string
  *                       required: true 
+ *                       default: "YYYY-MM-DDT09:00:00Z"
  *                     endTime:
  *                       type: string
  *                       required: true  
+ *                       default: "YYYY-MM-DDT18:00:00Z"
  *                     remarks:
  *                       type: string
  *                       required: true 
@@ -2656,11 +2699,11 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/duty-requests', authController.protect, attendanceController.createDutyRequest);
+attendanceRouter.post('/employee-duty-requests', authController.protect, attendanceController.createEmployeeDutyRequest);
 
 /**
  * @swagger
- * /api/v1/attendance/duty-requests/{id}:
+ * /api/v1/attendance/employee-duty-requests/{id}:
  *   get:
  *     summary: Get a DutyRequest by ID
  *     tags: [Attendance Management]
@@ -2682,11 +2725,11 @@ attendanceRouter.post('/duty-requests', authController.protect, attendanceContro
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceController.getDutyRequest);
+attendanceRouter.get('/employee-duty-requests/:id', authController.protect, attendanceController.getEmployeeDutyRequest);
 
 /**
  * @swagger
- * /api/v1/attendance/duty-requests/{id}:
+ * /api/v1/attendance/employee-duty-requests/{id}:
  *   put:
  *     summary: Update a DutyRequest by ID
  *     tags: [Attendance Management]
@@ -2724,7 +2767,13 @@ attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceCon
  *                   type: object
  *                   required: true
  *                   properties:
- *                     employeeOnShiftDuration:
+ *                     date:
+ *                       type: string
+ *                       required: true
+ *                     shift:
+ *                       type: string
+ *                       required: true 
+ *                     shiftDuration:
  *                       type: string
  *                       required: true 
  *                     statrTime:
@@ -2744,11 +2793,11 @@ attendanceRouter.get('/duty-requests/:id', authController.protect, attendanceCon
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/duty-requests/:id', authController.protect, attendanceController.updateDutyRequest);
+attendanceRouter.put('/employee-duty-requests/:id', authController.protect, attendanceController.updateEmployeeDutyRequest);
 
 /**
  * @swagger
- * /api/v1/attendance/duty-requests/{id}:
+ * /api/v1/attendance/employee-duty-requests/{id}:
  *   delete:
  *     summary: Delete a DutyRequest by ID
  *     tags: [Attendance Management]
@@ -2770,11 +2819,11 @@ attendanceRouter.put('/duty-requests/:id', authController.protect, attendanceCon
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/duty-requests/:id', authController.protect, attendanceController.deleteDutyRequest);
+attendanceRouter.delete('/employee-duty-requests/:id', authController.protect, attendanceController.deleteEmployeeDutyRequest);
 
 /**
  * @swagger
- * /api/v1/attendance/duty-requests:
+ * /api/v1/attendance/employee-duty-requests:
  *   get:
  *     summary: Get all DutyRequests
  *     tags: [Attendance Management]
@@ -2787,7 +2836,7 @@ attendanceRouter.delete('/duty-requests/:id', authController.protect, attendance
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/duty-requests', authController.protect, attendanceController.getAllDutyRequests);  
+attendanceRouter.get('/employee-duty-requests', authController.protect, attendanceController.getAllEmployeeDutyRequests);  
 
  
 module.exports = attendanceRouter;

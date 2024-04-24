@@ -12,8 +12,7 @@ var expenseTemplateCategoryFieldValuesSchema = new Schema({
     required: true  
   },
   type: {
-    type: String,
-    required: true  
+    type: String  
   },
   rate: {
     type: Number,

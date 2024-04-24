@@ -2,9 +2,17 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var employeeOnDutyShiftSchema = new Schema({  
- employeeOnShiftDuration: {
-    type: String,
+  employeeOnDutyRequest: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'EmployeeOnDutyRequest'
+  },
+ date: {
+    type: Date,
     required: true
+  },
+  shift: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Shift'
   },
   shiftDuration: {
     type: String,
