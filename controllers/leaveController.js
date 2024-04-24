@@ -293,7 +293,22 @@ exports.getLeaveTemplate = async (req, res, next) => {
             return;
         }
         const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
+        
+      
+        for(var m = 0; m < leaveTemplateCategories.length; m++) {   
+          
+          const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
+          if(templateApplicableCategoryEmployee) 
+          {
+            console.log("Hel");
+            leaveTemplateCategories[m].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+          }
+          else{
+            leaveTemplateCategories[m].templateApplicableCategoryEmployee=null;
+          }
+        }  
         leaveTemplate.applicableCategories = leaveTemplateCategories;
+
         const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
         leaveTemplate.clubbingRestrictions = leaveClubbingRestrictions;
         res.status(200).json({
@@ -419,6 +434,17 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
           const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
           if(leaveTemplateCategories) 
           {
+            for(var m = 0; m < leaveTemplateCategories.length; m++) {   
+          
+              const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
+              if(templateApplicableCategoryEmployee) 
+              {
+                  leaveTemplateCategories[m].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+              }
+              else{
+                leaveTemplateCategories[m].templateApplicableCategoryEmployee=null;
+              }
+            }  
             leaveTemplates[i].applicableCategories=leaveTemplateCategories;
           }
           else{
