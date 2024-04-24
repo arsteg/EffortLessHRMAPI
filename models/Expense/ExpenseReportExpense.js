@@ -16,6 +16,19 @@ var expenseReportExpenseSchema = new Schema({
     type: Date,
     required: true
   },
+  expenseTemplateCategoryFieldValues:{
+    type: mongoose.Schema.ObjectId,
+    ref: 'ExpenseTemplateCategoryFieldValues',
+    required: true
+  },
+  type: {
+    type: String,
+    required: true
+  },
+  quantity: {
+    type: String,
+    required: true
+  },
   amount: {
     type: Number,
     required: true
@@ -34,6 +47,7 @@ var expenseReportExpenseSchema = new Schema({
   documentLink: {
     type: String
   },
+
   expenseReportExpenseFields:[]
  
 }, { collection: 'ExpenseReportExpense' });

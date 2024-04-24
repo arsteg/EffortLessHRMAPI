@@ -12,6 +12,7 @@ var expenseReportExpenseFieldsSchema = new Schema({
     ref: 'ExpenseApplicationField',
     required: true
   },
+  type: String,
   value: String  
 }, { collection: 'ExpenseReportExpenseFields' });
 

@@ -906,7 +906,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
     // Create ExpenseReportExpenses and associated ExpenseReportExpenseFields
     expenseReport.expenseReportExpense = await Promise.all(
       expenseReportExpenses.map(async (expenseData) => {
-        const { expenseCategory, incurredDate, amount, isReimbursable, isBillable, reason, expenseAttachments, expenseReportExpenseFields } = expenseData;
+        const { expenseCategory, incurredDate,expenseTemplateCategoryFieldValues,type,quantity, amount, isReimbursable, isBillable, reason, expenseAttachments, expenseReportExpenseFields } = expenseData;
         if(expenseAttachments!=null)
         {
         for(var i = 0; i < expenseAttachments.length; i++) {
@@ -934,6 +934,9 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
           expenseReport: expenseReport._id,
           expenseCategory,
           incurredDate,
+          expenseTemplateCategoryFieldValues,
+          type,
+          quantity,
           amount,
           isReimbursable: isReimbursable || true,
           isBillable: isBillable || false,
@@ -946,6 +949,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
             expenseReportExpenseFields.map((field) => ({
               expenseReportExpense: expense._id,
               expenseApplicationField: field.expenseApplicationField,
+              type: field.type,
               value: field.value,
             }))
           );
@@ -1175,6 +1179,7 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
     const expenseReportExpenseFields = req.body.expenseReportExpenseFields.map((field) => ({
       expenseReportExpense: expenseReportExpense._id,
       expenseApplicationField: field.expenseApplicationField,
+      type: field.type,
       value: field.value,
     }));
 
@@ -1255,6 +1260,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
           // If ID is present, update existing ExpenseReportExpenseFields
           return ExpenseReportExpenseFields.findByIdAndUpdate(field.id, {
             expenseApplicationField: field.expenseApplicationField,
+            type: field.type,
             value: field.value,
           });
         } else {
@@ -1262,6 +1268,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
           return ExpenseReportExpenseFields.create({
             expenseReportExpense: id,
             expenseApplicationField: field.expenseApplicationField,
+            quatity: field.quatity,
             value: field.value,
           });
         }

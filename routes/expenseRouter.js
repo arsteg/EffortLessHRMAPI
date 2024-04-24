@@ -905,6 +905,17 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *                       type: string
  *                       format: date
  *                       required: true
+ *                     expenseTemplateCategoryFieldValues:
+ *                       type: string
+ *                       required: true
+ *                     quantity:
+ *                       type: number
+ *                       description: quantity
+ *                       required: true
+ *                     type:
+ *                       type: number
+ *                       description: type
+ *                       required: true
  *                     amount:
  *                       type: number
  *                       description: Name of the field
@@ -935,6 +946,9 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *                             type: string
  *                             description: Field value
  *                             required: true
+ *                           type:
+ *                             type: string
+ *                             description: Field value
  *                           value:
  *                             type: string
  *                             description: Field value
@@ -1142,9 +1156,21 @@ router.get('/expense-reports', authController.protect, expenseController.getAllE
  *                 type: string
  *                 format: date
  *                 description: Date when the expense was incurred
+ *               expenseTemplateCategoryFieldValues:
+ *                 type: string
+ *                 required: true
+ *               quantity:
+ *                 type: number
+ *                 description: quantity
+ *                 required: true
+ *               type:
+ *                 type: number
+ *                 description: type
+ *                 required: true
  *               amount:
  *                 type: number
- *                 description: Amount of the expense
+ *                 description: Name of the field
+ *                 required: true
  *               isReimbursable:
  *                 type: boolean
  *                 description: Whether the expense is reimbursable or not
@@ -1168,6 +1194,9 @@ router.get('/expense-reports', authController.protect, expenseController.getAllE
  *                         type: string
  *                         description: Field value
  *                         required: true
+ *                       type:
+ *                         type: string
+ *                         description: Field value
  *                       value:
  *                         type: string
  *                         description: Field value
@@ -1242,8 +1271,21 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *               incurredDate:
  *                 type: string
  *                 format: date
+ *               expenseTemplateCategoryFieldValues:
+ *                type: string
+ *                 required: true
+ *               quantity:
+ *                 type: number
+ *                 description: quantity
+ *                 required: true
+ *               type:
+ *                 type: number
+ *                 description: type
+ *                 required: true
  *               amount:
  *                 type: number
+ *                 description: Name of the field
+ *                 required: true
  *               isReimbursable:
  *                 type: boolean
  *               isBillable:
@@ -1268,6 +1310,9 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                         type: string
  *                         description: Field value
  *                         required: true
+ *                       type:
+ *                         type: string
+ *                         description: Field value
  *                       value:
  *                         type: string
  *                         description: Field value
