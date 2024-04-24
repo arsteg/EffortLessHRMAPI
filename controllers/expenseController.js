@@ -758,7 +758,30 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
     data: applicableCategories,
   });
 });
-
+exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, res, next) => {  
+  console.log(req.params.expenseCategory);
+  console.log(req.params.expenseTemplate);
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({
+    expenseCatgeory: req.params.expenseCategory,
+    expenseTemplate: req.params.expenseTemplate,
+  }).exec();
+  
+  if(applicableCategories) 
+  {
+      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories.expenseCategory);  
+      if(expenseTemplateCategoryFieldValues) 
+        {
+          applicableCategories.expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
+        }
+        else{
+          applicableCategories.expenseTemplateCategoryFieldValues=null;
+        }
+      
+  } res.status(200).json({
+    status: 'success',
+    data: applicableCategories,
+  });
+});
 exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;

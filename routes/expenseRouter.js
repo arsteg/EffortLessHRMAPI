@@ -712,6 +712,39 @@ router.get('/expense-template-applicable-categories-by-template/:expenseTemplate
 
 /**
  * @swagger
+ * /api/v1/expense/expense-template-applicable-categories-by-template-category/{expenseTemplate}/{expenseCategory}:
+ *   get:
+ *     summary: Get an ExpenseTemplateApplicableCategories by expenseTemplateId
+ *     tags: [Expense Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: expenseTemplate
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: expenseTemplateId of the ExpenseTemplateApplicableCategories
+ *       - in: path
+ *         name: expenseCategory
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: expenseCategoryId of the ExpenseTemplateApplicableCategories
+ *     responses:
+ *       200:
+ *         description: Successful response with the ExpenseTemplateApplicableCategories
+ *       404:
+ *         description: ExpenseTemplateApplicableCategories not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/expense-template-applicable-categories-by-template-category/:expenseTemplate/:expenseCategory',authController.protect, expenseController.getApplicableCategoryByTemplateAndCategoryId);
+
+
+/**
+ * @swagger
  * /api/v1/expense/expense-template-applicable-categories:
  *   get:
  *     summary: Get all ExpenseTemplateApplicableCategories
@@ -1272,7 +1305,7 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                 type: string
  *                 format: date
  *               expenseTemplateCategoryFieldValues:
- *                type: string
+ *                 type: string
  *                 required: true
  *               quantity:
  *                 type: number
