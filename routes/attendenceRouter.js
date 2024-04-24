@@ -2753,15 +2753,30 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *             properties:
  *               onDutyReason:
  *                 type: string
+ *                 required: true
  *               startDate:
  *                 type: string
  *                 format: date
+ *                 required: true
  *               endDate:
  *                 type: string
  *                 format: date
+ *                 required: true
  *               comment:
  *                 type: string
- *               employeeOnDutyShifts:
+ *               primaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               primaryApprovarComment:
+ *                 type: string
+ *                 default: ""
+ *               secondaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               secondaryApprovarComment:
+ *                 type: string
+ *                 default: ""
+ *               onDutyShift:
  *                 type: array
  *                 items:
  *                   type: object
@@ -2776,12 +2791,14 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *                     shiftDuration:
  *                       type: string
  *                       required: true 
- *                     statrTime:
+ *                     startTime:
  *                       type: string
  *                       required: true 
+ *                       default: "YYYY-MM-DDT09:00:00Z"
  *                     endTime:
  *                       type: string
  *                       required: true  
+ *                       default: "YYYY-MM-DDT18:00:00Z"
  *                     remarks:
  *                       type: string
  *                       required: true 

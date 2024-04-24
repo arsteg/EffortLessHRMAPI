@@ -1323,20 +1323,77 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
 // Update a DutyRequest by ID
 exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
-  const dutyRequest = await EmployeeOnDutyRequest.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const employeeOnDutyRequest = await EmployeeOnDutyRequest.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+  );
 
-  if (!dutyRequest) {
-    return next(new AppError('DutyRequest not found', 404));
+  if (!employeeOnDutyRequest) {
+      return next(new AppError('DutyRequest not found', 404));
   }
 
+  const onDutyShifts = req.body.onDutyShift;
+
+  // Find existing shifts that match date and employeeOnDutyRequest
+  const existingShifts = await EmployeeOnDutyShift.find({
+      employeeOnDutyRequest: employeeOnDutyRequest._id,
+      date: { $in: onDutyShifts.map(shift => shift.date) }
+  });
+
+  // Update existing shifts and collect IDs of shifts to be inserted
+  const shiftsToUpdate = [];
+  const shiftIdsToInsert = [];
+  onDutyShifts.forEach(shift => {
+      const existingShift = existingShifts.find(s =>
+          s.date === shift.date && s.shift === shift.shift
+      );
+      if (existingShift) {
+          // Update existing shift
+          existingShift.startTime = shift.startTime;
+          existingShift.endTime = shift.endTime;
+          existingShift.shiftDuration = shift.shiftDuration;
+          existingShift.remarks = shift.remarks;
+          shiftsToUpdate.push(existingShift.save());
+      } else {
+          // Insert new shift
+          shift.employeeOnDutyRequest = employeeOnDutyRequest._id;
+          shiftIdsToInsert.push(shift);
+      }
+  });
+
+  // Wait for all updates to complete
+  await Promise.all(shiftsToUpdate);
+
+  // Insert new shifts
+  await EmployeeOnDutyShift.insertMany(shiftIdsToInsert);
+
+  const shiftsToDelete = existingShifts.filter(existingShift =>
+    !onDutyShifts.some(shift =>
+        shift.date === existingShift.date && shift.shift === existingShift.shift
+    )
+);
+console.log(shiftsToDelete);
+await EmployeeOnDutyShift.deleteMany({ _id: { $in: shiftsToDelete.map(shift => shift._id) } });
+
+if(employeeOnDutyRequest) 
+{  
+    const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);  
+    if(employeeOnDutyShifts) 
+      {
+        employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
+      }
+      else{
+        employeeOnDutyRequest.employeeOnDutyShifts=null;
+      }
+}
+
   res.status(200).json({
-    status: 'success',
-    data: dutyRequest
+      status: 'success',
+      data: employeeOnDutyRequest
   });
 });
+
 
 // Delete a DutyRequest by ID
 exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
@@ -1354,7 +1411,22 @@ exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
 // Get all DutyRequests
 exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
-  const dutyRequests = await EmployeeOnDutyRequest.find();
+  const dutyRequests = await EmployeeOnDutyRequest.find({ company: req.cookies.companyId }); 
+  if(dutyRequests) 
+  {      
+    console.log("hello");
+   for(var i = 0; i < dutyRequests.length; i++) {     
+   
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
+      if(employeeOnDutyShifts) 
+        { console.log(employeeOnDutyShifts);
+          dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
+        }
+        else{
+          dutyRequests[i].employeeOnDutyShifts=null;
+        }
+      }
+ }
   res.status(200).json({
     status: 'success',
     data: dutyRequests
