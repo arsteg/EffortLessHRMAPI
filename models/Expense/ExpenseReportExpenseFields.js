@@ -9,8 +9,7 @@ var expenseReportExpenseFieldsSchema = new Schema({
   },
   expenseApplicationField: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ExpenseApplicationField',
-    required: true
+    ref: 'ExpenseApplicationField'
   },
   type: String,
   value: String  
