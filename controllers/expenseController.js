@@ -544,13 +544,13 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
 
 async function insertFields(category, fields) {
   console.log(category);
-  await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category.expenseCategory });
+  await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
 
   if (fields.length === 0) {
     return []; // Return an empty array if there are no fields to insert
   } else {
     // Insert new fields into ExpenseTemplateCategoryFieldValues collection
-    return ExpenseTemplateCategoryFieldValues.insertMany(fields.map(field => ({ expenseTemplateCategory: category.expenseCategory, ...field })));
+    return ExpenseTemplateCategoryFieldValues.insertMany(fields.map(field => ({ expenseTemplateCategory: category._id, ...field })));
   }
 }
 
@@ -721,7 +721,7 @@ exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
         
           for(var i = 0; i < applicableCategories.length; i++) {     
             
-          const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i].expenseCategory);  
+          const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i]._id);  
           if(expenseTemplateCategoryFieldValues) 
             {
               applicableCategories[i].expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
@@ -744,7 +744,7 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
     
       for(var i = 0; i < applicableCategories.length; i++) {    
         console.log(applicableCategories[i].expenseCategory); 
-      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i].expenseCategory);  
+      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i]._id);  
       if(expenseTemplateCategoryFieldValues) 
         {
           applicableCategories[i].expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
@@ -768,7 +768,7 @@ exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, re
   
   if(applicableCategories) 
   {
-      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories.expenseCategory);  
+      const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  
       if(expenseTemplateCategoryFieldValues) 
         {
           applicableCategories.expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
