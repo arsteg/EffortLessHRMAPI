@@ -1434,6 +1434,18 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
 });
 
 exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
+  // Set the appliedOn field to the current date
+  req.body.appliedOn = new Date();
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+   console.log("hii2");
+   // Add companyId to the request body
+   req.body.company = companyId;
+   
   const regularizationRequest = await RegularizationRequest.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -1488,7 +1500,7 @@ exports.deleteRegularizationRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
-  const regularizationRequests = await RegularizationRequest.find();
+  const regularizationRequests = await RegularizationRequest.find({ company: req.cookies.companyId }); 
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,

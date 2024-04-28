@@ -1,35 +1,76 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-const regularizationRequestSchema = new Schema({
+var regularizationRequestSchema = new Schema({
   regularizationDate: {
     type: Date,
-    required: true,
+    required: true
   },
   requestType: {
     type: String,
-    required: true,
+    required: true
+  },
+  checkInTime: {
+    type: Date,
+    required: true
+  },
+  checkOutTime: {
+    type: Date,
+    required: true
   },
   shift: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Shift',
-    required: true,
+    type: String,
+    required: true
+  },
+  isHalfDayRegularization: {
+    type: Boolean,
+    required: true
+  },
+  halfDayType: {
+    type: String
   },
   reason: {
     type: String,
-    required: true,
+    required: true
   },
   comment: {
+    type: String
+  },
+  status: {
     type: String,
+    required: true
+  },
+  firstApprover: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  firstApproverDate: {
+    type: Date
+  },
+  firstApproverComment: {
+    type: String
+  },
+  secondApprover: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  secondApproverDate: {
+    type: Date
+  },
+  secondApproverComment: {
+    type: String
+  },
+  appliedOn: {
+    type: Date,
+    required: true
   },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
-  },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-  },
+    required: true,
+  }
 }, { collection: 'RegularizationRequest' });
 
 module.exports = mongoose.model('RegularizationRequest', regularizationRequestSchema);

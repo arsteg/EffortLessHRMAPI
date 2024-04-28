@@ -2489,13 +2489,38 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
  *               shift:
  *                 type: string
  *                 required: true
+ *               checkInTime:
+ *                 type: string              
+ *                 format: date-time
+ *               checkOutTime:
+ *                 type: string              
+ *                 format: date-time
+ *               firstApprover:
+ *                 type: string
+ *               firstApproverDate:
+ *                 format: date
+ *               firstApproverComment:
+ *                 type: string
+ *               secondApprover:
+ *                 type: string
+ *               secondApproverDate:
+ *                 format: date
+ *               secondApproverComment:
+ *                 type: string
  *               reason:
  *                 type: string
  *                 required: true
+ *               isHalfDayRegularization:
+ *                 type: string
+ *               halfDayType:
+ *                 type: string
  *               comment:
  *                 type: string 
  *               user:
  *                 type: string
+ *               status:
+ *                 type: string
+ *                 required: true
  *     responses:
  *       201:
  *         description: Regularization Request successfully created
@@ -2556,19 +2581,45 @@ attendanceRouter.get('/regularizationRequests/:id',authController.protect,attend
    *           schema:
    *             type: object
    *             properties:
-   *               regularizationDate:
-   *                 type: string
-   *                 format: date
-   *               requestType:
-   *                 type: string
-   *               shift:
-   *                 type: string
-   *               reason:
-   *                 type: string
-   *               comment:
-   *                 type: string   
-   *               user:
-   *                 type: string
+    *               regularizationDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               requestType:
+ *                 type: string
+ *                 required: true
+ *               shift:
+ *                 type: string
+ *                 required: true
+ *               checkInTime:
+ *                 type: string              
+ *                 format: date-time
+ *               checkOutTime:
+ *                 type: string              
+ *                 format: date-time
+ *               firstApprover:
+ *                 type: string
+ *               firstApproverDate:
+ *                 format: date
+ *               firstApproverComment:
+ *                 type: string
+ *               secondApprover:
+ *                 type: string
+ *               secondApproverDate:
+ *                 format: date
+ *               secondApproverComment:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *                 required: true
+ *               isHalfDayRegularization:
+ *                 type: string
+ *               halfDayType:
+ *                 type: string
+ *               comment:
+ *                 type: string 
+ *               user:
+ *                 type: string                   
    *     responses:
    *       200:
    *         description: Successful response with the updated Regularization Request
