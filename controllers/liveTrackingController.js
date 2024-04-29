@@ -15,7 +15,7 @@ const cors = require('cors'); // Import the cors package
 var allowedOrigin ="http://localhost:4200";
 if (process.env.NODE_ENV === 'development') {
   allowedOrigin= "http://localhost:4200";
-} else if (process.env.NODE_ENV === 'production') {                        
+} else if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {                        
   allowedOrigin= "https://effort-less-hrm-web.vercel.app";
 }
 //app.use(compression);

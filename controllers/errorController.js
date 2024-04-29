@@ -60,7 +60,7 @@ module.exports = (err, req, res, next) => {
 
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
-  } else if (process.env.NODE_ENV === 'production') {
+  } else if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {
     // It is not good to override parameters so we create hard copy
     let error = { ...err };
 
