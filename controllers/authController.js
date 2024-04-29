@@ -35,7 +35,7 @@ const createAndSendToken = async (user, statusCode, res) => {
     ),
     httpOnly: true
   };    
-  if (process.env.NODE_ENV === 'production')
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test')
   {
       res.cookie('companyId', user.company.id, {
         secure: true,
@@ -58,7 +58,7 @@ const createAndSendToken = async (user, statusCode, res) => {
     res.cookie('companyName', user.company.companyName);
   }
   // In production save cookie only in https connection
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') cookieOptions.secure = true;
   res.cookie('jwt', token, cookieOptions);
   
   // Remove password from the output
