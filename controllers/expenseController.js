@@ -761,11 +761,11 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
 exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, res, next) => {  
   console.log(req.params.expenseCategory);
   console.log(req.params.expenseTemplate);
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({
-    expenseCatgeory: req.params.expenseCategory,
-    expenseTemplate: req.params.expenseTemplate,
-  }).exec();
   
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({
+    expenseTemplate: req.params.expenseTemplate,
+    expenseCategory: req.params.expenseCategory
+});
   if(applicableCategories) 
   {
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  
