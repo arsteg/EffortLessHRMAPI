@@ -1342,7 +1342,6 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                       expenseApplicationField:
  *                         type: string
  *                         description: Field value
- *                         required: true
  *                       type:
  *                         type: string
  *                         description: Field value
