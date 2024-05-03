@@ -2912,6 +2912,9 @@ attendanceRouter.get('/employee-duty-requests', authController.protect, attendan
  *   post:
  *     summary: Add a TimeEntry
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     requestBody:
  *       description: TimeEntry details
  *       required: true
@@ -2933,9 +2936,6 @@ attendanceRouter.get('/employee-duty-requests', authController.protect, attendan
  *               task:
  *                 type: string
  *                 required: true
- *               company:
- *                 type: string
- *                 required: true
  *               user:
  *                 type: string
  *                 required: true
@@ -2944,9 +2944,6 @@ attendanceRouter.get('/employee-duty-requests', authController.protect, attendan
  *                 items:
  *                   type: object
  *                   properties:
- *                     timeEntry:
- *                       type: string
- *                       required: true
  *                     fromTime:
  *                       type: string
  *                       required: true
@@ -2979,6 +2976,9 @@ attendanceRouter.post('/time-entries', authController.protect, attendanceControl
  *   get:
  *     summary: Get a TimeEntry by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -3002,6 +3002,9 @@ attendanceRouter.get('/time-entries/:id', authController.protect, attendanceCont
  *   put:
  *     summary: Update a TimeEntry by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -3026,10 +3029,28 @@ attendanceRouter.get('/time-entries/:id', authController.protect, attendanceCont
  *                 type: string
  *               task:
  *                 type: string
- *               company:
- *                 type: string
  *               user:
  *                 type: string
+ *               trackTimeEntries:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     fromTime:
+ *                       type: string
+ *                       required: true
+ *                       format: time
+ *                       example: "hh:mm tt" 
+ *                     toTime:
+ *                       type: string
+ *                       required: true
+ *                       format: time
+ *                       example: "hh:mm tt" 
+ *                     totalTime:
+ *                       type: string
+ *                       required: true
+ *                     notes:
+ *                       type: string
  *     responses:
  *       200:
  *         description: Successful response with the updated TimeEntry
@@ -3046,6 +3067,9 @@ attendanceRouter.put('/time-entries/:id', authController.protect, attendanceCont
  *   get:
  *     summary: Get all TimeEntries by companyId
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     responses:
  *       200:
  *         description: Successful response with TimeEntries
@@ -3060,6 +3084,9 @@ attendanceRouter.get('/time-entries', authController.protect, attendanceControll
  *   delete:
  *     summary: Delete a TimeEntry by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id

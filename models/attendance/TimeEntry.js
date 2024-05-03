@@ -11,11 +11,13 @@ var timeEntrySchema = new Schema({
     required: true
   },
   project: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'Project',
     required: true
   },
   task: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'Task',
     required: true
   },
   company: {
@@ -27,7 +29,8 @@ var timeEntrySchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: true
-  }
+  },
+  trackTimeEntries: []
 }, { collection: 'TimeEntry' });
 
 module.exports = mongoose.model('TimeEntry', timeEntrySchema);
