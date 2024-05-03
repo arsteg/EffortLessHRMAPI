@@ -24,7 +24,8 @@ const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
 const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
-
+const TimeEntry = require('../models/attendance/TimeEntry');
+const TrackTimeEntry = require('../models/attendance/TrackTimeEntry');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1504,5 +1505,107 @@ exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,
+  });
+});
+
+exports.addTimeEntry = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+
+  // Extract trackTimeEntries array from the request body
+  const trackTimeEntriestoInsert = req.body.trackTimeEntries;
+  
+  // Check if trackTimeEntries array is provided
+  if (!Array.isArray(trackTimeEntriestoInsert)) {
+    return next(new AppError('trackTimeEntries array is required', 400));
+  }
+
+  // Create the TimeEntry object first
+  const timeEntry = await TimeEntry.create(req.body);
+
+  // Array to store IDs of created TrackTimeEntry objects
+  const trackTimeEntries = [];
+
+  // Iterate over trackTimeEntries array and create TrackTimeEntry objects
+  for (const trackTimeEntryData of trackTimeEntriestoInsert) {
+    // Set the TimeEntry ID for each TrackTimeEntry
+    trackTimeEntryData.timeEntry = timeEntry._id;
+
+    const trackTimeEntry = await TrackTimeEntry.create(trackTimeEntryData);
+    trackTimeEntries.push(trackTimeEntry); // Store the ID of the created TrackTimeEntry
+  }
+
+  timeEntry.trackTimeEntries=trackTimeEntries;
+  res.status(201).json({
+    status: 'success',
+    data: timeEntry
+  });
+});
+
+
+exports.getTimeEntry = catchAsync(async (req, res, next) => {
+  const timeEntry = await TimeEntry.findById(req.params.id);
+  if(timeEntry) 
+  {  
+      const trackTimeEntries = await EmployeeOnDutyShift.find({}).where('timeEntry').equals(timeEntry._id);  
+      if(timeEntry) 
+        {
+          timeEntry.trackTimeEntries = trackTimeEntries;
+        }
+        else{
+          timeEntry.trackTimeEntries=null;
+        }
+  }
+  if (!timeEntry) {
+    return next(new AppError('TimeEntry not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: timeEntry
+  });
+});
+
+exports.updateTimeEntry = catchAsync(async (req, res, next) => {
+  const timeEntry = await TimeEntry.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!timeEntry) {
+    return next(new AppError('TimeEntry not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: timeEntry
+  });
+});
+
+exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
+  const timeEntries = await TimeEntry.find({ company: req.cookies.companyId });
+  res.status(200).json({
+    status: 'success',
+    data: timeEntries
+  });
+});
+
+exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
+  const timeEntry = await TimeEntry.findByIdAndDelete(req.params.id);
+  
+  if (!timeEntry) {
+    return next(new AppError('TimeEntry not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
   });
 });

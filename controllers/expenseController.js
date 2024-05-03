@@ -487,7 +487,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   expenseTemplateData.company = companyId;
   const expenseTemplate = await ExpenseTemplate.create(expenseTemplateData);
   
-  const expenseTemplateCategories =  await createExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
+  const expenseTemplateCategories =  await updateOrCreateExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
  
   res.status(201).json({
     status: 'success',
@@ -612,6 +612,7 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
     data: { expenseTemplate: expenseTemplate, expenseCategories: updatedCategories },
   });
 });
+
 async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, updatedCategories) {
   const existingCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
 
@@ -762,10 +763,8 @@ exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, re
   console.log(req.params.expenseCategory);
   console.log(req.params.expenseTemplate);
   
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({
-    expenseTemplate: req.params.expenseTemplate,
-    expenseCategory: req.params.expenseCategory
-});
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({}).where('expenseTemplate').equals( req.params.expenseTemplate).where('expenseCatgeory').equals( req.params.expenseCategory);
+      
   if(applicableCategories) 
   {
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  

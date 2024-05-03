@@ -439,7 +439,8 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
               const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
               if(templateApplicableCategoryEmployee) 
               {
-                  leaveTemplateCategories[m].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
+                console.log("Hel");
+                leaveTemplateCategories[m].templateApplicableCategoryEmployee=templateApplicableCategoryEmployee;
               }
               else{
                 leaveTemplateCategories[m].templateApplicableCategoryEmployee=null;

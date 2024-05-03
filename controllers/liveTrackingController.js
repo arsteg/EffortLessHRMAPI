@@ -42,6 +42,7 @@ const port = 4000;
 server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
+
 // Handle WebSocket upgrade requests
 server.on('upgrade', (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {

@@ -2906,5 +2906,175 @@ attendanceRouter.delete('/employee-duty-requests/:id', authController.protect, a
  */
 attendanceRouter.get('/employee-duty-requests', authController.protect, attendanceController.getAllEmployeeDutyRequests);  
 
+/**
+ * @swagger
+ * /api/v1/attendance/time-entries:
+ *   post:
+ *     summary: Add a TimeEntry
+ *     tags: [Attendance Management]
+ *     requestBody:
+ *       description: TimeEntry details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               duration:
+ *                 type: string
+ *                 required: true
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               project:
+ *                 type: string
+ *                 required: true
+ *               task:
+ *                 type: string
+ *                 required: true
+ *               company:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               trackTimeEntries:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     timeEntry:
+ *                       type: string
+ *                       required: true
+ *                     fromTime:
+ *                       type: string
+ *                       required: true
+ *                       format: time
+ *                       example: "hh:mm tt" 
+ *                     toTime:
+ *                       type: string
+ *                       required: true
+ *                       format: time
+ *                       example: "hh:mm tt" 
+ *                     totalTime:
+ *                       type: string
+ *                       required: true
+ *                     notes:
+ *                       type: string
+ *     responses:
+ *       201:
+ *         description: TimeEntry successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+
+attendanceRouter.post('/time-entries', authController.protect, attendanceController.addTimeEntry);
+
+/**
+ * @swagger
+ * /api/v1/attendance/time-entries/{id}:
+ *   get:
+ *     summary: Get a TimeEntry by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the TimeEntry
+ *     responses:
+ *       200:
+ *         description: Successful response with the TimeEntry
+ *       404:
+ *         description: TimeEntry not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/time-entries/:id', authController.protect, attendanceController.getTimeEntry);
+
+/**
+ * @swagger
+ * /api/v1/attendance/time-entries/{id}:
+ *   put:
+ *     summary: Update a TimeEntry by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the TimeEntry
+ *     requestBody:
+ *       description: New TimeEntry details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               duration:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               project:
+ *                 type: string
+ *               task:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *               user:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated TimeEntry
+ *       404:
+ *         description: TimeEntry not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/time-entries/:id', authController.protect, attendanceController.updateTimeEntry);
+
+/**
+ * @swagger
+ * /api/v1/attendance/time-entries:
+ *   get:
+ *     summary: Get all TimeEntries by companyId
+ *     tags: [Attendance Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with TimeEntries
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/time-entries', authController.protect, attendanceController.getAllTimeEntriesByCompanyId);
+
+/**
+ * @swagger
+ * /api/v1/attendance/time-entries/{id}:
+ *   delete:
+ *     summary: Delete a TimeEntry by ID
+ *     tags: [Attendance Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the TimeEntry
+ *     responses:
+ *       204:
+ *         description: TimeEntry successfully deleted
+ *       404:
+ *         description: TimeEntry not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/time-entries/:id', authController.protect, attendanceController.deleteTimeEntry);
  
 module.exports = attendanceRouter;
