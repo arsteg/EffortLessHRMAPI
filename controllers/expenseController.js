@@ -1238,6 +1238,7 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const expenseAttachments = req.body.expenseAttachments;
+  
   var documentLink;
   for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
@@ -1276,8 +1277,10 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   const { expenseReportExpenseFields } = req.body;
 
   if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {
+    console.log(expenseReportExpenseFields);
     const updatedFields = await Promise.all(
       expenseReportExpenseFields.map(async (field) => {
+        console.log(field.id);
         if (field.id) {
           // If ID is present, update existing ExpenseReportExpenseFields
           return ExpenseReportExpenseFields.findByIdAndUpdate(field.id, {
@@ -1290,15 +1293,15 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
           return ExpenseReportExpenseFields.create({
             expenseReportExpense: id,
             expenseApplicationField: field.expenseApplicationField,
-            quatity: field.quatity,
+            type: field.type,
             value: field.value,
           });
         }
       })
     );
-
+console.log(updatedFields);
     // Remove ExpenseReportExpenseFields not present in the request
-    const fieldIdsToUpdate = updatedFields.map((field) => field._id);
+    const fieldIdsToUpdate = updatedFields.map((field) => field.id);
     await ExpenseReportExpenseFields.deleteMany({
       expenseReportExpense: id,
       _id: { $nin: fieldIdsToUpdate },
