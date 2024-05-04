@@ -879,7 +879,6 @@ attendanceRouter.get('/attendance-templates', authController.protect, attendance
  */
 attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
 
-
 //Attdance Template Regulrization
 /**
  * @swagger
@@ -1107,7 +1106,6 @@ attendanceRouter.get('/regularizations-by-company', attendanceController.getAllA
 attendanceRouter.delete('/regularizations/:id', attendanceController.deleteAttendanceRegularization);
 
 //Attandance Assignment
-
 /**
  * @swagger
  * /api/v1/attendance/attendance-assignments:
@@ -1440,7 +1438,6 @@ attendanceRouter.put('/rounding-information/:id',authController.protect,attendan
 attendanceRouter.delete('/rounding-information/:id',authController.protect,attendanceController.deleteRoundingInformation);
 
 //Overtime Information
-
 /**
  * @swagger
  * /api/v1/attendance/overtime-information:
@@ -2967,7 +2964,6 @@ attendanceRouter.get('/employee-duty-requests', authController.protect, attendan
  *       500:
  *         description: Internal server error
  */
-
 attendanceRouter.post('/time-entries', authController.protect, attendanceController.addTimeEntry);
 
 /**
@@ -3103,5 +3099,25 @@ attendanceRouter.get('/time-entries', authController.protect, attendanceControll
  *         description: Internal server error
  */
 attendanceRouter.delete('/time-entries/:id', authController.protect, attendanceController.deleteTimeEntry);
- 
+
+
+/**
+ * @swagger
+ * /api/v1/attendance/timelog-mapped-attandance:
+ *   post:
+ *     summary: Add a TimeEntry
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       201:
+ *         description: TimeEntry successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/timelog-mapped-attandance', authController.protect, attendanceController.MappedTimlogToAttandance);
+
 module.exports = attendanceRouter;

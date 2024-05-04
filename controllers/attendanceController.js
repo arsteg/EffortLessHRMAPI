@@ -17,15 +17,19 @@ const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
 const EmployeeOnDutyShift= require('../models/attendance/employeeOnDutyShift');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
+const AppError = require('../utils/appError.js');
+const APIFeatures = require('../utils/apiFeatures');
 const User = require('../models/permissions/userModel');
-
+const TimeLog = require('../models/timeLog');
 const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
 const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
 const TimeEntry = require('../models/attendance/TimeEntry');
 const TrackTimeEntry = require('../models/attendance/TrackTimeEntry');
+
+const Attandance = require('../models/attendance/attendanceRecords');
+const AttendanceRecords = require('../models/attendance/attendanceRecords');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1608,4 +1612,84 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
     status: 'success',
     data: null
   });
+});
+
+exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
+  
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+  if (!companyId) {
+     return next(new AppError('Company ID not found in cookies', 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+   let filter = { status: 'Active', company: req.cookies.companyId };
+
+   // Generate query based on request params
+   const features = new APIFeatures(User.find(filter), req.query)
+     .filter()
+     .sort()
+     .limitFields()
+     .paginate();
+
+   // Run created query
+   const document = await features.query;
+   const endDate = new Date(); // Today's date
+   const startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // One week before endDate
+
+   // Perform additional work on each user
+   const modifiedUsers = await Promise.all(document.map(async user => {
+    const timeLogs = await TimeLog.aggregate([
+      { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+          startTime: { $min: '$startTime' },
+          lastTimeLog: { $max: '$endTime' }
+        }
+      }
+    ]);
+
+    // Transform timeLogs and insert into AttendanceRecords
+    const attendanceRecords = await Promise.all(timeLogs.map(async log => {
+      // Count the number of rows in TimeLog table for each user and date
+      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+  
+      return {
+        date: new Date(log._id), // Convert _id to Date object
+        checkIn: log.startTime, // Rename startTime to checkIn
+        checkOut: log.lastTimeLog, // Rename lastTimeLog to checkOut
+        user: user._id, // Associate the AttendanceRecord with the user
+        duration: timeLogCount * 10, // Calculate duration based on the count of TimeLog entries for this date
+        ODHours: 0, // Assuming ODHours needs to be calculated
+        SSLHours: 0, // Assuming SSLHours needs to be calculated
+        beforeProcessing: 'N/A', // Insert appropriate value
+        afterProcessing: 'N/A', // Insert appropriate value
+        earlyLateStatus: 'N/A', // Insert appropriate value
+        deviationHour: '00:00', // Insert appropriate value
+        shiftTiming: '00:00', // Insert appropriate value
+        lateComingRemarks: 'N/A', // Insert appropriate value
+        company: req.cookies.companyId, // Insert company from cookies
+        user: user._id // Associate the AttendanceRecord with the user
+      };
+    }));
+  
+
+    // Insert attendanceRecords into AttendanceRecord collection
+   return await AttendanceRecords.insertMany(attendanceRecords);
+
+   
+  }));
+ 
+   // Create the TimeEntry object first
+  // const timeEntry = await AttendanceRecords.create(req.body);
+ 
+ 
+   res.status(201).json({
+     status: 'success',
+     data: null
+   });
 });
