@@ -37,7 +37,7 @@ var separationRouter = require('./routes/SeparationRouter');
 var attendanceRouter = require(`./routes/attendenceRouter`);
 var pricingRouter = require(`./routes/pricingRouter`);
 var interviewsRouter = require(`./routes/interviewProcessRouter`);
-
+var payrollRouter = require(`./routes/payrollRouter`);
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
@@ -122,6 +122,7 @@ app.use('/api/v1/attendance', attendanceRouter);
 app.use('/api/v1/pricing', pricingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/zoom', zoomRouter);
+app.use('/api/v1/payroll', payrollRouter);
  //execute on 1st day of each month
  cron.schedule('0 0 1 * *', () => {
   console.log('+ script to add default holidays1...');
