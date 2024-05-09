@@ -1,5 +1,7 @@
-const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel");
-const RoundingRule = require("../models/Payroll/RoundingRulesModel");
+const GeneralSetting = require("../models/Payroll/payrollGeneralSettingModel");
+const RoundingRule = require("../models/Payroll/roundingRulesModel");
+const FixedAllowances = require('../models/Payroll/fixedAllowancesModel');
+const catchAsync = require('../utils/catchAsync');
 // controllers/payrollController.js
 
 exports.createGeneralSetting = async (req, res, next) => {
@@ -155,9 +157,73 @@ exports.deleteRoundingRule = async (req, res, next) => {
 };
 
 exports.getAllRoundingRules = async (req, res, next) => {
-  const roundingRules = await RoundingRule.find();
+  const roundingRules = await RoundingRule.find({}).where('company').equals(req.cookies.companyId);;
   res.status(200).json({
     status: 'success',
     data: roundingRules
   });
 };
+
+exports.createFixedAllowances = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const fixedAllowances = await FixedAllowances.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: fixedAllowances
+  });
+});
+
+exports.getFixedAllowancesById = catchAsync(async (req, res, next) => {
+  const fixedAllowances = await FixedAllowances.findById(req.params.id);
+  if (!fixedAllowances) {
+    return next(new AppError('FixedAllowances not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: fixedAllowances
+  });
+});
+
+exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
+  const fixedAllowances = await FixedAllowances.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!fixedAllowances) {
+    return next(new AppError('FixedAllowances not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: fixedAllowances
+  });
+});
+
+exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
+  const fixedAllowances = await FixedAllowances.findByIdAndDelete(req.params.id);
+  if (!fixedAllowances) {
+    return next(new AppError('FixedAllowances not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
+  const fixedAllowances = await FixedAllowances.find({}).where('company').equals(req.cookies.companyId);;
+  res.status(200).json({
+    status: 'success',
+    data: fixedAllowances
+  });
+});

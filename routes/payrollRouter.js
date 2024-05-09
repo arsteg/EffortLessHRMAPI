@@ -350,4 +350,171 @@ router.delete('/rounding-rules/:id', authController.protect, payrollController.d
  */
 router.get('/rounding-rules', authController.protect, payrollController.getAllRoundingRules);
 
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-allowances:
+ *   post:
+ *     summary: Add a new FixedAllowances
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: FixedAllowances details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               type:
+ *                 type: string
+ *                 required: true
+ *               isArrearsAffect:
+ *                 type: boolean
+ *                 default: false
+ *               calculatedBy:
+ *                 type: string
+ *                 required: true
+ *               isTaxEnabledOnce:
+ *                 type: boolean
+ *                 default: false
+ *               isProvidentFundAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isESICAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isGratuityFundAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isLWFAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isProfessionalTaxAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isTDSAffected:
+ *                 type: boolean
+ *                 default: false
+ *               isAttendanceToEffectTheEligibility:
+ *                 type: boolean
+ *                 default: false
+ *     responses:
+ *       201:
+ *         description: FixedAllowances successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/fixed-allowances', payrollController.createFixedAllowances);
+
+router.post('/fixed-allowances', payrollController.createFixedAllowances);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-allowances/{id}:
+ *   get:
+ *     summary: Get a FixedAllowances by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FixedAllowances
+ *     responses:
+ *       200:
+ *         description: Successful response with the FixedAllowances
+ *       404:
+ *         description: FixedAllowances not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixed-allowances/:id', payrollController.getFixedAllowancesById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-allowances/{id}:
+ *   put:
+ *     summary: Update a FixedAllowances by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FixedAllowances
+ *     requestBody:
+ *       description: New FixedAllowances details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/FixedAllowances'
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated FixedAllowances
+ *       404:
+ *         description: FixedAllowances not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/fixed-allowances/:id', payrollController.updateFixedAllowances);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-allowances/{id}:
+ *   delete:
+ *     summary: Delete a FixedAllowances by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FixedAllowances
+ *     responses:
+ *       204:
+ *         description: FixedAllowances successfully deleted
+ *       404:
+ *         description: FixedAllowances not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/fixed-allowances/:id', payrollController.deleteFixedAllowances);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-allowances:
+ *   get:
+ *     summary: Get all FixedAllowances
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with FixedAllowances
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixed-allowances', payrollController.getAllFixedAllowances);
+
 module.exports = router;
