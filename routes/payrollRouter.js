@@ -567,7 +567,7 @@ router.get('/fixed-contribution',authController.protect, payrollController.getAl
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution-slabs:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs:
  *   post:
  *     summary: Add a new Fixed Contribution Slab
  *     tags: [Payroll Management]
@@ -611,11 +611,11 @@ router.get('/fixed-contribution',authController.protect, payrollController.getAl
  *       500:
  *         description: Internal server error
  */
-router.post('/fixed-contribution-slabs', authController.protect,payrollController.createFixedContributionSlab);
+router.post('/lwf-fixed-contribution-slabs', authController.protect,payrollController.createFixedContributionSlab);
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs/{id}:
  *   get:
  *     summary: Get a Fixed Contribution Slab by ID
  *     tags: [Payroll Management]
@@ -637,11 +637,11 @@ router.post('/fixed-contribution-slabs', authController.protect,payrollControlle
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-contribution-slabs/:id',authController.protect, payrollController.getFixedContributionSlab);
+router.get('/lwf-fixed-contribution-slabs/:id',authController.protect, payrollController.getFixedContributionSlab);
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs/{id}:
  *   put:
  *     summary: Update a Fixed Contribution Slab by ID
  *     tags: [Payroll Management]
@@ -685,11 +685,11 @@ router.get('/fixed-contribution-slabs/:id',authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.put('/fixed-contribution-slabs/:id',authController.protect, payrollController.updateFixedContributionSlab);
+router.put('/lwf-fixed-contribution-slabs/:id',authController.protect, payrollController.updateFixedContributionSlab);
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs/{id}:
  *   delete:
  *     summary: Delete a Fixed Contribution Slab by ID
  *     tags: [Payroll Management]
@@ -711,11 +711,11 @@ router.put('/fixed-contribution-slabs/:id',authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.delete('/fixed-contribution-slabs/:id',authController.protect, payrollController.deleteFixedContributionSlab);
+router.delete('/lwf-fixed-contribution-slabs/:id',authController.protect, payrollController.deleteFixedContributionSlab);
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution-slabs:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs:
  *   get:
  *     summary: Get all Fixed Contribution Slabs
  *     tags: [Payroll Management]
@@ -728,6 +728,91 @@ router.delete('/fixed-contribution-slabs/:id',authController.protect, payrollCon
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-contribution-slabs',authController.protect, payrollController.getAllFixedContributionSlabs);
+router.get('/lwf-fixed-contribution-slabs',authController.protect, payrollController.getAllFixedContributionSlabs);
+// routes/payrollRoutes.js
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/lwf-fixed-contribution-months: 
+ *   post:
+ *     summary: Add a LWFFixedContributionMonth
+ *     tags: [Payroll Management]
+ *     requestBody:
+ *       description: LWFFixedContributionMonth details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paymentMonth:
+ *                 type: string
+ *                 required: true
+ *               processMonth:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: LWFFixedContributionMonth successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/lwf-fixed-contribution-months', payrollController.createLWFFixedContributionMonth);
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/lwf-fixed-contribution-months-update:
+ *   put:
+ *     summary: Update a LWFFixedContributionMonth
+ *     tags: [Payroll Management]
+ *     requestBody:
+ *       description: New LWFFixedContributionMonth details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               months :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       paymentMonth:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       processMonth:
+ *                         type: boolen
+ *                         description: Field value
+ *                  description: Array of field values
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated LWFFixedContributionMonth
+ *       404:
+ *         description: LWFFixedContributionMonth not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/lwf-fixed-contribution-months-update/', payrollController.updateLWFFixedContributionMonth);
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/lwf-fixed-contribution-months:
+ *   get:
+ *     summary: Get all LWFFixedContributionMonths
+ *     tags: [Payroll Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with LWFFixedContributionMonths
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/lwf-fixed-contribution-months', payrollController.getAllLWFFixedContributionMonths);
 
 module.exports = router;

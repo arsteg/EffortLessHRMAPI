@@ -4,6 +4,8 @@ const FixedAllowances = require('../models/Payroll/fixedAllowancesModel');
 const FixedContribution = require('../models/Payroll/fixedContributionModel');
 const catchAsync = require('../utils/catchAsync');
 const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContributionSlabModel");
+const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
+
 // controllers/payrollController.js
 
 exports.createGeneralSetting = async (req, res, next) => {
@@ -353,3 +355,117 @@ exports.getAllFixedContributionSlabs = async (req, res, next) => {
     });
   }
 };
+
+// controllers/payrollController.js
+
+
+exports.createLWFFixedContributionMonth = async (req, res, next) => {
+  try {
+    const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+  
+    // Add companyId to the request body
+    req.body.company = companyId;
+
+    const lwfFixedContributionMonth = await LWFFixedContributionMonth.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: lwfFixedContributionMonth
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.getLWFFixedContributionMonth = async (req, res, next) => {
+  try {
+    const lwfFixedContributionMonth = await LWFFixedContributionMonth.findById(req.params.id);
+    if (!lwfFixedContributionMonth) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'LWFFixedContributionMonth not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: lwfFixedContributionMonth
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.updateLWFFixedContributionMonth = async (req, res, next) => {
+  try {
+    const { months } = req.body;
+    const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+  
+
+    // Update records based on companyId and paymentMonth
+    const updatePromises = months.map(async (month) => {
+      await LWFFixedContributionMonth.updateMany(
+        { company: companyId, paymentMonth: month.paymentMonth },
+        { $set: { processMonth: month.processMonth } }
+      );
+    });
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({ status: 'success', message: 'LWFFixedContributionMonths updated successfully' });
+  } catch (error) {
+    console.error('Error updating LWFFixedContributionMonths:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+exports.deleteLWFFixedContributionMonth = async (req, res, next) => {
+  try {
+    const lwfFixedContributionMonth = await LWFFixedContributionMonth.findByIdAndDelete(req.params.id);
+    if (!lwfFixedContributionMonth) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'LWFFixedContributionMonth not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.getAllLWFFixedContributionMonths = async (req, res, next) => {
+  try {
+    const lwfFixedContributionMonths = await LWFFixedContributionMonth.find({}).where('company').equals(req.cookies.companyId);;
+    res.status(200).json({
+      status: 'success',
+      data: lwfFixedContributionMonths
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
