@@ -411,9 +411,7 @@ router.get('/rounding-rules', authController.protect, payrollController.getAllRo
  *       500:
  *         description: Internal server error
  */
-router.post('/fixed-allowances', payrollController.createFixedAllowances);
-
-router.post('/fixed-allowances', payrollController.createFixedAllowances);
+router.post('/fixed-allowances',authController.protect, payrollController.createFixedAllowances);
 
 /**
  * @swagger
@@ -439,7 +437,7 @@ router.post('/fixed-allowances', payrollController.createFixedAllowances);
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-allowances/:id', payrollController.getFixedAllowancesById);
+router.get('/fixed-allowances/:id',authController.protect, payrollController.getFixedAllowancesById);
 
 /**
  * @swagger
@@ -472,7 +470,7 @@ router.get('/fixed-allowances/:id', payrollController.getFixedAllowancesById);
  *       500:
  *         description: Internal server error
  */
-router.put('/fixed-allowances/:id', payrollController.updateFixedAllowances);
+router.put('/fixed-allowances/:id',authController.protect, payrollController.updateFixedAllowances);
 
 /**
  * @swagger
@@ -498,7 +496,7 @@ router.put('/fixed-allowances/:id', payrollController.updateFixedAllowances);
  *       500:
  *         description: Internal server error
  */
-router.delete('/fixed-allowances/:id', payrollController.deleteFixedAllowances);
+router.delete('/fixed-allowances/:id',authController.protect, payrollController.deleteFixedAllowances);
 
 /**
  * @swagger
@@ -515,6 +513,221 @@ router.delete('/fixed-allowances/:id', payrollController.deleteFixedAllowances);
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-allowances', payrollController.getAllFixedAllowances);
+router.get('/fixed-allowances', authController.protect,payrollController.getAllFixedAllowances);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution:
+ *   post:
+ *     summary: Add a new FixedContributions
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: FixedContributions details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               shortName:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: FixedContributions successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/fixed-contribution',authController.protect, payrollController.createFixedContribution);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution:
+ *   get:
+ *     summary: Get all FixedContributions
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with FixedAllowances
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixed-contribution',authController.protect, payrollController.getAllFixedContributions);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution-slabs:
+ *   post:
+ *     summary: Add a new Fixed Contribution Slab
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Fixed Contribution Slab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fixedContribution:
+ *                 type: string
+ *                 required: true
+ *               fromAmount:
+ *                 type: number
+ *                 required: true
+ *               toAmount:
+ *                 type: number
+ *                 required: true
+ *               employeePercent:
+ *                 type: number
+ *                 required: true
+ *               employeeAmount:
+ *                 type: number
+ *                 required: true
+ *               employerPercentage:
+ *                 type: number
+ *                 required: true
+ *               employerAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Fixed Contribution Slab successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/fixed-contribution-slabs', authController.protect,payrollController.createFixedContributionSlab);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ *   get:
+ *     summary: Get a Fixed Contribution Slab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Contribution Slab
+ *     responses:
+ *       200:
+ *         description: Successful response with the Fixed Contribution Slab
+ *       404:
+ *         description: Fixed Contribution Slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixed-contribution-slabs/:id',authController.protect, payrollController.getFixedContributionSlab);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ *   put:
+ *     summary: Update a Fixed Contribution Slab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Contribution Slab
+ *     requestBody:
+ *       description: New Fixed Contribution Slab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fixedContribution:
+ *                 type: string
+ *               fromAmount:
+ *                 type: number
+ *               toAmount:
+ *                 type: number
+ *               employeePercent:
+ *                 type: number
+ *               employeeAmount:
+ *                 type: number
+ *               employerPercentage:
+ *                 type: number
+ *               employerAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Fixed Contribution Slab
+ *       404:
+ *         description: Fixed Contribution Slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/fixed-contribution-slabs/:id',authController.protect, payrollController.updateFixedContributionSlab);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution-slabs/{id}:
+ *   delete:
+ *     summary: Delete a Fixed Contribution Slab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Contribution Slab
+ *     responses:
+ *       204:
+ *         description: Fixed Contribution Slab successfully deleted
+ *       404:
+ *         description: Fixed Contribution Slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/fixed-contribution-slabs/:id',authController.protect, payrollController.deleteFixedContributionSlab);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixed-contribution-slabs:
+ *   get:
+ *     summary: Get all Fixed Contribution Slabs
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Fixed Contribution Slabs
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixed-contribution-slabs',authController.protect, payrollController.getAllFixedContributionSlabs);
 
 module.exports = router;
