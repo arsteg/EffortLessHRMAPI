@@ -738,6 +738,9 @@ router.get('/lwf-fixed-contribution-slabs',authController.protect, payrollContro
  *   post:
  *     summary: Add a LWFFixedContributionMonth
  *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
  *     requestBody:
  *       description: LWFFixedContributionMonth details
  *       required: true
@@ -760,8 +763,7 @@ router.get('/lwf-fixed-contribution-slabs',authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.post('/lwf-fixed-contribution-months', payrollController.createLWFFixedContributionMonth);
-
+router.post('/lwf-fixed-contribution-months',authController.protect, payrollController.createLWFFixedContributionMonth);
 
 /**
  * @swagger
@@ -769,6 +771,9 @@ router.post('/lwf-fixed-contribution-months', payrollController.createLWFFixedCo
  *   put:
  *     summary: Update a LWFFixedContributionMonth
  *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
  *     requestBody:
  *       description: New LWFFixedContributionMonth details
  *       required: true
@@ -787,7 +792,7 @@ router.post('/lwf-fixed-contribution-months', payrollController.createLWFFixedCo
  *                         description: Field value
  *                         required: true
  *                       processMonth:
- *                         type: boolen
+ *                         type: boolean
  *                         description: Field value
  *                  description: Array of field values
  *     responses:
@@ -798,8 +803,7 @@ router.post('/lwf-fixed-contribution-months', payrollController.createLWFFixedCo
  *       500:
  *         description: Internal server error
  */
-router.put('/lwf-fixed-contribution-months-update/', payrollController.updateLWFFixedContributionMonth);
-
+router.put('/lwf-fixed-contribution-months-update/',authController.protect, payrollController.updateLWFFixedContributionMonth);
 
 /**
  * @swagger
@@ -807,12 +811,72 @@ router.put('/lwf-fixed-contribution-months-update/', payrollController.updateLWF
  *   get:
  *     summary: Get all LWFFixedContributionMonths
  *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
  *     responses:
  *       200:
  *         description: Successful response with LWFFixedContributionMonths
  *       500:
  *         description: Internal server error
  */
-router.get('/lwf-fixed-contribution-months', payrollController.getAllLWFFixedContributionMonths);
+router.get('/lwf-fixed-contribution-months',authController.protect, payrollController.getAllLWFFixedContributionMonths);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-eligible-states:
+ *   put:
+ *     summary: Update a PTEligibleStates
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: New PTEligibleStates details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               states :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       state:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       isEligible:
+ *                         type: boolean
+ *                         description: Field value
+ *                  description: Array of field values
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PTEligibleStates
+ *       404:
+ *         description: PTEligibleStates not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/pt-eligible-states/',authController.protect, payrollController.addUpdatePTEligibleStates);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-eligible-states:
+ *   get:
+ *     summary: Get all PTEligibleStates
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with PTEligibleStates
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-eligible-states',authController.protect, payrollController.getAllPTEligibleStates);
 
 module.exports = router;

@@ -5,8 +5,7 @@ const FixedContribution = require('../models/Payroll/fixedContributionModel');
 const catchAsync = require('../utils/catchAsync');
 const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContributionSlabModel");
 const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
-
-// controllers/payrollController.js
+const PTEligibleStates = require('../models/Payroll/ptEligibleStatesModel');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -456,7 +455,7 @@ exports.deleteLWFFixedContributionMonth = async (req, res, next) => {
 
 exports.getAllLWFFixedContributionMonths = async (req, res, next) => {
   try {
-    const lwfFixedContributionMonths = await LWFFixedContributionMonth.find({}).where('company').equals(req.cookies.companyId);;
+    const lwfFixedContributionMonths = await LWFFixedContributionMonth.find({}).where('company').equals(req.cookies.companyId);
     res.status(200).json({
       status: 'success',
       data: lwfFixedContributionMonths
@@ -468,4 +467,57 @@ exports.getAllLWFFixedContributionMonths = async (req, res, next) => {
     });
   }
 };
+exports.getAllPTEligibleStates = async (req, res, next) => {
+  try {
+    const ptEligibleStates = await PTEligibleStates.find({}).where('company').equals(req.cookies.companyId);
+    res.status(200).json({
+      status: 'success',
+      data: ptEligibleStates
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+exports.addUpdatePTEligibleStates = async (req, res, next) => {
+  const company = req.cookies.companyId;
 
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Check if the request body contains the required fields
+  if (!req.body.states) {
+    return next(new AppError('Company ID and states array are required.', 400));
+  }
+
+  const { states } = req.body;
+  console.log("hi");
+  // Iterate over the states array and add/update each state
+  const updatedStates = [];
+  for (const stateObj of states) {
+    const { state, isEligible } = stateObj;
+    let ptEligibleState;
+    console.log("hi1");
+    // Find existing state or create a new one if not found
+    const existingState = await PTEligibleStates.findOne({ company, state });
+    if (existingState) {
+      console.log("hi2");
+      // Update existing state
+      ptEligibleState = await PTEligibleStates.findByIdAndUpdate(existingState._id, { isEligible }, { new: true });
+    } else {
+      // Create new state
+      console.log("hi3");
+      ptEligibleState = await PTEligibleStates.create({ company, state, isEligible });
+    }
+    updatedStates.push(ptEligibleState);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedStates
+  });
+};
