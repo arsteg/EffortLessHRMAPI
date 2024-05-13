@@ -617,6 +617,10 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  *                 type: number
  *                 description: The minimum number of hours required per week.
  *                 example: 40
+ *               minimumMinutesRequiredPerWeek:
+ *                 type: number
+ *                 description: The minimum number of hours required per week.
+ *                 example: 40
  *               notifyEmployeeMinHours:
  *                 type: boolean
  *                 description: Whether to notify employees if minimum hours are not met.
@@ -733,6 +737,10 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *                 description: The mode of processing missing check-ins and check-outs.
  *                 example: Automatic
  *               minimumHoursRequiredPerWeek:
+ *                 type: number
+ *                 description: The minimum number of hours required per week.
+ *                 example: 40
+ *               minimumMinutesRequiredPerWeek:
  *                 type: number
  *                 description: The minimum number of hours required per week.
  *                 example: 40

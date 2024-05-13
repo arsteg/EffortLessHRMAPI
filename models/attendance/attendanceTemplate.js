@@ -22,6 +22,10 @@ const attendanceTemplateSchema = new Schema({
     type: Number,
     required: true
   },
+  minimumMinutesRequiredPerWeek: {
+    type: Number,
+    required: true
+  },
   notifyEmployeeMinHours: {
     type: Boolean,
     default: true
