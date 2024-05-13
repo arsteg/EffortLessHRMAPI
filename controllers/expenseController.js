@@ -507,7 +507,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
         });
 
         if (existingCategory) {
-          const insertedFields = await insertFields(existingCategory, category.fields);
+          const insertedFields = await insertFields(existingCategory, category.expenseTemplateCategoryFieldValues);
 
           // Update the existing category document with newly inserted fields
           return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
@@ -523,7 +523,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
           });
 
           // Insert new fields into ExpenseTemplateCategoryFieldValues collection
-          const insertedFields = await insertFields(newCategory, category.fields);
+          const insertedFields = await insertFields(newCategory, category.expenseTemplateCategoryFieldValues);
 
           // Update the new category document with the inserted fields
           newCategory.expenseTemplateCategoryFieldValues = insertedFields;
@@ -542,15 +542,15 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
   }
 }
 
-async function insertFields(category, fields) {
+async function insertFields(category, expenseTemplateCategoryFieldValues) {
   console.log(category);
   await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
 
-  if (fields.length === 0) {
+  if (expenseTemplateCategoryFieldValues.length === 0) {
     return []; // Return an empty array if there are no fields to insert
   } else {
     // Insert new fields into ExpenseTemplateCategoryFieldValues collection
-    return ExpenseTemplateCategoryFieldValues.insertMany(fields.map(field => ({ expenseTemplateCategory: category._id, ...field })));
+    return ExpenseTemplateCategoryFieldValues.insertMany(expenseTemplateCategoryFieldValues.map(field => ({ expenseTemplateCategory: category._id, ...field })));
   }
 }
 
