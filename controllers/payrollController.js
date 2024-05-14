@@ -6,6 +6,7 @@ const catchAsync = require('../utils/catchAsync');
 const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContributionSlabModel");
 const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
 const PTEligibleStates = require('../models/Payroll/ptEligibleStatesModel');
+const PTSlab = require("../models/Payroll/ptSlabModel");
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -520,4 +521,91 @@ exports.addUpdatePTEligibleStates = async (req, res, next) => {
     status: 'success',
     data: updatedStates
   });
+};
+exports.addPTSlab = async (req, res, next) => {
+  try {
+    const company = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!company) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+    req.body.company=company;
+    const ptSlab = await PTSlab.create(req.body);
+    res.status(201).json({
+      status: "success",
+      data: ptSlab,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllPTSlabs = async (req, res, next) => {
+  try {
+    const ptSlabs = await PTSlab.where('company').equals(req.cookies.companyId);
+    res.status(200).json({
+      status: "success",
+      data: ptSlabs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updatePTSlab = async (req, res, next) => {
+  try {
+    const ptSlab = await PTSlab.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!ptSlab) {
+      return res.status(404).json({
+        status: "failure",
+        message: "PTSlab not found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      data: ptSlab,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPTSlabById = async (req, res, next) => {
+  try {
+    const ptSlab = await PTSlab.findById(req.params.id);
+    if (!ptSlab) {
+      return res.status(404).json({
+        status: "failure",
+        message: "PTSlab not found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      data: ptSlab,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deletePTSlab = async (req, res, next) => {
+  try {
+    const ptSlab = await PTSlab.findByIdAndDelete(req.params.id);
+    if (!ptSlab) {
+      return res.status(404).json({
+        status: "failure",
+        message: "PTSlab not found",
+      });
+    }
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

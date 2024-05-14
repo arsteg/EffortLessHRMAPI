@@ -879,4 +879,169 @@ router.put('/pt-eligible-states/',authController.protect, payrollController.addU
  */
 router.get('/pt-eligible-states',authController.protect, payrollController.getAllPTEligibleStates);
 
+// Add a PTSlab
+/**
+ * @swagger
+ * /api/v1/payroll/pt-slabs:
+ *   post:
+ *     summary: Add a PTSlab
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PTSlab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fromAmount:
+ *                 type: string
+ *                 required: true
+ *               toAmount:
+ *                 type: string
+ *                 required: true
+ *               employeePercentage:
+ *                 type: number
+ *                 required: true
+ *               employeeAmount:
+ *                 type: number
+ *                 required: true
+ *               twelfthMonthValue:
+ *                 type: number
+ *                 required: true
+ *               twelfthMonthAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PTSlab successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/pt-slabs', authController.protect, payrollController.addPTSlab);
+
+// Get all PTSlabs
+/**
+ * @swagger
+ * /api/v1/payroll/pt-slabs:
+ *   get:
+ *     summary: Get all PTSlabs
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with PTSlabs
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-slabs', authController.protect, payrollController.getAllPTSlabs);
+
+// Update PTSlab
+/**
+ * @swagger
+ * /api/v1/payroll/pt-slabs/{id}:
+ *   put:
+ *     summary: Update a PTSlab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTSlab
+ *     requestBody:
+ *       description: New PTSlab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fromAmount:
+ *                 type: string
+ *               toAmount:
+ *                 type: string
+ *               employeePercentage:
+ *                 type: number
+ *               employeeAmount:
+ *                 type: number
+ *               twelfthMonthValue:
+ *                 type: number
+ *               twelfthMonthAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PTSlab
+ *       404:
+ *         description: PTSlab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/pt-slabs/:id', authController.protect, payrollController.updatePTSlab);
+
+// Get PTSlab by ID
+/**
+ * @swagger
+ * /api/v1/payroll/pt-slabs/{id}:
+ *   get:
+ *     summary: Get a PTSlab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTSlab
+ *     responses:
+ *       200:
+ *         description: Successful response with the PTSlab
+ *       404:
+ *         description: PTSlab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-slabs/:id', authController.protect, payrollController.getPTSlabById);
+
+// Delete PTSlab
+/**
+ * @swagger
+ * /api/v1/payroll/pt-slabs/{id}:
+ *   delete:
+ *     summary: Delete a PTSlab by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTSlab
+ *     responses:
+ *       204:
+ *         description: PTSlab successfully deleted
+ *       404:
+ *         description: PTSlab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/pt-slabs/:id', authController.protect, payrollController.deletePTSlab);
+
 module.exports = router;
