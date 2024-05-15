@@ -7,7 +7,7 @@ const attendanceTemplateSchema = new Schema({
     required: true
   },
   attendanceMode: {
-    type: String,
+    type: [String],
     required: true
   },
   missingCheckInCheckoutHandlingMode: {

@@ -7,6 +7,7 @@ const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContribution
 const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
 const PTEligibleStates = require('../models/Payroll/ptEligibleStatesModel');
 const PTSlab = require("../models/Payroll/ptSlabModel");
+const PTDeductionMonth = require('../models/Payroll/ptDeductionMonthModel');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -607,5 +608,109 @@ exports.deletePTSlab = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.addPTDeductionMonth = async (req, res, next) => {
+  try {
+    const company = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!company) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+    req.body.company = company;
+
+    const ptDeductionMonth = await PTDeductionMonth.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: ptDeductionMonth
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.getAllPTDeductionMonths = async (req, res, next) => {
+  try {
+    const ptDeductionMonths = await PTDeductionMonth.where('company').equals(req.cookies.companyId);;
+    res.status(200).json({
+      status: 'success',
+      data: ptDeductionMonths
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.getPTDeductionMonthById = async (req, res, next) => {
+  try {
+    const ptDeductionMonth = await PTDeductionMonth.findById(req.params.id);
+    if (!ptDeductionMonth) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'PT Deduction Month not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: ptDeductionMonth
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.updatePTDeductionMonth = async (req, res, next) => {
+  try {
+    const ptDeductionMonth = await PTDeductionMonth.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+    if (!ptDeductionMonth) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'PT Deduction Month not found'
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: ptDeductionMonth
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
+
+exports.deletePTDeductionMonth = async (req, res, next) => {
+  try {
+    const ptDeductionMonth = await PTDeductionMonth.findByIdAndDelete(req.params.id);
+    if (!ptDeductionMonth) {
+      return res.status(404).json({
+        status: 'failure',
+        message: 'PT Deduction Month not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
   }
 };

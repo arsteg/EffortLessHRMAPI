@@ -1044,4 +1044,154 @@ router.get('/pt-slabs/:id', authController.protect, payrollController.getPTSlabB
  */
 router.delete('/pt-slabs/:id', authController.protect, payrollController.deletePTSlab);
 
+// Add a PTDeductionMonth
+/**
+ * @swagger
+ * /api/v1/payroll/pt-deduction-months:
+ *   post:
+ *     summary: Add a new PT Deduction Month
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PT Deduction Month details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               state:
+ *                 type: string
+ *                 required: true
+ *               paymentMonth:
+ *                 type: string
+ *                 required: true
+ *               processMonth:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PT Deduction Month successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/pt-deduction-months', authController.protect, payrollController.addPTDeductionMonth);
+
+// GetAll PTDeductionMonth
+/**
+ * @swagger
+ * /api/v1/payroll/pt-deduction-months:
+ *   get:
+ *     summary: Get all PT Deduction Months
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with PT Deduction Months
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-deduction-months', authController.protect, payrollController.getAllPTDeductionMonths);
+
+// GetbyId PTDeductionMonth
+/**
+ * @swagger
+ * /api/v1/payroll/pt-deduction-months/{id}:
+ *   get:
+ *     summary: Get a PT Deduction Month by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PT Deduction Month
+ *     responses:
+ *       200:
+ *         description: Successful response with the PT Deduction Month
+ *       404:
+ *         description: PT Deduction Month not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-deduction-months/:id', authController.protect, payrollController.getPTDeductionMonthById);
+
+// Update PTDeductionMonth
+/**
+ * @swagger
+ * /api/v1/payroll/pt-deduction-months/{id}:
+ *   put:
+ *     summary: Update a PT Deduction Month by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PT Deduction Month
+ *     requestBody:
+ *       description: New PT Deduction Month details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               state:
+ *                 type: string
+ *               paymentMonth:
+ *                 type: string
+ *               processMonth:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PT Deduction Month
+ *       404:
+ *         description: PT Deduction Month not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/pt-deduction-months/:id', authController.protect, payrollController.updatePTDeductionMonth);
+
+// delete PTDeductionMonth
+/**
+ * @swagger
+ * /api/v1/payroll/pt-deduction-months/{id}:
+ *   delete:
+ *     summary: Delete a PT Deduction Month by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PT Deduction Month
+ *     responses:
+ *       204:
+ *         description: PT Deduction Month successfully deleted
+ *       404:
+ *         description: PT Deduction Month not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/pt-deduction-months/:id', authController.protect, payrollController.deletePTDeductionMonth);
+
 module.exports = router;

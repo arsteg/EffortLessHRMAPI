@@ -602,9 +602,9 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  *                 description: The label of the attendance template.
  *                 example: My Attendance Template
  *               attendanceMode:
- *                 type: string
- *                 description: The mode of attendance.
- *                 example: Online
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               missingCheckInCheckoutHandlingMode:
  *                 type: string
  *                 description: The mode of handling missing check-ins and check-outs.
@@ -725,9 +725,9 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *                 description: The label of the attendance template.
  *                 example: My Attendance Template
  *               attendanceMode:
- *                 type: string
- *                 description: The mode of attendance.
- *                 example: Online
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               missingCheckInCheckoutHandlingMode:
  *                 type: string
  *                 description: The mode of handling missing check-ins and check-outs.
