@@ -894,6 +894,9 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *   post:
  *     summary: Add a new Attendance Regularization
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     requestBody:
  *       description: Attendance Regularization details
  *       required: true
@@ -931,20 +934,15 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *                 type: array
  *                 items:
  *                   type: object
- *                   required: true
  *                   properties:
  *                     Location:
  *                       type: string
- *                       required: true 
  *                     Latitude:
- *                       type: string
  *                       required: true 
  *                     Longitude:
  *                       type: string
- *                       required: true 
  *                     Radius:
  *                       type: string
- *                       required: true  
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
@@ -965,7 +963,7 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/regularizations', attendanceController.addAttendanceRegularization);
+attendanceRouter.post('/regularizations',authController.protect, attendanceController.addAttendanceRegularization);
 
 /**
  * @swagger
@@ -973,6 +971,9 @@ attendanceRouter.post('/regularizations', attendanceController.addAttendanceRegu
  *   get:
  *     summary: Get an Attendance Regularization by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -988,7 +989,7 @@ attendanceRouter.post('/regularizations', attendanceController.addAttendanceRegu
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceRegularization);
+attendanceRouter.get('/regularizations/:id',authController.protect, attendanceController.getAttendanceRegularization);
 
 /**
  * @swagger
@@ -996,6 +997,9 @@ attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceR
  *   put:
  *     summary: Update an Attendance Regularization by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -1040,20 +1044,15 @@ attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceR
  *                 type: array
  *                 items:
  *                   type: object
- *                   required: true
  *                   properties:
  *                     Location:
  *                       type: string
- *                       required: true 
  *                     Latitude:
- *                       type: string
  *                       required: true 
  *                     Longitude:
  *                       type: string
- *                       required: true 
  *                     Radius:
- *                       type: string
- *                       required: true  
+ *                       type: string  
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
@@ -1074,7 +1073,7 @@ attendanceRouter.get('/regularizations/:id', attendanceController.getAttendanceR
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/regularizations/:id', attendanceController.updateAttendanceRegularization);
+attendanceRouter.put('/regularizations/:id',authController.protect, attendanceController.updateAttendanceRegularization);
 
 /**
  * @swagger
@@ -1082,13 +1081,16 @@ attendanceRouter.put('/regularizations/:id', attendanceController.updateAttendan
  *   get:
  *     summary: Get all Attendance Regularizations by Company ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     responses:
  *       200:
  *         description: Successful response with Attendance Regularizations
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularizations-by-company', attendanceController.getAllAttendanceRegularizationsByCompany);
+attendanceRouter.get('/regularizations-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
 
 /**
  * @swagger
@@ -1096,6 +1098,9 @@ attendanceRouter.get('/regularizations-by-company', attendanceController.getAllA
  *   delete:
  *     summary: Delete an Attendance Regularization by ID
  *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -1111,7 +1116,171 @@ attendanceRouter.get('/regularizations-by-company', attendanceController.getAllA
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/regularizations/:id', attendanceController.deleteAttendanceRegularization);
+attendanceRouter.delete('/regularizations/:id',authController.protect, attendanceController.deleteAttendanceRegularization);
+
+// Swagger annotations
+/**
+ * @swagger
+ * /api/v1/attendance/attendanceRegularizationRestrictedLocations:
+ *   post:
+ *     summary: Add a new AttendanceRegularizationRestrictedLocation
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: AttendanceRegularizationRestrictedLocation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               attendanceRegularization:
+ *                 type: string
+ *                 required: true
+ *               Location:
+ *                 type: string
+ *                 required: true
+ *               Latitude:
+ *                 type: string
+ *                 required: true
+ *               Longitude:
+ *                 type: string
+ *                 required: true
+ *               Radius:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: AttendanceRegularizationRestrictedLocation successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/attendanceRegularizationRestrictedLocations',authController.protect, attendanceController.addAttendanceRegularizationRestrictedLocation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendanceRegularizationRestrictedLocations/{attendanceRegularization}:
+ *   get:
+ *     summary: Get all AttendanceRegularizationRestrictedLocations by attendanceRegularization
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: attendanceRegularization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the attendanceRegularization
+ *     responses:
+ *       200:
+ *         description: Successful response with all restricted locations
+ *       404:
+ *         description: No locations found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:attendanceRegularization',authController.protect, attendanceController.getAllAttendanceRegularizationRestrictedLocations);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendanceRegularizationRestrictedLocations/{id}:
+ *   put:
+ *     summary: Update an AttendanceRegularizationRestrictedLocation by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the restricted location
+ *     requestBody:
+ *       description: Updated AttendanceRegularizationRestrictedLocation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               Location:
+ *                 type: string
+ *               Latitude:
+ *                 type: string
+ *               Longitude:
+ *                 type: string
+ *               Radius:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated location
+ *       404:
+ *         description: No location found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.updateAttendanceRegularizationRestrictedLocation);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendanceRegularizationRestrictedLocations/{id}:
+ *   get:
+ *     summary: Get an AttendanceRegularizationRestrictedLocation by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the restricted location
+ *     responses:
+ *       200:
+ *         description: Successful response with the location details
+ *       404:
+ *         description: No location found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.getAttendanceRegularizationRestrictedLocationById);
+
+/**
+ * @swagger
+ * /api/v1/attendance/attendanceRegularizationRestrictedLocations/{id}:
+ *   delete:
+ *     summary: Delete an AttendanceRegularizationRestrictedLocation by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the restricted location
+ *     responses:
+ *       204:
+ *         description: Location successfully deleted
+ *       404:
+ *         description: No location found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.deleteAttendanceRegularizationRestrictedLocation);
+
 
 //Attandance Assignment
 /**

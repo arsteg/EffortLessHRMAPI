@@ -726,6 +726,64 @@ exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.addAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
+  const newLocation = await AttendanceRegularizationRestrictedLocation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: newLocation
+  });
+});
+
+exports.getAllAttendanceRegularizationRestrictedLocations = catchAsync(async (req, res, next) => {
+  const locations = await AttendanceRegularizationRestrictedLocation.find({ attendanceRegularization: req.params.attendanceRegularization });
+  res.status(200).json({
+    status: 'success',
+    data: locations
+  });
+});
+
+exports.updateAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
+  const updatedLocation = await AttendanceRegularizationRestrictedLocation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!updatedLocation) {
+    return next(new AppError('No location found with that ID', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedLocation
+  });
+});
+
+exports.getAttendanceRegularizationRestrictedLocationById = catchAsync(async (req, res, next) => {
+  const location = await AttendanceRegularizationRestrictedLocation.findById(req.params.id);
+
+  if (!location) {
+    return next(new AppError('No location found with that ID', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: location
+  });
+});
+
+exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
+  const location = await AttendanceRegularizationRestrictedLocation.findByIdAndDelete(req.params.id);
+
+  if (!location) {
+    return next(new AppError('No location found with that ID', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
 // Create a new Attendance Template Assignment
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   
