@@ -847,7 +847,7 @@ exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Update an Attendance Template Assignment by ID
 exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
   // Check if the attendance assignment exists
-  const attendanceAssignment = await AttendanceAssignment.findById(req.params.id);
+  const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
   if (!attendanceAssignment) {
     return next(new AppError('Attendance Template Assignment not found', 404));
   }
