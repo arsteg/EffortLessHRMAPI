@@ -27,19 +27,15 @@ var attendanceRegularizationSchema = new Schema({
   },
   howAssignLocationsForEachEmployee: {
     type: String,
-    required: true
   },
   enableLocationCaptureFromMobile: {
-    type: String,
-    required: true
+    type: String
   },
   geoLocationAPIProvider: {
-    type: String,
-    required: true
+    type: String
   },
   googleAPIKey: {
-    type: String,
-    required: true
+    type: String
   },
   isFacialFingerprintRecognitionFromMobile: {
     type: String,
@@ -53,6 +49,7 @@ var attendanceRegularizationSchema = new Schema({
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
+    required: true
   },
   AttendanceRegularizationRestrictedLocations: [],
   AttendanceRegularizationRestrictedIPDetails: []
