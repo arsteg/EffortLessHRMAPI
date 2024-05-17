@@ -1613,6 +1613,22 @@ attendanceRouter.put('/rounding-information/:id',authController.protect,attendan
  *         description: Internal server error
  */
 attendanceRouter.delete('/rounding-information/:id',authController.protect,attendanceController.deleteRoundingInformation);
+/**
+ * @swagger
+ * /api/v1/attendance/rounding-information:
+ *   get:
+ *     summary: Get all rounding-information
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Overtime Information
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/rounding-information', authController.protect, attendanceController.getAllRoundingInformation);
 
 //Overtime Information
 /**
