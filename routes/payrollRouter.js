@@ -1561,15 +1561,21 @@ router.delete('/esicContributions/:id',authController.protect, payrollController
  *                 required: true
  *               amount:
  *                 type: number
- *                 required: true
  *               percentage:
  *                 type: number
  *               isAttandanceToAffectEligibility:
  *                 type: boolean
  *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *               variableAllowanceApplicableEmployee :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       employee:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       201:
  *         description: Variable allowance successfully created
@@ -1689,6 +1695,16 @@ router.get('/variableAllowances/:id', authController.protect, payrollController.
  *                 type: number
  *               isAttandanceToAffectEligibility:
  *                 type: boolean
+ *               variableAllowanceApplicableEmployee :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       employee:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       200:
  *         description: Variable allowance successfully updated
@@ -1705,9 +1721,7 @@ router.put('/variableAllowances/:id', authController.protect, payrollController.
  *   delete:
  *     summary: Delete a variable allowance by ID
  *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
+
  *     parameters:
  *       - in: path
  *         name: id

@@ -11,7 +11,7 @@ const PTDeductionMonth = require('../models/Payroll/ptDeductionMonthModel');
 const ESICCeilingAmount = require('../models/Payroll/esicCeilingAmountModel');
 const ESICContribution = require('../models/Payroll/esicContributionModel');
 const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
-
+const VariableAllowanceApplicableEmployee= require('../models/Payroll/variableAllowanceApplicableEmployeeModel');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -871,6 +871,16 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   const variableAllowance = await VariableAllowance.create(req.body);
+  if (req.body.variableAllowanceApplicableEmployee && req.body.variableAllowanceApplicableEmployee.length > 0) {
+  
+    const result = req.body.variableAllowanceApplicableEmployee.map(item => ({
+      variableAllowance: variableAllowance._id,
+      employee: item.employee
+    }));
+    console.log(result);
+    variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);
+    
+  }
   res.status(201).json({
     status: 'success',
     data: variableAllowance
@@ -880,6 +890,20 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
 // Get all VariableAllowances by company
 exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) => {  
   const variableAllowances = await VariableAllowance.where('company').equals(req.cookies.companyId);
+  if(variableAllowances) 
+  {
+    
+      for(var i = 0; i < variableAllowances.length; i++) {     
+        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('VariableAllowance').equals(variableAllowances[i]._id);  
+        if(variableAllowanceApplicableEmployees) 
+          {
+            variableAllowances[i].variableAllowanceApplicableEmployees = VariableAllowanceApplicableEmployee;
+          }
+          else{
+            variableAllowances[i].variableAllowanceApplicableEmployees=null;
+          }
+        }
+  }
   res.status(200).json({
     status: 'success',
     data: variableAllowances
@@ -889,6 +913,19 @@ exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) =>
 // Get a VariableAllowance by ID
 exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
   const variableAllowance = await VariableAllowance.findById(req.params.id);
+  if(variableAllowance) 
+  {
+    
+        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('VariableAllowance').equals(variableAllowance._id);  
+        if(variableAllowanceApplicableEmployees) 
+          {
+            variableAllowance.variableAllowanceApplicableEmployees = VariableAllowanceApplicableEmployee;
+          }
+          else{
+            variableAllowance.variableAllowanceApplicableEmployees=null;
+          }
+        
+  }
   if (!variableAllowance) {
     return next(new AppError('Variable allowance not found', 404));
   }
@@ -904,6 +941,16 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true
   });
+
+  if (req.body.variableAllowanceApplicableEmployee && req.body.variableAllowanceApplicableEmployee.length > 0) {
+    await VariableAllowanceApplicableEmployee.deleteMany({ VariableAllowance: variableAllowance._id });
+    const result = req.body.variableAllowanceApplicableEmployee.map(item => ({
+      VariableAllowance: variableAllowance._id,
+      employee: item.employee
+    }));
+    console.log(result);
+    variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);    
+  }
   if (!variableAllowance) {
     return next(new AppError('Variable allowance not found', 404));
   }

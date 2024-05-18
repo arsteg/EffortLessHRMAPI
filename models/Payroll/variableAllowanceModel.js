@@ -69,8 +69,7 @@ const variableAllowanceSchema = new Schema({
     required: true
   },
   amount: {
-    type: Number,
-    required: true
+    type: Number
   },
   percentage: {
     type: Number
@@ -83,7 +82,8 @@ const variableAllowanceSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required: true
-  }
+  },
+  variableAllowanceApplicableEmployees:[]
 }, { collection: 'VariableAllowance' });
 
 module.exports = mongoose.model('VariableAllowance', variableAllowanceSchema);
