@@ -8,6 +8,9 @@ const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributio
 const PTEligibleStates = require('../models/Payroll/ptEligibleStatesModel');
 const PTSlab = require("../models/Payroll/ptSlabModel");
 const PTDeductionMonth = require('../models/Payroll/ptDeductionMonthModel');
+const ESICCeilingAmount = require('../models/Payroll/esicCeilingAmountModel');
+const ESICContribution = require('../models/Payroll/esicContributionModel');
+
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -636,7 +639,7 @@ exports.addPTDeductionMonth = async (req, res, next) => {
 
 exports.getAllPTDeductionMonths = async (req, res, next) => {
   try {
-    const ptDeductionMonths = await PTDeductionMonth.where('company').equals(req.cookies.companyId);;
+    const ptDeductionMonths = await PTDeductionMonth.where('company').equals(req.cookies.companyId);
     res.status(200).json({
       status: 'success',
       data: ptDeductionMonths
@@ -714,3 +717,142 @@ exports.deletePTDeductionMonth = async (req, res, next) => {
     });
   }
 };
+// Add a CeilingAmount
+exports.createCeilingAmount = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  req.body.company = company;
+
+  const ceilingAmount = await ESICCeilingAmount.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: ceilingAmount
+  });
+});
+
+// Get all CeilingAmounts by company
+exports.getCeilingAmountsByCompany = catchAsync(async (req, res, next) => {
+  const ceilingAmounts = await ESICCeilingAmount.where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: ceilingAmounts
+  });
+});
+
+// Update a CeilingAmount by ID
+exports.updateCeilingAmount = catchAsync(async (req, res, next) => {
+  const ceilingAmount = await ESICCeilingAmount.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!ceilingAmount) {
+    return next(new AppError('CeilingAmount not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: ceilingAmount
+  });
+});
+
+// Get a CeilingAmount by ID
+exports.getCeilingAmountById = catchAsync(async (req, res, next) => {
+  const ceilingAmount = await ESICCeilingAmount.findById(req.params.id);
+
+  if (!ceilingAmount) {
+    return next(new AppError('CeilingAmount not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: ceilingAmount
+  });
+});
+
+// Delete a CeilingAmount by ID
+exports.deleteCeilingAmount = catchAsync(async (req, res, next) => {
+  const ceilingAmount = await ESICCeilingAmount.findByIdAndDelete(req.params.id);
+
+  if (!ceilingAmount) {
+    return next(new AppError('CeilingAmount not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+exports.addESICContribution = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+
+  const esicContribution = await ESICContribution.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: esicContribution
+  });
+});
+
+exports.getAllESICContributionsByCompany = catchAsync(async (req, res, next) => {
+  const esicContributions = await ESICContribution.where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: esicContributions
+  });
+});
+
+exports.updateESICContribution = catchAsync(async (req, res, next) => {
+  const esicContribution = await ESICContribution.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!esicContribution) {
+    return next(new AppError('ESIC contribution not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: esicContribution
+  });
+});
+
+exports.getESICContributionById = catchAsync(async (req, res, next) => {
+  const esicContribution = await ESICContribution.findById(req.params.id);
+
+  if (!esicContribution) {
+    return next(new AppError('ESIC contribution not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: esicContribution
+  });
+});
+
+exports.deleteESICContribution = catchAsync(async (req, res, next) => {
+  const esicContribution = await ESICContribution.findByIdAndDelete(req.params.id);
+
+  if (!esicContribution) {
+    return next(new AppError('ESIC contribution not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});

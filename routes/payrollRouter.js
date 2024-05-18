@@ -1194,4 +1194,303 @@ router.put('/pt-deduction-months/:id', authController.protect, payrollController
  */
 router.delete('/pt-deduction-months/:id', authController.protect, payrollController.deletePTDeductionMonth);
 
+/**
+ * @swagger
+ * /api/v1/payroll/esic-ceilingAmounts:
+ *   post:
+ *     summary: Add a CeilingAmount
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: CeilingAmount details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               defaultValue:
+ *                 type: number
+ *                 required: true
+ *               maxAmount:
+ *                 type: number
+ *                 required: true
+ *               company:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: CeilingAmount successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/esic-ceilingAmounts', authController.protect, payrollController.createCeilingAmount);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esic-ceilingAmounts-by-company:
+ *   get:
+ *     summary: Get all CeilingAmounts by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with CeilingAmounts
+ *       404:
+ *         description: CeilingAmounts not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/esic-ceilingAmounts-by-company', authController.protect, payrollController.getCeilingAmountsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esic-ceilingAmounts/{id}:
+ *   put:
+ *     summary: Update a CeilingAmount
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the CeilingAmount
+ *     requestBody:
+ *       description: New CeilingAmount details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               defaultValue:
+ *                 type: number
+ *               maxAmount:
+ *                 type: number
+ *               company:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated CeilingAmount
+ *       404:
+ *         description: CeilingAmount not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/esic-ceilingAmounts/:id', authController.protect, payrollController.updateCeilingAmount);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esic-ceilingAmounts/{id}:
+ *   get:
+ *     summary: Get a CeilingAmount by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the CeilingAmount
+ *     responses:
+ *       200:
+ *         description: Successful response with the CeilingAmount
+ *       404:
+ *         description: CeilingAmount not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/esic-ceilingAmounts/:id', authController.protect, payrollController.getCeilingAmountById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esic-ceilingAmounts/{id}:
+ *   delete:
+ *     summary: Delete a CeilingAmount
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the CeilingAmount
+ *     responses:
+ *       204:
+ *         description: CeilingAmount successfully deleted
+ *       404:
+ *         description: CeilingAmount not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/esic-ceilingAmounts/:id', authController.protect, payrollController.deleteCeilingAmount);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esicContributions:
+ *   post:
+ *     summary: Add a new ESIC contribution
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: ESIC contribution details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fromAmount:
+ *                 type: number
+ *                 required: true
+ *               toAmount:
+ *                 type: number
+ *                 required: true
+ *               employeePercentage:
+ *                 type: number
+ *                 required: true
+ *               employerPercentage:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: ESIC contribution successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/esicContributions',authController.protect, payrollController.addESICContribution);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esicContributions-by-company:
+ *   get:
+ *     summary: Get all ESIC contributions by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with ESIC contributions
+ *       404:
+ *         description: ESIC contributions not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/esicContributions-by-company',authController.protect, payrollController.getAllESICContributionsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esicContributions/{id}:
+ *   put:
+ *     summary: Update an ESIC contribution by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ESIC contribution
+ *     requestBody:
+ *       description: New ESIC contribution details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fromAmount:
+ *                 type: number
+ *               toAmount:
+ *                 type: number
+ *               employeePercentage:
+ *                 type: number
+ *               employerPercentage:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated ESIC contribution
+ *       404:
+ *         description: ESIC contribution not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/esicContributions/:id',authController.protect, payrollController.updateESICContribution);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esicContributions/{id}:
+ *   get:
+ *     summary: Get an ESIC contribution by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ESIC contribution
+ *     responses:
+ *       200:
+ *         description: Successful response with the ESIC contribution
+ *       404:
+ *         description: ESIC contribution not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/esicContributions/:id', authController.protect,payrollController.getESICContributionById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/esicContributions/{id}:
+ *   delete:
+ *     summary: Delete an ESIC contribution by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ESIC contribution
+ *     responses:
+ *       204:
+ *         description: ESIC contribution successfully deleted
+ *       404:
+ *         description: ESIC contribution not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/esicContributions/:id',authController.protect, payrollController.deleteESICContribution);
+
 module.exports = router;

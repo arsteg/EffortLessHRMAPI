@@ -3293,7 +3293,6 @@ attendanceRouter.get('/time-entries', authController.protect, attendanceControll
  */
 attendanceRouter.delete('/time-entries/:id', authController.protect, attendanceController.deleteTimeEntry);
 
-
 /**
  * @swagger
  * /api/v1/attendance/timelog-mapped-attandance:
