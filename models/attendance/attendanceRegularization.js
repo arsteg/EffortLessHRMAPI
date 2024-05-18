@@ -44,8 +44,10 @@ var attendanceRegularizationSchema = new Schema({
   attendanceTemplate: {
     type: mongoose.Schema.ObjectId,
     ref: 'AttendanceTemplate',
+    unique: true, 
     required: true
   },
+  // Ensure unique entries for attendanceTemplate
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

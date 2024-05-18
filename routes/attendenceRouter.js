@@ -890,7 +890,7 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
 //Attdance Template Regulrization
 /**
  * @swagger
- * /api/v1/attendance/regularizations:
+ * /api/v1/attendance/regularization:
  *   post:
  *     summary: Add a new Attendance Regularization
  *     tags: [Attendance Management]
@@ -963,11 +963,11 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/regularizations',authController.protect, attendanceController.addAttendanceRegularization);
+attendanceRouter.post('/regularization',authController.protect, attendanceController.addAttendanceRegularization);
 
 /**
  * @swagger
- * /api/v1/attendance/regularizations/{id}:
+ * /api/v1/attendance/regularization/{id}:
  *   get:
  *     summary: Get an Attendance Regularization by ID
  *     tags: [Attendance Management]
@@ -989,11 +989,37 @@ attendanceRouter.post('/regularizations',authController.protect, attendanceContr
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularizations/:id',authController.protect, attendanceController.getAttendanceRegularization);
+attendanceRouter.get('/regularization/:id',authController.protect, attendanceController.getAttendanceRegularization);
 
 /**
  * @swagger
- * /api/v1/attendance/regularizations/{id}:
+ * /api/v1/attendance/regularization-by-template/{templateId}:
+ *   get:
+ *     summary: Get an Attendance Template by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: templateId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Attendance Template
+ *     responses:
+ *       200:
+ *         description: Successful response with the Attendance Template
+ *       404:
+ *         description: Attendance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/regularization-by-template/:templateId',authController.protect, attendanceController.getAttendanceRegularizationByTemplate);
+
+/**
+ * @swagger
+ * /api/v1/attendance/regularization/{id}:
  *   put:
  *     summary: Update an Attendance Regularization by ID
  *     tags: [Attendance Management]
@@ -1073,11 +1099,11 @@ attendanceRouter.get('/regularizations/:id',authController.protect, attendanceCo
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/regularizations/:id',authController.protect, attendanceController.updateAttendanceRegularization);
+attendanceRouter.put('/regularization/:id',authController.protect, attendanceController.updateAttendanceRegularization);
 
 /**
  * @swagger
- * /api/v1/attendance/regularizations-by-company:
+ * /api/v1/attendance/regularization-by-company:
  *   get:
  *     summary: Get all Attendance Regularizations by Company ID
  *     tags: [Attendance Management]
@@ -1090,11 +1116,11 @@ attendanceRouter.put('/regularizations/:id',authController.protect, attendanceCo
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularizations-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
+attendanceRouter.get('/regularization-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
 
 /**
  * @swagger
- * /api/v1/attendance/regularizations/{id}:
+ * /api/v1/attendance/regularization/{id}:
  *   delete:
  *     summary: Delete an Attendance Regularization by ID
  *     tags: [Attendance Management]
@@ -1116,7 +1142,7 @@ attendanceRouter.get('/regularizations-by-company',authController.protect, atten
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/regularizations/:id',authController.protect, attendanceController.deleteAttendanceRegularization);
+attendanceRouter.delete('/regularization/:id',authController.protect, attendanceController.deleteAttendanceRegularization);
 
 // Swagger annotations
 /**

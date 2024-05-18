@@ -607,6 +607,39 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next) => {
+  const attendanceRegularization = await AttendanceRegularization.findOne({
+    attendanceTemplate: req.params.templateId,
+    company: req.cookies.companyId,
+  });
+  if (!attendanceRegularization) {
+    return next(new AppError("Attendance Regularization not found", 404));
+  }
+  if(attendanceRegularization) 
+  {  
+      const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+      if(attendanceRegularizationRestrictedIP) 
+        {
+          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+        }
+        else{
+          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
+        }
+        const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
+      if(attendanceRegularizationRestrictedLocation) 
+        {
+          attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+        }
+        else{
+          attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
+        }
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: attendanceRegularization
+  });
+});
 exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   // Check if the attendanceTemplate exists
   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
