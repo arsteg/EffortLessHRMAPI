@@ -10,6 +10,7 @@ const PTSlab = require("../models/Payroll/ptSlabModel");
 const PTDeductionMonth = require('../models/Payroll/ptDeductionMonthModel');
 const ESICCeilingAmount = require('../models/Payroll/esicCeilingAmountModel');
 const ESICContribution = require('../models/Payroll/esicContributionModel');
+const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 
 
 exports.createGeneralSetting = async (req, res, next) => {
@@ -851,6 +852,73 @@ exports.deleteESICContribution = catchAsync(async (req, res, next) => {
     return next(new AppError('ESIC contribution not found', 404));
   }
 
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+// Create a new VariableAllowance
+exports.createVariableAllowance = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const variableAllowance = await VariableAllowance.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: variableAllowance
+  });
+});
+
+// Get all VariableAllowances by company
+exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) => {  
+  const variableAllowances = await VariableAllowance.where('company').equals(req.cookies.companyId);
+  res.status(200).json({
+    status: 'success',
+    data: variableAllowances
+  });
+});
+
+// Get a VariableAllowance by ID
+exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
+  const variableAllowance = await VariableAllowance.findById(req.params.id);
+  if (!variableAllowance) {
+    return next(new AppError('Variable allowance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: variableAllowance
+  });
+});
+
+// Update a VariableAllowance by ID
+exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
+  const variableAllowance = await VariableAllowance.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!variableAllowance) {
+    return next(new AppError('Variable allowance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: variableAllowance
+  });
+});
+
+// Delete a VariableAllowance by ID
+exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
+  const variableAllowance = await VariableAllowance.findByIdAndDelete(req.params.id);
+  if (!variableAllowance) {
+    return next(new AppError('Variable allowance not found', 404));
+  }
   res.status(204).json({
     status: 'success',
     data: null

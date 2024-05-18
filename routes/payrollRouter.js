@@ -1493,4 +1493,236 @@ router.get('/esicContributions/:id', authController.protect,payrollController.ge
  */
 router.delete('/esicContributions/:id',authController.protect, payrollController.deleteESICContribution);
 
+/**
+ * @swagger
+ * /api/v1/payroll/variableAllowances:
+ *   post:
+ *     summary: Create a new variable allowance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Variable allowance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               allowanceRatePerDay:
+ *                 type: number
+ *                 required: true
+ *               isPayrollEditable:
+ *                 type: boolean
+ *                 required: true
+ *               isProvidentFundAffected:
+ *                 type: boolean
+ *                 required: true
+ *               isESICAffected:
+ *                 type: boolean
+ *                 required: true
+ *               isLWFAffected:
+ *                 type: boolean
+ *                 required: true
+ *               isIncomeTaxAffected:
+ *                 type: boolean
+ *                 required: true
+ *               deductIncomeTaxAllowance:
+ *                 type: string
+ *                 required: true
+ *               taxRegime:
+ *                 type: string
+ *                 required: true
+ *               isShowInCTCStructure:
+ *                 type: boolean
+ *                 required: true
+ *               paidAllowanceFrequently:
+ *                 type: string
+ *                 required: true
+ *               allowanceEffectiveFromMonth:
+ *                 type: string
+ *                 required: true
+ *               allowanceEffectiveFromYear:
+ *                 type: string
+ *                 required: true
+ *               isEndingPeriod:
+ *                 type: boolean
+ *                 required: true
+ *               allowanceStopMonth:
+ *                 type: string
+ *               allowanceStopYear:
+ *                 type: string
+ *               amountEnterForThisVariableAllowance:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               percentage:
+ *                 type: number
+ *               isAttandanceToAffectEligibility:
+ *                 type: boolean
+ *                 required: true
+ *               company:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Variable allowance successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/variableAllowances', authController.protect, payrollController.createVariableAllowance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableAllowances-by-company:
+ *   get:
+ *     summary: Get all variable allowances by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with variable allowances
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/variableAllowances-by-company', authController.protect, payrollController.getAllVariableAllowancesByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableAllowances/{id}:
+ *   get:
+ *     summary: Get a variable allowance by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable allowance
+ *     responses:
+ *       200:
+ *         description: Successful response with the variable allowance
+ *       404:
+ *         description: Variable allowance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/variableAllowances/:id', authController.protect, payrollController.getVariableAllowanceById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableAllowances/{id}:
+ *   put:
+ *     summary: Update a variable allowance by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable allowance
+ *     requestBody:
+ *       description: Updated variable allowance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               allowanceRatePerDay:
+ *                 type: number
+ *               isPayrollEditable:
+ *                 type: boolean
+ *               isProvidentFundAffected:
+ *                 type: boolean
+ *               isESICAffected:
+ *                 type: boolean
+ *               isLWFAffected:
+ *                 type: boolean
+ *               isIncomeTaxAffected:
+ *                 type: boolean
+ *               deductIncomeTaxAllowance:
+ *                 type: string
+ *               taxRegime:
+ *                 type: string
+ *               isShowInCTCStructure:
+ *                 type: boolean
+ *               paidAllowanceFrequently:
+ *                 type: string
+ *               allowanceEffectiveFromMonth:
+ *                 type: string
+ *               allowanceEffectiveFromYear:
+ *                 type: string
+ *               isEndingPeriod:
+ *                 type: boolean
+ *               allowanceStopMonth:
+ *                 type: string
+ *               allowanceStopYear:
+ *                 type: string
+ *               amountEnterForThisVariableAllowance:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               percentage:
+ *                 type: number
+ *               isAttandanceToAffectEligibility:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Variable allowance successfully updated
+ *       404:
+ *         description: Variable allowance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/variableAllowances/:id', authController.protect, payrollController.updateVariableAllowance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableAllowances/{id}:
+ *   delete:
+ *     summary: Delete a variable allowance by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable allowance
+ *     responses:
+ *       204:
+ *         description: Variable allowance successfully deleted
+ *       404:
+ *         description: Variable allowance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/variableAllowances/:id', authController.protect, payrollController.deleteVariableAllowance);
+
 module.exports = router;
