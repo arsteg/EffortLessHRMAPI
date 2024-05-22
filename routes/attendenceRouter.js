@@ -2285,6 +2285,18 @@ attendanceRouter.get('/user-on-duty-templates', authController.protect, attendan
  *               isCheckoutTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the checkout time extends to the next day.
+ *               isHalfDayApplicable:
+ *                 type: boolean
+ *                 description: Indicates if the Half Day Applicable or not.
+ *               minHoursToGetCreditforHalafDay:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a Half day (Hours part).
+ *               minMinutesToGetCreditforHalafDay:
+ *                 type: number
+ *                 description: Minimum Minutes per day required to get credit for a Half day (minutes part).
+ *               maxLateComingAllowedMinutesFirstHalfAttendance:
+ *                 type: number
+ *                 description: max Late Coming Allowed Minutes First Half Attendance.
  *               isLatestDepartureTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the latest departure time extends to the next day.
@@ -2427,6 +2439,18 @@ attendanceRouter.get('/shifts/:id', authController.protect, attendanceController
  *               isCheckoutTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the checkout time extends to the next day.
+ *               isHalfDayApplicable:
+ *                 type: boolean
+ *                 description: Indicates if the Half Day Applicable or not.
+ *               minHoursToGetCreditforHalafDay:
+ *                 type: number
+ *                 description: Minimum hours per day required to get credit for a Half day (Hours part).
+ *               minMinutesToGetCreditforHalafDay:
+ *                 type: number
+ *                 description: Minimum Minutes per day required to get credit for a Half day (minutes part).
+ *               maxLateComingAllowedMinutesFirstHalfAttendance:
+ *                 type: number
+ *                 description: max Late Coming Allowed Minutes First Half Attendance.
  *               isLatestDepartureTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the latest departure time extends to the next day.

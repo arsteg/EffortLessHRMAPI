@@ -35,6 +35,18 @@ var shiftSchema = new Schema({
   minhoursPerDayToGetCreditForFullDayMinutes: {
     type: Number
   },
+  isHalfDayApplicable: {
+    type: Boolean
+  },
+  minHoursToGetCreditforHalafDay: {
+    type: Boolean
+  },
+  minMinutesToGetCreditforHalafDay: {
+    type: Number
+  },
+  maxLateComingAllowedMinutesFirstHalfAttendance: {
+    type: Number
+  },
   isCheckoutTimeNextDay: {
     type: Boolean
   },
