@@ -2443,9 +2443,6 @@ attendanceRouter.get('/shifts/:id', authController.protect, attendanceController
  *               secondHalfDuration:
  *                 type: string
  *                 description: Duration of the second half of the shift.
- *               company:
- *                 type: string
- *                 description: Reference to the company associated with the shift.
  *               isLateComingAllowed:
  *                 type: boolean
  *                 description: Indicates if late coming is allowed for the shift.

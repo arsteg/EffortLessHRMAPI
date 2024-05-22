@@ -15,61 +15,43 @@ var shiftSchema = new Schema({
     default: false
   },
   shiftType: {
-    type: String,
-    required: true
+    type: String
   },
   startTimeHour: {
-    type: String,
-    required: true
+    type: String
   },
   startTimeMinutes: {
-    type: String,
-    required: true
+    type: String
   },
   endTimeHour: {
-    type: String,
-    required: true
+    type: String
   },
   endTimeMinutes: {
-    type: String,
-    required: true
+    type: String
   },
   minhoursPerDayToGetCreditForFullDayHour: {
-    type: Number,
-    required: true
+    type: Number
   },
   minhoursPerDayToGetCreditForFullDayMinutes: {
-    type: Number,
-    required: true
+    type: Number
   },
   isCheckoutTimeNextDay: {
-    type: Boolean,
-    default: false
+    type: Boolean
   },
   isLatestDepartureTimeNextDay: {
-    type: Boolean,
-    default: false
+    type: Boolean
   },
   earliestArrival: {
-    type: String,
-    required: true
+    type: String
   },
   latestDeparture: {
-    type: Date,
-    required: true
+    type: Date
   },
   firstHalfDuration: {
-    type: String,
-    required: true
+    type: String
   },
   secondHalfDuration: {
-    type: String,
-    required: true
-  },
-  company: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Company',
-    required: true
+    type: String
   },
   isLateComingAllowed: {
     type: Boolean,
