@@ -80,44 +80,6 @@ router.post('/getactivity', authController.protect, reportController.getActivity
  */
 router.post('/getproductivitybymember', authController.protect, reportController.getProductivityByMember);
 
-/**
- * @swagger
- * /api/v1/report/getAppWebsiteByMember:
- *  post:
- *      tags:
- *          - Report Management
- *      summary: "Get Activity"   
- *      security: [{
- *         bearerAuth: []
- *     }]    
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                         user:
- *                              type: string                             
- *                         fromdate:
- *                              type: string
- *                              format: date
- *                         todate:
- *                              type: string
- *                              format: date
- *     
- *      produces:
- *          - application/json
- *      responses:
- *          200:
- *              description: "Success"
- *              content:
- *                  application/json:
- *                      schema:
- *                          type: object
- *
- */
-router.post('/getAppWebsiteByMember', authController.protect, reportController.getAppWebsiteByMember);
-
  /**
  * @swagger
  * /api/v1/report/getproductivity:
