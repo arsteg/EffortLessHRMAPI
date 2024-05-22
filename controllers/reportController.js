@@ -315,14 +315,15 @@ for(var u = 0; u < appwebsiteusers.length; u++)
               keyboardStrokes=keyboardStrokes+appWebsites[i].keyboardStrokes;
               scrollingNumber=scrollingNumber+appWebsites[i].scrollingNumber;  
               inactive=inactive + appWebsites[i].inactive;                 
+              totalTimeSpent += appWebsites[i].TimeSpent;
            }
-      totalTimeSpent = appWebsites.length*10*60;        
+      //totalTimeSpent = appWebsites.length*10*60;        
       appWebsiteSummary.firstName = appWebsites[0].userReference.firstName;  
       appWebsiteSummary.lastName = appWebsites[0].userReference.lastName;
       appWebsiteSummary.mouseClicks = mouseClicks;
       appWebsiteSummary.keyboardStrokes = keyboardStrokes;
       appWebsiteSummary.scrollingNumber = scrollingNumber;                 
-      appWebsiteSummary.TimeSpent = totalTimeSpent; 
+      appWebsiteSummary.TimeSpent = totalTimeSpent - inactive; 
       appWebsiteSummary.inactive = inactive; 
       appWebsiteSummary.date=appWebsites[0].date;
        
@@ -378,7 +379,7 @@ for(var u = 0; u < appwebsiteusers.length; u++)
        }
            
      appWebsiteSummary.appwebsiteDetails=appwebsiteDetails;
-     appWebsiteSummary.total = appWebsiteSummary.TimeSpent+appWebsiteSummary.inactive;   
+     appWebsiteSummary.total = totalTimeSpent; //appWebsiteSummary.TimeSpent;
      appWebsiteSummary.timeSpentProductive=timeSpentProductive;
      appWebsiteSummary.timeSpentNonProductive=timeSpentNonProductive;     
      appwebsiteproductivity.push(appWebsiteSummary);
