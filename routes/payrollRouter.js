@@ -1921,13 +1921,10 @@ router.delete('/fixedDeductions/:id', authController.protect, payrollController.
  *                 required: true
  *               deductionStopMonth:
  *                 type: string
- *                 required: true
  *               deductionStopYear:
  *                 type: string
- *                 required: true
  *               amountEnterForThisVariableDeduction:
  *                 type: string
- *                 required: true
  *               amount:
  *                 type: number
  *                 required: true

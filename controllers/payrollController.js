@@ -729,7 +729,8 @@ exports.createCeilingAmount = catchAsync(async (req, res, next) => {
     return next(new AppError('Company ID not found in cookies', 400));
   }
   req.body.company = company;
-
+  req.body.period = "Monthly";
+  req.body.roundType = "Round Up";
   const ceilingAmount = await ESICCeilingAmount.create(req.body);
   res.status(201).json({
     status: 'success',

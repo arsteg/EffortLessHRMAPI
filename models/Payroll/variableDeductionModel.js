@@ -27,12 +27,10 @@ var variableDeductionSchema = new Schema({
     required: true
   },
   deductionStopMonth: {
-    type: String,
-    required: true
+    type: String
   },
   deductionStopYear: {
-    type: String,
-    required: true
+    type: String
   },
   amountEnterForThisVariableDeduction: {
     type: String,
