@@ -973,6 +973,8 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
               expenseApplicationField: field.expenseApplicationField,
               type: field.type,
               value: field.value,
+              fromDate:field.fromDate,
+              toDate:field.toDate
             }))
           );
         }
@@ -1203,6 +1205,8 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
       expenseApplicationField: field.expenseApplicationField,
       type: field.type,
       value: field.value,
+      fromDate:field.fromDate,
+      toDate:field.toDate
     }));
 
     await ExpenseReportExpenseFields.insertMany(expenseReportExpenseFields);
@@ -1287,6 +1291,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
             expenseApplicationField: field.expenseApplicationField,
             type: field.type,
             value: field.value,
+            fromDate:field.fromDate,
+            toDate:field.toDate
           });
         } else {
           // If ID is not present, create new ExpenseReportExpenseFields
@@ -1295,6 +1301,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
             expenseApplicationField: field.expenseApplicationField,
             type: field.type,
             value: field.value,
+            fromDate:field.fromDate,
+            toDate:field.toDate
           });
         }
       })

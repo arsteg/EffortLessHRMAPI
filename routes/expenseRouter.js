@@ -986,6 +986,12 @@ router.get('/employee-expense-assignments', authController.protect, expenseContr
  *                             type: string
  *                             description: Field value
  *                             required: true
+ *                           fromDate:
+ *                             type: string
+ *                             description: From Date value
+ *                           toDate:
+ *                             type: string
+ *                             description: To Date value
  *                       description: Array of field values
  *                 required: true
  *                 description: Array of field objects
@@ -1234,6 +1240,12 @@ router.get('/expense-reports', authController.protect, expenseController.getAllE
  *                         type: string
  *                         description: Field value
  *                         required: true
+ *                       fromDate:
+ *                         type: string
+ *                         description: From Date value
+ *                       toDate:
+ *                         type: string
+ *                         description: To Date value
  *                  description: Array of field values
  *     responses:
  *       201:
@@ -1349,6 +1361,12 @@ router.get('/expenseReportExpenses/:id', authController.protect, expenseControll
  *                         type: string
  *                         description: Field value
  *                         required: true
+ *                       fromDate:
+ *                         type: string
+ *                         description: From Date value
+ *                       toDate:
+ *                         type: string
+ *                         description: To Date value
  *                  description: Array of field values
  *     responses:
  *       200:
