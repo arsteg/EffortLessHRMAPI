@@ -906,13 +906,13 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *             type: object
  *             properties:
  *               canEmpRegularizeOwnAttendance:
- *                 type: string
+ *                 type: boolean
  *               canSupervisorsRegularizeSubordinatesAttendance:
- *                 type: string
+ *                 type: boolean
  *               canAdminEditRegularizeAttendance:
- *                 type: string
+ *                 type: boolean
  *               isIPrestrictedEmployeeCheckInCheckOut:
- *                 type: string
+ *                 type: boolean
  *               IPDetails:
  *                 type: array
  *                 items:
@@ -929,7 +929,7 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *                 items:
  *                   type: string
  *               isRestrictLocationForCheckInCheckOutUsingMobile:
- *                 type: string
+ *                 type: boolean
  *               restrictLocationDetails:
  *                 type: array
  *                 items:
@@ -946,13 +946,13 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
- *                 type: string
+ *                 type: boolean
  *               geoLocationAPIProvider:
  *                 type: string
  *               googleAPIKey:
  *                 type: string
  *               isFacialFingerprintRecognitionFromMobile:
- *                 type: string
+ *                 type: boolean
  *               attendanceTemplate:
  *                 type: string
  *     responses:
@@ -1042,13 +1042,13 @@ attendanceRouter.get('/regularization-by-template/:templateId',authController.pr
  *             type: object
  *             properties:
  *               canEmpRegularizeOwnAttendance:
- *                 type: string
+ *                 type: boolean
  *               canSupervisorsRegularizeSubordinatesAttendance:
- *                 type: string
+ *                 type: boolean
  *               canAdminEditRegularizeAttendance:
- *                 type: string 
+ *                 type: boolean 
  *               isIPrestrictedEmployeeCheckInCheckOut:
- *                 type: string
+ *                 type: boolean
  *               IPDetails:
  *                 type: array
  *                 items:
@@ -1065,7 +1065,7 @@ attendanceRouter.get('/regularization-by-template/:templateId',authController.pr
  *                 items:
  *                   type: string
  *               isRestrictLocationForCheckInCheckOutUsingMobile:
- *                 type: string
+ *                 type: boolean
  *               restrictLocationDetails:
  *                 type: array
  *                 items:
@@ -1082,13 +1082,13 @@ attendanceRouter.get('/regularization-by-template/:templateId',authController.pr
  *               howAssignLocationsForEachEmployee:
  *                 type: string
  *               enableLocationCaptureFromMobile:
- *                 type: string
+ *                 type: boolean
  *               geoLocationAPIProvider:
  *                 type: string
  *               googleAPIKey:
  *                 type: string
  *               isFacialFingerprintRecognitionFromMobile:
- *                 type: string
+ *                 type: boolean
  *               attendanceTemplate:
  *                 type: string
  *     responses:
@@ -2748,7 +2748,7 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
  *                 type: string
  *                 required: true
  *               isHalfDayRegularization:
- *                 type: string
+ *                 type: boolean
  *               halfDayType:
  *                 type: string
  *               comment:
@@ -2850,7 +2850,7 @@ attendanceRouter.get('/regularizationRequests/:id',authController.protect,attend
  *                 type: string
  *                 required: true
  *               isHalfDayRegularization:
- *                 type: string
+ *                 type: boolean
  *               halfDayType:
  *                 type: string
  *               comment:

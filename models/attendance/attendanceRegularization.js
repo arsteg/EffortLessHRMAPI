@@ -3,15 +3,15 @@ var Schema = mongoose.Schema;
 
 var attendanceRegularizationSchema = new Schema({
   canEmpRegularizeOwnAttendance: {
-    type: String,
+    type: Boolean,
     required: true
   },
   canSupervisorsRegularizeSubordinatesAttendance: {
-    type: String,
+    type: Boolean,
     required: true
   },
   canAdminEditRegularizeAttendance: {
-    type: String,
+    type: Boolean,
     required: true
   },
   shouldWeeklyEmailNotificationToBeSent: {
@@ -21,15 +21,19 @@ var attendanceRegularizationSchema = new Schema({
   whoReceiveWeeklyEmailNotification: [{
     type: String
   }],
+  isIPrestrictedEmployeeCheckInCheckOut: {
+    type: Boolean,
+    required: true
+  },
   isRestrictLocationForCheckInCheckOutUsingMobile: {
-    type: String,
+    type: Boolean,
     required: true
   },
   howAssignLocationsForEachEmployee: {
     type: String,
   },
   enableLocationCaptureFromMobile: {
-    type: String
+    type: Boolean
   },
   geoLocationAPIProvider: {
     type: String
@@ -38,7 +42,7 @@ var attendanceRegularizationSchema = new Schema({
     type: String
   },
   isFacialFingerprintRecognitionFromMobile: {
-    type: String,
+    type: Boolean,
     required: true
   },
   attendanceTemplate: {
