@@ -1676,37 +1676,31 @@ attendanceRouter.get('/rounding-information', authController.protect, attendance
  *               Name:
  *                 type: string
  *                 required: true
- *               OvertimeInformation:
+ *               RoundingInformation:
  *                 type: string
  *                 required: true
  *               BaseType:
  *                 type: string
  *               AttandanceShift:
  *                 type: string
+ *                 required: true
  *               FromTimeHour:
  *                 type: string
- *                 required: true
  *               FromTimeMinutes:
  *                 type: string
- *                 required: true
  *               FromTimeTT:
  *                 type: string
- *                 required: true
  *               ToTimeHour:
  *                 type: string
- *                 required: true
  *               ToTimeMinutes:
  *                 type: string
- *                 required: true
  *               ToTimeTT:
  *                 type: string
- *                 required: true
  *               CutomMultiplier:
  *                 type: number
  *                 required: true
  *               CalculationType:
  *                 type: string
- *                 required: true
  *     responses:
  *       201:
  *         description: Overtime Information successfully created
@@ -1770,37 +1764,31 @@ attendanceRouter.get('/overtime-information/:id', authController.protect, attend
  *               Name:
  *                 type: string
  *                 required: true
- *               OvertimeInformation:
+ *               RoundingInformation:
  *                 type: string
  *                 required: true
  *               BaseType:
  *                 type: string
  *               AttandanceShift:
  *                 type: string
+ *                 required: true
  *               FromTimeHour:
  *                 type: string
- *                 required: true
  *               FromTimeMinutes:
  *                 type: string
- *                 required: true
  *               FromTimeTT:
  *                 type: string
- *                 required: true
  *               ToTimeHour:
  *                 type: string
- *                 required: true
  *               ToTimeMinutes:
  *                 type: string
- *                 required: true
  *               ToTimeTT:
  *                 type: string
- *                 required: true
  *               CutomMultiplier:
  *                 type: number
  *                 required: true
  *               CalculationType:
  *                 type: string
- *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated Overtime Information

@@ -12,6 +12,8 @@ const ESICCeilingAmount = require('../models/Payroll/esicCeilingAmountModel');
 const ESICContribution = require('../models/Payroll/esicContributionModel');
 const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 const VariableAllowanceApplicableEmployee= require('../models/Payroll/variableAllowanceApplicableEmployeeModel');
+const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
+const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -971,3 +973,154 @@ exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+
+// Create Fixed Deduction
+exports.createFixedDeduction = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+
+    const fixedDeduction = await FixedDeduction.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: fixedDeduction
+    });
+});
+
+// Get all Fixed Deductions by company
+exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
+    const { companyId } = req.cookies.companyId;
+    if (!mongoose.Types.ObjectId.isValid(companyId)) {
+        return next(new AppError('Invalid company ID', 400));
+    }
+
+    const fixedDeductions = await FixedDeduction.find({ company: companyId });
+    res.status(200).json({
+        status: 'success',
+        data: fixedDeductions
+    });
+});
+
+// Get Fixed Deduction by ID
+exports.getFixedDeductionById = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const fixedDeduction = await FixedDeduction.findById(id);
+
+    if (!fixedDeduction) {
+        return next(new AppError('Fixed Deduction not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: fixedDeduction
+    });
+});
+
+// Update Fixed Deduction
+exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const fixedDeduction = await FixedDeduction.findByIdAndUpdate(id, req.body, {
+        new: true,
+        runValidators: true
+    });
+
+    if (!fixedDeduction) {
+        return next(new AppError('Fixed Deduction not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: fixedDeduction
+    });
+});
+
+// Delete Fixed Deduction
+exports.deleteFixedDeduction = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const fixedDeduction = await FixedDeduction.findByIdAndDelete(id);
+
+    if (!fixedDeduction) {
+        return next(new AppError('Fixed Deduction not found', 404));
+    }
+
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
+
+
+exports.createVariableDeduction = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+
+  const variableDeduction = await VariableDeduction.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: variableDeduction
+  });
+});
+
+exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
+  const { companyId } = req.cookies.companyId;
+  if (!mongoose.Types.ObjectId.isValid(companyId)) {
+      return next(new AppError('Invalid company ID', 400));
+  }
+
+  const variableDeductions = await VariableDeduction.find({ company: companyId });
+  res.status(200).json({
+    status: 'success',
+    data: variableDeductions
+  });
+});
+
+exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
+  const variableDeduction = await VariableDeduction.findById(req.params.id);
+  if (!variableDeduction) {
+    return next(new AppError('Variable deduction not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: variableDeduction
+  });
+});
+
+exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
+  const variableDeduction = await VariableDeduction.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!variableDeduction) {
+    return next(new AppError('Variable deduction not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: variableDeduction
+  });
+});
+
+exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
+  const variableDeduction = await VariableDeduction.findByIdAndDelete(req.params.id);
+  if (!variableDeduction) {
+    return next(new AppError('Variable deduction not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+

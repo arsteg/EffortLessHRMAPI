@@ -1721,7 +1721,9 @@ router.put('/variableAllowances/:id', authController.protect, payrollController.
  *   delete:
  *     summary: Delete a variable allowance by ID
  *     tags: [Payroll Management]
-
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
  *     parameters:
  *       - in: path
  *         name: id
@@ -1738,5 +1740,338 @@ router.put('/variableAllowances/:id', authController.protect, payrollController.
  *         description: Internal server error
  */
 router.delete('/variableAllowances/:id', authController.protect, payrollController.deleteVariableAllowance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixedDeductions:
+ *   post:
+ *     summary: Create a new Fixed Deduction
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Fixed Deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               isEffectAttendanceOnEligibility:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Fixed Deduction successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/fixedDeductions', authController.protect, payrollController.createFixedDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixedDeductions-by-company:
+ *   get:
+ *     summary: Get all Fixed Deductions by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the Fixed Deductions
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixedDeductions-by-company', authController.protect, payrollController.getAllFixedDeductionsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixedDeductions/{id}:
+ *   get:
+ *     summary: Get a Fixed Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Deduction
+ *     responses:
+ *       200:
+ *         description: Successful response with the Fixed Deduction
+ *       404:
+ *         description: Fixed Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fixedDeductions/:id', authController.protect, payrollController.getFixedDeductionById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixedDeductions/{id}:
+ *   put:
+ *     summary: Update a Fixed Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Deduction
+ *     requestBody:
+ *       description: New Fixed Deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               isEffectAttendanceOnEligibility:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Fixed Deduction
+ *       404:
+ *         description: Fixed Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/fixedDeductions/:id', authController.protect, payrollController.updateFixedDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/fixedDeductions/{id}:
+ *   delete:
+ *     summary: Delete a Fixed Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Fixed Deduction
+ *     responses:
+ *       204:
+ *         description: Fixed Deduction successfully deleted
+ *       404:
+ *         description: Fixed Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/fixedDeductions/:id', authController.protect, payrollController.deleteFixedDeduction);
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableDeductions:
+ *   post:
+ *     summary: Add a new Variable Deduction
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Variable Deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               isShowINCTCStructure:
+ *                 type: boolean
+ *                 required: true
+ *               paidDeductionFrequently:
+ *                 type: boolean
+ *                 required: true
+ *               deductionEffectiveFromMonth:
+ *                 type: string
+ *                 required: true
+ *               deductionEffectiveFromYear:
+ *                 type: string
+ *                 required: true
+ *               isEndingPeriod:
+ *                 type: boolean
+ *                 required: true
+ *               deductionStopMonth:
+ *                 type: string
+ *                 required: true
+ *               deductionStopYear:
+ *                 type: string
+ *                 required: true
+ *               amountEnterForThisVariableDeduction:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               percentage:
+ *                 type: number
+ *                 required: true
+ *               isAttendanceToAffectEligibility:
+ *                 type: boolean
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Variable deduction successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/variableDeductions', payrollController.createVariableDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableDeductions:
+ *   get:
+ *     summary: Get all Variable Deductions
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with variable deductions
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/variableDeductions', payrollController.getAllVariableDeductions);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableDeductions/{id}:
+ *   get:
+ *     summary: Get a Variable Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable deduction
+ *     responses:
+ *       200:
+ *         description: Successful response with the variable deduction
+ *       404:
+ *         description: Variable deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/variableDeductions/:id', payrollController.getVariableDeductionById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableDeductions/{id}:
+ *   put:
+ *     summary: Update a Variable Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable deduction
+ *     requestBody:
+ *       description: Updated variable deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               isShowINCTCStructure:
+ *                 type: boolean
+ *               paidDeductionFrequently:
+ *                 type: boolean
+ *               deductionEffectiveFromMonth:
+ *                 type: string
+ *               deductionEffectiveFromYear:
+ *                 type: string
+ *               isEndingPeriod:
+ *                 type: boolean
+ *               deductionStopMonth:
+ *                 type: string
+ *               deductionStopYear:
+ *                 type: string
+ *               amountEnterForThisVariableDeduction:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               percentage:
+ *                 type: number
+ *               isAttendanceToAffectEligibility:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated variable deduction
+ *       404:
+ *         description: Variable deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/variableDeductions/:id', payrollController.updateVariableDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/variableDeductions/{id}:
+ *   delete:
+ *     summary: Delete a Variable Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the variable deduction
+ *     responses:
+ *       204:
+ *         description: Variable deduction successfully deleted
+ *       404:
+ *         description: Variable deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/variableDeductions/:id', payrollController.deleteVariableDeduction);
 
 module.exports = router;

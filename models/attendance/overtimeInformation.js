@@ -6,8 +6,9 @@ const overtimeInformationSchema = new Schema({
     type: String,
     required: true
   },
-  OvertimeInformation: {
+  RoundingInformation: {
     type: String,
+    ref: 'RoundingInformation',
     required: true
   },
   BaseType: {
@@ -19,36 +20,29 @@ const overtimeInformationSchema = new Schema({
     required: true
   },
   FromTimeHour: {
-    type: String,
-    required: true
+    type: String
   },
   FromTimeMinutes: {
-    type: String,
-    required: true
+    type: String
   },
   FromTimeTT: {
-    type: String,
-    required: true
+    type: String
   },
   ToTimeHour: {
-    type: String,
-    required: true
+    type: String
   },
   ToTimeMinutes: {
-    type: String,
-    required: true
+    type: String
   },
   ToTimeTT: {
-    type: String,
-    required: true
+    type: String
   },
   CutomMultiplier: {
     type: Number,
     required: true
   },
   CalculationType: {
-    type: String,
-    required: true
+    type: String
   },
   company: {
     type: mongoose.Schema.ObjectId,
