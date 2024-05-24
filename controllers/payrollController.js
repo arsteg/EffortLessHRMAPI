@@ -15,6 +15,11 @@ const VariableAllowanceApplicableEmployee= require('../models/Payroll/variableAl
 const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
 const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 const VariableDeductionApplicableEmployee= require('../models/Payroll/variableDeductionApplicableEmployeeModel');
+const OtherBenefits = require('../models/Payroll/otherBenefitsModels');
+const LoanAdvancesCategory = require('../models/Payroll/loanAdvancesCategoryModel');
+
+const AppError = require('../utils/appError.js');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1087,12 +1092,14 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
-  const { companyId } = req.cookies.companyId;
-  if (!mongoose.Types.ObjectId.isValid(companyId)) {
-      return next(new AppError('Invalid company ID', 400));
-  }
+  const company = req.cookies.companyId;
 
-  const variableDeductions = await VariableDeduction.find({ company: companyId });
+    // Check if companyId exists in cookies
+    if (!company) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+
+  const variableDeductions = await VariableDeduction.find({ company: company });
   if(variableDeductions) 
   {
     
@@ -1171,3 +1178,145 @@ exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
   });
 });
 
+// Add OtherBenefits
+exports.createOtherBenefits = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const otherBenefits = await OtherBenefits.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: otherBenefits
+  });
+});
+
+// Get All OtherBenefits by Company
+exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
+  const { companyId } = req.cookies.companyId;
+  const otherBenefits = await OtherBenefits.find({ company: companyId });
+  res.status(200).json({
+    status: 'success',
+    data: otherBenefits
+  });
+});
+
+// Update OtherBenefits
+exports.updateOtherBenefits = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const otherBenefits = await OtherBenefits.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!otherBenefits) {
+    return next(new AppError('OtherBenefits not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: otherBenefits
+  });
+});
+
+// Get OtherBenefits by ID
+exports.getOtherBenefitsById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const otherBenefits = await OtherBenefits.findById(id);
+
+  if (!otherBenefits) {
+    return next(new AppError('OtherBenefits not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: otherBenefits
+  });
+});
+
+// Delete OtherBenefits
+exports.deleteOtherBenefits = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const otherBenefits = await OtherBenefits.findByIdAndDelete(id);
+
+  if (!otherBenefits) {
+    return next(new AppError('OtherBenefits not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
+  const { name } = req.body;
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  const existingCategory = await LoanAdvancesCategory.findOne({ name: name, company: companyId });;
+  console.log(existingCategory);
+  if (existingCategory) {
+    return next(new AppError('Loan Advances Category already exists', 400));
+  } 
+  req.body.company = companyId;
+  const loanAdvancesCategory = await LoanAdvancesCategory.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: loanAdvancesCategory
+  });
+});
+
+exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  const loanAdvancesCategories = await LoanAdvancesCategory.find({ company: companyId });
+  if (!loanAdvancesCategories) {
+    return next(new AppError('No Loan Advances Categories found for the specified company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: loanAdvancesCategories
+  });
+});
+
+exports.getLoanAdvancesCategoryById = catchAsync(async (req, res, next) => {
+  const loanAdvancesCategory = await LoanAdvancesCategory.findById(req.params.id);
+  if (!loanAdvancesCategory) {
+    return next(new AppError('Loan Advances Category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: loanAdvancesCategory
+  });
+});
+
+exports.updateLoanAdvancesCategory = catchAsync(async (req, res, next) => {
+  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!loanAdvancesCategory) {
+    return next(new AppError('Loan Advances Category not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: loanAdvancesCategory
+  });
+});
+
+exports.deleteLoanAdvancesCategory = catchAsync(async (req, res, next) => {
+  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndDelete(req.params.id);
+  if (!loanAdvancesCategory) {
+    return next(new AppError('Loan Advances Category not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});

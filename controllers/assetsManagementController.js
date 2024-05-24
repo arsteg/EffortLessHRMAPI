@@ -7,7 +7,7 @@ const CustomAttribute = require("../models/AssetsManagement/CustomAttributeModel
 const Asset = require("../models/AssetsManagement/assetModel");
 const EmployeeAssets = require("../models/AssetsManagement/employeeAssetsModel");
 const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
+const AppError = require('../utils/appError.js');
 const mongoose = require("mongoose");
 const CustomAttributeModel = require("../models/AssetsManagement/CustomAttributeModel");
 

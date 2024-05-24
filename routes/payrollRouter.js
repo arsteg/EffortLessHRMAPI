@@ -1952,7 +1952,7 @@ router.delete('/fixedDeductions/:id', authController.protect, payrollController.
  *       500:
  *         description: Internal server error
  */
-router.post('/variableDeductions', payrollController.createVariableDeduction);
+router.post('/variableDeductions',authController.protect, payrollController.createVariableDeduction);
 
 /**
  * @swagger
@@ -1969,7 +1969,7 @@ router.post('/variableDeductions', payrollController.createVariableDeduction);
  *       500:
  *         description: Internal server error
  */
-router.get('/variableDeductions', payrollController.getAllVariableDeductions);
+router.get('/variableDeductions',authController.protect, payrollController.getAllVariableDeductions);
 
 /**
  * @swagger
@@ -1995,7 +1995,7 @@ router.get('/variableDeductions', payrollController.getAllVariableDeductions);
  *       500:
  *         description: Internal server error
  */
-router.get('/variableDeductions/:id', payrollController.getVariableDeductionById);
+router.get('/variableDeductions/:id',authController.protect, payrollController.getVariableDeductionById);
 
 /**
  * @swagger
@@ -2063,7 +2063,7 @@ router.get('/variableDeductions/:id', payrollController.getVariableDeductionById
  *       500:
  *         description: Internal server error
  */
-router.put('/variableDeductions/:id', payrollController.updateVariableDeduction);
+router.put('/variableDeductions/:id',authController.protect, payrollController.updateVariableDeduction);
 
 /**
  * @swagger
@@ -2089,6 +2089,290 @@ router.put('/variableDeductions/:id', payrollController.updateVariableDeduction)
  *       500:
  *         description: Internal server error
  */
-router.delete('/variableDeductions/:id', payrollController.deleteVariableDeduction);
+router.delete('/variableDeductions/:id',authController.protect, payrollController.deleteVariableDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/otherBenefits:
+ *   post:
+ *     summary: Add a new OtherBenefits
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: OtherBenefits details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *                 required: true
+ *               isEffectAttendanceOnEligibility:
+ *                 type: boolean
+ *                 required: true
+ *               company:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: OtherBenefits successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/otherBenefits',authController.protect, payrollController.createOtherBenefits);
+
+/**
+ * @swagger
+ * /api/v1/payroll/otherBenefit-by-company:
+ *   get:
+ *     summary: Get all OtherBenefits by Company ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with OtherBenefits
+ *       404:
+ *         description: OtherBenefits not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/otherBenefits-by-company',authController.protect, payrollController.getAllOtherBenefitsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/otherBenefits/{id}:
+ *   put:
+ *     summary: Update OtherBenefits by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: OtherBenefits ID
+ *     requestBody:
+ *       description: Updated OtherBenefits details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               isEffectAttendanceOnEligibility:
+ *                 type: boolean
+ *               company:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with updated OtherBenefits
+ *       404:
+ *         description: OtherBenefits not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/otherBenefits/:id',authController.protect, payrollController.updateOtherBenefits);
+
+/**
+ * @swagger
+ * /api/v1/payroll/otherBenefits/{id}:
+ *   get:
+ *     summary: Get OtherBenefits by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: OtherBenefits ID
+ *     responses:
+ *       200:
+ *         description: Successful response with OtherBenefits
+ *       404:
+ *         description: OtherBenefits not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/otherBenefits/:id',authController.protect, payrollController.getOtherBenefitsById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/otherBenefits/{id}:
+ *   delete:
+ *     summary: Delete OtherBenefits by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: OtherBenefits ID
+ *     responses:
+ *       204:
+ *         description: OtherBenefits successfully deleted
+ *       404:
+ *         description: OtherBenefits not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/otherBenefits/:id',authController.protect, payrollController.deleteOtherBenefits);
+
+/**
+ * @swagger
+ * /api/v1/payroll/loan-advances-category:
+ *   post:
+ *     summary: Add a Loan Advances Category
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Loan Advances Category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Loan Advances Category successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/loan-advances-category', authController.protect, payrollController.addLoanAdvancesCategory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/loan-advances-category-by-company:
+ *   get:
+ *     summary: Get all Loan Advances Categories by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Loan Advances Categories
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/loan-advances-category-by-company', authController.protect, payrollController.getAllLoanAdvancesCategoriesByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/loan-advances-category/{id}:
+ *   get:
+ *     summary: Get a Loan Advances Category by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Loan Advances Category
+ *     responses:
+ *       200:
+ *         description: Successful response with the Loan Advances Category
+ *       404:
+ *         description: Loan Advances Category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/loan-advances-category/:id', authController.protect, payrollController.getLoanAdvancesCategoryById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/loan-advances-category/{id}:
+ *   put:
+ *     summary: Update a Loan Advances Category by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Loan Advances Category
+ *     requestBody:
+ *       description: Updated Loan Advances Category details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Loan Advances Category
+ *       404:
+ *         description: Loan Advances Category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/loan-advances-category/:id', authController.protect, payrollController.updateLoanAdvancesCategory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/loan-advances-category/{id}:
+ *   delete:
+ *     summary: Delete a Loan Advances Category by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Loan Advances Category
+ *     responses:
+ *       204:
+ *         description: Loan Advances Category successfully deleted
+ *       404:
+ *         description: Loan Advances Category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/loan-advances-category/:id', authController.protect, payrollController.deleteLoanAdvancesCategory);
 
 module.exports = router;
