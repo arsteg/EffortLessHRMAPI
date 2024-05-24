@@ -38,7 +38,8 @@ const server = http.createServer((req, res) => {
   res.end('WebSocket server');
 });
 // Start the HTTP server
-const port = 4000;
+//const port = 4000;
+const port = 443;
 server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
@@ -157,7 +158,6 @@ exports.addNew = catchAsync(async (req, res, next) => {
      var userIds = await LiveTracking.find(filter).distinct('user');   
       LiveTracking.where('user').in(userIds).
         then(liveTrackingEntry => {  
-        
           liveTrackings.push(liveTrackingEntry);
           res.status(200).json({
             status: 'success',
