@@ -14,7 +14,7 @@ const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 const VariableAllowanceApplicableEmployee= require('../models/Payroll/variableAllowanceApplicableEmployeeModel');
 const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
 const VariableDeduction = require('../models/Payroll/variableDeductionModel');
-
+const VariableDeductionApplicableEmployee= require('../models/Payroll/variableDeductionApplicableEmployeeModel');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -897,10 +897,10 @@ exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) =>
   {
     
       for(var i = 0; i < variableAllowances.length; i++) {     
-        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('VariableAllowance').equals(variableAllowances[i]._id);  
+        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('variableAllowance').equals(variableAllowances[i]._id);  
         if(variableAllowanceApplicableEmployees) 
           {
-            variableAllowances[i].variableAllowanceApplicableEmployees = VariableAllowanceApplicableEmployee;
+            variableAllowances[i].variableAllowanceApplicableEmployees = variableAllowanceApplicableEmployees;
           }
           else{
             variableAllowances[i].variableAllowanceApplicableEmployees=null;
@@ -919,13 +919,13 @@ exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
   if(variableAllowance) 
   {
     
-        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('VariableAllowance').equals(variableAllowance._id);  
+        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('variableAllowance').equals(variableAllowance._id);  
         if(variableAllowanceApplicableEmployees) 
           {
-            variableAllowance.variableAllowanceApplicableEmployees = VariableAllowanceApplicableEmployee;
+            variableAllowance.variableAllowanceApplicableEmployees = variableAllowanceApplicableEmployees;
           }
           else{
-            variableAllowance.variableAllowanceApplicableEmployees=null;
+            variableAllowance.variableAllowanceApplicableEmployees = null;
           }
         
   }
@@ -946,9 +946,9 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
   });
 
   if (req.body.variableAllowanceApplicableEmployee && req.body.variableAllowanceApplicableEmployee.length > 0) {
-    await VariableAllowanceApplicableEmployee.deleteMany({ VariableAllowance: variableAllowance._id });
+    await VariableAllowanceApplicableEmployee.deleteMany({ variableAllowance: variableAllowance._id });
     const result = req.body.variableAllowanceApplicableEmployee.map(item => ({
-      VariableAllowance: variableAllowance._id,
+      variableAllowance: variableAllowance._id,
       employee: item.employee
     }));
     console.log(result);
@@ -1070,6 +1070,16 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
 
   const variableDeduction = await VariableDeduction.create(req.body);
+  if (req.body.variableDeductionApplicableEmployee && req.body.variableDeductionApplicableEmployee.length > 0) {
+  
+    const result = req.body.variableDeductionApplicableEmployee.map(item => ({
+      variableDeduction: variableDeduction._id,
+      employee: item.employee
+    }));
+    console.log(result);
+    variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);
+    
+  }
   res.status(201).json({
     status: 'success',
     data: variableDeduction
@@ -1083,6 +1093,20 @@ exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
   }
 
   const variableDeductions = await VariableDeduction.find({ company: companyId });
+  if(variableDeductions) 
+  {
+    
+      for(var i = 0; i < variableDeductions.length; i++) {     
+        const variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.find({}).where('variableDeduction').equals(variableDeductions[i]._id);  
+        if(variableDeductionApplicableEmployees) 
+          {
+            variableDeductions[i].variableDeductionApplicableEmployees = variableDeductionApplicableEmployees;
+          }
+          else{
+            variableDeductions[i].variableDeductionApplicableEmployees = null;
+          }
+        }
+  }
   res.status(200).json({
     status: 'success',
     data: variableDeductions
@@ -1093,6 +1117,19 @@ exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
   const variableDeduction = await VariableDeduction.findById(req.params.id);
   if (!variableDeduction) {
     return next(new AppError('Variable deduction not found', 404));
+  }
+  if(variableDeduction) 
+  {
+    
+        const variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.find({}).where('variableDeduction').equals(variableDeduction._id);  
+        if(variableDeductionApplicableEmployees) 
+          {
+            variableDeduction.variableDeductionApplicableEmployees = variableDeductionApplicableEmployees;
+          }
+          else{
+            variableDeduction.variableDeductionApplicableEmployees = null;
+          }
+        
   }
   res.status(200).json({
     status: 'success',
@@ -1105,6 +1142,15 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true
   });
+  if (req.body.variableDeductionnApplicableEmployee && req.body.variableDeductionApplicableEmployee.length > 0) {
+    await VariableDeductionApplicableEmployee.deleteMany({ variableDeduction: variableDeduction._id });
+    const result = req.body.variableDeductionApplicableEmployee.map(item => ({
+      variableDeduction: variableDeduction._id,
+      employee: item.employee
+    }));
+    console.log(result);
+    variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);    
+  }
   if (!variableDeduction) {
     return next(new AppError('Variable deduction not found', 404));
   }

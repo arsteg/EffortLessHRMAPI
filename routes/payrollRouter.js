@@ -1934,6 +1934,16 @@ router.delete('/fixedDeductions/:id', authController.protect, payrollController.
  *               isAttendanceToAffectEligibility:
  *                 type: boolean
  *                 required: true
+ *               variableDeductionApplicableEmployee :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       employee:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       201:
  *         description: Variable deduction successfully created
@@ -2035,6 +2045,16 @@ router.get('/variableDeductions/:id', payrollController.getVariableDeductionById
  *                 type: number
  *               isAttendanceToAffectEligibility:
  *                 type: boolean
+ *               variableDeductionApplicableEmployee :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       employee:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       200:
  *         description: Successful response with the updated variable deduction

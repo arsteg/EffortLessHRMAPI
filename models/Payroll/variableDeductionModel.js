@@ -52,7 +52,8 @@ var variableDeductionSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required: true
-  }
+  },
+  variableDeductionApplicableEmployees:[]
 }, { collection: 'VariableDeduction' });
 
 module.exports = mongoose.model('VariableDeduction', variableDeductionSchema);
