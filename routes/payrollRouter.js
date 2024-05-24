@@ -2375,4 +2375,142 @@ router.put('/loan-advances-category/:id', authController.protect, payrollControl
  */
 router.delete('/loan-advances-category/:id', authController.protect, payrollController.deleteLoanAdvancesCategory);
 
+// Swagger annotations
+/**
+ * @swagger
+ * /api/v1/payroll/flexiBenefitsCategory:
+ *   post:
+ *     summary: Add a new FlexiBenefitsCategory
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: FlexiBenefitsCategory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: FlexiBenefitsCategory successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/flexiBenefitsCategory',authController.protect, payrollController.createFlexiBenefitsCategory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexiBenefitsCategory-by-company:
+ *   get:
+ *     summary: Get all FlexiBenefitsCategory by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with FlexiBenefitsCategories
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexiBenefitsCategory-by-company',authController.protect, payrollController.getAllFlexiBenefitsCategoryByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ *   put:
+ *     summary: Update a FlexiBenefitsCategory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FlexiBenefitsCategory
+ *     requestBody:
+ *       description: New FlexiBenefitsCategory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated FlexiBenefitsCategory
+ *       404:
+ *         description: FlexiBenefitsCategory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/flexiBenefitsCategory/:id',authController.protect, payrollController.updateFlexiBenefitsCategory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ *   get:
+ *     summary: Get a FlexiBenefitsCategory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FlexiBenefitsCategory
+ *     responses:
+ *       200:
+ *         description: Successful response with the FlexiBenefitsCategory
+ *       404:
+ *         description: FlexiBenefitsCategory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexiBenefitsCategory/:id',authController.protect, payrollController.getFlexiBenefitsCategoryById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ *   delete:
+ *     summary: Delete a FlexiBenefitsCategory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the FlexiBenefitsCategory
+ *     responses:
+ *       204:
+ *         description: FlexiBenefitsCategory successfully deleted
+ *       404:
+ *         description: FlexiBenefitsCategory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/flexiBenefitsCategory/:id',authController.protect, payrollController.deleteFlexiBenefitsCategory);
+
 module.exports = router;

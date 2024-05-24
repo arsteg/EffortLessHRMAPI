@@ -17,6 +17,7 @@ const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 const VariableDeductionApplicableEmployee= require('../models/Payroll/variableDeductionApplicableEmployeeModel');
 const OtherBenefits = require('../models/Payroll/otherBenefitsModels');
 const LoanAdvancesCategory = require('../models/Payroll/loanAdvancesCategoryModel');
+const FlexiBenefitsCategory = require("../models/Payroll/flexiBenefitsCategoryModel");
 
 const AppError = require('../utils/appError.js');
 
@@ -1315,6 +1316,89 @@ exports.deleteLoanAdvancesCategory = catchAsync(async (req, res, next) => {
   if (!loanAdvancesCategory) {
     return next(new AppError('Loan Advances Category not found', 404));
   }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Create a new FlexiBenefitsCategory
+exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
+
+  const { name } = req.body;
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  const existingCategory = await FlexiBenefitsCategory.findOne({ name: name, company: companyId });;
+  console.log(existingCategory);
+  req.body.company = companyId;
+  if (existingCategory) {  
+    return next(new AppError('FlexiBenefitsCategory already exists for this company', 400));
+  }
+
+  const flexiBenefitsCategory = await FlexiBenefitsCategory.create( req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: flexiBenefitsCategory
+  });
+});
+
+// Get all FlexiBenefitsCategory by company
+exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(async (req, res, next) => {
+  const { companyId } = req.cookies.companyId;
+
+  const flexiBenefitsCategories = await FlexiBenefitsCategory.find({ company: companyId });
+
+  res.status(200).json({
+    status: 'success',
+    data: flexiBenefitsCategories
+  });
+});
+
+// Update a FlexiBenefitsCategory
+exports.updateFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const updatedCategory = await FlexiBenefitsCategory.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!updatedCategory) {
+    return next(new AppError('FlexiBenefitsCategory not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedCategory
+  });
+});
+
+// Get a FlexiBenefitsCategory by ID
+exports.getFlexiBenefitsCategoryById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const flexiBenefitsCategory = await FlexiBenefitsCategory.findById(id);
+
+  if (!flexiBenefitsCategory) {
+    return next(new AppError('FlexiBenefitsCategory not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: flexiBenefitsCategory
+  });
+});
+
+// Delete a FlexiBenefitsCategory
+exports.deleteFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const flexiBenefitsCategory = await FlexiBenefitsCategory.findByIdAndDelete(id);
+
+  if (!flexiBenefitsCategory) {
+    return next(new AppError('FlexiBenefitsCategory not found', 404));
+  }
+
   res.status(204).json({
     status: 'success',
     data: null
