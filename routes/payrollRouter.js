@@ -2641,6 +2641,20 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
+ *               ctcTemplateEmployerContribution :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       fixedContribution:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *     responses:
  *       201:
  *         description: CTCTemplate successfully created
@@ -2766,6 +2780,20 @@ router.get('/CTCTemplates/:id',authController.protect, payrollController.getCTCT
  *                         type: number
  *                         description: Field value
  *                       minimumAmount:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateEmployerContribution :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       fixedContribution:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
  *                         type: string
  *                         description: Field value
  *                         required: true

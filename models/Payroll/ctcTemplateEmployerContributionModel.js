@@ -8,9 +8,9 @@ const ctctemplateEmployerContributionSchema = new Schema({
     required: true
   },
   fixedContribution: {
-    type: String,
-    required: true,
-    trim: true
+    type: mongoose.Schema.ObjectId,
+    ref: 'FixedContribution',
+    required: true
   },
   value: {
     type: String,

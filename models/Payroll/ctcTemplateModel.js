@@ -13,7 +13,8 @@ const ctcTemplateSchema = new Schema({
     required: true
   },
   ctcTemplateFixedAllowances:[],
-  ctcTemplateFixedDeductions:[]
+  ctcTemplateFixedDeductions:[],
+  ctcTemplateEmployerContributions:[],
 }, { collection: 'CTCTemplate' });
 
 module.exports = mongoose.model('CTCTemplate', ctcTemplateSchema);
