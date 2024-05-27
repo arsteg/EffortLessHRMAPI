@@ -646,6 +646,7 @@ async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, update
 
   return finalCategories;
 }
+
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
   console.log(employeeExpenseAssignment);
