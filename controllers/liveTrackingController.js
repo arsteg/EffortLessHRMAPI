@@ -38,8 +38,8 @@ const server = http.createServer((req, res) => {
   res.end('WebSocket server');
 });
 // Start the HTTP server
-//const port = 4000;
-const port = 443;
+const port = 4000;
+//const port = 443;
 server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
