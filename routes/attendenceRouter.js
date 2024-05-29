@@ -2929,6 +2929,9 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *                 required: true
  *               comment:
  *                 type: string
+ *               status:
+ *                 type: string
+ *                 default: "Pending"
  *               primaryApprovar:
  *                 type: string
  *                 default: null
@@ -3047,6 +3050,9 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *                 type: string
  *                 default: ""
  *               secondaryApprovar:
+ *                 type: string
+ *                 default: null
+ *               status:
  *                 type: string
  *                 default: null
  *               secondaryApprovarComment:

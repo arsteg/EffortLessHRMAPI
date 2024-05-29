@@ -2,16 +2,17 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var ctctemplateEmployeeDeductionSchema = new Schema({
-  CTCTemplate: {
+  ctcTemplate: {
     type: mongoose.Schema.ObjectId,
     ref: 'CTCTemplate',
     required: true
   },
-  EmployeeDeduction: {
-    type: String,
+  employeeDeduction: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'FixedContribution',
     required: true
   },
-  Value: {
+  value: {
     type: String,
     required: true
   }

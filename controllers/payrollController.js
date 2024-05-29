@@ -24,7 +24,11 @@ const AppError = require('../utils/appError.js');
 const CTCTemplateFixedAllowance = require("../models/Payroll/ctcTemplateFixedAllowanceModel");
 const CTCTemplateFixedDeduction = require("../models/Payroll/ctcTemplateFixedDeductionModel");
 const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEmployerContributionModel");
-const ctcTemplateEmployerContributionModel = require("../models/Payroll/ctcTemplateEmployerContributionModel");
+const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
+const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1007,9 +1011,9 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
 
 // Get all Fixed Deductions by company
 exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
-    const { companyId } = req.cookies.companyId;
-    if (!mongoose.Types.ObjectId.isValid(companyId)) {
-        return next(new AppError('Invalid company ID', 400));
+    const companyId  = req.cookies.companyId;
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
     }
 
     const fixedDeductions = await FixedDeduction.find({ company: companyId });
@@ -1203,7 +1207,7 @@ exports.createOtherBenefits = catchAsync(async (req, res, next) => {
 
 // Get All OtherBenefits by Company
 exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
-  const { companyId } = req.cookies.companyId;
+  const companyId = req.cookies.companyId;
   const otherBenefits = await OtherBenefits.find({ company: companyId });
   res.status(200).json({
     status: 'success',
@@ -1455,7 +1459,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
    if (!companyId) {
      return next(new AppError('Company ID not found in cookies', 400));
    }
-  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution, ...ctcTemplateData } = req.body;
+  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution,ctcTemplateOtherBenefitAllowance,ctcTemplateEmployeeDeduction,...ctcTemplateData } = req.body;
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
@@ -1471,6 +1475,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
   }
   const ctcTemplate = await CTCTemplate.create(ctcTemplateData);
   ctcTemplate.ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(ctcTemplate._id, req.body.ctcTemplateFixedAllowance);
+ 
   if(ctcTemplateFixedDeduction.length > 0)
   {
     for (const deduction of ctcTemplateFixedDeduction) {
@@ -1486,6 +1491,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     }
     ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(ctcTemplate._id, req.body.ctcTemplateFixedDeduction);
   }
+
   if(ctcTemplateEmployerContribution.length > 0)
   {
     for (const contirbution of ctcTemplateEmployerContribution) {
@@ -1495,12 +1501,42 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: 'failure',
-          message: 'Invalid Fixed Deduction',
+          message: 'Invalid Fixed Contribution',
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateFixedContribution(ctcTemplate._id, req.body.ctcTemplateEmployerContribution);
+    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateEmployerContribution(ctcTemplate._id, req.body.ctcTemplateEmployerContribution);
   }
+  if(ctcTemplateOtherBenefitAllowance.length > 0)
+  {
+    for (const item of ctcTemplateOtherBenefitAllowance) {
+  
+      const result = await OtherBenefits.findById(item.otherBenefit);
+    
+      if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Other benefits',
+        });
+      }
+    }
+    ctcTemplate.ctcTemplateOtherBenefitAllowances = await updateOrOtherBenefitsAllowance(ctcTemplate._id, req.body.ctcTemplateOtherBenefitAllowance);
+  } 
+  if(ctcTemplateEmployeeDeduction.length > 0)
+  {
+    for (const contirbution of ctcTemplateEmployeeDeduction) {
+  
+      const result = await FixedContribution.findById(contirbution.employeeDeduction);
+    
+      if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Employee Deduction',
+        });
+      }
+    }
+    ctcTemplate.ctcTemplateEmployeeDeductions = await updateOrCreateEmployeeDeduction(ctcTemplate._id, req.body.ctcTemplateEmployeeDeduction);
+  } 
   res.status(201).json({
     status: 'success',
     data: ctcTemplate
@@ -1527,6 +1563,7 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
         ...category,
       });
       return newCategory.save();
+    
     }
   });
     // Remove categories not present in the updated list
@@ -1540,7 +1577,7 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
 
   await Promise.all(removalPromises);
   const finalCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId });
-
+  console.log(finalCategories);
   return finalCategories;
 }
 
@@ -1575,10 +1612,13 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
 
   await Promise.all(removalPromises);
   const finalCategories = await CTCTemplateFixedDeduction.find({ ctcTemplate: ctcTemplateId });
-
+console.log(finalCategories);
   return finalCategories;
 }
-async function updateOrCreateFixedContribution(ctcTemplateId, updatedCategories) {
+async function deleteCTCFixedDeduction(ctcTemplateId) {
+  await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);  
+}
+async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateEmployerContribution.find({ ctcTemplate: ctcTemplateId });
 
@@ -1612,13 +1652,85 @@ async function updateOrCreateFixedContribution(ctcTemplateId, updatedCategories)
 
   return finalCategories;
 }
+
+async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) {
+
+  const existingCategories = await CTCTemplateOtherBenefitAllowance.find({ ctcTemplate: ctcTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.otherBenefit.equals(category.otherBenefit)
+    );
+
+    if (!existingCategory) {  
+      const newCategory = new CTCTemplateOtherBenefitAllowance({
+        ctcTemplate: ctcTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.otherBenefit === existing.otherBenefit.toString())
+  );
+  
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return CTCTemplateOtherBenefitAllowance.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await CTCTemplateOtherBenefitAllowance.find({ ctcTemplate: ctcTemplateId });
+
+  return finalCategories;
+}
+
+async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories) {
+
+  const existingCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.employeeDeduction.equals(category.employeeDeduction)
+    );
+
+    if (!existingCategory) {  
+      const newCategory = new CTCTemplateEmployeeDeduction({
+        ctcTemplate: ctcTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.employeeDeduction === existing.employeeDeduction.toString())
+  );
+  
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return CTCTemplateEmployeeDeduction.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
+
+  return finalCategories;
+}
+
 exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
   const ctcTemplates = await CTCTemplate.find({ company: req.cookies.companyId });
   if(ctcTemplates)
   {
-   for(var i = 0; i < ctcTemplates.length; i++) {     
-   const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-   if(ctcTemplateFixedAllowances) 
+   for(var i = 0; i < ctcTemplates.length; i++)
+   {     
+    const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
+    if(ctcTemplateFixedAllowances) 
       {
         ctcTemplates[i].ctcTemplateFixedAllowances=ctcTemplateFixedAllowances;
       }
@@ -1626,7 +1738,7 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
         ctcTemplates[i].ctcTemplateFixedAllowances=null;
       }
       const ctcTemplateFixedDeductions = await CTCTemplateFixedDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-   if(ctcTemplateFixedDeductions) 
+    if(ctcTemplateFixedDeductions) 
       {
         ctcTemplates[i].ctcTemplateFixedDeductions=ctcTemplateFixedDeductions;
       }
@@ -1640,9 +1752,27 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
          }
          else{
            ctcTemplates[i].ctcTemplateEmployerContributions=null;
+         } 
+       const ctcTemplateOtherBenefitAllowances = await CTCTemplateOtherBenefitAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
+       if(ctcTemplateOtherBenefitAllowances) 
+         {
+           ctcTemplates[i].ctcTemplateOtherBenefitAllowances=ctcTemplateOtherBenefitAllowances;
          }
-     
-   }
+       else
+         {
+           ctcTemplates[i].ctcTemplateOtherBenefitAllowances=null;
+         }   
+      
+       const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
+       if(ctcTemplateEmployeeDeductions) 
+         {
+           ctcTemplates[i].ctcTemplateEmployeeDeductions=ctcTemplateEmployeeDeductions;
+         }
+       else
+         {
+           ctcTemplates[i].ctcTemplateEmployeeDeductions=null;
+         }       
+    }
   }
   res.status(200).json({
     status: 'success',
@@ -1661,6 +1791,25 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
   ctcTemplate.ctcTemplateFixedDeductions = ctcTemplateFixedDeductions;
   const ctcTemplateEmployerContribution = await CTCTemplateEmployerContribution.find({}).where('ctcTemplate').equals(req.params.id);
   ctcTemplate.ctcTemplateEmployerContributions = ctcTemplateEmployerContribution;
+  const ctcTemplateOtherBenefitAllowances = await CTCTemplateOtherBenefitAllowance.find({}).where('ctcTemplate').equals(req.params.id);
+  if(ctcTemplateOtherBenefitAllowances) 
+    {
+      ctcTemplate.ctcTemplateOtherBenefitAllowances = ctcTemplateOtherBenefitAllowances;
+    }
+  else
+    {
+      ctcTemplate.ctcTemplateOtherBenefitAllowances = null;
+    }   
+ 
+  const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find({}).where('ctcTemplate').equals(req.params.id);
+  if(ctcTemplateEmployeeDeductions) 
+    {
+      ctcTemplate.ctcTemplateEmployeeDeductions = ctcTemplateEmployeeDeductions;
+    }
+  else
+    {
+      ctcTemplate.ctcTemplateEmployeeDeductions = null;
+    }       
   res.status(200).json({
     status: 'success',
     data: ctcTemplate
@@ -1668,7 +1817,7 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
-  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution, ...ctcTemplateData } = req.body;
+  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution,ctcTemplateEmployeeDeduction,ctcTemplateOtherBenefitAllowance, ...ctcTemplateData } = req.body;
 
   // Check if policyLabel is provided
   if (!ctcTemplateData.name) {
@@ -1712,7 +1861,13 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
-    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(ctcTemplate._id, req.body.ctcTemplateFixedDeduction);
+    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(req.params.id, req.body.ctcTemplateFixedDeduction);
+  }
+  else
+  {
+    const ctcTemplateObjectId = new ObjectId(req.params.id);
+    console.log(ctcTemplateObjectId);
+    await deleteCTCFixedDeduction(req.params.id);
   }
   if(ctcTemplateEmployerContribution.length > 0)
   {
@@ -1727,8 +1882,38 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateFixedContribution(ctcTemplate._id, req.body.ctcTemplateEmployerContribution);
-  }  
+    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateEmployerContribution(req.params.id, req.body.ctcTemplateEmployerContribution);
+  } 
+  if(ctcTemplateOtherBenefitAllowance.length > 0)
+  {
+    for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {
+  
+      const result = await OtherBenefits.findById(otherBenefit.otherBenefit);
+    
+      if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Fixed Deduction',
+        });
+      }
+    }
+    ctcTemplate.ctcTemplateOtherBenefitAllowances = await updateOrOtherBenefitsAllowance(req.params.id, req.body.ctcTemplateOtherBenefitAllowance);
+  } 
+  if(ctcTemplateEmployeeDeduction.length > 0)
+  {
+    for (const contirbution of ctcTemplateEmployeeDeduction) {
+  
+      const result = await FixedContribution.findById(contirbution.fixedContribution);
+    
+      if (!result) {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Invalid Fixed Deduction',
+        });
+      }
+    }
+    ctcTemplate.ctcTemplateEmployeeDeductions = await updateOrCreateEmployeeDeduction(req.params.id, req.body.ctcTemplateEmployeeDeduction);
+  } 
   res.status(200).json({
     status: 'success',
     data: ctcTemplate

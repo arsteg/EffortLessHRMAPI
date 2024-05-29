@@ -15,6 +15,8 @@ const ctcTemplateSchema = new Schema({
   ctcTemplateFixedAllowances:[],
   ctcTemplateFixedDeductions:[],
   ctcTemplateEmployerContributions:[],
+  ctcTemplateOtherBenefitAllowances: [],
+  ctcTemplateEmployeeDeductions:[]
 }, { collection: 'CTCTemplate' });
 
 module.exports = mongoose.model('CTCTemplate', ctcTemplateSchema);

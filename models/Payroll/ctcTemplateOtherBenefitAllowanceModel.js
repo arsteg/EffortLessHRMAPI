@@ -2,12 +2,12 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var ctctemplateOtherBenefitAllowanceSchema = new Schema({
-  CTCTemplate: {
+  ctcTemplate: {
     type: mongoose.Schema.ObjectId,
     ref: 'CTCTemplate',
     required: true
   },
-  OtherBenefits: {
+  otherBenefit: {
     type: String,
     required: true
   }

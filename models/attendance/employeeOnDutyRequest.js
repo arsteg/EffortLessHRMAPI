@@ -32,6 +32,10 @@ const employeeOnDutyRequestSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User'
   },
+  status: {
+    type: String,
+    required: true,
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

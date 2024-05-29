@@ -2129,7 +2129,7 @@ router.post('/otherBenefits',authController.protect, payrollController.createOth
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefit-by-company:
+ * /api/v1/payroll/otherBenefits-by-company:
  *   get:
  *     summary: Get all OtherBenefits by Company ID
  *     tags: [Payroll Management]
@@ -2581,7 +2581,7 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *         bearerAuth: []
  *     }]
  *     requestBody:
- *       description: CTCTemplate details
+ *       description: New CTCTemplate details
  *       required: true
  *       content:
  *         application/json:
@@ -2590,8 +2590,7 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *             properties:
  *               name:
  *                 type: string
- *                 required: true
- *               ctcTemplateFixedAllowance :
+ *               ctcTemplateFixedAllowance:
  *                  type: array
  *                  items:
  *                     type: object
@@ -2616,7 +2615,7 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
- *               ctcTemplateEmployeeDeduction :
+ *               ctcTemplateFixedDeduction:
  *                  type: array
  *                  items:
  *                     type: object
@@ -2630,23 +2629,51 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *                         description: Field value
  *                         required: true
  *                       value:
- *                         type: string
+ *                         type: number
  *                         description: Field value
  *                         required: true
  *                       valueType:
- *                         type: number
+ *                         type: string
  *                         description: Field value
  *                       minimumAmount:
  *                         type: string
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
- *               ctcTemplateEmployerContribution :
+ *               ctcTemplateEmployerContribution:
  *                  type: array
  *                  items:
  *                     type: object
  *                     properties:
  *                       fixedContribution:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateOtherBenefitAllowance:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       otherBenefit:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateEmployeeDeduction:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       employeeDeduction:
  *                         type: string
  *                         description: Field value
  *                         required: true
@@ -2759,7 +2786,7 @@ router.get('/CTCTemplates/:id',authController.protect, payrollController.getCTCT
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
- *               ctcTemplateEmployeeDeduction :
+ *               ctcTemplateFixedDeduction :
  *                  type: array
  *                  items:
  *                     type: object
@@ -2790,6 +2817,34 @@ router.get('/CTCTemplates/:id',authController.protect, payrollController.getCTCT
  *                     type: object
  *                     properties:
  *                       fixedContribution:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateOtherBenefitAllowance:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       otherBenefit:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateEmployeeDeduction :
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       fixedDeduction:
  *                         type: string
  *                         description: Field value
  *                         required: true
