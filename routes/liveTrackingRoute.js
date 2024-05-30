@@ -109,3 +109,182 @@ router.post('/closewebsocket',authController.protect, liveTrackingController.clo
  *         description: Internal server error
  */
 router.post('/getByUsers',authController.protect, liveTrackingController.getByUsers);
+
+// Set live tracking
+/**
+ * @swagger
+ * /api/v1/liveTracking/setLiveTrackingByUser:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         users:
+ *                              type: string
+ *                              items:
+ *                                type: string
+ *                                example: ""
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the live tracking entry
+ *       404:
+ *         description: Live tracking entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/setLiveTrackingByUser', liveTrackingController.setLiveTrackingByUser);
+
+// Set live tracking
+/**
+ * @swagger
+ * /api/v1/liveTracking/removeUserFromLiveTracking:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         users:
+ *                              type: string
+ *                              items:
+ *                                type: string
+ *                                example: ""
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the live tracking entry
+ *       404:
+ *         description: Live tracking entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/removeUserFromLiveTracking', liveTrackingController.removeUserFromLiveTracking);
+
+// Read live tracking
+/**
+ * @swagger
+ * /api/v1/liveTracking/getLiveTrackingByUserId:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         user:
+ *                              type: string
+ *                              items:
+ *                                type: string
+ *                                example: ""
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the live tracking entry
+ *       404:
+ *         description: Live tracking entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/getLiveTrackingByUserId', liveTrackingController.getLiveTrackingByUserId);
+
+// Read live tracking
+/**
+ * @swagger
+ * /api/v1/liveTracking/getLiveTrackingTestData:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the live tracking entry
+ *       404:
+ *         description: Live tracking entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/getLiveTrackingTestData', liveTrackingController.getLiveTrackingTestData);
+
+// Create
+/**
+ * @swagger
+ * /api/v1/liveTracking/updateUserScreen:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Create a new live tracking entry"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          fileString:
+ *                              type: string
+ *     responses:
+ *       200:
+ *         description: Successfully created a live tracking entry
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/updateUserScreen', liveTrackingController.updateUserScreen);
+
+// Read live tracking
+/**
+ * @swagger
+ * /api/v1/liveTracking/getUsersLiveScreen:
+ *   post:
+ *     tags:
+ *       - Live Tracking
+ *     summary: "Get a live tracking entry by ID"
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                         users:
+ *                              type: string
+ *                              items:
+ *                                type: string
+ *                                example: ""
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the live tracking entry
+ *       404:
+ *         description: Live tracking entry not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/getUsersLiveScreen', liveTrackingController.getUsersLiveScreen);

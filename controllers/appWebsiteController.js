@@ -285,8 +285,8 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
       const newStartDate = new Date(startYear, startMonth, startDay);
       const newEndDate = new Date(endYear, endMonth, endDay);
       filters.lastVisitTime = {
-        $gte: newStartDate,
-        $lte: newEndDate
+        $gte: newStartDate.setHours(0, 0, 0, 0),
+        $lte: newEndDate.setHours(23, 59, 59, 999)
       };
     }
 
