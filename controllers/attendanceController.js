@@ -510,6 +510,21 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
+  console.log(req.params.userId);
+  const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });  
+ 
+  var attendanceTemplate =null;
+  if(attendanceTemplateAssignments.length>0)
+  {
+  console.log(attendanceTemplateAssignments[0].attandanceTemplate);
+  attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
+  }
+  res.status(200).json({
+    status: 'success',
+    data: attendanceTemplate,
+  });
+});
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
   const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId);
@@ -1294,7 +1309,7 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
   if(shiftTemplateAssignments.length>0)
   {
   console.log(shiftTemplateAssignments[0].template);
-  shifts = await Shift.find({_id: shiftTemplateAssignments[0].template});
+  shifts = await Shift.findById(shiftTemplateAssignments[0].template);
   }
   res.status(200).json({
     status: 'success',

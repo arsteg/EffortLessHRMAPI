@@ -887,6 +887,32 @@ attendanceRouter.get('/attendance-templates', authController.protect, attendance
  */
 attendanceRouter.get('/attendance-templates/:id', authController.protect, attendanceController.getAttendanceTemplate);
 
+/**
+ * @swagger
+ * /api/v1/attendance/attendance-templates-by-user/{userId}:
+ *   get:
+ *     summary: Get an Attendance Template by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the User
+ *     responses:
+ *       200:
+ *         description: Successful response with the Attendance Template
+ *       404:
+ *         description: Attendance Template not found
+ *       500:
+ *         description: Internal server error
+ */
+ attendanceRouter.get('/attendance-templates-by-user/:userId', authController.protect, attendanceController.getAttendanceTemplateByUser);
+
 //Attdance Template Regulrization
 /**
  * @swagger
