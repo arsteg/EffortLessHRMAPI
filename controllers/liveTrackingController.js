@@ -76,6 +76,7 @@ wss.on('connection', (ws, request) => {
   // ws.send('Welcome to the WebSocket server!');
 });
 
+//Apis
 
 exports.startStopLivePreview = catchAsync(async (req, res, next) => {
   try{
@@ -122,6 +123,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
       company : req.cookies.companyId,
     });   
   });
+
   exports.addOrUpdateIfExists = catchAsync(async (req, res, next) => {
     const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
     if (liveTrackigExits.length>0) {
@@ -166,3 +168,101 @@ exports.addNew = catchAsync(async (req, res, next) => {
         });  
   }
   });
+
+
+  exports.setLiveTrackingByUser = catchAsync(async (req, res, next) => {
+      // Create a new LiveTracking record
+      const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.body.users);    
+      if (liveTrackigExits.length <= 0) {
+        const newLiveTracking = await LiveTracking.create({
+          user:req.body.users,
+          company : req.cookies.companyId,
+        });
+        // Send a success response
+        res.status(201).json({
+          success: true,
+          data: newLiveTracking,
+        });
+      }
+      else{
+        res.status(201).json({
+          success: false,
+          data: 'User already added'
+        });
+      }
+  });
+
+  exports.removeUserFromLiveTracking = catchAsync(async (req, res, next) => {
+    const liveTrackigExits = await LiveTracking.where('user').equals(req.body.users);
+    if (liveTrackigExits.length > 0) {
+      const newLiveTracking = await LiveTracking.deleteMany({ user: req.body.users });
+      if(newLiveTracking.deletedCount>0){
+        res.status(200).json({
+          success: true,
+          data: newLiveTracking,
+        });
+      }
+      else{
+        res.status(200).json({
+          success: false
+        });
+      }
+    }
+});
+
+//check online user for live
+exports.getLiveTrackingTestData = catchAsync(async (req, res, next) => {
+  var userIds = await LiveTracking.distinct('user');
+  res.status(200).json({
+    success: true,
+    data: userIds,
+  });
+});
+
+exports.getLiveTrackingByUserId = catchAsync(async (req, res, next) => {
+    const liveTrackigExits = await LiveTracking.where('user').equals(req.cookies.userId);
+    if(liveTrackigExits.length > 0) {
+        res.status(200).json({
+          success: true
+        });
+    }
+    else {
+      res.status(200).json({
+        success: false
+      });
+    }
+});
+
+exports.updateUserScreen = catchAsync(async (req, res, next) => {
+  const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
+  if (liveTrackigExits.length>0) {
+    const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
+    res.status(200).json({
+      status: 'success'
+    });
+  }
+  else{
+    res.status(200).json({
+      status: 'fail'
+    });
+  }
+});
+
+exports.getUsersLiveScreen = catchAsync(async (req, res, next) => {
+  if(req.body.users!='')
+  {
+    const liveTrackigData = await LiveTracking.where('user').equals(req.body.users);    
+    if (liveTrackigData.length > 0) {
+      res.status(200).json({
+        status: true,
+        data: liveTrackigData
+      });
+    }
+    else{
+      res.status(200).json({
+        status: false,
+        data: liveTrackigData
+      });
+    }
+  }
+});
