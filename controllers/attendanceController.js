@@ -902,10 +902,10 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 
   // Update only primary and secondary approvers if provided in the request body
   if (req.body.primaryApprovar !== undefined) {
-    attendanceAssignment.primaryApprovar = req.body.primaryApprovar;
+    attendanceAssignment.primaryApprover = req.body.primaryApprovar;
   }
   if (req.body.secondaryApprovar !== undefined) {
-    attendanceAssignment.secondaryApprovar = req.body.secondaryApprovar;
+    attendanceAssignment.secondaryApprover = req.body.secondaryApprovar;
   }
 
   // Save the updated assignment
