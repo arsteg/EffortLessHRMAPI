@@ -2941,6 +2941,9 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *           schema:
  *             type: object
  *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
  *               onDutyReason:
  *                 type: string
  *                 required: true
@@ -3055,6 +3058,9 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *           schema:
  *             type: object
  *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
  *               onDutyReason:
  *                 type: string
  *                 required: true
