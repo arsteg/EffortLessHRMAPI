@@ -2520,6 +2520,31 @@ attendanceRouter.put('/shifts/:id', authController.protect, attendanceController
  *         description: Internal server error
  */
 attendanceRouter.delete('/shifts/:id', authController.protect, attendanceController.deleteShift);
+/**
+ * @swagger
+ * /api/v1/attendance/shifts-by-user/{userId}:
+ *   get:
+ *     summary: Get a shift by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the shift
+ *     responses:
+ *       200:
+ *         description: Successful response with the shift
+ *       404:
+ *         description: Shift not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/shifts-by-user/:userId', authController.protect, attendanceController.getShiftByUser);
 
 /**
  * @swagger

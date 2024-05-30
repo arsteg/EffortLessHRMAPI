@@ -1286,6 +1286,21 @@ exports.getAllShifts = catchAsync(async (req, res, next) => {
     data: shifts,
   });
 });
+exports.getShiftByUser = catchAsync(async (req, res, next) => {
+  console.log(req.params.userId);
+  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ user: req.params.userId });  
+ 
+  var shifts =null;
+  if(shiftTemplateAssignments.length>0)
+  {
+  console.log(shiftTemplateAssignments[0].template);
+  shifts = await Shift.find({_id: shiftTemplateAssignments[0].template});
+  }
+  res.status(200).json({
+    status: 'success',
+    data: shifts,
+  });
+});
 
 //Shift Assignment API
 
@@ -1397,7 +1412,7 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   const dutyRequest = await EmployeeOnDutyRequest.findById(req.params.id);
   if(dutyRequest) 
-  {  
+  {
       const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequest._id);  
       if(employeeOnDutyShifts) 
         {
@@ -1406,7 +1421,7 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
         else{
           dutyRequest.employeeOnDutyShifts=null;
         }
- }
+  }
   if (!dutyRequest) {
     return next(new AppError('DutyRequest not found', 404));
   }
@@ -1414,7 +1429,7 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: dutyRequest
-  });
+  });  
 });
 
 // Update a DutyRequest by ID
