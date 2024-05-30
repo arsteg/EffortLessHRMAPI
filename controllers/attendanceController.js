@@ -1520,7 +1520,6 @@ if(employeeOnDutyRequest)
   });
 });
 
-
 // Delete a DutyRequest by ID
 exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   const dutyRequest = await EmployeeOnDutyRequest.findByIdAndDelete(req.params.id);
@@ -1581,6 +1580,17 @@ exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
 
 exports.getRegularizationRequest = catchAsync(async (req, res, next) => {
   const regularizationRequest = await RegularizationRequest.findById(req.params.id);
+  if (!regularizationRequest) {
+    return next(new AppError('Regularization Request not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: regularizationRequest,
+  });
+});
+
+exports.getRegularizationRequestByUser = catchAsync(async (req, res, next) => {
+  const regularizationRequest = await RegularizationRequest.find({ user: req.params.userId});
   if (!regularizationRequest) {
     return next(new AppError('Regularization Request not found', 404));
   }
@@ -1674,7 +1684,6 @@ exports.addTimeEntry = catchAsync(async (req, res, next) => {
     data: timeEntry
   });
 });
-
 
 exports.getTimeEntry = catchAsync(async (req, res, next) => {
   const timeEntry = await TimeEntry.findById(req.params.id);

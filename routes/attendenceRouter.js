@@ -2949,6 +2949,34 @@ attendanceRouter.delete('/regularizationRequests/:id',authController.protect,att
    */
 attendanceRouter.get('/regularizationRequests',authController.protect,attendanceController.getAllRegularizationRequests);
 
+ /**
+   * @swagger
+   * /api/v1/attendance/regularizationRequests-by-user/{userId}:
+   *   get:
+   *     summary: Get a Regularization Request by ID
+   *     tags: [Attendance Management]
+   *     security: [{
+   *         bearerAuth: []
+   *     }]
+   *     parameters:
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID of the Regularization Request
+   *     responses:
+   *       200:
+   *         description: Successful response with the Regularization Request
+   *       404:
+   *         description: Regularization Request not found
+   *       500:
+   *         description: Internal server error
+   */
+ attendanceRouter.get('/regularizationRequests-by-user/:userId',authController.protect,attendanceController.getRegularizationRequestByUser);
+  
+
+
 // DutyRequest routes
 /**
  * @swagger
