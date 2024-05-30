@@ -1321,6 +1321,7 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
 
 // Create a new ShiftTemplateAssignment
 exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
@@ -1392,14 +1393,18 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   if (!userOnDutyTemplate) {
     return next(new AppError('UserOnDutyTemplate not assigned for current user', 404));
   }
-  console.log("hii1");
+
+  const employeeOnDutyRequestIsExists = await EmployeeOnDutyRequest.find({ user: req.body.user });
+  if (!employeeOnDutyRequestIsExists) {
+    return next(new AppError('EmployeeOnDutyRequest is already assigned for current user', 404));
+  }
+
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
-  console.log("hii2");
   // Add companyId to the request body
   req.body.company = companyId;
  //self
@@ -1558,9 +1563,35 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
+  const employeeOnDutyRequest = await EmployeeOnDutyRequest.findOne({ user: req.params.userId});
+  if (!employeeOnDutyRequest) {
+    return next(new AppError('Employee Duty Request not found', 404));
+  }
+  if(employeeOnDutyRequest) 
+  {
+      console.log(employeeOnDutyRequest._id);
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);  
+      if(employeeOnDutyShifts) 
+        {
+          employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
+        }
+        else{
+          employeeOnDutyRequest.employeeOnDutyShifts=null;
+        }
+  }
+  if (!employeeOnDutyRequest) {
+    return next(new AppError('DutyRequest not found', 404));
+  } 
+  res.status(200).json({
+    status: 'success',
+    data: employeeOnDutyRequest,
+  });
+});
+
 exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
-  // Set the appliedOn field to the current date
-  req.body.appliedOn = new Date();
+   // Set the appliedOn field to the current date
+   req.body.appliedOn = new Date();
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
    // Check if companyId exists in cookies

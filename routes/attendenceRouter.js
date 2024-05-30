@@ -3090,6 +3090,32 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
 
 /**
  * @swagger
+ * /api/v1/attendance/employee-duty-requests-by-user/{userId}:
+ *   get:
+ *     summary: Get a DutyRequest by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the DutyRequest
+ *     responses:
+ *       200:
+ *         description: Successful response with the DutyRequest
+ *       404:
+ *         description: DutyRequest not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/employee-duty-requests-by-user/:userId', authController.protect, attendanceController.getEmployeeDutyRequestsByUser);
+
+/**
+ * @swagger
  * /api/v1/attendance/employee-duty-requests/{id}:
  *   put:
  *     summary: Update a DutyRequest by ID
