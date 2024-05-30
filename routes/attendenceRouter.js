@@ -2990,11 +2990,11 @@ attendanceRouter.get('/regularizationRequests',authController.protect,attendance
  *                     startTime:
  *                       type: string
  *                       required: true 
- *                       default: "YYYY-MM-DDT09:00:00Z"
+ *                       default: "09:00"
  *                     endTime:
  *                       type: string
  *                       required: true  
- *                       default: "YYYY-MM-DDT18:00:00Z"
+ *                       default: "18:00"
  *                     remarks:
  *                       type: string
  *                       required: true 
@@ -3107,11 +3107,11 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *                     startTime:
  *                       type: string
  *                       required: true 
- *                       default: "YYYY-MM-DDT09:00:00Z"
+ *                       default: "09:00"
  *                     endTime:
  *                       type: string
  *                       required: true  
- *                       default: "YYYY-MM-DDT18:00:00Z"
+ *                       default: "18:00"
  *                     remarks:
  *                       type: string
  *                       required: true 
