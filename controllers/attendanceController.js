@@ -1564,28 +1564,30 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
-  const employeeOnDutyRequest = await EmployeeOnDutyRequest.findOne({ user: req.params.userId});
-  if (!employeeOnDutyRequest) {
+  const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId});
+  if (dutyRequests.length<=0) {
     return next(new AppError('Employee Duty Request not found', 404));
   }
-  if(employeeOnDutyRequest) 
-  {
-      console.log(employeeOnDutyRequest._id);
-      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);  
-      if(employeeOnDutyShifts) 
-        {
-          employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
-        }
-        else{
-          employeeOnDutyRequest.employeeOnDutyShifts=null;
+  if(dutyRequests.length>0) 
+    {      
+       for(var i = 0; i < dutyRequests.length; i++) {     
+     
+        const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
+        if(employeeOnDutyShifts) 
+          { console.log(employeeOnDutyShifts);
+            dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
+          }
+          else{
+            dutyRequests[i].employeeOnDutyShifts=null;
+          }
         }
   }
-  if (!employeeOnDutyRequest) {
+  if (!dutyRequests) {
     return next(new AppError('DutyRequest not found', 404));
   } 
   res.status(200).json({
     status: 'success',
-    data: employeeOnDutyRequest,
+    data: dutyRequests,
   });
 });
 
