@@ -1442,9 +1442,6 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
           dutyRequest.employeeOnDutyShifts=null;
         }
   }
-  if (!dutyRequest) {
-    return next(new AppError('DutyRequest not found', 404));
-  }
 
   res.status(200).json({
     status: 'success',
@@ -1501,7 +1498,6 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
   const dutyRequests = await EmployeeOnDutyRequest.find({ company: req.cookies.companyId }); 
   if(dutyRequests) 
   {      
-    console.log("hello");
    for(var i = 0; i < dutyRequests.length; i++) {     
    
       const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
@@ -1522,9 +1518,7 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
 
 exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId});
-  if (dutyRequests.length<=0) {
-    return next(new AppError('Employee Duty Request not found', 404));
-  }
+ 
   if(dutyRequests.length>0) 
     {      
        for(var i = 0; i < dutyRequests.length; i++) {     
@@ -1539,9 +1533,7 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
           }
         }
   }
-  if (!dutyRequests) {
-    return next(new AppError('DutyRequest not found', 404));
-  } 
+ 
   res.status(200).json({
     status: 'success',
     data: dutyRequests,
