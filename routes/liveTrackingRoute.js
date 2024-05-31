@@ -140,7 +140,7 @@ router.post('/getByUsers',authController.protect, liveTrackingController.getByUs
  *       500:
  *         description: Internal server error
  */
-router.post('/setLiveTrackingByUser', liveTrackingController.setLiveTrackingByUser);
+router.post('/setLiveTrackingByUser', authController.protect, liveTrackingController.setLiveTrackingByUser);
 
 // Set live tracking
 /**
@@ -172,7 +172,7 @@ router.post('/setLiveTrackingByUser', liveTrackingController.setLiveTrackingByUs
  *       500:
  *         description: Internal server error
  */
-router.post('/removeUserFromLiveTracking', liveTrackingController.removeUserFromLiveTracking);
+router.post('/removeUserFromLiveTracking', authController.protect, liveTrackingController.removeUserFromLiveTracking);
 
 // Read live tracking
 /**
@@ -204,7 +204,7 @@ router.post('/removeUserFromLiveTracking', liveTrackingController.removeUserFrom
  *       500:
  *         description: Internal server error
  */
-router.post('/getLiveTrackingByUserId', liveTrackingController.getLiveTrackingByUserId);
+router.post('/getLiveTrackingByUserId', authController.protect, liveTrackingController.getLiveTrackingByUserId);
 
 // Read live tracking
 /**
@@ -255,7 +255,7 @@ router.post('/getLiveTrackingTestData', liveTrackingController.getLiveTrackingTe
  *       500:
  *         description: Internal server error
  */
-router.post('/updateUserScreen', liveTrackingController.updateUserScreen);
+router.post('/updateUserScreen', authController.protect, liveTrackingController.updateUserScreen);
 
 // Read live tracking
 /**
@@ -287,4 +287,4 @@ router.post('/updateUserScreen', liveTrackingController.updateUserScreen);
  *       500:
  *         description: Internal server error
  */
-router.post('/getUsersLiveScreen', liveTrackingController.getUsersLiveScreen);
+router.post('/getUsersLiveScreen', authController.protect, liveTrackingController.getUsersLiveScreen);
