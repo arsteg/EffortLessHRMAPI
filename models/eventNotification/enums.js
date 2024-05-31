@@ -1,0 +1,27 @@
+const RecurringFrequency = {
+    DAILY: 'daily',
+    WEEKLY: 'weekly',
+    MONTHLY: 'monthly',
+    ANNUALLY: 'annually'
+  };
+  
+  const NotificationChannel = {
+    EMAIL: 'email',
+    SMS: 'sms',
+    UI: 'ui',
+    APP: 'app'
+  };  
+  
+  const NotificationStatus = { // Corrected typo
+    SCHEDULED: 'scheduled',
+    SENT: 'sent',
+    DELIVERED: 'delivered',
+    READ: 'read' // Corrected typo
+  };
+  
+  module.exports = {
+    RecurringFrequency,
+    NotificationChannel,
+    NotificationStatus // Corrected typo
+  };
+  
