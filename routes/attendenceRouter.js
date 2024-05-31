@@ -3145,32 +3145,6 @@ attendanceRouter.get('/employee-duty-requests-by-user/:userId', authController.p
  *               secondaryApprovarComment:
  *                 type: string
  *                 default: ""
- *               onDutyShift:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     date:
- *                       type: string
- *                       required: true
- *                     shift:
- *                       type: string
- *                       required: true 
- *                     shiftDuration:
- *                       type: string
- *                       required: true 
- *                     startTime:
- *                       type: string
- *                       required: true 
- *                       default: "09:00"
- *                     endTime:
- *                       type: string
- *                       required: true  
- *                       default: "18:00"
- *                     remarks:
- *                       type: string
- *                       required: true 
  *     responses:
  *       200:
  *         description: Successful response with the updated DutyRequest
