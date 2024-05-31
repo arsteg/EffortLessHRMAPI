@@ -179,13 +179,13 @@ exports.addNew = catchAsync(async (req, res, next) => {
           company : req.cookies.companyId,
         });
         // Send a success response
-        res.status(201).json({
+        res.status(200).json({
           success: true,
           data: newLiveTracking,
         });
       }
       else{
-        res.status(201).json({
+        res.status(200).json({
           success: false,
           data: 'User already added'
         });
@@ -207,6 +207,11 @@ exports.addNew = catchAsync(async (req, res, next) => {
           success: false
         });
       }
+    }
+    else{
+      res.status(200).json({
+        success: false
+      });
     }
 });
 
@@ -261,8 +266,14 @@ exports.getUsersLiveScreen = catchAsync(async (req, res, next) => {
     else{
       res.status(200).json({
         status: false,
-        data: liveTrackigData
+        data: "no data found"
       });
     }
+  }
+  else{
+    res.status(200).json({
+      status: false,
+      data: "no data found"
+    });
   }
 });
