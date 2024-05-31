@@ -2278,36 +2278,24 @@ attendanceRouter.get('/user-on-duty-templates', authController.protect, attendan
  *               shiftType:
  *                 type: string
  *                 description: Type of the shift (e.g., morning, evening).
- *               startTimeHour:
+ *               startTime:
  *                 type: string
  *                 description: Hour of the starting time of the shift.
- *               startTimeMinutes:
- *                 type: string
- *                 description: Minutes of the starting time of the shift.
- *               endTimeHour:
+ *               endTime:
  *                 type: string
  *                 description: Hour of the ending time of the shift.
- *               endTimeMinutes:
+ *               minHoursPerDayToGetCreditForFullDay:
  *                 type: string
- *                 description: Minutes of the ending time of the shift.
- *               minhoursPerDayToGetCreditForFullDayHour:
- *                 type: number
  *                 description: Minimum hours per day required to get credit for a full day (hours part).
- *               minhoursPerDayToGetCreditForFullDayMinutes:
- *                 type: number
- *                 description: Minimum hours per day required to get credit for a full day (minutes part).
  *               isCheckoutTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the checkout time extends to the next day.
  *               isHalfDayApplicable:
  *                 type: boolean
  *                 description: Indicates if the Half Day Applicable or not.
- *               minHoursToGetCreditforHalafDay:
- *                 type: number
+ *               minHoursPerDayToGetCreditforHalfDay:
+ *                 type: string
  *                 description: Minimum hours per day required to get credit for a Half day (Hours part).
- *               minMinutesToGetCreditforHalafDay:
- *                 type: number
- *                 description: Minimum Minutes per day required to get credit for a Half day (minutes part).
  *               maxLateComingAllowedMinutesFirstHalfAttendance:
  *                 type: number
  *                 description: max Late Coming Allowed Minutes First Half Attendance.
@@ -2432,36 +2420,24 @@ attendanceRouter.get('/shifts/:id', authController.protect, attendanceController
  *               shiftType:
  *                 type: string
  *                 description: Type of the shift (e.g., morning, evening).
- *               startTimeHour:
+ *               startTime:
  *                 type: string
  *                 description: Hour of the starting time of the shift.
- *               startTimeMinutes:
- *                 type: string
- *                 description: Minutes of the starting time of the shift.
- *               endTimeHour:
+ *               endTime:
  *                 type: string
  *                 description: Hour of the ending time of the shift.
- *               endTimeMinutes:
+ *               minHoursPerDayToGetCreditForFullDay:
  *                 type: string
- *                 description: Minutes of the ending time of the shift.
- *               minhoursPerDayToGetCreditForFullDayHour:
- *                 type: number
  *                 description: Minimum hours per day required to get credit for a full day (hours part).
- *               minhoursPerDayToGetCreditForFullDayMinutes:
- *                 type: number
- *                 description: Minimum hours per day required to get credit for a full day (minutes part).
  *               isCheckoutTimeNextDay:
  *                 type: boolean
  *                 description: Indicates if the checkout time extends to the next day.
  *               isHalfDayApplicable:
  *                 type: boolean
  *                 description: Indicates if the Half Day Applicable or not.
- *               minHoursToGetCreditforHalafDay:
- *                 type: number
+ *               minHoursPerDayToGetCreditforHalfDay:
+ *                 type: string
  *                 description: Minimum hours per day required to get credit for a Half day (Hours part).
- *               minMinutesToGetCreditforHalafDay:
- *                 type: number
- *                 description: Minimum Minutes per day required to get credit for a Half day (minutes part).
  *               maxLateComingAllowedMinutesFirstHalfAttendance:
  *                 type: number
  *                 description: max Late Coming Allowed Minutes First Half Attendance.

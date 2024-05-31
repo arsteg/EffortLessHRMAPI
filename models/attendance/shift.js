@@ -17,32 +17,20 @@ var shiftSchema = new Schema({
   shiftType: {
     type: String
   },
-  startTimeHour: {
+  startTime: {
     type: String
   },
-  startTimeMinutes: {
+  endTime: {
     type: String
   },
-  endTimeHour: {
+  minHoursPerDayToGetCreditForFullDay: {
     type: String
-  },
-  endTimeMinutes: {
-    type: String
-  },
-  minhoursPerDayToGetCreditForFullDayHour: {
-    type: Number
-  },
-  minhoursPerDayToGetCreditForFullDayMinutes: {
-    type: Number
   },
   isHalfDayApplicable: {
     type: Boolean
   },
-  minHoursToGetCreditforHalafDay: {
-    type: Boolean
-  },
-  minMinutesToGetCreditforHalafDay: {
-    type: Number
+  minHoursPerDayToGetCreditforHalfDay: {
+    type: String
   },
   maxLateComingAllowedMinutesFirstHalfAttendance: {
     type: Number
