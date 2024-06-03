@@ -1,7 +1,7 @@
 // models/UserNotification.js
 const mongoose = require('mongoose');
 const baseSchema = require('./baseSchema');
-const { NotificationStatus } = require('../enums'); // Corrected typo
+const { NotificationStatus } = require('../eventNotification/enums');
 const Schema = mongoose.Schema;
 
 const userNotificationSchema = new Schema({

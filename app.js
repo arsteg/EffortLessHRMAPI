@@ -38,6 +38,7 @@ var attendanceRouter = require(`./routes/attendenceRouter`);
 var pricingRouter = require(`./routes/pricingRouter`);
 var interviewsRouter = require(`./routes/interviewProcessRouter`);
 var payrollRouter = require(`./routes/payrollRouter`);
+var eventNotificationRouter = require(`./routes/eventNotificationRoutes`);
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
@@ -123,15 +124,17 @@ app.use('/api/v1/pricing', pricingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/zoom', zoomRouter);
 app.use('/api/v1/payroll', payrollRouter);
+app.use('/api/v1/eventNotifications', eventNotificationRouter);
+
  //execute on 1st day of each month
  cron.schedule('0 0 1 * *', () => {
-  console.log('+ script to add default holidays1...');
+  console.log('This Job will run every day......');
 //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 
 //execute at every minute
 cron.schedule('* * * * *', async () => {
-  console.log('Running script to add default holidays2...');
+  console.log('This Job will run every minute...');
  // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 

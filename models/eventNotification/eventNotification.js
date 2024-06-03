@@ -1,7 +1,6 @@
-// models/EventNotification.js
 const mongoose = require('mongoose');
 const baseSchema = require('./baseSchema');
-const { RecurringFrequency } = require('../enums');
+const { RecurringFrequency } = require('../eventNotification/enums');
 const Schema = mongoose.Schema;
 
 const eventNotificationSchema = new Schema({
