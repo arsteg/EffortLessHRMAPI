@@ -5,9 +5,9 @@ const app = express();
 app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
 const WebSocket = require('ws');
-const server = require('http').createServer();
-const wss = new WebSocket.Server({ server });
-//const wss = new WebSocket.Server({ noServer: true });
+//const server = require('http').createServer();
+//const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ noServer: true });
 const http = require('http');
 // Store connected clients
 const clients = new Map();
@@ -34,11 +34,11 @@ app.use(cors(
 ));
 app.options('*', cors());
 
-// // Create an HTTP server
-// const server = http.createServer((req, res) => {
-//   res.writeHead(200, { 'Content-Type': 'text/plain' });
-//   res.end('WebSocket server');
-// });
+// Create an HTTP server
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('WebSocket server');
+});
 
 // Start the HTTP server
 const port = 4000;
