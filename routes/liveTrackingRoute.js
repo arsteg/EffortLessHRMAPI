@@ -128,7 +128,7 @@ router.post('/getByUsers',authController.protect, liveTrackingController.getByUs
  *                      type: object
  *                      properties:
  *                         users:
- *                              type: array
+ *                              type: string
  *                              items:
  *                                type: string
  *                                example: ""
@@ -160,7 +160,7 @@ router.post('/setLiveTrackingByUser', authController.protect, liveTrackingContro
  *                      type: object
  *                      properties:
  *                         users:
- *                              type: array
+ *                              type: string
  *                              items:
  *                                type: string
  *                                example: ""
@@ -288,35 +288,3 @@ router.post('/updateUserScreen', authController.protect, liveTrackingController.
  *         description: Internal server error
  */
 router.post('/getUsersLiveScreen', authController.protect, liveTrackingController.getUsersLiveScreen);
-
-// Read by ID
-/**
- * @swagger
- * /api/v1/liveTracking/getMultipleUsersLiveScreen:
- *   post:
- *     tags:
- *       - Live Tracking
- *     summary: "Get a live tracking entry by ID"
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                         users:
- *                              type: array
- *                              items:
- *                                type: string
- *                                example: ""
- *     responses:
- *       200:
- *         description: Successfully retrieved the live tracking entry
- *       404:
- *         description: Live tracking entry not found
- *       500:
- *         description: Internal server error
- */
-router.post('/getMultipleUsersLiveScreen',authController.protect, liveTrackingController.getMultipleUsersLiveScreen);
