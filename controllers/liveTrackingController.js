@@ -171,25 +171,25 @@ exports.addNew = catchAsync(async (req, res, next) => {
 
 
   exports.setLiveTrackingByUser = catchAsync(async (req, res, next) => {
-    // Create a new LiveTracking record
-    const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.body.users);
-    if (liveTrackigExits.length <= 0) {
-      const newLiveTracking = await LiveTracking.create({
-        user:req.body.users,
-        company : req.cookies.companyId,
-      });
-      // Send a success response
-      res.status(200).json({
-        success: true,
-        data: newLiveTracking,
-      });
-    }
-    else{
-      res.status(200).json({
-        success: false,
-        data: 'User already added'
-      });
-    }
+      // Create a new LiveTracking record
+      const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.body.users);    
+      if (liveTrackigExits.length <= 0) {
+        const newLiveTracking = await LiveTracking.create({
+          user:req.body.users,
+          company : req.cookies.companyId,
+        });
+        // Send a success response
+        res.status(200).json({
+          success: true,
+          data: newLiveTracking,
+        });
+      }
+      else{
+        res.status(200).json({
+          success: false,
+          data: 'User already added'
+        });
+      }
   });
 
   exports.removeUserFromLiveTracking = catchAsync(async (req, res, next) => {
