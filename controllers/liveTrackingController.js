@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
 const WebSocket = require('ws');
-const server = require('https').createServer();
+const server = require('http').createServer();
 const wss = new WebSocket.Server({ server });
 //const wss = new WebSocket.Server({ noServer: true });
 const http = require('http');
@@ -47,12 +47,12 @@ server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
 
-// Handle WebSocket upgrade requests
-server.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
-  }); 
-});
+// // Handle WebSocket upgrade requests
+// server.on('upgrade', (request, socket, head) => {
+//   wss.handleUpgrade(request, socket, head, (ws) => {
+//     wss.emit('connection', ws, request);
+//   }); 
+// });
 
 // // WebSocket connection event
 // wss.on('connection', (ws, request) => {
@@ -87,7 +87,18 @@ wss.on('connection', (ws) => {
     ws.send('Hello, client!');
   });
 
-  ws.send('Welcome to the server!');
+  // Create a response JSON object
+  const response = {
+    type: "greeting",
+    content: "Hello, client!",
+    timestamp: new Date().toISOString()
+  };
+  console.log(JSON.stringify(response));
+  ws.send(JSON.stringify(response));
+  console.log('after');
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
 });
 
 //Apis
