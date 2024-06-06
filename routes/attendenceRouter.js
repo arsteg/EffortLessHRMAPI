@@ -2743,10 +2743,10 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
  *                 required: true
  *               checkInTime:
  *                 type: string              
- *                 format: date-time
+ *                 required: true
  *               checkOutTime:
  *                 type: string              
- *                 format: date-time
+ *                 required: true
  *               firstApprover:
  *                 type: string
  *               firstApproverDate:
