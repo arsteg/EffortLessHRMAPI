@@ -16,11 +16,11 @@ var regularizationRequestSchema = new Schema({
     required: true
   },
   checkInTime: {
-    type: Date,
+    type: String,
     required: true
   },
   checkOutTime: {
-    type: Date,
+    type: String,
     required: true
   },
   shift: {

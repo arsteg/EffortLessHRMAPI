@@ -1782,6 +1782,23 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
+   // Check if the user exists
+   const userExists = await User.findById(req.body.user);
+   if (!userExists) {
+     return next(new AppError('User not found', 404));
+   }
+ 
+   // Check if the advance template exists
+   const advanceTemplateExists = await AdvanceTemplate.findById(req.body.advanceTemplate);
+   if (!advanceTemplateExists) {
+     return next(new AppError('Advance template not found', 404));
+   }
+   // Check if another EmployeeAdvanceAssignment exists for the same user
+  const existingAssignment = await EmployeeAdvanceAssignment.findOne({ user: req.body.user, _id: { $ne: req.params.id } });
+  if (existingAssignment) {
+    return next(new AppError('Another EmployeeAdvanceAssignment already exists for this user', 400));
+  }
+  
   const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user);
   var employeeAdvanceAssignment;
   if (employeeAdvanceAssignmentExists.length<=0) {
@@ -1827,6 +1844,18 @@ exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) =
 });
 
 exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
+   // Check if the user exists
+   const userExists = await User.findById(req.body.user);
+   if (!userExists) {
+     return next(new AppError('User not found', 404));
+   }
+ 
+   // Check if the advance template exists
+   const advanceTemplateExists = await AdvanceTemplate.findById(req.body.advanceTemplate);
+   if (!advanceTemplateExists) {
+     return next(new AppError('Advance template not found', 404));
+   }
+
  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndUpdate(
    req.params.id,
    req.body,

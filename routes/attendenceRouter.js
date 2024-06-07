@@ -2742,11 +2742,9 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
  *                 type: string
  *                 required: true
  *               checkInTime:
- *                 type: string              
- *                 format: date-time
+ *                 type: string  
  *               checkOutTime:
- *                 type: string              
- *                 format: date-time
+ *                 type: string   
  *               firstApprover:
  *                 type: string
  *               firstApproverDate:
@@ -2844,11 +2842,9 @@ attendanceRouter.get('/regularizationRequests/:id',authController.protect,attend
  *                 type: string
  *                 required: true
  *               checkInTime:
- *                 type: string              
- *                 format: date-time
+ *                 type: string   
  *               checkOutTime:
- *                 type: string              
- *                 format: date-time
+ *                 type: string    
  *               firstApprover:
  *                 type: string
  *               firstApproverDate:
