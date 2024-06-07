@@ -1340,7 +1340,7 @@ exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
 
 exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res, next) => {
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.expenseReportId);
-  if(expenseReportExpenses) 
+  if(expenseReportExpenses)
   {
       for(var i = 0; i < expenseReportExpenses.length; i++) {     
       const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpenses[i]._id);  
@@ -1352,7 +1352,7 @@ exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res,
           expenseReportExpenses[i].expenseReportExpenseFields=null;
         }
       }
-   }  
+   }
   res.status(200).json({
     status: 'success',
     data: expenseReportExpenses
@@ -1782,7 +1782,7 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
-  const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user).where('advanceTemplate').equals(req.body.advanceTemplate);
+  const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user);
   var employeeAdvanceAssignment;
   if (employeeAdvanceAssignmentExists.length<=0) {
     employeeAdvanceAssignment = await EmployeeAdvanceAssignment.create(req.body);
