@@ -17,6 +17,7 @@ const AdvanceTemplateCategories = require('../models/Expense/AdvanceTemplateCate
 const EmployeeAdvanceAssignment = require('../models/Expense/EmployeeAdvanceAssignment');
 const userSubordinate = require('../models/userSubordinateModel');
 const ExpenseTemplateCategoryFieldValues = require('../models/Expense/ExpenseTemplateCategoryFieldValues');
+const User = require('../models/permissions/userModel');
 const { ObjectId } = require('mongodb');
 const { v1: uuidv1} = require('uuid');
 // Import ExpenseCategory model
@@ -1798,7 +1799,7 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   if (existingAssignment) {
     return next(new AppError('Another EmployeeAdvanceAssignment already exists for this user', 400));
   }
-  
+
   const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user);
   var employeeAdvanceAssignment;
   if (employeeAdvanceAssignmentExists.length<=0) {
