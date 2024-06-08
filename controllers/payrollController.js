@@ -124,6 +124,7 @@ exports.deleteGeneralSetting = async (req, res, next) => {
 };
 
 exports.createRoundingRule = async (req, res, next) => {
+  console.log("hii");
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
 
@@ -131,9 +132,16 @@ exports.createRoundingRule = async (req, res, next) => {
    if (!companyId) {
      return next(new AppError('Company ID not found in cookies', 400));
    }
- 
+   console.log(companyId);
+   // Validate generalSetting
+   const generalSettingExists = await GeneralSetting.findById(req.body.generalSetting);
+   if (!generalSettingExists) {
+     return next(new AppError('Invalid general setting', 400));
+   }
    // Add companyId to the request body
+   console.log("hii2");
    req.body.company = companyId;
+   console.log(req.body.company);
   const roundingRule = await RoundingRule.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -182,10 +190,21 @@ exports.deleteRoundingRule = async (req, res, next) => {
 };
 
 exports.getAllRoundingRules = async (req, res, next) => {
-  const roundingRules = await RoundingRule.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const companyId = req.cookies.companyId;
+
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+console.log(limit);
+  const roundingRules = await RoundingRule.find({ company: companyId })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
   res.status(200).json({
     status: 'success',
-    data: roundingRules
+    data: roundingRules,
   });
 };
 
@@ -246,7 +265,11 @@ exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
-  const fixedAllowances = await FixedAllowances.find({}).where('company').equals(req.cookies.companyId);;
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const fixedAllowances = await FixedAllowances.find({}).where('company').equals(req.cookies.companyId)
+  .skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: fixedAllowances
@@ -263,6 +286,7 @@ exports.createFixedContribution = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllFixedContributions = catchAsync(async (req, res, next) => {
+  
   const fixedContributions = await FixedContribution.find({});
   res.status(200).json({
     status: 'success',
@@ -364,7 +388,9 @@ exports.deleteFixedContributionSlab = async (req, res, next) => {
 
 exports.getAllFixedContributionSlabs = async (req, res, next) => {
   try {
-    const fixedContributionSlabs = await LWFFixedContributionSlab.find({}).where('company').equals(req.cookies.companyId);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const fixedContributionSlabs = await LWFFixedContributionSlab.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip)).limit(parseInt(limit));
     res.status(200).json({
       status: 'success',
       data: fixedContributionSlabs
@@ -564,7 +590,10 @@ exports.addPTSlab = async (req, res, next) => {
 
 exports.getAllPTSlabs = async (req, res, next) => {
   try {
-    const ptSlabs = await PTSlab.where('company').equals(req.cookies.companyId);
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const ptSlabs = await PTSlab.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+    .limit(parseInt(limit));
     res.status(200).json({
       status: "success",
       data: ptSlabs,
@@ -754,7 +783,11 @@ exports.createCeilingAmount = catchAsync(async (req, res, next) => {
 
 // Get all CeilingAmounts by company
 exports.getCeilingAmountsByCompany = catchAsync(async (req, res, next) => {
-  const ceilingAmounts = await ESICCeilingAmount.where('company').equals(req.cookies.companyId);
+
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const ceilingAmounts = await ESICCeilingAmount.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: ceilingAmounts
@@ -826,7 +859,10 @@ exports.addESICContribution = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllESICContributionsByCompany = catchAsync(async (req, res, next) => {
-  const esicContributions = await ESICContribution.where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const esicContributions = await ESICContribution.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: esicContributions
@@ -906,7 +942,10 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
 
 // Get all VariableAllowances by company
 exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) => {  
-  const variableAllowances = await VariableAllowance.where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const variableAllowances = await VariableAllowance.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   if(variableAllowances) 
   {
     
@@ -1011,12 +1050,15 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
 
 // Get all Fixed Deductions by company
 exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
     const companyId  = req.cookies.companyId;
     if (!companyId) {
       return next(new AppError('Company ID not found in cookies', 400));
     }
 
-    const fixedDeductions = await FixedDeduction.find({ company: companyId });
+    const fixedDeductions = await FixedDeduction.find({ company: companyId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
     res.status(200).json({
         status: 'success',
         data: fixedDeductions
@@ -1102,13 +1144,15 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
 
 exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId;
-
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
     // Check if companyId exists in cookies
     if (!company) {
       return next(new AppError('Company ID not found in cookies', 400));
     }
 
-  const variableDeductions = await VariableDeduction.find({ company: company });
+  const variableDeductions = await VariableDeduction.find({ company: company }).skip(parseInt(skip))
+  .limit(parseInt(limit));
   if(variableDeductions) 
   {
     
@@ -1208,7 +1252,10 @@ exports.createOtherBenefits = catchAsync(async (req, res, next) => {
 // Get All OtherBenefits by Company
 exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
-  const otherBenefits = await OtherBenefits.find({ company: companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const otherBenefits = await OtherBenefits.find({ company: companyId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: otherBenefits
@@ -1284,7 +1331,10 @@ exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
 
 exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
-  const loanAdvancesCategories = await LoanAdvancesCategory.find({ company: companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const loanAdvancesCategories = await LoanAdvancesCategory.find({ company: companyId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
   if (!loanAdvancesCategories) {
     return next(new AppError('No Loan Advances Categories found for the specified company', 404));
   }
@@ -1356,8 +1406,10 @@ exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
 // Get all FlexiBenefitsCategory by company
 exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(async (req, res, next) => {
   const { companyId } = req.cookies.companyId;
-
-  const flexiBenefitsCategories = await FlexiBenefitsCategory.find({ company: companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const flexiBenefitsCategories = await FlexiBenefitsCategory.find({ company: companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
 
   res.status(200).json({
     status: 'success',
@@ -1432,6 +1484,8 @@ exports.createPFCharge = catchAsync(async (req, res, next) => {
 });
 
 exports.getPFChargesByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
   const companyId = req.cookies.companyId;
 
   // Check if companyId exists in cookies
@@ -1439,11 +1493,8 @@ exports.getPFChargesByCompany = catchAsync(async (req, res, next) => {
     return next(new AppError('Company ID not found in cookies', 400));
   }
   // Assuming PFCharge has a field 'company' to relate PF Charges to a specific company
-  const pfCharges = await PFCharge.find({ company: companyId });
-  
-  if (!pfCharges.length) {
-    return next(new AppError('No PF Charges found for the specified company', 404));
-  }
+  const pfCharges = await PFCharge.find({ company: companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
 
   res.status(200).json({
     status: 'success',
@@ -1724,7 +1775,9 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
 }
 
 exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
-  const ctcTemplates = await CTCTemplate.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const ctcTemplates = await CTCTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip)).limit(parseInt(limit));
   if(ctcTemplates)
   {
    for(var i = 0; i < ctcTemplates.length; i++)

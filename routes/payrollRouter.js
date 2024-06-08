@@ -335,12 +335,22 @@ router.delete('/rounding-rules/:id', authController.protect, payrollController.d
 
 /**
  * @swagger
- * /api/v1/payroll/rounding-rules:
- *   get:
+ * /api/v1/payroll/rounding-rules-list:
+ *   post:
  *     summary: Get all rounding rules
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     tags: [Payroll Management]
  *     responses:
  *       200:
@@ -348,7 +358,7 @@ router.delete('/rounding-rules/:id', authController.protect, payrollController.d
  *       500:
  *         description: Internal server error
  */
-router.get('/rounding-rules', authController.protect, payrollController.getAllRoundingRules);
+router.post('/rounding-rules-list', authController.protect, payrollController.getAllRoundingRules);
 
 /**
  * @swagger
@@ -500,20 +510,30 @@ router.delete('/fixed-allowances/:id',authController.protect, payrollController.
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-allowances:
- *   get:
+ * /api/v1/payroll/fixed-allowances-list:
+ *   post:
  *     summary: Get all FixedAllowances
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     responses:
  *       200:
  *         description: Successful response with FixedAllowances
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-allowances', authController.protect,payrollController.getAllFixedAllowances);
+router.post('/fixed-allowances-list', authController.protect,payrollController.getAllFixedAllowances);
 
 /**
  * @swagger
@@ -715,20 +735,30 @@ router.delete('/lwf-fixed-contribution-slabs/:id',authController.protect, payrol
 
 /**
  * @swagger
- * /api/v1/payroll/lwf-fixed-contribution-slabs:
- *   get:
+ * /api/v1/payroll/lwf-fixed-contribution-slabs-list:
+ *   post:
  *     summary: Get all Fixed Contribution Slabs
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     responses:
  *       200:
  *         description: Successful response with Fixed Contribution Slabs
  *       500:
  *         description: Internal server error
  */
-router.get('/lwf-fixed-contribution-slabs',authController.protect, payrollController.getAllFixedContributionSlabs);
+router.post('/lwf-fixed-contribution-slabs-list',authController.protect, payrollController.getAllFixedContributionSlabs);
 // routes/payrollRoutes.js
 
 
@@ -928,20 +958,30 @@ router.post('/pt-slabs', authController.protect, payrollController.addPTSlab);
 // Get all PTSlabs
 /**
  * @swagger
- * /api/v1/payroll/pt-slabs:
- *   get:
+ * /api/v1/payroll/pt-slabs-list:
+ *   post:
  *     summary: Get all PTSlabs
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     responses:
  *       200:
  *         description: Successful response with PTSlabs
  *       500:
  *         description: Internal server error
  */
-router.get('/pt-slabs', authController.protect, payrollController.getAllPTSlabs);
+router.post('/pt-slabs-list', authController.protect, payrollController.getAllPTSlabs);
 
 // Update PTSlab
 /**
@@ -1233,12 +1273,22 @@ router.post('/esic-ceilingAmounts', authController.protect, payrollController.cr
 /**
  * @swagger
  * /api/v1/payroll/esic-ceilingAmounts-by-company:
- *   get:
+ *   post:
  *     summary: Get all CeilingAmounts by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     responses:
  *       200:
  *         description: Successful response with CeilingAmounts
@@ -1247,7 +1297,7 @@ router.post('/esic-ceilingAmounts', authController.protect, payrollController.cr
  *       500:
  *         description: Internal server error
  */
-router.get('/esic-ceilingAmounts-by-company', authController.protect, payrollController.getCeilingAmountsByCompany);
+router.post('/esic-ceilingAmounts-by-company', authController.protect, payrollController.getCeilingAmountsByCompany);
 
 /**
  * @swagger
@@ -1383,12 +1433,22 @@ router.post('/esicContributions',authController.protect, payrollController.addES
 /**
  * @swagger
  * /api/v1/payroll/esicContributions-by-company:
- *   get:
+ *   post:
  *     summary: Get all ESIC contributions by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with ESIC contributions
@@ -1397,7 +1457,7 @@ router.post('/esicContributions',authController.protect, payrollController.addES
  *       500:
  *         description: Internal server error
  */
-router.get('/esicContributions-by-company',authController.protect, payrollController.getAllESICContributionsByCompany);
+router.post('/esicContributions-by-company',authController.protect, payrollController.getAllESICContributionsByCompany);
 
 /**
  * @swagger
@@ -1495,7 +1555,7 @@ router.delete('/esicContributions/:id',authController.protect, payrollController
 
 /**
  * @swagger
- * /api/v1/payroll/variableAllowances:
+ * /api/v1/payroll/variable-allowances:
  *   post:
  *     summary: Create a new variable allowance
  *     tags: [Payroll Management]
@@ -1584,17 +1644,27 @@ router.delete('/esicContributions/:id',authController.protect, payrollController
  *       500:
  *         description: Internal server error
  */
-router.post('/variableAllowances', authController.protect, payrollController.createVariableAllowance);
+router.post('/variable-allowances', authController.protect, payrollController.createVariableAllowance);
 
 /**
  * @swagger
- * /api/v1/payroll/variableAllowances-by-company:
- *   get:
+ * /api/v1/payroll/variable-allowances-by-company:
+ *   post:
  *     summary: Get all variable allowances by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with variable allowances
@@ -1603,11 +1673,11 @@ router.post('/variableAllowances', authController.protect, payrollController.cre
  *       500:
  *         description: Internal server error
  */
-router.get('/variableAllowances-by-company', authController.protect, payrollController.getAllVariableAllowancesByCompany);
+router.post('/variable-allowances-by-company', authController.protect, payrollController.getAllVariableAllowancesByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/variableAllowances/{id}:
+ * /api/v1/payroll/variable-allowances/{id}:
  *   get:
  *     summary: Get a variable allowance by ID
  *     tags: [Payroll Management]
@@ -1629,11 +1699,11 @@ router.get('/variableAllowances-by-company', authController.protect, payrollCont
  *       500:
  *         description: Internal server error
  */
-router.get('/variableAllowances/:id', authController.protect, payrollController.getVariableAllowanceById);
+router.get('/variable-allowances/:id', authController.protect, payrollController.getVariableAllowanceById);
 
 /**
  * @swagger
- * /api/v1/payroll/variableAllowances/{id}:
+ * /api/v1/payroll/variable-allowances/{id}:
  *   put:
  *     summary: Update a variable allowance by ID
  *     tags: [Payroll Management]
@@ -1713,11 +1783,11 @@ router.get('/variableAllowances/:id', authController.protect, payrollController.
  *       500:
  *         description: Internal server error
  */
-router.put('/variableAllowances/:id', authController.protect, payrollController.updateVariableAllowance);
+router.put('/variable-allowances/:id', authController.protect, payrollController.updateVariableAllowance);
 
 /**
  * @swagger
- * /api/v1/payroll/variableAllowances/{id}:
+ * /api/v1/payroll/variable-allowances/{id}:
  *   delete:
  *     summary: Delete a variable allowance by ID
  *     tags: [Payroll Management]
@@ -1739,11 +1809,11 @@ router.put('/variableAllowances/:id', authController.protect, payrollController.
  *       500:
  *         description: Internal server error
  */
-router.delete('/variableAllowances/:id', authController.protect, payrollController.deleteVariableAllowance);
+router.delete('/variable-allowances/:id', authController.protect, payrollController.deleteVariableAllowance);
 
 /**
  * @swagger
- * /api/v1/payroll/fixedDeductions:
+ * /api/v1/payroll/fixed-deductions:
  *   post:
  *     summary: Create a new Fixed Deduction
  *     tags: [Payroll Management]
@@ -1772,17 +1842,27 @@ router.delete('/variableAllowances/:id', authController.protect, payrollControll
  *       500:
  *         description: Internal server error
  */
-router.post('/fixedDeductions', authController.protect, payrollController.createFixedDeduction);
+router.post('/fixed-deductions', authController.protect, payrollController.createFixedDeduction);
 
 /**
  * @swagger
- * /api/v1/payroll/fixedDeductions-by-company:
- *   get:
+ * /api/v1/payroll/fixed-deductions-by-company:
+ *   post:
  *     summary: Get all Fixed Deductions by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the Fixed Deductions
@@ -1791,11 +1871,11 @@ router.post('/fixedDeductions', authController.protect, payrollController.create
  *       500:
  *         description: Internal server error
  */
-router.get('/fixedDeductions-by-company', authController.protect, payrollController.getAllFixedDeductionsByCompany);
+router.post('/fixed-deductions-by-company', authController.protect, payrollController.getAllFixedDeductionsByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/fixedDeductions/{id}:
+ * /api/v1/payroll/fixed-deductions/{id}:
  *   get:
  *     summary: Get a Fixed Deduction by ID
  *     tags: [Payroll Management]
@@ -1817,11 +1897,11 @@ router.get('/fixedDeductions-by-company', authController.protect, payrollControl
  *       500:
  *         description: Internal server error
  */
-router.get('/fixedDeductions/:id', authController.protect, payrollController.getFixedDeductionById);
+router.get('/fixed-deductions/:id', authController.protect, payrollController.getFixedDeductionById);
 
 /**
  * @swagger
- * /api/v1/payroll/fixedDeductions/{id}:
+ * /api/v1/payroll/fixed-deductions/{id}:
  *   put:
  *     summary: Update a Fixed Deduction by ID
  *     tags: [Payroll Management]
@@ -1855,11 +1935,11 @@ router.get('/fixedDeductions/:id', authController.protect, payrollController.get
  *       500:
  *         description: Internal server error
  */
-router.put('/fixedDeductions/:id', authController.protect, payrollController.updateFixedDeduction);
+router.put('/fixed-deductions/:id', authController.protect, payrollController.updateFixedDeduction);
 
 /**
  * @swagger
- * /api/v1/payroll/fixedDeductions/{id}:
+ * /api/v1/payroll/fixed-deductions/{id}:
  *   delete:
  *     summary: Delete a Fixed Deduction by ID
  *     tags: [Payroll Management]
@@ -1881,12 +1961,12 @@ router.put('/fixedDeductions/:id', authController.protect, payrollController.upd
  *       500:
  *         description: Internal server error
  */
-router.delete('/fixedDeductions/:id', authController.protect, payrollController.deleteFixedDeduction);
+router.delete('/fixed-deductions/:id', authController.protect, payrollController.deleteFixedDeduction);
 
 
 /**
  * @swagger
- * /api/v1/payroll/variableDeductions:
+ * /api/v1/payroll/variable-deductions:
  *   post:
  *     summary: Add a new Variable Deduction
  *     tags: [Payroll Management]
@@ -1952,28 +2032,38 @@ router.delete('/fixedDeductions/:id', authController.protect, payrollController.
  *       500:
  *         description: Internal server error
  */
-router.post('/variableDeductions',authController.protect, payrollController.createVariableDeduction);
+router.post('/variable-deductions',authController.protect, payrollController.createVariableDeduction);
 
 /**
  * @swagger
- * /api/v1/payroll/variableDeductions:
- *   get:
+ * /api/v1/payroll/variable-deductions-list:
+ *   post:
  *     summary: Get all Variable Deductions
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with variable deductions
  *       500:
  *         description: Internal server error
  */
-router.get('/variableDeductions',authController.protect, payrollController.getAllVariableDeductions);
+router.post('/variable-deductions-list',authController.protect, payrollController.getAllVariableDeductions);
 
 /**
  * @swagger
- * /api/v1/payroll/variableDeductions/{id}:
+ * /api/v1/payroll/variable-deductions/{id}:
  *   get:
  *     summary: Get a Variable Deduction by ID
  *     tags: [Payroll Management]
@@ -1995,11 +2085,11 @@ router.get('/variableDeductions',authController.protect, payrollController.getAl
  *       500:
  *         description: Internal server error
  */
-router.get('/variableDeductions/:id',authController.protect, payrollController.getVariableDeductionById);
+router.get('/variable-deductions/:id',authController.protect, payrollController.getVariableDeductionById);
 
 /**
  * @swagger
- * /api/v1/payroll/variableDeductions/{id}:
+ * /api/v1/payroll/variable-deductions/{id}:
  *   put:
  *     summary: Update a Variable Deduction by ID
  *     tags: [Payroll Management]
@@ -2063,11 +2153,11 @@ router.get('/variableDeductions/:id',authController.protect, payrollController.g
  *       500:
  *         description: Internal server error
  */
-router.put('/variableDeductions/:id',authController.protect, payrollController.updateVariableDeduction);
+router.put('/variable-deductions/:id',authController.protect, payrollController.updateVariableDeduction);
 
 /**
  * @swagger
- * /api/v1/payroll/variableDeductions/{id}:
+ * /api/v1/payroll/variable-deductions/{id}:
  *   delete:
  *     summary: Delete a Variable Deduction by ID
  *     tags: [Payroll Management]
@@ -2089,11 +2179,11 @@ router.put('/variableDeductions/:id',authController.protect, payrollController.u
  *       500:
  *         description: Internal server error
  */
-router.delete('/variableDeductions/:id',authController.protect, payrollController.deleteVariableDeduction);
+router.delete('/variable-deductions/:id',authController.protect, payrollController.deleteVariableDeduction);
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefits:
+ * /api/v1/payroll/other-benefits:
  *   post:
  *     summary: Add a new OtherBenefits
  *     tags: [Payroll Management]
@@ -2125,17 +2215,27 @@ router.delete('/variableDeductions/:id',authController.protect, payrollControlle
  *       500:
  *         description: Internal server error
  */
-router.post('/otherBenefits',authController.protect, payrollController.createOtherBenefits);
+router.post('/other-benefits',authController.protect, payrollController.createOtherBenefits);
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefits-by-company:
- *   get:
+ * /api/v1/payroll/other-benefits-by-company:
+ *   post:
  *     summary: Get all OtherBenefits by Company ID
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with OtherBenefits
@@ -2144,11 +2244,11 @@ router.post('/otherBenefits',authController.protect, payrollController.createOth
  *       500:
  *         description: Internal server error
  */
-router.get('/otherBenefits-by-company',authController.protect, payrollController.getAllOtherBenefitsByCompany);
+router.post('/other-benefits-by-company',authController.protect, payrollController.getAllOtherBenefitsByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefits/{id}:
+ * /api/v1/payroll/other-benefits/{id}:
  *   put:
  *     summary: Update OtherBenefits by ID
  *     tags: [Payroll Management]
@@ -2184,11 +2284,11 @@ router.get('/otherBenefits-by-company',authController.protect, payrollController
  *       500:
  *         description: Internal server error
  */
-router.put('/otherBenefits/:id',authController.protect, payrollController.updateOtherBenefits);
+router.put('/other-benefits/:id',authController.protect, payrollController.updateOtherBenefits);
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefits/{id}:
+ * /api/v1/payroll/other-benefits/{id}:
  *   get:
  *     summary: Get OtherBenefits by ID
  *     tags: [Payroll Management]
@@ -2210,11 +2310,11 @@ router.put('/otherBenefits/:id',authController.protect, payrollController.update
  *       500:
  *         description: Internal server error
  */
-router.get('/otherBenefits/:id',authController.protect, payrollController.getOtherBenefitsById);
+router.get('/other-benefits/:id',authController.protect, payrollController.getOtherBenefitsById);
 
 /**
  * @swagger
- * /api/v1/payroll/otherBenefits/{id}:
+ * /api/v1/payroll/other-benefits/{id}:
  *   delete:
  *     summary: Delete OtherBenefits by ID
  *     tags: [Payroll Management]
@@ -2236,7 +2336,7 @@ router.get('/otherBenefits/:id',authController.protect, payrollController.getOth
  *       500:
  *         description: Internal server error
  */
-router.delete('/otherBenefits/:id',authController.protect, payrollController.deleteOtherBenefits);
+router.delete('/other-benefits/:id',authController.protect, payrollController.deleteOtherBenefits);
 
 /**
  * @swagger
@@ -2271,12 +2371,22 @@ router.post('/loan-advances-category', authController.protect, payrollController
 /**
  * @swagger
  * /api/v1/payroll/loan-advances-category-by-company:
- *   get:
+ *   post:
  *     summary: Get all Loan Advances Categories by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Loan Advances Categories
@@ -2285,7 +2395,7 @@ router.post('/loan-advances-category', authController.protect, payrollController
  *       500:
  *         description: Internal server error
  */
-router.get('/loan-advances-category-by-company', authController.protect, payrollController.getAllLoanAdvancesCategoriesByCompany);
+router.post('/loan-advances-category-by-company', authController.protect, payrollController.getAllLoanAdvancesCategoriesByCompany);
 
 /**
  * @swagger
@@ -2378,7 +2488,7 @@ router.delete('/loan-advances-category/:id', authController.protect, payrollCont
 // Swagger annotations
 /**
  * @swagger
- * /api/v1/payroll/flexiBenefitsCategory:
+ * /api/v1/payroll/flexi-benefits-category:
  *   post:
  *     summary: Add a new FlexiBenefitsCategory
  *     tags: [Payroll Management]
@@ -2404,17 +2514,27 @@ router.delete('/loan-advances-category/:id', authController.protect, payrollCont
  *       500:
  *         description: Internal server error
  */
-router.post('/flexiBenefitsCategory',authController.protect, payrollController.createFlexiBenefitsCategory);
+router.post('/flexi-benefits-category',authController.protect, payrollController.createFlexiBenefitsCategory);
 
 /**
  * @swagger
- * /api/v1/payroll/flexiBenefitsCategory-by-company:
- *   get:
+ * /api/v1/payroll/flexi-benefits-category-by-company:
+ *   post:
  *     summary: Get all FlexiBenefitsCategory by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with FlexiBenefitsCategories
@@ -2423,11 +2543,11 @@ router.post('/flexiBenefitsCategory',authController.protect, payrollController.c
  *       500:
  *         description: Internal server error
  */
-router.get('/flexiBenefitsCategory-by-company',authController.protect, payrollController.getAllFlexiBenefitsCategoryByCompany);
+router.post('/flexi-benefits-category-by-company',authController.protect, payrollController.getAllFlexiBenefitsCategoryByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ * /api/v1/payroll/flexi-benefits-category/{id}:
  *   put:
  *     summary: Update a FlexiBenefitsCategory by ID
  *     tags: [Payroll Management]
@@ -2459,11 +2579,11 @@ router.get('/flexiBenefitsCategory-by-company',authController.protect, payrollCo
  *       500:
  *         description: Internal server error
  */
-router.put('/flexiBenefitsCategory/:id',authController.protect, payrollController.updateFlexiBenefitsCategory);
+router.put('/flexi-benefits-category/:id',authController.protect, payrollController.updateFlexiBenefitsCategory);
 
 /**
  * @swagger
- * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ * /api/v1/payroll/flexi-benefits-category/{id}:
  *   get:
  *     summary: Get a FlexiBenefitsCategory by ID
  *     tags: [Payroll Management]
@@ -2485,11 +2605,11 @@ router.put('/flexiBenefitsCategory/:id',authController.protect, payrollControlle
  *       500:
  *         description: Internal server error
  */
-router.get('/flexiBenefitsCategory/:id',authController.protect, payrollController.getFlexiBenefitsCategoryById);
+router.get('/flexi-benefits-category/:id',authController.protect, payrollController.getFlexiBenefitsCategoryById);
 
 /**
  * @swagger
- * /api/v1/payroll/flexiBenefitsCategory/{id}:
+ * /api/v1/payroll/flexi-benefits-category/{id}:
  *   delete:
  *     summary: Delete a FlexiBenefitsCategory by ID
  *     tags: [Payroll Management]
@@ -2511,11 +2631,11 @@ router.get('/flexiBenefitsCategory/:id',authController.protect, payrollControlle
  *       500:
  *         description: Internal server error
  */
-router.delete('/flexiBenefitsCategory/:id',authController.protect, payrollController.deleteFlexiBenefitsCategory);
+router.delete('/flexi-benefits-category/:id',authController.protect, payrollController.deleteFlexiBenefitsCategory);
 
 /**
  * @swagger
- * /api/v1/payroll/pfCharge:
+ * /api/v1/payroll/pf-charge:
  *   post:
  *     summary: Add a new PF Charge
  *     tags: [Payroll Management]
@@ -2550,17 +2670,27 @@ router.delete('/flexiBenefitsCategory/:id',authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.post('/pfCharge', authController.protect, payrollController.createPFCharge);
+router.post('/pf-charge', authController.protect, payrollController.createPFCharge);
 
 /**
  * @swagger
- * /api/v1/payroll/pfCharge-by-company:
- *   get:
+ * /api/v1/payroll/pf-charge-by-company:
+ *   post:
  *     summary: Get all PF Charges by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with all PF Charges
@@ -2569,11 +2699,11 @@ router.post('/pfCharge', authController.protect, payrollController.createPFCharg
  *       500:
  *         description: Internal server error
  */
-router.get('/pfCharge-by-company',authController.protect, payrollController.getPFChargesByCompany);
+router.post('/pf-charge-by-company',authController.protect, payrollController.getPFChargesByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/CTCTemplates:
+ * /api/v1/payroll/ctc-templates:
  *   post:
  *     summary: Create a new CTCTemplate
  *     tags: [Payroll Management]
@@ -2690,28 +2820,38 @@ router.get('/pfCharge-by-company',authController.protect, payrollController.getP
  *       500:
  *         description: Internal server error
  */
-router.post('/CTCTemplates',authController.protect, payrollController.createCTCTemplate);
+router.post('/ctc-templates',authController.protect, payrollController.createCTCTemplate);
 
 /**
  * @swagger
- * /api/v1/payroll/CTCTemplates-by-company:
- *   get:
+ * /api/v1/payroll/ctc-templates-by-company:
+ *   post:
  *     summary: Get all CTCTemplates by company
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with CTCTemplates
  *       500:
  *         description: Internal server error
  */
-router.get('/CTCTemplates-by-company',authController.protect, payrollController.getAllCTCTemplatesByCompany);
+router.post('/ctc-templates-by-company',authController.protect, payrollController.getAllCTCTemplatesByCompany);
 
 /**
  * @swagger
- * /api/v1/payroll/CTCTemplates/{id}:
+ * /api/v1/payroll/ctc-templates/{id}:
  *   get:
  *     summary: Get a CTCTemplate by ID
  *     tags: [Payroll Management]
@@ -2733,11 +2873,11 @@ router.get('/CTCTemplates-by-company',authController.protect, payrollController.
  *       500:
  *         description: Internal server error
  */
-router.get('/CTCTemplates/:id',authController.protect, payrollController.getCTCTemplateById);
+router.get('/ctc-templates/:id',authController.protect, payrollController.getCTCTemplateById);
 
 /**
  * @swagger
- * /api/v1/payroll/CTCTemplates/{id}:
+ * /api/v1/payroll/ctc-templates/{id}:
  *   put:
  *     summary: Update a CTCTemplate by ID
  *     tags: [Payroll Management]
@@ -2861,11 +3001,11 @@ router.get('/CTCTemplates/:id',authController.protect, payrollController.getCTCT
  *       500:
  *         description: Internal server error
  */
-router.put('/CTCTemplates/:id',authController.protect, payrollController.updateCTCTemplateById);
+router.put('/ctc-templates/:id',authController.protect, payrollController.updateCTCTemplateById);
 
 /**
  * @swagger
- * /api/v1/payroll/CTCTemplates/{id}:
+ * /api/v1/payroll/ctc-templates/{id}:
  *   delete:
  *     summary: Delete a CTCTemplate by ID
  *     tags: [Payroll Management]
@@ -2887,6 +3027,6 @@ router.put('/CTCTemplates/:id',authController.protect, payrollController.updateC
  *       500:
  *         description: Internal server error
  */
-router.delete('/CTCTemplates/:id',authController.protect, payrollController.deleteCTCTemplateById);
+router.delete('/ctc-templates/:id',authController.protect, payrollController.deleteCTCTemplateById);
 
 module.exports = router;
