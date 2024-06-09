@@ -213,7 +213,10 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
-  const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   if(regularizationReasons) 
       {
         
@@ -359,7 +362,10 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
-  const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   if(onDutyReasons) 
       {
         
@@ -527,7 +533,10 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 });
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
-  const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: attendanceTemplates,
@@ -732,7 +741,9 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
-  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId }).skip(parseInt(skip)).limit(parseInt(limit));  
   if(attendanceRegularizations) 
   {
     
@@ -931,7 +942,10 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
-  const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: attendanceAssignments,
@@ -1001,7 +1015,10 @@ exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const roundingInformation = await RoundingInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: roundingInformation,
@@ -1063,7 +1080,10 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => { 
-  const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: overtimeInformation,
@@ -1125,7 +1145,10 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const onDutyTemplates = await OnDutyTemplate.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const onDutyTemplates = await OnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: onDutyTemplates,
@@ -1230,7 +1253,10 @@ exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 // Get all UserOnDutyTemplates
 exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
-  const userOnDutyTemplates = await UserOnDutyTemplate.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const userOnDutyTemplates = await UserOnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: userOnDutyTemplates,
@@ -1295,7 +1321,10 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllShifts = catchAsync(async (req, res, next) => {
-  const shifts = await Shift.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const shifts = await Shift.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: shifts,
@@ -1380,7 +1409,10 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 
 // Get all ShiftTemplateAssignments
 exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => { 
-  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId });  
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: shiftTemplateAssignments
@@ -1495,7 +1527,10 @@ exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
 // Get all DutyRequests
 exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
-  const dutyRequests = await EmployeeOnDutyRequest.find({ company: req.cookies.companyId }); 
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const dutyRequests = await EmployeeOnDutyRequest.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   if(dutyRequests) 
   {      
    for(var i = 0; i < dutyRequests.length; i++) {     
@@ -1618,7 +1653,10 @@ exports.deleteRegularizationRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
-  const regularizationRequests = await RegularizationRequest.find({ company: req.cookies.companyId }); 
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const regularizationRequests = await RegularizationRequest.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,
@@ -1706,7 +1744,10 @@ exports.updateTimeEntry = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
-  const timeEntries = await TimeEntry.find({ company: req.cookies.companyId });
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const timeEntries = await TimeEntry.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   res.status(200).json({
     status: 'success',
     data: timeEntries

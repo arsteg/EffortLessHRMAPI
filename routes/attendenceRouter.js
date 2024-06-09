@@ -266,20 +266,30 @@ attendanceRouter.delete('/regularization-reasons/:id', authController.protect, a
 
 /**
  * @swagger
- * /api/v1/attendance/regularization-reasons:
- *   get:
+ * /api/v1/attendance/regularization-reasons-list:
+ *   post:
  *     summary: Get all Regularization Reasons
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Regularization Reasons
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularization-reasons', authController.protect, attendanceController.getAllRegularizationReasons);
+attendanceRouter.post('/regularization-reasons-list', authController.protect, attendanceController.getAllRegularizationReasons);
 
 //Duty Reasons
 
@@ -428,20 +438,30 @@ attendanceRouter.delete('/duty-reasons/:id', authController.protect, attendanceC
 
 /**
  * @swagger
- * /api/v1/attendance/duty-reasons:
- *   get:
+ * /api/v1/attendance/duty-reasons-list:
+ *   post:
  *     summary: Get all Duty Reasons
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Duty Reasons
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/duty-reasons', authController.protect, attendanceController.getAllOnDutyReasons);
+attendanceRouter.post('/duty-reasons-list', authController.protect, attendanceController.getAllOnDutyReasons);
 
 // AttendanceMode routes
 /**
@@ -846,20 +866,30 @@ attendanceRouter.delete('/attendance-templates/:id', authController.protect, att
 
 /**
  * @swagger
- * /api/v1/attendance/attendance-templates:
- *   get:
+ * /api/v1/attendance/attendance-templates-by-company:
+ *   post:
  *     summary: Get all Attendance Templates
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Attendance Templates
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/attendance-templates', authController.protect, attendanceController.getAllAttendanceTemplates);
+attendanceRouter.post('/attendance-templates-by-company', authController.protect, attendanceController.getAllAttendanceTemplates);
 
 /**
  * @swagger
@@ -1130,19 +1160,29 @@ attendanceRouter.put('/regularization/:id',authController.protect, attendanceCon
 /**
  * @swagger
  * /api/v1/attendance/regularization-by-company:
- *   get:
+ *   post:
  *     summary: Get all Attendance Regularizations by Company ID
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Attendance Regularizations
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularization-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
+attendanceRouter.post('/regularization-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
 
 /**
  * @swagger
@@ -1468,20 +1508,30 @@ attendanceRouter.delete('/attendance-assignments/:id', authController.protect, a
 
 /**
  * @swagger
- * /api/v1/attendance/attendance-assignments:
- *   get:
+ * /api/v1/attendance/attendance-assignments-by-company:
+ *   post:
  *     summary: Get all Attendance Template Assignments
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Attendance Template Assignments
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/attendance-assignments', authController.protect, attendanceController.getAllAttendanceAssignments);
+attendanceRouter.post('/attendance-assignments-by-company', authController.protect, attendanceController.getAllAttendanceAssignments);
 
 //Rounding Information
 /**
@@ -1667,20 +1717,30 @@ attendanceRouter.put('/rounding-information/:id',authController.protect,attendan
 attendanceRouter.delete('/rounding-information/:id',authController.protect,attendanceController.deleteRoundingInformation);
 /**
  * @swagger
- * /api/v1/attendance/rounding-information:
- *   get:
+ * /api/v1/attendance/rounding-information-by-company:
+ *   post:
  *     summary: Get all rounding-information
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Overtime Information
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/rounding-information', authController.protect, attendanceController.getAllRoundingInformation);
+attendanceRouter.post('/rounding-information-by-company', authController.protect, attendanceController.getAllRoundingInformation);
 
 //Overtime Information
 /**
@@ -1854,19 +1914,29 @@ attendanceRouter.delete('/overtime-information/:id', authController.protect, att
 /**
  * @swagger
  * /api/v1/attendance/overtime-information:
- *   get:
+ *   post:
  *     summary: Get all Overtime Information
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Overtime Information
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/overtime-information', authController.protect, attendanceController.getAllOvertimeInformation);
+attendanceRouter.post('/overtime-information-by-company', authController.protect, attendanceController.getAllOvertimeInformation);
 
 // OnDutyTemplate routes
 /**
@@ -2045,20 +2115,30 @@ attendanceRouter.delete('/on-duty-templates/:id', authController.protect, attend
 
 /**
  * @swagger
- * /api/v1/attendance/on-duty-templates:
- *   get:
+ * /api/v1/attendance/on-duty-templates-by-company:
+ *   post:
  *     summary: Get all OnDutyTemplates
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with OnDutyTemplates
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/on-duty-templates/', authController.protect, attendanceController.getAllOnDutyTemplates);
+attendanceRouter.post('/on-duty-templates-by-company/', authController.protect, attendanceController.getAllOnDutyTemplates);
 
 
 // UserOnDutyTemplate routes
@@ -2233,19 +2313,29 @@ attendanceRouter.delete('/user-on-duty-templates/:id', authController.protect, a
 /**
  * @swagger
  * /api/v1/attendance/user-on-duty-templates:
- *   get:
+ *   post:
  *     summary: Get all UserOnDutyTemplates
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with UserOnDutyTemplates
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/user-on-duty-templates', authController.protect, attendanceController.getAllUserOnDutyTemplates);
+attendanceRouter.post('/user-on-duty-templates-by-company', authController.protect, attendanceController.getAllUserOnDutyTemplates);
 
 //Shift routes
     
@@ -2522,6 +2612,7 @@ attendanceRouter.put('/shifts/:id', authController.protect, attendanceController
  *         description: Internal server error
  */
 attendanceRouter.delete('/shifts/:id', authController.protect, attendanceController.deleteShift);
+
 /**
  * @swagger
  * /api/v1/attendance/shifts-by-user/{userId}:
@@ -2550,20 +2641,30 @@ attendanceRouter.get('/shifts-by-user/:userId', authController.protect, attendan
 
 /**
  * @swagger
- * /api/v1/attendance/shifts:
- *   get:
+ * /api/v1/attendance/shifts-by-company:
+ *   post:
  *     summary: Get all shifts
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with shifts
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/shifts', authController.protect, attendanceController.getAllShifts);
+attendanceRouter.post('/shifts-by-company', authController.protect, attendanceController.getAllShifts);
 
  // Shift Template Assignment
 
@@ -2697,22 +2798,32 @@ attendanceRouter.get('/shifts', authController.protect, attendanceController.get
    */
   attendanceRouter.delete('/shift-template-assignments/:id', authController.protect, attendanceController.deleteShiftTemplateAssignment);
   
-  /**
+/**
    * @swagger
-   * /api/v1/attendance/shift-template-assignments:
-   *   get:
+   * /api/v1/attendance/shift-template-assignments-by-company:
+   *   post:
    *     summary: Get all ShiftTemplateAssignments
    *     tags: [Attendance Management]
    *     security: [{
    *         bearerAuth: []
    *     }]
+   *     requestBody:
+   *         content:
+   *             application/json:
+   *                 schema:
+   *                     type: object
+   *                     properties:
+   *                         skip:
+   *                             type: string
+   *                         next:
+   *                             type: string
    *     responses:
    *       200:
    *         description: Successful response with ShiftTemplateAssignments
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.get('/shift-template-assignments', authController.protect, attendanceController.getAllShiftTemplateAssignments);
+  attendanceRouter.post('/shift-template-assignments-by-company', authController.protect, attendanceController.getAllShiftTemplateAssignments);
 
 /**
  * @swagger
@@ -2831,43 +2942,43 @@ attendanceRouter.get('/regularizationRequests/:id',authController.protect,attend
    *           schema:
    *             type: object
    *             properties:
-    *               regularizationDate:
- *                 type: string
- *                 format: date
- *                 required: true
- *               requestType:
- *                 type: string
- *                 required: true
- *               shift:
- *                 type: string
- *                 required: true
- *               checkInTime:
- *                 type: string   
- *               checkOutTime:
- *                 type: string    
- *               firstApprover:
- *                 type: string
- *               firstApproverDate:
- *                 format: date
- *               firstApproverComment:
- *                 type: string
- *               secondApprover:
- *                 type: string
- *               secondApproverDate:
- *                 format: date
- *               secondApproverComment:
- *                 type: string
- *               reason:
- *                 type: string
- *                 required: true
- *               isHalfDayRegularization:
- *                 type: boolean
- *               halfDayType:
- *                 type: string
- *               comment:
- *                 type: string 
- *               user:
- *                 type: string                   
+   *               regularizationDate:
+   *                 type: string
+   *                 format: date
+   *                 required: true
+   *               requestType:
+   *                 type: string
+   *                 required: true
+   *               shift:
+   *                 type: string
+   *                 required: true
+   *               checkInTime:
+   *                 type: string   
+   *               checkOutTime:
+   *                 type: string    
+   *               firstApprover:
+   *                 type: string
+   *               firstApproverDate:
+   *                 format: date
+   *               firstApproverComment:
+   *                 type: string
+   *               secondApprover:
+   *                 type: string
+   *               secondApproverDate:
+   *                 format: date
+   *               secondApproverComment:
+   *                 type: string
+   *               reason:
+   *                 type: string
+   *                 required: true
+   *               isHalfDayRegularization:
+   *                 type: boolean
+   *               halfDayType:
+   *                 type: string
+   *               comment:
+   *                 type: string 
+   *               user:
+   *                 type: string                   
    *     responses:
    *       200:
    *         description: Successful response with the updated Regularization Request
@@ -2906,20 +3017,30 @@ attendanceRouter.delete('/regularizationRequests/:id',authController.protect,att
   
 /**
    * @swagger
-   * /api/v1/attendance/regularizationRequests:
-   *   get:
+   * /api/v1/attendance/regularizationRequests-by-company:
+   *   post:
    *     summary: Get all Regularization Requests
    *     tags: [Attendance Management]
    *     security: [{
    *         bearerAuth: []
    *     }]
+   *     requestBody:
+   *         content:
+   *             application/json:
+   *                 schema:
+   *                     type: object
+   *                     properties:
+   *                         skip:
+   *                             type: string
+   *                         next:
+   *                             type: string
    *     responses:
    *       200:
    *         description: Successful response with Regularization Requests
    *       500:
    *         description: Internal server error
    */
-attendanceRouter.get('/regularizationRequests',authController.protect,attendanceController.getAllRegularizationRequests);
+attendanceRouter.post('/regularizationRequests-by-company',authController.protect,attendanceController.getAllRegularizationRequests);
 
  /**
    * @swagger
@@ -3179,20 +3300,30 @@ attendanceRouter.delete('/employee-duty-requests/:id', authController.protect, a
 
 /**
  * @swagger
- * /api/v1/attendance/employee-duty-requests:
- *   get:
+ * /api/v1/attendance/employee-duty-requests-by-company:
+ *   post:
  *     summary: Get all DutyRequests
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with DutyRequests
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/employee-duty-requests', authController.protect, attendanceController.getAllEmployeeDutyRequests);  
+attendanceRouter.post('/employee-duty-requests-by-company', authController.protect, attendanceController.getAllEmployeeDutyRequests);  
 
 /**
  * @swagger
@@ -3350,20 +3481,30 @@ attendanceRouter.put('/time-entries/:id', authController.protect, attendanceCont
 
 /**
  * @swagger
- * /api/v1/attendance/time-entries:
- *   get:
+ * /api/v1/attendance/time-entries-by-company:
+ *   post:
  *     summary: Get all TimeEntries by companyId
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with TimeEntries
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/time-entries', authController.protect, attendanceController.getAllTimeEntriesByCompanyId);
+attendanceRouter.post('/time-entries-by-company', authController.protect, attendanceController.getAllTimeEntriesByCompanyId);
 
 /**
  * @swagger
