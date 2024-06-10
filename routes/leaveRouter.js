@@ -382,12 +382,22 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
 
 /**
  * @swagger
- * /api/v1/leave/leave-categories:
- *   get:
+ * /api/v1/leave/leave-categories-list:
+ *   post:
  *     summary: Get all Leave Category
  *     security: [{
  *         bearerAuth: []
  *     }] 
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     tags: [Leave Management]
  *     responses:
  *       200:
@@ -395,7 +405,8 @@ router.put('/leave-categories/:id', authController.protect, leaveController.upda
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-categories', authController.protect, leaveController.getAllLeaveCategory);
+router.post('/leave-categories-list', authController.protect, leaveController.getAllLeaveCategory);
+
 /**
  * @swagger
  * /api/v1/leave/leave-categories-by-user/{userId}:
@@ -616,20 +627,30 @@ router.put('/leave-templates/:id', authController.protect, leaveController.updat
 
 /**
  * @swagger
- * /api/v1/leave/leave-templates:
- *   get:
+ * /api/v1/leave/leave-templates-list:
+ *   post:
  *     summary: Get all LeaveTemplates
  *     security: [{
  *         bearerAuth: []
  *     }] 
  *     tags: [Leave Management]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with LeaveTemplates
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-templates', authController.protect, leaveController.getAllLeaveTemplates);
+router.post('/leave-templates-list', authController.protect, leaveController.getAllLeaveTemplates);
 
 /**
  * @swagger
@@ -877,20 +898,30 @@ router.delete('/employee-leave-assignments/:id', authController.protect, leaveCo
 
 /**
  * @swagger
- * /api/v1/Leave/employee-leave-assignments:
- *   get:
+ * /api/v1/Leave/employee-leave-assignments-list:
+ *   post:
  *     summary: Get all EmployeeLeaveAssignments
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with EmployeeLeaveAssignments
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-assignments', authController.protect, leaveController.getAllEmployeeLeaveAssignments);
+router.post('/employee-leave-assignments-list', authController.protect, leaveController.getAllEmployeeLeaveAssignments);
 
 /**
  * @swagger
@@ -973,12 +1004,22 @@ router.get('/employee-leave-grant-by-user/:userId', authController.protect, leav
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-grant-by-team:
- *   get:
+ *   post:
  *     summary: Get an Employee Leave Grant by Team
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the Employee Leave Grant
@@ -987,7 +1028,7 @@ router.get('/employee-leave-grant-by-user/:userId', authController.protect, leav
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-grant-by-team', authController.protect, leaveController.getEmployeeLeaveGrantByTeam);
+router.post('/employee-leave-grant-by-team', authController.protect, leaveController.getEmployeeLeaveGrantByTeam);
 
 
 /**
@@ -1071,20 +1112,30 @@ router.put('/employee-leave-grant/:id', authController.protect, leaveController.
 
 /**
  * @swagger
- * /api/v1/Leave/employee-leave-grant:
- *   get:
+ * /api/v1/Leave/employee-leave-grant-list:
+ *   post:
  *     summary: Get all Employee Leave Grant
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Employee Leave Grant
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-grant', authController.protect, leaveController.getAllEmployeeLeaveGrant);
+router.post('/employee-leave-grant', authController.protect, leaveController.getAllEmployeeLeaveGrant);
 
 /**
  * @swagger
@@ -1256,12 +1307,22 @@ router.put('/employee-leave-application/:id', authController.protect, leaveContr
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-application-by-user/{userId}:
- *   get:
+ *   post:
  *     summary: Get an Employee Leave Application by ID
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     parameters:
  *       - in: path
  *         name: userId
@@ -1277,18 +1338,28 @@ router.put('/employee-leave-application/:id', authController.protect, leaveContr
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-application-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveApplicationByUser);
+router.post('/employee-leave-application-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveApplicationByUser);
 
 
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-application-by-team:
- *   get:
+ *   post:
  *     summary: Get an Employee Leave Application by ID
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the Employee Leave Grant
@@ -1297,7 +1368,7 @@ router.get('/employee-leave-application-by-user/:userId', authController.protect
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-application-by-team', authController.protect, leaveController.getEmployeeLeaveApplicationByTeam);
+router.post('/employee-leave-application-by-team', authController.protect, leaveController.getEmployeeLeaveApplicationByTeam);
 
 
 /**
@@ -1328,20 +1399,30 @@ router.delete('/employee-leave-application/:id', authController.protect, leaveCo
 
 /**
  * @swagger
- * /api/v1/Leave/employee-leave-application:
- *   get:
+ * /api/v1/Leave/employee-leave-application-list:
+ *   post:
  *     summary: Get all Employee Leave Entry
  *     tags: [Leave Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Employee Leave Entry
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-application', authController.protect, leaveController.getAllEmployeeLeaveApplication);
+router.post('/employee-leave-application-list', authController.protect, leaveController.getAllEmployeeLeaveApplication);
 
 /**
  * @swagger
@@ -1530,7 +1611,7 @@ router.delete('/short-leave/:id', authController.protect, leaveController.delete
 /**
  * @swagger
  * /api/v1/leave/short-leave-by-user/{userId}:
- *   get:
+ *   post:
  *     summary: Get a ShortLeave by User ID
  *     tags: [Leave Management]
  *     security: 
@@ -1542,6 +1623,16 @@ router.delete('/short-leave/:id', authController.protect, leaveController.delete
  *         schema:
  *           type: string
  *         description: ID of the User
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ShortLeave
@@ -1550,17 +1641,27 @@ router.delete('/short-leave/:id', authController.protect, leaveController.delete
  *       500:
  *         description: Internal server error
  */
-router.get('/short-leave-by-user/:userId', authController.protect, leaveController.getShortLeaveByUser);
+router.post('/short-leave-by-user/:userId', authController.protect, leaveController.getShortLeaveByUser);
 
 
 /**
  * @swagger
  * /api/v1/leave/short-leave-by-team:
- *   get:
+ *   post:
  *     summary: Get a ShortLeave by Team
  *     tags: [Leave Management]
  *     security: 
  *       - bearerAuth: []
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ShortLeave
@@ -1569,7 +1670,7 @@ router.get('/short-leave-by-user/:userId', authController.protect, leaveControll
  *       500:
  *         description: Internal server error
  */
-router.get('/short-leave-by-team', authController.protect, leaveController.getShortLeaveByTeam);
+router.post('/short-leave-by-team', authController.protect, leaveController.getShortLeaveByTeam);
 
 
 /**

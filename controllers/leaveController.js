@@ -139,7 +139,10 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
-  const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   if (!leaveCategory) {
     return next(new AppError('Leave category not found', 404));
   }
@@ -427,7 +430,10 @@ async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCat
 
 exports.getAllLeaveTemplates = async (req, res, next) => {
     try {
-        const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId);
+        const skip = parseInt(req.body.skip) || 0;
+        const limit = parseInt(req.body.next) || 10;
+        const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+        .limit(parseInt(limit));
         if(leaveTemplates)
         {
         for(var i = 0; i < leaveTemplates.length; i++) {   
@@ -695,7 +701,10 @@ await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);
 });
 
 exports.getAllEmployeeLeaveAssignments = catchAsync(async (req, res, next) => {
- const employeeLeaveAssignments = await EmployeeLeaveAssignment.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+ const employeeLeaveAssignments = await EmployeeLeaveAssignment.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+ .limit(parseInt(limit));
  res.status(200).json({
    status: 'success',
    data: employeeLeaveAssignments,
@@ -774,7 +783,8 @@ console.log(objectIdArray);
     const limit = parseInt(req.body.next) || 10;
   const leaveGrants = await LeaveGrant.find({
     employee: { $in: objectIdArray }
-});
+}).skip(parseInt(skip))
+.limit(parseInt(limit));;
  
   res.status(200).json({
     status: 'success',
@@ -837,7 +847,10 @@ console.log(objectIdArray);
  });
  
  exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
-  const leaveGrants = await LeaveGrant.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const leaveGrants = await LeaveGrant.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: leaveGrants,
@@ -927,7 +940,10 @@ console.log(objectIdArray);
  exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
      try {
          const { userId } = req.params;
-         const leaveApplications = await LeaveApplication.find({ employee: userId });
+         const skip = parseInt(req.body.skip) || 0;
+         const limit = parseInt(req.body.next) || 10;
+         const leaveApplications = await LeaveApplication.find({ employee: userId }).skip(parseInt(skip))
+         .limit(parseInt(limit));
  
          if (leaveApplications.length === 0) {
              return next(new AppError('Employee Leave Applications not found', 404));
@@ -974,7 +990,8 @@ console.log(objectIdArray);
     const limit = parseInt(req.body.next) || 10;
   const leaveApplications = await LeaveApplication.find({
     employee: { $in: objectIdArray }
-});
+}).skip(parseInt(skip))
+.limit(parseInt(limit));
 
 for(var i = 0; i < leaveApplications.length; i++) {   
   const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
@@ -1145,7 +1162,10 @@ exports.deleteShortLeave = async (req, res, next) => {
 
 exports.getShortLeaveByUser = async (req, res, next) => {
     try {
-        const shortLeaves = await ShortLeave.find({ employee: req.params.userId});
+      const skip = parseInt(req.body.skip) || 0;
+      const limit = parseInt(req.body.next) || 10;
+        const shortLeaves = await ShortLeave.find({ employee: req.params.userId}).skip(parseInt(skip))
+        .limit(parseInt(limit));
             res.status(200).json({
                 status: 'success',
                 data: shortLeaves
@@ -1182,7 +1202,8 @@ console.log(objectIdArray);
     const limit = parseInt(req.body.next) || 10;
   const shortLeaves = await ShortLeave.find({
     employee: { $in: objectIdArray }
-});
+}).skip(parseInt(skip))
+.limit(parseInt(limit));
  
   res.status(200).json({
     status: 'success',
