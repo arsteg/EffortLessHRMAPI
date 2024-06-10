@@ -141,6 +141,7 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
 exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const totalCount = await LeaveCategory.countDocuments({ company: req.cookies.companyId });
   const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
   .limit(parseInt(limit));
   if (!leaveCategory) {
@@ -148,7 +149,8 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: 'success',
-    data: leaveCategory
+    data: leaveCategory,
+    total: totalCount
   });
 });
 exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
@@ -432,6 +434,7 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
     try {
         const skip = parseInt(req.body.skip) || 0;
         const limit = parseInt(req.body.next) || 10;
+        const totalCount = await LeaveTemplate.countDocuments({ company: req.cookies.companyId });
         const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
         .limit(parseInt(limit));
         if(leaveTemplates)
@@ -470,7 +473,8 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
         }
         res.status(200).json({
             status: 'success',
-            data: leaveTemplates
+            data: leaveTemplates,
+            total: totalCount
         });
     } catch (err) {
         res.status(500).json({
@@ -521,14 +525,13 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
       const updatedCategories = await Promise.all(
         leaveCategories.map(async (category) => {
           const {
-            users,
+            users = [],
             ...grantData
           } = category;
           const existingCategory = await LeaveTemplateCategory.findOne({
             leaveCategory: category.leaveCategory,
             leaveTemplate: leaveTemplateId,
           });
-  
           let categoryResult;
           if (existingCategory) {
             grantData.isReadyForApply=true;
@@ -545,22 +548,22 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
             categoryResult = await newCategory.save();
           }
   
-          const userOperations = users.map(async (user) => {
-            console.log(user);
-            const filter = {
-              leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
-              user: user.user
-            };
-            const update = {
-              leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
-              user: user.user
-            };
-            const options = { upsert: true, new: true, setDefaultsOnInsert: true };
-  
-            return TemplateApplicableCategoryEmployee.findOneAndUpdate(filter, update, options);
-          });
-  
-          await Promise.all(userOperations);
+          if(users.length>=0){
+            const userOperations = users.map(async (user) => {
+              const filter = {
+                leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
+                user: user.user
+              };
+              const update = {
+                leaveTemplateCategory: existingCategory ? existingCategory._id : categoryResult._id,
+                user: user.user
+              };
+              const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    
+              return TemplateApplicableCategoryEmployee.findOneAndUpdate(filter, update, options);
+            });
+            await Promise.all(userOperations);
+          }
   
           return categoryResult;
         })
@@ -568,6 +571,7 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
   
       return updatedCategories;
     } catch (err) {
+      console.log(err);
       throw new AppError('Internal server error', 500);
     }
 }
@@ -703,11 +707,13 @@ await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);
 exports.getAllEmployeeLeaveAssignments = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const totalCount = await EmployeeLeaveAssignment.countDocuments({ company: req.cookies.companyId });
  const employeeLeaveAssignments = await EmployeeLeaveAssignment.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
  .limit(parseInt(limit));
  res.status(200).json({
    status: 'success',
    data: employeeLeaveAssignments,
+   total: totalCount
  });
 });
 

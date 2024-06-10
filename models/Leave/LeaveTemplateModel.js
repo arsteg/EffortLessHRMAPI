@@ -23,7 +23,7 @@ var leaveTemplateSchema = new Schema({
   secondaryApprover: {
     type: String,
     required: function() {
-      return this.approvalType === 'template-wise'; // Adjust the condition based on your actual logic
+      return this.approvalType === 'template-wise' && this.approvalLevel === '2 Level'; // Adjust the condition based on your actual logic
     }
   },
   isCommentMandatory: {
