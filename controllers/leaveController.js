@@ -784,18 +784,16 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
     } 
    
     const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
-console.log(objectIdArray);
+    console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;
-  const leaveGrants = await LeaveGrant.find({
-    employee: { $in: objectIdArray }
-}).skip(parseInt(skip))
-.limit(parseInt(limit));;
- 
-  res.status(200).json({
-    status: 'success',
-    data: leaveGrants
-  });
+    const limit = parseInt(req.body.next) || 10;   
+    const totalCount = await LeaveGrant.countDocuments({  employee: { $in: objectIdArray } });     
+    const leaveGrants = await LeaveGrant.find({employee: { $in: objectIdArray }}).skip(parseInt(skip)).limit(parseInt(limit));
+    res.status(200).json({
+      status: 'success',
+      data: leaveGrants,
+      total: totalCount
+    });
 });
 
  exports.updateEmployeeLeaveGrant = async (req, res, next) => {
@@ -855,11 +853,13 @@ console.log(objectIdArray);
  exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const totalCount = await LeaveGrant.countDocuments({ company: req.cookies.companyId });  
   const leaveGrants = await LeaveGrant.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
   .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: leaveGrants,
+    total: totalCount
   });
  });
 
@@ -948,6 +948,8 @@ console.log(objectIdArray);
          const { userId } = req.params;
          const skip = parseInt(req.body.skip) || 0;
          const limit = parseInt(req.body.next) || 10;
+         const totalCount = await LeaveApplication.countDocuments({ employee: userId });  
+ 
          const leaveApplications = await LeaveApplication.find({ employee: userId }).skip(parseInt(skip))
          .limit(parseInt(limit));
  
@@ -966,7 +968,8 @@ console.log(objectIdArray);
         }
          res.status(200).json({
              status: 'success',
-             data: leaveApplications
+             data: leaveApplications,
+             total: totalCount
          });
      } catch (error) {
          next(error);
@@ -994,6 +997,8 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
 console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
+    const totalCount = await LeaveApplication.countDocuments({  employee: { $in: objectIdArray } });  
+ 
   const leaveApplications = await LeaveApplication.find({
     employee: { $in: objectIdArray }
 }).skip(parseInt(skip))
@@ -1012,7 +1017,8 @@ for(var i = 0; i < leaveApplications.length; i++) {
  
   res.status(200).json({
     status: 'success',
-    data: leaveApplications
+    data: leaveApplications,
+    total:totalCount
   });
 });
 
@@ -1037,8 +1043,13 @@ for(var i = 0; i < leaveApplications.length; i++) {
  
  exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
      try {
-         const leaveApplications = await LeaveApplication.find({ company: req.cookies.companyId });
-         for(var i = 0; i < leaveApplications.length; i++) {   
+          const skip = parseInt(req.body.skip) || 0;
+          const limit = parseInt(req.body.next) || 10;
+          const totalCount = await LeaveApplication.countDocuments({ company: req.cookies.companyId});  
+      
+          const leaveApplications = await LeaveApplication.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+         .limit(parseInt(limit));
+          for(var i = 0; i < leaveApplications.length; i++) {   
           const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
           if(halfDays) 
           {
@@ -1050,7 +1061,8 @@ for(var i = 0; i < leaveApplications.length; i++) {
         }
          res.status(200).json({
              status: 'success',
-             data: leaveApplications
+             data: leaveApplications,
+             total: totalCount
          });
      } catch (error) {
          next(error);
@@ -1170,11 +1182,14 @@ exports.getShortLeaveByUser = async (req, res, next) => {
     try {
       const skip = parseInt(req.body.skip) || 0;
       const limit = parseInt(req.body.next) || 10;
+      const totalCount = await ShortLeave.countDocuments({ employee: req.params.userId });  
+ 
         const shortLeaves = await ShortLeave.find({ employee: req.params.userId}).skip(parseInt(skip))
         .limit(parseInt(limit));
             res.status(200).json({
                 status: 'success',
-                data: shortLeaves
+                data: shortLeaves,
+                total: totalCount
             });        
     } catch (err) {
         res.status(500).json({
@@ -1206,6 +1221,8 @@ exports.getShortLeaveByTeam = catchAsync(async (req, res, next) => {
 console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
+    const totalCount = await ShortLeave.countDocuments({   employee: { $in: objectIdArray } });  
+ 
   const shortLeaves = await ShortLeave.find({
     employee: { $in: objectIdArray }
 }).skip(parseInt(skip))
@@ -1213,7 +1230,8 @@ console.log(objectIdArray);
  
   res.status(200).json({
     status: 'success',
-    data: shortLeaves
+    data: shortLeaves,
+    total: totalCount
   });
 });
 
@@ -1269,13 +1287,17 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
     const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
+    const totalCount = await LeaveAssigned.countDocuments({ employee: { $in: objectIdArray } });  
+ 
   const leaveBalances = await LeaveAssigned.find({
     employee: { $in: objectIdArray }
-});
+}).skip(parseInt(skip))
+.limit(parseInt(limit));
  
   res.status(200).json({
     status: 'success',
-    data: leaveBalances
+    data: leaveBalances,
+    total: totalCount
   });
 });
 

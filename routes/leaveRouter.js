@@ -1135,7 +1135,7 @@ router.put('/employee-leave-grant/:id', authController.protect, leaveController.
  *       500:
  *         description: Internal server error
  */
-router.post('/employee-leave-grant', authController.protect, leaveController.getAllEmployeeLeaveGrant);
+router.post('/employee-leave-grant-list', authController.protect, leaveController.getAllEmployeeLeaveGrant);
 
 /**
  * @swagger
@@ -1736,7 +1736,17 @@ router.post('/get-leave-balance', authController.protect, leaveController.getLea
  *      summary: "Get Leave Balance"   
  *      security: [{
  *         bearerAuth: []
- *     }]     
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string 
  *      produces:
  *          - application/json
  *      responses:
