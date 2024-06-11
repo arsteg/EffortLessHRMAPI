@@ -1588,7 +1588,12 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
-  const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId});
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const totalCount = await EmployeeOnDutyRequest.countDocuments({  user: req.params.userId }); 
+
+  const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId}).skip(parseInt(skip))
+  .limit(parseInt(limit));  
  
   if(dutyRequests.length>0) 
     {      
@@ -1608,6 +1613,7 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: dutyRequests,
+    total: totalCount
   });
 });
 

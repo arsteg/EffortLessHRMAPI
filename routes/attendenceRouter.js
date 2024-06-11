@@ -3184,7 +3184,7 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
 /**
  * @swagger
  * /api/v1/attendance/employee-duty-requests-by-user/{userId}:
- *   get:
+ *   post:
  *     summary: Get a DutyRequest by ID
  *     tags: [Attendance Management]
  *     security: [{
@@ -3197,6 +3197,16 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *         schema:
  *           type: string
  *         description: ID of the DutyRequest
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the DutyRequest
@@ -3205,7 +3215,7 @@ attendanceRouter.get('/employee-duty-requests/:id', authController.protect, atte
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/employee-duty-requests-by-user/:userId', authController.protect, attendanceController.getEmployeeDutyRequestsByUser);
+attendanceRouter.post('/employee-duty-requests-by-user/:userId', authController.protect, attendanceController.getEmployeeDutyRequestsByUser);
 
 /**
  * @swagger
