@@ -1649,13 +1649,19 @@ exports.getRegularizationRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.getRegularizationRequestByUser = catchAsync(async (req, res, next) => {
-  const regularizationRequest = await RegularizationRequest.find({ user: req.params.userId});
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const totalCount = await RegularizationRequest.countDocuments({  user: req.params.userId }); 
+
+  const regularizationRequest = await RegularizationRequest.find({ user: req.params.userId}).skip(parseInt(skip))
+  .limit(parseInt(limit));  
   if (!regularizationRequest) {
     return next(new AppError('Regularization Request not found', 404));
   }
   res.status(200).json({
     status: 'success',
     data: regularizationRequest,
+    total: totalCount
   });
 });
 

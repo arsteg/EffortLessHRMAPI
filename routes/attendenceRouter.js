@@ -3045,7 +3045,7 @@ attendanceRouter.post('/regularizationRequests-by-company',authController.protec
  /**
    * @swagger
    * /api/v1/attendance/regularizationRequests-by-user/{userId}:
-   *   get:
+   *   post:
    *     summary: Get a Regularization Request by ID
    *     tags: [Attendance Management]
    *     security: [{
@@ -3058,6 +3058,16 @@ attendanceRouter.post('/regularizationRequests-by-company',authController.protec
    *         schema:
    *           type: string
    *         description: ID of the Regularization Request
+   *     requestBody:
+   *         content:
+   *             application/json:
+   *                 schema:
+   *                     type: object
+   *                     properties:
+   *                         skip:
+   *                             type: string
+   *                         next:
+   *                             type: string
    *     responses:
    *       200:
    *         description: Successful response with the Regularization Request
@@ -3066,7 +3076,7 @@ attendanceRouter.post('/regularizationRequests-by-company',authController.protec
    *       500:
    *         description: Internal server error
    */
- attendanceRouter.get('/regularizationRequests-by-user/:userId',authController.protect,attendanceController.getRegularizationRequestByUser);
+ attendanceRouter.post('/regularizationRequests-by-user/:userId',authController.protect,attendanceController.getRegularizationRequestByUser);
   
 
 
