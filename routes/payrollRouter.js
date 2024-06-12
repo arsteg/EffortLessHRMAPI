@@ -570,20 +570,30 @@ router.post('/fixed-contribution',authController.protect, payrollController.crea
 
 /**
  * @swagger
- * /api/v1/payroll/fixed-contribution:
- *   get:
+ * /api/v1/payroll/fixed-contribution-list:
+ *   post:
  *     summary: Get all FixedContributions
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
  *     responses:
  *       200:
  *         description: Successful response with FixedAllowances
  *       500:
  *         description: Internal server error
  */
-router.get('/fixed-contribution',authController.protect, payrollController.getAllFixedContributions);
+router.post('/fixed-contribution-list',authController.protect, payrollController.getAllFixedContributions);
 
 /**
  * @swagger
