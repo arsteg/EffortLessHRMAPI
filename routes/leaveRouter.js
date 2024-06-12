@@ -1416,6 +1416,8 @@ router.delete('/employee-leave-application/:id', authController.protect, leaveCo
  *                             type: string
  *                         next:
  *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Employee Leave Entry

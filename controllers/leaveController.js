@@ -1045,9 +1045,17 @@ for(var i = 0; i < leaveApplications.length; i++) {
      try {
           const skip = parseInt(req.body.skip) || 0;
           const limit = parseInt(req.body.next) || 10;
-          const totalCount = await LeaveApplication.countDocuments({ company: req.cookies.companyId});  
+          const status = req.body.status;
+
+          let query = { company: req.cookies.companyId };
+          if (status !== null && status !== undefined) {
+              query.status = status;
+          }
+
+          //const totalCount = await LeaveApplication.countDocuments({ company: req.cookies.companyId});  
+          const totalCount = await LeaveApplication.countDocuments(query);
       
-          const leaveApplications = await LeaveApplication.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+          const leaveApplications = await LeaveApplication.find(query).skip(parseInt(skip))
          .limit(parseInt(limit));
           for(var i = 0; i < leaveApplications.length; i++) {   
           const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
