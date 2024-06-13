@@ -916,7 +916,7 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
   const { employee, title, status,amount, expenseReportExpenses } = req.body;
-
+  var documentLink;
   try {
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({
