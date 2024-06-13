@@ -1510,8 +1510,8 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
   }
   else
   {
-    const advanceCategoryExists = await AdvanceCategory.findOne({ label: label });
-    if(advanceCategoryExists)
+  const advanceCategoryExists = await AdvanceCategory.findOne({ label: label, company: company });
+  if(advanceCategoryExists)
     {
       res.status(500).json({
         status: 'failure',
@@ -1583,7 +1583,7 @@ res.status(200).json({
 });
 
 exports.createAdvanceTemplate = async (req, res, next) => {
-  try {
+  
     // Extract data from the request body
     const {
       policyLabel,
@@ -1594,53 +1594,68 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       advanceCategories,
     } = req.body;
 
-    // Create the AdvanceTemplate document
-    const advanceTemplate = await AdvanceTemplate.create({
-      policyLabel,
-      approvalType,
-      approvalLevel,
-      firstApprovalEmployee,
-      secondApprovalEmployee,
-      company: req.user.company, // Assuming user information is available in req.user
+    const company = req.cookies.companyId;
+
+  // Validate if company value exists in cookies
+  if (!company) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
     });
+  }
     if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
       return next(new AppError('Advance Category Not Exists in Request', 400));
     }
-    for (const category of advanceCategories) {
-      const result = await AdvanceCategory.findById(category.advanceCategory);
-      console.log(result);
-       if (!result) {
-        return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Category',
-        });
-      }
-    }
-    // Create the AdvanceTemplateCategories documents
-    if (advanceCategories && advanceCategories.length > 0) {
-      const createdCategories = await AdvanceTemplateCategories.insertMany(
-        advanceCategories.map(category => ({
-          advanceTemplate: advanceTemplate._id,
-          advanceCategory: category.advanceCategory,
-        }))
-      );
-      advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
-      await advanceTemplate.save();
-    }
-
-    // Send a success response
-    res.status(201).json({
-      status: 'success',
-      data: advanceTemplate,
-    });
-  } catch (error) {
-    // Handle errors and send an error response
-    console.error(error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
+    else
+    {
+      const advanceCategoryExists = await AdvanceTemplate.findOne({ policyLabel: policyLabel, company: company });
+      console.log(advanceCategoryExists);
+      if(advanceCategoryExists)
+        {
+          res.status(500).json({
+            status: 'failure',
+            message: 'Label already in use for another category',
+          });
+        }
+        else
+        {
+          { // Create the AdvanceTemplate document
+            const advanceTemplate = await AdvanceTemplate.create({
+              policyLabel,
+              approvalType,
+              approvalLevel,
+              firstApprovalEmployee,
+              secondApprovalEmployee,
+              company: company, // Assuming user information is available in req.user
+            });
+            for (const category of advanceCategories) {
+              const result = await AdvanceCategory.findById(category.advanceCategory);
+              console.log(result);
+              if (!result) {
+                return res.status(400).json({
+                  status: 'failure',
+                  message: 'Invalid Category',
+                });
+              }
+            }
+            // Create the AdvanceTemplateCategories documents
+            if (advanceCategories && advanceCategories.length > 0) {
+              const createdCategories = await AdvanceTemplateCategories.insertMany(
+                advanceCategories.map(category => ({
+                  advanceTemplate: advanceTemplate._id,
+                  advanceCategory: category.advanceCategory,
+                }))
+              );
+              advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
+              await advanceTemplate.save();
+            } // Send a success response
+            res.status(201).json({
+              status: 'success',
+              data: advanceTemplate,
+            });
+            } 
+          }
+        }
 };
 
 exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
