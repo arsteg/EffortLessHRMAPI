@@ -161,7 +161,7 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
 /**
  * @swagger
  * /api/v1/company/holiday-by-year:
- *   get:
+ *   post:
  *     summary: Get a Holiday by Year
  *     tags: [Company Management]
  *     security: 
@@ -173,6 +173,18 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  *         schema:
  *           type: string
  *         description: Year of the Holidays
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the Holiday
@@ -181,7 +193,7 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  *       500:
  *         description: Internal server error
  */
-router.get('/holiday-by-year', authController.protect, companyController.getAllHolidaysByYear);
+router.post('/holiday-by-year', authController.protect, companyController.getAllHolidaysByYear);
   
 /**
  * @swagger

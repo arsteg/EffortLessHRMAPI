@@ -1020,6 +1020,8 @@ router.get('/employee-leave-grant-by-user/:userId', authController.protect, leav
  *                             type: string
  *                         next:
  *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the Employee Leave Grant
@@ -1128,6 +1130,8 @@ router.put('/employee-leave-grant/:id', authController.protect, leaveController.
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:
@@ -1664,6 +1668,8 @@ router.post('/short-leave-by-user/:userId', authController.protect, leaveControl
  *                             type: string
  *                         next:
  *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ShortLeave
@@ -1678,11 +1684,23 @@ router.post('/short-leave-by-team', authController.protect, leaveController.getS
 /**
  * @swagger
  * /api/v1/leave/short-leave:
- *   get:
+ *   post:
  *     summary: Get a ShortLeave
  *     tags: [Leave Management]
  *     security: 
  *       - bearerAuth: []
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ShortLeave
@@ -1691,7 +1709,7 @@ router.post('/short-leave-by-team', authController.protect, leaveController.getS
  *       500:
  *         description: Internal server error
  */
-router.get('/short-leave', authController.protect, leaveController.getAllShortLeave);
+router.post('/short-leave', authController.protect, leaveController.getAllShortLeave);
 
 /**
  * @swagger

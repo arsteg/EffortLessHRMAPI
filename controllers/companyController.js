@@ -194,8 +194,12 @@ exports.deleteHoliday = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
-  const holidayCalendars = await HolidayCalendar.find({}).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year);
-  if(holidayCalendars)
+  const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;   
+    const totalCount = await HolidayCalendar.countDocuments({  company: req.cookies.companyId, status : req.body.status });     
+    const holidayCalendars = await HolidayCalendar.find({}).where('status').equals(req.body.status).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year).skip(parseInt(skip)).limit(parseInt(limit));
+
+    if(holidayCalendars)
       {        
           for(var i = 0; i < holidayCalendars.length; i++) {     
           const holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendars[i]._id);  
@@ -210,7 +214,8 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
       }
   res.status(200).json({
     status: 'success',
-    data: holidayCalendars
+    data: holidayCalendars,
+    total: totalCount
   });
 });
 

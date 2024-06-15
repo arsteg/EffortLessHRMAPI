@@ -789,8 +789,8 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
     console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;   
-    const totalCount = await LeaveGrant.countDocuments({  employee: { $in: objectIdArray } });     
-    const leaveGrants = await LeaveGrant.find({employee: { $in: objectIdArray }}).skip(parseInt(skip)).limit(parseInt(limit));
+    const totalCount = await LeaveGrant.countDocuments({  employee: { $in: objectIdArray }, status : req.body.status });     
+    const leaveGrants = await LeaveGrant.find({employee: { $in: objectIdArray }, status : req.body.status}).skip(parseInt(skip)).limit(parseInt(limit));
     res.status(200).json({
       status: 'success',
       data: leaveGrants,
@@ -855,8 +855,22 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
  exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await LeaveGrant.countDocuments({ company: req.cookies.companyId });  
-  const leaveGrants = await LeaveGrant.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  // Extract companyId from req.cookies
+const company = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!company) {
+  return next(new AppError('Company ID not found in cookies', 400));
+}
+  const query = { company: company };
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
+console.log(query);
+  // Get the total count of documents matching the query
+  const totalCount = await LeaveGrant.countDocuments(query);
+
+  // Get the regularization requests matching the query with pagination
+  const leaveGrants = await LeaveGrant.find(query).skip(parseInt(skip))
   .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
@@ -1231,10 +1245,11 @@ exports.getShortLeaveByTeam = catchAsync(async (req, res, next) => {
 console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await ShortLeave.countDocuments({   employee: { $in: objectIdArray } });  
+    
+    const totalCount = await ShortLeave.countDocuments({   employee: { $in: objectIdArray } , status:  req.body.status});  
  
   const shortLeaves = await ShortLeave.find({
-    employee: { $in: objectIdArray }
+    employee: { $in: objectIdArray } , status:  req.body.status
 }).skip(parseInt(skip))
 .limit(parseInt(limit));
  
@@ -1247,10 +1262,17 @@ console.log(objectIdArray);
 
 exports.getAllShortLeave = async (req, res, next) => {
   try {
-      const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId})
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    
+    const totalCount = await ShortLeave.countDocuments({company: req.cookies.companyId , status:  req.body.status});  
+
+      const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId}).skip(parseInt(skip))
+      .limit(parseInt(limit));
           res.status(200).json({
               status: 'success',
-              data: shortLeaves
+              data: shortLeaves,
+              total: totalCount
           });
       
   } catch (err) {
