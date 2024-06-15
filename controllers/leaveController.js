@@ -154,11 +154,8 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   });
 });
 exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
-  
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
- 
   const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate,isReadyForApply: true});
- 
   res.status(200).json({
     status: 'success',
     data: leaveTemplateCategory
@@ -628,11 +625,16 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const employeeLeaveAssignmentExists = await EmployeeLeaveAssignment.find({}).where('user').equals(req.body.user);
   var employeeLeaveAssignment;
-  const leaveTemplate=await LeaveTemplate.findById(req.body.leaveTemplate);   
+  const leaveTemplate=await LeaveTemplate.findById(req.body.leaveTemplate);
   if (leaveTemplate && leaveTemplate.approvalType == "template-wise")
   {    
         req.body.primaryApprover = leaveTemplate.primaryApprover;
-        req.body.secondaryApprover = leaveTemplate.secondaryApprover;      
+        if(leaveTemplate.secondaryApprover!=""){
+          req.body.secondaryApprover = leaveTemplate.secondaryApprover;      
+        }
+        else{
+          delete req.body.secondaryApprover;
+        }
   }  
   if (employeeLeaveAssignmentExists.length<=0) {   
      
