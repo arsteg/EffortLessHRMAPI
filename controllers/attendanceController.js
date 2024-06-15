@@ -1562,9 +1562,22 @@ exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeOnDutyRequest.countDocuments({ company: req.cookies.companyId });  
- 
-  const dutyRequests = await EmployeeOnDutyRequest.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+// Extract companyId from req.cookies
+const company = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!company) {
+  return next(new AppError('Company ID not found in cookies', 400));
+}
+  const query = { company: company };
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
+console.log(query);
+  // Get the total count of documents matching the query
+  const totalCount = await EmployeeOnDutyRequest.countDocuments(query);
+
+  // Get the regularization requests matching the query with pagination
+  const dutyRequests = await EmployeeOnDutyRequest.find(query).skip(parseInt(skip))
   .limit(parseInt(limit));  
   if(dutyRequests) 
   {      
@@ -1703,10 +1716,24 @@ exports.deleteRegularizationRequest = catchAsync(async (req, res, next) => {
 exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await RegularizationRequest.countDocuments({ company: req.cookies.companyId });  
- 
-  const regularizationRequests = await RegularizationRequest.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+  // Extract companyId from req.cookies
+  const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  const query = { company: company };
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
+console.log(query);
+  // Get the total count of documents matching the query
+  const totalCount = await RegularizationRequest.countDocuments(query);
+
+  // Get the regularization requests matching the query with pagination
+  const regularizationRequests = await RegularizationRequest.find(query)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: regularizationRequests,

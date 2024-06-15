@@ -1309,7 +1309,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
         }
       })
     );
-console.log(updatedFields);
+    console.log(updatedFields);
     // Remove ExpenseReportExpenseFields not present in the request
     const fieldIdsToUpdate = updatedFields.map((field) => field.id);
     await ExpenseReportExpenseFields.deleteMany({

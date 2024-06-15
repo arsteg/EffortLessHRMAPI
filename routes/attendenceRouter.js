@@ -3034,6 +3034,8 @@ attendanceRouter.delete('/regularizationRequests/:id',authController.protect,att
    *                             type: string
    *                         next:
    *                             type: string
+   *                         status:
+   *                             type: string
    *     responses:
    *       200:
    *         description: Successful response with Regularization Requests
@@ -3336,6 +3338,8 @@ attendanceRouter.delete('/employee-duty-requests/:id', authController.protect, a
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:
