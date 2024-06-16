@@ -199,12 +199,72 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   });
   
   exports.getAllUserNotifications = catchAsync(async (req, res, next) => {
-    const userNotifications = await UserNotification.find();
+    const userNotifications = await UserNotification.find({company:req.cookies.companyId});
     res.status(200).json({
       status: 'success',
       data: userNotifications
     });
   });
+  
+exports.getAllUserNotificationsByNotification = catchAsync(async (req, res, next) => {
+  const notificationId = req.params.id;
+
+  try {
+      const userNotifications = await UserNotification.find({company:req.cookies.companyId}).where('notification').equals(req.params.id);
+      res.status(200).json({
+          status: 'success',
+          data: userNotifications
+      });
+  } catch (error) {
+      res.status(400).json({
+          status: 'error',
+          message: error.message
+      });
+  }
+});
+
+exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => {
+    const { user, notification, action } = req.body;
+    if (!user || !notification || !action) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'User, notification, and action are required'
+        });
+    }
+
+    if (action === 'assign') {
+        const existingNotification = await UserNotification.findOne({ user, notification });
+        if (existingNotification) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Notification already assigned to this user'
+            });        }
+
+        const userNotification = await UserNotification.create({ user, notification, status: 'unread' });
+        res.status(201).json({
+            status: 'success',
+            data: userNotification
+        });
+    } else if (action === 'unassign') {
+        const deletedNotification = await UserNotification.findOneAndDelete({ user, notification });
+        if (!deletedNotification) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Notification not found for this user'
+            });
+        }
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Notification successfully unassigned'
+        });
+    } else {
+        res.status(400).json({
+            status: 'fail',
+            message: 'Invalid action'
+        });
+    }
+});
 
 
   exports.testMe = catchAsync(async (req, res, next) => {    
