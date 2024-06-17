@@ -435,6 +435,32 @@ router.get('/leave-categories-by-user/:userId', authController.protect, leaveCon
 
 /**
  * @swagger
+ * /api/v1/leave/leave-categories-by-userv1/{userId}:
+ *   get:
+ *     summary: Get a leave category by UserId
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     tags: [Leave Management]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the leave category
+ *     responses:
+ *       200:
+ *         description: Successful response with the leave category
+ *       404:
+ *         description: Leave category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/leave-categories-by-userv1/:userId', authController.protect, leaveController.getAllLeaveCategoryByUserV1);
+
+/**
+ * @swagger
  * /api/v1/leave/leave-categories/{id}:
  *   delete:
  *     summary: Delete an Leave Category by ID

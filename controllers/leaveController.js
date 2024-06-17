@@ -162,6 +162,15 @@ exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllLeaveCategoryByUserV1 = catchAsync(async (req, res, next) => {
+  const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate, isReadyForApply: true}).populate('leaveCategory');
+  res.status(200).json({
+    status: 'success',
+    data: leaveTemplateCategory
+  });
+});
+
 exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
 const leaveCategory = await LeaveCategory.findById(req.params.id);   
 if (!leaveCategory) {
@@ -633,7 +642,8 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
           req.body.secondaryApprover = leaveTemplate.secondaryApprover;      
         }
         else{
-          delete req.body.secondaryApprover;
+          req.body.secondaryApprover = null;
+          //delete req.body.secondaryApprover;
         }
   }  
   if (employeeLeaveAssignmentExists.length<=0) {   
