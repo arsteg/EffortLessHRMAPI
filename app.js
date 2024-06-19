@@ -22,7 +22,6 @@ const AppError = require('./utils/appError');
 var recruitmentRouter = require('./routes/recruitmentRouter');
 var app = express();
 const cookieParser = require("cookie-parser");
-const cron = require("node-cron");
 const leaveController = require('./controllers/leaveController');
 //app.use(express.json({ lmit: '5000mb' }));
 const path = require('path');
@@ -125,17 +124,5 @@ app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/zoom', zoomRouter);
 app.use('/api/v1/payroll', payrollRouter);
 app.use('/api/v1/eventNotifications', eventNotificationRouter);
-
- //execute on 1st day of each month
- cron.schedule('0 0 1 * *', () => {
-  console.log('This Job will run every day......');
-//  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
-});
-
-//execute at every minute
-cron.schedule('* * * * *', async () => {
-  console.log('This Job will run every minute...');
- // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
-});
 
 module.exports = app;
