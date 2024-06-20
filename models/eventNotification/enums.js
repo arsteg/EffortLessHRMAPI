@@ -13,12 +13,12 @@ const RecurringFrequency = {
   };  
   
   const NotificationStatus = { // Corrected typo
+    UNREAD: 'unread',
     SCHEDULED: 'scheduled',
     SENT: 'sent',
     DELIVERED: 'delivered',
     READ: 'read' // Corrected typo
-  };
-  
+  };  
   module.exports = {
     RecurringFrequency,
     NotificationChannel,

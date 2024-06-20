@@ -49,7 +49,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/Notification', authController.protect, eventNotificationController.createEventNotification);
+router.post('/Notification', eventNotificationController.createEventNotification);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.post('/Notification', authController.protect, eventNotificationController
  *       500:
  *         description: Internal server error
  */
-router.get('/Notification/:id', authController.protect, eventNotificationController.getEventNotification);
+router.get('/Notification/:id',  eventNotificationController.getEventNotification);
 
 /**
  * @swagger
@@ -121,7 +121,7 @@ router.get('/Notification/:id', authController.protect, eventNotificationControl
  *       500:
  *         description: Internal server error
  */
-router.put('/Notification/:id', authController.protect, eventNotificationController.updateEventNotification);
+router.put('/Notification/:id',  eventNotificationController.updateEventNotification);
 
 /**
  * @swagger
@@ -158,7 +158,7 @@ router.delete('/Notification/:id', authController.protect, eventNotificationCont
  *       500:
  *         description: Internal server error
  */
-router.get('/Notification', authController.protect, eventNotificationController.getAllEventNotifications);
+router.get('/Notification', eventNotificationController.getAllEventNotifications);
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get('/Notification', authController.protect, eventNotificationController.
  *       500:
  *         description: Internal server error
  */
-router.post('/eventNotificationTypes', authController.protect, eventNotificationController.createEventNotificationType);
+router.post('/eventNotificationTypes', eventNotificationController.createEventNotificationType);
 
 /**
  * @swagger
@@ -208,7 +208,7 @@ router.post('/eventNotificationTypes', authController.protect, eventNotification
  *       500:
  *         description: Internal server error
  */
-router.get('/eventNotificationType/:id', authController.protect, eventNotificationController.getEventNotificationType);
+router.get('/eventNotificationType/:id', eventNotificationController.getEventNotificationType);
 
 /**
  * @swagger
@@ -243,7 +243,7 @@ router.get('/eventNotificationType/:id', authController.protect, eventNotificati
  *       500:
  *         description: Internal server error
  */
-router.put('/eventNotificationTypes/:id', authController.protect, eventNotificationController.updateEventNotificationType);
+router.put('/eventNotificationTypes/:id',  eventNotificationController.updateEventNotificationType);
 
 /**
  * @swagger
@@ -266,7 +266,7 @@ router.put('/eventNotificationTypes/:id', authController.protect, eventNotificat
  *       500:
  *         description: Internal server error
  */
-router.delete('/eventNotificationTypes/:id', authController.protect, eventNotificationController.deleteEventNotificationType);
+router.delete('/eventNotificationTypes/:id',  eventNotificationController.deleteEventNotificationType);
 
 /**
  * @swagger
@@ -315,7 +315,7 @@ router.get('/eventNotificationTypes',  eventNotificationController.getAllEventNo
  *       500:
  *         description: Internal server error
  */
-router.post('/userNotifications', authController.protect, eventNotificationController.createUserNotification);
+router.post('/userNotifications',  eventNotificationController.createUserNotification);
 
 /**
  * @swagger
@@ -338,7 +338,7 @@ router.post('/userNotifications', authController.protect, eventNotificationContr
  *       500:
  *         description: Internal server error
  */
-router.get('/userNotifications/:id', authController.protect, eventNotificationController.getUserNotification);
+router.get('/userNotifications/:id', eventNotificationController.getUserNotification);
 
 /**
  * @swagger
@@ -376,7 +376,7 @@ router.get('/userNotifications/:id', authController.protect, eventNotificationCo
  *       500:
  *         description: Internal server error
  */
-router.put('/userNotifications/:id', authController.protect, eventNotificationController.updateUserNotification);
+router.put('/userNotifications/:id',  eventNotificationController.updateUserNotification);
 
 /**
  * @swagger
@@ -399,7 +399,7 @@ router.put('/userNotifications/:id', authController.protect, eventNotificationCo
  *       500:
  *         description: Internal server error
  */
-router.delete('/userNotifications/:id', authController.protect, eventNotificationController.deleteUserNotification);
+router.delete('/userNotifications/:id', eventNotificationController.deleteUserNotification);
 
 /**
  * @swagger
@@ -413,6 +413,62 @@ router.delete('/userNotifications/:id', authController.protect, eventNotificatio
  *       500:
  *         description: Internal server error
  */
-router.get('/userNotifications', authController.protect, eventNotificationController.getAllUserNotifications);
+router.get('/userNotifications', eventNotificationController.getAllUserNotifications);
+
+/**
+ * @swagger
+ * /api/v1/eventNotifications/userNotifications/notification/{id}:
+ *   get:
+ *     summary: Get all user notifications by Notification id
+ *     tags: [Event Notification]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user notification 
+ *     responses:
+ *       200:
+ *         description: Successful response with user notifications
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/userNotifications/notification/:id', eventNotificationController.getAllUserNotificationsByNotification);
+
+/**
+ * @swagger
+ * /api/v1/eventNotifications/userNotifications/update:
+ *   post:
+ *     summary: Add or remove a user notification
+ *     tags: [Event Notification]
+ *     requestBody:
+ *       description: User notification details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               notification:
+ *                 type: string
+ *                 required: true
+ *               action:
+ *                 type: string
+ *                 enum: [assign, unassign]
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: User notification successfully updated
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/userNotifications/update', eventNotificationController.assignOrUnAssignUserNotification);
+
 
 module.exports = router;
