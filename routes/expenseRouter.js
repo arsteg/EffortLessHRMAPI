@@ -1087,6 +1087,8 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
  *                             type: string
  *                         next:
  *                             type: string
+ *                         status:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ExpenseReport
@@ -1116,6 +1118,8 @@ router.post('/expense-reports-by-user/:userId', authController.protect, expenseC
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:
@@ -1219,6 +1223,8 @@ router.delete('/expense-reports/:id', authController.protect, expenseController.
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:
@@ -1685,6 +1691,8 @@ router.delete('/advance/:id', authController.protect, expenseController.deleteAd
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:

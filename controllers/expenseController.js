@@ -1108,6 +1108,9 @@ exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
   const limit = parseInt(req.body.next) || 10;
   
   const query = { employee: req.params.userId };
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
    // Get the total count of documents matching the query
    const totalCount = await ExpenseReport.countDocuments(query);
   const expenseReports = await ExpenseReport.find(query).skip(parseInt(skip))
@@ -1159,6 +1162,9 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
     const query = { employee: { $in: objectIdArray } };
+    if (req.body.status) {
+      query.status = req.body.status;
+    }
     const totalCount = await ExpenseReport.countDocuments(query);
 
     // Get the regularization requests matching the query with pagination
@@ -1196,10 +1202,13 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
   const totalCount = await ExpenseReport.countDocuments(query);
 
  
-  const expenseReports = await ExpenseReport.find({}).where('company').equals(req.cookies.companyId) .skip(parseInt(skip))
+  const expenseReports = await ExpenseReport.find(query).skip(parseInt(skip))
   .limit(parseInt(limit));
   for(var j = 0; j < expenseReports.length; j++) {     
      {
@@ -1531,6 +1540,10 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
+
+  if (req.body.status) {
+    query.status = req.body.status;
+  }
   const totalCount = await Advance.countDocuments(query); 
   const advances = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
