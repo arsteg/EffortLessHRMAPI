@@ -138,8 +138,17 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
         log:result
       });  
     });
-exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {      
-      const manualTimeRequests = await manualTimeRequest.find({}).where('user').equals(req.params.id);
+
+exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {   
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { user: req.params.id };
+
+ 
+  const totalCount = await manualTimeRequest.countDocuments(query); 
+      const manualTimeRequests = await manualTimeRequest.find({}).where('user').equals(req.params.id).skip(parseInt(skip))
+      .limit(parseInt(limit));
+
       for(let i=0;i<manualTimeRequests.length;i++){ 
         manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project); 
         manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager);
@@ -147,7 +156,8 @@ exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
       }
       res.status(200).json({
           status: 'success',
-          data: manualTimeRequests
+          data: manualTimeRequests,
+          total: totalCount
         });  
       }); 
 

@@ -112,6 +112,16 @@ router.post('/updateManualTimeRequest', authController.protect, manualTimeContro
  *         schema:
  *           type: string
  *           format: int64
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string
  *      produces:
  *          - application/json
  *      responses:
