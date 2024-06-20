@@ -162,10 +162,24 @@ await expenseCategoryInstance.remove();
 });
 
 exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
-  const expenseCategories = await ExpenseCategory.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  // Extract companyId from req.cookies
+  const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  const query = { company: company };
+   // Get the total count of documents matching the query
+   const totalCount = await ExpenseCategory.countDocuments(query);
+
+  const expenseCategories = await ExpenseCategory.find(query).skip(parseInt(skip))
+  .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: expenseCategories,
+    total: totalCount
   });
 });
 
@@ -672,7 +686,15 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
-  const expenseTemplates = await ExpenseTemplate.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  
+  const query = { company: req.cookies.companyId };
+   // Get the total count of documents matching the query
+   const totalCount = await ExpenseTemplate.countDocuments(query);
+  const expenseTemplates = await ExpenseTemplate.find(query).skip(parseInt(skip))
+  .limit(parseInt(limit));
+
   if(expenseTemplates)
   {
    for(var i = 0; i < expenseTemplates.length; i++) {     
@@ -689,7 +711,8 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   
   res.status(200).json({
     status: 'success',
-    data: expenseTemplates
+    data: expenseTemplates,
+    total: totalCount
   });
 });
 
@@ -906,10 +929,19 @@ if (expenseReport.length>0) {
 });
 
 exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => {
-  const employeeExpenseAssignments = await EmployeeExpenseAssignment.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  
+  const query = { company: req.cookies.companyId };
+   // Get the total count of documents matching the query
+   const totalCount = await EmployeeExpenseAssignment.countDocuments(query);
+  const employeeExpenseAssignments = await EmployeeExpenseAssignment.find(query).skip(parseInt(skip))
+  .limit(parseInt(limit));
+
   res.status(200).json({
     status: 'success',
     data: employeeExpenseAssignments,
+    total: totalCount
   });
 });
 
@@ -1072,7 +1104,14 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
 });
 
 exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
-  const expenseReports = await ExpenseReport.find({}).where('employee').equals(req.params.userId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  
+  const query = { employee: req.params.userId };
+   // Get the total count of documents matching the query
+   const totalCount = await ExpenseReport.countDocuments(query);
+  const expenseReports = await ExpenseReport.find(query).skip(parseInt(skip))
+  .limit(parseInt(limit));
   for(var j = 0; j < expenseReports.length; j++) {     
      {
       const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);
@@ -1094,7 +1133,8 @@ exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: 'success',
-    data: expenseReports
+    data: expenseReports,
+    total: totalCount
   });
 });
 
@@ -1116,12 +1156,16 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
     } 
    
     const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
-console.log(objectIdArray);
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-  const expenseReports = await ExpenseReport.find({
-    employee: { $in: objectIdArray }
-});
+    const query = { employee: { $in: objectIdArray } };
+    const totalCount = await ExpenseReport.countDocuments(query);
+
+    // Get the regularization requests matching the query with pagination
+    const expenseReports = await ExpenseReport.find(query)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
+ 
   for(var j = 0; j < expenseReports.length; j++) {     
      {
       const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);
@@ -1143,12 +1187,20 @@ console.log(objectIdArray);
   }
   res.status(200).json({
     status: 'success',
-    data: expenseReports
+    data: expenseReports,
+    total: totalCount
   });
 });
 
 exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
-  const expenseReports = await ExpenseReport.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await ExpenseReport.countDocuments(query);
+
+ 
+  const expenseReports = await ExpenseReport.find({}).where('company').equals(req.cookies.companyId) .skip(parseInt(skip))
+  .limit(parseInt(limit));
   for(var j = 0; j < expenseReports.length; j++) {     
      {
       const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(expenseReports[j]._id);
@@ -1170,7 +1222,8 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: 'success',
-    data: expenseReports
+    data: expenseReports,
+    total: totalCount
   });
 });
 
@@ -1361,7 +1414,13 @@ exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res,
 });
 
 exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
-  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await ExpenseReport.countDocuments(query); 
+
+  const expenseReportExpenses = await ExpenseReportExpense.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  .limit(parseInt(limit));
   if(expenseReportExpenses) 
   {
       for(var i = 0; i < expenseReportExpenses.length; i++) {     
@@ -1377,7 +1436,8 @@ exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
    }  
   res.status(200).json({
     status: 'success',
-    data: expenseReportExpenses
+    data: expenseReportExpenses,
+    total: totalCount
   });
 });
 exports.createAdvance = catchAsync(async (req, res, next) => {
@@ -1468,10 +1528,16 @@ exports.deleteAdvance = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAdvances = catchAsync(async (req, res, next) => {
-    const advances = await Advance.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await Advance.countDocuments(query); 
+  const advances = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+    .limit(parseInt(limit));
     res.status(200).json({
         status: 'success',
-        data: advances
+        data: advances,
+        total: totalCount
     });
 });
 
@@ -1575,10 +1641,18 @@ return res.status(204).json({
 });
 
 exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
-const advanceCategories = await AdvanceCategory.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await Advance.countDocuments(query); 
+  const advanceCategories = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+
 res.status(200).json({
   status: 'success',
   data: advanceCategories,
+  total: totalCount
 });
 });
 
@@ -1770,7 +1844,13 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
-  const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId);
+
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await AdvanceTemplate.countDocuments(query); 
+  const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+    .limit(parseInt(limit));
   if(advanceTemplates) {
     for(var i = 0; i < advanceTemplates.length; i++) {
       const AdvanceTemplateCategories = await AdvanceTemplateCategory.find({})
@@ -1785,7 +1865,8 @@ exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
   }
    res.status(200).json({
     status: 'success',
-    data: advanceTemplates
+    data: advanceTemplates,
+    total: totalCount
   });
 });
 
@@ -1849,13 +1930,20 @@ exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.params.userId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { user: req.params.userId };
+  const totalCount = await EmployeeAdvanceAssignment.countDocuments(query); 
+  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.params.userId).skip(parseInt(skip))
+    .limit(parseInt(limit));
+
  if (!employeeAdvanceAssignment) {
    return next(new AppError('EmployeeAdvanceAssignment not found', 404));
  }
  res.status(200).json({
    status: 'success',
    data: employeeAdvanceAssignment,
+   total: totalCount
  });
 });
 
@@ -1909,9 +1997,16 @@ await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
 });
 
 exports.getAllEmployeeAdvanceAssignments = catchAsync(async (req, res, next) => {
- const employeeAdvanceAssignments = await EmployeeAdvanceAssignment.find({}).where('company').equals(req.cookies.companyId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const query = { company: req.cookies.companyId };
+  const totalCount = await EmployeeAdvanceAssignment.countDocuments(query);  
+
+ const employeeAdvanceAssignments = await EmployeeAdvanceAssignment.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+ .limit(parseInt(limit));
  res.status(200).json({
    status: 'success',
    data: employeeAdvanceAssignments,
+   total: totalCount
  });
 });

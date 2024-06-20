@@ -170,19 +170,29 @@ router.delete('/expense-categories/:id', authController.protect, expenseControll
 /**
  * @swagger
  * /api/v1/expense/expense-categories:
- *   get:
+ *   post:
  *     summary: Get all expense categories
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with expense categories
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-categories', authController.protect, expenseController.getAllExpenseCategories);
+router.post('/expense-categories', authController.protect, expenseController.getAllExpenseCategories);
 
 /**
  * @swagger
@@ -193,7 +203,7 @@ router.get('/expense-categories', authController.protect, expenseController.getA
  *     security: [{
  *         bearerAuth: []
  *     }]
-*     requestBody:
+ *     requestBody:
  *       description: Expense application field details
  *       required: true
  *       content:
@@ -586,20 +596,30 @@ router.delete('/expense-templates/:id', authController.protect, expenseControlle
 
 /**
  * @swagger
- * /api/v1/expense/expense-templates:
- *   get:
+ * /api/v1/expense/expense-templates-list:
+ *   post:
  *     summary: Get all Expense Templates
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Expense Templates
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-templates', authController.protect, expenseController.getAllExpenseTemplates);
+router.post('/expense-templates-list', authController.protect, expenseController.getAllExpenseTemplates);
 
 /**
  * @swagger
@@ -882,20 +902,30 @@ router.delete('/employee-expense-assignments/:id', authController.protect, expen
 
 /**
  * @swagger
- * /api/v1/expense/employee-expense-assignments:
- *   get:
+ * /api/v1/expense/employee-expense-assignments-list:
+ *   post:
  *     summary: Get all EmployeeExpenseAssignments
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with EmployeeExpenseAssignments
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-expense-assignments', authController.protect, expenseController.getAllEmployeeExpenseAssignments);
+router.post('/employee-expense-assignments-list', authController.protect, expenseController.getAllEmployeeExpenseAssignments);
 
 /**
  * @swagger
@@ -1034,7 +1064,7 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
 /**
  * @swagger
  * /api/v1/expense/expense-reports-by-user/{userId}:
- *   get:
+ *   post:
  *     summary: Get an ExpenseReport by ID
  *     tags: [Expense Management]
  *     security: [{
@@ -1047,6 +1077,16 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
  *         schema:
  *           type: string
  *         description: ID of the ExpenseReport
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ExpenseReport
@@ -1055,18 +1095,28 @@ router.get('/expense-reports/:id', authController.protect, expenseController.get
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-reports-by-user/:userId', authController.protect, expenseController.getExpenseReportsByUser);
+router.post('/expense-reports-by-user/:userId', authController.protect, expenseController.getExpenseReportsByUser);
 
 
 /**
  * @swagger
  * /api/v1/expense/expense-reports-by-team:
- *   get:
+ *   post:
  *     summary: Get an ExpenseReport by ID
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the ExpenseReport
@@ -1075,7 +1125,7 @@ router.get('/expense-reports-by-user/:userId', authController.protect, expenseCo
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-reports-by-team', authController.protect, expenseController.getExpenseReportsByTeam);
+router.post('/expense-reports-by-team', authController.protect, expenseController.getExpenseReportsByTeam);
 
 
 /**
@@ -1153,20 +1203,30 @@ router.delete('/expense-reports/:id', authController.protect, expenseController.
 
 /**
  * @swagger
- * /api/v1/expense/expense-reports:
- *   get:
+ * /api/v1/expense/expense-reports-list:
+ *   post:
  *     summary: Get all ExpenseReports
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with ExpenseReports
  *       500:
  *         description: Internal server error
  */
-router.get('/expense-reports', authController.protect, expenseController.getAllExpenseReports);
+router.post('/expense-reports-list', authController.protect, expenseController.getAllExpenseReports);
 
 /**
  * @swagger
@@ -1410,13 +1470,23 @@ router.delete('/expenseReportExpenses/:id', authController.protect, expenseContr
 
 /**
  * @swagger
- * /api/v1/expense/expenseReportExpenses:
- *   get:
+ * /api/v1/expense/expenseReportExpenses-list:
+ *   post:
  *     summary: Get all Expense Report Expenses
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Expense Report Expenses
@@ -1425,7 +1495,7 @@ router.delete('/expenseReportExpenses/:id', authController.protect, expenseContr
  *       500:
  *         description: Internal server error
  */
-router.get('/expenseReportExpenses', authController.protect, expenseController.getAllExpenseReportExpenses);
+router.post('/expenseReportExpenses-list', authController.protect, expenseController.getAllExpenseReportExpenses);
 
 
 /**
@@ -1599,20 +1669,30 @@ router.delete('/advance/:id', authController.protect, expenseController.deleteAd
 
 /**
  * @swagger
- * /api/v1/expense/advance:
- *   get:
+ * /api/v1/expense/advance-list:
+ *   post:
  *     summary: Get all Advances
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with ExpenseAdvances
  *       500:
  *         description: Internal server error
  */
-router.get('/advance', authController.protect, expenseController.getAllAdvances);
+router.post('/advance-list', authController.protect, expenseController.getAllAdvances);
 
 /**
  * @swagger
@@ -1784,20 +1864,30 @@ router.delete('/advance-categories/:id', authController.protect, expenseControll
 
 /**
  * @swagger
- * /api/v1/expense/advance-categories:
- *   get:
+ * /api/v1/expense/advance-categories-list:
+ *   post:
  *     summary: Get all advance categories
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with advance categories
  *       500:
  *         description: Internal server error
  */
-router.get('/advance-categories', authController.protect, expenseController.getAllAdvanceCategories);
+router.post('/advance-categories-list', authController.protect, expenseController.getAllAdvanceCategories);
 
 /**
  * @swagger
@@ -1958,20 +2048,30 @@ router.delete('/advance-templates/:id', authController.protect, expenseControlle
 
 /**
  * @swagger
- * /api/v1/expense/advance-templates:
- *   get:
+ * /api/v1/expense/advance-templates-list:
+ *   post:
  *     summary: Get all Advance Templates
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Expense Templates
  *       500:
  *         description: Internal server error
  */
-router.get('/advance-templates', authController.protect, expenseController.getAllAdvanceTemplates);
+router.post('/advance-templates-list', authController.protect, expenseController.getAllAdvanceTemplates);
 
 /**
  * @swagger
@@ -2018,7 +2118,7 @@ router.post('/employee-advance-assignments', authController.protect, expenseCont
 /**
  * @swagger
  * /api/v1/expense/employee-advance-assignments-by-user/{userId}:
- *   get:
+ *   post:
  *     summary: Get an EmployeeadvanceAssignment by ID
  *     tags: [Expense Management]
  *     security: [{
@@ -2031,6 +2131,16 @@ router.post('/employee-advance-assignments', authController.protect, expenseCont
  *         schema:
  *           type: string
  *         description: userId of the User
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with the EmployeeAdvanceAssignment
@@ -2039,7 +2149,7 @@ router.post('/employee-advance-assignments', authController.protect, expenseCont
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-advance-assignments-by-user/:userId', authController.protect, expenseController.getEmployeeAdvanceAssignmentByUser);
+router.post('/employee-advance-assignments-by-user/:userId', authController.protect, expenseController.getEmployeeAdvanceAssignmentByUser);
 
 /**
  * @swagger
@@ -2069,19 +2179,29 @@ router.delete('/employee-advance-assignments/:id', authController.protect, expen
 
 /**
  * @swagger
- * /api/v1/expense/employee-advance-assignments:
- *   get:
+ * /api/v1/expense/employee-advance-assignments-list:
+ *   post:
  *     summary: Get all EmployeeAdvanceAssignments
  *     tags: [Expense Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with EmployeeAdvanceAssignments
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-advance-assignments', authController.protect, expenseController.getAllEmployeeAdvanceAssignments);
+router.post('/employee-advance-assignments-list', authController.protect, expenseController.getAllEmployeeAdvanceAssignments);
 
 module.exports = router;
