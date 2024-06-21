@@ -169,7 +169,7 @@ router.delete('/expense-categories/:id', authController.protect, expenseControll
 
 /**
  * @swagger
- * /api/v1/expense/expense-categories:
+ * /api/v1/expense/expense-categories-list:
  *   post:
  *     summary: Get all expense categories
  *     tags: [Expense Management]
@@ -192,7 +192,7 @@ router.delete('/expense-categories/:id', authController.protect, expenseControll
  *       500:
  *         description: Internal server error
  */
-router.post('/expense-categories', authController.protect, expenseController.getAllExpenseCategories);
+router.post('/expense-categories-list', authController.protect, expenseController.getAllExpenseCategories);
 
 /**
  * @swagger
