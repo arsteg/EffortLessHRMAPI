@@ -1657,8 +1657,8 @@ exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
-  const totalCount = await Advance.countDocuments(query); 
-  const advanceCategories = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  const totalCount = await AdvanceCategory.countDocuments(query); 
+  const advanceCategories = await AdvanceCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
 
 
