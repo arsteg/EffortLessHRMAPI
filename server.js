@@ -86,7 +86,7 @@ cron.schedule('0 0 1 * *', () => {
 //execute at every minute
 cron.schedule('* * * * *', async () => {
   console.log('This Job will run every minute...');
-  //notificationSender.sendNotification();
+  notificationSender.sendNotification('62dfa6993babb9ac20728636',io,userSocketMap,'users-online',{'message':'Hello'});
   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 

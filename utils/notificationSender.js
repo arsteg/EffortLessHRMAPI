@@ -1,4 +1,4 @@
-const sendNotification = (userId, io,userSocketMap, messageToSend) => {  
+const sendNotification = (userId, io,userSocketMap,notificationTye, messageToSend) => {  
     if (userId && userSocketMap.has(userId)) {
       const socketId = userSocketMap.get(userId);            
       // Emit to the specific socket (user) identified by socketId
