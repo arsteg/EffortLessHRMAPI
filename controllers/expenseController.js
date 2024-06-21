@@ -1903,12 +1903,6 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
    if (!advanceTemplateExists) {
      return next(new AppError('Advance template not found', 404));
    }
-   // Check if another EmployeeAdvanceAssignment exists for the same user
-  const existingAssignment = await EmployeeAdvanceAssignment.findOne({ user: req.body.user, _id: { $ne: req.params.id } });
-  if (existingAssignment) {
-    return next(new AppError('Another EmployeeAdvanceAssignment already exists for this user', 400));
-  }
-
   const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user);
   var employeeAdvanceAssignment;
   if (employeeAdvanceAssignmentExists.length<=0) {
