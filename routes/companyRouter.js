@@ -185,6 +185,11 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  *                             type: string
  *                         status:
  *                             type: string
+ *                         years:
+ *                             type: array
+ *                              items:
+ *                                type: string
+ *                                example: "" 
  *     responses:
  *       200:
  *         description: Successful response with the Holiday
