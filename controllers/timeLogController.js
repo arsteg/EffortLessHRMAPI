@@ -243,6 +243,33 @@ exports.getLogsWithImages = catchAsync(async (req, res, next) => {
 });
 
 
+exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
+ console.log("hello");
+  const timeLogsExists = await TimeLog.find({ date: { $lt: new Date(req.body.tillDate) } }); 
+  if(timeLogsExists)
+  { 
+    console.log(timeLogsExists.length);
+    for(var i = 0; i <timeLogsExists.length; i++) {
+    if(timeLogsExists[i].filePath)
+    {
+        var url = timeLogsExists[i].filePath;     
+        containerClient.getBlockBlobClient(url).deleteIfExists();
+        const blockBlobClient = containerClient.getBlockBlobClient(url);
+        await blockBlobClient.deleteIfExists();
+        console.log("deleted");
+    }
+    console.log(timeLogsExists[i]._id);
+    const document = await TimeLog.findByIdAndDelete(timeLogsExists[i]._id);
+    if (!document) {
+      console.log('No document found with that ID');
+    }    
+  }
+}
+res.status(204).json({
+  status: 'success',
+  data: null
+});
+});
 exports.deleteLog = catchAsync(async (req, res, next) => {
   for(var i = 0; i < req.body.logs.length; i++) {
   const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);    

@@ -245,6 +245,36 @@ router.post('/getCurrentWeekTotalTime', authController.protect, timeLogControlle
  *
  */
 router.delete('/deleteTimeLog', authController.protect, timeLogController.deleteLog);
+/**
+ * @swagger
+ * /api/v1/timelogs/deleteTimeLog-till-date:
+ *  delete:
+ *      tags:
+ *          - Timelog Management
+ *      summary: "Delete Timelog based on LogId"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+*              application/json:
+*                  schema:
+*                      type: object
+*                      properties:
+*                          tillDate:
+*                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.delete('/deleteTimeLog-till-date', authController.protect, timeLogController.deleteLogTillDate);
 
 /**
 * @swagger

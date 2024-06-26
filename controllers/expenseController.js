@@ -785,15 +785,17 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
   });
 });
 exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, res, next) => {  
-  console.log(req.params.expenseCategory);
-  console.log(req.params.expenseTemplate);
-  
-  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({}).where('expenseTemplate').equals( req.params.expenseTemplate).where('expenseCatgeory').equals( req.params.expenseCategory);
-      
+
+  const applicableCategories = await ExpenseTemplateApplicableCategories.findOne({
+    expenseCategory: req.params.expenseCategory,
+    expenseTemplate: req.params.expenseTemplate
+  });  
+ 
   if(applicableCategories) 
   {
+    console.log(applicableCategories._id);
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  
-      if(expenseTemplateCategoryFieldValues) 
+        if(expenseTemplateCategoryFieldValues) 
         {
           applicableCategories.expenseTemplateCategoryFieldValues = expenseTemplateCategoryFieldValues;
         }
