@@ -469,6 +469,18 @@ router.get('/userNotifications/notification/:id', eventNotificationController.ge
  *         description: Internal server error
  */
 router.post('/userNotifications/update', eventNotificationController.assignOrUnAssignUserNotification);
-
+/**
+ * @swagger
+ * /api/v1/eventNotifications/today:
+ *   get:
+ *     summary: Get today's notifications for the logged-in user
+ *     tags: [Event Notification] 
+ *     responses:
+ *       200:
+ *         description: Successful response with user notifications
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/today', eventNotificationController.getUserNotificationsForToday);
 
 module.exports = router;
