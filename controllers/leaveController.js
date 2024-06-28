@@ -181,6 +181,11 @@ exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
 
 exports.getAllLeaveCategoryByUserV1 = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
+  if(!employeeLeaveAssignment){
+    res.status(200).json({
+      status: 'failure'
+    });
+  }
   const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate, isReadyForApply: true}).populate('leaveCategory');
   res.status(200).json({
     status: 'success',
