@@ -11,6 +11,7 @@ const socket = require('./utils/socket');
 const cron = require("node-cron");
 const routes = require('./routes');
 const notificationSender = require('./utils/notificationSender');
+let { setSocketIO } = require('./utils/liveScreenSender');
 //  import environment variables
 // Handle unhandled exceptions
 // For synchronous code
@@ -32,6 +33,7 @@ io.on('connection', (client) => {
   client.on('register', (userId) => {    
     console.log(`Registered the user ID ${userId} with the connected socket ID, the client Id is:${client.id}`);
     userSocketMap.set(userId, client.id);    
+    setSocketIO(io, client.id, userId);
     // Emit the current user list to the new connection
     //io.to(client.id).emit('users-online', getUserList());
   });
@@ -86,6 +88,8 @@ cron.schedule('0 0 1 * *', () => {
 //execute at every minute
 cron.schedule('* * * * *', async () => {
   console.log('This Job will run every minute...');
+  //62dfa8d13babb9ac2072863c
+  //664229eec5a0b7f0dc0b7e0f
   notificationSender.sendNotification('62dfa6993babb9ac20728636',io,userSocketMap,'users-online',{'message':'Hello'});
   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });

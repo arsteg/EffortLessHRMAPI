@@ -1,119 +1,129 @@
 
 const LiveTracking = require('./../models/liveTrackingModel');
-const express = require('express');
-const app = express();
-app.use(express.json);
+//const express = require('express');
+//const app = express();
+//app.use(express.json);
 const catchAsync = require('./../utils/catchAsync');
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ noServer: true });
-const http = require('http');
+//const WebSocket = require('ws');
+//const socketIo = require('socket.io');
+//const wss = new WebSocket.Server({ noServer: true });
+//const http = require('http');
 // Store connected clients
-const clients = new Map();
-const cors = require('cors'); // Import the cors package
+//const clients = new Set();
+//const cors = require('cors'); // Import the cors package
+const { sendUsersLiveImagesToApp } = require('../utils/liveScreenSender');
 
 
-var allowedOrigin ="http://localhost:4200";
-if (process.env.NODE_ENV === 'development') {
-  allowedOrigin= "http://localhost:4200";
-} else if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {                        
-  allowedOrigin= "https://effort-less-hrm-web.vercel.app";
-}
-//app.use(compression);
-app.use(cors(
-  {
-    "origin": allowedOrigin,
-    credentials: true, // This MUST be "true" if your endpoint is
-                     // authenticated via either a session cookie
-                     // or Authorization header. Otherwise the
-                     // browser will block the response.
-    methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
-                                               // pre-flight OPTIONS requests
-  }
-));
-app.options('*', cors());
+// var allowedOrigin ="http://localhost:4200";
+// if (process.env.NODE_ENV === 'development') {
+//   allowedOrigin= "http://localhost:4200";
+// } else if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {                        
+//   allowedOrigin= "https://effort-less-hrm-web.vercel.app";
+// }
+// //app.use(compression);
+// app.use(cors(
+//   {
+//     origin: allowedOrigin,
+//     credentials: true, // This MUST be "true" if your endpoint is
+//                      // authenticated via either a session cookie
+//                      // or Authorization header. Otherwise the
+//                      // browser will block the response.
+//     methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
+//                                                // pre-flight OPTIONS requests
+//   }
+// ));
+// app.options('*', cors());
 
-// Create an HTTP server
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('WebSocket server');
-});
-// Start the HTTP server
-const port = 4000;
-//const port = 443;
-server.listen(port, () => {
-  console.log(`WebSocket server is running on port ${port}`);
-});
+// // Create an HTTP server
+// const server = http.createServer((req, res) => {
+//   res.writeHead(200, { 'Content-Type': 'text/plain' });
+//   res.end('WebSocket server');
+// });
 
-// Handle WebSocket upgrade requests
-server.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
-  }); 
-});
+// const io = socketIo(server, {
+//   cors: {
+//     origin: allowedOrigin,
+//     methods: ["GET", "POST"],
+//     credentials: true
+//   }
+// });
 
-// WebSocket connection event
-wss.on('connection', (ws, request) => {
-  console.log('A new client connected');
-  const userId = request.url.slice(1);
-  
-  // Add the client to the set of connected clients
-  //clients.add(ws);
-  clients.set(userId, ws);
-  // WebSocket message event
-  ws.on('message', (message) => {
-    console.log(`Received message: ${message}`);
-    // You can handle incoming messages from the client here if needed
-  });
+// // Start the HTTP server
+// const port = 4000;
+// //const port = 443;
+// server.listen(port, () => {
+//   console.log(`WebSocket server is running on port ${port}`);
+// });
 
-  // WebSocket close event
-  ws.on('close', () => {
-    console.log('Client disconnected');
-    // Remove the client from the set of connected clients
-    clients.delete(ws);
-  });
+// // // Handle WebSocket upgrade requests
+// // server.on('upgrade', (request, socket, head) => {
+// //   wss.handleUpgrade(request, socket, head, (ws) => {
+// //     wss.emit('connection', ws, request);
+// //   }); 
+// // });
 
-  // You can also send an initial message to the client upon connection if needed
-  // ws.send('Welcome to the WebSocket server!');
-});
+// // WebSocket connection event
+// io.on('connection', (ws) => {
+//   console.log('A new client connected');
+//   let userId = '';   
+
+//   ws.on('message', (message) => {
+//     console.log(`Received message: ${message}`);
+//     userId = message;
+//     //Add the client to the set of connected clients
+//     //clients.add(userId, ws);
+//   });
+//   clients.add(ws);
+//   // WebSocket close event
+//   ws.on('disconnect', () => {
+//     console.log('Client disconnected');
+//     // Remove the client from the set of connected clients
+//     clients.delete(ws);
+//   });
+
+//   // You can also send an initial message to the client upon connection if needed
+//   ws.send('');
+
+// });
 
 //Apis
 
 exports.startStopLivePreview = catchAsync(async (req, res, next) => {
-  try{
-    clients.forEach(function each(client, clientId) {
-      if (clientId === req.body.userId && client.readyState === WebSocket.OPEN) {
-        if(req.body.isStart == true) {
-          client.send(JSON.stringify({ EventName: "startlivepreview", UserId: req.body.userId }));
-        } else{
-          client.send(JSON.stringify({ EventName: "stoplivepreview", UserId: req.body.userId }));
-        }
-        res.status(200).json({
-          status: 'success'
-        });
+  // try{
+  //   clients.forEach(function each(client, clientId) {
+  //     if (clientId === req.body.userId && client.readyState === WebSocket.OPEN) {
+  //       if(req.body.isStart == true) {
+  //         client.send(JSON.stringify({ EventName: "startlivepreview", UserId: req.body.userId }));
+  //       } else{
+  //         client.send(JSON.stringify({ EventName: "stoplivepreview", UserId: req.body.userId }));
+  //       }
+  //       res.status(200).json({
+  //         status: 'success'
+  //       });
 
-      }
-    });
-  }
-  catch(error){
-    console.log(error);
-  }
+  //     }
+  //   });
+  // }
+  // catch(error){
+  //   console.log(error);
+  // }
 });
 
 exports.closeWebSocket = catchAsync(async (req, res, next) => {
-  try{
-    if (wpfSocket && wpfSocket.readyState === WebSocket.OPEN) {
-      console.log('openeed');
-      wpfSocket.close();
-      console.log('closed');
-    }
-    res.status(200).json({
-      status: 'success',
-      data: 'Connection closed'
-    });
-  }
-  catch(error){
-    console.log(error);
-  }
+  // try{
+  //   if (wpfSocket && wpfSocket.readyState === WebSocket.OPEN) {
+  //     console.log('openeed');
+  //     wpfSocket.close();
+  //     console.log('closed');
+  //   }
+  //   res.status(200).json({
+  //     status: 'success',
+  //     data: 'Connection closed'
+  //   });
+  // }
+  // catch(error){
+  //   console.log(error);
+  // }
 });
 
 exports.addNew = catchAsync(async (req, res, next) => {
@@ -239,9 +249,11 @@ exports.getLiveTrackingByUserId = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserScreen = catchAsync(async (req, res, next) => {
+  console.log('updateUserScreen In');
   const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
   if (liveTrackigExits.length>0) {
-    const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
+    sendUsersLiveImagesToApp(req.cookies.userId, req.body.fileString);
+    // const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
     res.status(200).json({
       status: 'success'
     });
