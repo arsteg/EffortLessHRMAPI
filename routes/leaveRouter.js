@@ -1226,6 +1226,11 @@ router.get('/employee-leave-grant/:id', authController.protect, leaveController.
  *                 type: string
  *                 format: date
  *                 required: false
+ *               leaveApplicationAttachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               endDate:
  *                 type: string
  *                 format: date

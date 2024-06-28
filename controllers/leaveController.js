@@ -3,19 +3,36 @@ const GeneralSetting = require('../models/Leave/LeaveGeneralSettingModel');
 const LeaveCategory = require("../models/Leave/LeaveCategoryModel");
 const LeaveTemplate = require('../models/Leave/LeaveTemplateModel');
 const LeaveTemplateCategory = require('../models/Leave/LeaveTemplateCategoryModel');
-const AppError = require('../utils/appError');
 const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestrictionModel');
 const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
-const mongoose = require("mongoose");
 const LeaveGrant = require('../models/Leave/LeaveGrantModel');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const User = require('../models/permissions/userModel');
- const ShortLeave = require("../models/Leave/ShortLeaveModel");
- const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
- const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
- const userSubordinate = require('../models/userSubordinateModel');
- const { ObjectId } = require('mongodb');
+const ShortLeave = require("../models/Leave/ShortLeaveModel");
+const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+const { ObjectId } = require('mongodb');
+const { v1: uuidv1} = require('uuid');
+// Import ExpenseCategory model
+const { BlobServiceClient } = require('@azure/storage-blob');
+const AppError = require('../utils/appError');
+const mongoose = require("mongoose");
+const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
+const userSubordinate = require('../models/userSubordinateModel');
+
+console.log(process.env.AZURE_STORAGE_CONNECTION_STRING);
+
+ // AZURE STORAGE CONNECTION DETAILS
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+if (!AZURE_STORAGE_CONNECTION_STRING) {
+throw Error("Azure Storage Connection string not found");
+}
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  AZURE_STORAGE_CONNECTION_STRING
+);
+
+const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
+
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
   const company = req.cookies.companyId;
@@ -899,8 +916,31 @@ console.log(query);
  
  exports.createEmployeeLeaveApplication = async (req, res, next) => {
      try {
-         const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status,haldDays } = req.body;
-         
+         const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status,haldDays,leaveApplicationAttachments } = req.body;
+         var documentLink;
+         if(leaveApplicationAttachments!=null)
+          {
+          for(var i = 0; i < leaveApplicationAttachments.length; i++) {
+            if (!leaveApplicationAttachments[i].attachmentType || !leaveApplicationAttachments[i].attachmentName || !leaveApplicationAttachments[i].attachmentSize || !leaveApplicationAttachments[i].extention || !leaveApplicationAttachments[i].file
+              ||leaveApplicationAttachments[i].attachmentType===null || leaveApplicationAttachments[i].attachmentName===null || leaveApplicationAttachments[i].attachmentSize===null || leaveApplicationAttachments[i].extention === null || leaveApplicationAttachments[i].file===null) {
+              return res.status(400).json({ error: 'All attachment properties must be provided' });
+            }
+            const blobName = leaveApplicationAttachments[i].attachmentName +"_" + uuidv1() + leaveApplicationAttachments[i].extention;
+           // Get a block blob client
+            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+            console.log("\nUploading to Azure storage as blob:\n\t", );
+            // Upload data to the blob
+            var FileString =  leaveApplicationAttachments[i].file;
+            const buffer = new Buffer.from(FileString, 'base64');
+            const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
+            documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
+            console.log(
+              "Blob was uploaded successfully. requestId: ",
+              uploadBlobResponse.requestId
+            );
+          
+          }
+          }
          const newLeaveApplication = await LeaveApplication.create({
              employee,
              leaveCategory,
@@ -911,7 +951,8 @@ console.log(query);
              comment,
              isHalfDayOption,
              status,
-             company: req.cookies.companyId // Assuming companyId is stored in cookies
+             company: req.cookies.companyId, // Assuming companyId is stored in cookies
+             documentLink
          });
          var createdHalfDays=null;
          // Check if haldDays is provided and valid

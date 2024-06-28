@@ -42,8 +42,11 @@ var leaveApplicationSchema = new Schema({
   company: {
     type: String,
     required: true
+  },    
+  documentLink: {
+    type: String
   },
-  halfDays:[],
+  halfDays:[]
 }, { collection: 'LeaveApplication' });
 
 module.exports = mongoose.model('LeaveApplication', leaveApplicationSchema);
