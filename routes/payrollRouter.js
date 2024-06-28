@@ -21,6 +21,8 @@ const router = express.Router();
  *                 type: number
  *               payrollApprovar:
  *                 type: string
+ *               attendanceCycle:
+ *                 type: string
  *               dayOfMonthToStartAttendanceCycle:
  *                 type: number
  *               password:
@@ -32,6 +34,10 @@ const router = express.Router();
  *               percentageForGraduity:
  *                 type: string
  *               leaveEncashment:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               graduityComponentsGraduitycalculation:
  *                 type: array
  *                 items:
  *                   type: string
@@ -127,6 +133,8 @@ router.get('/general-settings/:companyId', payrollController.getGeneralSettingBy
  *                 type: number
  *               payrollApprovar:
  *                 type: string
+ *               attendanceCycle:
+ *                 type: string
  *               dayOfMonthToStartAttendanceCycle:
  *                 type: number
  *               password:
@@ -138,6 +146,10 @@ router.get('/general-settings/:companyId', payrollController.getGeneralSettingBy
  *               percentageForGraduity:
  *                 type: string
  *               leaveEncashment:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               graduityComponentsGraduitycalculation:
  *                 type: array
  *                 items:
  *                   type: string

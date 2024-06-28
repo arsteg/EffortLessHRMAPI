@@ -10,6 +10,11 @@ const payrollGeneralSettingSchema = new Schema({
     type: String,
     required: true
   },
+  attendanceCycle:
+  {
+    type: String,
+    required: true
+  },
   dayOfMonthToStartAttendanceCycle: {
     type: Number,
     required: true
@@ -28,6 +33,10 @@ const payrollGeneralSettingSchema = new Schema({
   },
   percentageForGraduity: {
     type: String,
+    required: true
+  },
+  graduityComponentsGraduitycalculation:{
+    type: [String],
     required: true
   },
   leaveEncashment: {
