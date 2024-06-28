@@ -97,7 +97,7 @@ router.post('/updateManualTimeRequest', authController.protect, manualTimeContro
 /**
  * @swagger
  * /api/v1/manualTime/getManualTimeRequests/{id}:
- *  get:
+ *  post:
  *      tags:
  *          - Manual Time
  *      summary: "Get Manual Time Requests by user Id"   
@@ -133,7 +133,7 @@ router.post('/updateManualTimeRequest', authController.protect, manualTimeContro
  *                          type: object
  *
  */
-router.get('/getManualTimeRequests/:id', authController.protect, manualTimeController.getManualTimeRequestsByUser);
+router.post('/getManualTimeRequests/:id', authController.protect, manualTimeController.getManualTimeRequestsByUser);
 
 /**
   * @swagger
