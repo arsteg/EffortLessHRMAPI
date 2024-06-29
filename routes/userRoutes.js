@@ -983,6 +983,175 @@ router.put('/salary-details/:id', authController.protect, userController.updateE
  */
 router.delete('/salary-details/:id', authController.protect, userController.deleteEmployeeSalaryDetails);
 
+/**
+ * @swagger
+ * /api/v1/users/employee-salary-tax-salutaory-settings:
+ *   post:
+ *     summary: Create a new Employee Salary and Salutary Setting
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Employee Salary and Salutary Setting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employeeSalaryDetails:
+ *                 type: string
+ *                 required: true
+ *               isVariableAllowancePartOfCTC:
+ *                 type: boolean
+ *               isPFDeduction:
+ *                 type: boolean
+ *               isProvidentPensionDeduction:
+ *                 type: boolean
+ *               isEmployeeProvidentFundCappedAtPFCeiling:
+ *                 type: boolean
+ *               isEmployerProvidentFundCappedAtPFCeiling:
+ *                 type: boolean
+ *               fixedAmountForProvidentFundWage:
+ *                 type: number
+ *               pfTemplate:
+ *                 type: string
+ *               isESICDeduction:
+ *                 type: boolean
+ *               isPTDeduction:
+ *                 type: boolean
+ *               isLWFDeduction:
+ *                 type: boolean
+ *               isGratuityApplicable:
+ *                 type: boolean
+ *               gratuityTemplate:
+ *                 type: string
+ *               isIncomeTaxDeduction:
+ *                 type: boolean
+ *               isPFChargesApplicable:
+ *                 type: boolean
+ *               isRoundOffApplicable:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Employee Salary and Salutary Setting successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-salary-tax-salutaory-settings', authController.protect, userController.createEmployeeTaxAndSalutaorySetting);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salary-tax-salutaory-settings/{id}:
+ *   get:
+ *     summary: Get Employee Salary and Salutary Setting by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salary and Salutary Setting
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Salary and Salutary Setting
+ *       404:
+ *         description: Employee Salary and Salutary Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-salary-tax-salutaory-settings/:id', authController.protect, userController.getEmployeeTaxAndSalutaorySetting);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salary-tax-salutaory-settings/{id}:
+ *   put:
+ *     summary: Update Employee Salary and Salutary Setting by ID
+ *     tags: [User Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salary and Salutary Setting
+ *     requestBody:
+ *       description: New Employee Salary and Salutary Setting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isVariableAllowancePartOfCTC:
+ *                 type: boolean
+ *               isPFDeduction:
+ *                 type: boolean
+ *               isProvidentPensionDeduction:
+ *                 type: boolean
+ *               isEmployeeProvidentFundCappedAtPFCeiling:
+ *                 type: boolean
+ *               isEmployerProvidentFundCappedAtPFCeiling:
+ *                 type: boolean
+ *               fixedAmountForProvidentFundWage:
+ *                 type: number
+ *               pfTemplate:
+ *                 type: string
+ *               isESICDeduction:
+ *                 type: boolean
+ *               isPTDeduction:
+ *                 type: boolean
+ *               isLWFDeduction:
+ *                 type: boolean
+ *               isGratuityApplicable:
+ *                 type: boolean
+ *               gratuityTemplate:
+ *                 type: string
+ *               isIncomeTaxDeduction:
+ *                 type: boolean
+ *               isPFChargesApplicable:
+ *                 type: boolean
+ *               isRoundOffApplicable:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Employee Salary and Salutary Setting
+ *       404:
+ *         description: Employee Salary and Salutary Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-salary-tax-salutaory-settings/:id', authController.protect, userController.updateEmployeeTaxAndSalutaorySetting);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salary-tax-salutaory-settings/{id}:
+ *   delete:
+ *     summary: Delete Employee Salary and Salutary Setting by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salary and Salutary Setting
+ *     responses:
+ *       204:
+ *         description: Employee Salary and Salutary Setting successfully deleted
+ *       404:
+ *         description: Employee Salary and Salutary Setting not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-salary-tax-salutaory-settings/:id', authController.protect, userController.deleteEmployeeTaxAndSalutaorySetting);
 
 router
   .route('/:id')

@@ -13,6 +13,7 @@ const AppWebsite = require('./../models/commons/appWebsiteModel');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const UserEmployment = require('../models/Employment/userEmploymentModel');
 const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetailsModel');
+const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndSalutaorySettingModel');
 
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -292,6 +293,72 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     return next(new AppError('Employee Salary Details not found', 404));
   }
   
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+/**
+ * Create Employee Salary, Tax, and Salutaory Setting
+ */
+exports.createEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  
+  req.body.company = companyId;
+  const employeeSettings = await EmployeeTaxAndSalutaorySetting.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: employeeSettings
+  });
+});
+
+/**
+ * Get Employee Salary, Tax, and Salutaory Setting by ID
+ */
+exports.getEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
+  const employeeSettings = await EmployeeTaxAndSalutaorySetting.findById(req.params.id);
+  if (!employeeSettings) {
+    return next(new AppError('Employee settings not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeSettings
+  });
+});
+
+/**
+ * Update Employee Salary, Tax, and Salutaory Setting by ID
+ */
+exports.updateEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
+  const employeeSettings = await EmployeeTaxAndSalutaorySetting.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!employeeSettings) {
+    return next(new AppError('Employee settings not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeSettings
+  });
+});
+
+/**
+ * Delete Employee Salary, Tax, and Salutaory Setting by ID
+ */
+exports.deleteEmployeeTaxAndSalutaorySetting= catchAsync(async (req, res, next) => {
+  const employeeSettings = await EmployeeTaxAndSalutaorySetting.findByIdAndDelete(req.params.id);
+
+  if (!employeeSettings) {
+    return next(new AppError('Employee settings not found', 404));
+  }
+
   res.status(204).json({
     status: 'success',
     data: null
