@@ -18,6 +18,8 @@ const User = require('../models/permissions/userModel');
 const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
 
+const UserEmployment = require('../models/Employment/userEmploymentModel');
+
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
     const softwareExists = await Software.findOne({ name: name});

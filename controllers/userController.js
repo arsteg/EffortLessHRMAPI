@@ -11,7 +11,11 @@ const BrowserHistory= require('../models/appsWebsites/browserHistory');
 const Productivity = require('./../models/productivityModel');
 const AppWebsite = require('./../models/commons/appWebsiteModel');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
-exports.getAllUsers=catchAsync(async (req, res, next) => {
+const UserEmployment = require('../models/Employment/userEmploymentModel');
+const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetailsModel');
+
+
+exports.getAllUsers = catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
     let filter = { status: 'Active', company : req.cookies.companyId };
     // Thanks to merging params in routers      
@@ -180,4 +184,116 @@ exports.getUserProjects = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.createUserEmployment = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  
+  req.body.company = companyId;
+  const userEmployment = await UserEmployment.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: userEmployment
+  });
+});
 
+exports.getUserEmployment = catchAsync(async (req, res, next) => {
+  const userEmployment = await UserEmployment.findById(req.params.id);
+  if (!userEmployment) {
+    return next(new AppError('UserEmployment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: userEmployment
+  });
+});
+
+exports.updateUserEmployment = catchAsync(async (req, res, next) => {
+  const userEmployment = await UserEmployment.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!userEmployment) {
+    return next(new AppError('UserEmployment not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: userEmployment
+  });
+});
+
+exports.deleteUserEmployment = catchAsync(async (req, res, next) => {
+  const userEmployment = await UserEmployment.findByIdAndDelete(req.params.id);
+
+  if (!userEmployment) {
+    return next(new AppError('UserEmployment not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+// controllers/employeeSalaryDetailsController.js
+exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  
+  req.body.company = companyId;
+
+  const employeeSalaryDetails = await EmployeeSalaryDetails.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: employeeSalaryDetails
+  });
+});
+
+// controllers/employeeSalaryDetailsController.js
+exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findById(req.params.id);
+  if (!employeeSalaryDetails) {
+    return next(new AppError('Employee Salary Details not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalaryDetails
+  });
+});
+
+// controllers/employeeSalaryDetailsController.js
+exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!employeeSalaryDetails) {
+    return next(new AppError('Employee Salary Details not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalaryDetails
+  });
+});
+
+// controllers/employeeSalaryDetailsController.js
+exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndDelete(req.params.id);
+  
+  if (!employeeSalaryDetails) {
+    return next(new AppError('Employee Salary Details not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});

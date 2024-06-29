@@ -493,6 +493,7 @@ router.post('/me',authController.protect,userController.getUser);
  *
  */
 router.patch('/updateuser/:id',authController.protect, userController.updateUser);
+
 /**
  * @swagger
  * /api/v1/users/deleteuser/{id}:
@@ -605,6 +606,383 @@ router.route('/getUserManagers/:id').get(userController.getUserManagers);
  *
  */
  router.get('/getUserProjects/:id',authController.protect,userController.getUserProjects);
+
+/**
+ * @swagger
+ * /api/v1/users/user-employment:
+ *   post:
+ *     summary: Add a new user employment record
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: User employment details to add
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 description: ID of the user associated with the employment
+ *                 required: true
+ *               effectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of employment
+ *                 required: true
+ *               location:
+ *                 type: string
+ *                 description: Location of employment
+ *                 required: true
+ *               designation:
+ *                 type: string
+ *                 description: ID of the designation
+ *               employmentType:
+ *                 type: string
+ *                 description: Type of employment (e.g., full-time, part-time)
+ *                 required: true
+ *               reportingSupervisor:
+ *                 type: string
+ *                 description: ID of the reporting supervisor
+ *               department:
+ *                 type: string
+ *                 description: ID of the department
+ *               band:
+ *                 type: string
+ *                 description: ID of the band
+ *               subDepartments:
+ *                 type: string
+ *                 description: ID of the sub-department
+ *               employmentStatusEffectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of employment status
+ *               zone:
+ *                 type: string
+ *                 description: ID of the zone
+ *               noticePeriod:
+ *                 type: string
+ *                 description: Notice period details
+ *               totalCTCExcludingVariableAndOtherBenefits:
+ *                 type: number
+ *                 description: Total CTC excluding variable and other benefits
+ *               totalCTCIncludingVariable:
+ *                 type: number
+ *                 description: Total CTC including variable
+ *     responses:
+ *       201:
+ *         description: User employment record successfully added
+ *       400:
+ *         description: Bad request, invalid input
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/user-employment',authController.protect, userController.createUserEmployment);
+
+/**
+ * @swagger
+ * /api/v1/users/user-employment/{id}:
+ *   get:
+ *     summary: Get a user employment record by ID
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user employment record
+ *     responses:
+ *       200:
+ *         description: Successful response with the user employment record
+ *       404:
+ *         description: User employment record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/user-employment/:id',authController.protect, userController.getUserEmployment);
+
+/**
+ * @swagger
+ * /api/v1/users/user-employment/{id}:
+ *   put:
+ *     summary: Update a user employment record by ID
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user employment record
+ *     requestBody:
+ *       description: New user employment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               effectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of employment
+ *                 required: true
+ *               location:
+ *                 type: string
+ *                 description: Location of employment
+ *                 required: true
+ *               designation:
+ *                 type: string
+ *                 description: ID of the designation
+ *               employmentType:
+ *                 type: string
+ *                 description: Type of employment (e.g., full-time, part-time)
+ *                 required: true
+ *               reportingSupervisor:
+ *                 type: string
+ *                 description: ID of the reporting supervisor
+ *               department:
+ *                 type: string
+ *                 description: ID of the department
+ *               band:
+ *                 type: string
+ *                 description: ID of the band
+ *               subDepartments:
+ *                 type: string
+ *                 description: ID of the sub-department
+ *               employmentStatusEffectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of employment status
+ *               zone:
+ *                 type: string
+ *                 description: ID of the zone
+ *               noticePeriod:
+ *                 type: string
+ *                 description: Notice period details
+ *               totalCTCExcludingVariableAndOtherBenefits:
+ *                 type: number
+ *                 description: Total CTC excluding variable and other benefits
+ *               totalCTCIncludingVariable:
+ *                 type: number
+ *                 description: Total CTC including variable
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated user employment record
+ *       404:
+ *         description: User employment record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/user-employment/:id',authController.protect, userController.updateUserEmployment);
+
+/**
+ * @swagger
+ * /api/v1/users/user-employment/{id}:
+ *   delete:
+ *     summary: Delete a user employment record by ID
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user employment record
+ *     responses:
+ *       204:
+ *         description: User employment record successfully deleted
+ *       404:
+ *         description: User employment record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/user-employment/:id',authController.protect, userController.deleteUserEmployment);
+
+/**
+ * @swagger
+ * /api/v1/users/salary-details:
+ *   post:
+ *     summary: Add a new employee salary details record
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Employee salary details to add
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 description: ID of the employee associated with the salary details
+ *                 required: true
+ *               payrollEffectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of the salary details
+ *                 required: true
+ *               actualEffectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of the salary details
+ *                 required: true
+ *               frequencyToEnterCTC:
+ *                 type: string
+ *                 description: Basic salary amount
+ *                 required: true
+ *               CTCTemplate:
+ *                 type: string
+ *                 description: Total allowances amount
+ *               isEmployerPartInclusiveInSalaryStructure:
+ *                 type: boolean
+ *               enteringAmount:
+ *                 type: number
+ *                 required: true
+ *               CTCAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       '201':
+ *         description: Employee salary details record successfully added
+ *       '400':
+ *         description: Bad request, invalid input
+ *       '500':
+ *         description: Internal server error
+ */
+router.post('/salary-details', authController.protect, userController.createEmployeeSalaryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/salary-details/{id}:
+ *   get:
+ *     summary: Get employee salary details by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee salary details record
+ *     responses:
+ *       '200':
+ *         description: Successful response with the employee salary details
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.get('/salary-details/:id', authController.protect, userController.getEmployeeSalaryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/salary-details/{id}:
+ *   put:
+ *     summary: Update employee salary details by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee salary details record
+ *     requestBody:
+ *       description: New employee salary details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollEffectiveFrom:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of the salary details
+ *                 required: true
+ *               actualEffectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Effective date of the salary details
+ *                 required: true
+ *               frequencyToEnterCTC:
+ *                 type: string
+ *                 description: Basic salary amount
+ *                 required: true
+ *               CTCTemplate:
+ *                 type: string
+ *                 description: Total allowances amount
+ *               isEmployerPartInclusiveInSalaryStructure:
+ *                 type: boolean
+ *               enteringAmount:
+ *                 type: number
+ *                 required: true
+ *               CTCAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       '200':
+ *         description: Successful response with the updated employee salary details
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.put('/salary-details/:id', authController.protect, userController.updateEmployeeSalaryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/salary-details/{id}:
+ *   delete:
+ *     summary: Delete employee salary details by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee salary details record to delete
+ *     responses:
+ *       '204':
+ *         description: Employee salary details successfully deleted
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.delete('/salary-details/:id', authController.protect, userController.deleteEmployeeSalaryDetails);
+
 
 router
   .route('/:id')
