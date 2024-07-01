@@ -465,7 +465,7 @@ router.post('/UserUIState',  commonController.saveUserUiState);
  
 /**
  * @swagger
- * /api/v1/common/GetUserUIState/{key}:
+ * /api/v1/common/UserUIState/{key}:
  *   get:
  *     summary: Retrieve the state value for a specific user and key
  *     tags: [common]
@@ -489,7 +489,7 @@ router.post('/UserUIState',  commonController.saveUserUiState);
  *       500:
  *         description: Server error
  */ 
-router.get('/GetUserUIState/:key', commonController.getUserUiState);
+router.get('/UserUIState/:key', commonController.getUserUiState);
 
 
 
