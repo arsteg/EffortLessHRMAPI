@@ -1323,7 +1323,7 @@ exports.getAllShortLeave = async (req, res, next) => {
     
     const totalCount = await ShortLeave.countDocuments({company: req.cookies.companyId , status:  req.body.status});  
 
-      const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId}).skip(parseInt(skip))
+      const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId, status:  req.body.status}).skip(parseInt(skip))
       .limit(parseInt(limit));
           res.status(200).json({
               status: 'success',

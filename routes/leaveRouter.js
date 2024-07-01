@@ -1714,7 +1714,7 @@ router.post('/short-leave-by-team', authController.protect, leaveController.getS
 
 /**
  * @swagger
- * /api/v1/leave/short-leave:
+ * /api/v1/leave/all-short-leave:
  *   post:
  *     summary: Get a ShortLeave
  *     tags: [Leave Management]
@@ -1740,7 +1740,7 @@ router.post('/short-leave-by-team', authController.protect, leaveController.getS
  *       500:
  *         description: Internal server error
  */
-router.post('/short-leave', authController.protect, leaveController.getAllShortLeave);
+router.post('/all-short-leave', authController.protect, leaveController.getAllShortLeave);
 
 /**
  * @swagger
