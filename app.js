@@ -43,7 +43,7 @@ app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 50
 const loggingMiddleware = require('./Logger/loggingMiddleware');
 
 var notificationRoute = require('./routes/notificationRoute');
-app.use(loggingMiddleware);
+//app.use(loggingMiddleware);
 
 var allowedOrigin ="http://localhost:4200";
 if (process.env.NODE_ENV === 'development') {

@@ -312,6 +312,40 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
+  const userId = req.cookies.userId;
+  console.log(`Fetching notifications for user ID: ${userId}`);
+  
+  // Fetch UserNotification records for the given user
+  const userNotifications = await UserNotification.find({ user: userId });
+  console.log(`User notifications fetched: ${JSON.stringify(userNotifications, null, 2)}`);
+
+  if (!userNotifications || userNotifications.length === 0) {
+    console.log('No user notifications found');
+    return next(new AppError('No user notifications found', 404));
+  }
+
+  // Extract notification IDs from UserNotification records
+  const notificationIds = userNotifications.map(notification => notification.notification);
+  console.log(`Notification IDs extracted: ${notificationIds}`);
+
+  // Fetch EventNotification records for the extracted notification IDs and apply date filter
+  const eventNotifications = await EventNotification.find({
+    _id: { $in: notificationIds }});
+  console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);
+
+  if (!eventNotifications || eventNotifications.length === 0) {
+    console.log('No event notifications found for today');
+    return next(new AppError('No event notifications found for today', 404));
+  }
+
+  console.log('Event notifications found, sending response');
+  res.status(200).json({
+    status: 'success',
+    data: eventNotifications
+  });
+});
+
 exports.testMe = catchAsync(async (req, res, next) => {    
     res.status(200).json({
       status: 'success',

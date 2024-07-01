@@ -7,8 +7,9 @@ const RolePerms = require('../models/rolePermsModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
-
- // Get Country List
+const UserState = require('../models/Settings/userUIState');
+const AppError = require('../utils/appError');
+// Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
     res.status(200).json({
@@ -353,6 +354,35 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
     } catch (error) {
       res.status(500).json({ error: 'Server error' });
     }
+  });
+
+  exports.saveUserUiState = catchAsync(async (req, res, next) => {
+    const { key, value } = req.body;
+    const  user= req.cookies.userId;    
+    try {
+      let state = await UserState.findOneAndUpdate(
+        { user, key },
+        { value },
+        { upsert: true, new: true }
+      );
+  
+      res.status(200).json(state);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }  
+  });
+  exports.getUserUiState = catchAsync(async (req, res, next) => {    
+    const key = req.params.key;    
+    console.log(`req.cookies.userId:${req.cookies.userId}, key:${key}`);
+    try {
+      let state = await UserState.where({ user: req.cookies.userId, key }).findOne();
+        if(!state){
+          next(new AppError("No user state found with that key", 404));
+        }
+      res.status(200).json(state);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }  
   });
 
   

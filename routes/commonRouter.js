@@ -1,6 +1,7 @@
 const express = require('express');
 const commonController = require('../controllers/commonController');
 const authController = require('../controllers/authController');
+const settingsController = require('../controllers/settingsController');
 const router = express.Router();
 
 // Country Router
@@ -24,7 +25,7 @@ router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
  * /api/v1/common/emailTemplate:
  *   post:
  *     summary: Add a new email template
- *     tags: [Email Templates]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -62,7 +63,7 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
  *  /api/v1/common/emailTemplates/changestatus/{id}:
  *   put:
  *     summary: Update an existing email template
- *     tags: [Email Templates]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -99,7 +100,7 @@ router.put('/emailTemplates/changestatus/:id',  authController.protect, commonCo
  * /api/v1/common/emailTemplates/{id}:
  *   delete:
  *     summary: Delete an email template
- *     tags: [Email Templates]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -121,7 +122,7 @@ router.delete('/emailTemplates/:id', authController.protect, commonController.de
  * /api/v1/common/emailTemplate/{id}:
  *   get:
  *     summary: Get an email template by ID
- *     tags: [Email Templates]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -149,7 +150,7 @@ router.get('/emailTemplate/:id', authController.protect, commonController.getEma
  * /api/v1/common/emailTemplates:
  *   get:
  *     summary: Get all email templates
- *     tags: [Email Templates] 
+ *     tags: [common] 
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -169,7 +170,7 @@ router.get('/emailTemplates', authController.protect, commonController.getAllEma
  * /api/v1/common/taskstatus:
  *   post:
  *     summary: Add a new task status
- *     tags: [Task Status]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -195,7 +196,7 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
   * @swagger
   * /api/v1/common/taskstatuslist:
   *  get:
-  *      tags: [Task Status]
+  *      tags: [common]
   *      summary: "Get all task status"
   *      security: [{
   *         bearerAuth: []
@@ -218,7 +219,7 @@ router.get('/taskstatuslist/', authController.protect, commonController.getTaskS
  *  /api/v1/common/taskstatus/{id}:
  *   put:
  *     summary: Update an existing Task Status
- *     tags: [Task Status]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -252,7 +253,7 @@ router.put('/taskstatus/:id',  authController.protect, commonController.updateTa
  * /api/v1/common/taskstatus/{id}:
  *   delete:
  *     summary: Delete an task status
- *     tags: [Task Status]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -274,7 +275,7 @@ router.delete('/taskstatus/:id', authController.protect, commonController.delete
  * /api/v1/common/taskstatus/{id}:
  *   get:
  *     summary: Get an task status by ID
- *     tags: [Task Status]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -302,7 +303,7 @@ router.get('/taskstatus/:id', authController.protect, commonController.getTaskSt
  * /api/v1/common/taskpriority:
  *   post:
  *     summary: Add a new task Priority
- *     tags: [Task Priority]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -328,7 +329,7 @@ router.post('/taskpriority',  authController.protect, commonController.saveTaskP
   * @swagger
   * /api/v1/common/taskprioritylist:
   *  get:
-  *      tags: [Task Priority]
+  *      tags: [common]
   *      summary: "Get all task priority"
   *      security: [{
   *         bearerAuth: []
@@ -351,7 +352,7 @@ router.get('/taskprioritylist/', authController.protect, commonController.getTas
  *  /api/v1/common/taskpriority/{id}:
  *   put:
  *     summary: Update an existing Task Priority
- *     tags: [Task Priority]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -385,7 +386,7 @@ router.put('/taskpriority/:id',  authController.protect, commonController.update
  * /api/v1/common/taskpriority/{id}:
  *   delete:
  *     summary: Delete an task priority
- *     tags: [Task Priority]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -407,7 +408,7 @@ router.delete('/taskpriority/:id', authController.protect, commonController.dele
  * /api/v1/common/taskpriority/{id}:
  *   get:
  *     summary: Get an task priority by ID
- *     tags: [Task Priority]
+ *     tags: [common]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -429,4 +430,67 @@ router.delete('/taskpriority/:id', authController.protect, commonController.dele
  *         description: Server error
  */
 router.get('/taskpriority/:id', authController.protect, commonController.getTaskPriorityById)
+
+
+/**
+ * @swagger
+ * /api/v1/common/UserUIState:
+ *   post:
+ *     summary: Save or update a state key-value pair for a user
+ *     tags: [common]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 required: true
+ *               value:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Successfully added a new Task Priority
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post('/UserUIState',  commonController.saveUserUiState);
+ 
+/**
+ * @swagger
+ * /api/v1/common/GetUserUIState/{key}:
+ *   get:
+ *     summary: Retrieve the state value for a specific user and key
+ *     tags: [common]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path      
+ *         name: key
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The key for the state item
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the UserUIState
+ *       400:
+ *         description: Invalid UserUIState ID
+ *       404:
+ *         description: UserUIState not found
+ *       500:
+ *         description: Server error
+ */ 
+router.get('/GetUserUIState/:key', commonController.getUserUiState);
+
+
+
 module.exports = router;

@@ -483,4 +483,18 @@ router.post('/userNotifications/update', eventNotificationController.assignOrUnA
  */
 router.get('/today', eventNotificationController.getUserNotificationsForToday);
 
+/**
+ * @swagger
+ * /api/v1/eventNotifications/All:
+ *   get:
+ *     summary: Get all notifications for the logged-in user
+ *     tags: [Event Notification] 
+ *     responses:
+ *       200:
+ *         description: Successful response with user notifications
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/All', eventNotificationController.getUserNotificationsForToday);
+
 module.exports = router;
