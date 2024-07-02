@@ -125,7 +125,7 @@ router.put('/Notification/:id',  eventNotificationController.updateEventNotifica
 
 /**
  * @swagger
- * /api/v1/eventNotifications/{id}:
+ * /api/v1/eventNotifications/Notification/{id}:
  *   delete:
  *     summary: Delete an event notification by ID
  *     tags: [Event Notification]
@@ -144,7 +144,7 @@ router.put('/Notification/:id',  eventNotificationController.updateEventNotifica
  *       500:
  *         description: Internal server error
  */
-router.delete('/Notification/:id', authController.protect, eventNotificationController.deleteEventNotification);
+router.delete('/Notification/:id', eventNotificationController.deleteEventNotification);
 
 /**
  * @swagger

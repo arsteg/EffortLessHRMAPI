@@ -45,13 +45,14 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   });
   
   exports.deleteEventNotification = catchAsync(async (req, res, next) => {
+    console.log(`req.params.id:${req.params.id}`);
     const eventNotification = await EventNotification.findByIdAndDelete(req.params.id);
     if (!eventNotification) {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(204).json({
       status: 'success',
-      data: null
+      data: eventNotification
     });
   });
   
@@ -195,7 +196,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     }
     res.status(204).json({
       status: 'success',
-      data: null
+      data: userNotification
     });
   });
   
