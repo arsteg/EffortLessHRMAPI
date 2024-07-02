@@ -495,6 +495,6 @@ router.get('/today', eventNotificationController.getUserNotificationsForToday);
  *       500:
  *         description: Internal server error
  */
-router.get('/All', eventNotificationController.getUserNotificationsForToday);
+router.get('/All', eventNotificationController.getUserNotificationsAll);
 
 module.exports = router;
