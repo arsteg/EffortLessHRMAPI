@@ -282,8 +282,10 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
   console.log(`User notifications fetched: ${JSON.stringify(userNotifications, null, 2)}`);
 
   if (!userNotifications || userNotifications.length === 0) {
-    console.log('No user notifications found');
-    return next(new AppError('No user notifications found', 404));
+    res.status(200).json({
+      status: 'success',
+      data: []
+    });
   }
 
   // Extract notification IDs from UserNotification records
@@ -298,12 +300,7 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
       $lte: endOfDay
     }
   });
-  console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);
-
-  if (!eventNotifications || eventNotifications.length === 0) {
-    console.log('No event notifications found for today');
-    return next(new AppError('No event notifications found for today', 404));
-  }
+  console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);  
 
   console.log('Event notifications found, sending response');
   res.status(200).json({
@@ -321,8 +318,10 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   console.log(`User notifications fetched: ${JSON.stringify(userNotifications, null, 2)}`);
 
   if (!userNotifications || userNotifications.length === 0) {
-    console.log('No user notifications found');
-    return next(new AppError('No user notifications found', 404));
+    res.status(200).json({
+      status: 'success',
+      data: []
+    });
   }
 
   // Extract notification IDs from UserNotification records
@@ -334,10 +333,7 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
     _id: { $in: notificationIds }});
   console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);
 
-  if (!eventNotifications || eventNotifications.length === 0) {
-    console.log('No event notifications found for today');
-    return next(new AppError('No event notifications found for today', 404));
-  }
+  
 
   console.log('Event notifications found, sending response');
   res.status(200).json({
