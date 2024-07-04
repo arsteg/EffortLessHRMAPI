@@ -11,6 +11,7 @@ const socket = require('./utils/socket');
 const cron = require("node-cron");
 const routes = require('./routes');
 const notificationSender = require('./utils/notificationSender');
+const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 let { setSocketIO } = require('./utils/liveScreenSender');
 //  import environment variables
 // Handle unhandled exceptions
@@ -80,17 +81,42 @@ mongoose
 });
 
 //execute on 1st day of each month
-cron.schedule('0 0 1 * *', () => {
+cron.schedule('0 0 1 * *', async () => {
   console.log('This Job will run every day......');
-//  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
+  await updateRecurringNotifications();
+  //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 
 //execute at every minute
-cron.schedule('* * * * *', async () => {
-  console.log('This Job will run every minute...');
+// cron.schedule('* * * * *', async () => {
+//   console.log('This Job will run every minute...');
+//   //62dfa8d13babb9ac2072863c
+//   //664229eec5a0b7f0dc0b7e0f
+//   notificationSender.sendNotification('62dfa6993babb9ac20728636',io,userSocketMap,'users-online',{'message':'Hello'});
+//   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
+// });
+
+//Execute every 10 minutes
+cron.schedule('*/5 * * * *', async () => {
+  const currentTime = new Date();
+  const formattedTime = currentTime.toLocaleString();
+  console.log(`${currentTime}:This Job will run every 10 minutes...`);
   //62dfa8d13babb9ac2072863c
   //664229eec5a0b7f0dc0b7e0f
-  notificationSender.sendNotification('62dfa6993babb9ac20728636',io,userSocketMap,'users-online',{'message':'Hello'});
+  
+  let userIds = [];
+  for (let [userId, socketId] of userSocketMap.entries()) {
+    userIds.push(userId);
+  }
+  console.log('User IDs:', userIds);  
+  if(userIds.length > 0){
+    const allUserNotifications = await getUserNotifications(userIds);
+    for (let notification of allUserNotifications) {
+      if(notification){        
+        notificationSender.sendNotification(notification.user.toString(), io, userSocketMap, 'users-online', notification);
+      }
+    }    
+  }  
   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 

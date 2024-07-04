@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const EventNotification= require('../models/eventNotification/eventNotification');
 const EventNotificationType = require('../models/eventNotification/eventNotificationType');
 const UserNotification   = require('../models/eventNotification/userNotification');
+const NotificationStatus = require('../models/eventNotification/enums.js');
 const moment = require('moment'); 
 
 exports.createEventNotification = catchAsync(async (req, res, next) => {
@@ -333,15 +334,112 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   const eventNotifications = await EventNotification.find({
     _id: { $in: notificationIds }});
   console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);
-
-  
-
   console.log('Event notifications found, sending response');
   res.status(200).json({
     status: 'success',
     data: eventNotifications
   });
 });
+
+exports.getUserNotifications = async (userIds) => {
+//  const { userIds } = req.body; // Extract userIds from the request body
+
+  console.log('Received user IDs:', userIds); // Log the received user IDs
+
+  try {
+      // Step 1: Retrieve UserNotification records for given user IDs
+      console.log('Retrieving UserNotification records for given user IDs...');
+      
+      const userNotifications = await UserNotification.find({
+          user: { $in: userIds },
+          status: 'unread' // Only consider unread notifications
+      }).populate('notification'); // Populate EventNotification reference
+
+      console.log('Retrieved user notifications:', userNotifications); // Log the retrieved user notifications
+
+      console.log(`NotificationStatus: ${NotificationStatus}`); // Logs 'unread'
+
+      console.log(`NotificationStatus.UNREAD: ${NotificationStatus.UNREAD}`); // Logs 'unread'
+
+      // Step 2: Filter to get EventNotification for the current date
+      console.log('Filtering notifications for the current date...');
+      const currentDate = new Date();
+      const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
+
+      console.log('Start of day:', startOfDay); // Log the start of the day
+      console.log('End of day:', endOfDay); // Log the end of the day
+
+      const eventNotifications = userNotifications.filter(userNotification => {
+          const eventDate = userNotification.notification.date;
+          console.log('Event date:', eventDate); // Log the event date
+          return eventDate >= startOfDay && eventDate <= endOfDay;
+      });
+
+      console.log('Filtered event notifications:', eventNotifications); // Log the filtered event notifications
+      return eventNotifications;      
+      console.log('Response sent successfully'); // Log that the response was sent successfully
+  } catch (error) {
+      console.error('Error retrieving user notifications:', error); // Log any errors encountered     
+  }
+};
+
+exports.updateRecurringNotifications = async () => {
+  try {
+    console.log('Fetching UserNotification records with status "read"...');
+    const userNotifications = await UserNotification.find({
+      status: 'read'
+    }).populate('notification');
+
+    console.log(`Fetched ${userNotifications.length} UserNotification records.`);
+
+    for (const userNotification of userNotifications) {
+      const eventNotification = userNotification.notification;
+      console.log(`Processing UserNotification with ID: ${userNotification._id} and EventNotification ID: ${eventNotification._id}`);
+
+      console.log(`eventNotification.isRecurring: ${eventNotification.isRecurring}`);
+
+      if (eventNotification.isRecurring) {
+        console.log(`UserNotification is recurring with frequency: ${eventNotification.recurringFrequency}`);
+
+        // Update the date based on the recurringFrequency
+        let newDate;
+        switch (eventNotification.recurringFrequency) {
+          case 'daily':
+            newDate = moment(eventNotification.date).add(1, 'days').toDate();
+            break;
+          case 'weekly':
+            newDate = moment(eventNotification.date).add(1, 'weeks').toDate();
+            break;
+          case 'monthly':
+            newDate = moment(eventNotification.date).add(1, 'months').toDate();
+            break;
+          case 'annually':
+            newDate = moment(eventNotification.date).add(1, 'years').toDate();
+            break;
+          default:
+            console.log(`Unrecognized recurring frequency: ${eventNotification.recurringFrequency} for UserNotification ID: ${userNotification._id}`);
+            continue;
+        }
+
+        console.log(`Updating EventNotification ID: ${eventNotification._id} with new date: ${newDate}`);
+        await EventNotification.findByIdAndUpdate(eventNotification._id, { date: newDate });
+
+        console.log(`Resetting status of UserNotification ID: ${userNotification._id} to 'unread'`);
+        await UserNotification.findByIdAndUpdate(userNotification._id, { status: 'unread' });
+      } else {
+        console.log(`UserNotification ID: ${userNotification._id} is not recurring and will be skipped.`);
+        // If needed to delete the non-recurring notification, uncomment the following line
+        // console.log(`Deleting non-recurring UserNotification ID: ${userNotification._id}`);
+        // await UserNotification.findByIdAndDelete(userNotification._id);
+      }
+    }
+
+    console.log('Completed processing all UserNotification records.');
+  } catch (error) {
+    console.error('An error occurred while updating recurring notifications:', error);
+  }
+};
 
 exports.testMe = catchAsync(async (req, res, next) => {    
     res.status(200).json({
