@@ -355,11 +355,7 @@ exports.getUserNotifications = async (userIds) => {
           status: 'unread' // Only consider unread notifications
       }).populate('notification'); // Populate EventNotification reference
 
-      console.log('Retrieved user notifications:', userNotifications); // Log the retrieved user notifications
-
-      console.log(`NotificationStatus: ${NotificationStatus}`); // Logs 'unread'
-
-      console.log(`NotificationStatus.UNREAD: ${NotificationStatus.UNREAD}`); // Logs 'unread'
+      console.log('Retrieved user notifications:', userNotifications); // Log the retrieved user notifications         
 
       // Step 2: Filter to get EventNotification for the current date
       console.log('Filtering notifications for the current date...');
