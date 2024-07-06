@@ -26,6 +26,8 @@ const CTCTemplateFixedDeduction = require("../models/Payroll/ctcTemplateFixedDed
 const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEmployerContributionModel");
 const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
 const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
+const PTConfigureStates = require('../models/Payroll/ptConfigureStatesModel');
+
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -417,6 +419,25 @@ exports.getAllFixedContributionSlabs = async (req, res, next) => {
   }
 };
 
+exports.getAllFixedContributionSlabsByState = async (req, res, next) => {
+  try {
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const totalCount = await LWFFixedContributionSlab.countDocuments({state: req.body.state  });  
+ 
+    const fixedContributionSlabs = await LWFFixedContributionSlab.find({}).where('state').equals(req.body.state).skip(parseInt(skip)).limit(parseInt(limit));
+    res.status(200).json({
+      status: 'success',
+      data: fixedContributionSlabs,
+      total: totalCount
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failure',
+      message: err.message
+    });
+  }
+};
 // controllers/payrollController.js
 
 
@@ -543,6 +564,74 @@ exports.getAllPTEligibleStates = async (req, res, next) => {
     });
   }
 };
+
+exports.createPTConfigureState = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
+    }
+  
+    // Add companyId to the request body
+    req.body.company = companyId;
+
+  const ptConfigureState = await PTConfigureStates.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: ptConfigureState
+  });
+});
+
+exports.getPTConfigureState = catchAsync(async (req, res, next) => {
+  const ptConfigureState = await PTConfigureStates.findById(req.params.id);
+  if (!ptConfigureState) {
+    return next(new AppError('PTConfigureState not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: ptConfigureState
+  });
+});
+
+exports.updatePTConfigureState = catchAsync(async (req, res, next) => {
+  const ptConfigureState = await PTConfigureStates.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!ptConfigureState) {
+    return next(new AppError('PTConfigureState not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: ptConfigureState
+  });
+});
+
+exports.deletePTConfigureState = catchAsync(async (req, res, next) => {
+  const ptConfigureState = await PTConfigureStates.findByIdAndDelete(req.params.id);
+
+  if (!ptConfigureState) {
+    return next(new AppError('PTConfigureState not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllPTConfigureStatesByCompany = catchAsync(async (req, res, next) => {
+  const ptConfigureStates = await PTConfigureStates.find({ company: req.cookies.companyId });
+
+  res.status(200).json({
+    status: 'success',
+    data: ptConfigureStates
+  });
+});
+
 exports.addUpdatePTEligibleStates = async (req, res, next) => {
   const company = req.cookies.companyId;
 
@@ -557,22 +646,18 @@ exports.addUpdatePTEligibleStates = async (req, res, next) => {
   }
 
   const { states } = req.body;
-  console.log("hi");
   // Iterate over the states array and add/update each state
   const updatedStates = [];
   for (const stateObj of states) {
     const { state, isEligible } = stateObj;
     let ptEligibleState;
-    console.log("hi1");
     // Find existing state or create a new one if not found
     const existingState = await PTEligibleStates.findOne({ company, state });
     if (existingState) {
-      console.log("hi2");
       // Update existing state
       ptEligibleState = await PTEligibleStates.findByIdAndUpdate(existingState._id, { isEligible }, { new: true });
     } else {
       // Create new state
-      console.log("hi3");
       ptEligibleState = await PTEligibleStates.create({ company, state, isEligible });
     }
     updatedStates.push(ptEligibleState);

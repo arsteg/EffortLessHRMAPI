@@ -1153,6 +1153,354 @@ router.put('/employee-salary-tax-salutaory-settings/:id', authController.protect
  */
 router.delete('/employee-salary-tax-salutaory-settings/:id', authController.protect, userController.deleteEmployeeTaxAndSalutaorySetting);
 
+/**
+ * @swagger
+ * /api/v1/users/employee-salutatory-details:
+ *   post:
+ *     summary: Add a new Employee Salutatory Details
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Employee Salutatory Details object
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *               isEmployeeEligibleForProvidentFundDeduction:
+ *                 type: boolean
+ *               willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling:
+ *                 type: boolean
+ *               willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling:
+ *                 type: boolean
+ *               providentFundJoiningDate:
+ *                 type: string
+ *                 format: date
+ *               providentFundNumber:
+ *                 type: number
+ *               UANNumber:
+ *                 type: number
+ *               fixedAmountForYourProvidentFundWage:
+ *                 type: number
+ *               additionalPFContributionInPercentage:
+ *                 type: number
+ *               isESICDeductedFromSalary:
+ *                 type: boolean
+ *               ESICNumber:
+ *                 type: string
+ *               isTaxDeductedFromPlayslip:
+ *                 type: boolean
+ *               isLWFDeductedFromPlayslip:
+ *                 type: boolean
+ *               isIncomeTaxDeducted:
+ *                 type: boolean
+ *               isGratuityEligible:
+ *                 type: boolean
+ *               isComeUnderGratuityPaymentAct:
+ *                 type: boolean
+ *               taxRegime:
+ *                 type: boolean
+ *               taxRegimeUpdated:
+ *                 type: string
+ *                 format: date
+ *               taxRegimeUpdatedBy:
+ *                 type: string
+ *               roundOffApplicable:
+ *                 type: boolean
+ *               dailyWageApplicable:
+ *                 type: boolean
+ *               eligibleForOvertime:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Employee Salutatory Details successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-salutatory-details', authController.protect, userController.createEmployeeSalutatoryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salutatory-details/{id}:
+ *   get:
+ *     summary: Get Employee Salutatory Details by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salutatory Details
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Salutatory Details
+ *       404:
+ *         description: Employee Salutatory Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-salutatory-details/:id', authController.protect, userController.getEmployeeSalutatoryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salutatory-details/{id}:
+ *   put:
+ *     summary: Update Employee Salutatory Details by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salutatory Details
+ *     requestBody:
+ *       description: New Employee Salutatory Details object
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+*               isEmployeeEligibleForProvidentFundDeduction:
+ *                 type: boolean
+ *               willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling:
+ *                 type: boolean
+ *               willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling:
+ *                 type: boolean
+ *               providentFundJoiningDate:
+ *                 type: string
+ *                 format: date
+ *               providentFundNumber:
+ *                 type: number
+ *               UANNumber:
+ *                 type: number
+ *               fixedAmountForYourProvidentFundWage:
+ *                 type: number
+ *               additionalPFContributionInPercentage:
+ *                 type: number
+ *               isESICDeductedFromSalary:
+ *                 type: boolean
+ *               ESICNumber:
+ *                 type: string
+ *               isTaxDeductedFromPlayslip:
+ *                 type: boolean
+ *               isLWFDeductedFromPlayslip:
+ *                 type: boolean
+ *               isIncomeTaxDeducted:
+ *                 type: boolean
+ *               isGratuityEligible:
+ *                 type: boolean
+ *               isComeUnderGratuityPaymentAct:
+ *                 type: boolean
+ *               taxRegime:
+ *                 type: boolean
+ *               taxRegimeUpdated:
+ *                 type: string
+ *                 format: date
+ *               taxRegimeUpdatedBy:
+ *                 type: string
+ *               roundOffApplicable:
+ *                 type: boolean
+ *               dailyWageApplicable:
+ *                 type: boolean
+ *               eligibleForOvertime:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Employee Salutatory Details
+ *       404:
+ *         description: Employee Salutatory Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-salutatory-details/:id', authController.protect, userController.updateEmployeeSalutatoryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-salutatory-details/{id}:
+ *   delete:
+ *     summary: Delete Employee Salutatory Details by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salutatory Details
+ *     responses:
+ *       204:
+ *         description: Employee Salutatory Details successfully deleted
+ *       404:
+ *         description: Employee Salutatory Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-salutatory-details/:id', authController.protect, userController.deleteEmployeeSalutatoryDetails);
+
+/**
+ * @swagger
+ * /api/v1/users/income-tax-componants:
+ *   post:
+ *     summary: Add a new Income Tax Componant
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - User Management
+ *     requestBody:
+ *       description: Income Tax Componant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               componantName:
+ *                 type: string
+ *                 required: true
+ *               MaximumAmount:
+ *                 type: number
+ *                 required: true
+ *               type:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Income Tax Componant successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/income-tax-componants', authController.protect, userController.createIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/users/income-tax-componants/{id}:
+ *   get:
+ *     summary: Get an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - User Management
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     responses:
+ *       200:
+ *         description: Successful response with the Income Tax Componant
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/income-tax-componants/:id', authController.protect, userController.getIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/users/income-tax-componants/{id}:
+ *   put:
+ *     summary: Update an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - User Management
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     requestBody:
+ *       description: New Income Tax Componant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               componantName:
+ *                 type: string
+ *               MaximumAmount:
+ *                 type: number
+ *               type:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Income Tax Componant
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/income-tax-componants/:id', authController.protect, userController.updateIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/users/income-tax-componants/{id}:
+ *   delete:
+ *     summary: Delete an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - User Management
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     responses:
+ *       204:
+ *         description: Income Tax Componant successfully deleted
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/income-tax-componants/:id', authController.protect, userController.deleteIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/users/income-tax-componants-by-company:
+ *   get:
+ *     summary: Get all Income Tax Componants by company
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - User Management
+ *     responses:
+ *       200:
+ *         description: Successful response with Income Tax Componants
+ *       404:
+ *         description: Income Tax Componants not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/income-tax-componants-by-company', authController.protect, userController.getIncomeTaxComponantsByCompany);
+
+module.exports = router;
+
 router
   .route('/:id')
   .get(userController.getUser)

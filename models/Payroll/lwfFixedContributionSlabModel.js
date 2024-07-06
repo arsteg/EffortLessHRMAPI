@@ -2,6 +2,10 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var fixedContributionSlabSchema = new Schema({  
+  state: {
+    type: String,
+    required: true
+  },
   fixedContribution: {
     type: String,
     required: true

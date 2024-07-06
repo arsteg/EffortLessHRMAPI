@@ -624,6 +624,8 @@ router.post('/fixed-contribution-list',authController.protect, payrollController
  *           schema:
  *             type: object
  *             properties:
+ *               state:
+ *                 type: string
  *               fixedContribution:
  *                 type: string
  *                 required: true
@@ -783,6 +785,36 @@ router.delete('/lwf-fixed-contribution-slabs/:id',authController.protect, payrol
 router.post('/lwf-fixed-contribution-slabs-list',authController.protect, payrollController.getAllFixedContributionSlabs);
 // routes/payrollRoutes.js
 
+/**
+ * @swagger
+ * /api/v1/payroll/lwf-fixed-contribution-slabs-list-by-state:
+ *   post:
+ *     summary: Get all Fixed Contribution Slabs
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
+ *                         state:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with Fixed Contribution Slabs
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/lwf-fixed-contribution-slabs-list-by-state',authController.protect, payrollController.getAllFixedContributionSlabsByState);
+// routes/payrollRoutes.js
+
 
 /**
  * @swagger
@@ -873,6 +905,146 @@ router.put('/lwf-fixed-contribution-months-update/',authController.protect, payr
  *         description: Internal server error
  */
 router.get('/lwf-fixed-contribution-months',authController.protect, payrollController.getAllLWFFixedContributionMonths);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-configure-states:
+ *   post:
+ *     summary: Create a new PTConfigureState
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PTConfigureState details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               state:
+ *                 type: string
+ *               frequency:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: PTConfigureState successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/pt-configure-states', authController.protect, payrollController.createPTConfigureState);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-configure-states/{id}:
+ *   get:
+ *     summary: Get a PTConfigureState by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTConfigureState
+ *     responses:
+ *       200:
+ *         description: Successful response with the PTConfigureState
+ *       404:
+ *         description: PTConfigureState not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-configure-states/:id', authController.protect, payrollController.getPTConfigureState);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-configure-states/{id}:
+ *   put:
+ *     summary: Update a PTConfigureState by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTConfigureState
+ *     requestBody:
+ *       description: New PTConfigureState details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               state:
+ *                 type: string
+ *               frequency:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PTConfigureState
+ *       404:
+ *         description: PTConfigureState not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/pt-configure-states/:id', authController.protect, payrollController.updatePTConfigureState);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-configure-states/{id}:
+ *   delete:
+ *     summary: Delete a PTConfigureState by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PTConfigureState
+ *     responses:
+ *       204:
+ *         description: PTConfigureState successfully deleted
+ *       404:
+ *         description: PTConfigureState not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/pt-configure-states/:id', authController.protect, payrollController.deletePTConfigureState);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pt-configure-states-by-company:
+ *   get:
+ *     summary: Get all PTConfigureStates by company ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with PTConfigureStates
+ *       404:
+ *         description: PTConfigureStates not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pt-configure-states-by-company', authController.protect, payrollController.getAllPTConfigureStatesByCompany);
 
 /**
  * @swagger

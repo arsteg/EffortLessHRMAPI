@@ -14,6 +14,8 @@ const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel')
 const UserEmployment = require('../models/Employment/userEmploymentModel');
 const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetailsModel');
 const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndSalutaorySettingModel');
+const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
+const IncomeTaxComponant = require("../models/Employment/IncomeTaxComponant");
 
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -364,3 +366,120 @@ exports.deleteEmployeeTaxAndSalutaorySetting= catchAsync(async (req, res, next) 
     data: null
   });
 });
+
+exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  
+  req.body.company = companyId;
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: employeeSalutatoryDetails
+  });
+});
+
+exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findById(req.params.id);
+  if (!employeeSalutatoryDetails) {
+    return next(new AppError('Employee Salutatory Details not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalutatoryDetails
+  });
+});
+
+exports.updateEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!employeeSalutatoryDetails) {
+    return next(new AppError('Employee Salutatory Details not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalutatoryDetails
+  });
+});
+
+exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findByIdAndDelete(req.params.id);
+  
+  if (!employeeSalutatoryDetails) {
+    return next(new AppError('Employee Salutatory Details not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findById(req.params.id);
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndDelete(req.params.id);
+  
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
+  const incomeTaxComponants = await IncomeTaxComponant.find({ company: req.params.companyId });
+
+  if (!incomeTaxComponants || incomeTaxComponants.length === 0) {
+    return next(new AppError('Income Tax Componants not found for the company', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponants
+  });
+});
+
