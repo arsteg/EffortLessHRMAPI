@@ -542,11 +542,13 @@ exports.addTask = catchAsync(async (req, res, next) => {
   }
   // Upload Capture image on block blob client 
 var taskNumber=0;
-const taskList = await Task.find({}).where('company').equals(req.cookies.companyId).where('project').equals(req.body.project);  
-if(taskList)
-{ 
-  taskNumber=taskList.length+1;
-} 
+const taskCount = await Task.countDocuments({
+  company: req.cookies.companyId,
+  project: req.body.project
+});
+
+  taskNumber=taskCount+1;
+
   const newTask = await Task.create({
     taskName: req.body.taskName,
     startDate:req.body.startDate,
