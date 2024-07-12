@@ -374,6 +374,150 @@ router.post('/rounding-rules-list', authController.protect, payrollController.ge
 
 /**
  * @swagger
+ * /api/v1/payroll/pf-templates:
+ *   post:
+ *     summary: Add a PF Template
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PF Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               templateName:
+ *                 type: string
+ *                 required: true
+ *               allowanceApplicable:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PF Template successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/pf-templates', payrollController.createPFTemplate);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pf-templates/{id}:
+ *   get:
+ *     summary: Get a PF Template by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PF Template
+ *     responses:
+ *       200:
+ *         description: Successful response with the PF Template
+ *       404:
+ *         description: PF Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pf-templates/:id', authController.protect, payrollController.getPFTemplate);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pf-templates/{id}:
+ *   put:
+ *     summary: Update a PF Template by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PF Template
+ *     requestBody:
+ *       description: New PF Template details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               templateName:
+ *                 type: string
+ *               allowanceApplicable:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PF Template
+ *       404:
+ *         description: PF Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/pf-templates/:id', authController.protect, payrollController.updatePFTemplate);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pf-templates/{id}:
+ *   delete:
+ *     summary: Delete a PF Template by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PF Template
+ *     responses:
+ *       204:
+ *         description: PF Template successfully deleted
+ *       404:
+ *         description: PF Template not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/pf-templates/:id', authController.protect, payrollController.deletePFTemplate);
+
+/**
+ * @swagger
+ * /api/v1/payroll/pf-templates-by-company:
+ *   get:
+ *     summary: Get all PF Templates by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with PF Templates
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pf-templates-by-company', authController.protect, payrollController.getAllPFTemplatesByCompany);
+
+/**
+ * @swagger
  * /api/v1/payroll/fixed-allowances:
  *   post:
  *     summary: Add a new FixedAllowances
@@ -818,15 +962,15 @@ router.post('/lwf-fixed-contribution-slabs-list-by-state',authController.protect
 
 /**
  * @swagger
- * /api/v1/payroll/lwf-fixed-contribution-months: 
+ * /api/v1/payroll/lwf-fixed-deduction-months: 
  *   post:
- *     summary: Add a LWFFixedContributionMonth
+ *     summary: Add a LWFFixedDeductionnMonth
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
  *     requestBody:
- *       description: LWFFixedContributionMonth details
+ *       description: LWFFixedDeductionMonth details
  *       required: true
  *       content:
  *         application/json:
@@ -841,25 +985,25 @@ router.post('/lwf-fixed-contribution-slabs-list-by-state',authController.protect
  *                 required: true
  *     responses:
  *       201:
- *         description: LWFFixedContributionMonth successfully added
+ *         description: LWFFixedDeductionMonth successfully added
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-router.post('/lwf-fixed-contribution-months',authController.protect, payrollController.createLWFFixedContributionMonth);
+router.post('/lwf-fixed-deduction-months',authController.protect, payrollController.createLWFFixedDeductionMonth);
 
 /**
  * @swagger
- * /api/v1/payroll/lwf-fixed-contribution-months-update:
+ * /api/v1/payroll/lwf-fixed-deduction-months-update:
  *   put:
- *     summary: Update a LWFFixedContributionMonth
+ *     summary: Update a LWFFixedDeductionMonth
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
  *     requestBody:
- *       description: New LWFFixedContributionMonth details
+ *       description: New LWFFixedDeductionMonth details
  *       required: true
  *       content:
  *         application/json:
@@ -887,24 +1031,24 @@ router.post('/lwf-fixed-contribution-months',authController.protect, payrollCont
  *       500:
  *         description: Internal server error
  */
-router.put('/lwf-fixed-contribution-months-update/',authController.protect, payrollController.updateLWFFixedContributionMonth);
+router.put('/lwf-fixed-deduction-months-update/',authController.protect, payrollController.updateLWFFixedDeductionMonth);
 
 /**
  * @swagger
- * /api/v1/payroll/lwf-fixed-contribution-months:
+ * /api/v1/payroll/lwf-fixed-deduction-months:
  *   get:
- *     summary: Get all LWFFixedContributionMonths
+ *     summary: Get all LWFFixedDeductionMonths
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
  *     responses:
  *       200:
- *         description: Successful response with LWFFixedContributionMonths
+ *         description: Successful response with LWFFixedDeductionMonths
  *       500:
  *         description: Internal server error
  */
-router.get('/lwf-fixed-contribution-months',authController.protect, payrollController.getAllLWFFixedContributionMonths);
+router.get('/lwf-fixed-deduction-months',authController.protect, payrollController.getAllLWFFixedDeductionMonths);
 
 /**
  * @swagger
@@ -1785,12 +1929,16 @@ router.delete('/esicContributions/:id',authController.protect, payrollController
  *               isIncomeTaxAffected:
  *                 type: boolean
  *                 required: true
+ *               isProfessionalTaxAffected:
+ *                 type: boolean
+ *                 required: true
  *               deductIncomeTaxAllowance:
  *                 type: string
  *                 required: true
  *               taxRegime:
- *                 type: string
- *                 required: true
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *                 required: true
@@ -1933,10 +2081,15 @@ router.get('/variable-allowances/:id', authController.protect, payrollController
  *                 type: boolean
  *               isIncomeTaxAffected:
  *                 type: boolean
+ *               isProfessionalTaxAffected:
+ *                 type: boolean
+ *                 required: true
  *               deductIncomeTaxAllowance:
  *                 type: string
  *               taxRegime:
- *                 type: string
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *               paidAllowanceFrequently:

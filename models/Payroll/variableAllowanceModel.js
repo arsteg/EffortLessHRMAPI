@@ -30,12 +30,16 @@ const variableAllowanceSchema = new Schema({
     type: Boolean,
     required: true
   },
+  isProfessionalTaxAffected: {
+    type: Boolean,
+    required: true
+  },
   deductIncomeTaxAllowance: {
     type: String,
     required: true
   },
   taxRegime: {
-    type: String,
+    type: [String],
     required: true
   },
   isShowInCTCStructure: {

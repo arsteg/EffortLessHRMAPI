@@ -27,6 +27,7 @@ const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEm
 const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
 const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
 const PTConfigureStates = require('../models/Payroll/ptConfigureStatesModel');
+const PFTemplates = require('../models/Payroll/pfTemplateModel');
 
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -212,6 +213,78 @@ exports.getAllRoundingRules = async (req, res, next) => {
     total: totalCount
   });
 };
+
+
+exports.createPFTemplate = catchAsync(async (req, res, next) => {
+  const pfTemplate = await PFTemplates.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: pfTemplate
+  });
+});
+
+/**
+ * Controller to get a PF template by ID
+ */
+exports.getPFTemplate = catchAsync(async (req, res, next) => {
+  const pfTemplate = await PFTemplates.findById(req.params.id);
+  if (!pfTemplate) {
+    return next(new AppError('PF template not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: pfTemplate
+  });
+});
+
+/**
+ * Controller to update a PF template by ID
+ */
+exports.updatePFTemplate = catchAsync(async (req, res, next) => {
+  const pfTemplate = await PFTemplates.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!pfTemplate) {
+    return next(new AppError('PF template not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: pfTemplate
+  });
+});
+
+/**
+ * Controller to delete a PF template by ID
+ */
+exports.deletePFTemplate = catchAsync(async (req, res, next) => {
+  const pfTemplate = await PFTemplates.findByIdAndDelete(req.params.id);
+  
+  if (!pfTemplate) {
+    return next(new AppError('PF template not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+/**
+ * Controller to get all PF templates by company ID
+ */
+exports.getAllPFTemplatesByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.params.companyId;
+  const pfTemplates = await PFTemplates.find({ companyId });
+  
+  res.status(200).json({
+    status: 'success',
+    data: pfTemplates
+  });
+});
+
 
 exports.createFixedAllowances = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -441,7 +514,7 @@ exports.getAllFixedContributionSlabsByState = async (req, res, next) => {
 // controllers/payrollController.js
 
 
-exports.createLWFFixedContributionMonth = async (req, res, next) => {
+exports.createLWFFixedDeductionMonth = async (req, res, next) => {
   try {
     const companyId = req.cookies.companyId;
 
@@ -453,10 +526,10 @@ exports.createLWFFixedContributionMonth = async (req, res, next) => {
     // Add companyId to the request body
     req.body.company = companyId;
 
-    const lwfFixedContributionMonth = await LWFFixedContributionMonth.create(req.body);
+    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.create(req.body);
     res.status(201).json({
       status: 'success',
-      data: lwfFixedContributionMonth
+      data: lwfFixedDeductionMonth
     });
   } catch (err) {
     res.status(400).json({
@@ -466,10 +539,10 @@ exports.createLWFFixedContributionMonth = async (req, res, next) => {
   }
 };
 
-exports.getLWFFixedContributionMonth = async (req, res, next) => {
+exports.getLWFFixedDeductionMonth = async (req, res, next) => {
   try {
-    const lwfFixedContributionMonth = await LWFFixedContributionMonth.findById(req.params.id);
-    if (!lwfFixedContributionMonth) {
+    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.findById(req.params.id);
+    if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
         status: 'failure',
         message: 'LWFFixedContributionMonth not found'
@@ -477,7 +550,7 @@ exports.getLWFFixedContributionMonth = async (req, res, next) => {
     }
     res.status(200).json({
       status: 'success',
-      data: lwfFixedContributionMonth
+      data: lwfFixedDeductionMonth
     });
   } catch (err) {
     res.status(500).json({
@@ -487,7 +560,7 @@ exports.getLWFFixedContributionMonth = async (req, res, next) => {
   }
 };
 
-exports.updateLWFFixedContributionMonth = async (req, res, next) => {
+exports.updateLWFFixedDeductionMonth = async (req, res, next) => {
   try {
     const { months } = req.body;
     const companyId = req.cookies.companyId;
@@ -500,7 +573,7 @@ exports.updateLWFFixedContributionMonth = async (req, res, next) => {
 
     // Update records based on companyId and paymentMonth
     const updatePromises = months.map(async (month) => {
-      await LWFFixedContributionMonth.updateMany(
+      await LWFFixedDeductionMonth.updateMany(
         { company: companyId, paymentMonth: month.paymentMonth },
         { $set: { processMonth: month.processMonth } }
       );
@@ -508,20 +581,20 @@ exports.updateLWFFixedContributionMonth = async (req, res, next) => {
 
     await Promise.all(updatePromises);
 
-    res.status(200).json({ status: 'success', message: 'LWFFixedContributionMonths updated successfully' });
+    res.status(200).json({ status: 'success', message: 'LWFFixedDeductionMonths updated successfully' });
   } catch (error) {
-    console.error('Error updating LWFFixedContributionMonths:', error);
+    console.error('Error updating LWFFixedDeductionMonths:', error);
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 };
 
-exports.deleteLWFFixedContributionMonth = async (req, res, next) => {
+exports.deleteLWFFixedDeductionMonth = async (req, res, next) => {
   try {
-    const lwfFixedContributionMonth = await LWFFixedContributionMonth.findByIdAndDelete(req.params.id);
-    if (!lwfFixedContributionMonth) {
+    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.findByIdAndDelete(req.params.id);
+    if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
         status: 'failure',
-        message: 'LWFFixedContributionMonth not found'
+        message: 'LWFFixedDeductionMonth not found'
       });
     }
     res.status(204).json({
@@ -536,12 +609,12 @@ exports.deleteLWFFixedContributionMonth = async (req, res, next) => {
   }
 };
 
-exports.getAllLWFFixedContributionMonths = async (req, res, next) => {
+exports.getAllLWFFixedDeductionMonths = async (req, res, next) => {
   try {
-    const lwfFixedContributionMonths = await LWFFixedContributionMonth.find({}).where('company').equals(req.cookies.companyId);
+    const lwfFixedDeductionMonths = await LWFFixedDeductionMonth.find({}).where('company').equals(req.cookies.companyId);
     res.status(200).json({
       status: 'success',
-      data: lwfFixedContributionMonths
+      data: lwfFixedDeductionMonths
     });
   } catch (err) {
     res.status(500).json({

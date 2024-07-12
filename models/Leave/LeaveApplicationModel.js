@@ -31,7 +31,8 @@ var leaveApplicationSchema = new Schema({
   },
   status: {
     type: String,
-    required: true
+    enum: ['Level 1 Approval Pending','Level 2 Approval Pending','Approved', 'Cancelled', 'Rejected'],
+    default: 'Level 1 Approval Pending'
   },
   level1Reason: {
     type: String
