@@ -667,12 +667,6 @@ router.route('/getUserManagers/:id').get(userController.getUserManagers);
  *               noticePeriod:
  *                 type: string
  *                 description: Notice period details
- *               totalCTCExcludingVariableAndOtherBenefits:
- *                 type: number
- *                 description: Total CTC excluding variable and other benefits
- *               totalCTCIncludingVariable:
- *                 type: number
- *                 description: Total CTC including variable
  *     responses:
  *       201:
  *         description: User employment record successfully added
@@ -773,12 +767,6 @@ router.get('/user-employment/:id',authController.protect, userController.getUser
  *               noticePeriod:
  *                 type: string
  *                 description: Notice period details
- *               totalCTCExcludingVariableAndOtherBenefits:
- *                 type: number
- *                 description: Total CTC excluding variable and other benefits
- *               totalCTCIncludingVariable:
- *                 type: number
- *                 description: Total CTC including variable
  *     responses:
  *       200:
  *         description: Successful response with the updated user employment record
@@ -857,9 +845,15 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
  *               isEmployerPartInclusiveInSalaryStructure:
  *                 type: boolean
  *               enteringAmount:
+ *                 type: string
+ *                 required: true
+ *               Amount:
  *                 type: number
  *                 required: true
- *               CTCAmount:
+ *               totalCTCExcludingVariableAndOtherBenefits:
+ *                 type: number
+ *                 required: true
+ *               totalCTCIncludingVariable:
  *                 type: number
  *                 required: true
  *     responses:
@@ -942,9 +936,15 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *               isEmployerPartInclusiveInSalaryStructure:
  *                 type: boolean
  *               enteringAmount:
+ *                 type: string
+ *                 required: true
+ *               Amount:
  *                 type: number
  *                 required: true
- *               CTCAmount:
+ *               totalCTCExcludingVariableAndOtherBenefits:
+ *                 type: number
+ *                 required: true
+ *               totalCTCIncludingVariable:
  *                 type: number
  *                 required: true
  *     responses:

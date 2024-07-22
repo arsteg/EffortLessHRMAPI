@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const employeeSalaryTaxAndSalutaorySettingSchema = new Schema({
+const employeeSalaryTaxAndStatutorySettingSchema = new Schema({
   employeeSalaryDetails: {
     type: Schema.Types.ObjectId,
     ref: 'EmployeeSalaryDetails',
@@ -72,6 +72,6 @@ const employeeSalaryTaxAndSalutaorySettingSchema = new Schema({
     ref: 'Company',
     required: true
   }
-}, { collection: 'EmployeeSalaryTaxAndSalutaorySetting' });
+}, { collection: 'EmployeeSalaryTaxAndStatutorySetting' });
 
-module.exports = mongoose.model('EmployeeSalaryTaxAndSalutaorySetting', employeeSalaryTaxAndSalutaorySettingSchema);
+module.exports = mongoose.model('EmployeeSalaryTaxAndStatutorySetting', employeeSalaryTaxAndStatutorySettingSchema);

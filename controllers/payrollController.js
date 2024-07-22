@@ -276,12 +276,16 @@ exports.deletePFTemplate = catchAsync(async (req, res, next) => {
  * Controller to get all PF templates by company ID
  */
 exports.getAllPFTemplatesByCompany = catchAsync(async (req, res, next) => {
-  const companyId = req.params.companyId;
-  const pfTemplates = await PFTemplates.find({ companyId });
-  
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const totalCount = await PFTemplates.countDocuments({ company: req.cookies.companyId });
+ 
+  const pfTemplates = await PFTemplates.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip)).limit(parseInt(limit));
+   
   res.status(200).json({
     status: 'success',
-    data: pfTemplates
+    data: pfTemplates,
+    total: totalCount
   });
 });
 

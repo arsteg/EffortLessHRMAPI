@@ -11,9 +11,9 @@ const BrowserHistory= require('../models/appsWebsites/browserHistory');
 const Productivity = require('./../models/productivityModel');
 const AppWebsite = require('./../models/commons/appWebsiteModel');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
-const UserEmployment = require('../models/Employment/userEmploymentModel');
+const UserEmployment = require('../models/Employment/UserEmploymentModel');
 const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetailsModel');
-const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndSalutaorySettingModel');
+const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js');
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const IncomeTaxComponant = require("../models/Employment/IncomeTaxComponant");
 

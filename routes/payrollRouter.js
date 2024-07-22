@@ -502,19 +502,29 @@ router.delete('/pf-templates/:id', authController.protect, payrollController.del
 /**
  * @swagger
  * /api/v1/payroll/pf-templates-by-company:
- *   get:
+ *   post:
  *     summary: Get all PF Templates by company
  *     tags: [Payroll Management]
  *     security: [{
  *        bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with PF Templates
  *       500:
  *         description: Internal server error
  */
-router.get('/pf-templates-by-company', authController.protect, payrollController.getAllPFTemplatesByCompany);
+router.post('/pf-templates-by-company', authController.protect, payrollController.getAllPFTemplatesByCompany);
 
 /**
  * @swagger

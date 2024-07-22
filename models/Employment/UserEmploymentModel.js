@@ -49,12 +49,6 @@ var userEmploymentSchema = new Schema({
   noticePeriod: {
     type: String
   },
-  totalCTCExcludingVariableAndOtherBenefits: {
-    type: Number
-  },
-  totalCTCIncludingVariable: {
-    type: Number
-  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema
