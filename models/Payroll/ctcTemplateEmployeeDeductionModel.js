@@ -8,8 +8,7 @@ var ctctemplateEmployeeDeductionSchema = new Schema({
     required: true
   },
   employeeDeduction: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'FixedContribution',
+    type: String,
     required: true
   },
   value: {
