@@ -206,8 +206,8 @@ else
 {
   
   const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveCategory').equals(req.params.id);
-  if(leaveTemplateCategory!==null){
-    return next(new AppError('Leave Category Added against Leave empalte, you can not delete found', 404));
+  if(leaveTemplateCategory!==null && leaveTemplateCategory.length>0){
+    return next(new AppError('Leave Category Added against Leave tempalte, you can not delete found', 404));
   }
   else
   {
