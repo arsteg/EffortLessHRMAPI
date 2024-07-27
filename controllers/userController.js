@@ -16,8 +16,22 @@ const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetail
 const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js');
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const IncomeTaxComponant = require("../models/Employment/IncomeTaxComponant");
+const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel");
+const SalaryComponentOtherBenefits =  require("../models/Employment/SalaryComponentOtherBenefits");
+const SalaryComponentEmployerContribution =  require("../models/Employment/SalaryComponentEmployerContribution");
+const SalaryComponentFixedDeduction =  require("../models/Employment/SalaryComponentFixedDeduction");
+const SalaryComponentVariableDeduction =  require("../models/Employment/SalaryComponentVariableDeduction");
+const SalaryComponentPFCharge =  require("../models/Employment/SalaryComponentPFCharge");
+const FixedAllowance = require('../models/Payroll/fixedAllowancesModel');
+const OtherBenefits= require('../models/Payroll/otherBenefitsModels');
+const FixedContribution = require('../models/Payroll/fixedContributionModel');
+const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
+const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
+const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 
+const PFCharge = require('../models/Payroll/pfChargeModel');
 
+var mongoose = require('mongoose');
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
     let filter = { status: 'Active', company : req.cookies.companyId };
@@ -240,7 +254,15 @@ exports.deleteUserEmployment = catchAsync(async (req, res, next) => {
     data: null
   });
 });
-
+async function checkUserExistence(criterion) {
+  try {
+    const user = await User.findOne(criterion);
+    return user ? true : false;
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    throw error;
+  }
+}
 
 // controllers/employeeSalaryDetailsController.js
 exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
@@ -248,10 +270,134 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
+  const criterion = { _id: req.body.user }; // You can also use { email: 'example@example.com' }
+  if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
+     return res.status(400).json({ error: `${req.body.user} Invalid ObjectId` });
+  }
+  checkUserExistence(criterion)
+    .then(userExists => {
+      if (userExists) {
+        console.log('User exists');
+      } else {
+        console.log('User does not exist');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  const fixedAllowances = await FixedAllowance.find({ company: companyId }).select('_id').exec();
+  const validAllowances = fixedAllowances.map(fa => fa._id.toString());
   
+  for (const item of req.body.salaryComponentFixedAllowance) {
+    if (!validAllowances.includes(item.fixedAllowance)) {
+      return res.status(400).json({ error: `${item.fixedAllowance} is not a valid fixed allowance` });
+    }
+  }
+
+  const otherBenefits = await OtherBenefits.find({ company: companyId }).select('_id').exec();
+  const validBenefits = otherBenefits.map(fa => fa._id.toString());
+  for (const item of req.body.salaryComponentOtherBenefits) {
+    if (!validBenefits.includes(item.otherBenefits)) {
+      return res.status(400).json({ error: `${item.otherBenefits} is not a valid Other Benefits` });
+    }
+  }
+
+  const fixedContribution = await FixedContribution.find({ company: companyId }).select('_id').exec();
+  const validEmployeeContribution = fixedContribution.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentEmployerContribution) {
+    if (!validEmployeeContribution.includes(item.employerContribution)) {
+      return res.status(400).json({ error: `${item.employerContribution} is not a valid Fixed Contribution` });
+    }
+  }
+
+  const variableAllowance = await VariableAllowance.find({ company: companyId }).select('_id').exec();
+  const validVariableAllowance = variableAllowance.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentVariableAllowance) {
+    if (!validVariableAllowance.includes(item.variableAllowance)) {
+      return res.status(400).json({ error: `${item.variableAllowance} is not a valid Variable Allowance` });
+    }
+  }
+
+  
+  const fixedDeduction = await FixedDeduction.find({ company: companyId }).select('_id').exec();
+  const validFixedDeduction = fixedDeduction.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentFixedDeduction) {
+    if (!validFixedDeduction.includes(item.fixedDeduction)) {
+      return res.status(400).json({ error: `${item.fixedDeduction} is not a valid Fixed Deduction` });
+    }
+  }
+
+  const variableDeduction = await VariableDeduction.find({ company: companyId }).select('_id').exec();
+  const validVariableDeduction = variableDeduction.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentVariableDeduction) {
+    if (!validVariableDeduction.includes(item.variableDeduction)) {
+      return res.status(400).json({ error: `${item.variableDeduction} is not a valid Variable Deduction` });
+    }
+  }
+
+  const pfCharge = await PFCharge.find({ company: companyId }).select('_id').exec();
+  const validPFCharge = pfCharge.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentPFCharge) {
+    if (!validPFCharge.includes(item.pfCharge)) {
+      return res.status(400).json({ error: `${item.pfCharge} is not a valid PF Charge` });
+    }
+  }
+
   req.body.company = companyId;
 
   const employeeSalaryDetails = await EmployeeSalaryDetails.create(req.body);
+
+  const employeeSalaryTaxAndStatutorySetting = req.body.employeeSalaryTaxAndStatutorySetting.map((item) => {
+    return { ...item, company: companyId,employeeSalaryDetails:employeeSalaryDetails._id };
+  });
+
+  const employeeTaxAndSalutaorySetting = await EmployeeTaxAndSalutaorySetting.create(employeeSalaryTaxAndStatutorySetting);
+  employeeSalaryDetails.taxAndSalutaorySetting = employeeTaxAndSalutaorySetting;
+  
+
+  const employeesalaryComponentFixedAllowance = req.body.salaryComponentFixedAllowance.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+
+  const salaryComponentFixedAllowance = await SalaryComponentFixedAllowance.create(employeesalaryComponentFixedAllowance);
+  employeeSalaryDetails.fixedAllowanceList=salaryComponentFixedAllowance;
+
+  const employeeSalaryComponentFixedAllowance = req.body.salaryComponentOtherBenefits.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentOtherBenefits = await SalaryComponentOtherBenefits.create(employeeSalaryComponentFixedAllowance);
+  employeeSalaryDetails.otherBenefitList=salaryComponentOtherBenefits;
+  
+  const employeeSalaryComponentEmployerContribution = req.body.salaryComponentEmployerContribution.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentEmployerContribution = await SalaryComponentEmployerContribution.create(employeeSalaryComponentEmployerContribution);
+  employeeSalaryDetails.employerContributionList=salaryComponentEmployerContribution;
+  
+
+  const employeesalaryComponentFixedDeduction = req.body.salaryComponentFixedDeduction.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentFixedDeduction = await SalaryComponentFixedDeduction.create(employeesalaryComponentFixedDeduction);
+  employeeSalaryDetails.fixedDeductionList=salaryComponentFixedDeduction; 
+  
+  const employeeSalaryComponentVariableDeduction = req.body.salaryComponentVariableDeduction.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentVariableDeduction = await SalaryComponentVariableDeduction.create(employeeSalaryComponentVariableDeduction);
+  employeeSalaryDetails.variableDeductionList=salaryComponentVariableDeduction; 
+
+  const employeeSalaryComponentPFCharge = req.body.salaryComponentPFCharge.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentPFCharge = await SalaryComponentPFCharge.create(employeeSalaryComponentPFCharge);
+  employeeSalaryDetails.pfChargeList=salaryComponentPFCharge; 
+
   res.status(201).json({
     status: 'success',
     data: employeeSalaryDetails
@@ -261,7 +407,14 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 // controllers/employeeSalaryDetailsController.js
 exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   const employeeSalaryDetails = await EmployeeSalaryDetails.findById(req.params.id);
-  if (!employeeSalaryDetails) {
+  employeeSalaryDetails.taxAndSalutaorySetting = await EmployeeTaxAndSalutaorySetting.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.fixedAllowanceList = await SalaryComponentFixedAllowance.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.otherBenefitList = await SalaryComponentOtherBenefits.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.employerContributionList = await SalaryComponentEmployerContribution.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.fixedDeductionList = await SalaryComponentFixedDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.variableDeductionList = await SalaryComponentVariableDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.pfChargeList = await SalaryComponentPFCharge.find({}).where('employeeSalaryDetails').equals(req.params.id);
+    if (!employeeSalaryDetails) {
     return next(new AppError('Employee Salary Details not found', 404));
   }
   res.status(200).json({
@@ -293,6 +446,10 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   
   if (!employeeSalaryDetails) {
     return next(new AppError('Employee Salary Details not found', 404));
+  }
+  else
+  {
+    
   }
   
   res.status(204).json({

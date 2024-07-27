@@ -856,6 +856,147 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
  *               totalCTCIncludingVariable:
  *                 type: number
  *                 required: true
+ *               employeeSalaryTaxAndStatutorySetting:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     isVariableAllowancePartOfCTC:
+ *                       type: boolean 
+ *                     isPFDeduction:
+ *                       type: boolean
+ *                     isProvidentPensionDeduction:
+ *                       type: boolean
+ *                     isEmployeeProvidentFundCappedAtPFCeiling:
+ *                       type: boolean
+ *                     isEmployerProvidentFundCappedAtPFCeiling:
+ *                       type: boolean 
+ *                     fixedAmountForProvidentFundWage:
+ *                       type: number 
+ *                     pfTemplate:
+ *                       type: string
+ *                     isESICDeduction:
+ *                       type: boolean  
+ *                     isPTDeduction:
+ *                       type: boolean
+ *                     isLWFDeduction:
+ *                       type: boolean
+ *                     isGratuityApplicable:
+ *                       type: boolean
+ *                     gratuityTemplate:
+ *                       type: string
+ *                     isIncomeTaxDeduction:
+ *                       type: boolean 
+ *                     isPFChargesApplicable:
+ *                       type: boolean
+ *                     isRoundOffApplicable:
+ *                       type: boolean
+ *               salaryComponentFixedAllowance:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     fixedAllowance:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentOtherBenefits:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     otherBenefits:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentEmployerContribution:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     employerContribution:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentFixedDeduction:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     fixedDeduction:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentVariableAllowance:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     variableAllowance:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentVariableDeduction:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     variableDeduction:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentPFCharge:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     pfCharge:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
  *     responses:
  *       '201':
  *         description: Employee salary details record successfully added
@@ -947,6 +1088,57 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *               totalCTCIncludingVariable:
  *                 type: number
  *                 required: true
+ *               employeeSalaryTaxAndStatutorySetting:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     isVariableAllowancePartOfCTC:
+ *                       type: boolean 
+ *                     isPFDeduction:
+ *                       type: boolean
+ *                     isProvidentPensionDeduction:
+ *                       type: boolean
+ *                     isEmployeeProvidentFundCappedAtPFCeiling:
+ *                       type: boolean
+ *                     isEmployerProvidentFundCappedAtPFCeiling:
+ *                       type: boolean 
+ *                     fixedAmountForProvidentFundWage:
+ *                       type: number 
+ *                     pfTemplate:
+ *                       type: string
+ *                     isESICDeduction:
+ *                       type: boolean  
+ *                     isPTDeduction:
+ *                       type: boolean
+ *                     isLWFDeduction:
+ *                       type: boolean
+ *                     isGratuityApplicable:
+ *                       type: boolean
+ *                     gratuityTemplate:
+ *                       type: string
+ *                     isIncomeTaxDeduction:
+ *                       type: boolean 
+ *                     isPFChargesApplicable:
+ *                       type: boolean
+ *                     isRoundOffApplicable:
+ *                       type: boolean
+ *               salaryComponentFixedAllowance:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     fixedAllowance:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
  *     responses:
  *       '200':
  *         description: Successful response with the updated employee salary details

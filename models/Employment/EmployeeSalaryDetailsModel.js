@@ -45,7 +45,13 @@ const employeeSalaryDetailsSchema = new Schema({
     ref: 'Company', // Reference to the Company schema assuming it exists
     required: true
   },
-  SalaryComponantFixedAllowance:  []
+  taxAndSalutaorySetting: [],
+  fixedAllowanceList:  [],
+  otherBenefitList:  [],
+  employerContributionList: [],
+  fixedDeductionList: [],
+  variableDeductionList: [],
+  pfChargeList: []
 }, { collection: 'EmployeeSalaryDetails' });
 
 module.exports = mongoose.model('EmployeeSalaryDetails', employeeSalaryDetailsSchema);
