@@ -1294,6 +1294,33 @@ router.delete('/salary-details/:id', authController.protect, userController.dele
 
 /**
  * @swagger
+ * /api/v1/users/salary-details-by-userId/{userId}:
+ *   get:
+ *     summary: Get employee salary details by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee salary details record
+ *     responses:
+ *       '200':
+ *         description: Successful response with the employee salary details
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.get('/salary-details-by-userId/:userId', authController.protect, userController.getEmployeeSalaryDetailsByUser);
+
+
+/**
+ * @swagger
  * /api/v1/users/employee-salary-tax-salutaory-settings:
  *   post:
  *     summary: Create a new Employee Salary and Salutary Setting

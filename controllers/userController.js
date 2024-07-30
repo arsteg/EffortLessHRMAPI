@@ -216,7 +216,7 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
-  const userEmployment = await UserEmployment.find({}).where('use').equals(req.params.userId);
+  const userEmployment = await UserEmployment.find({}).where('user').equals(req.params.userId);
   if (!userEmployment) {
     return next(new AppError('UserEmployment not found', 404));
   }
@@ -415,6 +415,30 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
+  const employeeSalaryDetails = await EmployeeSalaryDetails.find({}).where('user').equals(req.params.userId);
+  console.log(req.params.userId);
+  if (!employeeSalaryDetails) {
+    return next(new AppError('Employee Salary Details not found', 404));
+  }
+
+  for(let i=0;i<employeeSalaryDetails.length;i++){
+    
+  employeeSalaryDetails[i].taxAndSalutaorySetting = await EmployeeTaxAndSalutaorySetting.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].fixedAllowanceList = await SalaryComponentFixedAllowance.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].otherBenefitList = await SalaryComponentOtherBenefits.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].employerContributionList = await SalaryComponentEmployerContribution.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].fixedDeductionList = await SalaryComponentFixedDeduction.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].variableDeductionList = await SalaryComponentVariableDeduction.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].pfChargeList = await SalaryComponentPFCharge.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  
+  }
+ 
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalaryDetails
+  });
+});
 // controllers/employeeSalaryDetailsController.js
 exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   const employeeSalaryDetails = await EmployeeSalaryDetails.findById(req.params.id);
