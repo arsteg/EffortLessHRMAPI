@@ -806,6 +806,33 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
 
 /**
  * @swagger
+ * /api/v1/users/user-employment-by-userId:
+ *   get:
+ *     summary: Get a user employment record by ID
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user employment record
+ *     responses:
+ *       200:
+ *         description: Successful response with the user employment record
+ *       404:
+ *         description: User employment record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/user-employment-by-userId',authController.protect, userController.getUserEmploymentByUser);
+
+/**
+ * @swagger
  * /api/v1/users/salary-details:
  *   post:
  *     summary: Add a new employee salary details record
@@ -1131,6 +1158,96 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *                   required: true
  *                   properties:
  *                     fixedAllowance:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentOtherBenefits:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     otherBenefits:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentEmployerContribution:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     employerContribution:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentFixedDeduction:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     fixedDeduction:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentVariableAllowance:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     variableAllowance:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentVariableDeduction:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     variableDeduction:
+ *                       type: string 
+ *                       required: true
+ *                     monthlyAmount:
+ *                       type: number
+ *                       required: true
+ *                     yearlyAmount:
+ *                       type: number
+ *                       required: true
+ *               salaryComponentPFCharge:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     pfCharge:
  *                       type: string 
  *                       required: true
  *                     monthlyAmount:

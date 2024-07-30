@@ -215,6 +215,17 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
+  const userEmployment = await UserEmployment.find({}).where('use').equals(req.params.userId);
+  if (!userEmployment) {
+    return next(new AppError('UserEmployment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: userEmployment
+  });
+});
+
 exports.getUserEmployment = catchAsync(async (req, res, next) => {
   const userEmployment = await UserEmployment.findById(req.params.id);
   if (!userEmployment) {
@@ -425,6 +436,138 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
 // controllers/employeeSalaryDetailsController.js
 exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
+  
+  const employeeSalaryDetailsId = req.params.id;
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  const fixedAllowances = await FixedAllowance.find({ company: companyId }).select('_id').exec();
+  const validAllowances = fixedAllowances.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentFixedAllowance) {
+    if (!validAllowances.includes(item.fixedAllowance)) {
+      return res.status(400).json({ error: `${item.fixedAllowance} is not a valid fixed allowance` });
+    }
+  }
+
+  const otherBenefits = await OtherBenefits.find({ company: companyId }).select('_id').exec();
+  const validBenefits = otherBenefits.map(fa => fa._id.toString());
+  for (const item of req.body.salaryComponentOtherBenefits) {
+    if (!validBenefits.includes(item.otherBenefits)) {
+      return res.status(400).json({ error: `${item.otherBenefits} is not a valid Other Benefits` });
+    }
+  }
+
+  const fixedContribution = await FixedContribution.find({ company: companyId }).select('_id').exec();
+  const validEmployeeContribution = fixedContribution.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentEmployerContribution) {
+    if (!validEmployeeContribution.includes(item.employerContribution)) {
+      return res.status(400).json({ error: `${item.employerContribution} is not a valid Fixed Contribution` });
+    }
+  }
+
+  const variableAllowance = await VariableAllowance.find({ company: companyId }).select('_id').exec();
+  const validVariableAllowance = variableAllowance.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentVariableAllowance) {
+    if (!validVariableAllowance.includes(item.variableAllowance)) {
+      return res.status(400).json({ error: `${item.variableAllowance} is not a valid Variable Allowance` });
+    }
+  }
+
+  
+  const fixedDeduction = await FixedDeduction.find({ company: companyId }).select('_id').exec();
+  const validFixedDeduction = fixedDeduction.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentFixedDeduction) {
+    if (!validFixedDeduction.includes(item.fixedDeduction)) {
+      return res.status(400).json({ error: `${item.fixedDeduction} is not a valid Fixed Deduction` });
+    }
+  }
+
+  const variableDeduction = await VariableDeduction.find({ company: companyId }).select('_id').exec();
+  const validVariableDeduction = variableDeduction.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentVariableDeduction) {
+    if (!validVariableDeduction.includes(item.variableDeduction)) {
+      return res.status(400).json({ error: `${item.variableDeduction} is not a valid Variable Deduction` });
+    }
+  }
+
+  const pfCharge = await PFCharge.find({ company: companyId }).select('_id').exec();
+  const validPFCharge = pfCharge.map(fa => fa._id.toString());
+  
+  for (const item of req.body.salaryComponentPFCharge) {
+    if (!validPFCharge.includes(item.pfCharge)) {
+      return res.status(400).json({ error: `${item.pfCharge} is not a valid PF Charge` });
+    }
+  }
+
+    // Step 2: Update or create SalaryComponentFixedAllowance records
+    const requestIds = req.body.salaryComponentFixedAllowance
+    .filter(item => item._id) // Ensure only existing IDs are considered
+    .map(item => item._id.toString());
+
+  // Retrieve existing records in the database
+  const existingRecords = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: employeeSalaryDetailsId }).select('_id fixedAllowance').exec();
+  const existingIds = existingRecords.map(record => record._id.toString());
+
+  // Update or create records
+  for (const item of req.body.salaryComponentFixedAllowance) {
+    if (item._id && existingIds.includes(item._id.toString())) {
+      // Update existing record
+      await SalaryComponentFixedAllowance.findByIdAndUpdate(item._id, item, { new: true, runValidators: true });
+    } else {
+      // Create new record
+      await SalaryComponentFixedAllowance.create({ ...item, employeeSalaryDetails: employeeSalaryDetailsId });
+    }
+  }
+
+  // Delete records not in the request
+  for (const id of existingIds) {
+    if (!requestIds.includes(id)) {
+      await SalaryComponentFixedAllowance.findByIdAndDelete(id);
+    }
+  }
+
+  const updateOrCreateRecords = async (model, requestData, idField) => {
+    const requestIds = requestData
+      .filter(item => item._id) // Ensure only existing IDs are considered
+      .map(item => item._id.toString());
+
+    const existingRecords = await model.find({ employeeSalaryDetails: employeeSalaryDetailsId }).select('_id').exec();
+    const existingIds = existingRecords.map(record => record._id.toString());
+
+    // Update or create records
+    for (const item of requestData) {
+      if (item._id && existingIds.includes(item._id.toString())) {
+        await model.findByIdAndUpdate(item._id, item, { new: true, runValidators: true });
+      } else {
+        await model.create({ ...item, employeeSalaryDetails: employeeSalaryDetailsId });
+      }
+    }
+
+    // Delete records not in the request
+    for (const id of existingIds) {
+      if (!requestIds.includes(id)) {
+        await model.findByIdAndDelete(id);
+      }
+    }
+  };
+
+  // Handle SalaryComponentPFCharge
+  await updateOrCreateRecords(SalaryComponentPFCharge, req.body.salaryComponentPFCharge, 'pfCharge');
+
+  // Handle other components similarly
+  await updateOrCreateRecords(SalaryComponentOtherBenefits, req.body.salaryComponentOtherBenefits, 'otherBenefits');
+  await updateOrCreateRecords(SalaryComponentEmployerContribution, req.body.salaryComponentEmployerContribution, 'employerContribution');
+  await updateOrCreateRecords(SalaryComponentFixedDeduction, req.body.salaryComponentFixedDeduction, 'fixedDeduction');
+  await updateOrCreateRecords(SalaryComponentVariableDeduction, req.body.salaryComponentVariableDeduction, 'variableDeduction');
+
+
+
   const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -442,16 +585,27 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
 // controllers/employeeSalaryDetailsController.js
 exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
-  const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndDelete(req.params.id);
-  
+  const employeeSalaryDetailsId = req.params.id;
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findById(employeeSalaryDetailsId);
+
   if (!employeeSalaryDetails) {
-    return next(new AppError('Employee Salary Details not found', 404));
+    return res.status(404).json({ message: 'Employee Salary Details not found' });
   }
-  else
-  {
-    
-  }
+
+  // Delete related records from different collections
+  await EmployeeTaxAndSalutaorySetting.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentFixedAllowance.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentOtherBenefits.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentEmployerContribution.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentFixedDeduction.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentVariableDeduction.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentPFCharge.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+
+  // Finally, delete the EmployeeSalaryDetails record itself
+  await EmployeeSalaryDetails.findByIdAndDelete(employeeSalaryDetailsId);
+  //const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndDelete(req.params.id);
   
+ 
   res.status(204).json({
     status: 'success',
     data: null
