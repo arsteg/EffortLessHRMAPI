@@ -1835,6 +1835,204 @@ router.delete('/income-tax-componants/:id', authController.protect, userControll
  */
 router.get('/income-tax-componants-by-company', authController.protect, userController.getIncomeTaxComponantsByCompany);
 
+// EmployeeLoanadvance routes
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance:
+ *   post:
+ *     summary: Add a new Employee Loan Advance
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Employee Loan Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               category:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               repaymentFrequency:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Employee Loan Advance successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-loan-advance', authController.protect, userController.createEmployeeLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance/{id}:
+ *   get:
+ *     summary: Get an Employee Loan Advance by ID
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Loan Advance
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Loan Advance
+ *       404:
+ *         description: Employee Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-loan-advance/:id', authController.protect, userController.getEmployeeLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance/{id}:
+ *   put:
+ *     summary: Update an Employee Loan Advance by ID
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Loan Advance
+ *     requestBody:
+ *       description: New Employee Loan Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               repaymentFrequency:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Employee Loan Advance
+ *       404:
+ *         description: Employee Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-loan-advance/:id', authController.protect, userController.updateEmployeeLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance/{id}:
+ *   delete:
+ *     summary: Delete an Employee Loan Advance by ID
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Loan Advance
+ *     responses:
+ *       204:
+ *         description: Employee Loan Advance successfully deleted
+ *       404:
+ *         description: Employee Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-loan-advance/:id', authController.protect, userController.deleteEmployeeLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance-by-company:
+ *   post:
+ *     summary: Get all Employee Loan Advances by company ID
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with all Employee Loan Advances
+ *       404:
+ *         description: Employee Loan Advances not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-loan-advance-by-company', authController.protect, userController.getAllEmployeeLoanAdvancesByCompany);
+
+/**
+ * @swagger
+ * /api/v1/users/employee-loan-advance-by-user/{userId}:
+ *   post:
+ *     summary: Get all Employee Loan Advances by company ID
+ *     tags: 
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Loan Advance
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with all Employee Loan Advances
+ *       404:
+ *         description: Employee Loan Advances not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-loan-advance-by-user/:userId', authController.protect, userController.getAllEmployeeLoanAdvancesByUser);
+
 module.exports = router;
 
 router

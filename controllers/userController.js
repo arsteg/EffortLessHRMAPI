@@ -30,6 +30,7 @@ const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 
 const PFCharge = require('../models/Payroll/pfChargeModel');
+const EmployeeLoanAdvance = require("../models/Employment/EmployeeLoanAdvanceModel.js");
 
 var mongoose = require('mongoose');
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -824,3 +825,91 @@ exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
   });
 });
 
+
+
+exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  
+  req.body.company = companyId;
+   const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: employeeLoanAdvances
+  });
+});
+
+exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
+  const employeeLoanAdvances = await EmployeeLoanAdvance.findById(req.params.id);
+  if (!employeeLoanAdvances) {
+    return next(new AppError('Employee Loan Advance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeLoanAdvances
+  });
+});
+
+exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
+  const employeeLoanAdvances = await EmployeeLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!employeeLoanAdvances) {
+    return next(new AppError('Employee Loan Advance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeLoanAdvances
+  });
+});
+
+exports.deleteEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
+  const employeeLoanAdvances = await EmployeeLoanAdvance.findByIdAndDelete(req.params.id);
+  if (!employeeLoanAdvances) {
+    return next(new AppError('Employee Loan Advance not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  cosnole.log(companyId);
+  const totalCount = await EmployeeLoanAdvance.countDocuments({ company: companyId });  
+ 
+  const employeeLoanAdvances = await EmployeeLoanAdvance.find({ company: companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
+  if (!employeeLoanAdvances || employeeLoanAdvances.length === 0) {
+    return next(new AppError('No Employee Loan Advances found for the given company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeLoanAdvances,
+    total: totalCount
+  });
+});
+exports.getAllEmployeeLoanAdvancesByUser= catchAsync(async (req, res, next) => {
+
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  console.log(req.params.userId);
+  const totalCount = await EmployeeLoanAdvance.countDocuments({ user: req.params.userId });  
+ 
+  const employeeLoanAdvances = await EmployeeLoanAdvance.find({ user: req.params.userId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
+  if (!employeeLoanAdvances || employeeLoanAdvances.length === 0) {
+    return next(new AppError('No Employee Loan Advances found for the given user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeLoanAdvances,
+    total: totalCount
+  });
+});
