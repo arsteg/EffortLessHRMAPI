@@ -1860,7 +1860,7 @@ router.get('/income-tax-componants-by-company', authController.protect, userCont
  *               user:
  *                 type: string
  *                 required: true
- *               category:
+ *               loanAdvancesCategory:
  *                 type: string
  *                 required: true
  *               amount:
@@ -1929,7 +1929,7 @@ router.get('/employee-loan-advance/:id', authController.protect, userController.
  *           schema:
  *             type: object
  *             properties:
- *               category:
+ *               loanAdvancesCategory:
  *                 type: string
  *               amount:
  *                 type: number

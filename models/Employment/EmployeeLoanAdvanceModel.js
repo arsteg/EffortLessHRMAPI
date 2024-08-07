@@ -7,8 +7,9 @@ var employeeLoanAdvanceSchema = new Schema({
     ref: 'User', // Reference to the Company schema assuming it exists
     required: true
   },
-  category: {
-    type: String,
+  loanAdvancesCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LoanAdvancesCategory',
     required: true
   },
   amount: {

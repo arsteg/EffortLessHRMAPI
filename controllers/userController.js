@@ -834,6 +834,39 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   }
   
   req.body.company = companyId;
+ 
+  if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
+     return res.status(400).json({ error: `${req.body.user} Invalid ObjectId` });
+  }
+  const criterion = await User.exists({ _id: req.body.user });
+  checkUserExistence(criterion)
+    .then(userExists => {
+      if (userExists) {
+        console.log('User exists');
+      } else {
+        console.log('User does not exist');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+    
+    const criterionCategory =await LoanAdvancesCategory.exists({ _id: req.body.loanAdvancesCategory }); // You can also use { email: 'example@example.com' }
+  if (!mongoose.Types.ObjectId.isValid(req.body.loanAdvancesCategory)) {
+     return res.status(400).json({ error: `${req.body.loanAdvancesCategory} Invalid ObjectId` });
+  }
+  checkUserExistence(criterionCategory)
+    .then(categoryExists => {
+      if (categoryExists) {
+        console.log('loanAdvancesCategory exists');
+      } else {
+        console.log('loanAdvancesCategory does not exist');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+
    const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -853,6 +886,22 @@ exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
 });
 
 exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
+  const criterionCategory =  await LoanAdvancesCategory.exists({ _id: req.body.loanAdvancesCategory }); // You can also use { email: 'example@example.com' }
+  if (!mongoose.Types.ObjectId.isValid(req.body.loanAdvancesCategory)) {
+     return res.status(400).json({ error: `${req.body.loanAdvancesCategory} Invalid ObjectId` });
+  }
+  checkUserExistence(criterionCategory)
+    .then(categoryExists => {
+      if (categoryExists) {
+        console.log('loanAdvancesCategory exists');
+      } else {
+        console.log('loanAdvancesCategory does not exist');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
