@@ -806,7 +806,7 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
 
 /**
  * @swagger
- * /api/v1/users/user-employment-by-userId:
+ * /api/v1/users/user-employment-by-userId/{userId}:
  *   get:
  *     summary: Get a user employment record by ID
  *     tags: 
@@ -829,7 +829,7 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
  *       500:
  *         description: Internal server error
  */
-router.get('/user-employment-by-userId',authController.protect, userController.getUserEmploymentByUser);
+router.get('/user-employment-by-userId/:userId',authController.protect, userController.getUserEmploymentByUser);
 
 /**
  * @swagger
