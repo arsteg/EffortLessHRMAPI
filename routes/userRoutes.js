@@ -1708,11 +1708,14 @@ router.delete('/employee-salutatory-details/:id', authController.protect, userCo
  *               componantName:
  *                 type: string
  *                 required: true
- *               MaximumAmount:
+ *               maximumAmount:
  *                 type: number
  *                 required: true
  *               type:
  *                 type: string
+ *                 required: true
+ *               order:
+ *                 type: number
  *                 required: true
  *     responses:
  *       201:
@@ -1776,7 +1779,7 @@ router.get('/income-tax-componants/:id', authController.protect, userController.
  *             properties:
  *               componantName:
  *                 type: string
- *               MaximumAmount:
+ *               maximumAmount:
  *                 type: number
  *               type:
  *                 type: string

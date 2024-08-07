@@ -6,12 +6,16 @@ const incomeTaxComponantSchema = new Schema({
     type: String,
     required: true
   },
-  MaximumAmount: {
+  maximumAmount: {
     type: Number,
     required: true
   },
   type: {
     type: String,
+    required: true
+  },
+  order:{
+    type: Number,
     required: true
   },
   company: {
