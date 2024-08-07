@@ -20,8 +20,7 @@ const employeeSalaryDetailsSchema = new Schema({
     required: true
   },
   CTCTemplate: {
-    type: String,
-    required: true
+    type: String
   },
   isEmployerPartInclusiveInSalaryStructure: {
     type: Boolean,
