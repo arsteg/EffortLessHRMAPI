@@ -935,9 +935,7 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) 
  
   const employeeLoanAdvances = await EmployeeLoanAdvance.find({ company: companyId }).skip(parseInt(skip))
   .limit(parseInt(limit));
-  if (!employeeLoanAdvances || employeeLoanAdvances.length === 0) {
-    return next(new AppError('No Employee Loan Advances found for the given company', 404));
-  }
+ 
   res.status(200).json({
     status: 'success',
     data: employeeLoanAdvances,
@@ -953,9 +951,7 @@ exports.getAllEmployeeLoanAdvancesByUser= catchAsync(async (req, res, next) => {
  
   const employeeLoanAdvances = await EmployeeLoanAdvance.find({ user: req.params.userId }).skip(parseInt(skip))
   .limit(parseInt(limit));
-  if (!employeeLoanAdvances || employeeLoanAdvances.length === 0) {
-    return next(new AppError('No Employee Loan Advances found for the given user', 404));
-  }
+ 
   res.status(200).json({
     status: 'success',
     data: employeeLoanAdvances,
