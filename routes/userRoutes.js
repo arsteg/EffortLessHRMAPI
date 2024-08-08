@@ -1588,6 +1588,31 @@ router.get('/employee-salutatory-details/:id', authController.protect, userContr
 
 /**
  * @swagger
+ * /api/v1/users/employee-salutatory-details/{userId}:
+ *   get:
+ *     summary: Get Employee Salutatory Details by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Salutatory Details
+ *     responses:
+ *       200:
+ *         description: Successful response with the Employee Salutatory Details
+ *       404:
+ *         description: Employee Salutatory Details not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-salutatory-details/:userId', authController.protect, userController.getEmployeeSalutatoryDetailsByUser);
+
+/**
+ * @swagger
  * /api/v1/users/employee-salutatory-details/{id}:
  *   put:
  *     summary: Update Employee Salutatory Details by ID

@@ -32,6 +32,8 @@ const VariableDeduction = require('../models/Payroll/variableDeductionModel');
 const PFCharge = require('../models/Payroll/pfChargeModel');
 const EmployeeLoanAdvance = require("../models/Employment/EmployeeLoanAdvanceModel.js");
 
+const LoanAdvancesCategory = require("../models/Employment/EmployeeLoanAdvanceModel.js");
+
 var mongoose = require('mongoose');
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
@@ -723,6 +725,14 @@ exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) => {
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.find({ user: req.params.userId });
+  
+  res.status(200).json({
+    status: 'success',
+    data: employeeSalutatoryDetails
+  });
+});
 exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findById(req.params.id);
   if (!employeeSalutatoryDetails) {
