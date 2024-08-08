@@ -1588,7 +1588,7 @@ router.get('/employee-salutatory-details/:id', authController.protect, userContr
 
 /**
  * @swagger
- * /api/v1/users/employee-salutatory-details/{userId}:
+ * /api/v1/users/employee-salutatory-details-by-user/{userId}:
  *   get:
  *     summary: Get Employee Salutatory Details by ID
  *     tags: [User Management]
@@ -1600,7 +1600,7 @@ router.get('/employee-salutatory-details/:id', authController.protect, userContr
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the Employee Salutatory Details
+ *         description: user Id
  *     responses:
  *       200:
  *         description: Successful response with the Employee Salutatory Details
@@ -1609,7 +1609,7 @@ router.get('/employee-salutatory-details/:id', authController.protect, userContr
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-salutatory-details/:userId', authController.protect, userController.getEmployeeSalutatoryDetailsByUser);
+router.get('/employee-salutatory-details-by-user/:userId', authController.protect, userController.getEmployeeSalutatoryDetailsByUser);
 
 /**
  * @swagger
