@@ -22,6 +22,8 @@ const SalaryComponentEmployerContribution =  require("../models/Employment/Salar
 const SalaryComponentFixedDeduction =  require("../models/Employment/SalaryComponentFixedDeduction");
 const SalaryComponentVariableDeduction =  require("../models/Employment/SalaryComponentVariableDeduction");
 const SalaryComponentPFCharge =  require("../models/Employment/SalaryComponentPFCharge");
+const SalaryComponentVariableAllowance =  require("../models/Employment/SalaryComponentVariableAllowance");
+
 const FixedAllowance = require('../models/Payroll/fixedAllowancesModel');
 const OtherBenefits= require('../models/Payroll/otherBenefitsModels');
 const FixedContribution = require('../models/Payroll/fixedContributionModel');
@@ -412,6 +414,12 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   const salaryComponentPFCharge = await SalaryComponentPFCharge.create(employeeSalaryComponentPFCharge);
   employeeSalaryDetails.pfChargeList=salaryComponentPFCharge; 
 
+  const employeeSalaryComponentVariableAllowance = req.body.salaryComponentVariableAllowance.map((item) => {
+    return { ...item, employeeSalaryDetails:employeeSalaryDetails._id };
+  });  
+  const salaryComponentVariableAllowance = await SalaryComponentVariableAllowance.create(employeeSalaryComponentVariableAllowance);
+  employeeSalaryDetails.variableAllowanceList=salaryComponentVariableAllowance; 
+
   res.status(201).json({
     status: 'success',
     data: employeeSalaryDetails
@@ -434,6 +442,7 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
   employeeSalaryDetails[i].fixedDeductionList = await SalaryComponentFixedDeduction.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
   employeeSalaryDetails[i].variableDeductionList = await SalaryComponentVariableDeduction.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
   employeeSalaryDetails[i].pfChargeList = await SalaryComponentPFCharge.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
+  employeeSalaryDetails[i].variableAllowanceList = await SalaryComponentVariableAllowance.find({}).where('employeeSalaryDetails').equals(employeeSalaryDetails[i]._id);
   
   }
  
@@ -452,7 +461,9 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   employeeSalaryDetails.fixedDeductionList = await SalaryComponentFixedDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
   employeeSalaryDetails.variableDeductionList = await SalaryComponentVariableDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
   employeeSalaryDetails.pfChargeList = await SalaryComponentPFCharge.find({}).where('employeeSalaryDetails').equals(req.params.id);
-    if (!employeeSalaryDetails) {
+  employeeSalaryDetails.variableAllowanceList = await SalaryComponentVariableAllowance.find({}).where('employeeSalaryDetails').equals(req.params.id);
+
+  if (!employeeSalaryDetails) {
     return next(new AppError('Employee Salary Details not found', 404));
   }
   res.status(200).json({
@@ -592,7 +603,10 @@ console.log("hello");
           {
             await updateOrCreateRecords(SalaryComponentVariableDeduction, req.body.salaryComponentVariableDeduction, 'variableDeduction');
           }
-
+          if(req.body.salaryComponentVariableAllowance.length > 0)
+            {
+              await updateOrCreateRecords(SalaryComponentVariableAllowance, req.body.salaryComponentVariableAllowance, 'variableAllowance');
+            }
           console.log("hello1");
   const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -609,6 +623,7 @@ console.log("hello");
   employeeSalaryDetails.fixedDeductionList = await SalaryComponentFixedDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
   employeeSalaryDetails.variableDeductionList = await SalaryComponentVariableDeduction.find({}).where('employeeSalaryDetails').equals(req.params.id);
   employeeSalaryDetails.pfChargeList = await SalaryComponentPFCharge.find({}).where('employeeSalaryDetails').equals(req.params.id);
+  employeeSalaryDetails.variableAllowanceList = await SalaryComponentVariableAllowance.find({}).where('employeeSalaryDetails').equals(req.params.id);
 
   res.status(200).json({
     status: 'success',
@@ -633,6 +648,7 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   await SalaryComponentFixedDeduction.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
   await SalaryComponentVariableDeduction.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
   await SalaryComponentPFCharge.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
+  await SalaryComponentVariableAllowance.deleteMany({ employeeSalaryDetails: employeeSalaryDetailsId });
 
   // Finally, delete the EmployeeSalaryDetails record itself
   await EmployeeSalaryDetails.findByIdAndDelete(employeeSalaryDetailsId);

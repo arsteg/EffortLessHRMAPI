@@ -50,6 +50,7 @@ const employeeSalaryDetailsSchema = new Schema({
   employerContributionList: [],
   fixedDeductionList: [],
   variableDeductionList: [],
+  variableAllowanceList : [],
   pfChargeList: []
 }, { collection: 'EmployeeSalaryDetails' });
 
