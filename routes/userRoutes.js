@@ -2228,9 +2228,6 @@ router.post('/employee-income-tax-declarations-by-company', authController.prote
  *               financialYear:
  *                 type: string
  *                 required: true
- *               user:
- *                 type: string
- *                 required: true
  *               employeeIncomeTaxDeclarationComponent:
  *                 type: array
  *                 items:
@@ -2258,9 +2255,11 @@ router.post('/employee-income-tax-declarations-by-company', authController.prote
  *                     remark:
  *                       type: string
  *                       required: true
- *                     attachment:
- *                       type: number
- *                       required: true
+ *                     employeeIncomeTaxDeclarationAttachments:
+ *                        type: array
+ *                        items:
+ *                          type: string
+ *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               employeeIncomeTaxDeclarationHRA:
  *                 type: array
  *                 items:
@@ -2291,6 +2290,11 @@ router.post('/employee-income-tax-declarations-by-company', authController.prote
  *                     approvalStatus:
  *                       type: string
  *                       required: true
+ *                     employeeIncomeTaxDeclarationHRAAttachments:
+ *                        type: array
+ *                        items:
+ *                          type: string
+ *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *     responses:
  *       200:
  *         description: Successful response with the updated employee income tax declaration
