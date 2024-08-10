@@ -1846,7 +1846,7 @@ router.delete('/income-tax-componants/:id', authController.protect, userControll
 
 /**
  * @swagger
- * /api/v1/users/income-tax-componants-by-company:
+ * /api/v1/users/income-tax-componants-list:
  *   post:
  *     summary: Get all Income Tax Componants by company
  *     security:
@@ -1871,7 +1871,7 @@ router.delete('/income-tax-componants/:id', authController.protect, userControll
  *       500:
  *         description: Internal server error
  */
-router.post('/income-tax-componants-by-company', authController.protect, userController.getIncomeTaxComponantsByCompany);
+router.post('/income-tax-componants-list', authController.protect, userController.getIncomeTaxComponantsByCompany);
 
 // EmployeeLoanadvance routes
 
@@ -2122,9 +2122,11 @@ router.post('/employee-loan-advance-by-user/:userId', authController.protect, us
  *                     remark:
  *                       type: string
  *                       required: true
- *                     attachment:
- *                       type: number
- *                       required: true
+ *                     employeeIncomeTaxDeclarationAttachments:
+ *                        type: array
+ *                        items:
+ *                          type: string
+ *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               employeeIncomeTaxDeclarationHRA:
  *                 type: array
  *                 items:
@@ -2155,6 +2157,11 @@ router.post('/employee-loan-advance-by-user/:userId', authController.protect, us
  *                     approvalStatus:
  *                       type: string
  *                       required: true
+ *                     employeeIncomeTaxDeclarationHRAAttachments:
+ *                        type: array
+ *                        items:
+ *                          type: string
+ *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *     responses:
  *       201:
  *         description: Employee income tax declaration successfully added

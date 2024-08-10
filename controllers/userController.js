@@ -38,7 +38,19 @@ const LoanAdvancesCategory = require("../models/Employment/EmployeeLoanAdvanceMo
 const EmployeeIncomeTaxDeclaration = require('../models/Employment/EmployeeIncomeTaxDeclaration');
 const EmployeeIncomeTaxDeclarationComponent = require('../models/Employment/EmployeeIncomeTaxDeclarationComponent');
 const EmployeeIncomeTaxDeclarationHRA = require('../models/Employment/EmployeeIncomeTaxDeclarationHRA');
+const { v1: uuidv1} = require('uuid');
 var mongoose = require('mongoose');
+const { BlobServiceClient } = require('@azure/storage-blob');
+// AZURE STORAGE CONNECTION DETAILS
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+if (!AZURE_STORAGE_CONNECTION_STRING) {
+throw Error("Azure Storage Connection string not found");
+}
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  AZURE_STORAGE_CONNECTION_STRING
+);
+const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
+
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
     let filter = { status: 'Active', company : req.cookies.companyId };
@@ -994,6 +1006,7 @@ exports.getAllEmployeeLoanAdvancesByUser= catchAsync(async (req, res, next) => {
 
 // Add Employee Income Tax Declaration
 exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
+ 
   const companyId = req.cookies.companyId;
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
@@ -1012,16 +1025,100 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.create(req.body);
 
-  const employeeIncomeTaxDeclarationComponent = req.body.employeeIncomeTaxDeclarationComponent.map((item) => {
-    return { ...item, company: companyId,employeeIncomeTaxDeclaration:employeeIncomeTaxDeclaration._id };
-  });
+  const employeeIncomeTaxDeclarationComponent = await Promise.all(
+    req.body.employeeIncomeTaxDeclarationComponent.map(async (item) => {
+    // Initialize an array to store links
+    const documentLinks = [];
 
+    if (item.employeeIncomeTaxDeclarationAttachments != null) {
+      for (let i = 0; i < item.employeeIncomeTaxDeclarationAttachments.length; i++) {
+        const attachment = item.employeeIncomeTaxDeclarationAttachments[i];
+
+        if (
+          !attachment.attachmentType || !attachment.attachmentName || 
+          !attachment.attachmentSize || !attachment.extention || 
+          !attachment.file || attachment.attachmentType === null || 
+          attachment.attachmentName === null || attachment.attachmentSize === null || 
+          attachment.extention === null || attachment.file === null
+        ) {
+          return res.status(400).json({ error: 'All attachment properties must be provided' });
+        }
+
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+        
+        // Get a block blob client
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Upload data to the blob
+        const buffer = Buffer.from(attachment.file, 'base64');
+        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+        // Generate the document link
+        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+        // Add the document link to the array
+        item.documentLink=documentLink;
+      }
+    }
+
+    // Return the item with added properties
+    return {
+      ...item,
+      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+    };
+  }));
+  
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
 
-  const employeeIncomeTaxDeclarationHRA = req.body.employeeIncomeTaxDeclarationHRA.map((item) => {
-    return { ...item, company: companyId,employeeIncomeTaxDeclaration:employeeIncomeTaxDeclaration._id };
-  });
+  const employeeIncomeTaxDeclarationHRA = await Promise.all(
+    req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
+    // Initialize an array to store links
+    const documentLinks = [];
+
+    if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
+      for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
+        const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
+
+        if (
+          !attachment.attachmentType || !attachment.attachmentName || 
+          !attachment.attachmentSize || !attachment.extention || 
+          !attachment.file || attachment.attachmentType === null || 
+          attachment.attachmentName === null || attachment.attachmentSize === null || 
+          attachment.extention === null || attachment.file === null
+        ) {
+          return res.status(400).json({ error: 'All attachment properties must be provided' });
+        }
+
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+        
+        // Get a block blob client
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Upload data to the blob
+        const buffer = Buffer.from(attachment.file, 'base64');
+        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+        // Generate the document link
+        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+        // Add the document link to the array
+        item.documentLink=documentLink;
+      }
+    }
+
+    // Return the item with added properties
+    return {
+      ...item,
+      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+    };
+  }));
+
+
 
   const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
@@ -1148,10 +1245,40 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
   if (!employeeIncomeTaxDeclaration) {
     return next(new AppError('Employee income tax declaration not found', 404));
   }
-  // Delete related records from different collections
-  await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
-  await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
-
+  const taxDeclarationComponants = await EmployeeIncomeTaxDeclarationComponent.find({ _id: req.params.id }); 
+  if(taxDeclarationComponants)
+  { 
+      console.log(taxDeclarationComponants.length);
+      for(var i = 0; i <taxDeclarationComponants.length; i++) {
+      if(taxDeclarationComponants[i].documentLink)
+        {
+            var url = taxDeclarationComponants[i].documentLink;     
+            containerClient.getBlockBlobClient(url).deleteIfExists();
+            const blockBlobClient = containerClient.getBlockBlobClient(url);
+            await blockBlobClient.deleteIfExists();
+            console.log("deleted componant");
+        }
+    }
+    await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
+  }
+  
+  const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.para.id }); 
+  if(taxDeclarationHRAs)
+  { 
+      console.log(taxDeclarationHRAs.length);
+      for(var i = 0; i <taxDeclarationHRAs.length; i++) {
+      if(taxDeclarationHRAs[i].documentLink)
+        {
+            var url = taxDeclarationHRAs[i].documentLink;     
+            containerClient.getBlockBlobClient(url).deleteIfExists();
+            const blockBlobClient = containerClient.getBlockBlobClient(url);
+            await blockBlobClient.deleteIfExists();
+            console.log("deleted HRA");
+        }
+    }
+    await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
+   }
+ 
   res.status(204).json({
     status: 'success',
     data: null

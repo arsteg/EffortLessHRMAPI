@@ -30,7 +30,7 @@ const employeeIncomeTaxDeclarationComponentSchema = new Schema({
   remark: {
     type: String
   },
-  attachment: {
+  documentLink: {
     type: String
   },
   employeeIncomeTaxDeclaration: {

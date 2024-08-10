@@ -37,7 +37,10 @@ var employeeIncomeTaxDeclarationHRASchema = new Schema({
   approvalStatus: {
     type: String,
     required: true
-  }
+  },
+  documentLink: {
+    type: String
+  },
 }, { collection: 'EmployeeIncomeTaxDeclarationHRA' });
 
 module.exports = mongoose.model('EmployeeIncomeTaxDeclarationHRA', employeeIncomeTaxDeclarationHRASchema);
