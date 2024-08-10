@@ -35,7 +35,9 @@ const PFCharge = require('../models/Payroll/pfChargeModel');
 const EmployeeLoanAdvance = require("../models/Employment/EmployeeLoanAdvanceModel.js");
 
 const LoanAdvancesCategory = require("../models/Employment/EmployeeLoanAdvanceModel.js");
-
+const EmployeeIncomeTaxDeclaration = require('../models/Employment/EmployeeIncomeTaxDeclaration');
+const EmployeeIncomeTaxDeclarationComponent = require('../models/Employment/EmployeeIncomeTaxDeclarationComponent');
+const EmployeeIncomeTaxDeclarationHRA = require('../models/Employment/EmployeeIncomeTaxDeclarationHRA');
 var mongoose = require('mongoose');
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     // To allow for nested GET revicews on tour (hack)
@@ -827,7 +829,7 @@ exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
 
 exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
   const incomeTaxComponant = await IncomeTaxComponant.findByIdAndDelete(req.params.id);
-  
+;
   if (!incomeTaxComponant) {
     return next(new AppError('Income Tax Componant not found', 404));
   }
@@ -839,19 +841,24 @@ exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
 });
 
 exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
-  const incomeTaxComponants = await IncomeTaxComponant.find({ company: req.params.companyId });
-
-  if (!incomeTaxComponants || incomeTaxComponants.length === 0) {
-    return next(new AppError('Income Tax Componants not found for the company', 404));
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 0;
+  const totalCount = await IncomeTaxComponant.countDocuments({ company:  req.cookies.companyId });  
+  let incomeTaxComponants;
+  if (limit > 0) {
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId })
+      .skip(skip)
+      .limit(limit);
+  } else {
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId });
   }
 
   res.status(200).json({
     status: 'success',
-    data: incomeTaxComponants
+    data: incomeTaxComponants,
+    total: totalCount
   });
 });
-
-
 
 exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
@@ -956,7 +963,6 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) 
   const companyId = req.cookies.companyId;
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  cosnole.log(companyId);
   const totalCount = await EmployeeLoanAdvance.countDocuments({ company: companyId });  
  
   const employeeLoanAdvances = await EmployeeLoanAdvance.find({ company: companyId }).skip(parseInt(skip))
@@ -968,6 +974,7 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) 
     total: totalCount
   });
 });
+
 exports.getAllEmployeeLoanAdvancesByUser= catchAsync(async (req, res, next) => {
 
   const skip = parseInt(req.body.skip) || 0;
@@ -982,5 +989,171 @@ exports.getAllEmployeeLoanAdvancesByUser= catchAsync(async (req, res, next) => {
     status: 'success',
     data: employeeLoanAdvances,
     total: totalCount
+  });
+});
+
+// Add Employee Income Tax Declaration
+exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }  
+  req.body.company = companyId;  
+
+  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
+  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
+  
+  for (const item of req.body.employeeIncomeTaxDeclarationComponent) {
+    if (!validIncomeTaxComponant.includes(item.incomeTaxComponent)) {
+      return res.status(400).json({ error: `${item.incomeTaxComponent} is not a valid fixed allowance` });
+    }
+  }
+
+    
+  const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.create(req.body);
+
+  const employeeIncomeTaxDeclarationComponent = req.body.employeeIncomeTaxDeclarationComponent.map((item) => {
+    return { ...item, company: companyId,employeeIncomeTaxDeclaration:employeeIncomeTaxDeclaration._id };
+  });
+
+  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
+
+  const employeeIncomeTaxDeclarationHRA = req.body.employeeIncomeTaxDeclarationHRA.map((item) => {
+    return { ...item, company: companyId,employeeIncomeTaxDeclaration:employeeIncomeTaxDeclaration._id };
+  });
+
+  const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
+
+
+  res.status(201).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclaration
+  });
+});
+
+// Get All Employee Income Tax Declarations by Company
+exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });  
+ 
+  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ company: req.cookies.companyId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
+  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
+      
+    employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
+    employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
+  }
+  if (!employeeIncomeTaxDeclarations) {
+    return next(new AppError('No declarations found for this company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclarations,
+    total: totalCount
+  });
+});
+
+// Update Employee Income Tax Declaration
+exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
+
+  const employeeIncomeTaxDeclarationId = req.params.id;
+  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
+  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
+  
+  for (const item of req.body.employeeIncomeTaxDeclarationComponent) {
+    if (!validIncomeTaxComponant.includes(item.incomeTaxComponent)) {
+      return res.status(400).json({ error: `${item.incomeTaxComponent} is not a valid fixed allowance` });
+    }
+  }
+  const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!employeeIncomeTaxDeclaration) {
+    return next(new AppError('Employee income tax declaration not found', 404));
+  }
+  const updateOrCreateRecords = async (model, requestData, idField) => {
+    const requestIds = requestData
+      .filter(item => item._id) // Ensure only existing IDs are considered
+      .map(item => item._id.toString());
+
+    const existingRecords = await model.find({ employeeIncomeTaxDeclaration: employeeIncomeTaxDeclarationId }).select('_id').exec();
+    const existingIds = existingRecords.map(record => record._id.toString());
+
+    // Update or create records
+    for (const item of requestData) {
+      if (item._id && existingIds.includes(item._id.toString())) {
+        await model.findByIdAndUpdate(item._id, item, { new: true, runValidators: true });
+      } else {
+        await model.create({ ...item, employeeIncomeTaxDeclaration: employeeIncomeTaxDeclarationId });
+      }
+    }
+
+    // Delete records not in the request
+    for (const id of existingIds) {
+      if (!requestIds.includes(id)) {
+        await model.findByIdAndDelete(id);
+      }
+    }
+  };
+
+  // Handle SalaryComponentPFCharge
+  if(req.body.employeeIncomeTaxDeclarationComponent.length > 0)
+    {
+     await updateOrCreateRecords(EmployeeIncomeTaxDeclarationComponent, req.body.employeeIncomeTaxDeclarationComponent, 'incomeTaxDeclarationComponent');
+    }
+    else
+    {
+      await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });  
+    }
+    if(req.body.employeeIncomeTaxDeclarationHRA.length > 0)
+      {
+    await updateOrCreateRecords(EmployeeIncomeTaxDeclarationHRA, req.body.employeeIncomeTaxDeclarationHRA, 'incomeTaxDeclarationHRA');
+      }
+      else
+      {
+        await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
+      }
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclaration
+  });
+});
+
+// Get Employee Income Tax Declaration by ID
+exports.getEmployeeIncomeTaxDeclarationById = catchAsync(async (req, res, next) => {
+  const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.params.id);
+
+  if (!employeeIncomeTaxDeclaration) {
+    return next(new AppError('Employee income tax declaration not found', 404));
+  }
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
+  employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclaration
+  });
+});
+
+// Delete Employee Income Tax Declaration
+exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
+  const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findByIdAndDelete(req.params.id);
+  if (!employeeIncomeTaxDeclaration) {
+    return next(new AppError('Employee income tax declaration not found', 404));
+  }
+  // Delete related records from different collections
+  await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
+  await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
+
+  res.status(204).json({
+    status: 'success',
+    data: null
   });
 });

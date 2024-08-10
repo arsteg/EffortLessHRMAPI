@@ -1733,11 +1733,11 @@ router.delete('/employee-salutatory-details/:id', authController.protect, userCo
  *               componantName:
  *                 type: string
  *                 required: true
+ *               section:
+ *                 type: string
+ *                 required: true
  *               maximumAmount:
  *                 type: number
- *                 required: true
- *               type:
- *                 type: string
  *                 required: true
  *               order:
  *                 type: number
@@ -1804,10 +1804,10 @@ router.get('/income-tax-componants/:id', authController.protect, userController.
  *             properties:
  *               componantName:
  *                 type: string
+ *               section:
+ *                 type: string
  *               maximumAmount:
  *                 type: number
- *               type:
- *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with the updated Income Tax Componant
@@ -1847,12 +1847,22 @@ router.delete('/income-tax-componants/:id', authController.protect, userControll
 /**
  * @swagger
  * /api/v1/users/income-tax-componants-by-company:
- *   get:
+ *   post:
  *     summary: Get all Income Tax Componants by company
  *     security:
  *       - bearerAuth: []
  *     tags:
  *       - User Management
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
  *         description: Successful response with Income Tax Componants
@@ -1861,7 +1871,7 @@ router.delete('/income-tax-componants/:id', authController.protect, userControll
  *       500:
  *         description: Internal server error
  */
-router.get('/income-tax-componants-by-company', authController.protect, userController.getIncomeTaxComponantsByCompany);
+router.post('/income-tax-componants-by-company', authController.protect, userController.getIncomeTaxComponantsByCompany);
 
 // EmployeeLoanadvance routes
 
@@ -2061,7 +2071,280 @@ router.post('/employee-loan-advance-by-company', authController.protect, userCon
  */
 router.post('/employee-loan-advance-by-user/:userId', authController.protect, userController.getAllEmployeeLoanAdvancesByUser);
 
-module.exports = router;
+
+// Add Employee Income Tax Declaration
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations:
+ *   post:
+ *     summary: Add a new employee income tax declaration
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Employee income tax declaration details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               financialYear:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               employeeIncomeTaxDeclarationComponent:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     incomeTaxComponent:
+ *                       type: string 
+ *                       required: true
+ *                     section:
+ *                       type: string 
+ *                       required: true
+ *                     maximumAmount:
+ *                       type: number
+ *                       required: true
+ *                     appliedAmount:
+ *                       type: number
+ *                       required: true
+ *                     approvedAmount:
+ *                       type: number
+ *                       required: true
+ *                     approvalStatus:
+ *                       type: string
+ *                       required: true
+ *                     remark:
+ *                       type: string
+ *                       required: true
+ *                     attachment:
+ *                       type: number
+ *                       required: true
+ *               employeeIncomeTaxDeclarationHRA:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     rentDeclared:
+ *                       type: number 
+ *                       required: true
+ *                     month:
+ *                       type: string 
+ *                       required: true
+ *                     verifiedAmount:
+ *                       type: number
+ *                       required: true
+ *                     cityType:
+ *                       type: string
+ *                       required: true
+ *                     landlordName:
+ *                       type: string
+ *                       required: true
+ *                     landlordPan:
+ *                       type: string
+ *                       required: true
+ *                     landlordAddress:
+ *                       type: string
+ *                       required: true
+ *                     approvalStatus:
+ *                       type: string
+ *                       required: true
+ *     responses:
+ *       201:
+ *         description: Employee income tax declaration successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-income-tax-declarations', authController.protect, userController.createEmployeeIncomeTaxDeclaration);
+
+// Get All Employee Income Tax Declarations by Company
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations-by-company:
+ *   post:
+ *     summary: Get all employee income tax declarations by company ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with employee income tax declarations
+ *       404:
+ *         description: Declarations not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-income-tax-declarations-by-company', authController.protect, userController.getAllEmployeeIncomeTaxDeclarationsByCompany);
+
+// Update Employee Income Tax Declaration
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations/{id}:
+ *   put:
+ *     summary: Update an employee income tax declaration by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee income tax declaration
+ *     requestBody:
+ *       description: Updated employee income tax declaration details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               financialYear:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               employeeIncomeTaxDeclarationComponent:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     incomeTaxComponent:
+ *                       type: string 
+ *                       required: true
+ *                     section:
+ *                       type: string 
+ *                       required: true
+ *                     maximumAmount:
+ *                       type: number
+ *                       required: true
+ *                     appliedAmount:
+ *                       type: number
+ *                       required: true
+ *                     approvedAmount:
+ *                       type: number
+ *                       required: true
+ *                     approvalStatus:
+ *                       type: string
+ *                       required: true
+ *                     remark:
+ *                       type: string
+ *                       required: true
+ *                     attachment:
+ *                       type: number
+ *                       required: true
+ *               employeeIncomeTaxDeclarationHRA:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: true
+ *                   properties:
+ *                     rentDeclared:
+ *                       type: number 
+ *                       required: true
+ *                     month:
+ *                       type: string 
+ *                       required: true
+ *                     verifiedAmount:
+ *                       type: number
+ *                       required: true
+ *                     cityType:
+ *                       type: string
+ *                       required: true
+ *                     landlordName:
+ *                       type: string
+ *                       required: true
+ *                     landlordPan:
+ *                       type: string
+ *                       required: true
+ *                     landlordAddress:
+ *                       type: string
+ *                       required: true
+ *                     approvalStatus:
+ *                       type: string
+ *                       required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated employee income tax declaration
+ *       404:
+ *         description: Employee income tax declaration not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-income-tax-declarations/:id', authController.protect, userController.updateEmployeeIncomeTaxDeclaration);
+
+// Get Employee Income Tax Declaration by ID
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations/{id}:
+ *   get:
+ *     summary: Get an employee income tax declaration by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee income tax declaration
+ *     responses:
+ *       200:
+ *         description: Successful response with the employee income tax declaration
+ *       404:
+ *         description: Employee income tax declaration not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/employee-income-tax-declarations/:id', authController.protect, userController.getEmployeeIncomeTaxDeclarationById);
+
+// Delete Employee Income Tax Declaration
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations/{id}:
+ *   delete:
+ *     summary: Delete an employee income tax declaration by ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee income tax declaration
+ *     responses:
+ *       204:
+ *         description: Employee income tax declaration successfully deleted
+ *       404:
+ *         description: Employee income tax declaration not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/employee-income-tax-declarations/:id', authController.protect, userController.deleteEmployeeIncomeTaxDeclaration);
 
 router
   .route('/:id')

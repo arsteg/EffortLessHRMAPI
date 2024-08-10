@@ -3,7 +3,8 @@ const Schema = mongoose.Schema;
 
 const employeeIncomeTaxDeclarationComponentSchema = new Schema({
   incomeTaxComponent: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'IncomeTaxComponant',
     required: true
   },
   section: {

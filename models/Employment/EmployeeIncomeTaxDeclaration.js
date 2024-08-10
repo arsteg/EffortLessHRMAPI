@@ -15,7 +15,9 @@ const employeeIncomeTaxDeclarationSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required: true
-  }
+  },
+  incomeTaxDeclarationComponent: [],
+  incomeTaxDeclarationHRA: []
 }, { collection: 'EmployeeIncomeTaxDeclaration' });
 
 module.exports = mongoose.model('EmployeeIncomeTaxDeclaration', employeeIncomeTaxDeclarationSchema);
