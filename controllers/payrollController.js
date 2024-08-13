@@ -129,7 +129,6 @@ exports.deleteGeneralSetting = async (req, res, next) => {
 };
 
 exports.createRoundingRule = async (req, res, next) => {
-  console.log("hii");
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
 
@@ -137,16 +136,13 @@ exports.createRoundingRule = async (req, res, next) => {
    if (!companyId) {
      return next(new AppError('Company ID not found in cookies', 400));
    }
-   console.log(companyId);
    // Validate generalSetting
    const generalSettingExists = await GeneralSetting.findById(req.body.generalSetting);
    if (!generalSettingExists) {
      return next(new AppError('Invalid general setting', 400));
    }
    // Add companyId to the request body
-   console.log("hii2");
    req.body.company = companyId;
-   console.log(req.body.company);
   const roundingRule = await RoundingRule.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -1117,7 +1113,6 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
       variableAllowance: variableAllowance._id,
       employee: item.employee
     }));
-    console.log(result);
     variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);
     
   }
@@ -1194,7 +1189,6 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
       variableAllowance: variableAllowance._id,
       employee: item.employee
     }));
-    console.log(result);
     variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);    
   }
   if (!variableAllowance) {
@@ -1326,7 +1320,6 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
       variableDeduction: variableDeduction._id,
       employee: item.employee
     }));
-    console.log(result);
     variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);
     
   }
@@ -1405,7 +1398,6 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
       variableDeduction: variableDeduction._id,
       employee: item.employee
     }));
-    console.log(result);
     variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);    
   }
   if (!variableDeduction) {
@@ -1517,7 +1509,6 @@ exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
     return next(new AppError('Company ID not found in cookies', 400));
   }
   const existingCategory = await LoanAdvancesCategory.findOne({ name: name, company: companyId });;
-  console.log(existingCategory);
   if (existingCategory) {
     return next(new AppError('Loan Advances Category already exists', 400));
   } 
@@ -1591,8 +1582,7 @@ exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
-  const existingCategory = await FlexiBenefitsCategory.findOne({ name: name, company: companyId });;
-  console.log(existingCategory);
+  const existingCategory = await FlexiBenefitsCategory.findOne({ name: name, company: companyId });
   req.body.company = companyId;
   if (existingCategory) {  
     return next(new AppError('FlexiBenefitsCategory already exists for this company', 400));
@@ -1850,14 +1840,11 @@ async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories)
 
     if (!existingCategory) {
      // Create new category
-     console.log("Hi");
       const newCategory = new CTCTemplateVariableAllowance({
         ctcTemplate: ctcTemplateId,
         ...category,
       });
-      console.log(newCategory);
-      return newCategory.save();
-    
+      return newCategory.save();    
     }
   });
   await Promise.all(updatedCategoriesPromises);
@@ -1872,7 +1859,6 @@ async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories)
 
   await Promise.all(removalPromises);
   const finalCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
-  console.log(finalCategories);
   return finalCategories;
 }
 
@@ -1892,8 +1878,7 @@ async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories)
         ctcTemplate: ctcTemplateId,
         ...category,
       });
-      console.log(newCategory);
-      console.log("Save call");
+     
       return newCategory.save();
     }
   });
@@ -1906,10 +1891,8 @@ async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories)
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateVariableDeduction.findByIdAndRemove(category._id);
   });
-  console.log(categoriesToRemove);
   await Promise.all(removalPromises);
   const finalCategories = await CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
-  console.log(finalCategories);
   return finalCategories;
 }
 
@@ -1925,9 +1908,6 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
     );
 
     if (!existingCategory) {
-     // Create new category
-     console.log(ctcTemplateId);
-     console.log(category);
       const newCategory = new CTCTemplateFixedAllowance({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -1947,8 +1927,7 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId });
-  console.log(finalCategories);
+  const finalCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId }); 
   return finalCategories;
 }
 
@@ -1984,7 +1963,6 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
 
   await Promise.all(removalPromises);
   const finalCategories = await CTCTemplateFixedDeduction.find({ ctcTemplate: ctcTemplateId });
-console.log(finalCategories);
   return finalCategories;
 }
 
@@ -2067,23 +2045,18 @@ async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) 
 async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
-  console.log("existingCategories");
-  console.log(existingCategories);
-  console.log(updatedCategories);
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
     const existingCategory = existingCategories.find(
       (existing) => existing.employeeDeduction.equals(category.fixedDeduction)
     );
-    console.log(category.fixedDeduction);
     if (!existingCategory) {  
       const newCategory = new CTCTemplateEmployeeDeduction({
         ctcTemplate: ctcTemplateId,
         employeeDeduction: category.fixedDeduction,
         ...category,
       });
-      console.log(newCategory);
       return newCategory.save();
     } else {
       // Update the existing category if needed (example shown, customize as necessary)
@@ -2099,7 +2072,6 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
   const categoriesToRemove = existingCategories.filter(
     (existing) => !updatedCategories.find((updated) => updated.fixedDeduction === existing.employeeDeduction.toString())
   );
-  console.log(categoriesToRemove);
 
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateEmployeeDeduction.findByIdAndRemove(category._id);
@@ -2109,9 +2081,6 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
 
   // Fetch the final list of categories
   const finalCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
-  console.log("finalCategories");
-  console.log(finalCategories);
-
   return finalCategories;
 }
 
@@ -2296,9 +2265,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   if(ctcTemplateEmployeeDeduction.length > 0)
   {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
-      console.log(ctcTemplateEmployeeDeduction);
       const result = await FixedContribution.findById(contirbution.fixedDeduction);
-      console.log(result);
       if (!result) {
         return res.status(400).json({
           status: 'failure',
