@@ -22,6 +22,8 @@ const PFCharge = require('../models/Payroll/pfChargeModel');
 const CTCTemplate = require("../models/Payroll/ctcTemplateModel");
 const AppError = require('../utils/appError.js');
 const CTCTemplateFixedAllowance = require("../models/Payroll/ctcTemplateFixedAllowanceModel");
+const CTCTemplateVariableDeduction = require("../models/Payroll/ctcTemplateVariableDeductionModel");
+const CTCTemplateVariableAllowance = require("../models/Payroll/ctcTemplateVariableAllowanceModel");
 const CTCTemplateFixedDeduction = require("../models/Payroll/ctcTemplateFixedDeductionModel");
 const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEmployerContributionModel");
 const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
@@ -1717,7 +1719,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
    if (!companyId) {
      return next(new AppError('Company ID not found in cookies', 400));
    }
-  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution,ctcTemplateOtherBenefitAllowance,ctcTemplateEmployeeDeduction,...ctcTemplateData } = req.body;
+  const {ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateVariableAllowance,ctcTemplateVariableDeduction,ctcTemplateEmployerContribution,ctcTemplateOtherBenefitAllowance,ctcTemplateEmployeeDeduction,...ctcTemplateData } = req.body;
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
@@ -1749,7 +1751,41 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     }
     ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(ctcTemplate._id, req.body.ctcTemplateFixedDeduction);
   }
+//
 
+  if(ctcTemplateVariableAllowance.length > 0)
+    {
+      for (const allowance of ctcTemplateVariableAllowance) {
+    
+        const result = await VariableAllowance.findById(allowance.variableAllowance);
+      
+        if (!result) {
+          return res.status(400).json({
+            status: 'failure',
+            message: 'Invalid Variable Allowance',
+          });
+        }
+      }
+      ctcTemplate.ctcTemplateVariableAllowances = await updateOrCreateVariableAllownace(ctcTemplate._id, ctcTemplateVariableAllowance);
+    }
+
+    if(ctcTemplateVariableDeduction.length > 0)
+      {
+        for (const allowance of ctcTemplateVariableDeduction) {
+      
+          const result = await VariableDeduction.findById(allowance.variableDeduction);
+        
+          if (!result) {
+            return res.status(400).json({
+              status: 'failure',
+              message: 'Invalid Variable Deduction',
+            });
+          }
+        }
+        ctcTemplate.ctcTemplateVariableDeductions = await updateOrCreateVariableDeduction(ctcTemplate._id, ctcTemplateVariableDeduction);
+      }
+
+//hello
   if(ctcTemplateEmployerContribution.length > 0)
   {
     for (const contirbution of ctcTemplateEmployerContribution) {
@@ -1801,6 +1837,82 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
+async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories) {
+
+  const existingCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.variableAllowance.equals(category.variableAllowance)
+    );
+
+    if (!existingCategory) {
+     // Create new category
+     console.log("Hi");
+      const newCategory = new CTCTemplateVariableAllowance({
+        ctcTemplate: ctcTemplateId,
+        ...category,
+      });
+      console.log(newCategory);
+      return newCategory.save();
+    
+    }
+  });
+  await Promise.all(updatedCategoriesPromises);
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.variableAllowance === existing.variableAllowance.toString())
+  );
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return CTCTemplateVariableAllowance.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
+  console.log(finalCategories);
+  return finalCategories;
+}
+
+async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories) {
+
+  const existingCategories = await CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.variableDeduction.equals(category.variableDeduction)
+    );
+
+    if (!existingCategory) {  
+      const newCategory = new CTCTemplateVariableDeduction({
+        ctcTemplate: ctcTemplateId,
+        ...category,
+      });
+      console.log(newCategory);
+      console.log("Save call");
+      return newCategory.save();
+    }
+  });
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.variableDeduction === existing.variableDeduction.toString())
+  );
+  
+  await Promise.all(updatedCategoriesPromises);
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return CTCTemplateVariableDeduction.findByIdAndRemove(category._id);
+  });
+  console.log(categoriesToRemove);
+  await Promise.all(removalPromises);
+  const finalCategories = await CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
+  console.log(finalCategories);
+  return finalCategories;
+}
+
 async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId });
@@ -1824,6 +1936,7 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
     
     }
   });
+  await Promise.all(updatedCategoriesPromises);
     // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
     (existing) => !updatedCategories.find((updated) => updated.fixedAllowance === existing.fixedAllowance.toString())
@@ -1858,6 +1971,7 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
       return newCategory.save();
     }
   });
+  await Promise.all(updatedCategoriesPromises);
     // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
     (existing) => !updatedCategories.find((updated) => updated.fixedDeduction === existing.fixedDeduction.toString())
@@ -1873,9 +1987,11 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
 console.log(finalCategories);
   return finalCategories;
 }
+
 async function deleteCTCFixedDeduction(ctcTemplateId) {
   await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);  
 }
+
 async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateEmployerContribution.find({ ctcTemplate: ctcTemplateId });
@@ -1895,6 +2011,7 @@ async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategori
       return newCategory.save();
     }
   });
+  await Promise.all(updatedCategoriesPromises);
     // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
     (existing) => !updatedCategories.find((updated) => updated.fixedContribution === existing.fixedContribution.toString())
@@ -1930,6 +2047,7 @@ async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) 
       return newCategory.save();
     }
   });
+  await Promise.all(updatedCategoriesPromises);
     // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
     (existing) => !updatedCategories.find((updated) => updated.otherBenefit === existing.otherBenefit.toString())

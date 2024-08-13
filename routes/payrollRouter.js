@@ -3127,6 +3127,56 @@ router.post('/pf-charge-by-company',authController.protect, payrollController.ge
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
+ *               ctcTemplateVariableAllowance:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       variableAllowance:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       criteria:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: number
+ *                         description: Field value
+ *                         required: true
+ *                       valueType:
+ *                         type: string
+ *                         description: Field value
+ *                       minimumAmount:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
+ *               ctcTemplateVariableDeduction:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ *                     properties:
+ *                       variableDeduction:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       criteria:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                       value:
+ *                         type: number
+ *                         description: Field value
+ *                         required: true
+ *                       valueType:
+ *                         type: string
+ *                         description: Field value
+ *                       minimumAmount:
+ *                         type: string
+ *                         description: Field value
+ *                         required: true
+ *                  description: Array of field values
  *               ctcTemplateEmployerContribution:
  *                  type: array
  *                  items:

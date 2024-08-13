@@ -12,11 +12,13 @@ const ctcTemplateSchema = new Schema({
     ref: 'Company',
     required: true
   },
-  ctcTemplateFixedAllowances:[],
-  ctcTemplateFixedDeductions:[],
+  ctcTemplateVariableAllowances:[],
+  ctcTemplateVariableDeductions:[],
   ctcTemplateEmployerContributions:[],
   ctcTemplateOtherBenefitAllowances: [],
-  ctcTemplateEmployeeDeductions:[]
+  ctcTemplateEmployeeDeductions:[],
+  ctcTemplateFixedAllowances:[],
+  ctcTemplateFixedDeductions:[]
 }, { collection: 'CTCTemplate' });
 
 module.exports = mongoose.model('CTCTemplate', ctcTemplateSchema);
