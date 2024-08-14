@@ -8,7 +8,8 @@ var ctctemplateOtherBenefitAllowanceSchema = new Schema({
     required: true
   },
   otherBenefit: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'OtherBenefits',
     required: true
   }
 }, { collection: 'CTCTemplateOtherBenefitAllowance' });

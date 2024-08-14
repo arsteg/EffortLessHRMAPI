@@ -2009,10 +2009,11 @@ async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategori
 async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateOtherBenefitAllowance.find({ ctcTemplate: ctcTemplateId });
+  console.log(existingCategories);
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
+   console.log(category);
     const existingCategory = existingCategories.find(
       (existing) => existing.otherBenefit.equals(category.otherBenefit)
     );
