@@ -2111,6 +2111,7 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
       else{
         ctcTemplates[i].ctcTemplateFixedDeductions=null;
       }
+
       const ctcTemplateEmployerContribution = await CTCTemplateEmployerContribution.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
       if(ctcTemplateEmployerContribution) 
          {
@@ -2138,6 +2139,28 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
          {
            ctcTemplates[i].ctcTemplateEmployeeDeductions=null;
          }       
+
+         //
+         const ctcTemplateVariableAllowance = await CTCTemplateVariableAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
+         if(ctcTemplateVariableAllowance) 
+           {
+             ctcTemplates[i].ctcTemplateVariableAllowances = ctcTemplateVariableAllowance;
+           }
+         else
+           {
+             ctcTemplates[i].ctcTemplateVariableAllowances = null;
+           } 
+     
+         const ctcTemplateVariableDeduction = await CTCTemplateVariableDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
+         if(ctcTemplateVariableDeduction) 
+           {
+             ctcTemplates[i].ctcTemplateVariableDeductions = ctcTemplateVariableDeduction;
+           }
+         else
+           {
+             ctcTemplates[i].ctcTemplateVariableDeductions = null;
+           } 
+         //
     }
   }
   res.status(200).json({
@@ -2176,7 +2199,28 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
   else
     {
       ctcTemplate.ctcTemplateEmployeeDeductions = null;
-    }       
+    }    
+    //
+     const ctcTemplateVariableAllowance = await CTCTemplateVariableAllowance.find({}).where('ctcTemplate').equals(req.params.id);
+    if(ctcTemplateVariableAllowance) 
+      {
+        ctcTemplate.ctcTemplateVariableAllowances = ctcTemplateVariableAllowance;
+      }
+    else
+      {
+        ctcTemplate.ctcTemplateVariableAllowances = null;
+      } 
+
+    const ctcTemplateVariableDeduction = await CTCTemplateVariableDeduction.find({}).where('ctcTemplate').equals(req.params.id);
+    if(ctcTemplateVariableDeduction) 
+      {
+        ctcTemplate.ctcTemplateVariableDeductions = ctcTemplateVariableDeduction;
+      }
+    else
+      {
+        ctcTemplate.ctcTemplateVariableDeductions = null;
+      } 
+    ////
   res.status(200).json({
     status: 'success',
     data: ctcTemplate
@@ -2184,7 +2228,7 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
-  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateEmployerContribution,ctcTemplateEmployeeDeduction,ctcTemplateOtherBenefitAllowance, ...ctcTemplateData } = req.body;
+  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateVariableAllowance,ctcTemplateVariableDeduction,ctcTemplateEmployerContribution,ctcTemplateEmployeeDeduction,ctcTemplateOtherBenefitAllowance, ...ctcTemplateData } = req.body;
 
   // Check if policyLabel is provided
   if (!ctcTemplateData.name) {
@@ -2214,7 +2258,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   }
 
   const ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(req.params.id, ctcTemplateFixedAllowance);
-  ctcTemplate.ctcTemplateFixedAllowances=ctcTemplateFixedAllowances;
+  ctcTemplate.ctcTemplateFixedAllowances = ctcTemplateFixedAllowances;
   if(ctcTemplateFixedDeduction.length > 0)
   {
     for (const deduction of ctcTemplateFixedDeduction) {
@@ -2275,6 +2319,37 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
     }
     ctcTemplate.ctcTemplateEmployeeDeductions = await updateOrCreateEmployeeDeduction(req.params.id, req.body.ctcTemplateEmployeeDeduction);
   } 
+  if(ctcTemplateVariableAllowance.length > 0)
+    {
+      for (const allowance of ctcTemplateVariableAllowance) {
+    
+        const result = await VariableAllowance.findById(allowance.variableAllowance);
+      
+        if (!result) {
+          return res.status(400).json({
+            status: 'failure',
+            message: 'Invalid Variable Allowance',
+          });
+        }
+      }
+      ctcTemplate.ctcTemplateVariableAllowances = await updateOrCreateVariableAllownace(req.params.id, ctcTemplateVariableAllowance);
+  }
+
+  if(ctcTemplateVariableDeduction.length > 0)
+  {
+        for (const allowance of ctcTemplateVariableDeduction) {
+      
+          const result = await VariableDeduction.findById(allowance.variableDeduction);
+        
+          if (!result) {
+            return res.status(400).json({
+              status: 'failure',
+              message: 'Invalid Variable Deduction',
+            });
+          }
+        }
+        ctcTemplate.ctcTemplateVariableDeductions = await updateOrCreateVariableDeduction(req.params.id, ctcTemplateVariableDeduction);
+  }
   res.status(200).json({
     status: 'success',
     data: ctcTemplate
@@ -2286,6 +2361,17 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
   
   if (!ctcTemplate) {
     return next(new AppError('CTCTemplate not found', 404));
+  }
+  else
+  {
+    await CTCTemplateFixedAllowance.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateEmployerContribution.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateOtherBenefitAllowance.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateEmployeeDeduction.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateVariableAllowance.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateVariableDeduction.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateFixedAllowance.deleteMany({ ctcTemplate: req.params.id });
   }
   
   res.status(204).json({
