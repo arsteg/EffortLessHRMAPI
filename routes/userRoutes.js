@@ -2201,6 +2201,43 @@ router.post('/employee-income-tax-declarations', authController.protect, userCon
  */
 router.post('/employee-income-tax-declarations-by-company', authController.protect, userController.getAllEmployeeIncomeTaxDeclarationsByCompany);
 
+// Get All Employee Income Tax Declarations by User
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations-by-user/{userId}:
+ *   post:
+ *     summary: Get all employee income tax declarations by company ID
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the employee
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with employee income tax declarations
+ *       404:
+ *         description: Declarations not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/employee-income-tax-declarations-by-user/:userId', authController.protect, userController.getAllEmployeeIncomeTaxDeclarationsByCompany);
+
+
 // Update Employee Income Tax Declaration
 /**
  * @swagger

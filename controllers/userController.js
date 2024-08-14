@@ -1151,6 +1151,29 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
   });
 });
 
+// Get All Employee Income Tax Declarations by Company
+exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });  
+ 
+  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
+  .limit(parseInt(limit));
+  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
+      
+    employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
+    employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
+  }
+  if (!employeeIncomeTaxDeclarations) {
+    return next(new AppError('No declarations found for this company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclarations,
+    total: totalCount
+  });
+});
+
 // Update Employee Income Tax Declaration
 exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
 
