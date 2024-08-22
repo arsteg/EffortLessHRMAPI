@@ -9,8 +9,8 @@ const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const UserState = require('../models/Settings/userUIState');
 const AppError = require('../utils/appError');
-const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
-  
+const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
+const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -454,3 +454,71 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
       });
   });
   
+  
+exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findById(req.params.id);
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponant
+  });
+});
+
+exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndDelete(req.params.id);
+;
+  if (!incomeTaxComponant) {
+    return next(new AppError('Income Tax Componant not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 0;
+  const totalCount = await IncomeTaxComponant.countDocuments({ company:  req.cookies.companyId });  
+  let incomeTaxComponants;
+  if (limit > 0) {
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId })
+      .skip(skip)
+      .limit(limit);
+  } else {
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: incomeTaxComponants,
+    total: totalCount
+  });
+});

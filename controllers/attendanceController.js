@@ -11,6 +11,8 @@ const RegularizationReason = require("../models/attendance/regularizationReason"
 const RegularizationRequest = require('../models/attendance/RegularizationRequest');
 const RoundingInformation = require('../models/attendance/roundingInformation');
 const Shift = require('../models/attendance/shift');
+const RosterShiftAssignment = require('../models/attendance/rosterShiftAssignment');
+
 const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssignment');
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
@@ -1451,6 +1453,84 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
     total: totalCount
   });
 });
+
+exports.createRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const rosterShiftAssignment = await RosterShiftAssignment.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: rosterShiftAssignment,
+  });
+});
+
+exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.id);
+  if (!rosterShiftAssignment) {
+    return next(new AppError('Roster shift assignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: rosterShiftAssignment,
+  });
+});
+
+exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!rosterShiftAssignment) {
+    return next(new AppError('Roster shift assignment not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: rosterShiftAssignment,
+  });
+});
+
+exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndDelete(req.params.id);
+
+  if (!rosterShiftAssignment) {
+    return next(new AppError('Roster shift assignment not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllRosterShiftAssignmentsBycompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+// Extract companyId from req.cookies
+const company = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!company) {
+  return next(new AppError('Company ID not found in cookies', 400));
+}
+  const query = { company: company };
+  // Get the total count of documents matching the query
+  const totalCount = await RosterShiftAssignment.countDocuments(query);
+ 
+  const rosterShiftAssignments = await RosterShiftAssignment.find(query);
+  res.status(200).json({
+    status: 'success',
+    data: rosterShiftAssignments,
+    total: totalCount
+  });
+});
+
 
 // Create a new DutyRequest
 exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {

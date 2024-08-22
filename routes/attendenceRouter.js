@@ -2825,6 +2825,186 @@ attendanceRouter.post('/shifts-by-company', authController.protect, attendanceCo
    */
   attendanceRouter.post('/shift-template-assignments-by-company', authController.protect, attendanceController.getAllShiftTemplateAssignments);
 
+  // Roster Shift Assignment routes
+
+/**
+ * @swagger
+ * /api/v1/attendance/roster-shift-assignments:
+ *   post:
+ *     summary: Create a new roster shift assignment
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Roster shift assignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user
+ *               - shift
+ *               - repeat
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 description: The ID of the employee.
+ *               shift:
+ *                 type: string
+ *                 description: The ID of the roster shift.
+ *               repeat:
+ *                 type: boolean
+ *               frequency:
+ *                 type: string
+ *               endDate:
+ *                 type: boolean
+ *                 format: date
+ *               endsOn:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Roster shift assignment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/roster-shift-assignments', authController.protect, attendanceController.createRosterShiftAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/roster-shift-assignments/{id}:
+ *   get:
+ *     summary: Get a roster shift assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the roster shift assignment
+ *     responses:
+ *       200:
+ *         description: Successful response with the roster shift assignment
+ *       404:
+ *         description: Roster shift assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/roster-shift-assignments/:id', authController.protect, attendanceController.getRosterShiftAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/roster-shift-assignments/{id}:
+ *   put:
+ *     summary: Update a roster shift assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the roster shift assignment
+ *     requestBody:
+ *       description: New roster shift assignment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user
+ *               - shift
+ *               - repeat
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 description: The ID of the employee.
+ *               shift:
+ *                 type: string
+ *                 description: The ID of the roster shift.
+ *               repeat:
+ *                 type: boolean
+ *               frequency:
+ *                 type: string
+ *               endDate:
+ *                 type: boolean
+ *                 format: date
+ *               endsOn:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated roster shift assignment
+ *       404:
+ *         description: Roster shift assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.put('/roster-shift-assignments/:id', authController.protect, attendanceController.updateRosterShiftAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/roster-shift-assignments/{id}:
+ *   delete:
+ *     summary: Delete a roster shift assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the roster shift assignment
+ *     responses:
+ *       204:
+ *         description: Roster shift assignment successfully deleted
+ *       404:
+ *         description: Roster shift assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/roster-shift-assignments/:id', authController.protect, attendanceController.deleteRosterShiftAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/roster-shift-assignments-by-company:
+ *   post:
+ *     summary: Get all roster shift assignments
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with all roster shift assignments
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/roster-shift-assignments-by-company', authController.protect, attendanceController.getAllRosterShiftAssignmentsBycompany);
+
 /**
  * @swagger
  * /api/v1/attendance/regularizationRequests:

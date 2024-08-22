@@ -15,7 +15,7 @@ const UserEmployment = require('../models/Employment/UserEmploymentModel');
 const EmployeeSalaryDetails = require('../models/Employment/EmployeeSalaryDetailsModel');
 const EmployeeTaxAndSalutaorySetting = require('../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js');
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
-const IncomeTaxComponant = require("../models/Employment/IncomeTaxComponant");
+const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel");
 const SalaryComponentOtherBenefits =  require("../models/Employment/SalaryComponentOtherBenefits");
 const SalaryComponentEmployerContribution =  require("../models/Employment/SalaryComponentEmployerContribution");
@@ -23,17 +23,14 @@ const SalaryComponentFixedDeduction =  require("../models/Employment/SalaryCompo
 const SalaryComponentVariableDeduction =  require("../models/Employment/SalaryComponentVariableDeduction");
 const SalaryComponentPFCharge =  require("../models/Employment/SalaryComponentPFCharge");
 const SalaryComponentVariableAllowance =  require("../models/Employment/SalaryComponentVariableAllowance");
-
 const FixedAllowance = require('../models/Payroll/fixedAllowancesModel');
 const OtherBenefits= require('../models/Payroll/otherBenefitsModels');
 const FixedContribution = require('../models/Payroll/fixedContributionModel');
 const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
 const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 const VariableDeduction = require('../models/Payroll/variableDeductionModel');
-
 const PFCharge = require('../models/Payroll/pfChargeModel');
 const EmployeeLoanAdvance = require("../models/Employment/EmployeeLoanAdvanceModel.js");
-
 const LoanAdvancesCategory = require("../models/Employment/EmployeeLoanAdvanceModel.js");
 const EmployeeIncomeTaxDeclaration = require('../models/Employment/EmployeeIncomeTaxDeclaration');
 const EmployeeIncomeTaxDeclarationComponent = require('../models/Employment/EmployeeIncomeTaxDeclarationComponent');
@@ -803,74 +800,6 @@ exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   });
 });
 
-
-exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
-  const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: incomeTaxComponant
-  });
-});
-
-exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
-  const incomeTaxComponant = await IncomeTaxComponant.findById(req.params.id);
-  if (!incomeTaxComponant) {
-    return next(new AppError('Income Tax Componant not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: incomeTaxComponant
-  });
-});
-
-exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
-  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!incomeTaxComponant) {
-    return next(new AppError('Income Tax Componant not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: incomeTaxComponant
-  });
-});
-
-exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
-  const incomeTaxComponant = await IncomeTaxComponant.findByIdAndDelete(req.params.id);
-;
-  if (!incomeTaxComponant) {
-    return next(new AppError('Income Tax Componant not found', 404));
-  }
-  
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
-});
-
-exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 0;
-  const totalCount = await IncomeTaxComponant.countDocuments({ company:  req.cookies.companyId });  
-  let incomeTaxComponants;
-  if (limit > 0) {
-    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId })
-      .skip(skip)
-      .limit(limit);
-  } else {
-    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId });
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: incomeTaxComponants,
-    total: totalCount
-  });
-});
 
 exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;

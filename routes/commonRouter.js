@@ -628,4 +628,159 @@ router.get('/income-tax-sections/:id',authController.protect, commonController.g
  */
 router.delete('/income-tax-sections/:id',authController.protect, commonController.deleteIncomeTaxSection);
 
+/**
+ * @swagger
+ * /api/v1/common/income-tax-componants:
+ *   post:
+ *     summary: Add a new Income Tax Componant
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management]
+ *     requestBody:
+ *       description: Income Tax Componant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               componantName:
+ *                 type: string
+ *                 required: true
+ *               section:
+ *                 type: string
+ *                 required: true
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
+ *               order:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Income Tax Componant successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/income-tax-componants', authController.protect, commonController.createIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-componants/{id}:
+ *   get:
+ *     summary: Get an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     responses:
+ *       200:
+ *         description: Successful response with the Income Tax Componant
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/income-tax-componants/:id', authController.protect, commonController.getIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-componants/{id}:
+ *   put:
+ *     summary: Update an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     requestBody:
+ *       description: New Income Tax Componant details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               componantName:
+ *                 type: string
+ *               section:
+ *                 type: string
+ *               maximumAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Income Tax Componant
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/income-tax-componants/:id', authController.protect, commonController.updateIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-componants/{id}:
+ *   delete:
+ *     summary: Delete an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Income Tax Componant
+ *     responses:
+ *       204:
+ *         description: Income Tax Componant successfully deleted
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/income-tax-componants/:id', authController.protect, commonController.deleteIncomeTaxComponant);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-componants-list:
+ *   post:
+ *     summary: Get all Income Tax Componants by company
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with Income Tax Componants
+ *       404:
+ *         description: Income Tax Componants not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/income-tax-componants-list', authController.protect, commonController.getIncomeTaxComponantsByCompany);
+
 module.exports = router;

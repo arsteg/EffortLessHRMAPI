@@ -7,7 +7,8 @@ const incomeTaxComponantSchema = new Schema({
     required: true
   },
   section: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'IncomeTaxSection',
     required: true
   },
   maximumAmount: {
