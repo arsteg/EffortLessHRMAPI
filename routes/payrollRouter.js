@@ -3200,10 +3200,6 @@ router.post('/pf-charge-by-company',authController.protect, payrollController.ge
  *                         type: string
  *                         description: Field value
  *                         required: true
- *                       value:
- *                         type: string
- *                         description: Field value
- *                         required: true
  *                  description: Array of field values
  *               ctcTemplateEmployeeDeduction:
  *                  type: array
@@ -3428,10 +3424,6 @@ router.get('/ctc-templates/:id',authController.protect, payrollController.getCTC
  *                     type: object
  *                     properties:
  *                       otherBenefit:
- *                         type: string
- *                         description: Field value
- *                         required: true
- *                       value:
  *                         type: string
  *                         description: Field value
  *                         required: true

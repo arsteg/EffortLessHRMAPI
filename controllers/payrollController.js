@@ -1830,7 +1830,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
 async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories) {
 
   const existingCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
-
+  console.log(existingCategories);
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
    
@@ -1838,8 +1838,15 @@ async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories)
       (existing) => existing.variableAllowance.equals(category.variableAllowance)
     );
 
-    if (!existingCategory) {
-     // Create new category
+    if (existingCategory) {
+      // Update existing category
+      return CTCTemplateVariableAllowance.findByIdAndUpdate(
+        existingCategory._id,
+        { ...category },
+        { new: true, runValidators: true }
+      );
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateVariableAllowance({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -1873,7 +1880,15 @@ async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories)
       (existing) => existing.variableDeduction.equals(category.variableDeduction)
     );
 
-    if (!existingCategory) {  
+    if (existingCategory) {
+      // Update existing category
+      return CTCTemplateVariableDeduction.findByIdAndUpdate(
+        existingCategory._id,
+        { ...category },
+        { new: true, runValidators: true }
+      );
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateVariableDeduction({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -1907,7 +1922,12 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
       (existing) => existing.fixedAllowance.equals(category.fixedAllowance)
     );
 
-    if (!existingCategory) {
+    if (existingCategory) {
+      // Update existing category
+      Object.assign(existingCategory, category);
+      return existingCategory.save();
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateFixedAllowance({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -1942,7 +1962,12 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
       (existing) => existing.fixedDeduction.equals(category.fixedDeduction)
     );
 
-    if (!existingCategory) {  
+    if (existingCategory) {
+      // Update existing category
+      Object.assign(existingCategory, category);
+      return existingCategory.save();
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateFixedDeduction({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -1981,7 +2006,12 @@ async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategori
       (existing) => existing.fixedContribution.equals(category.fixedContribution)
     );
 
-    if (!existingCategory) {  
+    if (existingCategory) {
+      // Update existing category
+      Object.assign(existingCategory, category);
+      return existingCategory.save();
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateEmployerContribution({
         ctcTemplate: ctcTemplateId,
         ...category,
@@ -2018,7 +2048,12 @@ async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) 
       (existing) => existing.otherBenefit.equals(category.otherBenefit)
     );
 
-    if (!existingCategory) {  
+    if (existingCategory) {
+      // Manually update fields to ensure Mongoose detects the change
+      existingCategory.set(category);
+      return existingCategory.save();
+    } else {
+      // Create new category
       const newCategory = new CTCTemplateOtherBenefitAllowance({
         ctcTemplate: ctcTemplateId,
         ...category,
