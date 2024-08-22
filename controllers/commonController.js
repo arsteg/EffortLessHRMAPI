@@ -9,6 +9,8 @@ const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const UserState = require('../models/Settings/userUIState');
 const AppError = require('../utils/appError');
+const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
+  
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -389,3 +391,66 @@ const AppError = require('../utils/appError');
   //End Country region
   
 
+
+  exports.createIncomeTaxSection = catchAsync(async (req, res, next) => {
+     // Extract companyId from req.cookies
+      const companyId = req.cookies.companyId;
+      // Check if companyId exists in cookies
+      if (!companyId) {
+        return next(new AppError('Company ID not found in cookies', 400));
+      }
+      req.body.company=companyId;
+      const incomeTaxSection = await IncomeTaxSection.create(req.body);
+      res.status(201).json({
+          status: 'success',
+          data: incomeTaxSection
+      });
+  });
+  
+  exports.getIncomeTaxSectionsByCompany = catchAsync(async (req, res, next) => {
+      const incomeTaxSections = await IncomeTaxSection.find({ company: req.cookies.companyId });
+      if (!incomeTaxSections.length) {
+          return next(new AppError('IncomeTaxSections not found for the given company', 404));
+      }
+      res.status(200).json({
+          status: 'success',
+          data: incomeTaxSections
+      });
+  });
+  
+  exports.updateIncomeTaxSection = catchAsync(async (req, res, next) => {
+      const incomeTaxSection = await IncomeTaxSection.findByIdAndUpdate(req.params.id, req.body, {
+          new: true,
+          runValidators: true
+      });
+      if (!incomeTaxSection) {
+          return next(new AppError('IncomeTaxSection not found', 404));
+      }
+      res.status(200).json({
+          status: 'success',
+          data: incomeTaxSection
+      });
+  });
+  
+  exports.getIncomeTaxSectionById = catchAsync(async (req, res, next) => {
+      const incomeTaxSection = await IncomeTaxSection.findById(req.params.id);
+      if (!incomeTaxSection) {
+          return next(new AppError('IncomeTaxSection not found', 404));
+      }
+      res.status(200).json({
+          status: 'success',
+          data: incomeTaxSection
+      });
+  });
+  
+  exports.deleteIncomeTaxSection = catchAsync(async (req, res, next) => {
+      const incomeTaxSection = await IncomeTaxSection.findByIdAndDelete(req.params.id);
+      if (!incomeTaxSection) {
+          return next(new AppError('IncomeTaxSection not found', 404));
+      }
+      res.status(204).json({
+          status: 'success',
+          data: null
+      });
+  });
+  

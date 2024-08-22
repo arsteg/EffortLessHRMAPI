@@ -25,7 +25,7 @@ router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
  * /api/v1/common/emailTemplate:
  *   post:
  *     summary: Add a new email template
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -63,7 +63,7 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
  *  /api/v1/common/emailTemplates/changestatus/{id}:
  *   put:
  *     summary: Update an existing email template
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -100,7 +100,7 @@ router.put('/emailTemplates/changestatus/:id',  authController.protect, commonCo
  * /api/v1/common/emailTemplates/{id}:
  *   delete:
  *     summary: Delete an email template
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -122,7 +122,7 @@ router.delete('/emailTemplates/:id', authController.protect, commonController.de
  * /api/v1/common/emailTemplate/{id}:
  *   get:
  *     summary: Get an email template by ID
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -150,7 +150,7 @@ router.get('/emailTemplate/:id', authController.protect, commonController.getEma
  * /api/v1/common/emailTemplates:
  *   get:
  *     summary: Get all email templates
- *     tags: [common] 
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -170,7 +170,7 @@ router.get('/emailTemplates', authController.protect, commonController.getAllEma
  * /api/v1/common/taskstatus:
  *   post:
  *     summary: Add a new task status
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -196,7 +196,7 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
   * @swagger
   * /api/v1/common/taskstatuslist:
   *  get:
-  *      tags: [common]
+  *      tags: [Common Management]
   *      summary: "Get all task status"
   *      security: [{
   *         bearerAuth: []
@@ -219,7 +219,7 @@ router.get('/taskstatuslist/', authController.protect, commonController.getTaskS
  *  /api/v1/common/taskstatus/{id}:
  *   put:
  *     summary: Update an existing Task Status
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -253,7 +253,7 @@ router.put('/taskstatus/:id',  authController.protect, commonController.updateTa
  * /api/v1/common/taskstatus/{id}:
  *   delete:
  *     summary: Delete an task status
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -275,7 +275,7 @@ router.delete('/taskstatus/:id', authController.protect, commonController.delete
  * /api/v1/common/taskstatus/{id}:
  *   get:
  *     summary: Get an task status by ID
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -303,7 +303,7 @@ router.get('/taskstatus/:id', authController.protect, commonController.getTaskSt
  * /api/v1/common/taskpriority:
  *   post:
  *     summary: Add a new task Priority
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -329,7 +329,7 @@ router.post('/taskpriority',  authController.protect, commonController.saveTaskP
   * @swagger
   * /api/v1/common/taskprioritylist:
   *  get:
-  *      tags: [common]
+  *      tags: [Common Management]
   *      summary: "Get all task priority"
   *      security: [{
   *         bearerAuth: []
@@ -352,7 +352,7 @@ router.get('/taskprioritylist/', authController.protect, commonController.getTas
  *  /api/v1/common/taskpriority/{id}:
  *   put:
  *     summary: Update an existing Task Priority
- *     tags: [common]
+  *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -386,7 +386,7 @@ router.put('/taskpriority/:id',  authController.protect, commonController.update
  * /api/v1/common/taskpriority/{id}:
  *   delete:
  *     summary: Delete an task priority
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -408,7 +408,7 @@ router.delete('/taskpriority/:id', authController.protect, commonController.dele
  * /api/v1/common/taskpriority/{id}:
  *   get:
  *     summary: Get an task priority by ID
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -437,7 +437,7 @@ router.get('/taskpriority/:id', authController.protect, commonController.getTask
  * /api/v1/common/UserUIState:
  *   post:
  *     summary: Save or update a state key-value pair for a user
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -468,7 +468,7 @@ router.post('/UserUIState',  commonController.saveUserUiState);
  * /api/v1/common/UserUIState/{key}:
  *   get:
  *     summary: Retrieve the state value for a specific user and key
- *     tags: [common]
+ *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }] 
@@ -491,6 +491,141 @@ router.post('/UserUIState',  commonController.saveUserUiState);
  */ 
 router.get('/UserUIState/:key', commonController.getUserUiState);
 
+/**
+ * @swagger
+ * /api/v1/common/income-tax-sections:
+ *   post:
+ *     summary: Add a new IncomeTaxSection
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     requestBody:
+ *       description: IncomeTaxSection details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               section:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: IncomeTaxSection successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/income-tax-sections', authController.protect,commonController.createIncomeTaxSection);
 
+/**
+ * @swagger
+ * /api/v1/common/income-tax-sections-by-company:
+ *   get:
+ *     summary: Get all IncomeTaxSections by company
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     responses:
+ *       200:
+ *         description: Successful response with IncomeTaxSections
+ *       404:
+ *         description: IncomeTaxSections not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/income-tax-sections-by-company', authController.protect, commonController.getIncomeTaxSectionsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-sections/{id}:
+ *   put:
+ *     summary: Update an IncomeTaxSection by ID
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the IncomeTaxSection
+ *     requestBody:
+ *       description: New IncomeTaxSection details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               section:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated IncomeTaxSection
+ *       404:
+ *         description: IncomeTaxSection not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/income-tax-sections/:id',authController.protect, commonController.updateIncomeTaxSection);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-sections/{id}:
+ *   get:
+ *     summary: Get an IncomeTaxSection by ID
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the IncomeTaxSection
+ *     responses:
+ *       200:
+ *         description: Successful response with the IncomeTaxSection
+ *       404:
+ *         description: IncomeTaxSection not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/income-tax-sections/:id',authController.protect, commonController.getIncomeTaxSectionById);
+
+/**
+ * @swagger
+ * /api/v1/common/income-tax-sections/{id}:
+ *   delete:
+ *     summary: Delete an IncomeTaxSection by ID
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the IncomeTaxSection
+ *     responses:
+ *       204:
+ *         description: IncomeTaxSection successfully deleted
+ *       404:
+ *         description: IncomeTaxSection not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/income-tax-sections/:id',authController.protect, commonController.deleteIncomeTaxSection);
 
 module.exports = router;
