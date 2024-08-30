@@ -2133,6 +2133,9 @@ router.post('/employee-income-tax-declarations-by-user/:userId', authController.
  *                     remark:
  *                       type: string
  *                       required: true
+ *                     documentLink:
+ *                       type: string
+ *                       required: true 
  *                     employeeIncomeTaxDeclarationAttachments:
  *                        type: array
  *                        items:
@@ -2166,6 +2169,9 @@ router.post('/employee-income-tax-declarations-by-user/:userId', authController.
  *                       type: string
  *                       required: true
  *                     approvalStatus:
+ *                       type: string
+ *                       required: true
+ *                     documentLink:
  *                       type: string
  *                       required: true
  *                     employeeIncomeTaxDeclarationHRAAttachments:
