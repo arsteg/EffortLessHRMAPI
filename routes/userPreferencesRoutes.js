@@ -7,42 +7,13 @@ module.exports = router;
 // User Preferences routes
 /**
  * @swagger
- * /api/v1/userPreferences/preference-categories: 
- *   post:
- *     summary: Create a new preference category
- *     tags: [User Preferences Management]
- *     requestBody:
- *       description: Preference category details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 required: true
- *               description:
- *                 type: string
- *                 required: true
- *     responses:
- *       201:
- *         description: Preference category successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/preference-categories',   userPreferencesController.createPreferenceCategory);
-/**
- * @swagger
  * /api/v1/userPreferences/preference-categories/{id}:
  *   get:
- *     summary: Get a preference category by ID
+ *     summary: Get a preference category by Name
  *     tags: [User Preferences Management]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
@@ -55,64 +26,9 @@ router.post('/preference-categories',   userPreferencesController.createPreferen
  *       500:
  *         description: Internal server error
  */
-router.get('/preference-categories/:id',  authController.protect,  userPreferencesController.getPreferenceCategory);
-/**
- * @swagger
- * /api/v1/userPreferences/preference-categories/{id}:
- *   put:
- *     summary: Update a preference category by ID
- *     tags: [User Preferences Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the preference category
- *     requestBody:
- *       description: New preference category details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated preference category
- *       404:
- *         description: Preference category not found
- *       500:
- *         description: Internal server error
- */
-router.put('/preference-categories/:id', authController.protect,   userPreferencesController.updatePreferenceCategory);
+router.get('/preference-categories/:name',  authController.protect,  userPreferencesController.getPreferenceCategory);
 
-/**
- * @swagger
- * /api/v1/userPreferences/preference-categories/{id}:
- *   delete:
- *     summary: Delete a preference category by ID
- *     tags: [User Preferences Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the preference category
- *     responses:
- *       204:
- *         description: Preference category successfully deleted
- *       404:
- *         description: Preference category not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/preference-categories/:id',  authController.protect,  userPreferencesController.deletePreferenceCategory);
+
 /**
  * @swagger
  * /api/v1/userPreferences/preference-categories:
