@@ -2241,6 +2241,141 @@ router.get('/employee-income-tax-declarations/:id', authController.protect, user
  */
 router.delete('/employee-income-tax-declarations/:id', authController.protect, userController.deleteEmployeeIncomeTaxDeclaration);
 
+// Update Employee Income Tax Declaration Componant
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations-componant-by-id/{Id}:
+ *   put:
+ *     summary: Update an employee income tax declaration by Id
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee income tax declaration Componant
+ *     requestBody:
+ *       description: New GeneralSetting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employeeIncomeTaxDeclaration:
+ *                 type: string 
+ *                 required: true
+ *               incomeTaxComponent:
+ *                 type: string 
+ *                 required: true
+ *               section:
+ *                 type: string 
+ *                 required: true
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
+ *               appliedAmount:
+ *                 type: number
+ *                 required: true
+ *               approvedAmount:
+ *                 type: number
+ *                 required: true
+ *               approvalStatus:
+ *                 type: string
+ *                 required: true
+ *               remark:
+ *                 type: string
+ *                 required: true
+ *               documentLink:
+ *                 type: string
+ *                 required: true 
+ *               employeeIncomeTaxDeclarationAttachments:
+ *                 type: array
+ *                 items:
+ *                    type: string
+ *                    example: {"attachmentType",attachmentName,attachmentSize,extention,file}
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated employee income tax declaration
+ *       404:
+ *         description: Employee income tax declaration not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-income-tax-declarations-componant-by-id/:{Id}', authController.protect, userController.updateEmployeeIncomeTaxDeclarationComponant);
+
+// Update Employee Income Tax Declaration Componant
+/**
+ * @swagger
+ * /api/v1/users/employee-income-tax-declarations-hra-by-id/{Id}:
+ *   put:
+ *     summary: Update an employee income tax declaration HRA by Id
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee income tax declaration HRA
+ *     requestBody:
+ *       description: New GeneralSetting details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employeeIncomeTaxDeclaration:
+ *                 type: string 
+ *                 required: true
+ *               rentDeclared:
+ *                 type: number 
+ *                 required: true
+ *               month:
+ *                 type: string 
+ *                 required: true
+ *               verifiedAmount:
+ *                 type: number
+ *                 required: true
+ *               cityType:
+ *                 type: string
+ *                 required: true
+ *               landlordName:
+ *                 type: string
+ *                 required: true
+ *               landlordPan:
+ *                 type: string
+ *                 required: true
+ *               landlordAddress:
+ *                 type: string
+ *                 required: true
+ *               approvalStatus:
+ *                 type: string
+ *                 required: true
+ *               documentLink:
+ *                 type: string
+ *                 required: true
+ *               employeeIncomeTaxDeclarationAttachments:
+ *                 type: array
+ *                 items:
+ *                    type: string
+ *                    example: {"attachmentType",attachmentName,attachmentSize,extention,file}
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated employee income tax declaration
+ *       404:
+ *         description: Employee income tax declaration not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-income-tax-declarations-hra-by-id/:{Id}', authController.protect, userController.updateEmployeeIncomeTaxDeclarationHRA);
+
 router
   .route('/:id')
   .get(userController.getUser)

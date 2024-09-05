@@ -1339,3 +1339,108 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     data: null
   });
 });
+
+// Update Employee Income Tax Declaration componant
+exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res, next) => {
+ 
+  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
+  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
+  
+    if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
+      return res.status(400).json({ error: `${req.body.incomeTaxComponent} is not a Valid Income Ta componant` });
+    }
+    if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
+      for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
+        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+
+        if (
+          !attachment.attachmentType || !attachment.attachmentName || 
+          !attachment.attachmentSize || !attachment.extention || 
+          !attachment.file || attachment.attachmentType === null || 
+          attachment.attachmentName === null || attachment.attachmentSize === null || 
+          attachment.extention === null || attachment.file === null
+        ) {
+          return res.status(400).json({ error: 'All attachment properties must be provided' });
+        }
+
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+        
+        // Get a block blob client
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Upload data to the blob
+        const buffer = Buffer.from(attachment.file, 'base64');
+        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+        // Generate the document link
+        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+        // Add the document link to the array
+        req.body.documentLink=documentLink;
+      }
+    }
+  const employeeIncomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });  
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclarationComponent
+  });
+});
+
+
+// Update Employee Income Tax Declaration
+exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next) => {
+ 
+  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
+  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
+  
+    if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
+      return res.status(400).json({ error: `${req.body.incomeTaxComponent} is not a Valid Income Ta componant` });
+    }
+    if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
+      for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
+        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+
+        if (
+          !attachment.attachmentType || !attachment.attachmentName || 
+          !attachment.attachmentSize || !attachment.extention || 
+          !attachment.file || attachment.attachmentType === null || 
+          attachment.attachmentName === null || attachment.attachmentSize === null || 
+          attachment.extention === null || attachment.file === null
+        ) {
+          return res.status(400).json({ error: 'All attachment properties must be provided' });
+        }
+
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+        
+        // Get a block blob client
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Upload data to the blob
+        const buffer = Buffer.from(attachment.file, 'base64');
+        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+        // Generate the document link
+        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+        // Add the document link to the array
+        req.body.documentLink=documentLink;
+      }
+    }
+  const employeeIncomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });  
+  res.status(200).json({
+    status: 'success',
+    data: employeeIncomeTaxDeclarationHRA
+  });
+});
+
+
