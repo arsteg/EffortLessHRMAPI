@@ -1,7 +1,6 @@
 const userPreferences = require("../models/userPreferences/userPreferenceModel.js");
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/permissions/userModel.js");
-const PreferenceCategory = require("../models/userPreferences/preferenceCategoryModel.js");
 const PreferenceOption = require("../models/userPreferences/preferenceOptionModel.js");
 const UserPreference = require("../models/userPreferences/userPreferenceModel.js");
 const AppError = require("../utils/appError.js");
@@ -12,26 +11,25 @@ const mongoose = require('mongoose');
 const app = express()
 app.use(express.json);
 
-exports.createPreferenceCategory = catchAsync(async (req, res, next) => {  
-  const result = await PreferenceCategory.find({ name: req.body.name }); 
-  if(result && result.length>0){
-    res.status(400).json({
-      status: 'failure',
-      data: "Preference category already exists"
-    });
-  }
-  else{
-    const preferenceCategory = await PreferenceCategory.create(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: preferenceCategory
-    });
-  } 
-  });
+const preferenceCategories = [{
+  "_id": "64d5ef2e62f196f103918984",
+  "name": "TimeTracker",
+  "description": "Time Tracker"  
+},
+{
+  "_id": "64d6076dda83fed598e35bc5",
+  "name": "Dashboard",
+  "description": "Dashboard"  
+},
+{
+  "_id": "64e7133886c0652b1eda0e2b",
+  "name": "Manage",
+  "description": "Manage"  
+}]
   
 // controllers/preferenceCategoryController.js
 exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
-    const preferenceCategory = await PreferenceCategory.findById(req.params.id);
+    const preferenceCategory = preferenceCategories.find(category => category.name === name);;
     if (!preferenceCategory) {
       return next(new AppError('Preference category not found', 404));
     }
@@ -41,39 +39,9 @@ exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
     });
   });
 
-  // controllers/preferenceCategoryController.js
-exports.updatePreferenceCategory = catchAsync(async (req, res, next) => {
-    const preferenceCategory = await PreferenceCategory.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-  
-    if (!preferenceCategory) {
-      return next(new AppError('Preference category not found', 404));
-    }
-  
-    res.status(200).json({
-      status: 'success',
-      data: preferenceCategory
-    });
-  });
 
-  // controllers/preferenceCategoryController.js
-exports.deletePreferenceCategory = catchAsync(async (req, res, next) => {
-    const preferenceCategory = await PreferenceCategory.findByIdAndDelete(req.params.id);
-    
-    if (!preferenceCategory) {
-      return next(new AppError('Preference category not found', 404));
-    }
-    
-    res.status(204).json({
-      status: 'success',
-      data: null
-    });
-  });
-// controllers/preferenceCategoryController.js
 exports.getAllPreferenceCategories = catchAsync(async (req, res, next) => {
-    const preferenceCategories = await PreferenceCategory.find();
+    
     res.status(200).json({
       status: 'success',
       data: preferenceCategories
