@@ -71,7 +71,7 @@ const payrollGeneralSettingSchema = new Schema({
     type: String,
     required: true
   },
-  isAllowTDSFromProH2R: {
+  isAllowTDSFromEffortlessHRM: {
     type: Boolean,
     required: true
   },

@@ -63,7 +63,7 @@ const router = express.Router();
  *                 type: boolean
  *               denominatorForCalculatingTheNoticeRecovery:
  *                 type: string
- *               isAllowTDSFromProH2R:
+ *               isAllowTDSFromEffortlessHRM:
  *                 type: boolean
  *               isAllowNcpDaysApplicableInPF:
  *                 type: boolean
@@ -175,7 +175,7 @@ router.get('/general-settings/:companyId', payrollController.getGeneralSettingBy
  *                 type: boolean
  *               denominatorForCalculatingTheNoticeRecovery:
  *                 type: string
- *               isAllowTDSFromProH2R:
+ *               isAllowTDSFromEffortlessHRM:
  *                 type: boolean
  *               isAllowNcpDaysApplicableInPF:
  *                 type: boolean
