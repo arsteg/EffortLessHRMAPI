@@ -3433,7 +3433,7 @@ router.get('/ctc-templates/:id',authController.protect, payrollController.getCTC
  *                  items:
  *                     type: object
  *                     properties:
- *                       fixedDeduction:
+ *                       employeeDeduction:
  *                         type: string
  *                         description: Field value
  *                         required: true

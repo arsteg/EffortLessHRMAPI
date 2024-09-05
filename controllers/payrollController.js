@@ -2085,12 +2085,12 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
     const existingCategory = existingCategories.find(
-      (existing) => existing.employeeDeduction.equals(category.fixedDeduction)
+      (existing) => existing.employeeDeduction.equals(category.employeeDeduction)
     );
     if (!existingCategory) {  
       const newCategory = new CTCTemplateEmployeeDeduction({
         ctcTemplate: ctcTemplateId,
-        employeeDeduction: category.fixedDeduction,
+        employeeDeduction: category.employeeDeduction,
         ...category,
       });
       return newCategory.save();
@@ -2106,7 +2106,7 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
 
   // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.fixedDeduction === existing.employeeDeduction.toString())
+    (existing) => !updatedCategories.find((updated) => updated.employeeDeduction === existing.employeeDeduction.toString())
   );
 
   const removalPromises = categoriesToRemove.map(async (category) => {
@@ -2345,11 +2345,11 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   if(ctcTemplateEmployeeDeduction.length > 0)
   {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
-      const result = await FixedContribution.findById(contirbution.fixedDeduction);
+      const result = await FixedContribution.findById(contirbution.employeeDeduction);
       if (!result) {
         return res.status(400).json({
           status: 'failure',
-          message: 'Invalid Fixed Contribution End',
+          message: 'Invalid Employee Deduction End',
         });
       }
     }
