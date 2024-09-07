@@ -2244,19 +2244,12 @@ router.delete('/employee-income-tax-declarations/:id', authController.protect, u
 // Update Employee Income Tax Declaration Componant
 /**
  * @swagger
- * /api/v1/users/employee-income-tax-declarations-componant-by-id/{Id}:
+ * /api/v1/users/employee-income-tax-declarations-componant:
  *   put:
- *     summary: Update an employee income tax declaration by Id
+ *     summary: Update an employee income tax declaration
  *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the employee income tax declaration Componant
  *     requestBody:
  *       description: New GeneralSetting details
  *       required: true
@@ -2305,24 +2298,17 @@ router.delete('/employee-income-tax-declarations/:id', authController.protect, u
  *       500:
  *         description: Internal server error
  */
-router.put('/employee-income-tax-declarations-componant-by-id/:{Id}', authController.protect, userController.updateEmployeeIncomeTaxDeclarationComponant);
+router.put('/employee-income-tax-declarations-componant', authController.protect, userController.updateEmployeeIncomeTaxDeclarationComponant);
 
 // Update Employee Income Tax Declaration Componant
 /**
  * @swagger
- * /api/v1/users/employee-income-tax-declarations-hra-by-id/{Id}:
+ * /api/v1/users/employee-income-tax-declarations-hra:
  *   put:
- *     summary: Update an employee income tax declaration HRA by Id
+ *     summary: Update an employee income tax declaration HRA
  *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the employee income tax declaration HRA
  *     requestBody:
  *       description: New GeneralSetting details
  *       required: true
@@ -2374,7 +2360,7 @@ router.put('/employee-income-tax-declarations-componant-by-id/:{Id}', authContro
  *       500:
  *         description: Internal server error
  */
-router.put('/employee-income-tax-declarations-hra-by-id/:{Id}', authController.protect, userController.updateEmployeeIncomeTaxDeclarationHRA);
+router.put('/employee-income-tax-declarations-hra', authController.protect, userController.updateEmployeeIncomeTaxDeclarationHRA);
 
 router
   .route('/:id')

@@ -1341,106 +1341,128 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
 });
 
 // Update Employee Income Tax Declaration componant
+// Update or create Employee Income Tax Declaration component
 exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res, next) => {
- 
+  // Validate income tax component
   const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
   const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
-  
-    if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
-      return res.status(400).json({ error: `${req.body.incomeTaxComponent} is not a Valid Income Ta componant` });
-    }
-    if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
-      for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
-        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
+  if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
+    return res.status(400).json({ error: `${req.body.incomeTaxComponent} is not a valid income tax component` });
+  }
+
+  // Process attachments if they are present
+  if (req.body.employeeIncomeTaxDeclarationAttachments) {
+    for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
+      const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+
+      if (!attachment.attachmentType || !attachment.attachmentName || 
           !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
-        }
-
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
-        // Add the document link to the array
-        req.body.documentLink=documentLink;
+          !attachment.file) {
+        return res.status(400).json({ error: 'All attachment properties must be provided' });
       }
+
+      const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+      
+      // Get a block blob client
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+      // Upload data to the blob
+      const buffer = Buffer.from(attachment.file, 'base64');
+      const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+      // Generate the document link
+      const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+      console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+      // Add the document link to the array
+      req.body.documentLink = documentLink;
     }
-  const employeeIncomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });  
+  }
+
+  // Use findOneAndUpdate with upsert option
+  const employeeIncomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.findOneAndUpdate(
+    {
+      employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
+      incomeTaxComponent: req.body.incomeTaxComponent
+    },
+    req.body,
+    {
+      new: true, // Return the updated document
+      upsert: true, // Create a new document if no match is found
+      runValidators: true // Ensure validation rules are applied
+    }
+  );
+
   res.status(200).json({
     status: 'success',
     data: employeeIncomeTaxDeclarationComponent
   });
 });
 
-
-// Update Employee Income Tax Declaration
+// Update or create Employee Income Tax Declaration HRA
 exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next) => {
- 
-  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
-  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
   
-    if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
-      return res.status(400).json({ error: `${req.body.incomeTaxComponent} is not a Valid Income Ta componant` });
-    }
-    if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
-      for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
-        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+  // Process attachments if any
+  if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
+    for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {  
+      const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
-          !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
-        }
-
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
-        // Add the document link to the array
-        req.body.documentLink=documentLink;
+      // Validate attachment fields
+      if (
+        !attachment.attachmentType || !attachment.attachmentName || 
+        !attachment.attachmentSize || !attachment.extention || 
+        !attachment.file || attachment.attachmentType === null || 
+        attachment.attachmentName === null || attachment.attachmentSize === null || 
+        attachment.extention === null || attachment.file === null
+      ) {
+        return res.status(400).json({ error: 'All attachment properties must be provided' });
       }
+
+      const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+      
+      // Get a block blob client
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+      // Upload data to the blob
+      const buffer = Buffer.from(attachment.file, 'base64');
+      const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+      // Generate the document link
+      const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+      console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+      // Add the document link to the array
+      req.body.documentLink = documentLink;
     }
-  const employeeIncomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });  
+  }
+
+  // Find an existing record or create a new one
+  const existingRecord = await EmployeeIncomeTaxDeclarationHRA.findOne({
+    employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
+    month: req.body.month
+  });
+
+  let employeeIncomeTaxDeclarationHRA;
+
+  if (existingRecord) {
+    // Update existing record
+    employeeIncomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.findByIdAndUpdate(existingRecord._id, req.body, {
+      new: true,
+      runValidators: true
+    });
+  } else {
+    // Create new record
+    employeeIncomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.create(req.body);
+  }
+
   res.status(200).json({
     status: 'success',
     data: employeeIncomeTaxDeclarationHRA
   });
 });
+
 
 
