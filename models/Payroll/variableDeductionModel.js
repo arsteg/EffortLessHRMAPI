@@ -11,7 +11,7 @@ var variableDeductionSchema = new Schema({
     required: true
   },
   paidDeductionFrequently: {
-    type: Boolean,
+    type: String,
     required: true
   },
   deductionEffectiveFromMonth: {

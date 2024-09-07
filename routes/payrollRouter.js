@@ -2345,7 +2345,7 @@ router.delete('/fixed-deductions/:id', authController.protect, payrollController
  *                 type: boolean
  *                 required: true
  *               paidDeductionFrequently:
- *                 type: boolean
+ *                 type: string
  *                 required: true
  *               deductionEffectiveFromMonth:
  *                 type: string
@@ -2473,7 +2473,7 @@ router.get('/variable-deductions/:id',authController.protect, payrollController.
  *               isShowINCTCStructure:
  *                 type: boolean
  *               paidDeductionFrequently:
- *                 type: boolean
+ *                 type: string
  *               deductionEffectiveFromMonth:
  *                 type: string
  *               deductionEffectiveFromYear:
