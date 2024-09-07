@@ -2076,7 +2076,7 @@ router.post('/employee-income-tax-declarations-by-company', authController.prote
  *       500:
  *         description: Internal server error
  */
-router.post('/employee-income-tax-declarations-by-user/:userId', authController.protect, userController.getAllEmployeeIncomeTaxDeclarationsByCompany);
+router.post('/employee-income-tax-declarations-by-user/:userId', authController.protect, userController.getAllEmployeeIncomeTaxDeclarationsByUser);
 
 
 // Update Employee Income Tax Declaration
