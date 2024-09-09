@@ -29,9 +29,10 @@ const AttendanceRegularizationRestrictedIP = require('../models/attendance/Atten
 const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
 const TimeEntry = require('../models/attendance/TimeEntry');
 const TrackTimeEntry = require('../models/attendance/TrackTimeEntry');
-
+const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Attandance = require('../models/attendance/attendanceRecords');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
+const manualTimeRequestModel = require('../models/manualTime/manualTimeRequestModel.js');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1457,18 +1458,34 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
 exports.createRosterShiftAssignment = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
+
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
+
   // Add companyId to the request body
   req.body.company = companyId;
-  const rosterShiftAssignment = await RosterShiftAssignment.create(req.body);
+
+  // Extract dates array from the request body
+  const { dates, ...restBody } = req.body;
+
+  // Create an array of roster shift assignments, one for each date
+  const rosterShiftAssignments = dates.map(date => ({
+    ...restBody,
+    date, // Assign each date individually
+    company: companyId,
+  }));
+
+  // Insert multiple documents at once
+  const createdAssignments = await RosterShiftAssignment.insertMany(rosterShiftAssignments);
+
   res.status(201).json({
     status: 'success',
-    data: rosterShiftAssignment,
+    data: createdAssignments,
   });
 });
+
 
 exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
   const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.id);
@@ -1481,6 +1498,16 @@ exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getRosterShiftAssignmentByUser = catchAsync(async (req, res, next) => {
+  const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.userId);
+  if (!rosterShiftAssignment) {
+    return next(new AppError('Roster shift assignment not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: rosterShiftAssignment,
+  });
+});
 exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
   const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -1970,8 +1997,57 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
     // Transform timeLogs and insert into AttendanceRecords
     const attendanceRecords = await Promise.all(timeLogs.map(async log => {
       // Count the number of rows in TimeLog table for each user and date
+      //check that if attandance added or not for respective date
+      //if payroll is generated then we cant proess attandance
+
       const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+      var shiftTiming="";
+      var deviationHour="";
+      //Calculate : timedifference between cheackin and checkout time with comprison with shift timing    
   
+      const shiftAssignment = await ShiftTemplateAssignment.findById(user._id);
+      if(shiftAssignment)
+      {
+        const shift = await Shift.findOne({
+          _id: shiftAssignment.template,
+        });
+        if(shift){
+            shiftTiming = shift._id;
+            const timeDifference = getTimeDifference(shift.startTime,shift.endTime);
+            const timeWorked = timeLogCount * 10
+            if(timeWorked<timeDifference)
+            { 
+              deviationHour=timeDifference-timeWorked;
+            }
+            if(timeDifference<timeWorked)
+            { 
+              deviationHour=timeWorked-timeDifference;
+            }
+        }    
+      
+
+      //Validation 1 : Fetch shift for currentuser, if shift is not assigned we will not process attandance
+      //Validation 2: If Payoll generated then we will not process attdandance
+
+      var ODHours="";
+
+      //Calculate :  Mean Off Duty Hours , suppose user is workig out from office and not in shift timing then we wil calculate
+      var SLHous="";
+      //same like ODHours
+         
+      var lateComingRemarks="";
+      const manualTime = await manualTimeRequest.findOne({
+        user: user_id,
+        fromDate: { $lte: new Date(log._id) },
+        toDate: { $gte: new Date(log._id) }
+      });
+
+      // Function to check if dateToCheck is between fromDate and toDate    
+      if(new Date(log._id)){
+        lateComingRemarks = manualTime.reason;
+      }
+      
+      //Fetch manual entry comment if any
       return {
         date: new Date(log._id), // Convert _id to Date object
         checkIn: log.startTime, // Rename startTime to checkIn
@@ -1989,8 +2065,9 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
         company: req.cookies.companyId, // Insert company from cookies
         user: user._id // Associate the AttendanceRecord with the user
       };
+    }
     }));
-  
+   
 
     // Insert attendanceRecords into AttendanceRecord collection
    return await AttendanceRecords.insertMany(attendanceRecords);
@@ -2007,3 +2084,23 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
      data: null
    });
 });
+
+function parseTime(timeString) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return new Date().setHours(hours, minutes, 0, 0); // Use today's date with the given time
+}
+
+function getTimeDifference(startTime, endTime) {
+  const start = parseTime(startTime);
+  const end = parseTime(endTime);
+  
+  const differenceInMilliseconds = end - start;
+  
+  // If the end time is before the start time, assume it's the next day
+  if (differenceInMilliseconds < 0) {
+    differenceInMilliseconds += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
+  }
+  
+  const differenceInMinutes = Math.floor(differenceInMilliseconds / (1000 * 60));
+  return differenceInMinutes;
+}

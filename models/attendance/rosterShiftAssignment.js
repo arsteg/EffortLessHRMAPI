@@ -24,7 +24,7 @@ var rosterShiftAssignmentSchema = new Schema({
     type: String,
     required: true
   },
-  endDate: {
+  date: {
     type: Date
   },
   company: {

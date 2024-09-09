@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const shiftTemplateAssignmentSchema = new Schema({
   template: {
     type: mongoose.Schema.ObjectId,
-    ref: 'AttendanceTemplate',
+    ref: 'Shift',
     required: true
   },
   user: {

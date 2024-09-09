@@ -2858,9 +2858,12 @@ attendanceRouter.post('/shifts-by-company', authController.protect, attendanceCo
  *                 type: boolean
  *               frequency:
  *                 type: string
- *               endDate:
- *                 type: boolean
- *                 format: date
+ *               dates:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: date
+ *                 description: An array of dates for the roster shift assignment.
  *               endsOn:
  *                 type: string
  *     responses:
@@ -2901,6 +2904,33 @@ attendanceRouter.get('/roster-shift-assignments/:id', authController.protect, at
 
 /**
  * @swagger
+ * /api/v1/attendance/roster-shift-assignments-by-user/{userId}:
+ *   get:
+ *     summary: Get a roster shift assignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the roster shift assignment
+ *     responses:
+ *       200:
+ *         description: Successful response with the roster shift assignment
+ *       404:
+ *         description: Roster shift assignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/roster-shift-assignments-by-user/:userId', authController.protect, attendanceController.getRosterShiftAssignmentByUser);
+
+
+/**
+ * @swagger
  * /api/v1/attendance/roster-shift-assignments/{id}:
  *   put:
  *     summary: Update a roster shift assignment by ID
@@ -2937,8 +2967,8 @@ attendanceRouter.get('/roster-shift-assignments/:id', authController.protect, at
  *                 type: boolean
  *               frequency:
  *                 type: string
- *               endDate:
- *                 type: boolean
+ *               date:
+ *                 type: string
  *                 format: date
  *               endsOn:
  *                 type: string
@@ -3260,8 +3290,6 @@ attendanceRouter.post('/regularizationRequests-by-company',authController.protec
    */
  attendanceRouter.post('/regularizationRequests-by-user/:userId',authController.protect,attendanceController.getRegularizationRequestByUser);
   
-
-
 // DutyRequest routes
 /**
  * @swagger
