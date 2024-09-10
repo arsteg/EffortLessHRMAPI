@@ -1107,14 +1107,7 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
 exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
 
   const employeeIncomeTaxDeclarationId = req.params.id;
-  const incomeTaxComponants = await IncomeTaxComponant.find().select('_id').exec();
-  const validIncomeTaxComponant = incomeTaxComponants.map(fa => fa._id.toString());
-  
-  for (const item of req.body.employeeIncomeTaxDeclarationComponent) {
-    if (!validIncomeTaxComponant.includes(item.incomeTaxComponent)) {
-      return res.status(400).json({ error: `${item.incomeTaxComponent} is not a valid fixed allowance` });
-    }
-  }
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -1146,67 +1139,6 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       }
     }
   };
-
-  // Handle SalaryComponentPFCharge
-  if(req.body.employeeIncomeTaxDeclarationComponent.length > 0)
-    {
-      for (let j = 0; j < req.body.employeeIncomeTaxDeclarationComponent.length; j++) {  
-     
-        if (req.body.employeeIncomeTaxDeclarationComponent[j].employeeIncomeTaxDeclarationAttachments != null) {
-          for (let i = 0; i < req.body.employeeIncomeTaxDeclarationComponent[j].employeeIncomeTaxDeclarationAttachments.length; i++) {  
-            const attachment = req.body.employeeIncomeTaxDeclarationComponent[j].employeeIncomeTaxDeclarationAttachments[i];
-    
-            if (
-              !attachment.attachmentType || !attachment.attachmentName || 
-              !attachment.attachmentSize || !attachment.extention || 
-              !attachment.file || attachment.attachmentType === null || 
-              attachment.attachmentName === null || attachment.attachmentSize === null || 
-              attachment.extention === null || attachment.file === null
-            ) {
-              return res.status(400).json({ error: 'All attachment properties must be provided' });
-            }
-    
-            const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-            
-            // Get a block blob client
-            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    
-            // Upload data to the blob
-            const buffer = Buffer.from(attachment.file, 'base64');
-            const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-    
-            // Generate the document link
-            const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-    
-            console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-    
-            // Add the document link to the array
-            req.body.employeeIncomeTaxDeclarationComponent[j].documentLink=documentLink;
-          }
-        }
-      }
-      console.log(req.body.employeeIncomeTaxDeclarationComponent);
-     await updateOrCreateRecords(EmployeeIncomeTaxDeclarationComponent, req.body.employeeIncomeTaxDeclarationComponent, 'incomeTaxDeclarationComponent');
-    }
-  else
-    {
-      const taxDeclarationComponants = await EmployeeIncomeTaxDeclarationComponent.find({ _id: req.params.id }); 
-      if(taxDeclarationComponants)
-      { 
-          console.log(taxDeclarationComponants.length);
-          for(var i = 0; i <taxDeclarationComponants.length; i++) {
-          if(taxDeclarationComponants[i].documentLink)
-            {
-                var url = taxDeclarationComponants[i].documentLink;     
-                containerClient.getBlockBlobClient(url).deleteIfExists();
-                const blockBlobClient = containerClient.getBlockBlobClient(url);
-                await blockBlobClient.deleteIfExists();
-                console.log("deleted componant");
-            }
-        }
-        await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
-      } 
-    }
 
   if(req.body.employeeIncomeTaxDeclarationHRA.length > 0)
     {
@@ -1249,7 +1181,7 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     console.log(req.body.employeeIncomeTaxDeclarationHRA);
     await updateOrCreateRecords(EmployeeIncomeTaxDeclarationHRA, req.body.employeeIncomeTaxDeclarationHRA, 'incomeTaxDeclarationHRA');
     }
-  else
+    else
     {
         const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.params.id }); 
         if(taxDeclarationHRAs)

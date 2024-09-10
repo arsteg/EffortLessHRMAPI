@@ -2106,41 +2106,6 @@ router.post('/employee-income-tax-declarations-by-user/:userId', authController.
  *               financialYear:
  *                 type: string
  *                 required: true
- *               employeeIncomeTaxDeclarationComponent:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     incomeTaxComponent:
- *                       type: string 
- *                       required: true
- *                     section:
- *                       type: string 
- *                       required: true
- *                     maximumAmount:
- *                       type: number
- *                       required: true
- *                     appliedAmount:
- *                       type: number
- *                       required: true
- *                     approvedAmount:
- *                       type: number
- *                       required: true
- *                     approvalStatus:
- *                       type: string
- *                       required: true
- *                     remark:
- *                       type: string
- *                       required: true
- *                     documentLink:
- *                       type: string
- *                       required: true 
- *                     employeeIncomeTaxDeclarationAttachments:
- *                        type: array
- *                        items:
- *                          type: string
- *                          example: {"attachmentType",attachmentName,attachmentSize,extention,file}
  *               employeeIncomeTaxDeclarationHRA:
  *                 type: array
  *                 items:
