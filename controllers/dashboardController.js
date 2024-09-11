@@ -299,16 +299,7 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
     targetDate.getMonth(),
     targetDate.getDate() + 1
   );
-  // Check if userId is provided in query parameters
-  const userId = req.query.userId || req.cookies.userId;
-  console.log("userId from cookies or query:", userId);
-
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json({
-      status: "error",
-      message: "User ID is required",
-    });
-  }
+  const userId = req.query.userId;
 
   // Find all appWebsite entries for the given user and date
   const appWebsites = await appWebsiteModel.find({
@@ -322,7 +313,7 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
         },
       },
       {
-        userReference: mongoose.Types.ObjectId.isValid(userId),
+        userReference: userId,
       },
     ],
   });
