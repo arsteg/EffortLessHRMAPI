@@ -301,8 +301,9 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   );
   // Check if userId is provided in query parameters
   const userId = req.query.userId || req.cookies.userId;
+  console.log("userId from cookies or query:", userId);
 
-  if (!userId) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({
       status: "error",
       message: "User ID is required",
@@ -321,7 +322,7 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
         },
       },
       {
-        userReference: userId,
+        userReference: mongoose.Types.ObjectId.isValid(userId),
       },
     ],
   });
