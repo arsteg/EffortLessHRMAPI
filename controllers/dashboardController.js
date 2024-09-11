@@ -185,25 +185,9 @@ exports.getMonthlySummary = catchAsync(async (req, res, next) => {
 });
 
 exports.getTaskwiseHours = catchAsync(async (req, res, next) => {
-  const { userId: currentUserId, role } = req.cookies;
-
-  // If userId is passed in query (e.g., by an admin), use it; otherwise, use the currentUserId from cookies
-  const userId = req.query.userId || currentUserId;
-  // Check if a non-admin user is trying to fetch data for someone else (optional, based on security needs)
-  if (
-    role !== "admin" &&
-    req.query.userId &&
-    req.query.userId !== currentUserId
-  ) {
-    return res.status(403).json({
-      status: "fail",
-      message: "You are not authorized to access this data.",
-    });
-  }
-
   const timeLogs = await TimeLog.aggregate([
     {
-      $match: { user: mongoose.Types.ObjectId(userId) },
+      $match: { user: mongoose.Types.ObjectId(req.query.userId) },
     },
     {
       $group: {
@@ -315,7 +299,15 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
     targetDate.getMonth(),
     targetDate.getDate() + 1
   );
-  const userId = req.query.userId;
+  // Check if userId is provided in query parameters
+  const userId = req.query.userId || req.cookies.userId;
+
+  if (!userId) {
+    return res.status(400).json({
+      status: "error",
+      message: "User ID is required",
+    });
+  }
 
   // Find all appWebsite entries for the given user and date
   const appWebsites = await appWebsiteModel.find({
