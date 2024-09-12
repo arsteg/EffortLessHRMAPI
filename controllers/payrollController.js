@@ -1,26 +1,26 @@
 const GeneralSetting = require("../models/Payroll/payrollGeneralSettingModel");
 const RoundingRule = require("../models/Payroll/roundingRulesModel");
-const FixedAllowances = require('../models/Payroll/fixedAllowancesModel');
-const FixedContribution = require('../models/Payroll/fixedContributionModel');
-const catchAsync = require('../utils/catchAsync');
+const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
+const FixedContribution = require("../models/Payroll/fixedContributionModel");
+const catchAsync = require("../utils/catchAsync");
 const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContributionSlabModel");
 const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
-const PTEligibleStates = require('../models/Payroll/ptEligibleStatesModel');
+const PTEligibleStates = require("../models/Payroll/ptEligibleStatesModel");
 const PTSlab = require("../models/Payroll/ptSlabModel");
-const PTDeductionMonth = require('../models/Payroll/ptDeductionMonthModel');
-const ESICCeilingAmount = require('../models/Payroll/esicCeilingAmountModel');
-const ESICContribution = require('../models/Payroll/esicContributionModel');
-const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
-const VariableAllowanceApplicableEmployee= require('../models/Payroll/variableAllowanceApplicableEmployeeModel');
-const FixedDeduction = require('../models/Payroll/fixedDeductionModel');
-const VariableDeduction = require('../models/Payroll/variableDeductionModel');
-const VariableDeductionApplicableEmployee= require('../models/Payroll/variableDeductionApplicableEmployeeModel');
-const OtherBenefits = require('../models/Payroll/otherBenefitsModels');
-const LoanAdvancesCategory = require('../models/Payroll/loanAdvancesCategoryModel');
+const PTDeductionMonth = require("../models/Payroll/ptDeductionMonthModel");
+const ESICCeilingAmount = require("../models/Payroll/esicCeilingAmountModel");
+const ESICContribution = require("../models/Payroll/esicContributionModel");
+const VariableAllowance = require("../models/Payroll/variableAllowanceModel");
+const VariableAllowanceApplicableEmployee = require("../models/Payroll/variableAllowanceApplicableEmployeeModel");
+const FixedDeduction = require("../models/Payroll/fixedDeductionModel");
+const VariableDeduction = require("../models/Payroll/variableDeductionModel");
+const VariableDeductionApplicableEmployee = require("../models/Payroll/variableDeductionApplicableEmployeeModel");
+const OtherBenefits = require("../models/Payroll/otherBenefitsModels");
+const LoanAdvancesCategory = require("../models/Payroll/loanAdvancesCategoryModel");
 const FlexiBenefitsCategory = require("../models/Payroll/flexiBenefitsCategoryModel");
-const PFCharge = require('../models/Payroll/pfChargeModel');
+const PFCharge = require("../models/Payroll/pfChargeModel");
 const CTCTemplate = require("../models/Payroll/ctcTemplateModel");
-const AppError = require('../utils/appError.js');
+const AppError = require("../utils/appError.js");
 const CTCTemplateFixedAllowance = require("../models/Payroll/ctcTemplateFixedAllowanceModel");
 const CTCTemplateVariableDeduction = require("../models/Payroll/ctcTemplateVariableDeductionModel");
 const CTCTemplateVariableAllowance = require("../models/Payroll/ctcTemplateVariableAllowanceModel");
@@ -28,10 +28,10 @@ const CTCTemplateFixedDeduction = require("../models/Payroll/ctcTemplateFixedDed
 const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEmployerContributionModel");
 const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
 const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
-const PTConfigureStates = require('../models/Payroll/ptConfigureStatesModel');
-const PFTemplates = require('../models/Payroll/pfTemplateModel');
+const PTConfigureStates = require("../models/Payroll/ptConfigureStatesModel");
+const PFTemplates = require("../models/Payroll/pfTemplateModel");
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 
 exports.createGeneralSetting = async (req, res, next) => {
@@ -40,140 +40,158 @@ exports.createGeneralSetting = async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
-  
+
   try {
     const generalSetting = await GeneralSetting.create(req.body);
     res.status(201).json({
-      status: 'success',
-      data: generalSetting
+      status: "success",
+      data: generalSetting,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
-      error: err.message
+      status: "failure",
+      error: err.message,
     });
   }
 };
 
 exports.getGeneralSettingByCompanyId = async (req, res, next) => {
   try {
-    const generalSetting = await GeneralSetting.findOne({ companyId: req.cookies.companyId });
+    const generalSetting = await GeneralSetting.findOne({
+      companyId: req.cookies.companyId,
+    });
     if (!generalSetting) {
-      return res.status(404).json({
-        status: 'failure',
-        error: 'GeneralSetting not found'
+      // return res.status(404).json({
+      //   status: 'failure',
+      //   error: 'GeneralSetting not found'
+      // });
+      return res.status(200).json({
+        status: "success",
+        data: [],
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: generalSetting
+      status: "success",
+      data: generalSetting,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      error: err.message
+      status: "failure",
+      error: err.message,
     });
   }
 };
 
 exports.updateGeneralSetting = async (req, res, next) => {
   try {
-    const generalSetting = await GeneralSetting.findOneAndUpdate({ companyId: req.cookies.companyId }, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const generalSetting = await GeneralSetting.findOneAndUpdate(
+      { companyId: req.cookies.companyId },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!generalSetting) {
       return res.status(404).json({
-        status: 'failure',
-        error: 'GeneralSetting not found'
+        status: "failure",
+        error: "GeneralSetting not found",
       });
     }
 
     res.status(200).json({
-      status: 'success',
-      data: generalSetting
+      status: "success",
+      data: generalSetting,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      error: err.message
+      status: "failure",
+      error: err.message,
     });
   }
 };
 
 exports.deleteGeneralSetting = async (req, res, next) => {
   try {
-    const generalSetting = await GeneralSetting.findOneAndDelete({ companyId: req.cookies.companyId });
+    const generalSetting = await GeneralSetting.findOneAndDelete({
+      companyId: req.cookies.companyId,
+    });
     if (!generalSetting) {
       return res.status(404).json({
-        status: 'failure',
-        error: 'GeneralSetting not found'
+        status: "failure",
+        error: "GeneralSetting not found",
       });
     }
     res.status(204).json({
-      status: 'success',
-      data: null
+      status: "success",
+      data: null,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      error: err.message
+      status: "failure",
+      error: err.message,
     });
   }
 };
 
 exports.createRoundingRule = async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
 
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   // Validate generalSetting
-   const generalSettingExists = await GeneralSetting.findById(req.body.generalSetting);
-   if (!generalSettingExists) {
-     return next(new AppError('Invalid general setting', 400));
-   }
-   // Add companyId to the request body
-   req.body.company = companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  // Validate generalSetting
+  const generalSettingExists = await GeneralSetting.findById(
+    req.body.generalSetting
+  );
+  if (!generalSettingExists) {
+    return next(new AppError("Invalid general setting", 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
   const roundingRule = await RoundingRule.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: roundingRule
+    status: "success",
+    data: roundingRule,
   });
 };
 
 exports.getRoundingRuleById = async (req, res, next) => {
   const roundingRule = await RoundingRule.findById(req.params.id);
   if (!roundingRule) {
-    return next(new AppError('Rounding rule not found', 404));
+    return next(new AppError("Rounding rule not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: roundingRule
+    status: "success",
+    data: roundingRule,
   });
 };
 
 exports.updateRoundingRule = async (req, res, next) => {
-  const roundingRule = await RoundingRule.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const roundingRule = await RoundingRule.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!roundingRule) {
-    return next(new AppError('Rounding rule not found', 404));
+    return next(new AppError("Rounding rule not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: roundingRule
+    status: "success",
+    data: roundingRule,
   });
 };
 
@@ -181,43 +199,42 @@ exports.deleteRoundingRule = async (req, res, next) => {
   const roundingRule = await RoundingRule.findByIdAndDelete(req.params.id);
 
   if (!roundingRule) {
-    return next(new AppError('Rounding rule not found', 404));
+    return next(new AppError("Rounding rule not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 };
 
 exports.getAllRoundingRules = async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
-  const totalCount = await RoundingRule.countDocuments({company: companyId });  
- 
+  const totalCount = await RoundingRule.countDocuments({ company: companyId });
+
   const roundingRules = await RoundingRule.find({ company: companyId })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: roundingRules,
-    total: totalCount
+    total: totalCount,
   });
 };
-
 
 exports.createPFTemplate = catchAsync(async (req, res, next) => {
   const pfTemplate = await PFTemplates.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: pfTemplate
+    status: "success",
+    data: pfTemplate,
   });
 });
 
@@ -227,11 +244,11 @@ exports.createPFTemplate = catchAsync(async (req, res, next) => {
 exports.getPFTemplate = catchAsync(async (req, res, next) => {
   const pfTemplate = await PFTemplates.findById(req.params.id);
   if (!pfTemplate) {
-    return next(new AppError('PF template not found', 404));
+    return next(new AppError("PF template not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: pfTemplate
+    status: "success",
+    data: pfTemplate,
   });
 });
 
@@ -239,18 +256,22 @@ exports.getPFTemplate = catchAsync(async (req, res, next) => {
  * Controller to update a PF template by ID
  */
 exports.updatePFTemplate = catchAsync(async (req, res, next) => {
-  const pfTemplate = await PFTemplates.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const pfTemplate = await PFTemplates.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!pfTemplate) {
-    return next(new AppError('PF template not found', 404));
+    return next(new AppError("PF template not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: pfTemplate
+    status: "success",
+    data: pfTemplate,
   });
 });
 
@@ -259,14 +280,14 @@ exports.updatePFTemplate = catchAsync(async (req, res, next) => {
  */
 exports.deletePFTemplate = catchAsync(async (req, res, next) => {
   const pfTemplate = await PFTemplates.findByIdAndDelete(req.params.id);
-  
+
   if (!pfTemplate) {
-    return next(new AppError('PF template not found', 404));
+    return next(new AppError("PF template not found", 404));
   }
-  
+
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
@@ -276,17 +297,22 @@ exports.deletePFTemplate = catchAsync(async (req, res, next) => {
 exports.getAllPFTemplatesByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await PFTemplates.countDocuments({ company: req.cookies.companyId });
- 
-  const pfTemplates = await PFTemplates.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip)).limit(parseInt(limit));
-   
+  const totalCount = await PFTemplates.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const pfTemplates = await PFTemplates.find({})
+    .where("company")
+    .equals(req.cookies.companyId)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: pfTemplates,
-    total: totalCount
+    total: totalCount,
   });
 });
-
 
 exports.createFixedAllowances = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -294,182 +320,206 @@ exports.createFixedAllowances = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
   const fixedAllowances = await FixedAllowances.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: fixedAllowances
+    status: "success",
+    data: fixedAllowances,
   });
 });
 
 exports.getFixedAllowancesById = catchAsync(async (req, res, next) => {
   const fixedAllowances = await FixedAllowances.findById(req.params.id);
   if (!fixedAllowances) {
-    return next(new AppError('FixedAllowances not found', 404));
+    return next(new AppError("FixedAllowances not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: fixedAllowances
+    status: "success",
+    data: fixedAllowances,
   });
 });
 
 exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
-  const fixedAllowances = await FixedAllowances.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const fixedAllowances = await FixedAllowances.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!fixedAllowances) {
-    return next(new AppError('FixedAllowances not found', 404));
+    return next(new AppError("FixedAllowances not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: fixedAllowances
+    status: "success",
+    data: fixedAllowances,
   });
 });
 
 exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
-  const fixedAllowances = await FixedAllowances.findByIdAndDelete(req.params.id);
+  const fixedAllowances = await FixedAllowances.findByIdAndDelete(
+    req.params.id
+  );
   if (!fixedAllowances) {
-    return next(new AppError('FixedAllowances not found', 404));
+    return next(new AppError("FixedAllowances not found", 404));
   }
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
 exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await FixedAllowances.countDocuments({company: req.cookies.companyId });  
- 
-  const fixedAllowances = await FixedAllowances.find({}).where('company').equals(req.cookies.companyId)
-  .skip(parseInt(skip))
-  .limit(parseInt(limit));
+  const totalCount = await FixedAllowances.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const fixedAllowances = await FixedAllowances.find({})
+    .where("company")
+    .equals(req.cookies.companyId)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: fixedAllowances,
-    total: totalCount
+    total: totalCount,
   });
 });
 
 exports.createFixedContribution = catchAsync(async (req, res, next) => {
- 
   const fixedContributions = await FixedContribution.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: fixedContributions
+    status: "success",
+    data: fixedContributions,
   });
 });
 
 exports.getAllFixedContributions = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await FixedContribution.countDocuments({ company: req.cookies.companyId });  
- 
-  const fixedContributions = await FixedContribution.find({company: req.cookies.companyId}).skip(parseInt(skip))
-  .limit(parseInt(limit));
+  const totalCount = await FixedContribution.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const fixedContributions = await FixedContribution.find({
+    company: req.cookies.companyId,
+  })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: fixedContributions,
-    total: totalCount
+    total: totalCount,
   });
 });
 
 exports.createFixedContributionSlab = async (req, res, next) => {
   try {
-      // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
+    // Extract companyId from req.cookies
+    const companyId = req.cookies.companyId;
 
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError("Company ID not found in cookies", 400));
+    }
 
-  // Add companyId to the request body
-  req.body.company = companyId;
+    // Add companyId to the request body
+    req.body.company = companyId;
 
-    const fixedContributionSlab = await LWFFixedContributionSlab.create(req.body);
+    const fixedContributionSlab = await LWFFixedContributionSlab.create(
+      req.body
+    );
     res.status(201).json({
-      status: 'success',
-      data: fixedContributionSlab
+      status: "success",
+      data: fixedContributionSlab,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.getFixedContributionSlab = async (req, res, next) => {
   try {
-    const fixedContributionSlab = await LWFFixedContributionSlab.findById(req.params.id);
+    const fixedContributionSlab = await LWFFixedContributionSlab.findById(
+      req.params.id
+    );
     if (!fixedContributionSlab) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'Fixed Contribution Slab not found'
+        status: "failure",
+        message: "Fixed Contribution Slab not found",
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: fixedContributionSlab
+      status: "success",
+      data: fixedContributionSlab,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.updateFixedContributionSlab = async (req, res, next) => {
   try {
-    const fixedContributionSlab = await LWFFixedContributionSlab.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const fixedContributionSlab =
+      await LWFFixedContributionSlab.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
     if (!fixedContributionSlab) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'Fixed Contribution Slab not found'
+        status: "failure",
+        message: "Fixed Contribution Slab not found",
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: fixedContributionSlab
+      status: "success",
+      data: fixedContributionSlab,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.deleteFixedContributionSlab = async (req, res, next) => {
   try {
-    const fixedContributionSlab = await LWFFixedContributionSlab.findByIdAndDelete(req.params.id);
+    const fixedContributionSlab =
+      await LWFFixedContributionSlab.findByIdAndDelete(req.params.id);
     if (!fixedContributionSlab) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'Fixed Contribution Slab not found'
+        status: "failure",
+        message: "Fixed Contribution Slab not found",
       });
     }
     res.status(204).json({
-      status: 'success',
-      data: null
+      status: "success",
+      data: null,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -478,18 +528,24 @@ exports.getAllFixedContributionSlabs = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await LWFFixedContributionSlab.countDocuments({company: req.cookies.companyId  });  
- 
-    const fixedContributionSlabs = await LWFFixedContributionSlab.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip)).limit(parseInt(limit));
+    const totalCount = await LWFFixedContributionSlab.countDocuments({
+      company: req.cookies.companyId,
+    });
+
+    const fixedContributionSlabs = await LWFFixedContributionSlab.find({})
+      .where("company")
+      .equals(req.cookies.companyId)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: fixedContributionSlabs,
-      total: totalCount
+      total: totalCount,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -498,23 +554,28 @@ exports.getAllFixedContributionSlabsByState = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await LWFFixedContributionSlab.countDocuments({state: req.body.state  });  
- 
-    const fixedContributionSlabs = await LWFFixedContributionSlab.find({}).where('state').equals(req.body.state).skip(parseInt(skip)).limit(parseInt(limit));
+    const totalCount = await LWFFixedContributionSlab.countDocuments({
+      state: req.body.state,
+    });
+
+    const fixedContributionSlabs = await LWFFixedContributionSlab.find({})
+      .where("state")
+      .equals(req.body.state)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: fixedContributionSlabs,
-      total: totalCount
+      total: totalCount,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 // controllers/payrollController.js
-
 
 exports.createLWFFixedDeductionMonth = async (req, res, next) => {
   try {
@@ -522,42 +583,46 @@ exports.createLWFFixedDeductionMonth = async (req, res, next) => {
 
     // Check if companyId exists in cookies
     if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      return next(new AppError("Company ID not found in cookies", 400));
     }
-  
+
     // Add companyId to the request body
     req.body.company = companyId;
 
-    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.create(req.body);
+    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.create(
+      req.body
+    );
     res.status(201).json({
-      status: 'success',
-      data: lwfFixedDeductionMonth
+      status: "success",
+      data: lwfFixedDeductionMonth,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.getLWFFixedDeductionMonth = async (req, res, next) => {
   try {
-    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.findById(req.params.id);
+    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.findById(
+      req.params.id
+    );
     if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'LWFFixedContributionMonth not found'
+        status: "failure",
+        message: "LWFFixedContributionMonth not found",
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: lwfFixedDeductionMonth
+      status: "success",
+      data: lwfFixedDeductionMonth,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -569,9 +634,8 @@ exports.updateLWFFixedDeductionMonth = async (req, res, next) => {
 
     // Check if companyId exists in cookies
     if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      return next(new AppError("Company ID not found in cookies", 400));
     }
-  
 
     // Update records based on companyId and paymentMonth
     const updatePromises = months.map(async (month) => {
@@ -583,59 +647,69 @@ exports.updateLWFFixedDeductionMonth = async (req, res, next) => {
 
     await Promise.all(updatePromises);
 
-    res.status(200).json({ status: 'success', message: 'LWFFixedDeductionMonths updated successfully' });
+    res
+      .status(200)
+      .json({
+        status: "success",
+        message: "LWFFixedDeductionMonths updated successfully",
+      });
   } catch (error) {
-    console.error('Error updating LWFFixedDeductionMonths:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Error updating LWFFixedDeductionMonths:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 exports.deleteLWFFixedDeductionMonth = async (req, res, next) => {
   try {
-    const lwfFixedDeductionMonth = await LWFFixedDeductionMonth.findByIdAndDelete(req.params.id);
+    const lwfFixedDeductionMonth =
+      await LWFFixedDeductionMonth.findByIdAndDelete(req.params.id);
     if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'LWFFixedDeductionMonth not found'
+        status: "failure",
+        message: "LWFFixedDeductionMonth not found",
       });
     }
     res.status(204).json({
-      status: 'success',
-      data: null
+      status: "success",
+      data: null,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.getAllLWFFixedDeductionMonths = async (req, res, next) => {
   try {
-    const lwfFixedDeductionMonths = await LWFFixedDeductionMonth.find({}).where('company').equals(req.cookies.companyId);
+    const lwfFixedDeductionMonths = await LWFFixedDeductionMonth.find({})
+      .where("company")
+      .equals(req.cookies.companyId);
     res.status(200).json({
-      status: 'success',
-      data: lwfFixedDeductionMonths
+      status: "success",
+      data: lwfFixedDeductionMonths,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 exports.getAllPTEligibleStates = async (req, res, next) => {
   try {
-    const ptEligibleStates = await PTEligibleStates.find({}).where('company').equals(req.cookies.companyId);
+    const ptEligibleStates = await PTEligibleStates.find({})
+      .where("company")
+      .equals(req.cookies.companyId);
     res.status(200).json({
-      status: 'success',
-      data: ptEligibleStates
+      status: "success",
+      data: ptEligibleStates,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -643,81 +717,91 @@ exports.getAllPTEligibleStates = async (req, res, next) => {
 exports.createPTConfigureState = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
-    // Check if companyId exists in cookies
-    if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
-    }
-  
-    // Add companyId to the request body
-    req.body.company = companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
 
   const ptConfigureState = await PTConfigureStates.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: ptConfigureState
+    status: "success",
+    data: ptConfigureState,
   });
 });
 
 exports.getPTConfigureState = catchAsync(async (req, res, next) => {
   const ptConfigureState = await PTConfigureStates.findById(req.params.id);
   if (!ptConfigureState) {
-    return next(new AppError('PTConfigureState not found', 404));
+    return next(new AppError("PTConfigureState not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: ptConfigureState
+    status: "success",
+    data: ptConfigureState,
   });
 });
 
 exports.updatePTConfigureState = catchAsync(async (req, res, next) => {
-  const ptConfigureState = await PTConfigureStates.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const ptConfigureState = await PTConfigureStates.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!ptConfigureState) {
-    return next(new AppError('PTConfigureState not found', 404));
+    return next(new AppError("PTConfigureState not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: ptConfigureState
+    status: "success",
+    data: ptConfigureState,
   });
 });
 
 exports.deletePTConfigureState = catchAsync(async (req, res, next) => {
-  const ptConfigureState = await PTConfigureStates.findByIdAndDelete(req.params.id);
+  const ptConfigureState = await PTConfigureStates.findByIdAndDelete(
+    req.params.id
+  );
 
   if (!ptConfigureState) {
-    return next(new AppError('PTConfigureState not found', 404));
+    return next(new AppError("PTConfigureState not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
-exports.getAllPTConfigureStatesByCompany = catchAsync(async (req, res, next) => {
-  const ptConfigureStates = await PTConfigureStates.find({ company: req.cookies.companyId });
+exports.getAllPTConfigureStatesByCompany = catchAsync(
+  async (req, res, next) => {
+    const ptConfigureStates = await PTConfigureStates.find({
+      company: req.cookies.companyId,
+    });
 
-  res.status(200).json({
-    status: 'success',
-    data: ptConfigureStates
-  });
-});
+    res.status(200).json({
+      status: "success",
+      data: ptConfigureStates,
+    });
+  }
+);
 
 exports.addUpdatePTEligibleStates = async (req, res, next) => {
   const company = req.cookies.companyId;
 
   // Check if companyId exists in cookies
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Check if the request body contains the required fields
   if (!req.body.states) {
-    return next(new AppError('Company ID and states array are required.', 400));
+    return next(new AppError("Company ID and states array are required.", 400));
   }
 
   const { states } = req.body;
@@ -730,17 +814,25 @@ exports.addUpdatePTEligibleStates = async (req, res, next) => {
     const existingState = await PTEligibleStates.findOne({ company, state });
     if (existingState) {
       // Update existing state
-      ptEligibleState = await PTEligibleStates.findByIdAndUpdate(existingState._id, { isEligible }, { new: true });
+      ptEligibleState = await PTEligibleStates.findByIdAndUpdate(
+        existingState._id,
+        { isEligible },
+        { new: true }
+      );
     } else {
       // Create new state
-      ptEligibleState = await PTEligibleStates.create({ company, state, isEligible });
+      ptEligibleState = await PTEligibleStates.create({
+        company,
+        state,
+        isEligible,
+      });
     }
     updatedStates.push(ptEligibleState);
   }
 
   res.status(200).json({
-    status: 'success',
-    data: updatedStates
+    status: "success",
+    data: updatedStates,
   });
 };
 exports.addPTSlab = async (req, res, next) => {
@@ -749,9 +841,9 @@ exports.addPTSlab = async (req, res, next) => {
 
     // Check if companyId exists in cookies
     if (!company) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      return next(new AppError("Company ID not found in cookies", 400));
     }
-    req.body.company=company;
+    req.body.company = company;
     const ptSlab = await PTSlab.create(req.body);
     res.status(201).json({
       status: "success",
@@ -766,14 +858,18 @@ exports.getAllPTSlabs = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await PTSlab.countDocuments({ company: req.cookies.companyId });  
- 
-    const ptSlabs = await PTSlab.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-    .limit(parseInt(limit));
+    const totalCount = await PTSlab.countDocuments({
+      company: req.cookies.companyId,
+    });
+
+    const ptSlabs = await PTSlab.where("company")
+      .equals(req.cookies.companyId)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
     res.status(200).json({
       status: "success",
       data: ptSlabs,
-      total: totalCount
+      total: totalCount,
     });
   } catch (error) {
     next(error);
@@ -843,34 +939,36 @@ exports.addPTDeductionMonth = async (req, res, next) => {
 
     // Check if companyId exists in cookies
     if (!company) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      return next(new AppError("Company ID not found in cookies", 400));
     }
     req.body.company = company;
 
     const ptDeductionMonth = await PTDeductionMonth.create(req.body);
     res.status(201).json({
-      status: 'success',
-      data: ptDeductionMonth
+      status: "success",
+      data: ptDeductionMonth,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.getAllPTDeductionMonths = async (req, res, next) => {
   try {
-    const ptDeductionMonths = await PTDeductionMonth.where('company').equals(req.cookies.companyId);
+    const ptDeductionMonths = await PTDeductionMonth.where("company").equals(
+      req.cookies.companyId
+    );
     res.status(200).json({
-      status: 'success',
-      data: ptDeductionMonths
+      status: "success",
+      data: ptDeductionMonths,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -880,63 +978,69 @@ exports.getPTDeductionMonthById = async (req, res, next) => {
     const ptDeductionMonth = await PTDeductionMonth.findById(req.params.id);
     if (!ptDeductionMonth) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'PT Deduction Month not found'
+        status: "failure",
+        message: "PT Deduction Month not found",
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: ptDeductionMonth
+      status: "success",
+      data: ptDeductionMonth,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.updatePTDeductionMonth = async (req, res, next) => {
   try {
-    const ptDeductionMonth = await PTDeductionMonth.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const ptDeductionMonth = await PTDeductionMonth.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!ptDeductionMonth) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'PT Deduction Month not found'
+        status: "failure",
+        message: "PT Deduction Month not found",
       });
     }
     res.status(200).json({
-      status: 'success',
-      data: ptDeductionMonth
+      status: "success",
+      data: ptDeductionMonth,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
 
 exports.deletePTDeductionMonth = async (req, res, next) => {
   try {
-    const ptDeductionMonth = await PTDeductionMonth.findByIdAndDelete(req.params.id);
+    const ptDeductionMonth = await PTDeductionMonth.findByIdAndDelete(
+      req.params.id
+    );
     if (!ptDeductionMonth) {
       return res.status(404).json({
-        status: 'failure',
-        message: 'PT Deduction Month not found'
+        status: "failure",
+        message: "PT Deduction Month not found",
       });
     }
     res.status(204).json({
-      status: 'success',
-      data: null
+      status: "success",
+      data: null,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
-      message: err.message
+      status: "failure",
+      message: err.message,
     });
   }
 };
@@ -946,48 +1050,55 @@ exports.createCeilingAmount = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
   req.body.company = company;
   req.body.period = "Monthly";
   req.body.roundType = "Round Up";
   const ceilingAmount = await ESICCeilingAmount.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: ceilingAmount
+    status: "success",
+    data: ceilingAmount,
   });
 });
 
 // Get all CeilingAmounts by company
 exports.getCeilingAmountsByCompany = catchAsync(async (req, res, next) => {
-
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await ESICCeilingAmount.countDocuments({ company: req.cookies.companyId  });  
- 
-  const ceilingAmounts = await ESICCeilingAmount.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));
+  const totalCount = await ESICCeilingAmount.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const ceilingAmounts = await ESICCeilingAmount.where("company")
+    .equals(req.cookies.companyId)
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: ceilingAmounts,
-    total: totalCount
+    total: totalCount,
   });
 });
 
 // Update a CeilingAmount by ID
 exports.updateCeilingAmount = catchAsync(async (req, res, next) => {
-  const ceilingAmount = await ESICCeilingAmount.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const ceilingAmount = await ESICCeilingAmount.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!ceilingAmount) {
-    return next(new AppError('CeilingAmount not found', 404));
+    return next(new AppError("CeilingAmount not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: ceilingAmount
+    status: "success",
+    data: ceilingAmount,
   });
 });
 
@@ -996,36 +1107,37 @@ exports.getCeilingAmountById = catchAsync(async (req, res, next) => {
   const ceilingAmount = await ESICCeilingAmount.findById(req.params.id);
 
   if (!ceilingAmount) {
-    return next(new AppError('CeilingAmount not found', 404));
+    return next(new AppError("CeilingAmount not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: ceilingAmount
+    status: "success",
+    data: ceilingAmount,
   });
 });
 
 // Delete a CeilingAmount by ID
 exports.deleteCeilingAmount = catchAsync(async (req, res, next) => {
-  const ceilingAmount = await ESICCeilingAmount.findByIdAndDelete(req.params.id);
+  const ceilingAmount = await ESICCeilingAmount.findByIdAndDelete(
+    req.params.id
+  );
 
   if (!ceilingAmount) {
-    return next(new AppError('CeilingAmount not found', 404));
+    return next(new AppError("CeilingAmount not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
-
 
 exports.addESICContribution = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
@@ -1033,38 +1145,48 @@ exports.addESICContribution = catchAsync(async (req, res, next) => {
 
   const esicContribution = await ESICContribution.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: esicContribution
+    status: "success",
+    data: esicContribution,
   });
 });
 
-exports.getAllESICContributionsByCompany = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await ESICContribution.countDocuments({ company: req.cookies.companyId  });  
- 
-  const esicContributions = await ESICContribution.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  res.status(200).json({
-    status: 'success',
-    data: esicContributions,
-    total: totalCount
-  });
-});
+exports.getAllESICContributionsByCompany = catchAsync(
+  async (req, res, next) => {
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const totalCount = await ESICContribution.countDocuments({
+      company: req.cookies.companyId,
+    });
+
+    const esicContributions = await ESICContribution.where("company")
+      .equals(req.cookies.companyId)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
+    res.status(200).json({
+      status: "success",
+      data: esicContributions,
+      total: totalCount,
+    });
+  }
+);
 
 exports.updateESICContribution = catchAsync(async (req, res, next) => {
-  const esicContribution = await ESICContribution.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const esicContribution = await ESICContribution.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!esicContribution) {
-    return next(new AppError('ESIC contribution not found', 404));
+    return next(new AppError("ESIC contribution not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: esicContribution
+    status: "success",
+    data: esicContribution,
   });
 });
 
@@ -1072,28 +1194,29 @@ exports.getESICContributionById = catchAsync(async (req, res, next) => {
   const esicContribution = await ESICContribution.findById(req.params.id);
 
   if (!esicContribution) {
-    return next(new AppError('ESIC contribution not found', 404));
+    return next(new AppError("ESIC contribution not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: esicContribution
+    status: "success",
+    data: esicContribution,
   });
 });
 
 exports.deleteESICContribution = catchAsync(async (req, res, next) => {
-  const esicContribution = await ESICContribution.findByIdAndDelete(req.params.id);
+  const esicContribution = await ESICContribution.findByIdAndDelete(
+    req.params.id
+  );
 
   if (!esicContribution) {
-    return next(new AppError('ESIC contribution not found', 404));
+    return next(new AppError("ESIC contribution not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
-
 
 // Create a new VariableAllowance
 exports.createVariableAllowance = catchAsync(async (req, res, next) => {
@@ -1101,117 +1224,135 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
   const variableAllowance = await VariableAllowance.create(req.body);
-  if (req.body.variableAllowanceApplicableEmployee && req.body.variableAllowanceApplicableEmployee.length > 0) {
-  
-    const result = req.body.variableAllowanceApplicableEmployee.map(item => ({
+  if (
+    req.body.variableAllowanceApplicableEmployee &&
+    req.body.variableAllowanceApplicableEmployee.length > 0
+  ) {
+    const result = req.body.variableAllowanceApplicableEmployee.map((item) => ({
       variableAllowance: variableAllowance._id,
-      employee: item.employee
+      employee: item.employee,
     }));
-    variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);
-    
+    variableAllowance.variableAllowanceApplicableEmployees =
+      await VariableAllowanceApplicableEmployee.insertMany(result);
   }
   res.status(201).json({
-    status: 'success',
-    data: variableAllowance
+    status: "success",
+    data: variableAllowance,
   });
 });
 
 // Get all VariableAllowances by company
-exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) => {  
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await VariableAllowance.countDocuments({ company: req.cookies.companyId  });  
- 
-  const variableAllowances = await VariableAllowance.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  if(variableAllowances) 
-  {
-    
-      for(var i = 0; i < variableAllowances.length; i++) {     
-        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('variableAllowance').equals(variableAllowances[i]._id);  
-        if(variableAllowanceApplicableEmployees) 
-          {
-            variableAllowances[i].variableAllowanceApplicableEmployees = variableAllowanceApplicableEmployees;
-          }
-          else{
-            variableAllowances[i].variableAllowanceApplicableEmployees=null;
-          }
+exports.getAllVariableAllowancesByCompany = catchAsync(
+  async (req, res, next) => {
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const totalCount = await VariableAllowance.countDocuments({
+      company: req.cookies.companyId,
+    });
+
+    const variableAllowances = await VariableAllowance.where("company")
+      .equals(req.cookies.companyId)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
+    if (variableAllowances) {
+      for (var i = 0; i < variableAllowances.length; i++) {
+        const variableAllowanceApplicableEmployees =
+          await VariableAllowanceApplicableEmployee.find({})
+            .where("variableAllowance")
+            .equals(variableAllowances[i]._id);
+        if (variableAllowanceApplicableEmployees) {
+          variableAllowances[i].variableAllowanceApplicableEmployees =
+            variableAllowanceApplicableEmployees;
+        } else {
+          variableAllowances[i].variableAllowanceApplicableEmployees = null;
         }
+      }
+    }
+    res.status(200).json({
+      status: "success",
+      data: variableAllowances,
+      total: totalCount,
+    });
   }
-  res.status(200).json({
-    status: 'success',
-    data: variableAllowances,
-    total: totalCount
-  });
-});
+);
 
 // Get a VariableAllowance by ID
 exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
   const variableAllowance = await VariableAllowance.findById(req.params.id);
-  if(variableAllowance) 
-  {
-    
-        const variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.find({}).where('variableAllowance').equals(variableAllowance._id);  
-        if(variableAllowanceApplicableEmployees) 
-          {
-            variableAllowance.variableAllowanceApplicableEmployees = variableAllowanceApplicableEmployees;
-          }
-          else{
-            variableAllowance.variableAllowanceApplicableEmployees = null;
-          }
-        
+  if (variableAllowance) {
+    const variableAllowanceApplicableEmployees =
+      await VariableAllowanceApplicableEmployee.find({})
+        .where("variableAllowance")
+        .equals(variableAllowance._id);
+    if (variableAllowanceApplicableEmployees) {
+      variableAllowance.variableAllowanceApplicableEmployees =
+        variableAllowanceApplicableEmployees;
+    } else {
+      variableAllowance.variableAllowanceApplicableEmployees = null;
+    }
   }
   if (!variableAllowance) {
-    return next(new AppError('Variable allowance not found', 404));
+    return next(new AppError("Variable allowance not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: variableAllowance
+    status: "success",
+    data: variableAllowance,
   });
 });
 
 // Update a VariableAllowance by ID
 exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
-  const variableAllowance = await VariableAllowance.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const variableAllowance = await VariableAllowance.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
-  if (req.body.variableAllowanceApplicableEmployee && req.body.variableAllowanceApplicableEmployee.length > 0) {
-    await VariableAllowanceApplicableEmployee.deleteMany({ variableAllowance: variableAllowance._id });
-    const result = req.body.variableAllowanceApplicableEmployee.map(item => ({
+  if (
+    req.body.variableAllowanceApplicableEmployee &&
+    req.body.variableAllowanceApplicableEmployee.length > 0
+  ) {
+    await VariableAllowanceApplicableEmployee.deleteMany({
       variableAllowance: variableAllowance._id,
-      employee: item.employee
+    });
+    const result = req.body.variableAllowanceApplicableEmployee.map((item) => ({
+      variableAllowance: variableAllowance._id,
+      employee: item.employee,
     }));
-    variableAllowance.variableAllowanceApplicableEmployees = await VariableAllowanceApplicableEmployee.insertMany(result);    
+    variableAllowance.variableAllowanceApplicableEmployees =
+      await VariableAllowanceApplicableEmployee.insertMany(result);
   }
   if (!variableAllowance) {
-    return next(new AppError('Variable allowance not found', 404));
+    return next(new AppError("Variable allowance not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: variableAllowance
+    status: "success",
+    data: variableAllowance,
   });
 });
 
 // Delete a VariableAllowance by ID
 exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
-  const variableAllowance = await VariableAllowance.findByIdAndDelete(req.params.id);
+  const variableAllowance = await VariableAllowance.findByIdAndDelete(
+    req.params.id
+  );
   if (!variableAllowance) {
-    return next(new AppError('Variable allowance not found', 404));
+    return next(new AppError("Variable allowance not found", 404));
   }
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
-
 
 // Create Fixed Deduction
 exports.createFixedDeduction = catchAsync(async (req, res, next) => {
@@ -1219,17 +1360,17 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
 
-    const fixedDeduction = await FixedDeduction.create(req.body);
-    res.status(201).json({
-        status: 'success',
-        data: fixedDeduction
-    });
+  const fixedDeduction = await FixedDeduction.create(req.body);
+  res.status(201).json({
+    status: "success",
+    data: fixedDeduction,
+  });
 });
 
 // Get all Fixed Deductions by company
@@ -1237,95 +1378,98 @@ exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  
-    const companyId  = req.cookies.companyId;
-    if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
-    }
-    const totalCount = await FixedDeduction.countDocuments({ company: req.cookies.companyId });  
- 
-    const fixedDeductions = await FixedDeduction.find({ company: companyId }).skip(parseInt(skip))
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  const totalCount = await FixedDeduction.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const fixedDeductions = await FixedDeduction.find({ company: companyId })
+    .skip(parseInt(skip))
     .limit(parseInt(limit));
-    res.status(200).json({
-        status: 'success',
-        data: fixedDeductions,
-        total: totalCount
-    });
+  res.status(200).json({
+    status: "success",
+    data: fixedDeductions,
+    total: totalCount,
+  });
 });
 
 // Get Fixed Deduction by ID
 exports.getFixedDeductionById = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const fixedDeduction = await FixedDeduction.findById(id);
+  const { id } = req.params;
+  const fixedDeduction = await FixedDeduction.findById(id);
 
-    if (!fixedDeduction) {
-        return next(new AppError('Fixed Deduction not found', 404));
-    }
+  if (!fixedDeduction) {
+    return next(new AppError("Fixed Deduction not found", 404));
+  }
 
-    res.status(200).json({
-        status: 'success',
-        data: fixedDeduction
-    });
+  res.status(200).json({
+    status: "success",
+    data: fixedDeduction,
+  });
 });
 
 // Update Fixed Deduction
 exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const fixedDeduction = await FixedDeduction.findByIdAndUpdate(id, req.body, {
-        new: true,
-        runValidators: true
-    });
+  const { id } = req.params;
+  const fixedDeduction = await FixedDeduction.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
-    if (!fixedDeduction) {
-        return next(new AppError('Fixed Deduction not found', 404));
-    }
+  if (!fixedDeduction) {
+    return next(new AppError("Fixed Deduction not found", 404));
+  }
 
-    res.status(200).json({
-        status: 'success',
-        data: fixedDeduction
-    });
+  res.status(200).json({
+    status: "success",
+    data: fixedDeduction,
+  });
 });
 
 // Delete Fixed Deduction
 exports.deleteFixedDeduction = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const fixedDeduction = await FixedDeduction.findByIdAndDelete(id);
+  const { id } = req.params;
+  const fixedDeduction = await FixedDeduction.findByIdAndDelete(id);
 
-    if (!fixedDeduction) {
-        return next(new AppError('Fixed Deduction not found', 404));
-    }
+  if (!fixedDeduction) {
+    return next(new AppError("Fixed Deduction not found", 404));
+  }
 
-    res.status(204).json({
-        status: 'success',
-        data: null
-    });
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
 });
-
 
 exports.createVariableDeduction = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
 
   const variableDeduction = await VariableDeduction.create(req.body);
-  if (req.body.variableDeductionApplicableEmployee && req.body.variableDeductionApplicableEmployee.length > 0) {
-  
-    const result = req.body.variableDeductionApplicableEmployee.map(item => ({
+  if (
+    req.body.variableDeductionApplicableEmployee &&
+    req.body.variableDeductionApplicableEmployee.length > 0
+  ) {
+    const result = req.body.variableDeductionApplicableEmployee.map((item) => ({
       variableDeduction: variableDeduction._id,
-      employee: item.employee
+      employee: item.employee,
     }));
-    variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);
-    
+    variableDeduction.variableDeductionApplicableEmployees =
+      await VariableDeductionApplicableEmployee.insertMany(result);
   }
   res.status(201).json({
-    status: 'success',
-    data: variableDeduction
+    status: "success",
+    data: variableDeduction,
   });
 });
 
@@ -1333,90 +1477,104 @@ exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId;
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
-    // Check if companyId exists in cookies
-    if (!company) {
-      return next(new AppError('Company ID not found in cookies', 400));
+
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  const totalCount = await VariableDeduction.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const variableDeductions = await VariableDeduction.find({ company: company })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+  if (variableDeductions) {
+    for (var i = 0; i < variableDeductions.length; i++) {
+      const variableDeductionApplicableEmployees =
+        await VariableDeductionApplicableEmployee.find({})
+          .where("variableDeduction")
+          .equals(variableDeductions[i]._id);
+      if (variableDeductionApplicableEmployees) {
+        variableDeductions[i].variableDeductionApplicableEmployees =
+          variableDeductionApplicableEmployees;
+      } else {
+        variableDeductions[i].variableDeductionApplicableEmployees = null;
+      }
     }
-    const totalCount = await VariableDeduction.countDocuments({ company: req.cookies.companyId });  
- 
-  const variableDeductions = await VariableDeduction.find({ company: company }).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  if(variableDeductions) 
-  {
-    
-      for(var i = 0; i < variableDeductions.length; i++) {     
-        const variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.find({}).where('variableDeduction').equals(variableDeductions[i]._id);  
-        if(variableDeductionApplicableEmployees) 
-          {
-            variableDeductions[i].variableDeductionApplicableEmployees = variableDeductionApplicableEmployees;
-          }
-          else{
-            variableDeductions[i].variableDeductionApplicableEmployees = null;
-          }
-        }
   }
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: variableDeductions,
-    total: totalCount
+    total: totalCount,
   });
 });
 
 exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
   const variableDeduction = await VariableDeduction.findById(req.params.id);
   if (!variableDeduction) {
-    return next(new AppError('Variable deduction not found', 404));
+    return next(new AppError("Variable deduction not found", 404));
   }
-  if(variableDeduction) 
-  {
-    
-        const variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.find({}).where('variableDeduction').equals(variableDeduction._id);  
-        if(variableDeductionApplicableEmployees) 
-          {
-            variableDeduction.variableDeductionApplicableEmployees = variableDeductionApplicableEmployees;
-          }
-          else{
-            variableDeduction.variableDeductionApplicableEmployees = null;
-          }
-        
+  if (variableDeduction) {
+    const variableDeductionApplicableEmployees =
+      await VariableDeductionApplicableEmployee.find({})
+        .where("variableDeduction")
+        .equals(variableDeduction._id);
+    if (variableDeductionApplicableEmployees) {
+      variableDeduction.variableDeductionApplicableEmployees =
+        variableDeductionApplicableEmployees;
+    } else {
+      variableDeduction.variableDeductionApplicableEmployees = null;
+    }
   }
   res.status(200).json({
-    status: 'success',
-    data: variableDeduction
+    status: "success",
+    data: variableDeduction,
   });
 });
 
 exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
-  const variableDeduction = await VariableDeduction.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-  if (req.body.variableDeductionnApplicableEmployee && req.body.variableDeductionApplicableEmployee.length > 0) {
-    await VariableDeductionApplicableEmployee.deleteMany({ variableDeduction: variableDeduction._id });
-    const result = req.body.variableDeductionApplicableEmployee.map(item => ({
+  const variableDeduction = await VariableDeduction.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  if (
+    req.body.variableDeductionnApplicableEmployee &&
+    req.body.variableDeductionApplicableEmployee.length > 0
+  ) {
+    await VariableDeductionApplicableEmployee.deleteMany({
       variableDeduction: variableDeduction._id,
-      employee: item.employee
+    });
+    const result = req.body.variableDeductionApplicableEmployee.map((item) => ({
+      variableDeduction: variableDeduction._id,
+      employee: item.employee,
     }));
-    variableDeduction.variableDeductionApplicableEmployees = await VariableDeductionApplicableEmployee.insertMany(result);    
+    variableDeduction.variableDeductionApplicableEmployees =
+      await VariableDeductionApplicableEmployee.insertMany(result);
   }
   if (!variableDeduction) {
-    return next(new AppError('Variable deduction not found', 404));
+    return next(new AppError("Variable deduction not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: variableDeduction
+    status: "success",
+    data: variableDeduction,
   });
 });
 
 exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
-  const variableDeduction = await VariableDeduction.findByIdAndDelete(req.params.id);
+  const variableDeduction = await VariableDeduction.findByIdAndDelete(
+    req.params.id
+  );
   if (!variableDeduction) {
-    return next(new AppError('Variable deduction not found', 404));
+    return next(new AppError("Variable deduction not found", 404));
   }
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
@@ -1426,15 +1584,15 @@ exports.createOtherBenefits = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
   const otherBenefits = await OtherBenefits.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: otherBenefits
+    status: "success",
+    data: otherBenefits,
   });
 });
 
@@ -1443,14 +1601,17 @@ exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await OtherBenefits.countDocuments({company: req.cookies.companyId });  
- 
-  const otherBenefits = await OtherBenefits.find({ company: companyId }).skip(parseInt(skip))
+  const totalCount = await OtherBenefits.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const otherBenefits = await OtherBenefits.find({ company: companyId })
+    .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: otherBenefits,
-    total: totalCount
+    total: totalCount,
   });
 });
 
@@ -1459,16 +1620,16 @@ exports.updateOtherBenefits = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const otherBenefits = await OtherBenefits.findByIdAndUpdate(id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   if (!otherBenefits) {
-    return next(new AppError('OtherBenefits not found', 404));
+    return next(new AppError("OtherBenefits not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: otherBenefits
+    status: "success",
+    data: otherBenefits,
   });
 });
 
@@ -1478,12 +1639,12 @@ exports.getOtherBenefitsById = catchAsync(async (req, res, next) => {
   const otherBenefits = await OtherBenefits.findById(id);
 
   if (!otherBenefits) {
-    return next(new AppError('OtherBenefits not found', 404));
+    return next(new AppError("OtherBenefits not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: otherBenefits
+    status: "success",
+    data: otherBenefits,
   });
 });
 
@@ -1493,12 +1654,12 @@ exports.deleteOtherBenefits = catchAsync(async (req, res, next) => {
   const otherBenefits = await OtherBenefits.findByIdAndDelete(id);
 
   if (!otherBenefits) {
-    return next(new AppError('OtherBenefits not found', 404));
+    return next(new AppError("OtherBenefits not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
@@ -1506,128 +1667,166 @@ exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
   const { name } = req.body;
   const companyId = req.cookies.companyId;
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
-  const existingCategory = await LoanAdvancesCategory.findOne({ name: name, company: companyId });;
+  const existingCategory = await LoanAdvancesCategory.findOne({
+    name: name,
+    company: companyId,
+  });
   if (existingCategory) {
-    return next(new AppError('Loan Advances Category already exists', 400));
-  } 
+    return next(new AppError("Loan Advances Category already exists", 400));
+  }
   req.body.company = companyId;
   const loanAdvancesCategory = await LoanAdvancesCategory.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: loanAdvancesCategory
+    status: "success",
+    data: loanAdvancesCategory,
   });
 });
 
-exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await LoanAdvancesCategory.countDocuments({ company: req.cookies.companyId });  
- 
-  const loanAdvancesCategories = await LoanAdvancesCategory.find({ company: companyId }).skip(parseInt(skip))
-    .limit(parseInt(limit));
-  if (!loanAdvancesCategories) {
-    return next(new AppError('No Loan Advances Categories found for the specified company', 404));
+exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(
+  async (req, res, next) => {
+    const companyId = req.cookies.companyId;
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const totalCount = await LoanAdvancesCategory.countDocuments({
+      company: req.cookies.companyId,
+    });
+
+    const loanAdvancesCategories = await LoanAdvancesCategory.find({
+      company: companyId,
+    })
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
+    if (!loanAdvancesCategories) {
+      return next(
+        new AppError(
+          "No Loan Advances Categories found for the specified company",
+          404
+        )
+      );
+    }
+    res.status(200).json({
+      status: "success",
+      data: loanAdvancesCategories,
+      total: totalCount,
+    });
   }
-  res.status(200).json({
-    status: 'success',
-    data: loanAdvancesCategories,
-    total: totalCount
-  });
-});
+);
 
 exports.getLoanAdvancesCategoryById = catchAsync(async (req, res, next) => {
-  const loanAdvancesCategory = await LoanAdvancesCategory.findById(req.params.id);
+  const loanAdvancesCategory = await LoanAdvancesCategory.findById(
+    req.params.id
+  );
   if (!loanAdvancesCategory) {
-    return next(new AppError('Loan Advances Category not found', 404));
+    return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: loanAdvancesCategory
+    status: "success",
+    data: loanAdvancesCategory,
   });
 });
 
 exports.updateLoanAdvancesCategory = catchAsync(async (req, res, next) => {
-  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
   if (!loanAdvancesCategory) {
-    return next(new AppError('Loan Advances Category not found', 404));
+    return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(200).json({
-    status: 'success',
-    data: loanAdvancesCategory
+    status: "success",
+    data: loanAdvancesCategory,
   });
 });
 
 exports.deleteLoanAdvancesCategory = catchAsync(async (req, res, next) => {
-  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndDelete(req.params.id);
+  const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndDelete(
+    req.params.id
+  );
   if (!loanAdvancesCategory) {
-    return next(new AppError('Loan Advances Category not found', 404));
+    return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
 
 // Create a new FlexiBenefitsCategory
 exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
-
   const { name } = req.body;
   const companyId = req.cookies.companyId;
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
-  const existingCategory = await FlexiBenefitsCategory.findOne({ name: name, company: companyId });
+  const existingCategory = await FlexiBenefitsCategory.findOne({
+    name: name,
+    company: companyId,
+  });
   req.body.company = companyId;
-  if (existingCategory) {  
-    return next(new AppError('FlexiBenefitsCategory already exists for this company', 400));
+  if (existingCategory) {
+    return next(
+      new AppError("FlexiBenefitsCategory already exists for this company", 400)
+    );
   }
 
-  const flexiBenefitsCategory = await FlexiBenefitsCategory.create( req.body);
+  const flexiBenefitsCategory = await FlexiBenefitsCategory.create(req.body);
 
   res.status(201).json({
-    status: 'success',
-    data: flexiBenefitsCategory
+    status: "success",
+    data: flexiBenefitsCategory,
   });
 });
 
 // Get all FlexiBenefitsCategory by company
-exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(async (req, res, next) => {
-  const { companyId } = req.cookies.companyId;
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await FlexiBenefitsCategory.countDocuments({ company: companyId });  
+exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
+  async (req, res, next) => {
+    const { companyId } = req.cookies.companyId;
+    const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;
+    const totalCount = await FlexiBenefitsCategory.countDocuments({
+      company: companyId,
+    });
 
-  const flexiBenefitsCategories = await FlexiBenefitsCategory.find({ company: companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
+    const flexiBenefitsCategories = await FlexiBenefitsCategory.find({
+      company: companyId,
+    })
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
 
-  res.status(200).json({
-    status: 'success',
-    data: flexiBenefitsCategories,
-    total: totalCount
-  });
-});
+    res.status(200).json({
+      status: "success",
+      data: flexiBenefitsCategories,
+      total: totalCount,
+    });
+  }
+);
 
 // Update a FlexiBenefitsCategory
 exports.updateFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const updatedCategory = await FlexiBenefitsCategory.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const updatedCategory = await FlexiBenefitsCategory.findByIdAndUpdate(
+    id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!updatedCategory) {
-    return next(new AppError('FlexiBenefitsCategory not found', 404));
+    return next(new AppError("FlexiBenefitsCategory not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: updatedCategory
+    status: "success",
+    data: updatedCategory,
   });
 });
 
@@ -1637,45 +1836,46 @@ exports.getFlexiBenefitsCategoryById = catchAsync(async (req, res, next) => {
   const flexiBenefitsCategory = await FlexiBenefitsCategory.findById(id);
 
   if (!flexiBenefitsCategory) {
-    return next(new AppError('FlexiBenefitsCategory not found', 404));
+    return next(new AppError("FlexiBenefitsCategory not found", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: flexiBenefitsCategory
+    status: "success",
+    data: flexiBenefitsCategory,
   });
 });
 
 // Delete a FlexiBenefitsCategory
 exports.deleteFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const flexiBenefitsCategory = await FlexiBenefitsCategory.findByIdAndDelete(id);
+  const flexiBenefitsCategory = await FlexiBenefitsCategory.findByIdAndDelete(
+    id
+  );
 
   if (!flexiBenefitsCategory) {
-    return next(new AppError('FlexiBenefitsCategory not found', 404));
+    return next(new AppError("FlexiBenefitsCategory not found", 404));
   }
 
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
-
 
 exports.createPFCharge = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
   const pfCharge = await PFCharge.create(req.body);
   res.status(201).json({
-    status: 'success',
-    data: pfCharge
+    status: "success",
+    data: pfCharge,
   });
 });
 
@@ -1686,156 +1886,191 @@ exports.getPFChargesByCompany = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError("Company ID not found in cookies", 400));
   }
-  const totalCount = await PFCharge.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await PFCharge.countDocuments({
+    company: req.cookies.companyId,
+  });
+
   // Assuming PFCharge has a field 'company' to relate PF Charges to a specific company
-  const pfCharges = await PFCharge.find({ company: companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+  const pfCharges = await PFCharge.find({ company: companyId })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: pfCharges,
-    total: totalCount
+    total: totalCount,
   });
 });
 
-
 exports.createCTCTemplate = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-  const {ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateVariableAllowance,ctcTemplateVariableDeduction,ctcTemplateEmployerContribution,ctcTemplateOtherBenefitAllowance,ctcTemplateEmployeeDeduction,...ctcTemplateData } = req.body;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  const {
+    ctcTemplateFixedAllowance,
+    ctcTemplateFixedDeduction,
+    ctcTemplateVariableAllowance,
+    ctcTemplateVariableDeduction,
+    ctcTemplateEmployerContribution,
+    ctcTemplateOtherBenefitAllowance,
+    ctcTemplateEmployeeDeduction,
+    ...ctcTemplateData
+  } = req.body;
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
- 
     const result = await FixedAllowances.findById(allowance.fixedAllowance);
-   
-     if (!result) {
+
+    if (!result) {
       return res.status(400).json({
-        status: 'failure',
-        message: 'Invalid Fixed Allowances',
+        status: "failure",
+        message: "Invalid Fixed Allowances",
       });
     }
   }
   const ctcTemplate = await CTCTemplate.create(ctcTemplateData);
-  ctcTemplate.ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(ctcTemplate._id, req.body.ctcTemplateFixedAllowance);
- 
-  if(ctcTemplateFixedDeduction.length > 0)
-  {
+  ctcTemplate.ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(
+    ctcTemplate._id,
+    req.body.ctcTemplateFixedAllowance
+  );
+
+  if (ctcTemplateFixedDeduction.length > 0) {
     for (const deduction of ctcTemplateFixedDeduction) {
-  
       const result = await FixedDeduction.findById(deduction.fixedDeduction);
-    
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Fixed Deduction',
+          status: "failure",
+          message: "Invalid Fixed Deduction",
         });
       }
     }
-    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(ctcTemplate._id, req.body.ctcTemplateFixedDeduction);
+    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(
+      ctcTemplate._id,
+      req.body.ctcTemplateFixedDeduction
+    );
   }
-//
+  //
 
-  if(ctcTemplateVariableAllowance.length > 0)
-    {
-      for (const allowance of ctcTemplateVariableAllowance) {
-    
-        const result = await VariableAllowance.findById(allowance.variableAllowance);
-      
-        if (!result) {
-          return res.status(400).json({
-            status: 'failure',
-            message: 'Invalid Variable Allowance',
-          });
-        }
+  if (ctcTemplateVariableAllowance.length > 0) {
+    for (const allowance of ctcTemplateVariableAllowance) {
+      const result = await VariableAllowance.findById(
+        allowance.variableAllowance
+      );
+
+      if (!result) {
+        return res.status(400).json({
+          status: "failure",
+          message: "Invalid Variable Allowance",
+        });
       }
-      ctcTemplate.ctcTemplateVariableAllowances = await updateOrCreateVariableAllownace(ctcTemplate._id, ctcTemplateVariableAllowance);
     }
+    ctcTemplate.ctcTemplateVariableAllowances =
+      await updateOrCreateVariableAllownace(
+        ctcTemplate._id,
+        ctcTemplateVariableAllowance
+      );
+  }
 
-    if(ctcTemplateVariableDeduction.length > 0)
-      {
-        for (const allowance of ctcTemplateVariableDeduction) {
-      
-          const result = await VariableDeduction.findById(allowance.variableDeduction);
-        
-          if (!result) {
-            return res.status(400).json({
-              status: 'failure',
-              message: 'Invalid Variable Deduction',
-            });
-          }
-        }
-        ctcTemplate.ctcTemplateVariableDeductions = await updateOrCreateVariableDeduction(ctcTemplate._id, ctcTemplateVariableDeduction);
+  if (ctcTemplateVariableDeduction.length > 0) {
+    for (const allowance of ctcTemplateVariableDeduction) {
+      const result = await VariableDeduction.findById(
+        allowance.variableDeduction
+      );
+
+      if (!result) {
+        return res.status(400).json({
+          status: "failure",
+          message: "Invalid Variable Deduction",
+        });
       }
+    }
+    ctcTemplate.ctcTemplateVariableDeductions =
+      await updateOrCreateVariableDeduction(
+        ctcTemplate._id,
+        ctcTemplateVariableDeduction
+      );
+  }
 
-//hello
-  if(ctcTemplateEmployerContribution.length > 0)
-  {
+  //hello
+  if (ctcTemplateEmployerContribution.length > 0) {
     for (const contirbution of ctcTemplateEmployerContribution) {
-  
-      const result = await FixedContribution.findById(contirbution.fixedContribution);
-    
+      const result = await FixedContribution.findById(
+        contirbution.fixedContribution
+      );
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Fixed Contribution',
+          status: "failure",
+          message: "Invalid Fixed Contribution",
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateEmployerContribution(ctcTemplate._id, req.body.ctcTemplateEmployerContribution);
+    ctcTemplate.ctcTemplateEmployerContributions =
+      await updateOrCreateEmployerContribution(
+        ctcTemplate._id,
+        req.body.ctcTemplateEmployerContribution
+      );
   }
-  if(ctcTemplateOtherBenefitAllowance.length > 0)
-  {
+  if (ctcTemplateOtherBenefitAllowance.length > 0) {
     for (const item of ctcTemplateOtherBenefitAllowance) {
-  
       const result = await OtherBenefits.findById(item.otherBenefit);
-    
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Other benefits',
+          status: "failure",
+          message: "Invalid Other benefits",
         });
       }
     }
-    ctcTemplate.ctcTemplateOtherBenefitAllowances = await updateOrOtherBenefitsAllowance(ctcTemplate._id, req.body.ctcTemplateOtherBenefitAllowance);
-  } 
-  if(ctcTemplateEmployeeDeduction.length > 0)
-  {
+    ctcTemplate.ctcTemplateOtherBenefitAllowances =
+      await updateOrOtherBenefitsAllowance(
+        ctcTemplate._id,
+        req.body.ctcTemplateOtherBenefitAllowance
+      );
+  }
+  if (ctcTemplateEmployeeDeduction.length > 0) {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
-  
-      const result = await FixedContribution.findById(contirbution.employeeDeduction);
-    
+      const result = await FixedContribution.findById(
+        contirbution.employeeDeduction
+      );
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Employee Deduction',
+          status: "failure",
+          message: "Invalid Employee Deduction",
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployeeDeductions = await updateOrCreateEmployeeDeduction(ctcTemplate._id, req.body.ctcTemplateEmployeeDeduction);
-  } 
+    ctcTemplate.ctcTemplateEmployeeDeductions =
+      await updateOrCreateEmployeeDeduction(
+        ctcTemplate._id,
+        req.body.ctcTemplateEmployeeDeduction
+      );
+  }
   res.status(201).json({
-    status: 'success',
-    data: ctcTemplate
+    status: "success",
+    data: ctcTemplate,
   });
 });
 
-async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
+async function updateOrCreateVariableAllownace(
+  ctcTemplateId,
+  updatedCategories
+) {
+  const existingCategories = await CTCTemplateVariableAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
   console.log(existingCategories);
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.variableAllowance.equals(category.variableAllowance)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.variableAllowance.equals(category.variableAllowance)
     );
 
     if (existingCategory) {
@@ -1851,13 +2086,17 @@ async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories)
         ctcTemplate: ctcTemplateId,
         ...category,
       });
-      return newCategory.save();    
+      return newCategory.save();
     }
   });
   await Promise.all(updatedCategoriesPromises);
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.variableAllowance === existing.variableAllowance.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.variableAllowance === existing.variableAllowance.toString()
+      )
   );
 
   const removalPromises = categoriesToRemove.map(async (category) => {
@@ -1865,19 +2104,24 @@ async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories)
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateVariableAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
   return finalCategories;
 }
 
-async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
+async function updateOrCreateVariableDeduction(
+  ctcTemplateId,
+  updatedCategories
+) {
+  const existingCategories = await CTCTemplateVariableDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.variableDeduction.equals(category.variableDeduction)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.variableDeduction.equals(category.variableDeduction)
     );
 
     if (existingCategory) {
@@ -1893,33 +2137,39 @@ async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories)
         ctcTemplate: ctcTemplateId,
         ...category,
       });
-     
+
       return newCategory.save();
     }
   });
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.variableDeduction === existing.variableDeduction.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.variableDeduction === existing.variableDeduction.toString()
+      )
   );
-  
+
   await Promise.all(updatedCategoriesPromises);
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateVariableDeduction.findByIdAndRemove(category._id);
   });
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateVariableDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
   return finalCategories;
 }
 
 async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId });
+  const existingCategories = await CTCTemplateFixedAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.fixedAllowance.equals(category.fixedAllowance)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.fixedAllowance.equals(category.fixedAllowance)
     );
 
     if (existingCategory) {
@@ -1933,13 +2183,16 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
         ...category,
       });
       return newCategory.save();
-    
     }
   });
   await Promise.all(updatedCategoriesPromises);
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.fixedAllowance === existing.fixedAllowance.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.fixedAllowance === existing.fixedAllowance.toString()
+      )
   );
 
   const removalPromises = categoriesToRemove.map(async (category) => {
@@ -1947,19 +2200,21 @@ async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId }); 
+  const finalCategories = await CTCTemplateFixedAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
   return finalCategories;
 }
 
 async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateFixedDeduction.find({ ctcTemplate: ctcTemplateId });
+  const existingCategories = await CTCTemplateFixedDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.fixedDeduction.equals(category.fixedDeduction)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.fixedDeduction.equals(category.fixedDeduction)
     );
 
     if (existingCategory) {
@@ -1976,34 +2231,42 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
     }
   });
   await Promise.all(updatedCategoriesPromises);
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.fixedDeduction === existing.fixedDeduction.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.fixedDeduction === existing.fixedDeduction.toString()
+      )
   );
-  
 
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateFixedDeduction.findByIdAndRemove(category._id);
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateFixedDeduction.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateFixedDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
   return finalCategories;
 }
 
 async function deleteCTCFixedDeduction(ctcTemplateId) {
-  await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);  
+  await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);
 }
 
-async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateEmployerContribution.find({ ctcTemplate: ctcTemplateId });
+async function updateOrCreateEmployerContribution(
+  ctcTemplateId,
+  updatedCategories
+) {
+  const existingCategories = await CTCTemplateEmployerContribution.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.fixedContribution.equals(category.fixedContribution)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.fixedContribution.equals(category.fixedContribution)
     );
 
     if (existingCategory) {
@@ -2020,32 +2283,41 @@ async function updateOrCreateEmployerContribution(ctcTemplateId, updatedCategori
     }
   });
   await Promise.all(updatedCategoriesPromises);
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.fixedContribution === existing.fixedContribution.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.fixedContribution === existing.fixedContribution.toString()
+      )
   );
-  
 
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateEmployerContribution.findByIdAndRemove(category._id);
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateEmployerContribution.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateEmployerContribution.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   return finalCategories;
 }
 
-async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateOtherBenefitAllowance.find({ ctcTemplate: ctcTemplateId });
+async function updateOrOtherBenefitsAllowance(
+  ctcTemplateId,
+  updatedCategories
+) {
+  const existingCategories = await CTCTemplateOtherBenefitAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
   console.log(existingCategories);
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   console.log(category);
-    const existingCategory = existingCategories.find(
-      (existing) => existing.otherBenefit.equals(category.otherBenefit)
+    console.log(category);
+    const existingCategory = existingCategories.find((existing) =>
+      existing.otherBenefit.equals(category.otherBenefit)
     );
 
     if (existingCategory) {
@@ -2062,32 +2334,40 @@ async function updateOrOtherBenefitsAllowance(ctcTemplateId, updatedCategories) 
     }
   });
   await Promise.all(updatedCategoriesPromises);
-    // Remove categories not present in the updated list
+  // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.otherBenefit === existing.otherBenefit.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) => updated.otherBenefit === existing.otherBenefit.toString()
+      )
   );
-  
 
   const removalPromises = categoriesToRemove.map(async (category) => {
     return CTCTemplateOtherBenefitAllowance.findByIdAndRemove(category._id);
   });
 
   await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateOtherBenefitAllowance.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateOtherBenefitAllowance.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   return finalCategories;
 }
 
-async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories) {
-
-  const existingCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
+async function updateOrCreateEmployeeDeduction(
+  ctcTemplateId,
+  updatedCategories
+) {
+  const existingCategories = await CTCTemplateEmployeeDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find(
-      (existing) => existing.employeeDeduction.equals(category.employeeDeduction)
+    const existingCategory = existingCategories.find((existing) =>
+      existing.employeeDeduction.equals(category.employeeDeduction)
     );
-    if (!existingCategory) {  
+    if (!existingCategory) {
       const newCategory = new CTCTemplateEmployeeDeduction({
         ctcTemplate: ctcTemplateId,
         employeeDeduction: category.employeeDeduction,
@@ -2106,7 +2386,11 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
 
   // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.employeeDeduction === existing.employeeDeduction.toString())
+    (existing) =>
+      !updatedCategories.find(
+        (updated) =>
+          updated.employeeDeduction === existing.employeeDeduction.toString()
+      )
   );
 
   const removalPromises = categoriesToRemove.map(async (category) => {
@@ -2116,302 +2400,381 @@ async function updateOrCreateEmployeeDeduction(ctcTemplateId, updatedCategories)
   await Promise.all(removalPromises);
 
   // Fetch the final list of categories
-  const finalCategories = await CTCTemplateEmployeeDeduction.find({ ctcTemplate: ctcTemplateId });
+  const finalCategories = await CTCTemplateEmployeeDeduction.find({
+    ctcTemplate: ctcTemplateId,
+  });
   return finalCategories;
 }
-
 
 exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await CTCTemplate.countDocuments({ company: req.cookies.companyId });  
- 
-  const ctcTemplates = await CTCTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip)).limit(parseInt(limit));
-  if(ctcTemplates)
-  {
-   for(var i = 0; i < ctcTemplates.length; i++)
-   {     
-    const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-    if(ctcTemplateFixedAllowances) 
-      {
-        ctcTemplates[i].ctcTemplateFixedAllowances=ctcTemplateFixedAllowances;
+  const totalCount = await CTCTemplate.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  const ctcTemplates = await CTCTemplate.find({
+    company: req.cookies.companyId,
+  })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+  if (ctcTemplates) {
+    for (var i = 0; i < ctcTemplates.length; i++) {
+      const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find(
+        {}
+      )
+        .where("ctcTemplate")
+        .equals(ctcTemplates[i]._id);
+      if (ctcTemplateFixedAllowances) {
+        ctcTemplates[i].ctcTemplateFixedAllowances = ctcTemplateFixedAllowances;
+      } else {
+        ctcTemplates[i].ctcTemplateFixedAllowances = null;
       }
-      else{
-        ctcTemplates[i].ctcTemplateFixedAllowances=null;
-      }
-      const ctcTemplateFixedDeductions = await CTCTemplateFixedDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-    if(ctcTemplateFixedDeductions) 
-      {
-        ctcTemplates[i].ctcTemplateFixedDeductions=ctcTemplateFixedDeductions;
-      }
-      else{
-        ctcTemplates[i].ctcTemplateFixedDeductions=null;
+      const ctcTemplateFixedDeductions = await CTCTemplateFixedDeduction.find(
+        {}
+      )
+        .where("ctcTemplate")
+        .equals(ctcTemplates[i]._id);
+      if (ctcTemplateFixedDeductions) {
+        ctcTemplates[i].ctcTemplateFixedDeductions = ctcTemplateFixedDeductions;
+      } else {
+        ctcTemplates[i].ctcTemplateFixedDeductions = null;
       }
 
-      const ctcTemplateEmployerContribution = await CTCTemplateEmployerContribution.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-      if(ctcTemplateEmployerContribution) 
-         {
-           ctcTemplates[i].ctcTemplateEmployerContributions=ctcTemplateEmployerContribution;
-         }
-         else{
-           ctcTemplates[i].ctcTemplateEmployerContributions=null;
-         } 
-       const ctcTemplateOtherBenefitAllowances = await CTCTemplateOtherBenefitAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-       if(ctcTemplateOtherBenefitAllowances) 
-         {
-           ctcTemplates[i].ctcTemplateOtherBenefitAllowances=ctcTemplateOtherBenefitAllowances;
-         }
-       else
-         {
-           ctcTemplates[i].ctcTemplateOtherBenefitAllowances=null;
-         }   
-      
-       const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-       if(ctcTemplateEmployeeDeductions) 
-         {
-           ctcTemplates[i].ctcTemplateEmployeeDeductions=ctcTemplateEmployeeDeductions;
-         }
-       else
-         {
-           ctcTemplates[i].ctcTemplateEmployeeDeductions=null;
-         }       
+      const ctcTemplateEmployerContribution =
+        await CTCTemplateEmployerContribution.find({})
+          .where("ctcTemplate")
+          .equals(ctcTemplates[i]._id);
+      if (ctcTemplateEmployerContribution) {
+        ctcTemplates[i].ctcTemplateEmployerContributions =
+          ctcTemplateEmployerContribution;
+      } else {
+        ctcTemplates[i].ctcTemplateEmployerContributions = null;
+      }
+      const ctcTemplateOtherBenefitAllowances =
+        await CTCTemplateOtherBenefitAllowance.find({})
+          .where("ctcTemplate")
+          .equals(ctcTemplates[i]._id);
+      if (ctcTemplateOtherBenefitAllowances) {
+        ctcTemplates[i].ctcTemplateOtherBenefitAllowances =
+          ctcTemplateOtherBenefitAllowances;
+      } else {
+        ctcTemplates[i].ctcTemplateOtherBenefitAllowances = null;
+      }
 
-         //
-         const ctcTemplateVariableAllowance = await CTCTemplateVariableAllowance.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-         if(ctcTemplateVariableAllowance) 
-           {
-             ctcTemplates[i].ctcTemplateVariableAllowances = ctcTemplateVariableAllowance;
-           }
-         else
-           {
-             ctcTemplates[i].ctcTemplateVariableAllowances = null;
-           } 
-     
-         const ctcTemplateVariableDeduction = await CTCTemplateVariableDeduction.find({}).where('ctcTemplate').equals(ctcTemplates[i]._id);
-         if(ctcTemplateVariableDeduction) 
-           {
-             ctcTemplates[i].ctcTemplateVariableDeductions = ctcTemplateVariableDeduction;
-           }
-         else
-           {
-             ctcTemplates[i].ctcTemplateVariableDeductions = null;
-           } 
-         //
+      const ctcTemplateEmployeeDeductions =
+        await CTCTemplateEmployeeDeduction.find({})
+          .where("ctcTemplate")
+          .equals(ctcTemplates[i]._id);
+      if (ctcTemplateEmployeeDeductions) {
+        ctcTemplates[i].ctcTemplateEmployeeDeductions =
+          ctcTemplateEmployeeDeductions;
+      } else {
+        ctcTemplates[i].ctcTemplateEmployeeDeductions = null;
+      }
+
+      //
+      const ctcTemplateVariableAllowance =
+        await CTCTemplateVariableAllowance.find({})
+          .where("ctcTemplate")
+          .equals(ctcTemplates[i]._id);
+      if (ctcTemplateVariableAllowance) {
+        ctcTemplates[i].ctcTemplateVariableAllowances =
+          ctcTemplateVariableAllowance;
+      } else {
+        ctcTemplates[i].ctcTemplateVariableAllowances = null;
+      }
+
+      const ctcTemplateVariableDeduction =
+        await CTCTemplateVariableDeduction.find({})
+          .where("ctcTemplate")
+          .equals(ctcTemplates[i]._id);
+      if (ctcTemplateVariableDeduction) {
+        ctcTemplates[i].ctcTemplateVariableDeductions =
+          ctcTemplateVariableDeduction;
+      } else {
+        ctcTemplates[i].ctcTemplateVariableDeductions = null;
+      }
+      //
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: ctcTemplates,
-    total: totalCount
+    total: totalCount,
   });
 });
 
 exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
   const ctcTemplate = await CTCTemplate.findById(req.params.id);
   if (!ctcTemplate) {
-    return next(new AppError('CTCTemplate not found', 404));
+    return next(new AppError("CTCTemplate not found", 404));
   }
-  const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find({}).where('ctcTemplate').equals(req.params.id);
+  const ctcTemplateFixedAllowances = await CTCTemplateFixedAllowance.find({})
+    .where("ctcTemplate")
+    .equals(req.params.id);
   ctcTemplate.ctcTemplateFixedAllowances = ctcTemplateFixedAllowances;
-  const ctcTemplateFixedDeductions = await CTCTemplateFixedDeduction.find({}).where('ctcTemplate').equals(req.params.id);
+  const ctcTemplateFixedDeductions = await CTCTemplateFixedDeduction.find({})
+    .where("ctcTemplate")
+    .equals(req.params.id);
   ctcTemplate.ctcTemplateFixedDeductions = ctcTemplateFixedDeductions;
-  const ctcTemplateEmployerContribution = await CTCTemplateEmployerContribution.find({}).where('ctcTemplate').equals(req.params.id);
-  ctcTemplate.ctcTemplateEmployerContributions = ctcTemplateEmployerContribution;
-  const ctcTemplateOtherBenefitAllowances = await CTCTemplateOtherBenefitAllowance.find({}).where('ctcTemplate').equals(req.params.id);
-  if(ctcTemplateOtherBenefitAllowances) 
-    {
-      ctcTemplate.ctcTemplateOtherBenefitAllowances = ctcTemplateOtherBenefitAllowances;
-    }
-  else
-    {
-      ctcTemplate.ctcTemplateOtherBenefitAllowances = null;
-    }   
- 
-  const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find({}).where('ctcTemplate').equals(req.params.id);
-  if(ctcTemplateEmployeeDeductions) 
-    {
-      ctcTemplate.ctcTemplateEmployeeDeductions = ctcTemplateEmployeeDeductions;
-    }
-  else
-    {
-      ctcTemplate.ctcTemplateEmployeeDeductions = null;
-    }    
-    //
-     const ctcTemplateVariableAllowance = await CTCTemplateVariableAllowance.find({}).where('ctcTemplate').equals(req.params.id);
-    if(ctcTemplateVariableAllowance) 
-      {
-        ctcTemplate.ctcTemplateVariableAllowances = ctcTemplateVariableAllowance;
-      }
-    else
-      {
-        ctcTemplate.ctcTemplateVariableAllowances = null;
-      } 
+  const ctcTemplateEmployerContribution =
+    await CTCTemplateEmployerContribution.find({})
+      .where("ctcTemplate")
+      .equals(req.params.id);
+  ctcTemplate.ctcTemplateEmployerContributions =
+    ctcTemplateEmployerContribution;
+  const ctcTemplateOtherBenefitAllowances =
+    await CTCTemplateOtherBenefitAllowance.find({})
+      .where("ctcTemplate")
+      .equals(req.params.id);
+  if (ctcTemplateOtherBenefitAllowances) {
+    ctcTemplate.ctcTemplateOtherBenefitAllowances =
+      ctcTemplateOtherBenefitAllowances;
+  } else {
+    ctcTemplate.ctcTemplateOtherBenefitAllowances = null;
+  }
 
-    const ctcTemplateVariableDeduction = await CTCTemplateVariableDeduction.find({}).where('ctcTemplate').equals(req.params.id);
-    if(ctcTemplateVariableDeduction) 
-      {
-        ctcTemplate.ctcTemplateVariableDeductions = ctcTemplateVariableDeduction;
-      }
-    else
-      {
-        ctcTemplate.ctcTemplateVariableDeductions = null;
-      } 
-    ////
+  const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find(
+    {}
+  )
+    .where("ctcTemplate")
+    .equals(req.params.id);
+  if (ctcTemplateEmployeeDeductions) {
+    ctcTemplate.ctcTemplateEmployeeDeductions = ctcTemplateEmployeeDeductions;
+  } else {
+    ctcTemplate.ctcTemplateEmployeeDeductions = null;
+  }
+  //
+  const ctcTemplateVariableAllowance = await CTCTemplateVariableAllowance.find(
+    {}
+  )
+    .where("ctcTemplate")
+    .equals(req.params.id);
+  if (ctcTemplateVariableAllowance) {
+    ctcTemplate.ctcTemplateVariableAllowances = ctcTemplateVariableAllowance;
+  } else {
+    ctcTemplate.ctcTemplateVariableAllowances = null;
+  }
+
+  const ctcTemplateVariableDeduction = await CTCTemplateVariableDeduction.find(
+    {}
+  )
+    .where("ctcTemplate")
+    .equals(req.params.id);
+  if (ctcTemplateVariableDeduction) {
+    ctcTemplate.ctcTemplateVariableDeductions = ctcTemplateVariableDeduction;
+  } else {
+    ctcTemplate.ctcTemplateVariableDeductions = null;
+  }
+  ////
   res.status(200).json({
-    status: 'success',
-    data: ctcTemplate
+    status: "success",
+    data: ctcTemplate,
   });
 });
 
 exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
-  const { ctcTemplateFixedAllowance,ctcTemplateFixedDeduction,ctcTemplateVariableAllowance,ctcTemplateVariableDeduction,ctcTemplateEmployerContribution,ctcTemplateEmployeeDeduction,ctcTemplateOtherBenefitAllowance, ...ctcTemplateData } = req.body;
+  const {
+    ctcTemplateFixedAllowance,
+    ctcTemplateFixedDeduction,
+    ctcTemplateVariableAllowance,
+    ctcTemplateVariableDeduction,
+    ctcTemplateEmployerContribution,
+    ctcTemplateEmployeeDeduction,
+    ctcTemplateOtherBenefitAllowance,
+    ...ctcTemplateData
+  } = req.body;
 
   // Check if policyLabel is provided
   if (!ctcTemplateData.name) {
-    return next(new AppError('Name is required', 400));
+    return next(new AppError("Name is required", 400));
   }
 
   // Check if policyLabel already exists
-  const existingTemplate = await CTCTemplate.findOne({ 'name': ctcTemplateData.name ,_id: { $ne: req.params.id }});
+  const existingTemplate = await CTCTemplate.findOne({
+    name: ctcTemplateData.name,
+    _id: { $ne: req.params.id },
+  });
 
   if (existingTemplate) {
     return res.status(400).json({
-      status: 'failure',
-      message: 'Name already exists',
+      status: "failure",
+      message: "Name already exists",
     });
   }
 
-  if (!Array.isArray(ctcTemplateFixedAllowance) || ctcTemplateFixedAllowance.length === 0) {
-    return next(new AppError('CTC Template Fixed Allowance Not Exists in Request', 400));
+  if (
+    !Array.isArray(ctcTemplateFixedAllowance) ||
+    ctcTemplateFixedAllowance.length === 0
+  ) {
+    return next(
+      new AppError("CTC Template Fixed Allowance Not Exists in Request", 400)
+    );
   }
-  const ctcTemplate = await CTCTemplate.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const ctcTemplate = await CTCTemplate.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!ctcTemplate) {
-    return next(new AppError('CTCTemplate not found', 404));
+    return next(new AppError("CTCTemplate not found", 404));
   }
 
-  const ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(req.params.id, ctcTemplateFixedAllowance);
+  const ctcTemplateFixedAllowances = await updateOrCreateFixedAllowances(
+    req.params.id,
+    ctcTemplateFixedAllowance
+  );
   ctcTemplate.ctcTemplateFixedAllowances = ctcTemplateFixedAllowances;
-  if(ctcTemplateFixedDeduction.length > 0)
-  {
+  if (ctcTemplateFixedDeduction.length > 0) {
     for (const deduction of ctcTemplateFixedDeduction) {
       const result = await FixedDeduction.findById(deduction.fixedDeduction);
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Fixed Deduction',
+          status: "failure",
+          message: "Invalid Fixed Deduction",
         });
       }
     }
-    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(req.params.id, req.body.ctcTemplateFixedDeduction);
-  }
-  else
-  {
+    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(
+      req.params.id,
+      req.body.ctcTemplateFixedDeduction
+    );
+  } else {
     const ctcTemplateObjectId = new ObjectId(req.params.id);
     await deleteCTCFixedDeduction(req.params.id);
   }
-  if(ctcTemplateEmployerContribution.length > 0)
-  {
+  if (ctcTemplateEmployerContribution.length > 0) {
     for (const contirbution of ctcTemplateEmployerContribution) {
-  
-      const result = await FixedContribution.findById(contirbution.fixedContribution);
-    
+      const result = await FixedContribution.findById(
+        contirbution.fixedContribution
+      );
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Fixed Contribution',
+          status: "failure",
+          message: "Invalid Fixed Contribution",
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployerContributions = await updateOrCreateEmployerContribution(req.params.id, req.body.ctcTemplateEmployerContribution);
-  } 
-  if(ctcTemplateOtherBenefitAllowance.length > 0)
-  {
-    for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {  
+    ctcTemplate.ctcTemplateEmployerContributions =
+      await updateOrCreateEmployerContribution(
+        req.params.id,
+        req.body.ctcTemplateEmployerContribution
+      );
+  }
+  if (ctcTemplateOtherBenefitAllowance.length > 0) {
+    for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {
       const result = await OtherBenefits.findById(otherBenefit.otherBenefit);
-    
+
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Other Benefits',
+          status: "failure",
+          message: "Invalid Other Benefits",
         });
       }
     }
-    ctcTemplate.ctcTemplateOtherBenefitAllowances = await updateOrOtherBenefitsAllowance(req.params.id, req.body.ctcTemplateOtherBenefitAllowance);
-  } 
-  if(ctcTemplateEmployeeDeduction.length > 0)
-  {
+    ctcTemplate.ctcTemplateOtherBenefitAllowances =
+      await updateOrOtherBenefitsAllowance(
+        req.params.id,
+        req.body.ctcTemplateOtherBenefitAllowance
+      );
+  }
+  if (ctcTemplateEmployeeDeduction.length > 0) {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
-      const result = await FixedContribution.findById(contirbution.employeeDeduction);
+      const result = await FixedContribution.findById(
+        contirbution.employeeDeduction
+      );
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
-          message: 'Invalid Employee Deduction End',
+          status: "failure",
+          message: "Invalid Employee Deduction End",
         });
       }
     }
-    ctcTemplate.ctcTemplateEmployeeDeductions = await updateOrCreateEmployeeDeduction(req.params.id, req.body.ctcTemplateEmployeeDeduction);
-  } 
-  if(ctcTemplateVariableAllowance.length > 0)
-    {
-      for (const allowance of ctcTemplateVariableAllowance) {
-    
-        const result = await VariableAllowance.findById(allowance.variableAllowance);
-      
-        if (!result) {
-          return res.status(400).json({
-            status: 'failure',
-            message: 'Invalid Variable Allowance',
-          });
-        }
+    ctcTemplate.ctcTemplateEmployeeDeductions =
+      await updateOrCreateEmployeeDeduction(
+        req.params.id,
+        req.body.ctcTemplateEmployeeDeduction
+      );
+  }
+  if (ctcTemplateVariableAllowance.length > 0) {
+    for (const allowance of ctcTemplateVariableAllowance) {
+      const result = await VariableAllowance.findById(
+        allowance.variableAllowance
+      );
+
+      if (!result) {
+        return res.status(400).json({
+          status: "failure",
+          message: "Invalid Variable Allowance",
+        });
       }
-      ctcTemplate.ctcTemplateVariableAllowances = await updateOrCreateVariableAllownace(req.params.id, ctcTemplateVariableAllowance);
+    }
+    ctcTemplate.ctcTemplateVariableAllowances =
+      await updateOrCreateVariableAllownace(
+        req.params.id,
+        ctcTemplateVariableAllowance
+      );
   }
 
-  if(ctcTemplateVariableDeduction.length > 0)
-  {
-        for (const allowance of ctcTemplateVariableDeduction) {
-      
-          const result = await VariableDeduction.findById(allowance.variableDeduction);
-        
-          if (!result) {
-            return res.status(400).json({
-              status: 'failure',
-              message: 'Invalid Variable Deduction',
-            });
-          }
-        }
-        ctcTemplate.ctcTemplateVariableDeductions = await updateOrCreateVariableDeduction(req.params.id, ctcTemplateVariableDeduction);
+  if (ctcTemplateVariableDeduction.length > 0) {
+    for (const allowance of ctcTemplateVariableDeduction) {
+      const result = await VariableDeduction.findById(
+        allowance.variableDeduction
+      );
+
+      if (!result) {
+        return res.status(400).json({
+          status: "failure",
+          message: "Invalid Variable Deduction",
+        });
+      }
+    }
+    ctcTemplate.ctcTemplateVariableDeductions =
+      await updateOrCreateVariableDeduction(
+        req.params.id,
+        ctcTemplateVariableDeduction
+      );
   }
   res.status(200).json({
-    status: 'success',
-    data: ctcTemplate
+    status: "success",
+    data: ctcTemplate,
   });
 });
 
 exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
   const ctcTemplate = await CTCTemplate.findByIdAndDelete(req.params.id);
-  
+
   if (!ctcTemplate) {
-    return next(new AppError('CTCTemplate not found', 404));
-  }
-  else
-  {
+    return next(new AppError("CTCTemplate not found", 404));
+  } else {
     await CTCTemplateFixedAllowance.deleteMany({ ctcTemplate: req.params.id });
     await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: req.params.id });
-    await CTCTemplateEmployerContribution.deleteMany({ ctcTemplate: req.params.id });
-    await CTCTemplateOtherBenefitAllowance.deleteMany({ ctcTemplate: req.params.id });
-    await CTCTemplateEmployeeDeduction.deleteMany({ ctcTemplate: req.params.id });
-    await CTCTemplateVariableAllowance.deleteMany({ ctcTemplate: req.params.id });
-    await CTCTemplateVariableDeduction.deleteMany({ ctcTemplate: req.params.id });
+    await CTCTemplateEmployerContribution.deleteMany({
+      ctcTemplate: req.params.id,
+    });
+    await CTCTemplateOtherBenefitAllowance.deleteMany({
+      ctcTemplate: req.params.id,
+    });
+    await CTCTemplateEmployeeDeduction.deleteMany({
+      ctcTemplate: req.params.id,
+    });
+    await CTCTemplateVariableAllowance.deleteMany({
+      ctcTemplate: req.params.id,
+    });
+    await CTCTemplateVariableDeduction.deleteMany({
+      ctcTemplate: req.params.id,
+    });
     await CTCTemplateFixedAllowance.deleteMany({ ctcTemplate: req.params.id });
   }
-  
+
   res.status(204).json({
-    status: 'success',
-    data: null
+    status: "success",
+    data: null,
   });
 });
