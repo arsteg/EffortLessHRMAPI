@@ -95,6 +95,10 @@ exports.signup = catchAsync(async(req, res, next) => {
 
 exports.webSignup = catchAsync(async(req, res, next) => {
   var company = await Company.findOne({companyName:req.body.companyName});
+  var newCompany=false;
+  if(company === null){
+    newCompany=true;
+  }
   var companyId = process.env.DEFAULT_COMPANY_Id;
   if(company === null){
     company = await Company.create({
@@ -163,10 +167,24 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   
   }
   const roles = await Role.find({ company: company._id });
-  const role = await Role.findOne({
+  var role =null;
+if(newCompany==true)
+{console.log("1");
+   role = await Role.findOne({
     company: company._id,
     Name: "Admin"
   });
+}
+else
+{console.log("2");
+  console.log(company._id);
+    role = await Role.findOne({
+     company: company._id,
+     Name: "User"
+   });
+ 
+}
+console.log(role);
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,

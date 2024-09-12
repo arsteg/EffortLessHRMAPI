@@ -1978,11 +1978,13 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
 
    // Run created query
    const document = await features.query;
+  
    const endDate = new Date(); // Today's date
    const startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // One week before endDate
 
    // Perform additional work on each user
    const modifiedUsers = await Promise.all(document.map(async user => {
+
     const timeLogs = await TimeLog.aggregate([
       { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
       {
@@ -1993,7 +1995,6 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
         }
       }
     ]);
-
     // Transform timeLogs and insert into AttendanceRecords
     const attendanceRecords = await Promise.all(timeLogs.map(async log => {
       // Count the number of rows in TimeLog table for each user and date
@@ -2001,10 +2002,12 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
       //if payroll is generated then we cant proess attandance
 
       const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+      
+
       var shiftTiming="";
       var deviationHour="";
       //Calculate : timedifference between cheackin and checkout time with comprison with shift timing    
-  
+    
       const shiftAssignment = await ShiftTemplateAssignment.findById(user._id);
       if(shiftAssignment)
       {
@@ -2065,9 +2068,14 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
         company: req.cookies.companyId, // Insert company from cookies
         user: user._id // Associate the AttendanceRecord with the user
       };
+    
+    }
+    else
+    {
+      return null;
     }
     }));
-   
+   console.log(attendanceRecords);
 
     // Insert attendanceRecords into AttendanceRecord collection
    return await AttendanceRecords.insertMany(attendanceRecords);
