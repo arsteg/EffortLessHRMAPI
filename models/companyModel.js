@@ -11,8 +11,7 @@ var companyModelSchema = new Schema({
     },
     contactPerson: {
       type: String,
-      required: true,
-      unique: true
+      required: true
     },
     address: {
       type: String
