@@ -19,6 +19,7 @@ const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
+const constants = require('../constants');
 
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -120,7 +121,6 @@ exports.webSignup = catchAsync(async(req, res, next) => {
       // Assign a new id to the duplicated record (you can generate new id as you like)
       duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
       return duplicatedRole;
-      console.log(duplicatedRole);
   
     });
      // Step 4: Save the duplicated records back to the database
@@ -169,22 +169,20 @@ exports.webSignup = catchAsync(async(req, res, next) => {
   const roles = await Role.find({ company: company._id });
   var role =null;
 if(newCompany==true)
-{console.log("1");
+{
    role = await Role.findOne({
     company: company._id,
     Name: "Admin"
   });
 }
 else
-{console.log("2");
-  console.log(company._id);
+{
     role = await Role.findOne({
      company: company._id,
      Name: "User"
    });
  
 }
-console.log(role);
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -202,18 +200,16 @@ console.log(role);
   if(newUser)
   {
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(companyId); 
-  console.log(newUser);
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
+ if(emailTemplate)
+ {
   const template = emailTemplate.contentData;
- 
   const message = template
   .replace("{firstName}", newUser.firstName)
   .replace("{url}", resetURL)
   .replace("{company}",  req.cookies.companyName)
   .replace("{company}", req.cookies.companyName)
-  .replace("{lastName}", newUser.lastName);
-
-  
+  .replace("{lastName}", newUser.lastName); 
 
      try {
       await sendEmail({
@@ -230,6 +226,7 @@ console.log(role);
         )
     );
    }
+  }
   createAndSendToken(newUser, 201, res);
   }
 
@@ -253,8 +250,9 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   }); 
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Update Your Profile").where('company').equals(req.cookies.companyId); 
-
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 
+  if(emailTemplate)
+    {
   const template = emailTemplate.contentData; 
  
   const message = template
@@ -277,6 +275,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       )
     );
   }
+}
   res.status(200).json({
     status: 'success',
     data: {
@@ -392,33 +391,38 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 3) Send it to user's email
   const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;  
   var companyId = process.env.DEFAULT_COMPANY_Id;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals("Forgot Password").where('company').equals(companyId); 
-
-  const template = emailTemplate.contentData; 
-  
-  const message = template  
-  .replace("{firstName}", user.firstName)
-  .replace("{url}", resetURL)
-  .replace("{lastName}", user.lastName);
-
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: emailTemplate.subject,
-      message
-    });
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Forgot_Password).where('company').equals(companyId); 
+  if(emailTemplate)
+  {
+    const template = emailTemplate.contentData; 
     
-  } catch (err) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save({ validateBeforeSave: false });
-    return next(
-      new AppError(
-        'There was an error sending the email. Try again later.',
-        500
-      )
-    );
+    const message = template  
+    .replace("{firstName}", user.firstName)
+    .replace("{url}", resetURL)
+    .replace("{lastName}", user.lastName);
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplate.subject,
+        message
+      });
+      
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      );
+    }
   }
+  res.status(200).json({
+    status: 'success'    
+  }); 
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
@@ -680,8 +684,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   });    
 });
 
-exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
-  console.log('getAllRolePermissions called');
+exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
   const rolePermissions = await RolePermission.find({});   
   res.status(201).json({
     status: 'success',
@@ -689,8 +692,7 @@ exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
   });    
 });
 
-exports.createRolePermission = catchAsync(async (req, res, next) => {  
-  console.log('createRolePermission called');
+exports.createRolePermission = catchAsync(async (req, res, next) => { 
   const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
