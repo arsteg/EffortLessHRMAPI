@@ -1416,9 +1416,18 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
  
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
   .limit(parseInt(limit));
+
   for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
       
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
+    
+    if(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0)
+    { 
+      for(let j=0;j<employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length;j++){  
+      const incomeTaxComponant = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
+      employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section=incomeTaxComponant.section;
+       }
+      }
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
   }
   if (!employeeIncomeTaxDeclarations) {
