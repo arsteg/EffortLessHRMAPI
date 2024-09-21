@@ -171,8 +171,10 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   });
 });
 exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
+  console.log(req.params.userId);
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
-  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate,isReadyForApply: true});
+  console.log(employeeLeaveAssignment);
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate});
   res.status(200).json({
     status: 'success',
     data: leaveTemplateCategory
@@ -186,7 +188,7 @@ exports.getAllLeaveCategoryByUserV1 = catchAsync(async (req, res, next) => {
       status: 'failure'
     });
   }
-  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate, isReadyForApply: true}).populate('leaveCategory');
+  const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate}).populate('leaveCategory');
   res.status(200).json({
     status: 'success',
     data: leaveTemplateCategory
