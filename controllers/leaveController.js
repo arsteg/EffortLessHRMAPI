@@ -20,6 +20,7 @@ const mongoose = require("mongoose");
 const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
 const userSubordinate = require('../models/userSubordinateModel');
 const scheduleController = require('../controllers/ScheduleController');
+const { Constants } = require('azure-storage');
 
 console.log(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
@@ -1067,9 +1068,10 @@ console.log(query);
          {
           try {
             // Check if the status is 'Cancelled' or 'Rejected'
-            if (req.body.status === 'Cancelled' || req.body.status === 'Rejected') {
+            if (req.body.status === Constants.Leave_Application_Constant.Cancelled || req.body.status ===Constants.Leave_Application_Constant.Rejected) {
               const leaveDays = calculateLeaveDays(startDate, endDate);
-              const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+              const cycle = await scheduleController.createFiscalCycle();
+              const leaveAssigned = await LeaveAssigned.findOne({ employee: req.body.employee, cycle: cycle, category: req.body.leaveCategory });
    
        // Deduct the applied leave days from the leave remaining
        leaveAssigned.leaveRemaining += leaveDays;

@@ -18,10 +18,16 @@ const Email_template_constant = {
     Bi_Monthly: "Bi-Monthly",
     Quaterly: "Quaterly"
   };
-  
+  const Leave_Application_Constant = {
+    Level_1_Approval_Pending: "Level 1 Approval Pending",
+    Level_2_Approval_Pending: "Level 2 Approval Pending",
+    Approved: "Approved",
+    Cancelled: "Cancelled",
+    Rejected: "Rejected"
+  };
   const COMPANIES = {
     // Define company-specific constants if needed
   };
   
-  module.exports = { Email_template_constant, Leave_Accrual_Period };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant };
   
