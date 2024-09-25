@@ -1036,10 +1036,7 @@ console.log(query);
   const differenceInDays = differenceInTime / (1000 * 3600 * 24);
 
   return differenceInDays + 1; // +1 to include both start and end dates
-};
-
-
-
+ };
  exports.updateEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const { id } = req.params;
@@ -1052,7 +1049,7 @@ console.log(query);
          await LeaveApplicationHalfDay.deleteMany({
           leaveCategory: updatedLeaveApplication._id,
        });
-       var createdHalfDays=null;
+        var createdHalfDays = null;
         // Check if haldDays is provided and valid
         if (Array.isArray(haldDays)) {  
           // Create haldDays instances
@@ -1062,9 +1059,30 @@ console.log(query);
             dayHalf: haldDay.dayHalf
            })));
          }
-         updatedLeaveApplication.halfDays=createdHalfDays;
+         updatedLeaveApplication.halfDays = createdHalfDays;
          if (!updatedLeaveApplication) {
              return next(new AppError('Employee Leave Application not found', 404));
+         }
+         else
+         {
+          try {
+            // Check if the status is 'Cancelled' or 'Rejected'
+            if (req.body.status === 'Cancelled' || req.body.status === 'Rejected') {
+              const leaveDays = calculateLeaveDays(startDate, endDate);
+              const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+   
+       // Deduct the applied leave days from the leave remaining
+       leaveAssigned.leaveRemaining += leaveDays;
+       leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
+
+       // Save the updated leave assigned record
+       await leaveAssigned.save();
+            }
+          }
+          catch (error) {
+            console.error("Error updating leave balance:", error);
+            return res.status(500).send("Internal Server Error.");
+          }
          }
  
          res.status(200).json({
