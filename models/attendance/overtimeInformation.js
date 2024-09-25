@@ -1,54 +1,49 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const overtimeInformationSchema = new Schema({
-  Name: {
-    type: String,
-    required: true
-  },
-  RoundingInformation: {
-    type: String,
-    ref: 'RoundingInformation',
-    required: true
-  },
-  BaseType: {
-    type: String,
-    required: true
-  },
-  AttandanceShift: {
-    type: String,
-    required: true
-  },
-  FromTimeHour: {
-    type: String
-  },
-  FromTimeMinutes: {
-    type: String
-  },
-  FromTimeTT: {
-    type: String
-  },
-  ToTimeHour: {
-    type: String
-  },
-  ToTimeMinutes: {
-    type: String
-  },
-  ToTimeTT: {
-    type: String
-  },
-  CutomMultiplier: {
-    type: Number,
-    required: true
-  },
-  CalculationType: {
-    type: String
-  },
-  company: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Company',
-    required: true,
-  },
-}, { collection: 'OvertimeInformation' });
+const overTimeInformationSchema = new Schema({
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    AttandanceShift: {
+        type: String,
+        required: true // Assuming this is also required
+    },
+    ShiftTime: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    CheckInDate: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    CheckInDate: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    CheckOutDate: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    CheckInTime: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    CheckOutTime: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    OverTime: {
+        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        required: true // Assuming OverTime is required
+    },
+    company: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Company',
+        required: true
+    }
+}, { collection: 'OverTimeInformation' });
 
-module.exports = mongoose.model('OvertimeInformation', overtimeInformationSchema);
+module.exports = mongoose.model('OverTimeInformation', overTimeInformationSchema);

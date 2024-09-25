@@ -11,10 +11,17 @@ const Email_template_constant = {
     Delete_Comment_Notification: "Delete Comment Notification"
     // Add other email templates as needed
   };
+  const Leave_Accrual_Period = {
+    Monthly: "Monthly",
+    Annually: "Annually",
+    Semi_Annually: "Semi-Annually",
+    Bi_Monthly: "Bi-Monthly",
+    Quaterly: "Quaterly"
+  };
   
   const COMPANIES = {
     // Define company-specific constants if needed
   };
   
-  module.exports = { Email_template_constant, COMPANIES };
+  module.exports = { Email_template_constant, Leave_Accrual_Period };
   

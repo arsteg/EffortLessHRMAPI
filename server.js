@@ -11,6 +11,7 @@ const socket = require('./utils/socket');
 const cron = require("node-cron");
 const routes = require('./routes');
 const notificationSender = require('./utils/notificationSender');
+const scheduleController = require('./controllers/ScheduleController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 let { setSocketIO } = require('./utils/liveScreenSender');
 //  import environment variables
@@ -100,6 +101,13 @@ cron.schedule('0 0 1 * *', async () => {
 cron.schedule('*/5 * * * *', async () => {
   const currentTime = new Date();
   const formattedTime = currentTime.toLocaleString();
+  console.log('Job started'); 
+  try {
+    await scheduleController.assignLeavesByJobs();
+    console.log(`${currentTime}: This Job ran successfully.`);
+} catch (error) {
+    console.error('Error occurred:', error);
+}
   console.log(`${currentTime}:This Job will run every 10 minutes...`);
   //62dfa8d13babb9ac2072863c
   //664229eec5a0b7f0dc0b7e0f

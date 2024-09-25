@@ -57,6 +57,10 @@ var attendanceRecordsSchema = new Schema({
   user: {
     type: String,
     required: true
+  },
+  isOvertime: {
+    type: Boolean,
+    required: true
   }
 }, { collection: 'AttendanceRecords' });
 

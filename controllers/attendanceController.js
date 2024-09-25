@@ -6,9 +6,7 @@ const EmployeeOnDutyRequest = require('../models/attendance/EmployeeOnDutyReques
 const GeneralSettings = require('../models/attendance/generalSettings');
 const OnDutyReason = require("../models/attendance/onDutyReason");
 const OnDutyTemplate = require('../models/attendance/onDutyTemplate');
-const OvertimeInformation = require('../models/attendance/overtimeInformation');
 const RegularizationReason = require("../models/attendance/regularizationReason");
-const RegularizationRequest = require('../models/attendance/RegularizationRequest');
 const RoundingInformation = require('../models/attendance/roundingInformation');
 const Shift = require('../models/attendance/shift');
 const RosterShiftAssignment = require('../models/attendance/rosterShiftAssignment');
@@ -27,12 +25,11 @@ const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/AttendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/AttendanceRegularizationRestrictedIP');
 const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
-const TimeEntry = require('../models/attendance/TimeEntry');
-const TrackTimeEntry = require('../models/attendance/TrackTimeEntry');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Attandance = require('../models/attendance/attendanceRecords');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
 const manualTimeRequestModel = require('../models/manualTime/manualTimeRequestModel.js');
+const OvertimeInformation = require('../models/attendance/overtimeInformation.js');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1046,43 +1043,13 @@ exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createOvertimeInformation = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   // Add companyId to the request body
-   req.body.company = companyId;
-  const overtimeInformation = await OvertimeInformation.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
+
 
 exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
   const overtimeInformation = await OvertimeInformation.findById(req.params.id);
   if (!overtimeInformation) {
     return next(new AppError('Overtime Information not found', 404));
   }
-  res.status(200).json({
-    status: 'success',
-    data: overtimeInformation,
-  });
-});
-
-exports.updateOvertimeInformation = catchAsync(async (req, res, next) => {
-  const overtimeInformation = await OvertimeInformation.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
-  }
-
   res.status(200).json({
     status: 'success',
     data: overtimeInformation,
@@ -1737,197 +1704,6 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createRegularizationRequest = catchAsync(async (req, res, next) => {
-   // Set the appliedOn field to the current date
-   req.body.appliedOn = new Date();
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   console.log("hii2");
-   // Add companyId to the request body
-   req.body.company = companyId;
-   
-  const regularizationRequest = await RegularizationRequest.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: regularizationRequest,
-  });
-});
-
-exports.getRegularizationRequest = catchAsync(async (req, res, next) => {
-  const regularizationRequest = await RegularizationRequest.findById(req.params.id);
-  if (!regularizationRequest) {
-    return next(new AppError('Regularization Request not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: regularizationRequest,
-  });
-});
-
-exports.getRegularizationRequestByUser = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await RegularizationRequest.countDocuments({  user: req.params.userId }); 
-
-  const regularizationRequest = await RegularizationRequest.find({ user: req.params.userId}).skip(parseInt(skip))
-  .limit(parseInt(limit));  
-  if (!regularizationRequest) {
-    return next(new AppError('Regularization Request not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: regularizationRequest,
-    total: totalCount
-  });
-});
-
-exports.updateRegularizationRequest = catchAsync(async (req, res, next) => {
-  const regularizationRequest = await RegularizationRequest.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!regularizationRequest) {
-    return next(new AppError('Regularization Request not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: regularizationRequest,
-  });
-});
-
-exports.deleteRegularizationRequest = catchAsync(async (req, res, next) => {
-  const regularizationRequest = await RegularizationRequest.findByIdAndDelete(
-    req.params.id
-  );
-
-  if (!regularizationRequest) {
-    return next(new AppError('Regularization Request not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-exports.getAllRegularizationRequests = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  // Extract companyId from req.cookies
-  const company = req.cookies.companyId;
-  // Check if companyId exists in cookies
-  if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-  const query = { company: company };
-  if (req.body.status) {
-    query.status = req.body.status;
-  }
-console.log(query);
-  // Get the total count of documents matching the query
-  const totalCount = await RegularizationRequest.countDocuments(query);
-
-  // Get the regularization requests matching the query with pagination
-  const regularizationRequests = await RegularizationRequest.find(query)
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
-  res.status(200).json({
-    status: 'success',
-    data: regularizationRequests,
-    total: totalCount
-  });
-});
-
-exports.addTimeEntry = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
-
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
-  }
-
-  // Add companyId to the request body
-  req.body.company = companyId;
-
-  // Extract trackTimeEntries array from the request body
-  const trackTimeEntriestoInsert = req.body.trackTimeEntries;
-  
-  // Check if trackTimeEntries array is provided
-  if (!Array.isArray(trackTimeEntriestoInsert)) {
-    return next(new AppError('trackTimeEntries array is required', 400));
-  }
-
-  // Create the TimeEntry object first
-  const timeEntry = await TimeEntry.create(req.body);
-
-  // Array to store IDs of created TrackTimeEntry objects
-  const trackTimeEntries = [];
-
-  // Iterate over trackTimeEntries array and create TrackTimeEntry objects
-  for (const trackTimeEntryData of trackTimeEntriestoInsert) {
-    // Set the TimeEntry ID for each TrackTimeEntry
-    trackTimeEntryData.timeEntry = timeEntry._id;
-
-    const trackTimeEntry = await TrackTimeEntry.create(trackTimeEntryData);
-    trackTimeEntries.push(trackTimeEntry); // Store the ID of the created TrackTimeEntry
-  }
-
-  timeEntry.trackTimeEntries=trackTimeEntries;
-  res.status(201).json({
-    status: 'success',
-    data: timeEntry
-  });
-});
-
-exports.getTimeEntry = catchAsync(async (req, res, next) => {
-  const timeEntry = await TimeEntry.findById(req.params.id);
-  if(timeEntry) 
-  {  
-      const trackTimeEntries = await EmployeeOnDutyShift.find({}).where('timeEntry').equals(timeEntry._id);  
-      if(timeEntry) 
-        {
-          timeEntry.trackTimeEntries = trackTimeEntries;
-        }
-        else{
-          timeEntry.trackTimeEntries=null;
-        }
-  }
-  if (!timeEntry) {
-    return next(new AppError('TimeEntry not found', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: timeEntry
-  });
-});
-
-exports.updateTimeEntry = catchAsync(async (req, res, next) => {
-  const timeEntry = await TimeEntry.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!timeEntry) {
-    return next(new AppError('TimeEntry not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: timeEntry
-  });
-});
-
 exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
@@ -1956,153 +1732,187 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
 });
 
 exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
-  
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
 
-   // Check if companyId exists in cookies
+  // Check if companyId exists in cookies
   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
- 
-   // Add companyId to the request body
-   req.body.company = companyId;
-   let filter = { status: 'Active', company: req.cookies.companyId };
+      return next(new AppError('Company ID not found in cookies', 400));
+  }
 
-   // Generate query based on request params
-   const features = new APIFeatures(User.find(filter), req.query)
-     .filter()
-     .sort()
-     .limitFields()
-     .paginate();
+  // Add companyId to the request body
+  req.body.company = companyId;
+  let filter = { status: 'Active', company: req.cookies.companyId };
 
-   // Run created query
-   const document = await features.query;
-  
-   const endDate = new Date(); // Today's date
-   const startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // One week before endDate
+  // Generate query based on request params
+  const features = new APIFeatures(User.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-   // Perform additional work on each user
-   const modifiedUsers = await Promise.all(document.map(async user => {
+  // Run created query
+  const document = await features.query;
 
-    const timeLogs = await TimeLog.aggregate([
-      { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
-          startTime: { $min: '$startTime' },
-          lastTimeLog: { $max: '$endTime' }
-        }
+  const endDate = new Date(); // Today's date
+  const startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // One week before endDate
+
+  // Perform additional work on each user
+  const modifiedUsers = await Promise.all(document.map(async user => {
+      const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+      if (shiftAssignment) {
+          const shift = await Shift.findOne({ _id: shiftAssignment.template });
+          if (shift) {
+              const timeLogs = await TimeLog.aggregate([
+                  { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
+                  {
+                      $group: {
+                          _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                          startTime: { $min: '$startTime' },
+                          lastTimeLog: { $max: '$endTime' }
+                      }
+                  }
+              ]);
+
+              if (timeLogs) {
+                  const attendanceRecords = await Promise.all(timeLogs.map(async log => {
+                      const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
+                      if (attendannceCount == 0) {
+                          const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+                          let shiftTiming = "";
+                          let deviationHour = "";
+                          let isOvertime = false;
+
+                          if (shift.startTime && shift.endDate && shift.minHoursPerDayToGetCreditForFullDay) {
+                              const timeDifference = getTimeDifference(shift.minHoursPerDayToGetCreditForFullDay);
+                              const timeWorked = timeLogCount * 10;
+
+                              if (timeWorked < timeDifference) {
+                                  deviationHour = timeDifference - timeWorked;
+                              }
+                              if (timeDifference < timeWorked) {
+                                  deviationHour = timeWorked - timeDifference;
+                                  isOvertime = true;
+                              }
+                          }
+
+                          // Fetch manual entry comment if any
+                          const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+
+                          return {
+                              date: new Date(log._id),
+                              checkIn: log.startTime,
+                              checkOut: log.lastTimeLog,
+                              user: user._id,
+                              duration: timeLogCount * 10,
+                              ODHours: 0,
+                              SSLHours: 0,
+                              beforeProcessing: 'N/A',
+                              afterProcessing: 'N/A',
+                              earlyLateStatus: 'N/A',
+                              deviationHour: '00:00',
+                              shiftTiming: '00:00',
+                              lateComingRemarks: lateComingRemarks,
+                              company: req.cookies.companyId,
+                              isOvertime: isOvertime,
+                          };
+                      }
+                  }));
+
+                  const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
+
+                 //compare parameters from shift and calculte no of halfdays added based on tmelog
+                 //Need o chaeck flag and if fllag s set then only + applied
+                 //IF isovertimeallowed flag set to true then only overtime will be calculated
+                  // Insert attendanceRecords into AttendanceRecord collection
+                  await insertAttendanceRecords(attendanceRecordsFiltered); 
+                  if(shift.isOvertime)
+                  {
+                  // Insert entries into OvertimeInformation for users with isOvertime set to true
+                  const overtimeRecords = attendanceRecordsFiltered
+                      .filter(record => record.isOvertime)
+                      .map(record => ({
+                          User: user._id, // Replace with appropriate user name
+                          AttandanceShift: shift._id,
+                          OverTime: record.deviationHour,                          
+                          ShiftTime: shift.startTime+" "+shift.endTime,
+                          Date: new Date(log._id),                          
+                          CheckInDate: record.checkIn,
+                          CheckOutDate: record.checkOut,
+                          CheckInTime: record.checkIn,
+                          CheckOutTime: record.checkOut,
+                          company: companyId,
+                      }));
+
+                  if (overtimeRecords.length) {
+                      await OvertimeInformation.insertMany(overtimeRecords);
+                  }
+                }
+              }
+          }
       }
-    ]);
-    // Transform timeLogs and insert into AttendanceRecords
-    const attendanceRecords = await Promise.all(timeLogs.map(async log => {
-      // Count the number of rows in TimeLog table for each user and date
-      //check that if attandance added or not for respective date
-      //if payroll is generated then we cant proess attandance
-
-      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
-      
-
-      var shiftTiming="";
-      var deviationHour="";
-      //Calculate : timedifference between cheackin and checkout time with comprison with shift timing    
-    
-      const shiftAssignment = await ShiftTemplateAssignment.findById(user._id);
-      if(shiftAssignment)
-      {
-        const shift = await Shift.findOne({
-          _id: shiftAssignment.template,
-        });
-        if(shift){
-            shiftTiming = shift._id;
-            const timeDifference = getTimeDifference(shift.startTime,shift.endTime);
-            const timeWorked = timeLogCount * 10
-            if(timeWorked<timeDifference)
-            { 
-              deviationHour=timeDifference-timeWorked;
-            }
-            if(timeDifference<timeWorked)
-            { 
-              deviationHour=timeWorked-timeDifference;
-            }
-        }    
-      
-
-      //Validation 1 : Fetch shift for currentuser, if shift is not assigned we will not process attandance
-      //Validation 2: If Payoll generated then we will not process attdandance
-
-      var ODHours="";
-
-      //Calculate :  Mean Off Duty Hours , suppose user is workig out from office and not in shift timing then we wil calculate
-      var SLHous="";
-      //same like ODHours
-         
-      var lateComingRemarks="";
-      const manualTime = await manualTimeRequest.findOne({
-        user: user_id,
-        fromDate: { $lte: new Date(log._id) },
-        toDate: { $gte: new Date(log._id) }
-      });
-
-      // Function to check if dateToCheck is between fromDate and toDate    
-      if(new Date(log._id)){
-        lateComingRemarks = manualTime.reason;
-      }
-      
-      //Fetch manual entry comment if any
-      return {
-        date: new Date(log._id), // Convert _id to Date object
-        checkIn: log.startTime, // Rename startTime to checkIn
-        checkOut: log.lastTimeLog, // Rename lastTimeLog to checkOut
-        user: user._id, // Associate the AttendanceRecord with the user
-        duration: timeLogCount * 10, // Calculate duration based on the count of TimeLog entries for this date
-        ODHours: 0, // Assuming ODHours needs to be calculated
-        SSLHours: 0, // Assuming SSLHours needs to be calculated
-        beforeProcessing: 'N/A', // Insert appropriate value
-        afterProcessing: 'N/A', // Insert appropriate value
-        earlyLateStatus: 'N/A', // Insert appropriate value
-        deviationHour: '00:00', // Insert appropriate value
-        shiftTiming: '00:00', // Insert appropriate value
-        lateComingRemarks: 'N/A', // Insert appropriate value
-        company: req.cookies.companyId, // Insert company from cookies
-        user: user._id // Associate the AttendanceRecord with the user
-      };
-    
-    }
-    else
-    {
-      return null;
-    }
-    }));
-   console.log(attendanceRecords);
-
-    // Insert attendanceRecords into AttendanceRecord collection
-   return await AttendanceRecords.insertMany(attendanceRecords);
-
-   
   }));
- 
-   // Create the TimeEntry object first
-  // const timeEntry = await AttendanceRecords.create(req.body);
- 
- 
-   res.status(201).json({
-     status: 'success',
-     data: null
-   });
+
+  res.status(201).json({
+      status: 'success',
+      data: null
+  });
 });
+
+// Function to get late coming remarks (if needed)
+async function getLateComingRemarks(userId, logId) {
+  const manualTime = await manualTimeRequest.findOne({
+      user: userId,
+      fromDate: { $lte: new Date(logId) },
+      toDate: { $gte: new Date(logId) }
+  });
+  return manualTime ? manualTime.reason : 'N/A';
+}
+
+// Insert attendanceRecords
+async function insertAttendanceRecords(attendanceRecords) {
+  if (!attendanceRecords) {
+      console.warn('No attendance records provided');
+      return;
+  }
+  
+  try {
+      await AttendanceRecords.insertMany(attendanceRecords);
+      console.log('Records inserted successfully');
+  } catch (error) {
+      console.error('Error inserting records:', error);
+  }
+}
+
+// Assuming you are using a function to handle the insertion
+async function insertAttendanceRecords(attendanceRecords) {
+  // Check if attendanceRecords is null or undefined and handle accordingly
+  if (!attendanceRecords) {
+      // Handle the null or undefined case
+      // For example, log a message, throw an error, or return a response
+      console.warn('No attendance records provided');
+      return; // or return a specific value or handle it as needed
+  }
+  
+  // Insert records into the database
+  try {
+      await AttendanceRecords.insertMany(attendanceRecords);
+      
+      console.log('Records inserted successfully');
+  } catch (error) {
+      console.error('Error inserting records:', error);
+      // Handle the error accordingly
+  }
+}
 
 function parseTime(timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
   return new Date().setHours(hours, minutes, 0, 0); // Use today's date with the given time
 }
 
-function getTimeDifference(startTime, endTime) {
-  const start = parseTime(startTime);
-  const end = parseTime(endTime);
+function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
   
-  const differenceInMilliseconds = end - start;
+  const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay;
   
   // If the end time is before the start time, assume it's the next day
   if (differenceInMilliseconds < 0) {
@@ -2111,4 +1921,57 @@ function getTimeDifference(startTime, endTime) {
   
   const differenceInMinutes = Math.floor(differenceInMilliseconds / (1000 * 60));
   return differenceInMinutes;
+}
+
+exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+
+  const totalCount =await getRecordsByYearAndMonth(req.body.year,req.body.month,req.body.skip,req.body.next);
+  
+  const attendanceRecords =await getRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  
+  res.status(200).json({
+    status: 'success',
+    data: attendanceRecords,
+    total: totalCount
+  });
+});
+async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month) {
+      throw new Error('Year and month are required');
+  }
+
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 1); // Start of the next month
+  console.log(startDate);
+  console.log(endDate);
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await AttendanceRecords.countDocuments({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).exec();
+          console.log(count);
+          return { count };
+      } else {
+          const records = await AttendanceRecords.find({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).skip(skip).limit(limit).exec();
+          console.log(records);
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
 }

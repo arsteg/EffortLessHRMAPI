@@ -19,6 +19,7 @@ const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
 const userSubordinate = require('../models/userSubordinateModel');
+const scheduleController = require('../controllers/ScheduleController');
 
 console.log(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
@@ -924,6 +925,24 @@ console.log(query);
  exports.createEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption,status,haldDays,leaveApplicationAttachments } = req.body;
+        const cycle = await scheduleController.createFiscalCycle();
+         const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
+    
+         if (!assignmentExists) {
+             console.log("Leave assignment does not exist. Cannot apply for leave.");
+             return;
+         }
+           // Get the current leave assigned record
+         const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+
+         const leaveDays = calculateLeaveDays(startDate, endDate);
+         // Check if there are enough leaves available
+         if (leaveAssigned.leaveRemaining < leaveDays) {
+             console.log("Not enough leave balance to apply for this leave.");
+             return;
+         }
+        
+
          var documentLink;
          if(leaveApplicationAttachments!=null)
           {
@@ -971,7 +990,22 @@ console.log(query);
             dayHalf: haldDay.dayHalf
            })));
          }
-         newLeaveApplication.halfDays=createdHalfDays;
+         newLeaveApplication.halfDays = createdHalfDays;
+
+         try {
+         
+          // Deduct the applied leave days from the leave remaining
+          leaveAssigned.leaveRemaining -= leaveDays;
+          leaveAssigned.leaveTaken += leaveDays; // Update the leave taken count
+  
+          // Save the updated leave assigned record
+          await leaveAssigned.save();
+  
+          console.log("Leave applied successfully. Remaining leave:", leaveAssigned.leaveRemaining);
+      } catch (error) {
+          console.error("Error applying for leave:", error);
+      }
+
          res.status(201).json({
              status: 'success',
              data: newLeaveApplication
@@ -980,7 +1014,32 @@ console.log(query);
          next(error);
      }
  };
- 
+ const calculateLeaveDays = (startDate, endDate) => {
+  // Ensure input is a string and convert to Date objects
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Check if the dates are valid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new Error("Invalid date format. Please provide valid dates.");
+  }
+
+  // Ensure start is before end
+  if (end < start) {
+      throw new Error("End date must be after start date.");
+  }
+
+  // Calculate the difference in time
+  const differenceInTime = end.getTime() - start.getTime();
+
+  // Convert time difference from milliseconds to days
+  const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+  return differenceInDays + 1; // +1 to include both start and end dates
+};
+
+
+
  exports.updateEmployeeLeaveApplication = async (req, res, next) => {
      try {
          const { id } = req.params;
@@ -1390,179 +1449,3 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
     total: totalCount
   });
 });
-
-exports.assignLeavesByJobs = async () => {
-console.log("Called");
-const users = await User.find({}); 
-if(users.length > 0)
-{
-  for (const user of users) {  
-   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(user._id.toString());
-
-if(employeeLeaveAssignment)
-{
-  console.log(employeeLeaveAssignment.leaveTemplate.toString());
-  
-        console.log("Called2");
-        const leaveTemplateCategory = await LeaveTemplateCategory.findOne({}).where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate.toString());
-        if (leaveTemplateCategory) {
-        console.log("Called4");
-       const leaveCategory =await  LeaveCategory.findById("65e5d2a0ef825624d35ffd0e");      
-       const cycle = "JANUARY_2023-DECEMBER_2024";
-       const employee = user._id.toString();
-       const category=leaveCategory._id;
-       const type = leaveCategory.leaveAccrualPeriod;
-       const createdOn = new Date();
-       const startMonth = createdOn.getMonth();        
-       const openingBalance = 0;
-       const leaveApplied = 0;      
-       const leaveRemaining = 0;
-       const closingBalance = 0;
-       const leaveTaken=0;
-        if(leaveCategory.leaveAccrualPeriod === "Monthly")
-       {        
-       
-       const endMonth=createdOn.getMonth();     
-       const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
-     
-       const leaveAssigned = await LeaveAssigned.create({
-          cycle,
-          employee,
-          category,
-          type,
-          createdOn,
-          startMonth,
-          endMonth,
-          openingBalance,
-          leaveApplied,
-          accruedBalance,
-          leaveRemaining,
-          closingBalance,
-          leaveTaken,
-          company: req.cookies.companyId // Assuming companyId is stored in cookies
-      });
-       }
-       if(leaveCategory.leaveAccrualPeriod === "Annually")
-       {
-        
-        const endMonth=createdOn.getMonth();
-        endMonth.setMonth(startMonth.getMonth() + 12);      
-        const accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;       
-        const leaveAssigned =  LeaveAssigned.create({
-           cycle,
-           employee,
-           category,
-           type,
-           createdOn,
-           startMonth,
-           endMonth,
-           openingBalance,
-           leaveApplied,
-           accruedBalance,
-           leaveRemaining,
-           closingBalance,
-           leaveTaken,
-           company: req.cookies.companyId // Assuming companyId is stored in cookies
-       });
-        
-       }
-       if(leaveCategory.leaveAccrualPeriod === "semi-annually")
-       {            
-       
-       const endMonth = startMonth + 6;    
-       console.log(leaveTemplateCategory);
-       const accruedBalance= 2;//leaveTemplateCategory.accrualRatePerPeriod;
-       console.log("Semi annually called" + "cycle"+cycle+"employee"+employee._id+"category"+category+"type"+type+"createdOn"+createdOn+"startMonth"+startMonth+
-       "endMonth"+endMonth+"openingBalance"+openingBalance+"leaveApplied"+leaveApplied+"accruedBalance"+accruedBalance+"leaveRemaining"+leaveRemaining
-       +"closingBalance"+ closingBalance +"leaveTaken"+leaveTaken);
-       const existingLeaveAssignment = await LeaveAssigned.findOne({
-        employee: employee,
-        category: category,
-        startMonth: startMonth,
-        endMonth: endMonth
-        
-    });
-   
-    if (existingLeaveAssignment) {
-        console.log('Leave assignment already exists for this employee, category');
-        // Handle the case where the leave assignment already exists
-    }
-     else 
-    {
-      const leaveAssigned =await LeaveAssigned.create({
-           cycle,
-           employee,
-           category,
-           type,
-           createdOn,
-           startMonth,
-           endMonth,
-           openingBalance,
-           leaveApplied,
-           accruedBalance,
-           leaveRemaining,
-           closingBalance,
-           leaveTaken,
-           company: leaveCategory.company.toString() // Assuming companyId is stored in cookies
-       });
-     //  console.log(leaveAssigned);
-      }
-       
-       }
-       if(leaveCategory.leaveAccrualPeriod==="Bi-Monthly")
-       {
-        const endMonth=createdOn.getMonth();       
-        const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;       
-        const leaveAssigned =  LeaveAssigned.create({
-           cycle,
-           employee,
-           category,
-           type,
-           createdOn,
-           startMonth,
-           endMonth,
-           openingBalance,
-           leaveApplied,
-           accruedBalance,
-           leaveRemaining,
-           closingBalance,
-           leaveTaken,
-           company: req.cookies.companyId // Assuming companyId is stored in cookies
-       });        
-       }
-       if(leaveCategory.leaveAccrualPeriod==="Quaterly")
-       {
-        const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
-        const endMonth=createdOn.getMonth();
-        endMonth.setMonth(startMonth.getMonth() + 4);
-        const leaveAssigned =  LeaveAssigned.create({
-           cycle,
-           employee,
-           category,
-           type,
-           createdOn,
-           startMonth,
-           endMonth,
-           openingBalance,
-           leaveApplied,
-           accruedBalance,
-           leaveRemaining,
-           closingBalance,
-           leaveTaken,
-           company: req.cookies.companyId // Assuming companyId is stored in cookies
-       });
-      }
-    }
-  
-  }
-}
-}
-//loop for employee
-//gettempalte for emplyee
-//get cetgories from levaeteplatecategory based on template
-//loop for categories
-// from categories based on monthly/yearly need to create AssignedTemplate
-
-console.log("hello");
-  
-}

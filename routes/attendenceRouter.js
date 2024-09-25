@@ -1743,59 +1743,6 @@ attendanceRouter.delete('/rounding-information/:id',authController.protect,atten
 attendanceRouter.post('/rounding-information-by-company', authController.protect, attendanceController.getAllRoundingInformation);
 
 //Overtime Information
-/**
- * @swagger
- * /api/v1/attendance/overtime-information:
- *   post:
- *     summary: Create a new Overtime Information
- *     tags: [Attendance Management]
- *     security: 
- *       - bearerAuth: []
- *     requestBody:
- *       description: Overtime Information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               Name:
- *                 type: string
- *                 required: true
- *               RoundingInformation:
- *                 type: string
- *                 required: true
- *               BaseType:
- *                 type: string
- *               AttandanceShift:
- *                 type: string
- *                 required: true
- *               FromTimeHour:
- *                 type: string
- *               FromTimeMinutes:
- *                 type: string
- *               FromTimeTT:
- *                 type: string
- *               ToTimeHour:
- *                 type: string
- *               ToTimeMinutes:
- *                 type: string
- *               ToTimeTT:
- *                 type: string
- *               CutomMultiplier:
- *                 type: number
- *                 required: true
- *               CalculationType:
- *                 type: string
- *     responses:
- *       201:
- *         description: Overtime Information successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/overtime-information', authController.protect, attendanceController.createOvertimeInformation);
 
 /**
  * @swagger
@@ -1822,94 +1769,6 @@ attendanceRouter.post('/overtime-information', authController.protect, attendanc
  *         description: Internal server error
  */
 attendanceRouter.get('/overtime-information/:id', authController.protect, attendanceController.getOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information/{id}:
- *   put:
- *     summary: Update an Overtime Information by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Overtime Information
- *     requestBody:
- *       description: New Overtime Information details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               Name:
- *                 type: string
- *                 required: true
- *               RoundingInformation:
- *                 type: string
- *                 required: true
- *               BaseType:
- *                 type: string
- *               AttandanceShift:
- *                 type: string
- *                 required: true
- *               FromTimeHour:
- *                 type: string
- *               FromTimeMinutes:
- *                 type: string
- *               FromTimeTT:
- *                 type: string
- *               ToTimeHour:
- *                 type: string
- *               ToTimeMinutes:
- *                 type: string
- *               ToTimeTT:
- *                 type: string
- *               CutomMultiplier:
- *                 type: number
- *                 required: true
- *               CalculationType:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated Overtime Information
- *       404:
- *         description: Overtime Information not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/overtime-information/:id', authController.protect, attendanceController.updateOvertimeInformation);
-
-/**
- * @swagger
- * /api/v1/attendance/overtime-information/{id}:
- *   delete:
- *     summary: Delete an Overtime Information by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Overtime Information
- *     responses:
- *       204:
- *         description: Overtime Information successfully deleted
- *       404:
- *         description: Overtime Information not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/overtime-information/:id', authController.protect, attendanceController.deleteOvertimeInformation);
 
 /**
  * @swagger
@@ -3035,261 +2894,6 @@ attendanceRouter.delete('/roster-shift-assignments/:id', authController.protect,
  */
 attendanceRouter.post('/roster-shift-assignments-by-company', authController.protect, attendanceController.getAllRosterShiftAssignmentsBycompany);
 
-/**
- * @swagger
- * /api/v1/attendance/regularizationRequests:
- *   post:
- *     summary: Create a new Regularization Request
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: Regularization Request details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               regularizationDate:
- *                 type: string
- *                 format: date
- *                 required: true
- *               requestType:
- *                 type: string
- *                 required: true
- *               shift:
- *                 type: string
- *                 required: true
- *               checkInTime:
- *                 type: string  
- *               checkOutTime:
- *                 type: string   
- *               firstApprover:
- *                 type: string
- *               firstApproverDate:
- *                 format: date
- *               firstApproverComment:
- *                 type: string
- *               secondApprover:
- *                 type: string
- *               secondApproverDate:
- *                 format: date
- *               secondApproverComment:
- *                 type: string
- *               reason:
- *                 type: string
- *                 required: true
- *               isHalfDayRegularization:
- *                 type: boolean
- *               halfDayType:
- *                 type: string
- *               comment:
- *                 type: string 
- *               user:
- *                 type: string
- *               status:
- *                 type: string
- *                 required: true
- *     responses:
- *       201:
- *         description: Regularization Request successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/regularizationRequests',authController.protect,attendanceController.createRegularizationRequest);
-  
- /**
-   * @swagger
-   * /api/v1/attendance/regularizationRequests/{id}:
-   *   get:
-   *     summary: Get a Regularization Request by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the Regularization Request
-   *     responses:
-   *       200:
-   *         description: Successful response with the Regularization Request
-   *       404:
-   *         description: Regularization Request not found
-   *       500:
-   *         description: Internal server error
-   */
-attendanceRouter.get('/regularizationRequests/:id',authController.protect,attendanceController.getRegularizationRequest);
-  
-/**
-   * @swagger
-   * /api/v1/attendance/regularizationRequests/{id}:
-   *   put:
-   *     summary: Update a Regularization Request by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the Regularization Request
-   *     requestBody:
-   *       description: New Regularization Request details
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               regularizationDate:
-   *                 type: string
-   *                 format: date
-   *                 required: true
-   *               requestType:
-   *                 type: string
-   *                 required: true
-   *               shift:
-   *                 type: string
-   *                 required: true
-   *               checkInTime:
-   *                 type: string   
-   *               checkOutTime:
-   *                 type: string    
-   *               firstApprover:
-   *                 type: string
-   *               firstApproverDate:
-   *                 format: date
-   *               firstApproverComment:
-   *                 type: string
-   *               secondApprover:
-   *                 type: string
-   *               secondApproverDate:
-   *                 format: date
-   *               secondApproverComment:
-   *                 type: string
-   *               reason:
-   *                 type: string
-   *                 required: true
-   *               isHalfDayRegularization:
-   *                 type: boolean
-   *               halfDayType:
-   *                 type: string
-   *               comment:
-   *                 type: string 
-   *               user:
-   *                 type: string                   
-   *     responses:
-   *       200:
-   *         description: Successful response with the updated Regularization Request
-   *       404:
-   *         description: Regularization Request not found
-   *       500:
-   *         description: Internal server error
-   */
-attendanceRouter.put('/regularizationRequests/:id',authController.protect,attendanceController.updateRegularizationRequest);
-  
-/**
-   * @swagger
-   * /api/v1/attendance/regularizationRequests/{id}:
-   *   delete:
-   *     summary: Delete a Regularization Request by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the Regularization Request
-   *     responses:
-   *       204:
-   *         description: Regularization Request successfully deleted
-   *       404:
-   *         description: Regularization Request not found
-   *       500:
-   *         description: Internal server error
-   */
-attendanceRouter.delete('/regularizationRequests/:id',authController.protect,attendanceController.deleteRegularizationRequest);
-  
-/**
-   * @swagger
-   * /api/v1/attendance/regularizationRequests-by-company:
-   *   post:
-   *     summary: Get all Regularization Requests
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     requestBody:
-   *         content:
-   *             application/json:
-   *                 schema:
-   *                     type: object
-   *                     properties:
-   *                         skip:
-   *                             type: string
-   *                         next:
-   *                             type: string
-   *                         status:
-   *                             type: string
-   *     responses:
-   *       200:
-   *         description: Successful response with Regularization Requests
-   *       500:
-   *         description: Internal server error
-   */
-attendanceRouter.post('/regularizationRequests-by-company',authController.protect,attendanceController.getAllRegularizationRequests);
-
- /**
-   * @swagger
-   * /api/v1/attendance/regularizationRequests-by-user/{userId}:
-   *   post:
-   *     summary: Get a Regularization Request by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: userId
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the Regularization Request
-   *     requestBody:
-   *         content:
-   *             application/json:
-   *                 schema:
-   *                     type: object
-   *                     properties:
-   *                         skip:
-   *                             type: string
-   *                         next:
-   *                             type: string
-   *     responses:
-   *       200:
-   *         description: Successful response with the Regularization Request
-   *       404:
-   *         description: Regularization Request not found
-   *       500:
-   *         description: Internal server error
-   */
- attendanceRouter.post('/regularizationRequests-by-user/:userId',authController.protect,attendanceController.getRegularizationRequestByUser);
-  
 // DutyRequest routes
 /**
  * @swagger
@@ -3559,213 +3163,6 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
 
 /**
  * @swagger
- * /api/v1/attendance/time-entries:
- *   post:
- *     summary: Add a TimeEntry
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: TimeEntry details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               duration:
- *                 type: string
- *                 required: true
- *               date:
- *                 type: string
- *                 format: date
- *                 required: true
- *               project:
- *                 type: string
- *                 required: true
- *               task:
- *                 type: string
- *                 required: true
- *               user:
- *                 type: string
- *                 required: true
- *               trackTimeEntries:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     fromTime:
- *                       type: string
- *                       required: true
- *                       format: time
- *                       example: "hh:mm tt" 
- *                     toTime:
- *                       type: string
- *                       required: true
- *                       format: time
- *                       example: "hh:mm tt" 
- *                     totalTime:
- *                       type: string
- *                       required: true
- *                     notes:
- *                       type: string
- *     responses:
- *       201:
- *         description: TimeEntry successfully added
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/time-entries', authController.protect, attendanceController.addTimeEntry);
-
-/**
- * @swagger
- * /api/v1/attendance/time-entries/{id}:
- *   get:
- *     summary: Get a TimeEntry by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the TimeEntry
- *     responses:
- *       200:
- *         description: Successful response with the TimeEntry
- *       404:
- *         description: TimeEntry not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.get('/time-entries/:id', authController.protect, attendanceController.getTimeEntry);
-
-/**
- * @swagger
- * /api/v1/attendance/time-entries/{id}:
- *   put:
- *     summary: Update a TimeEntry by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the TimeEntry
- *     requestBody:
- *       description: New TimeEntry details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               duration:
- *                 type: string
- *               date:
- *                 type: string
- *                 format: date
- *               project:
- *                 type: string
- *               task:
- *                 type: string
- *               user:
- *                 type: string
- *               trackTimeEntries:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     fromTime:
- *                       type: string
- *                       required: true
- *                       format: time
- *                       example: "hh:mm tt" 
- *                     toTime:
- *                       type: string
- *                       required: true
- *                       format: time
- *                       example: "hh:mm tt" 
- *                     totalTime:
- *                       type: string
- *                       required: true
- *                     notes:
- *                       type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated TimeEntry
- *       404:
- *         description: TimeEntry not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.put('/time-entries/:id', authController.protect, attendanceController.updateTimeEntry);
-
-/**
- * @swagger
- * /api/v1/attendance/time-entries-by-company:
- *   post:
- *     summary: Get all TimeEntries by companyId
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *         content:
- *             application/json:
- *                 schema:
- *                     type: object
- *                     properties:
- *                         skip:
- *                             type: string
- *                         next:
- *                             type: string
- *     responses:
- *       200:
- *         description: Successful response with TimeEntries
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.post('/time-entries-by-company', authController.protect, attendanceController.getAllTimeEntriesByCompanyId);
-
-/**
- * @swagger
- * /api/v1/attendance/time-entries/{id}:
- *   delete:
- *     summary: Delete a TimeEntry by ID
- *     tags: [Attendance Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the TimeEntry
- *     responses:
- *       204:
- *         description: TimeEntry successfully deleted
- *       404:
- *         description: TimeEntry not found
- *       500:
- *         description: Internal server error
- */
-attendanceRouter.delete('/time-entries/:id', authController.protect, attendanceController.deleteTimeEntry);
-
-/**
- * @swagger
  * /api/v1/attendance/timelog-mapped-attandance:
  *   post:
  *     summary: Add a TimeEntry
@@ -3782,5 +3179,38 @@ attendanceRouter.delete('/time-entries/:id', authController.protect, attendanceC
  *         description: Internal server error
  */
 attendanceRouter.post('/timelog-mapped-attandance', authController.protect, attendanceController.MappedTimlogToAttandance);
+
+/**
+ * @swagger
+ * /api/v1/attendance/get-attendance-by-month:
+ *   post:
+ *     summary: Get attendance By Month
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         month:
+ *                             type: number
+ *                         year:
+ *                             type: number
+ *     responses:
+ *       201:
+ *         description: Attendance Fetched Successfully for Month
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/get-attendance-by-month', authController.protect, attendanceController.GetAttendanceByMonth);
 
 module.exports = attendanceRouter;
