@@ -1811,4 +1811,36 @@ router.post('/get-leave-balance', authController.protect, leaveController.getLea
  */
 router.post('/get-leave-balance-by-team', authController.protect, leaveController.getLeaveBalanceByTeam);
 
+/**
+ * @swagger
+ * /api/v1/leave/get-leave-balance-by-company:
+ *  post:
+ *      tags: [Leave Management]
+ *      summary: "Get Leave Balance by company"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          skip:
+ *                              type: string
+ *                          next:
+ *                              type: string 
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.post('/get-leave-balance-by-company', authController.protect, leaveController.getLeaveBalanceByCompany);
+
 module.exports = router;

@@ -52,20 +52,13 @@ assignLeavesByJobs = async (req, res, next) => {
             }
             if(leaveCategory.leaveAccrualPeriod ===  constants.Leave_Accrual_Period.Annually)
             {            
-              const endMonth=3;            
+              const endMonth=12;            
               const assignmentExists = await doesLeaveAssignmentExist(employee, cycle, category);   
               if (!assignmentExists) {
               var ratePerPeriod = leaveTemplateCategory.accrualRatePerPeriod;    
               var balPerMonth=ratePerPeriod/12;   
-              var accruedBalance=0;
-              if(startMonth<=3)
-              {
-                accruedBalance=(12-startMonth)*balPerMonth;
-              }
-              else
-              {
-                accruedBalance=((12-startMonth)*balPerMonth) + (balPerMonth*3);
-              }          
+              var accruedBalance=0;             
+              accruedBalance=(((12-startMonth)+1)*balPerMonth);                      
               openingBalance=accruedBalance;
               leaveRemaining=accruedBalance;
                 try {
@@ -184,7 +177,7 @@ assignLeavesByJobs = async (req, res, next) => {
       
 };
 
-    const doesLeaveAssignmentExist = async (employeeId, cycle, categoryId) => {
+const doesLeaveAssignmentExist = async (employeeId, cycle, categoryId) => {
       try {
           const existingAssignment = await LeaveAssigned.findOne({
               employee: employeeId,
@@ -197,14 +190,14 @@ assignLeavesByJobs = async (req, res, next) => {
           console.error("Error checking leave assignment:", error);
           return false; // Return false in case of an error
       }
-    };
-    const createFiscalCycle = async () => {
+};
+const createFiscalCycle = async () => {
       const startYear = new Date().getFullYear(); // Get the current year
       const startMonth = "JANUARY";
       const endMonth = "DECEMBER";
       
       return `${startMonth}_${startYear}-${endMonth}_${startYear}`;
-   };
+};
   module.exports = {
     doesLeaveAssignmentExist,
     createFiscalCycle,

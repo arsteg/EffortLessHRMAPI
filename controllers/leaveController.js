@@ -1073,12 +1073,12 @@ console.log(query);
               const cycle = await scheduleController.createFiscalCycle();
               const leaveAssigned = await LeaveAssigned.findOne({ employee: req.body.employee, cycle: cycle, category: req.body.leaveCategory });
    
-       // Deduct the applied leave days from the leave remaining
-       leaveAssigned.leaveRemaining += leaveDays;
-       leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
+              // Deduct the applied leave days from the leave remaining
+              leaveAssigned.leaveRemaining += leaveDays;
+              leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
 
-       // Save the updated leave assigned record
-       await leaveAssigned.save();
+              // Save the updated leave assigned record
+              await leaveAssigned.save();
             }
           }
           catch (error) {
@@ -1463,6 +1463,24 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
 }).skip(parseInt(skip))
 .limit(parseInt(limit));
  
+  res.status(200).json({
+    status: 'success',
+    data: leaveBalances,
+    total: totalCount
+  });
+});
+exports.getLeaveBalanceByCompany = catchAsync(async (req, res, next) => {  
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const cycle = await scheduleController.createFiscalCycle();           
+        
+  const totalCount = await LeaveAssigned.countDocuments({ company: req.cookies.companyId, cycle:cycle });  
+
+  const leaveBalances = await LeaveAssigned.find({
+    company: req.cookies.companyId, cycle:cycle 
+  }).skip(parseInt(skip))
+  .limit(parseInt(limit));
+
   res.status(200).json({
     status: 'success',
     data: leaveBalances,
