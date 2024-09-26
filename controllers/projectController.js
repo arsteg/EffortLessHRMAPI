@@ -10,7 +10,7 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
   
   const appWebsite = await AppWebsite.find({}).where('projectReference').equals(req.params.id); 
   const manualTimeRequest = await ManualTimeRequest.find({}).where('project').equals(req.params.id); 
-  const task = await Task.find({}).where('project').equals(req.params.id);  
+  const task = await Task.find({}).where('project').equals(req.params.id).where('company').equals(req.cookies.companyId);  
   if (task.length > 0 || appWebsite.length > 0 || manualTimeRequest.length > 0) {
     return res.status(400).json({
       status: 'failed',
