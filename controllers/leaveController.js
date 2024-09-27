@@ -347,7 +347,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
         leaveTemplate.applicableCategories = leaveTemplateCategories;
 
         const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
-        leaveTemplate.clubbingRestrictions = leaveClubbingRestrictions;
+        leaveTemplate.cubbingRestrictionCategories = leaveClubbingRestrictions;
         res.status(200).json({
             status: 'success',
             data: leaveTemplate
@@ -410,7 +410,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
         });
         if (Array.isArray(cubbingRestrictionCategories)) {  
           // Create TemplateCubbingRestriction instances
-          leaveTemplate.clubbingRestrictions = await TemplateCubbingRestriction.insertMany(cubbingRestrictionCategories.map(category => ({
+          leaveTemplate.cubbingRestrictionCategories = await TemplateCubbingRestriction.insertMany(cubbingRestrictionCategories.map(category => ({
             leaveTemplate: leaveTemplate._id,
             category: category.leaveCategory,
             restrictedClubbedCategory: category.restrictedclubbedLeaveCategory
@@ -496,10 +496,10 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
         
           if(leaveClubbingRestrictions) 
             {
-              leaveTemplates[i].clubbingRestrictions = leaveClubbingRestrictions;
+              leaveTemplates[i].cubbingRestrictionCategories = leaveClubbingRestrictions;
             }
             else{
-              leaveTemplates[i].clubbingRestrictions = null;
+              leaveTemplates[i].cubbingRestrictionCategories = null;
             }
         }
         }
