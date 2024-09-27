@@ -49,7 +49,7 @@ var leaveTemplateSchema = new Schema({
     required: true
   },
   applicableCategories:[],
-  clubbingRestrictions:[]
+  cubbingRestrictionCategories:[]
 }, { collection: 'LeaveTemplate' });
 
 module.exports = mongoose.model('LeaveTemplate', leaveTemplateSchema);
