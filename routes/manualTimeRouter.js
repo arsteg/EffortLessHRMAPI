@@ -72,7 +72,12 @@ router.post('/addManualTimeRequest', authController.protect,manualTimeController
  *                          user:
  *                              type: string  
  *                          project:
- *                              type: string 
+ *                              type: string
+ *                          date:
+ *                              type: string
+ *                              format: date 
+ *                          task:
+ *                              type: string  
  *                          manager:
  *                              type: string
  *                          fromDate:
