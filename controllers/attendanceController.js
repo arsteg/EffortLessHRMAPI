@@ -10,7 +10,7 @@ const RegularizationReason = require("../models/attendance/regularizationReason"
 const RoundingInformation = require('../models/attendance/roundingInformation');
 const Shift = require('../models/attendance/shift');
 const RosterShiftAssignment = require('../models/attendance/rosterShiftAssignment');
-
+const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssignment');
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
@@ -28,8 +28,13 @@ const AttendanceRegularizationRestrictedLocation= require('../models/attendance/
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Attandance = require('../models/attendance/attendanceRecords');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
-const manualTimeRequestModel = require('../models/manualTime/manualTimeRequestModel.js');
-const OvertimeInformation = require('../models/attendance/overtimeInformation.js');
+const manualTimeRequestModel = require('../models/manualTime/manualTimeRequestModel');
+const OvertimeInformation = require('../models/attendance/overtimeInformation');
+const LOP = require('../models/attendance/lop.js');
+const constants = require('../constants');
+const HolidayCalendar = require('../models/Company/holidayCalendar');
+const AttendanceProcess = require('../models/attendance/AttendanceProcess');
+const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -1755,7 +1760,22 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   const document = await features.query;
 
   const endDate = new Date(); // Today's date
-  const startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // One week before endDate
+
+  // Move to the first day of the current month
+  const firstDayOfCurrentMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+  // Move to the last day of the previous month
+  const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth.getTime() - 1);
+
+  // Get the day of the week of the last day of the previous month
+  const lastDayOfWeek = lastDayOfPreviousMonth.getDay(); // (0 = Sunday, ..., 6 = Saturday)
+
+  // Calculate how many days to subtract to get to the last Monday
+  const daysToSubtract = lastDayOfWeek === 0 ? 6 : lastDayOfWeek - 1;
+
+  // Calculate the last Monday of the previous month
+  const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+
 
   // Perform additional work on each user
   const modifiedUsers = await Promise.all(document.map(async user => {
@@ -1927,27 +1947,36 @@ exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount =await getRecordsByYearAndMonth(req.body.year,req.body.month,req.body.skip,req.body.next);
+  const totalCount = await getRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
   
-  const attendanceRecords =await getRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
   
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,
     total: totalCount
   });
+
+});
+exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
+  
+  const attendanceRecords = await getRecordsByYearAndMonthByUser(req.body.year,req.body.month,req.body.user);
+  
+  res.status(200).json({
+    status: 'success',
+    data: attendanceRecords
+  });
+
 });
 async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month) {
       throw new Error('Year and month are required');
   }
-
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
   const endDate = new Date(year, month, 1); // Start of the next month
-  console.log(startDate);
-  console.log(endDate);
+
   // Fetch records from the database
   try {
       // Check if skip and limit are provided
@@ -1958,7 +1987,6 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
                   $lt: endDate
               }
           }).exec();
-          console.log(count);
           return { count };
       } else {
           const records = await AttendanceRecords.find({
@@ -1967,7 +1995,218 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
                   $lt: endDate
               }
           }).skip(skip).limit(limit).exec();
-          console.log(records);
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}
+async function getRecordsByYearAndMonthByUser(year, month, user) {
+  // Validate input
+  if (!year || !month) {
+      throw new Error('Year and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 1); // Start of the next month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided     
+          const records = await AttendanceRecords.find({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              },
+              user: user
+          }).exec();
+          return records;
+      
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}
+exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
+  try {
+      // Calculate the start and end dates for the month
+      const startOfMonth = new Date(req.body.year, req.body.month - 1, 1);
+      const endOfMonth = new Date(req.body.year, req.body.month, 0); // Last day of the month      
+     
+      // Step 1: Get attendance records for the specified month
+      const attendanceRecords = await AttendanceRecords.find({
+          user: req.body.user,
+          company: req.cookies.companyId,
+          date: { $gte: startOfMonth, $lte: endOfMonth },
+      });
+
+      // Step 2: Get approved leave applications for the specified month
+      const approvedLeaves = await LeaveApplication.find({
+          user: req.body.user,
+          status: constants.Leave_Application_Constant.app,
+          startDate: { $gte: startOfMonth, $lte: endOfMonth },
+          endDate: { $gte: startOfMonth, $lte: endOfMonth },
+      });
+
+      // Extract approved leave days
+      const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+          const leaveStart = new Date(leave.startDate);
+          const leaveEnd = new Date(leave.endDate);
+          const leaveDays = [];
+
+          for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
+              if (d >= startOfMonth && d <= endOfMonth) {
+                  leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
+              }
+          }
+          return leaveDays;
+      });
+      const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
+      const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
+
+       // Iterate through the days of the month
+       const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month      
+       for (let day = 1; day <= daysInMonth; day++) {      
+     
+            const currentDate = new Date(req.body.year, req.body.month-1, day);
+            console.log(req.body.year, req.body.month-1, day, "Date is "+currentDate);
+            const dayOfWeek = currentDate.getDay();
+            
+           // Check if it's Saturday (6) or Sunday (0) or a holiday
+           if (dayOfWeek === 0 || dayOfWeek === 6 || holidayDates.includes(currentDate.toISOString().split('T')[0])) {
+               continue;
+           }
+           else
+           {
+            console.log("else "+dayOfWeek);
+            console.log("rrr"+currentDate);
+
+           // Check if the day is marked as present in attendance records
+           const currentDateForValidate = new Date(req.body.year, req.body.month-1, day);
+           console.log(currentDateForValidate);
+           const isPresent = attendanceRecords.some(record => {
+               return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+           });
+           console.log(currentDateForValidate);
+           // If not present and not an approved leave, mark as LOP
+           if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
+               // Insert into LOP
+               const existingRecord = await LOP.findOne({
+                user: req.body.user,
+                date: currentDate,
+                company: req.cookies.companyId
+           });
+    
+           if (existingRecord) {
+           }
+    else
+    {
+               const lopRecord = new LOP({
+                   user: req.body.user,
+                   date: currentDate,
+                   company: req.cookies.companyId
+               });
+console.log(lopRecord);
+               await lopRecord.save();
+              // console.log(`Inserted LOP for ${currentDate.toISOString().split('T')[0]}`);
+           }
+          }
+          }
+       }
+
+       res.status(200).json({
+        status: 'success'
+      });
+   } catch (error) {
+    res.status(200).json({
+      status: 'fail'
+    });
+   }
+});
+
+exports.ProcessAttendance = async (req, res) => {
+  try {
+      const { attandanaceProcessPeroid, runDate, status, exportToPayroll, users } = req.body;
+
+      // 1. Create or find the AttendanceProcess record
+      let attendanceProcess = await AttendanceProcess.findOneAndUpdate(
+          { attendanceProcessPeriod: attandanaceProcessPeroid, runDate: new Date(runDate) },
+          { status, exportToPayroll },
+          { new: true, upsert: true }
+      );
+
+      // 2. Loop through the users array and create or update AttendanceProcessUsers
+      for (let userEntry of users) {
+          const { user, status } = userEntry;
+
+          // Create or update user attendance for the process
+          await AttendanceProcessUsers.findOneAndUpdate(
+              { attendanceProcess: attendanceProcess._id, user: user },
+              { status },
+              { new: true, upsert: true }
+          );
+      }
+
+      return res.status(201).json({
+          status: 'success',
+          message: 'Attendance processed successfully',
+          data: {
+              attendanceProcess,
+              users
+          }
+      });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          status: 'error',
+          message: 'Internal server error'
+      });
+  }
+};
+exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+
+  const totalCount = await getLOPRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
+  
+  const attendanceRecords = await getLOPRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  
+  res.status(200).json({
+    status: 'success',
+    data: attendanceRecords,
+    total: totalCount
+  });
+
+});
+
+async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month) {
+      throw new Error('Year and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 1); // Start of the next month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await LOP.countDocuments({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).exec();
+          return { count };
+      } else {
+          const records = await LOP.find({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).skip(skip).limit(limit).exec();
           return records;
       }
   } catch (error) {

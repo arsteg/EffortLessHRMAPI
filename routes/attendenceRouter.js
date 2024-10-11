@@ -3172,7 +3172,7 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
  *     }]
  *     responses:
  *       201:
- *         description: TimeEntry successfully added
+ *         description: TimeLog Mapped
  *       400:
  *         description: Bad request
  *       500:
@@ -3212,5 +3212,177 @@ attendanceRouter.post('/timelog-mapped-attandance', authController.protect, atte
  *         description: Internal server error
  */
 attendanceRouter.post('/get-attendance-by-month', authController.protect, attendanceController.GetAttendanceByMonth);
+
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance-lop:
+ *   post:
+ *     summary: Add a Process Attendance LOP
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         month:
+ *                             type: string
+ *                         year:
+ *                             type: string
+ *                         user:
+ *                             type: string
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance-lop', authController.protect, attendanceController.ProcessAttendanceAndLOP);
+
+/**
+ * @swagger
+ * /api/v1/attendance/get-attendance-by-month:
+ *   post:
+ *     summary: Get attendance By Month
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         month:
+ *                             type: number
+ *                         year:
+ *                             type: number
+ *     responses:
+ *       201:
+ *         description: Attendance Fetched Successfully for Month
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/get-attendance-by-month', authController.protect, attendanceController.GetAttendanceByMonth);
+
+/**
+ * @swagger
+ * /api/v1/attendance/get-attendance-by-month-user:
+ *   post:
+ *     summary: Get attendance By Month
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         month:
+ *                             type: number
+ *                         year:
+ *                             type: number
+ *                         user:
+ *                             type: string
+ *     responses:
+ *       201:
+ *         description: Attendance Fetched Successfully for Month
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/get-attendance-by-month-user', authController.protect, attendanceController.GetAttendanceByMonthAndUser);
+
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance-lop-by-month:
+ *   post:
+ *     summary: Add a Process Attendance LOP
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         month:
+ *                             type: string
+ *                         year:
+ *                             type: string
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance-lop-by-month', authController.protect, attendanceController.GetProcessAttendanceAndLOP);
+
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance:
+ *   post:
+ *     summary: Add a Process Attendance LOP
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         attandanaceProcessPeroid:
+ *                             type: string
+ *                         runDate:
+ *                             type: string
+ *                         status:
+ *                             type: string
+ *                         exportToPayroll:
+ *                             type: string
+ *                         users:
+ *                            type: array
+ *                            items:
+ *                              type: object
+ *                              properties:
+ *                                user:
+ *                                  type: string
+ *                                  required: true
+ *                                status:
+ *                                  type: string
+ *                                  required: true
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance', authController.protect, attendanceController.ProcessAttendance);
 
 module.exports = attendanceRouter;

@@ -92,12 +92,10 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
   if (!manager) {
     return next(new AppError(`There is no manager with id ${user}}.`, 404));
   }
-
   const project = await Project.findById(req.body.project);
   if (!project) {
     return next(new AppError(`Project is required.`, 404));
   }
-
   req.body.id = req.body.requestId; // Add this line
   const updatemanualTimeRequest = await manualTimeRequest.findByIdAndUpdate(
     req.body.id,
@@ -107,8 +105,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       runValidators: true,
     }
   );
-  // console.log("update id -------------:", req.body.id);
-
+  
   if (updatemanualTimeRequest) {
     if (req.body.status === "approved") {
       let startTime = moment(req.body.fromDate).toDate();
@@ -134,7 +131,6 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
       }
     }
   }
-
   res.status(200).json({
     status: "success",
     data: updatemanualTimeRequest,
@@ -146,7 +142,6 @@ exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { user: req.params.id };
-
   const totalCount = await manualTimeRequest.countDocuments(query);
   const manualTimeRequests = await manualTimeRequest
     .find({})

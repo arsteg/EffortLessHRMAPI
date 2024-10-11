@@ -96,7 +96,6 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
   });
  exports.getProjectListByUser  = catchAsync(async (req, res, next) => {    
   var projectList=[];
-
     const newProjectUserList = await ProjectUser.find({}).where('user').equals(req.body.userId);  
     if(newProjectUserList)
       {
@@ -151,9 +150,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
         createdBy: req.cookies.userId,
         updatedBy: req.cookies.userId
       });    
-    }  
-   
-  
+    }
   }
   const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.body.projectId);  
   res.status(200).json({
@@ -164,27 +161,28 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
   });
   });
  exports.updateProjectUser =  catchAsync(async (req, res, next) => {
-  const projectUser = await ProjectUser.findById(req.params.id);  
+  const projectUser = await ProjectUser.findById(req.params.id);
   if (projectUser) {
-  const projectUsersexists = await ProjectUser.find({}).where('project').equals(projectUser.project).where('user').equals(req.body.user);  
+      const projectUsersexists = await ProjectUser.find({}).where('project').equals(projectUser.project).where('user').equals(req.body.user);  
       if (projectUsersexists.length>0) {
         return next(new AppError('Project User already exists.', 403));
       }
-      else{ 
-    const document = await ProjectUser.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // If not found - add new
-      runValidators: true // Validate data
-    });
-    if (!document) {
-      return next(new AppError('No document found with that ID', 404));
+      else
+      {
+          const document = await ProjectUser.findByIdAndUpdate(req.params.id, req.body, {
+            new: true, // If not found - add new
+            runValidators: true // Validate data
+          });
+          if (!document) {
+            return next(new AppError('No document found with that ID', 404));
+          }
+          res.status(201).json({
+            status: 'success',
+            data: {
+              data: document
+            }
+          });
     }
-    res.status(201).json({
-      status: 'success',
-      data: {
-        data: document
-      }
-    });
-  }
   }
   });
   exports.deleteProjectUser = catchAsync(async (req, res, next) => {
@@ -197,10 +195,8 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
       data: null
     });
   });
-  exports.getProjectUsers  = catchAsync(async (req, res, next) => {    
-  
-    const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.params.id);  
-    
+  exports.getProjectUsers  = catchAsync(async (req, res, next) => {  
+    const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.params.id);    
     res.status(200).json({
       status: 'success',
       data: {

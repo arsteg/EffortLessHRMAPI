@@ -1,3 +1,6 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
 var attendanceProcessSchema = new Schema({
     attendanceProcessPeriod: {
       type: String,
@@ -5,14 +8,6 @@ var attendanceProcessSchema = new Schema({
     },
     runDate: {
       type: Date,
-      required: true
-    },
-    unprocessedEmployees: {
-      type: Number,
-      required: true
-    },
-    processedEmployees: {
-      type: Number,
       required: true
     },
     exportToPayroll: {
@@ -23,11 +18,6 @@ var attendanceProcessSchema = new Schema({
       type: mongoose.Schema.ObjectId,
       ref: 'Company',
       required: true
-    },
-    user: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'User',
-      required: true
-    }
+    }  
   }, { collection: 'AttendanceProcess' });
-  
+  module.exports = mongoose.model('AttendanceProcess', attendanceProcessSchema);
