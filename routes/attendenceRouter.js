@@ -3246,9 +3246,9 @@ attendanceRouter.post('/process-attendance-lop', authController.protect, attenda
 
 /**
  * @swagger
- * /api/v1/attendance/get-attendance-by-month:
+ * /api/v1/attendance/get-overtime-by-month:
  *   post:
- *     summary: Get attendance By Month
+ *     summary: Get Overtime By Month
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
@@ -3269,13 +3269,13 @@ attendanceRouter.post('/process-attendance-lop', authController.protect, attenda
  *                             type: number
  *     responses:
  *       201:
- *         description: Attendance Fetched Successfully for Month
+ *         description: Overtime Fetched Successfully for Month
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/get-attendance-by-month', authController.protect, attendanceController.GetAttendanceByMonth);
+attendanceRouter.post('/get-overtime-by-month', authController.protect, attendanceController.GetOvertimeByMonth);
 
 /**
  * @swagger
@@ -3356,7 +3356,9 @@ attendanceRouter.post('/process-attendance-lop-by-month', authController.protect
  *                 schema:
  *                     type: object
  *                     properties:
- *                         attandanaceProcessPeroid:
+ *                         attendanceProcessPeriodYear:
+ *                             type: string
+ *                         attendanceProcessPeriodMonth:
  *                             type: string
  *                         runDate:
  *                             type: string
@@ -3384,5 +3386,40 @@ attendanceRouter.post('/process-attendance-lop-by-month', authController.protect
  *         description: Internal server error
  */
 attendanceRouter.post('/process-attendance', authController.protect, attendanceController.ProcessAttendance);
+
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance:
+ *   delete:
+ *     summary: Delete a Process ttendanace
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               attandanaceProcessPeroidMonth:
+ *                 type: string
+ *                 description: The month of the attendance process period (e.g., '01' for January)
+ *                 example: '01'
+ *                 required: true
+ *               attandanaceProcessPeroidYear:
+ *                 type: string
+ *                 description: The year of the attendance process period (e.g., '2024')
+ *                 example: '2024'
+ *                 required: true
+ *     responses:
+ *       204:
+ *         description: Regularization Reason successfully deleted
+ *       404:
+ *         description: Regularization Reason not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/process-attendance', authController.protect, attendanceController.deleteAttendance);
 
 module.exports = attendanceRouter;

@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollManualArrearsSchema = new Schema({
     payrollUser: {
       type: mongoose.Schema.ObjectId,
@@ -27,6 +29,12 @@ var payrollManualArrearsSchema = new Schema({
     totalArrears: {
       type: Number,
       required: true
+    },
+    company: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Company',
+      required: true
     }
   }, { collection: 'PayrollManualArrears' });
-  
+     
+module.exports = mongoose.model('PayrollManualArrears', payrollManualArrearsSchema);

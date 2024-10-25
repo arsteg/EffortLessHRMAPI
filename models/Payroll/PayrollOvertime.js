@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollOvertimeSchema = new Schema({
     PayrollUser: {
       type: mongoose.Schema.ObjectId,
@@ -26,4 +28,6 @@ var payrollOvertimeSchema = new Schema({
       required: true
     }
   }, { collection: 'PayrollOvertime' });
+  
+module.exports = mongoose.model('PayrollOvertime', payrollOvertimeSchema);
   

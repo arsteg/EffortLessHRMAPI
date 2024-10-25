@@ -30,9 +30,18 @@ const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateO
 const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
 const PTConfigureStates = require("../models/Payroll/ptConfigureStatesModel");
 const PFTemplates = require("../models/Payroll/pfTemplateModel");
-
+const Payroll = require('../models/Payroll/Payroll');
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
+const PayrollUsers = require('../models/Payroll/PayrollUsers');
+const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
+const PayrollVariablePayDeduction = require('../models/Payroll/PayrollVariablePayDeduction');
+const PayrollVariablePayAllowance = require('../models/Payroll/PayrollVariablePayAllowance');
+const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
+const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
+const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
+const PayrollFlexiBenefitsPFTax = require('../models/Payroll/PayrollFlexiBenefitsAndPFTax'); 
+const PayrollOvertime = require('../models/Payroll/PayrollOvertime'); // Assume this is your Mongoose model
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -2778,3 +2787,771 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+exports.addPayroll = catchAsync(async (req, res, next) => {
+    // Extract companyId from req.cookies
+    const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError("Company ID not found in cookies", 400));
+    }
+  
+    // Add companyId to the request body
+    req.body.company = companyId;
+  
+  const payroll = await Payroll.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payroll
+  });
+});
+
+exports.getPayroll = catchAsync(async (req, res, next) => {
+  const payroll = await Payroll.findById(req.params.id);
+  if (!payroll) {
+    return next(new AppError('Payroll not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payroll
+  });
+});
+
+exports.updatePayroll = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+      const updatedPayroll = await Payroll.findByIdAndUpdate(
+          id,
+          { status, updatedDate: new Date() }, // Update only status and updatedDate
+          { new: true } // Return the updated document
+      );
+
+      if (!updatedPayroll) {
+          return res.status(404).json({ message: 'Payroll not found.' });
+      }
+
+      res.status(200).json(updatedPayroll);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+exports.deletePayroll = catchAsync(async (req, res, next) => {
+  const payroll = await Payroll.findByIdAndDelete(req.params.id);
+  if (!payroll) {
+    return next(new AppError('Payroll not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getPayrollsByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  
+  const totalCount = await Payroll.countDocuments({ company: companyId });
+
+  const payrolls = await Payroll.find({ company: companyId })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  res.status(200).json({
+    status: "success",
+    data: payrolls,
+    total: totalCount,
+  });
+  
+});
+
+// Add a PayrollUser
+exports.createPayrollUser = catchAsync(async (req, res, next) => {
+    // Extract companyId from req.cookies
+    const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError("Company ID not found in cookies", 400));
+    }
+  
+    // Add companyId to the request body
+    req.body.company = companyId;
+    const payrollUser = await PayrollUsers.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: payrollUser
+    });
+});
+
+// Get a PayrollUser by ID
+exports.getPayrollUser = catchAsync(async (req, res, next) => {
+    const payrollUser = await PayrollUsers.findById(req.params.id);
+    if (!payrollUser) {
+        return next(new AppError('PayrollUser not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: payrollUser
+    });
+});
+
+// Update a PayrollUser by ID
+exports.updatePayrollUser = catchAsync(async (req, res, next) => {
+    const payrollUser = await PayrollUsers.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
+
+    if (!payrollUser) {
+        return next(new AppError('PayrollUser not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: payrollUser
+    });
+});
+
+// Delete a PayrollUser by ID
+exports.deletePayrollUser = catchAsync(async (req, res, next) => {
+    const payrollUser = await PayrollUsers.findByIdAndDelete(req.params.id);
+    
+    if (!payrollUser) {
+        return next(new AppError('PayrollUser not found', 404));
+    }
+    
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
+
+// Get all PayrollUsers by company
+exports.getAllPayrollUsersByPayroll = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+  
+  const totalCount = await PayrollUsers.countDocuments({ company: companyId, payroll: req.body.payroll });
+
+  const payrolls = await PayrollUsers.find({ company: companyId, payroll: req.body.payroll })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  res.status(200).json({
+    status: "success",
+    data: payrolls,
+    total: totalCount,
+  });    
+});
+
+
+// Add PayrollAttendanceSummary
+exports.addPayrollAttendanceSummary = catchAsync(async (req, res, next) => {
+  const payrollAttendanceSummary = await PayrollAttendanceSummary.create(req.body);
+  
+  res.status(201).json({
+    status: 'success',
+    data: payrollAttendanceSummary
+  });
+});
+
+// Get PayrollAttendanceSummary by payrollUser
+exports.getPayrollAttendanceSummaryByUser = catchAsync(async (req, res, next) => {
+  const payrollAttendanceSummary = await PayrollAttendanceSummary.find({ payrollUser: req.params.payrollUser });
+  
+  if (!payrollAttendanceSummary) {
+    return next(new AppError('PayrollAttendanceSummary not found', 404));
+  }
+  
+  res.status(200).json({
+    status: 'success',
+    data: payrollAttendanceSummary
+  });
+});
+
+// Update PayrollAttendanceSummary by payrollUser
+exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
+  const payrollAttendanceSummary = await PayrollAttendanceSummary.findOneAndUpdate(
+    { payrollUser: req.params.payrollUser },
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!payrollAttendanceSummary) {
+    return next(new AppError('PayrollAttendanceSummary not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollAttendanceSummary
+  });
+});
+
+// Add Payroll Variable Pay Deduction
+exports.addPayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const newDeduction = await PayrollVariablePayDeduction.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: newDeduction,
+  });
+});
+
+// Get Payroll Variable Pay Deduction by payrollUser
+exports.getPayrollVariablePayDeductionByPayrollUser = catchAsync(async (req, res, next) => {
+  const payrollDeduction = await PayrollVariablePayDeduction.find({ payrollUser: req.params.payrollUser });
+  if (!payrollDeduction) {
+    return next(new AppError('Payroll Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollDeduction,
+  });
+});
+
+// Update Payroll Variable Pay Deduction
+exports.updatePayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+  const updatedDeduction = await PayrollVariablePayDeduction.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedDeduction) {
+    return next(new AppError('Payroll Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedDeduction,
+  });
+});
+
+// Delete Payroll Variable Pay Deduction
+exports.deletePayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+
+  const deduction = await PayrollVariablePayDeduction.findByIdAndDelete(req.params.id);
+  if (!deduction) {
+    return next(new AppError('Payroll Variable Pay Deduction not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+
+// Create PayrollVariablePayAllowance
+exports.createPayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError("Company ID not found in cookies", 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: payrollVariablePayAllowance
+    });
+});
+
+// Get PayrollVariablePayAllowance by payrollUser
+exports.getPayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
+    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.find({ payrollUser: req.params.payrollUser });
+
+    if (!payrollVariablePayAllowance) {
+        return next(new AppError('PayrollVariablePayAllowance not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: payrollVariablePayAllowance
+    });
+});
+
+// Update PayrollVariablePayAllowance
+exports.updatePayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
+    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
+
+    if (!payrollVariablePayAllowance) {
+        return next(new AppError('PayrollVariablePayAllowance not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: payrollVariablePayAllowance
+    });
+});
+
+// Create Payroll Manual Arrears
+exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError("Company ID not found in cookies", 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const payrollManualArrears = await PayrollManualArrears.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollManualArrears
+  });
+});
+
+// Get Payroll Manual Arrears by ID
+exports.getPayrollManualArrears = catchAsync(async (req, res, next) => {
+  const payrollManualArrears = await PayrollManualArrears.findById(req.params.id);
+  
+  if (!payrollManualArrears) {
+    return next(new AppError('Payroll Manual Arrears not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollManualArrears
+  });
+});
+
+// Get all Payroll Manual Arrears
+exports.getAllPayrollManualArrearsByPayrollUser = catchAsync(async (req, res, next) => {
+  console.log("hii");
+  const payrollManualArrears = await PayrollManualArrears.find({ payrollUser: req.params.payrollUser });
+  res.status(200).json({
+    status: 'success',
+    data: payrollManualArrears
+  });
+});
+
+// Update Payroll Manual Arrears by ID
+exports.updatePayrollManualArrears = catchAsync(async (req, res, next) => {
+  const payrollManualArrears = await PayrollManualArrears.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollManualArrears) {
+    return next(new AppError('Payroll Manual Arrears not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollManualArrears
+  });
+});
+
+// Delete Payroll Manual Arrears by ID
+exports.deletePayrollManualArrears = catchAsync(async (req, res, next) => {
+  const payrollManualArrears = await PayrollManualArrears.findByIdAndDelete(req.params.id);
+
+  if (!payrollManualArrears) {
+    return next(new AppError('Payroll Manual Arrears not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Add a Payroll Loan/Advance
+exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
+    // Extract companyId from req.cookies
+    const companyId = req.cookies.companyId;
+
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError("Company ID not found in cookies", 400));
+    }
+  
+    // Add companyId to the request body
+    req.body.company = companyId;
+  const payrollLoanAdvance = await PayrollLoanAdvance.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollLoanAdvance
+  });
+});
+
+// Get Payroll Loan/Advance by payrollUser
+exports.getPayrollLoanAdvanceByPayrollUser = catchAsync(async (req, res, next) => {
+  const payrollLoanAdvance = await PayrollLoanAdvance.find({ payrollUser: req.params.payrollUser });
+  if (!payrollLoanAdvance) {
+    return next(new AppError('Payroll Loan/Advance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollLoanAdvance
+  });
+});
+
+// Update Payroll Loan/Advance by ID
+exports.updatePayrollLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollLoanAdvance = await PayrollLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!payrollLoanAdvance) {
+    return next(new AppError('Payroll Loan/Advance not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollLoanAdvance
+  });
+});
+
+// Delete Payroll Loan/Advance by ID
+exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollLoanAdvance = await PayrollLoanAdvance.findByIdAndDelete(req.params.id);
+  if (!payrollLoanAdvance) {
+    return next(new AppError('Payroll Loan/Advance not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Create Payroll Income Tax
+exports.createPayrollIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollIncomeTax = await PayrollIncomeTax.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: payrollIncomeTax
+    });
+});
+
+// Get Payroll Income Tax by ID
+exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
+    const payrollIncomeTax = await PayrollIncomeTax.findById(req.params.id);
+    if (!payrollIncomeTax) {
+        return next(new AppError('Payroll Income Tax record not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: payrollIncomeTax
+    });
+});
+
+// Get All Payroll Income Tax records
+exports.getAllPayrollIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollIncomeTaxes = await PayrollIncomeTax.find();
+    res.status(200).json({
+        status: 'success',
+        data: payrollIncomeTaxes
+    });
+});
+
+// Update Payroll Income Tax by ID
+exports.updatePayrollIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollIncomeTax = await PayrollIncomeTax.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
+    if (!payrollIncomeTax) {
+        return next(new AppError('Payroll Income Tax record not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: payrollIncomeTax
+    });
+});
+
+// Delete Payroll Income Tax by ID
+exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollIncomeTax = await PayrollIncomeTax.findByIdAndDelete(req.params.id);
+    if (!payrollIncomeTax) {
+        return next(new AppError('Payroll Income Tax record not found', 404));
+    }
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
+// Create Flexi Benefits and PF Tax record
+exports.createFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const { PayrollUser, TotalFlexiBenefitAmount, TotalProfessionalTaxAmount } = req.body;
+
+    // Create a new record in the database
+    const newRecord = await PayrollFlexiBenefitsPFTax.create({
+      PayrollUser,
+      TotalFlexiBenefitAmount,
+      TotalProfessionalTaxAmount
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        record: newRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get Flexi Benefits and PF Tax record by ID
+exports.getFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const record = await PayrollFlexiBenefitsPFTax.findById(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get all Flexi Benefits and PF Tax records
+exports.getAllFlexiBenefitsAndPFTaxByPyrollUser = async (req, res) => {
+  try {
+    const records = await PayrollFlexiBenefitsPFTax.find();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        records
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Update Flexi Benefits and PF Tax record by ID
+exports.updateFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const updatedRecord = await PayrollFlexiBenefitsPFTax.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record: updatedRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Delete Flexi Benefits and PF Tax record by ID
+exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const record = await PayrollFlexiBenefitsPFTax.findByIdAndDelete(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      message: 'Record successfully deleted'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Create Payroll Overtime record
+exports.createPayrollOvertime = async (req, res) => {
+  try {
+    const { PayrollUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
+
+    // Create a new Payroll Overtime entry in the database
+    const newOvertime = await PayrollOvertime.create({
+      PayrollUser,
+      OverTime,
+      LateComing,
+      EarlyGoing,
+      FinalOvertime
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        record: newOvertime
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get Payroll Overtime by ID
+exports.getPayrollOvertime = async (req, res) => {
+  try {
+    const record = await PayrollOvertime.findById(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll Overtime record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Update Payroll Overtime by ID
+exports.updatePayrollOvertime = async (req, res) => {
+  try {
+    const updatedRecord = await PayrollOvertime.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll Overtime record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record: updatedRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Delete Payroll Overtime by ID
+exports.deletePayrollOvertime = async (req, res) => {
+  try {
+    const record = await PayrollOvertime.findByIdAndDelete(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll Overtime record not found'
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      message: 'Payroll Overtime record successfully deleted'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get all Payroll Overtime records
+exports.getAllPayrollOvertime = async (req, res) => {
+  try {
+    const records = await PayrollOvertime.find();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        records
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};

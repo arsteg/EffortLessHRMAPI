@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 var attendanceProcessSchema = new Schema({
-    attendanceProcessPeriod: {
+    attendanceProcessPeriodYear: {
+      type: String,
+      required: true
+    },
+    attendanceProcessPeriodMonth: {
       type: String,
       required: true
     },

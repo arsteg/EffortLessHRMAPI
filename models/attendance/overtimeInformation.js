@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const overTimeInformationSchema = new Schema({
-    user: {
+    User: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
         required: true

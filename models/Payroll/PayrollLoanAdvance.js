@@ -1,12 +1,14 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollLoanAdvanceSchema = new Schema({
     payrollUser: {
       type: mongoose.Schema.ObjectId,
       ref: 'PayrollUsers',
       required: true
     },
-    loanAndAdvance: {
+    employeeLoanAdvance: {
       type: mongoose.Schema.ObjectId,
-      ref: 'LoanAndAdvance',
+      ref: 'EmployeeLoanAdvance',
       required: true
     },
     disbursementAmount: {
@@ -17,6 +19,12 @@ var payrollLoanAdvanceSchema = new Schema({
       type: String,
       enum: ['Pending', 'Approved'],
       required: true
+    },
+    company: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Company',
+      required: true
     }
   }, { collection: 'PayrollLoanAdvance' });
+  module.exports = mongoose.model('PayrollLoanAdvance', payrollLoanAdvanceSchema);
   

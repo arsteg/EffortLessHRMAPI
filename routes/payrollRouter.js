@@ -3478,4 +3478,1483 @@ router.put('/ctc-templates/:id',authController.protect, payrollController.update
  */
 router.delete('/ctc-templates/:id',authController.protect, payrollController.deleteCTCTemplateById);
 
+/**
+ * @swagger
+ * /api/v1/payroll:
+ *   post:
+ *     summary: Add a new payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 enum: ['InProgress', 'Complete Approval Pending', 'OnHold', 'Processed']
+ *               month:
+ *                 type: string
+ *               year:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Payroll successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/',authController.protect, payrollController.addPayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/{id}:
+ *   get:
+ *     summary: Get payroll by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Payroll found
+ *       404:
+ *         description: Payroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/:id',authController.protect, payrollController.getPayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/{id}:
+ *   put:
+ *     summary: Update payroll by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     requestBody:
+ *       description: Updated payroll details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               updatedOnDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 enum: ['InProgress', 'Complete Approval Pending', 'OnHold', 'Processed']
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Payroll updated successfully
+ *       404:
+ *         description: Payroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/:id',authController.protect, payrollController.updatePayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/{id}:
+ *   delete:
+ *     summary: Delete payroll by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       204:
+ *         description: Payroll successfully deleted
+ *       404:
+ *         description: Payroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/:id',authController.protect, payrollController.deletePayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-by-company:
+ *   post:
+ *     summary: Get all payrolls by company ID
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     tags: [Payroll Management]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
+ *     responses:
+ *       200:
+ *         description: Payrolls retrieved successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-by-company',authController.protect, payrollController.getPayrollsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/users:
+ *   post:
+ *     summary: Add a PayrollUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PayrollUser details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payroll:
+ *                 type: string
+ *                 required: true
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               totalHomeTake:
+ *                 type: number
+ *                 required: true
+ *               totalFlexiBenefits:
+ *                 type: number
+ *                 required: true
+ *               totalCTC:
+ *                 type: number
+ *                 required: true
+ *               totalGrossSalary:
+ *                 type: number
+ *                 required: true
+ *               totalTakeHome:
+ *                 type: number
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 enum: [Active, OnHold, Processed]
+ *                 required: true
+ *               company:
+ *     responses:
+ *       201:
+ *         description: PayrollUser successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/users', authController.protect, payrollController.createPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/users/{id}:
+ *   get:
+ *     summary: Get a PayrollUser by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollUser
+ *     responses:
+ *       200:
+ *         description: Successful response with the PayrollUser
+ *       404:
+ *         description: PayrollUser not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/users/:id', authController.protect, payrollController.getPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/users/{id}:
+ *   put:
+ *     summary: Update a PayrollUser by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:  
+ *           type: string
+ *         description: ID of the PayrollUser
+ *     requestBody:
+ *       description: New PayrollUser details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payroll:
+ *                 type: string
+ *               user:
+ *                 type: string
+ *               totalHomeTake:
+ *                 type: number
+ *                 required: true
+ *               totalFlexiBenefits:
+ *                  type: number
+ *                  required: true
+ *               totalCTC:
+ *                  type: number
+ *                  required: true
+ *               totalGrossSalary:
+ *                  type: number
+ *                  required: true
+ *               totalTakeHome:
+ *                  type: number
+ *                  required: true
+ *               status:
+ *                  type: string
+ *                  enum: [Active, OnHold, Processed]
+ *                  required: true
+ *               totalFixedAllowance:
+ *                  type: number
+ *               totalOtherBenefits:
+ *                  type: number
+ *               totalEmployeeStatutoryDeduction:
+ *                  type: number
+ *               totalEmployeeStatutoryContribution:
+ *                  type: number
+ *               totalFixedDeduction:
+ *                  type: number
+ *               totalVariableDeduction:
+ *                  type: number
+ *               totalLoan:
+ *                  type: number
+ *               totalAdvance:
+ *                  type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PayrollUser
+ *       404:
+ *         description: PayrollUser not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/users/:id', authController.protect, payrollController.updatePayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/users/{id}:
+ *   delete:
+ *     summary: Delete a PayrollUser by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollUser
+ *     responses:
+ *       204:
+ *         description: PayrollUser successfully deleted
+ *       404:
+ *         description: PayrollUser not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/users/:id', authController.protect, payrollController.deletePayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/users-by-payroll:
+ *   post:
+ *     summary: Get all PayrollUsers by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string 
+ *                         payroll:
+ *                             type: string 
+ *     responses:
+ *       200:
+ *         description: Successful response with PayrollUsers
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/users-by-payroll', authController.protect, payrollController.getAllPayrollUsersByPayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payrolluser-attendance-summary:
+ *   post:
+ *     summary: Add a PayrollAttendanceSummary
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Attendance Summary details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               totalDays:
+ *                 type: number
+ *                 required: true
+ *               lopDays:
+ *                 type: number
+ *                 required: true
+ *               payableDays:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PayrollAttendanceSummary successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payrolluser-attendance-summary', authController.protect, payrollController.addPayrollAttendanceSummary);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payrolluser-attendance-summary-by-payrollUser/{payrollUser}:
+ *   get:
+ *     summary: Get a PayrollAttendanceSummary by payrollUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payrollUser
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll attendance summary
+ *       404:
+ *         description: PayrollAttendanceSummary not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payrolluser-attendance-summary-by-payrollUser/:payrollUser', authController.protect, payrollController.getPayrollAttendanceSummaryByUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payrolluser-attendance-summary/{id}:
+ *   put:
+ *     summary: Update a PayrollAttendanceSummary by Id
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Id
+ *     requestBody:
+ *       description: Updated Payroll Attendance Summary details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               totalDays:
+ *                 type: number
+ *               lopDays:
+ *                 type: number
+ *               payableDays:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: PayrollAttendanceSummary successfully updated
+ *       404:
+ *         description: PayrollAttendanceSummary not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payrolluser-attendance-summary/:id', authController.protect, payrollController.updatePayrollAttendanceSummary);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-deductions:
+ *   post:
+ *     summary: Add a new Payroll Variable Pay Deduction
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Variable Pay Deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               variableDeduction:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               month:
+ *                 type: number
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Variable Pay Deduction successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-variable-pay-deductions', payrollController.addPayrollVariablePayDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-deductions-by-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get a Payroll Variable Pay Deduction by payrollUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: PayrollUser ID for which the deduction is being retrieved
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Variable Pay Deduction
+ *       404:
+ *         description: Payroll Variable Pay Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-variable-pay-deductions-by-payrolluser/:payrollUser', payrollController.getPayrollVariablePayDeductionByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-deductions/{id}:
+ *   put:
+ *     summary: Update a Payroll Variable Pay Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Variable Pay Deduction
+ *     requestBody:
+ *       description: Updated Payroll Variable Pay Deduction details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *               variableDeduction:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               month:
+ *                 type: number
+ *               year:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll Variable Pay Deduction
+ *       404:
+ *         description: Payroll Variable Pay Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-variable-pay-deductions/:id', payrollController.updatePayrollVariablePayDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-deductions/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Variable Pay Deduction by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Variable Pay Deduction
+ *     responses:
+ *       204:
+ *         description: Payroll Variable Pay Deduction successfully deleted
+ *       404:
+ *         description: Payroll Variable Pay Deduction not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-variable-pay-deductions/:id', payrollController.deletePayrollVariablePayDeduction);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-allowances:
+ *   post:
+ *     summary: Add a new PayrollVariablePayAllowance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PayrollVariablePayAllowance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               variableAllowance:
+ *                 type: string
+ *                 required: true
+ *               Month:
+ *                 type: number
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: PayrollVariablePayAllowance successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-variable-pay-allowances', authController.protect, payrollController.createPayrollVariablePayAllowance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-allowances-by-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get a PayrollVariablePayAllowance by payrollUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with the PayrollVariablePayAllowance
+ *       404:
+ *         description: PayrollVariablePayAllowance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-variable-pay-allowances-by-payrolluser/:payrollUser', authController.protect, payrollController.getPayrollVariablePayAllowance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-allowances/{id}:
+ *   put:
+ *     summary: Update a PayrollVariablePayAllowance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollVariablePayAllowance
+ *     requestBody:
+ *       description: New PayrollVariablePayAllowance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *               variableAllowance:
+ *                 type: string
+ *               Month:
+ *                 type: number
+ *               year:
+ *                 type: number
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PayrollVariablePayAllowance
+ *       404:
+ *         description: PayrollVariablePayAllowance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-variable-pay-allowances/:id', authController.protect, payrollController.updatePayrollVariablePayAllowance);
+
+// Payroll Manual Arrears routes
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears:
+ *   post:
+ *     summary: Create a new Payroll Manual Arrears entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Manual Arrears details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               manualArrears:
+ *                 type: number
+ *                 required: true
+ *               arrearDays:
+ *                 type: number
+ *                 required: true
+ *               lopReversalDays:
+ *                 type: number
+ *                 required: true
+ *               salaryRevisionDays:
+ *                 type: number
+ *                 required: true
+ *               lopReversalArrears:
+ *                 type: number
+ *                 required: true
+ *               totalArrears:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Manual Arrears successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-manual-arrears/', authController.protect, payrollController.createPayrollManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears/{id}:
+ *   get:
+ *     summary: Get Payroll Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Manual Arrears
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Manual Arrears details
+ *       404:
+ *         description: Payroll Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-manual-arrears/:id', authController.protect, payrollController.getPayrollManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears-by-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get all Payroll Manual Arrears
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Manual Arrears
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Manual Arrears entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-manual-arrears-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllPayrollManualArrearsByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears/{id}:
+ *   put:
+ *     summary: Update Payroll Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Manual Arrears
+ *     requestBody:
+ *       description: New Payroll Manual Arrears details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *               manualArrears:
+ *                 type: number
+ *               arrearDays:
+ *                 type: number
+ *               lopReversalDays:
+ *                 type: number
+ *               salaryRevisionDays:
+ *                 type: number
+ *               lopReversalArrears:
+ *                 type: number
+ *               totalArrears:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll Manual Arrears
+ *       404:
+ *         description: Payroll Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-manual-arrears/:id', authController.protect, payrollController.updatePayrollManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears/{id}:
+ *   delete:
+ *     summary: Delete Payroll Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Manual Arrears
+ *     responses:
+ *       204:
+ *         description: Payroll Manual Arrears successfully deleted
+ *       404:
+ *         description: Payroll Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-manual-arrears/:id', authController.protect, payrollController.deletePayrollManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-loan-advance:
+ *   post:
+ *     summary: Add a new Payroll Loan/Advance
+ *     tags: [Payroll Loan Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Loan/Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               loanAndAdvance:
+ *                 type: string
+ *                 required: true
+ *               disbursementAmount:
+ *                 type: number
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 enum: [Pending, Approved]
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Loan/Advance successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-loan-advance/', authController.protect, payrollController.addPayrollLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-loan-advance-y-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get Payroll Loan/Advance by payrollUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Loan/Advance details
+ *       404:
+ *         description: Payroll Loan/Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-loan-advance-by-payrolluser/:payrollUser', authController.protect, payrollController.getPayrollLoanAdvanceByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-loan-advance/{id}:
+ *   put:
+ *     summary: Update a Payroll Loan/Advance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Loan/Advance
+ *     requestBody:
+ *       description: Updated Payroll Loan/Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               disbursementAmount:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *                 enum: [Pending, Approved]
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll Loan/Advance
+ *       404:
+ *         description: Payroll Loan/Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-loan-advance/:id', authController.protect, payrollController.updatePayrollLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-loan-advance/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Loan/Advance by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Loan/Advance
+ *     responses:
+ *       204:
+ *         description: Payroll Loan/Advance successfully deleted
+ *       404:
+ *         description: Payroll Loan/Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-loan-advance/:id', authController.protect, payrollController.deletePayrollLoanAdvance);
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax:
+ *   post:
+ *     summary: Create a new Payroll Flexi Benefits and PF Tax record
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Flexi Benefits and PF Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *                 required: true
+ *               TotalFlexiBenefitAmount:
+ *                 type: number
+ *                 required: true
+ *               TotalProfessionalTaxAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Flexi Benefits and PF Tax record successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/flexi-benefits-pf-tax/', authController.protect, payrollController.createFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax/{id}:
+ *   get:
+ *     summary: Get a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     responses:
+ *       200:
+ *         description: Successful response with the record details
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexi-benefits-pf-tax/:id', authController.protect, payrollController.getFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax-by-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get all Payroll Flexi Benefits and PF Tax records
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with all records
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllFlexiBenefitsAndPFTaxByPyrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax/{id}:
+ *   put:
+ *     summary: Update a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     requestBody:
+ *       description: Updated Flexi Benefits and PF Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               TotalFlexiBenefitAmount:
+ *                 type: number
+ *               TotalProfessionalTaxAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated record
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/flexi-benefits-pf-tax/:id', authController.protect, payrollController.updateFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     responses:
+ *       204:
+ *         description: Record successfully deleted
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/flexi-benefits-pf-tax/:id', authController.protect, payrollController.deleteFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/overtime:
+ *   post:
+ *     summary: Add a new Payroll Overtime entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Overtime details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *                 required: true
+ *               OverTime:
+ *                 type: string
+ *                 required: true
+ *               LateComing:
+ *                 type: string
+ *                 required: true
+ *               EarlyGoing:
+ *                 type: string
+ *                 required: true
+ *               FinalOvertime:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Overtime successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/overtime/', authController.protect, payrollController.createPayrollOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/overtime/{id}:
+ *   get:
+ *     summary: Get Payroll Overtime by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime details
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/overtime/:id', authController.protect, payrollController.getPayrollOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/overtime/{id}:
+ *   put:
+ *     summary: Update Payroll Overtime by ID
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     requestBody:
+ *       description: Updated Payroll Overtime details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               OverTime:
+ *                 type: string
+ *               LateComing:
+ *                 type: string
+ *               EarlyGoing:
+ *                 type: string
+ *               FinalOvertime:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payroll Overtime successfully updated
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/:id', authController.protect, payrollController.updatePayrollOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payrollOvertime/{id}:
+ *   delete:
+ *     summary: Delete Payroll Overtime by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     responses:
+ *       204:
+ *         description: Payroll Overtime successfully deleted
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/overtime/:id', authController.protect, payrollController.deletePayrollOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/overtime:
+ *   get:
+ *     summary: Get all Payroll Overtime entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/overtime/', authController.protect, payrollController.getAllPayrollOvertime);
+
+// Payroll Income Tax routes
+
+/**
+ * @swagger
+ * /api/v1/payroll-incomeTax:
+ *   post:
+ *     summary: Create a new Payroll Income Tax record
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Income Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *                 required: true
+ *               TaxCalculatedMethod:
+ *                 type: string
+ *                 required: true
+ *               TaxCalculated:
+ *                 type: number
+ *                 required: true
+ *               TDSCalculated:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Income Tax record successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/incomeTax/', authController.protect, payrollController.createPayrollIncomeTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll-incomeTax/{id}:
+ *   get:
+ *     summary: Get a Payroll Income Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Income Tax record
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/incomeTax/:id', authController.protect, payrollController.getPayrollIncomeTaxById);
+
+/**
+ * @swagger
+ * /api/v1/payroll-incomeTax:
+ *   get:
+ *     summary: Get all Payroll Income Tax records
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Income Tax records
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/incomeTax/', authController.protect, payrollController.getAllPayrollIncomeTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll-incomeTax/{id}:
+ *   put:
+ *     summary: Update a Payroll Income Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     requestBody:
+ *       description: New Payroll Income Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *               TaxCalculatedMethod:
+ *                 type: string
+ *               TaxCalculated:
+ *                 type: number
+ *               TDSCalculated:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll Income Tax record
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/incomeTax/:id', authController.protect, payrollController.updatePayrollIncomeTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll-incomeTax/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Income Tax record by ID
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       204:
+ *         description: Payroll Income Tax record successfully deleted
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/incomeTax/:id', authController.protect, payrollController.deletePayrollIncomeTax);
+
 module.exports = router;

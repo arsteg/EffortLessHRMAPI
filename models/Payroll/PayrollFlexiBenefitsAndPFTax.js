@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollFlexiBenefitsAndPFTaxSchema = new Schema({
     PayrollUser: {
       type: mongoose.Schema.ObjectId,
@@ -13,4 +15,5 @@ var payrollFlexiBenefitsAndPFTaxSchema = new Schema({
       required: true
     }
   }, { collection: 'PayrollFlexiBenefitsAndPFTax' });
-  
+      
+module.exports = mongoose.model('PayrollFlexiBenefitsAndPFTax', payrollFlexiBenefitsAndPFTaxSchema);

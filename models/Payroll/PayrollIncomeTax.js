@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollIncomeTaxSchema = new Schema({
     PayrollUser: {
       type: mongoose.Schema.ObjectId,
@@ -17,4 +19,7 @@ var payrollIncomeTaxSchema = new Schema({
       required: true
     }
   }, { collection: 'PayrollIncomeTax' });
+  
+  module.exports = mongoose.model('PayrollIncomeTax', payrollIncomeTaxSchema);
+  
   

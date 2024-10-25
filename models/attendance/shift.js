@@ -24,7 +24,8 @@ var shiftSchema = new Schema({
     type: String
   },
   minHoursPerDayToGetCreditForFullDay: {
-    type: String
+    type: String,
+    required: true
   },
   isHalfDayApplicable: {
     type: Boolean

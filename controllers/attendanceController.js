@@ -1802,11 +1802,16 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                           let shiftTiming = "";
                           let deviationHour = "";
                           let isOvertime = false;
-
-                          if (shift.startTime && shift.endDate && shift.minHoursPerDayToGetCreditForFullDay) {
-                              const timeDifference = getTimeDifference(shift.minHoursPerDayToGetCreditForFullDay);
+                          console.log(shift.minHoursPerDayToGetCreditForFullDay);
+                          console.log(shift.startTime);
+                          console.log(shift.endTime);
+                          if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
+                            console.log(shift.minHoursPerDayToGetCreditForFullDay);
+                            const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
+                              const timeDifference = hours * 60;
                               const timeWorked = timeLogCount * 10;
-
+console.log(timeDifference);
+console.log(timeWorked);
                               if (timeWorked < timeDifference) {
                                   deviationHour = timeDifference - timeWorked;
                               }
@@ -1815,7 +1820,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                                   isOvertime = true;
                               }
                           }
-
+console.log("Deviation Hours" + deviationHour);
                           // Fetch manual entry comment if any
                           const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
 
@@ -1830,7 +1835,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                               beforeProcessing: 'N/A',
                               afterProcessing: 'N/A',
                               earlyLateStatus: 'N/A',
-                              deviationHour: '00:00',
+                              deviationHour: deviationHour,
                               shiftTiming: '00:00',
                               lateComingRemarks: lateComingRemarks,
                               company: req.cookies.companyId,
@@ -1846,8 +1851,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                  //IF isovertimeallowed flag set to true then only overtime will be calculated
                   // Insert attendanceRecords into AttendanceRecord collection
                   await insertAttendanceRecords(attendanceRecordsFiltered); 
-                  if(shift.isOvertime)
-                  {
+                 
                   // Insert entries into OvertimeInformation for users with isOvertime set to true
                   const overtimeRecords = attendanceRecordsFiltered
                       .filter(record => record.isOvertime)
@@ -1856,18 +1860,18 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                           AttandanceShift: shift._id,
                           OverTime: record.deviationHour,                          
                           ShiftTime: shift.startTime+" "+shift.endTime,
-                          Date: new Date(log._id),                          
+                          Date: record.date,                          
                           CheckInDate: record.checkIn,
                           CheckOutDate: record.checkOut,
                           CheckInTime: record.checkIn,
                           CheckOutTime: record.checkOut,
                           company: companyId,
                       }));
-
+console.log(overtimeRecords)
                   if (overtimeRecords.length) {
                       await OvertimeInformation.insertMany(overtimeRecords);
                   }
-                }
+                
               }
           }
       }
@@ -1933,7 +1937,7 @@ function parseTime(timeString) {
 function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
   
   const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay;
-  
+  console.log(minHoursPerDayToGetCreditForFullDay);
   // If the end time is before the start time, assume it's the next day
   if (differenceInMilliseconds < 0) {
     differenceInMilliseconds += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
@@ -2214,3 +2218,161 @@ async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
       throw error; // Rethrow or handle error as needed
   }
 }
+// Controller to process attendance LOP (Insert method)
+exports.ProcessAttendance = async (req, res) => {
+
+    try {
+       const companyId = req.cookies.companyId;
+        // Check if companyId exists in cookies
+        if (!companyId) {
+          return next(new AppError('Company ID not found in cookies', 400));
+        }
+        req.body.company = companyId;
+        const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, status, exportToPayroll, users,company } = req.body;
+        // Extract companyId from req.cookies
+       console.log(attendanceProcessPeriodMonth);
+
+       let existingProcess = await AttendanceProcess.findOne({
+        attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+        attendanceProcessPeriodYear: attendanceProcessPeriodYear
+    });
+
+    if (existingProcess) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'Attendance process for this period already exists'
+        });
+    }
+
+        // 1. Insert a new AttendanceProcess record
+        let attendanceProcess = await AttendanceProcess.create({
+            attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+            attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+            runDate: new Date(runDate),
+            status,
+            exportToPayroll,
+            company
+        });
+
+        // 2. Prepare AttendanceProcessUsers records for bulk insert
+        const attendanceProcessUsers = users.map(userEntry => ({
+            attendanceProcess: attendanceProcess._id,
+            user: userEntry.user,
+            status: userEntry.status
+        }));
+
+        // 3. Insert multiple AttendanceProcessUsers records
+        await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
+
+        return res.status(201).json({
+            status: 'success',
+            message: 'Attendance processed successfully',
+            data: {
+                attendanceProcess,
+                users: attendanceProcessUsers
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+};
+// Controller to delete attendance process and associated users
+exports.deleteAttendance = async (req, res) => {
+    try {
+        const { attandanaceProcessPeroidMonth, attandanaceProcessPeroidYear } = req.body;
+
+        // 1. Find the AttendanceProcess record
+        let attendanceProcess = await AttendanceProcess.findOne({
+            attendanceProcessPeriodMonth: attandanaceProcessPeroidMonth,
+            attendanceProcessPeriodYear: attandanaceProcessPeroidYear
+        });
+
+        // If no record found, return a 404 error
+        if (!attendanceProcess) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Attendance process for this period not found'
+            });
+        }
+        // 2. Check if exportToPayroll is true
+        if (attendanceProcess.exportToPayroll === true) {
+          return res.status(400).json({
+              status: 'fail',
+              message: 'Cannot delete the attendance process as it has already been exported to payroll'
+          });
+        }
+        // 3. Delete the found AttendanceProcess record
+        await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
+
+        // 4. Delete associated AttendanceProcessUsers records
+        await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Attendance process and associated users deleted successfully'
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+};
+
+exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+
+  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
+  
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  
+  res.status(200).json({
+    status: 'success',
+    data: attendanceRecords,
+    total: totalCount
+  });
+
+});
+
+async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month) {
+      throw new Error('Year and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 1); // Start of the next month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await OvertimeInformation.countDocuments({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).exec();
+          return { count };
+      } else {
+          const records = await OvertimeInformation.find({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).skip(skip).limit(limit).exec();
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}
+
+

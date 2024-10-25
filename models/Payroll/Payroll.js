@@ -1,65 +1,26 @@
+
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollSchema = new Schema({
-    user: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'User',
-      required: true
-    },
     date: {
       type: Date,
       required: true
     },
-    totalHomeTake: {
-      type: Number,
-      required: true
-    },
-    company: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Company',
-      required: true
-    },
-    totalFixedAllowance: {
-      type: Number
-    },
-    totalOtherBenefits: {
-      type: Number
-    },
-    totalEmployeeStatutoryDeduction: {
-      type: Number
-    },
-    totalEmployeeStatutoryContribution: {
-      type: Number
-    },
-    totalFixedDeduction: {
-      type: Number
-    },
-    totalVariableDeduction: {
-      type: Number
-    },
-    totalLoan: {
-      type: Number
-    },
-    totalAdvance: {
-      type: Number
-    },
-    totalFlexiBenefits: {
-      type: Number,
-      required: true
-    },
-    totalCTC: {
-      type: Number,
-      required: true
-    },
-    totalGrossSalary: {
-      type: Number,
-      required: true
-    },
-    totalTakeHome: {
-      type: Number,
-      required: true
+    updatedOnDate: {
+      type: Date,
+      required: false
     },
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected'],
+      enum: ['InProgress','Complete Approval Pending', 'OnHold', 'Processed'],
+      required: true
+    },
+    month: {
+      type: String,
+      required: true
+    },
+    year: {
+      type: String,
       required: true
     },
     company: {
@@ -69,3 +30,4 @@ var payrollSchema = new Schema({
     }
   }, { collection: 'Payroll' });
   
+module.exports = mongoose.model('Payroll', payrollSchema);

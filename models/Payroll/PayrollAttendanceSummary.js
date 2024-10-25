@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var payrollAttendanceSummarySchema = new Schema({
     payrollUser: {
       type: mongoose.Schema.ObjectId,
@@ -17,4 +19,5 @@ var payrollAttendanceSummarySchema = new Schema({
       required: true
     }
   }, { collection: 'PayrollAttendanceSummary' });
-  
+     
+module.exports = mongoose.model('PayrollAttendanceSummary', payrollAttendanceSummarySchema);
