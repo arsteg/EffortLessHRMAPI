@@ -78,7 +78,6 @@ exports.addLog = catchAsync(async (req, res, next) => {
     url:url,
     isManualTime:false
   });  
-  console.log('time log created');
   res.status(200).json({
     status: 'success',
     data: {
@@ -244,21 +243,17 @@ exports.getLogsWithImages = catchAsync(async (req, res, next) => {
 
 
 exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
- console.log("hello");
   const timeLogsExists = await TimeLog.find({ date: { $lt: new Date(req.body.tillDate) } }); 
   if(timeLogsExists)
-  { 
-    console.log(timeLogsExists.length);
+  {  
     for(var i = 0; i <timeLogsExists.length; i++) {
     if(timeLogsExists[i].filePath)
     {
         var url = timeLogsExists[i].filePath;     
         containerClient.getBlockBlobClient(url).deleteIfExists();
         const blockBlobClient = containerClient.getBlockBlobClient(url);
-        await blockBlobClient.deleteIfExists();
-        console.log("deleted");
-    }
-    console.log(timeLogsExists[i]._id);
+        await blockBlobClient.deleteIfExists();      
+    }   
     const document = await TimeLog.findByIdAndDelete(timeLogsExists[i]._id);
     if (!document) {
       console.log('No document found with that ID');
@@ -402,8 +397,7 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
   var endDate = new Date(req.body.endDate); // Get end date from query parameter
 
   const startDateISO = startDate.toISOString().split('T')[0];
-  const endDateISO = endDate.toISOString().split('T')[0]; 
-               
+  const endDateISO = endDate.toISOString().split('T')[0];                
  
   console.log(`userIds: ${userIds} startDate: ${startDateISO} endDate:${endDateISO}`);
   

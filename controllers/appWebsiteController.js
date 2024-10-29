@@ -70,7 +70,6 @@ exports.delete = catchAsync(async (req, res, next) => {
 
 exports.getById = catchAsync(async (req, res, next) => {
     try {
-        console.log(req.params.id);
         const getDocumentByID = await appWebsite.findById(req.params.id);
         res.status(200).json({
             status: 'success',
@@ -207,10 +206,7 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
 
 exports.updateProductivity = catchAsync(async (req, res, next) => {    
     const { id } = req.params.id;
-    const { status } = req.body.status;
-    
-    console.log(`req.body.id: ${req.body.id}`);
-    console.log(`req.body.status: ${req.body.status}`);
+    const { status } = req.body.status;    
     
     const productivityData = await Productivity.findByIdAndUpdate(
         req.body.id,
@@ -295,8 +291,6 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
     }
 
     filters.company = req.cookies.companyId;
-
-    console.log('Filters:', filters);
 
     const history = await BrowserHistory.find(filters);
 

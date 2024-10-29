@@ -198,8 +198,6 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
 });
 
 exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {  
-  
-  console.log(`calling createAssetAttributeValue`);
 
   // Check if both assetId and attributeId exist
   if (req.body.assetId && req.body.attributeId) {    
@@ -552,7 +550,6 @@ exports.getAllEmployeeAssets = catchAsync(async (req, res, next) => {
 });
 
 exports.createVendor = catchAsync(async (req, res, next) => {
-  console.log(req.body);
 
   const { vendorId, vendorName, email, address, phone } = req.body;
 
@@ -805,12 +802,8 @@ exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
   // Find assets assigned to the given user
   const assignedAssetsForUser = await EmployeeAssets.find({ Employee: userId });
 
-  console.log(`assignedAssetsForUser:` + assignedAssetsForUser.length);
-
   // Extract asset IDs from the result
   const assignedAssetIds = assignedAssetsForUser.map((item) => item.Asset);
-
-  console.log(`assignedAssetIds:` + assignedAssetIds);
 
   // Find all assets that are NOT in the list of assigned assets for the user
   const unassignedAssets = await Asset.find({

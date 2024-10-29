@@ -2075,7 +2075,6 @@ async function updateOrCreateVariableAllownace(
   const existingCategories = await CTCTemplateVariableAllowance.find({
     ctcTemplate: ctcTemplateId,
   });
-  console.log(existingCategories);
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
     const existingCategory = existingCategories.find((existing) =>
@@ -2319,13 +2318,11 @@ async function updateOrOtherBenefitsAllowance(
 ) {
   const existingCategories = await CTCTemplateOtherBenefitAllowance.find({
     ctcTemplate: ctcTemplateId,
-  });
-  console.log(existingCategories);
+  }); 
 
   // Update existing and create new categories
   const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    console.log(category);
-    const existingCategory = existingCategories.find((existing) =>
+     const existingCategory = existingCategories.find((existing) =>
       existing.otherBenefit.equals(category.otherBenefit)
     );
 
@@ -3151,7 +3148,6 @@ exports.getPayrollManualArrears = catchAsync(async (req, res, next) => {
 
 // Get all Payroll Manual Arrears
 exports.getAllPayrollManualArrearsByPayrollUser = catchAsync(async (req, res, next) => {
-  console.log("hii");
   const payrollManualArrears = await PayrollManualArrears.find({ payrollUser: req.params.payrollUser });
   res.status(200).json({
     status: 'success',
@@ -3270,7 +3266,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
 });
 
 // Get All Payroll Income Tax records
-exports.getAllPayrollIncomeTax = catchAsync(async (req, res, next) => {
+exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) => {
     const payrollIncomeTaxes = await PayrollIncomeTax.find();
     res.status(200).json({
         status: 'success',

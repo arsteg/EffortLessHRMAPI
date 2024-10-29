@@ -20,8 +20,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
               }); 
              if(req.body.values!=null)
               {
-                for(var i = 0; i < req.body.values.length; i++) {
-                    console.log(req.body.values.length);
+                for(var i = 0; i < req.body.values.length; i++) {                   
                     const newvaluesItem = await genericSettingValue.create({
                     genericSetting:createDocument._id,
                     value:req.body.values[i].value

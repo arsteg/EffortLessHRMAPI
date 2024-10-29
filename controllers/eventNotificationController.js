@@ -45,8 +45,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     });
   });
   
-  exports.deleteEventNotification = catchAsync(async (req, res, next) => {
-    console.log(`req.params.id:${req.params.id}`);
+  exports.deleteEventNotification = catchAsync(async (req, res, next) => {  
     const eventNotification = await EventNotification.findByIdAndDelete(req.params.id);
     if (!eventNotification) {
       return next(new AppError('Event notification not found', 404));
@@ -116,9 +115,6 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   });
   
   exports.getAllEventNotificationTypes = catchAsync(async (req, res, next) => {
-    console.log('getAllEventNotificationTypes');
-    console.log('Cookies:', req.cookies);
-
     const companyId = req.cookies.companyId;
 
     if (!companyId) {
@@ -127,8 +123,6 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
             message: 'No companyId found in cookies'
         });
     }
-
-    console.log('companyId:', companyId, 'Type:', typeof companyId);
 
     // Convert companyId to ObjectId
     let objectId;
@@ -140,9 +134,6 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
             message: 'Invalid companyId format'
         });
     }
-
-    console.log('ObjectId:', objectId);
-
     try {
         const eventNotificationTypes = await EventNotificationType.find({ company: objectId });
         res.status(200).json({
@@ -150,7 +141,6 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
             data: eventNotificationTypes
         });
     } catch (error) {
-        console.error('Error fetching event notification types:', error);
         next(error);
     }
 });
@@ -271,17 +261,13 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
 
 exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
   const userId = req.cookies.userId;
-  console.log(`Fetching notifications for user ID: ${userId}`);
 
   // Get the start and end of the current date
   const startOfDay = moment().startOf('day').toDate();
   const endOfDay = moment().endOf('day').toDate();
-  console.log(`Start of day: ${startOfDay}`);
-  console.log(`End of day: ${endOfDay}`);
 
   // Fetch UserNotification records for the given user
   const userNotifications = await UserNotification.find({ user: userId });
-  console.log(`User notifications fetched: ${JSON.stringify(userNotifications, null, 2)}`);
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
@@ -292,7 +278,6 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
 
   // Extract notification IDs from UserNotification records
   const notificationIds = userNotifications.map(notification => notification.notification);
-  console.log(`Notification IDs extracted: ${notificationIds}`);
 
   // Fetch EventNotification records for the extracted notification IDs and apply date filter
   const eventNotifications = await EventNotification.find({
@@ -301,10 +286,8 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
       $gte: startOfDay,
       $lte: endOfDay
     }
-  });
-  console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);  
+  }); 
 
-  console.log('Event notifications found, sending response');
   res.status(200).json({
     status: 'success',
     data: eventNotifications
@@ -313,11 +296,9 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
 
 exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   const userId = req.cookies.userId;
-  console.log(`Fetching notifications for user ID: ${userId}`);
-  
+
   // Fetch UserNotification records for the given user
   const userNotifications = await UserNotification.find({ user: userId });
-  console.log(`User notifications fetched: ${JSON.stringify(userNotifications, null, 2)}`);
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
@@ -333,8 +314,6 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   // Fetch EventNotification records for the extracted notification IDs and apply date filter
   const eventNotifications = await EventNotification.find({
     _id: { $in: notificationIds }});
-  console.log(`Event notifications fetched: ${JSON.stringify(eventNotifications, null, 2)}`);
-  console.log('Event notifications found, sending response');
   res.status(200).json({
     status: 'success',
     data: eventNotifications
@@ -343,46 +322,33 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
 
 exports.getUserNotifications = async (userIds) => {
 //  const { userIds } = req.body; // Extract userIds from the request body
-
-  console.log('Received user IDs:', userIds); // Log the received user IDs
-
   try {
       // Step 1: Retrieve UserNotification records for given user IDs
-      console.log('Retrieving UserNotification records for given user IDs...');
-      
+          
       const userNotifications = await UserNotification.find({
           user: { $in: userIds },
           status: 'unread' // Only consider unread notifications
-      }).populate('notification'); // Populate EventNotification reference
-
-      console.log('Retrieved user notifications:', userNotifications); // Log the retrieved user notifications         
+      }).populate('notification'); // Populate EventNotification reference       
 
       // Step 2: Filter to get EventNotification for the current date
-      console.log('Filtering notifications for the current date...');
+     
       const currentDate = new Date();
       const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
       const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
 
-      console.log('Start of day:', startOfDay); // Log the start of the day
-      console.log('End of day:', endOfDay); // Log the end of the day
-
       const eventNotifications = userNotifications.filter(userNotification => {
-          const eventDate = userNotification.notification.date;
-          console.log('Event date:', eventDate); // Log the event date
+          const eventDate = userNotification.notification.date;         
           return eventDate >= startOfDay && eventDate <= endOfDay;
       });
 
-      console.log('Filtered event notifications:', eventNotifications); // Log the filtered event notifications
-      return eventNotifications;      
-      console.log('Response sent successfully'); // Log that the response was sent successfully
+    return eventNotifications;  
   } catch (error) {
       console.error('Error retrieving user notifications:', error); // Log any errors encountered     
   }
 };
 
 exports.updateRecurringNotifications = async () => {
-  try {
-    console.log('Fetching UserNotification records with status "read"...');
+  try {   
     const userNotifications = await UserNotification.find({
       status: 'read'
     }).populate('notification');
@@ -390,15 +356,10 @@ exports.updateRecurringNotifications = async () => {
     console.log(`Fetched ${userNotifications.length} UserNotification records.`);
 
     for (const userNotification of userNotifications) {
-      const eventNotification = userNotification.notification;
-      console.log(`Processing UserNotification with ID: ${userNotification._id} and EventNotification ID: ${eventNotification._id}`);
-
-      console.log(`eventNotification.isRecurring: ${eventNotification.isRecurring}`);
+      const eventNotification = userNotification.notification;  
 
       if (eventNotification.isRecurring) {
-        console.log(`UserNotification is recurring with frequency: ${eventNotification.recurringFrequency}`);
-
-        // Update the date based on the recurringFrequency
+               // Update the date based on the recurringFrequency
         let newDate;
         switch (eventNotification.recurringFrequency) {
           case 'daily':
@@ -417,11 +378,9 @@ exports.updateRecurringNotifications = async () => {
             console.log(`Unrecognized recurring frequency: ${eventNotification.recurringFrequency} for UserNotification ID: ${userNotification._id}`);
             continue;
         }
-
-        console.log(`Updating EventNotification ID: ${eventNotification._id} with new date: ${newDate}`);
+      
         await EventNotification.findByIdAndUpdate(eventNotification._id, { date: newDate });
 
-        console.log(`Resetting status of UserNotification ID: ${userNotification._id} to 'unread'`);
         await UserNotification.findByIdAndUpdate(userNotification._id, { status: 'unread' });
       } else {
         console.log(`UserNotification ID: ${userNotification._id} is not recurring and will be skipped.`);

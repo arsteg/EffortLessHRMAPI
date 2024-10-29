@@ -36,7 +36,9 @@ const EmployeeIncomeTaxDeclaration = require("../models/Employment/EmployeeIncom
 const EmployeeIncomeTaxDeclarationComponent = require("../models/Employment/EmployeeIncomeTaxDeclarationComponent");
 const EmployeeIncomeTaxDeclarationHRA = require("../models/Employment/EmployeeIncomeTaxDeclarationHRA");
 const { v1: uuidv1 } = require("uuid");
+const EmailTemplate = require('../models/commons/emailTemplateModel');
 var mongoose = require("mongoose");
+const constants = require('../constants');
 const { BlobServiceClient } = require("@azure/storage-blob");
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
@@ -1135,6 +1137,36 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     });
 
   const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
+  const user = await User.findById(req.body.user);  
+               
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification).where('company').equals(companyId); 
+  if(emailTemplate)
+  {
+   const template = emailTemplate.contentData;
+   const message = template
+   .replace("{firstName}", user.firstName)
+   .replace("{company}",  req.cookies.companyName)
+   .replace("{company}", req.cookies.companyName)
+   .replace("{lastName}", user.lastName); 
+ console.log(user.email);
+ console.log(emailTemplate.subject);
+      try {
+       await sendEmail({
+         email: user.email,
+         subject: emailTemplate.subject,
+         message
+       });
+      
+     } catch (err) {   
+      console.log(err);
+       return next(
+         new AppError(
+           'There was an error sending the email. Try again later.',
+           500
+         )
+     );
+   }
+}
   res.status(201).json({
     status: "success",
     data: employeeLoanAdvances,
@@ -1377,8 +1409,35 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
 
   const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
-
-
+  const user = await User.findById(req.body.user);  
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee).where('company').equals(companyId); 
+  if(emailTemplate)
+  {
+   const template = emailTemplate.contentData;
+   const message = template
+   .replace("{firstName}", user.firstName)
+   .replace("{company}",  req.cookies.companyName)
+   .replace("{company}", req.cookies.companyName)
+   .replace("{lastName}", user.lastName); 
+ console.log(user.email);
+ console.log(emailTemplate.subject);
+      try {
+       await sendEmail({
+         email: user.email,
+         subject: emailTemplate.subject,
+         message
+       });
+      
+     } catch (err) {   
+      console.log(err);
+       return next(
+         new AppError(
+           'There was an error sending the email. Try again later.',
+           500
+         )
+     );
+    }
+  }
   res.status(201).json({
     status: 'success',
     data: employeeIncomeTaxDeclaration

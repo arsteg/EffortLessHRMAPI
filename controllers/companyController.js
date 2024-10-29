@@ -141,7 +141,6 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
     const userId = val.user; // Get the user ID from the object
     newUsers.add(userId);
   }
-  console.log(newUsers);
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await HolidayapplicableEmployee.find({ holiday: isHolidayCalendar._id });
  
@@ -457,7 +456,6 @@ exports.updateDepartment = catchAsync(async (req, res, next) => {
 
 // Get All Departments by CompanyId
 exports.getAllDepartmentsByCompanyId = catchAsync(async (req, res, next) => {
-  console.log("hii");
   const departments = await Department.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
     status: 'success',

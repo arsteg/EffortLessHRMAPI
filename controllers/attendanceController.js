@@ -165,10 +165,9 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
     const userId = val.user; // Get the user ID from the object
     newUsers.add(userId);
   }
-  console.log(newUsers);
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await UserRegularizationReason.find({ regularizationReason: isRegularizationReason._id });
-  console.log(existingUsers);
+  
   // Extract the existing user IDs
   const existingUserIds = existingUsers.map(user => user.user.toString());
 
@@ -271,7 +270,6 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
     });
     userOnDutyReasons.push(userOnDutyReason);
   }
-  console.log(userOnDutyReasons);
   onDutyReason.userOnDutyReason=userOnDutyReasons;
   res.status(201).json({
     status: 'success',
@@ -318,11 +316,9 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
     const userId = val.user; // Get the user ID from the object
     newUsers.add(userId);
   }
-  console.log(newUsers);
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await UserOnDutyReason.find({ onDutyReason: isOnDutyReason._id });
-  console.log(existingUsers);
-  // Extract the existing user IDs
+    // Extract the existing user IDs
   const existingUserIds = existingUsers.map(user => user.user.toString());
 
   // Find users to be removed (existing users not present in the request)
@@ -528,13 +524,12 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
-  console.log(req.params.userId);
+
   const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });  
  
   var attendanceTemplate =null;
   if(attendanceTemplateAssignments.length>0)
-  {
-  console.log(attendanceTemplateAssignments[0].attandanceTemplate);
+  {  
   attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
   }
   res.status(200).json({
@@ -587,8 +582,7 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
     const IPDetails = req.body.IPDetails.map(ip => ({
       attendanceRegularization: attendanceRegularization._id,
       IP: ip.IP
-    }));
-    console.log(IPDetails);
+    }));  
     attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = await AttendanceRegularizationRestrictedIP.insertMany(IPDetails);
     
   }
@@ -603,7 +597,6 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
       Longitude: location.Longitude,
       Radius: location.Radius
     }));
-    console.log(locationDetails);
     attendanceRegularization.AttendanceRegularizationRestrictedLocations = await AttendanceRegularizationRestrictedLocation.insertMany(locationDetails);
     
   }
@@ -1336,13 +1329,11 @@ exports.getAllShifts = catchAsync(async (req, res, next) => {
   });
 });
 exports.getShiftByUser = catchAsync(async (req, res, next) => {
-  console.log(req.params.userId);
   const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ user: req.params.userId });  
  
   var shifts =null;
   if(shiftTemplateAssignments.length>0)
   {
-  console.log(shiftTemplateAssignments[0].template);
   shifts = await Shift.findById(shiftTemplateAssignments[0].template);
   }
   res.status(200).json({
@@ -1651,7 +1642,6 @@ if (!company) {
   if (req.body.status) {
     query.status = req.body.status;
   }
-console.log(query);
   // Get the total count of documents matching the query
   const totalCount = await EmployeeOnDutyRequest.countDocuments(query);
 
@@ -1664,7 +1654,7 @@ console.log(query);
    
       const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
       if(employeeOnDutyShifts) 
-        { console.log(employeeOnDutyShifts);
+        { 
           dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
         }
         else{
@@ -1693,7 +1683,7 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
      
         const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
         if(employeeOnDutyShifts) 
-          { console.log(employeeOnDutyShifts);
+          {
             dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
           }
           else{
@@ -1737,18 +1727,18 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
 });
 
 exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
+  const month = req.body.month || new Date().getMonth(); // Default to current month if not provided
+  const year = req.body.year || new Date().getFullYear(); // Default to current year if not provided
 
-  // Check if companyId exists in cookies
   if (!companyId) {
       return next(new AppError('Company ID not found in cookies', 400));
   }
 
-  // Add companyId to the request body
   req.body.company = companyId;
+  const startDate = new Date(year, month - 1, 1); // First day of the given month
+const endDate = new Date(year, month, 0); // Last day of the given month
   let filter = { status: 'Active', company: req.cookies.companyId };
-
   // Generate query based on request params
   const features = new APIFeatures(User.find(filter), req.query)
       .filter()
@@ -1759,7 +1749,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   // Run created query
   const document = await features.query;
 
-  const endDate = new Date(); // Today's date
+//  const endDate = new Date(); // Today's date
 
   // Move to the first day of the current month
   const firstDayOfCurrentMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -1772,10 +1762,10 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
 
   // Calculate how many days to subtract to get to the last Monday
   const daysToSubtract = lastDayOfWeek === 0 ? 6 : lastDayOfWeek - 1;
-
   // Calculate the last Monday of the previous month
-  const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+ // const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
+// Define start and end dates for the selected month
 
   // Perform additional work on each user
   const modifiedUsers = await Promise.all(document.map(async user => {
@@ -1800,18 +1790,12 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                       if (attendannceCount == 0) {
                           const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
                           let shiftTiming = "";
-                          let deviationHour = "";
-                          let isOvertime = false;
-                          console.log(shift.minHoursPerDayToGetCreditForFullDay);
-                          console.log(shift.startTime);
-                          console.log(shift.endTime);
+                          let deviationHour = "0";
+                          let isOvertime = false;                       
                           if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
-                            console.log(shift.minHoursPerDayToGetCreditForFullDay);
-                            const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
+                              const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
                               const timeDifference = hours * 60;
                               const timeWorked = timeLogCount * 10;
-console.log(timeDifference);
-console.log(timeWorked);
                               if (timeWorked < timeDifference) {
                                   deviationHour = timeDifference - timeWorked;
                               }
@@ -1820,7 +1804,6 @@ console.log(timeWorked);
                                   isOvertime = true;
                               }
                           }
-console.log("Deviation Hours" + deviationHour);
                           // Fetch manual entry comment if any
                           const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
 
@@ -1867,7 +1850,6 @@ console.log("Deviation Hours" + deviationHour);
                           CheckOutTime: record.checkOut,
                           company: companyId,
                       }));
-console.log(overtimeRecords)
                   if (overtimeRecords.length) {
                       await OvertimeInformation.insertMany(overtimeRecords);
                   }
@@ -1936,8 +1918,7 @@ function parseTime(timeString) {
 
 function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
   
-  const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay;
-  console.log(minHoursPerDayToGetCreditForFullDay);
+  const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay; 
   // If the end time is before the start time, assume it's the next day
   if (differenceInMilliseconds < 0) {
     differenceInMilliseconds += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
@@ -2074,7 +2055,6 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
        for (let day = 1; day <= daysInMonth; day++) {      
      
             const currentDate = new Date(req.body.year, req.body.month-1, day);
-            console.log(req.body.year, req.body.month-1, day, "Date is "+currentDate);
             const dayOfWeek = currentDate.getDay();
             
            // Check if it's Saturday (6) or Sunday (0) or a holiday
@@ -2083,16 +2063,11 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
            }
            else
            {
-            console.log("else "+dayOfWeek);
-            console.log("rrr"+currentDate);
-
-           // Check if the day is marked as present in attendance records
+                     // Check if the day is marked as present in attendance records
            const currentDateForValidate = new Date(req.body.year, req.body.month-1, day);
-           console.log(currentDateForValidate);
            const isPresent = attendanceRecords.some(record => {
                return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
            });
-           console.log(currentDateForValidate);
            // If not present and not an approved leave, mark as LOP
            if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
                // Insert into LOP
@@ -2104,16 +2079,14 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
     
            if (existingRecord) {
            }
-    else
-    {
+          else
+          {
                const lopRecord = new LOP({
                    user: req.body.user,
                    date: currentDate,
                    company: req.cookies.companyId
                });
-console.log(lopRecord);
                await lopRecord.save();
-              // console.log(`Inserted LOP for ${currentDate.toISOString().split('T')[0]}`);
            }
           }
           }
@@ -2230,8 +2203,6 @@ exports.ProcessAttendance = async (req, res) => {
         req.body.company = companyId;
         const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, status, exportToPayroll, users,company } = req.body;
         // Extract companyId from req.cookies
-       console.log(attendanceProcessPeriodMonth);
-
        let existingProcess = await AttendanceProcess.findOne({
         attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
         attendanceProcessPeriodYear: attendanceProcessPeriodYear
@@ -2264,6 +2235,11 @@ exports.ProcessAttendance = async (req, res) => {
         // 3. Insert multiple AttendanceProcessUsers records
         await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
 
+        await sendEmailToUsers(attendanceProcessUsers);
+//loop for user
+//send email to user that your ttdance is processed
+//Send email to managers that respective users has attendance process
+
         return res.status(201).json({
             status: 'success',
             message: 'Attendance processed successfully',
@@ -2272,13 +2248,48 @@ exports.ProcessAttendance = async (req, res) => {
                 users: attendanceProcessUsers
             }
         });
-    } catch (error) {
-        console.error(error);
+    } catch (error) {       
         return res.status(500).json({
             status: 'error',
             message: 'Internal server error'
         });
     }
+};
+const sendEmailToUsers = async (attendanceProcessUsers) => {
+  for (const userEntry of attendanceProcessUsers) {
+      const { user, status } = userEntry;
+      
+      const attendanceUser = await User.findById(user);  
+               
+      const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.CancelReject_Request_Leave_Application).where('company').equals(companyId); 
+      if(emailTemplate)
+      {
+       const template = emailTemplate.contentData;
+       const message = template
+       .replace("{firstName}", attendanceUser.firstName)
+       .replace("{company}",  req.cookies.companyName)
+       .replace("{company}", req.cookies.companyName)
+       .replace("{lastName}", attendanceUser.lastName); 
+     console.log(attendanceUser.email);
+     console.log(emailTemplate.subject);
+          try {
+           await sendEmail({
+             email: attendanceUser.email,
+             subject: emailTemplate.subject,
+             message
+           });
+          
+         } catch (err) {   
+          console.log(err);
+           return next(
+             new AppError(
+               'There was an error sending the email. Try again later.',
+               500
+             )
+         );
+       }
+  }
+}
 };
 // Controller to delete attendance process and associated users
 exports.deleteAttendance = async (req, res) => {

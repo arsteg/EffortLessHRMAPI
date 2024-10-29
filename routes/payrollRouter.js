@@ -4809,7 +4809,7 @@ router.get('/overtime/', authController.protect, payrollController.getAllPayroll
 
 /**
  * @swagger
- * /api/v1/payroll-incomeTax:
+ * /api/v1/payroll/incomeTax:
  *   post:
  *     summary: Create a new Payroll Income Tax record
  *     tags:  [Payroll Management]
@@ -4848,7 +4848,7 @@ router.post('/incomeTax/', authController.protect, payrollController.createPayro
 
 /**
  * @swagger
- * /api/v1/payroll-incomeTax/{id}:
+ * /api/v1/payroll/incomeTax/{id}:
  *   get:
  *     summary: Get a Payroll Income Tax record by ID
  *     tags: [Payroll Management]
@@ -4874,24 +4874,31 @@ router.get('/incomeTax/:id', authController.protect, payrollController.getPayrol
 
 /**
  * @swagger
- * /api/v1/payroll-incomeTax:
+ * /api/v1/payroll/incomeTax-by-payrollUser/{payrollUser}:
  *   get:
  *     summary: Get all Payroll Income Tax records
  *     tags:  [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
  *     responses:
  *       200:
  *         description: Successful response with Payroll Income Tax records
  *       500:
  *         description: Internal server error
  */
-router.get('/incomeTax/', authController.protect, payrollController.getAllPayrollIncomeTax);
+router.get('/incomeTax-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollIncomeTaxByPayrollUser);
 
 /**
  * @swagger
- * /api/v1/payroll-incomeTax/{id}:
+ * /api/v1/payroll/incomeTax/{id}:
  *   put:
  *     summary: Update a Payroll Income Tax record by ID
  *     tags: [Payroll Management]
@@ -4933,7 +4940,7 @@ router.put('/incomeTax/:id', authController.protect, payrollController.updatePay
 
 /**
  * @swagger
- * /api/v1/payroll-incomeTax/{id}:
+ * /api/v1/payroll/incomeTax/{id}:
  *   delete:
  *     summary: Delete a Payroll Income Tax record by ID
  *     tags:  [Payroll Management]

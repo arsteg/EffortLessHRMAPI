@@ -191,7 +191,6 @@ const plan = await Plan.findById(req.params.id);
 if(plan) {
     const softwares = await Software.find({})
       .where('_id').equals(plan.software);
-console.log(softwares);
     if(softwares && softwares.length) {
       plan.softwares = softwares;
     } else {
@@ -1214,7 +1213,6 @@ exports.getSubscriptionDetailsById = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
       return res.status(400).json({ error: 'Invalid subscription ID' });
     }
-    console.log(subscriptionId);
     // Find the subscription by ID
     const subscription = await Subscription.findById(subscriptionId);
 

@@ -86,8 +86,7 @@ assignLeavesByJobs = async (req, res, next) => {
             if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Semi_Annually)
             {            
             
-            const endMonth = startMonth + 6;    
-            console.log(leaveTemplateCategory);
+            const endMonth = startMonth + 6;              
             const accruedBalance= 2;//leaveTemplateCategory.accrualRatePerPeriod;
             console.log("Semi annually called" + "cycle"+cycle+"employee"+employee._id+"category"+category+"type"+type+"createdOn"+createdOn+"startMonth"+startMonth+
             "endMonth"+endMonth+"openingBalance"+openingBalance+"leaveApplied"+leaveApplied+"accruedBalance"+accruedBalance+"leaveRemaining"+leaveRemaining

@@ -374,8 +374,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
     }  
   });
   exports.getUserUiState = catchAsync(async (req, res, next) => {    
-    const key = req.params.key;    
-    console.log(`req.cookies.userId:${req.cookies.userId}, key:${key}`);
+    const key = req.params.key;        
     try {
       let state = await UserState.where({ user: req.cookies.userId, key }).findOne();
         if(!state){

@@ -685,8 +685,7 @@ exports.getAllCandidatesFeedbackData = async (req, res) => {
       candidate.feedbackFields = [];
 
       // Iterate through each feedback field for the candidate
-      for (const feedbackField of feedbackFields) {
-        console.log(`feedbackField._id: ${feedbackField._id}`);
+      for (const feedbackField of feedbackFields) {       
         const feedbackFieldValue = await FeedbackFieldValue.findOne({
           candidate: candidate._id,
           feedbackField: feedbackField._id,

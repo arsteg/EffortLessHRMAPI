@@ -107,8 +107,7 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
       details: templateCategories
     });
   } catch (error) {
-    console.error(error); // Log the error for debugging
-    res.status(500).json({
+      res.status(500).json({
       status: 'error',
       message: 'Internal server error'
     });
@@ -490,8 +489,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   }
   for (const category of expenseCategories) {
     const result = await ExpenseCategory.findById(category.expenseCategory);
-    console.log(result);
-     if (!result) {
+    if (!result) {
       return res.status(400).json({
         status: 'failure',
         message: 'Invalid Category',
@@ -558,8 +556,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
 }
 
 async function insertFields(category, expenseTemplateCategoryFieldValues) {
-  console.log(category);
-  await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
+   await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
 
   if (expenseTemplateCategoryFieldValues.length === 0) {
     return []; // Return an empty array if there are no fields to insert
@@ -769,7 +766,6 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
   {
     
       for(var i = 0; i < applicableCategories.length; i++) {    
-        console.log(applicableCategories[i].expenseCategory); 
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories[i]._id);  
       if(expenseTemplateCategoryFieldValues) 
         {
@@ -1154,7 +1150,6 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
               teamIdsArray.push(ids[i]);        
           }
     }
-  console.log(teamIdsArray);
   if(teamIds==null)    
     {
        teamIdsArray.push(req.cookies.userId);
@@ -1345,11 +1340,9 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   // Update or create ExpenseReportExpenseFields
   const { expenseReportExpenseFields } = req.body;
 
-  if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {
-    console.log(expenseReportExpenseFields);
+  if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {  
     const updatedFields = await Promise.all(
-      expenseReportExpenseFields.map(async (field) => {
-        console.log(field.id);
+      expenseReportExpenseFields.map(async (field) => {  
         if (field.id) {
           // If ID is present, update existing ExpenseReportExpenseFields
           return ExpenseReportExpenseFields.findByIdAndUpdate(field.id, {
@@ -1372,7 +1365,6 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
         }
       })
     );
-    console.log(updatedFields);
     // Remove ExpenseReportExpenseFields not present in the request
     const fieldIdsToUpdate = updatedFields.map((field) => field.id);
     await ExpenseReportExpenseFields.deleteMany({
@@ -1416,7 +1408,7 @@ exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res,
           expenseReportExpenses[i].expenseReportExpenseFields=null;
         }
       }
-   }
+  }
   res.status(200).json({
     status: 'success',
     data: expenseReportExpenses
@@ -1499,11 +1491,8 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
         message: 'Expense assignment not found for the given user.'
       });
     }
-console.log(employeeAdvanceAssignment);
     // Retrieve applicable categories for the expense template
     const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate);
-
-   console.log(templateCategories);
 
     res.status(200).json({
       status: 'success',     
@@ -1696,8 +1685,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
     }
     else
     {
-      const advanceCategoryExists = await AdvanceTemplate.findOne({ policyLabel: policyLabel, company: company });
-      console.log(advanceCategoryExists);
+      const advanceCategoryExists = await AdvanceTemplate.findOne({ policyLabel: policyLabel, company: company });    
       if(advanceCategoryExists)
         {
           res.status(500).json({
@@ -1718,7 +1706,6 @@ exports.createAdvanceTemplate = async (req, res, next) => {
             });
             for (const category of advanceCategories) {
               const result = await AdvanceCategory.findById(category.advanceCategory);
-              console.log(result);
               if (!result) {
                 return res.status(400).json({
                   status: 'failure',
@@ -1805,8 +1792,7 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
     }
     for (const category of advanceCategories) {
       const result = await AdvanceCategory.findById(category.advanceCategory);
-      console.log(result);
-       if (!result) {
+      if (!result) {
         return res.status(400).json({
           status: 'failure',
           message: 'Invalid Category',

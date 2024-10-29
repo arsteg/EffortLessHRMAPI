@@ -3170,6 +3170,16 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         month:
+ *                             type: number
+ *                         year:
+ *                             type: number
  *     responses:
  *       201:
  *         description: TimeLog Mapped

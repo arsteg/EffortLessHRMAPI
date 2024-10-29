@@ -79,7 +79,6 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
-  // console.log("Received body for update:", req.body);
   const user = await User.findById(req.body.user);
   let result = [];
   if (!user) {
