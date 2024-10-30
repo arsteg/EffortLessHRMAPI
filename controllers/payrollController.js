@@ -2959,6 +2959,13 @@ exports.getAllPayrollUsersByPayroll = catchAsync(async (req, res, next) => {
 
 // Add PayrollAttendanceSummary
 exports.addPayrollAttendanceSummary = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
   const payrollAttendanceSummary = await PayrollAttendanceSummary.create(req.body);
   
   res.status(201).json({
@@ -3001,6 +3008,13 @@ exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
 
 // Add Payroll Variable Pay Deduction
 exports.addPayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
 
@@ -3065,6 +3079,13 @@ exports.deletePayrollVariablePayDeduction = catchAsync(async (req, res, next) =>
 
 // Create PayrollVariablePayAllowance
 exports.createPayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
 
@@ -3115,6 +3136,13 @@ exports.updatePayrollVariablePayAllowance = catchAsync(async (req, res, next) =>
 
 // Create Payroll Manual Arrears
 exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
    // Extract companyId from req.cookies
    const companyId = req.cookies.companyId;
 
@@ -3188,6 +3216,13 @@ exports.deletePayrollManualArrears = catchAsync(async (req, res, next) => {
 
 // Add a Payroll Loan/Advance
 exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
     // Extract companyId from req.cookies
     const companyId = req.cookies.companyId;
 
@@ -3246,6 +3281,13 @@ exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
 
 // Create Payroll Income Tax
 exports.createPayrollIncomeTax = catchAsync(async (req, res, next) => {
+  const { payrollUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(payrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
     const payrollIncomeTax = await PayrollIncomeTax.create(req.body);
     res.status(201).json({
         status: 'success',
@@ -3302,9 +3344,15 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
 });
 // Create Flexi Benefits and PF Tax record
 exports.createFlexiBenefitsAndPFTax = async (req, res) => {
+
   try {
     const { PayrollUser, TotalFlexiBenefitAmount, TotalProfessionalTaxAmount } = req.body;
 
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(PayrollUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
     // Create a new record in the database
     const newRecord = await PayrollFlexiBenefitsPFTax.create({
       PayrollUser,
@@ -3429,7 +3477,12 @@ exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
 exports.createPayrollOvertime = async (req, res) => {
   try {
     const { PayrollUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
-
+   
+    // Check if payrollUser exists in the PayrollUsers model
+    const isValidUser = await PayrollUsers.findById(PayrollUser);
+    if (!isValidUser) {
+      return next(new AppError('Invalid payroll user', 400));
+    }
     // Create a new Payroll Overtime entry in the database
     const newOvertime = await PayrollOvertime.create({
       PayrollUser,
