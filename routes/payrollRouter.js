@@ -3659,9 +3659,6 @@ router.post('/payroll-by-company',authController.protect, payrollController.getP
  *               user:
  *                 type: string
  *                 required: true
- *               totalHomeTake:
- *                 type: number
- *                 required: true
  *               totalFlexiBenefits:
  *                 type: number
  *                 required: true
@@ -3743,9 +3740,6 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *                 type: string
  *               user:
  *                 type: string
- *               totalHomeTake:
- *                 type: number
- *                 required: true
  *               totalFlexiBenefits:
  *                  type: number
  *                  required: true
@@ -4790,20 +4784,27 @@ router.delete('/overtime/:id', authController.protect, payrollController.deleteP
 
 /**
  * @swagger
- * /api/v1/payroll/overtime:
+ * /api/v1/payroll/overtime-by-payrollUser/{payrollUser}:
  *   get:
  *     summary: Get all Payroll Overtime entries
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll User
  *     responses:
  *       200:
  *         description: Successful response with Payroll Overtime entries
  *       500:
  *         description: Internal server error
  */
-router.get('/overtime/', authController.protect, payrollController.getAllPayrollOvertime);
+router.get('/overtime-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollOvertimeByPayrollUser);
 
 // Payroll Income Tax routes
 

@@ -12,10 +12,6 @@ var payrollUsersSchema = new Schema({
       ref: 'User',
       required: true
     },
-    totalHomeTake: {
-      type: Number,
-      required: true
-    },
     totalFixedAllowance: {
       type: Number
     },

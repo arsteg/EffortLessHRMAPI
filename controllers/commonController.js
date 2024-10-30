@@ -295,7 +295,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       .catch((error) => {
         res.status(500).json({ error: error.message });
       }); 
-    });
+  });
 
   exports.updateEmailTemplate = catchAsync(async (req, res, next) => {        
   const id = req.params.id;

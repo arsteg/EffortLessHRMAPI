@@ -3267,7 +3267,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
 
 // Get All Payroll Income Tax records
 exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) => {
-    const payrollIncomeTaxes = await PayrollIncomeTax.find();
+    const payrollIncomeTaxes = await PayrollIncomeTax.find({ payrollUser: req.params.payrollUser });
     res.status(200).json({
         status: 'success',
         data: payrollIncomeTaxes
@@ -3355,7 +3355,7 @@ exports.getFlexiBenefitsAndPFTax = async (req, res) => {
 // Get all Flexi Benefits and PF Tax records
 exports.getAllFlexiBenefitsAndPFTaxByPyrollUser = async (req, res) => {
   try {
-    const records = await PayrollFlexiBenefitsPFTax.find();
+    const records = await PayrollFlexiBenefitsPFTax.find({ payrollUser: req.params.payrollUser });
 
     res.status(200).json({
       status: 'success',
@@ -3534,9 +3534,9 @@ exports.deletePayrollOvertime = async (req, res) => {
 };
 
 // Get all Payroll Overtime records
-exports.getAllPayrollOvertime = async (req, res) => {
+exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
   try {
-    const records = await PayrollOvertime.find();
+    const records = await PayrollOvertime.find({ payrollUser: req.params.payrollUser });
 
     res.status(200).json({
       status: 'success',
