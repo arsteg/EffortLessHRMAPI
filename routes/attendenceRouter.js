@@ -1772,7 +1772,7 @@ attendanceRouter.get('/overtime-information/:id', authController.protect, attend
 
 /**
  * @swagger
- * /api/v1/attendance/overtime-information:
+ * /api/v1/attendance/overtime-information-by-company:
  *   post:
  *     summary: Get all Overtime Information
  *     tags: [Attendance Management]
