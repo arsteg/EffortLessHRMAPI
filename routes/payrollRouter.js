@@ -4369,7 +4369,7 @@ router.delete('/payroll-manual-arrears/:id', authController.protect, payrollCont
  * /api/v1/payroll/payroll-loan-advance:
  *   post:
  *     summary: Add a new Payroll Loan/Advance
- *     tags: [Payroll Loan Management]
+ *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]

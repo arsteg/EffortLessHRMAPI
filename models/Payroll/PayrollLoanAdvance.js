@@ -6,7 +6,7 @@ var payrollLoanAdvanceSchema = new Schema({
       ref: 'PayrollUsers',
       required: true
     },
-    employeeLoanAdvance: {
+    loanAndAdvance: {
       type: mongoose.Schema.ObjectId,
       ref: 'EmployeeLoanAdvance',
       required: true
