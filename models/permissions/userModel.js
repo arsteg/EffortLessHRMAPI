@@ -65,21 +65,11 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 8,
     // Do not include password while using eg. findOne
     select: false
   },
   passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-    validate: {
-      // This only works on save!
-      validator: function(el) {
-        return el === this.password;
-      },
-      message: `Passwords don't match`
-    }
+    type: String
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
