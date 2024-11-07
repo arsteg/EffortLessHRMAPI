@@ -86,6 +86,8 @@ router.post('/addManualTimeRequest', authController.protect,manualTimeController
  *                          toDate:
  *                              type: string 
  *                              format: date
+ *                          status:
+ *                              type: string 
  *      produces:
  *          - application/json
  *      responses:
