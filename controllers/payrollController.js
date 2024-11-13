@@ -3281,10 +3281,10 @@ exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
 
 // Create Payroll Income Tax
 exports.createPayrollIncomeTax = catchAsync(async (req, res, next) => {
-  const { payrollUser } = req.body;
+  const { PayrollUser } = req.body;
 
   // Check if payrollUser exists in the PayrollUsers model
-  const isValidUser = await PayrollUsers.findById(payrollUser);
+  const isValidUser = await PayrollUsers.findById(PayrollUser);
   if (!isValidUser) {
     return next(new AppError('Invalid payroll user', 400));
   }

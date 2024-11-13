@@ -6,10 +6,6 @@ var payrollOvertimeSchema = new Schema({
       ref: 'PayrollUsers',
       required: true
     },
-    OverTime: {
-      type: String,
-      required: true
-    },
     LateComing: {
       type: String,
       required: true
@@ -24,7 +20,7 @@ var payrollOvertimeSchema = new Schema({
     },
     Overtime: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Overtime',
+      ref: 'OverTimeInformation',
       required: true
     }
   }, { collection: 'PayrollOvertime' });
