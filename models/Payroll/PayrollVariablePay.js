@@ -1,7 +1,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-var payrollVariablePayDeductionSchema = new Schema({
+var payrollVariablePaySchema = new Schema({
     payrollUser: {
       type: mongoose.Schema.ObjectId,
       ref: 'PayrollUsers',
@@ -9,8 +9,11 @@ var payrollVariablePayDeductionSchema = new Schema({
     },
     variableDeduction: {
       type: mongoose.Schema.ObjectId,
-      ref: 'VariableDeduction',
-      required: true
+      ref: 'VariableDeduction'
+    },
+    variableAllowance: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'VariableAllowance'
     },
     amount: {
       type: Number,
@@ -29,6 +32,14 @@ var payrollVariablePayDeductionSchema = new Schema({
       ref: 'Company',
       required: true
     }
-  }, { collection: 'PayrollVariablePayDeduction' });
+    
+  }, { 
+    collection: 'PayrollVariablePay',
+    validate: {
+      validator: function() {
+        return this.variableDeduction || this.variableAllowance;
+      },
+      message: 'Either variableDeduction or variableAllowance must be provided.',
+    },});
      
-module.exports = mongoose.model('PayrollVariablePayDeduction', payrollVariablePayDeductionSchema);
+module.exports = mongoose.model('PayrollVariablePay', payrollVariablePaySchema);
