@@ -89,22 +89,6 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateUser = catchAsync(async (req, res, next) => {
-  const document = await User.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true, // Validate data
-  });
-  if (!document) {
-    return next(new AppError("No document found with that ID", 404));
-  }
-  res.status(201).json({
-    status: "success",
-    data: {
-      data: document,
-    },
-  });
-});
-
 exports.getUser = catchAsync(async (req, res, next) => {
   const users = await User.findById(req.body.id)
     .where("status")
