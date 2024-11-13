@@ -14,8 +14,8 @@ const Email_template_constant = {
     LoanAdvance_Disbursement_Notification: "Loan Advance Disbursement Notification",
     Attendance_Processing_Update: "Attendance Processing Update",
     Leave_Application_Received_Confiration: "Leave Application Received Confiration",
-    CancelReject_Request_Leave_Application: "Leave_Application Rejected or Canceled",
-    Approval_Request_Leave_Application: "Approval Request Leave Application",
+    CancelReject_Request_Leave_Application: "Leave Application Rejected or Canceled",
+    Leave_Application_Approval_Request: "Leave Application Approval Request",
     Your_Leave_Application_Has_Been_Approved: "Your Leave Application Has Been Approved"
     // Add other email templates as needed
   };

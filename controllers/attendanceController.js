@@ -35,7 +35,7 @@ const constants = require('../constants');
 const HolidayCalendar = require('../models/Company/holidayCalendar');
 const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
-
+const EmailTemplate = require('../models/commons/emailTemplateModel');
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2102,7 +2102,7 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
    }
 });
 
-exports.ProcessAttendance = async (req, res) => {
+exports.ProcessAttendanceUpdate = async (req, res) => {
   try {
       const { attandanaceProcessPeroid, runDate, status, exportToPayroll, users } = req.body;
 
@@ -2280,13 +2280,7 @@ const sendEmailToUsers = async (attendanceProcessUsers) => {
            });
           
          } catch (err) {   
-          console.log(err);
-           return next(
-             new AppError(
-               'There was an error sending the email. Try again later.',
-               500
-             )
-         );
+          console.error(`Error sending email to user ${user}:`, err);
        }
   }
 }
