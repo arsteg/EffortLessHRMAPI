@@ -45,47 +45,6 @@ router.get('/preference-categories', userPreferencesController.getAllPreferenceC
 
 /**
  * @swagger
- * /api/v1/userPreferences/preferenceOptions:
- *   post:
- *     summary: Add a new preference option
- *     tags: [User Preferences Management]
- *     requestBody:
- *       description: Preference option details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               category:
- *                 type: string
- *                 required: true
- *               name:
- *                 type: string
- *                 required: true 
- *               label:
- *                 type: string
- *                 required: true  
- *               description:
- *                 type: string
- *                 required: true
- *               dataType:
- *                 type: string
- *                 required: true
- *               defaultValue:
- *                 type: string 
- *     responses:
- *       201:
- *         description: Preference option successfully added
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/preferenceOptions',  userPreferencesController.createPreferenceOption);
-
-/**
- * @swagger
  * /api/v1/userPreferences/preferenceOptions/{id}:
  *   get:
  *     summary: Get a preference option by ID
@@ -129,70 +88,6 @@ router.get('/preferenceOptions/:id', authController.protect,  userPreferencesCon
  *         description: Internal server error
  */
 router.get('/preferenceOptionsByCategory/:categoryId',  userPreferencesController.getPreferenceOptionByCategory);
-
-/**
- * @swagger
- * /api/v1/userPreferences/preferenceOptions/{id}:
- *   put:
- *     summary: Update a preference option by ID
- *     tags: [User Preferences Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the preference option
- *     requestBody:
- *       description: New preference option details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               category:
- *                 type: string
- *               name:
- *                 type: string
- *               label:
- *                 type: string
- *               description:
- *                 type: string
- *               dataType:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated preference option
- *       404:
- *         description: Preference option not found
- *       500:
- *         description: Internal server error
- */
-router.put('/preferenceOptions/:id',  userPreferencesController.updatePreferenceOption);
-
-/**
- * @swagger
- * /api/v1/userPreferences/preferenceOptions/{id}:
- *   delete:
- *     summary: Delete a preference option by ID
- *     tags: [User Preferences Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the preference option
- *     responses:
- *       204:
- *         description: Preference option successfully deleted
- *       404:
- *         description: Preference option not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/preferenceOptions/:id', authController.protect,  userPreferencesController.deletePreferenceOption);
 
 /**
  * @swagger
@@ -248,18 +143,11 @@ router.get('/preferenceOptions', authController.protect, userPreferencesControll
 router.post('/preferences/:id',  userPreferencesController.createUserPreference);
 /**
  * @swagger
- * /api/v1/userPreferences/preferences/{userId}/{categoryId}:
+ * /api/v1/userPreferences/preferences/{categoryId}:
  *   get:
  *     summary: Get a user preference by ID
  *     tags: [User Preferences Management]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the user preference
- *       - in: path
+ *     parameters: 
  *         name: categoryId
  *         required: true
  *         schema:
@@ -273,7 +161,31 @@ router.post('/preferences/:id',  userPreferencesController.createUserPreference)
  *       500:
  *         description: Internal server error
  */
-router.get('/preferences/:userId/:categoryId',  userPreferencesController.getUserPreference);
+router.get('/preferences/:categoryId',  userPreferencesController.getUserPreference);
+
+/**
+ * @swagger
+ * /api/v1/userPreferences/getUserPreferenceByKey/{key}:
+ *   get:
+ *     summary: Get a user preference by key
+ *     tags: [User Preferences Management]
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The key ID of the user preference
+ *     responses:
+ *       200:
+ *         description: Successful response with the user preference
+ *       404:
+ *         description: User preference not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/getUserPreferenceByKey/:key', userPreferencesController.getUserPreferenceByKey);
+
 
 /**
  * @swagger

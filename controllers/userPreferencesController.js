@@ -1,7 +1,6 @@
 const userPreferences = require("../models/userPreferences/userPreferenceModel.js");
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/permissions/userModel.js");
-const PreferenceOption = require("../models/userPreferences/preferenceOptionModel.js");
 const UserPreference = require("../models/userPreferences/userPreferenceModel.js");
 const AppError = require("../utils/appError.js");
 const express = require("express");
@@ -27,6 +26,74 @@ const preferenceCategories = [{
   "description": "Manage"  
 }]
   
+const PreferenceOptions = [{
+  "_id": "64df5b339aba07a9e0a775c9",
+  "category": "64d5ef2e62f196f103918984",
+  "name": "TimeTracker",
+  "key": "TimeTracker.EnableBeepSound",
+  "label": "Enable Beep Sound",
+  "description": "Check to enable the beep sound",
+  "dataType": "boolean",
+  "defaultValue": "false"  
+},
+{
+  "_id": "64df5b339aba07a9e0a775c1",
+  "category": "64d5ef2e62f196f103918984",
+  "name": "TimeTracker",
+  "key": "TimeTracker.EnableScreenshotPreview",
+  "label": "Enable Screenshot Preview ",
+  "description": "Check to enable the screenshot preview",
+  "dataType": "boolean",
+  "defaultValue": "false"  
+},
+{
+  "_id": "64e2ff5839f88b2ba694d42b",
+  "category": "64d5ef2e62f196f103918984",
+  "name": "BlurScreenshots",
+  "key": "TimeTracker.BlurScreenshots",
+  "label": "BlurScreenshots",
+  "description": "Check to blur the screenshots",
+  "dataType": "boolean",
+  "defaultValue": "false"  
+},
+{
+  "_id": "64e30e1139f88b2ba694d5da",
+  "category": "64d6076dda83fed598e35bc5",
+  "name": "DefaultPageSize",
+  "key": "TimeTracker.DefaultPageSize",
+  "label": "Default Page Size",
+  "description": "DefaultPageSize",
+  "dataType": "number",
+  "defaultValue": "10"  
+}
+// {
+//   "_id": "64e725ebc03b85dd7d296433",
+//   "category": "64d6076dda83fed598e35bc5",
+//   "name": "Date",
+//   "label": "Date",
+//   "description": "Date",
+//   "dataType": "date",
+//   "defaultValue": ""  
+// },
+// {
+//   "_id": "64e71cefc03b85dd7d29642c",
+//   "category": "64d6076dda83fed598e35bc5",
+//   "name": "List",
+//   "label": "List",
+//   "description": "List",
+//   "dataType": "list",
+//   "defaultValue": ""  
+// },
+// {
+//   "_id": "64e82cbd827134927ddd461b",
+//   "category": "64d6076dda83fed598e35bc5",
+//   "name": "Time",
+//   "label": "Time",
+//   "description": "Time",
+//   "dataType": "Time",
+//   "defaultValue": ""  
+// }
+]
 // controllers/preferenceCategoryController.js
 exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
     const preferenceCategory = preferenceCategories.find(category => category.name === name);;
@@ -46,20 +113,10 @@ exports.getAllPreferenceCategories = catchAsync(async (req, res, next) => {
       status: 'success',
       data: preferenceCategories
     });
-  });
-
-  // controllers/userPreferencesController.js
-exports.createPreferenceOption = catchAsync(async (req, res, next) => {
-    const preferenceOption = await PreferenceOption.create(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: preferenceOption
-    });
-  });
-
+  });  
   
 exports.getPreferenceOption = catchAsync(async (req, res, next) => {
-    const preferenceOption = await PreferenceOption.findById(req.params.id);
+    const preferenceOption = await PreferenceOptions.findById(req.params.id);
     if (!preferenceOption) {
       return next(new AppError('Preference option not found', 404));
     }
@@ -79,41 +136,7 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
       status: 'success',
       data: preferenceOption
     });
-  });
-
-
-
-
-  // controllers/userPreferencesController.js
-exports.updatePreferenceOption = catchAsync(async (req, res, next) => {
-    const preferenceOption = await PreferenceOption.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-  
-    if (!preferenceOption) {
-      return next(new AppError('Preference option not found', 404));
-    }
-  
-    res.status(200).json({
-      status: 'success',
-      data: preferenceOption
-    });
-  });
-
-  // controllers/userPreferencesController.js
-exports.deletePreferenceOption = catchAsync(async (req, res, next) => {
-    const preferenceOption = await PreferenceOption.findByIdAndDelete(req.params.id);
-    
-    if (!preferenceOption) {
-      return next(new AppError('Preference option not found', 404));
-    }
-    
-    res.status(204).json({
-      status: 'success',
-      data: null
-    });
-  });
+  });  
 
   // controllers/userPreferencesController.js
 exports.getAllPreferenceOptions = catchAsync(async (req, res, next) => {
@@ -159,11 +182,11 @@ exports.createUserPreference = catchAsync(async (req, res, next) => {
 // controllers/userPreferencesController.js
 exports.getUserPreference = catchAsync(async (req, res, next) => {
   
-  const userId= req.params.userId;
+  const userId= req.cookies.userId;
   const categoryId= req.params.categoryId;
 
   // Find all preference options
-  const allPreferenceOptions = await PreferenceOption.find();
+  const allPreferenceOptions = PreferenceOptions;
 
   // Find user preferences matching the given user ID
   const userPreferences = await UserPreference.find({ user: userId });
@@ -176,18 +199,41 @@ exports.getUserPreference = catchAsync(async (req, res, next) => {
     userPreferencesIdMap[pref.preference.toString()] = pref._id.toString();
   });
 
-  // Map the results to the desired format
-  const userPreferencesAllCat = allPreferenceOptions.map((option) => ({
-    preference:option.id,
-    category: option.category,
-    name: option.name,
-    label: option.label,
-    description: option.description,
-    dataType: option.dataType,
-    preferenceValue: userPreferencesMap[option._id.toString()] || option.defaultValue, // Set to null if not found
-    Id: userPreferencesIdMap[option._id.toString()] || null, // Set to null if not found
-  }));
+  // // Map the results to the desired format
+  // const userPreferencesAllCat = allPreferenceOptions.map((option) => ({
+  //   preference:option.id,
+  //   category: option.category,
+  //   name: option.name,
+  //   key: option.key,
+  //   label: option.label,
+  //   description: option.description,
+  //   dataType: option.dataType,
+  //   preferenceValue: userPreferencesMap[option._id.toString()] || option.defaultValue, // Set to null if not found
+  //   Id: userPreferencesIdMap[option._id.toString()] || null, // Set to null if not found
+  // }));
   
+  // Map the results to the desired format
+
+  console.log("User Preferences Map:", userPreferencesMap);
+console.log("User Preferences ID Map:", userPreferencesIdMap);
+
+const userPreferencesAllCat = allPreferenceOptions.map((option) => {
+  const optionId = option._id.toString(); // Convert ObjectId to string for consistent comparison
+  console.log("Processing optionId:", optionId);  // Debugging log
+
+  return {
+      preference: option._id,
+      category: option.category,
+      name: option.name,
+      key: option.key,
+      label: option.label,
+      description: option.description,
+      dataType: option.dataType,
+      preferenceValue: userPreferencesMap[optionId] || option.defaultValue, // Set to default if not found
+      Id: userPreferencesIdMap[optionId] || null, // Set to null if not found
+  };
+});
+
   const result = userPreferencesAllCat.filter((r)=>r.category==categoryId);
 
   res.status(200).json({
@@ -235,5 +281,42 @@ exports.getAllUserPreferences = catchAsync(async (req, res, next) => {
     data: userPreferences
   });
 });
+
+exports.getUserPreferenceByKey = catchAsync(async (req, res, next) => {
+  const { key } = req.params;
+  const userId = req.cookies.userId;
+
+  // Find the corresponding PreferenceOption based on the key
+  const preferenceOption = PreferenceOptions.find(option => option.key === key);
+
+  if (!preferenceOption) {
+    res.status(200).json({
+      status: 'failed',
+      data: null
+    });
+  }
+
+  // Find the UserPreference for the current user and the found preferenceOption
+  const userPreference = await UserPreference.findOne({
+    user: userId,
+    preference: preferenceOption._id
+  });
+
+  if (!userPreference) {
+    res.status(200).json({
+      status: 'failed',
+      data: null
+    });
+  }
+
+  // Return the entire UserPreference record or just the preferenceValue
+  res.status(200).json({
+    status: 'success',
+    data: userPreference.preferenceValue || userPreference
+  });
+});
+
+
+
 
 

@@ -2,7 +2,6 @@ var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var zoomRouter = require('./routes/zoomRouter');
-var tourRouter = require('./routes/tourRoutes');
 var userRouter = require('./routes/userRoutes');
 var timeLogRouter = require('./routes/timeLogRoutes');
 var errorLogRouter = require('./routes/errorLogRouter');
@@ -94,7 +93,6 @@ app.use(cookieParser());
 // Use api routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
-app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/timeLogs', timeLogRouter);
 app.use('/api/v1/errorlogs', errorLogRouter);
 app.use('/api/v1/company', companyRouter);
