@@ -2379,5 +2379,53 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
       throw error; // Rethrow or handle error as needed
   }
 }
+exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
 
+  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
+  
+  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  
+  res.status(200).json({
+    status: 'success',
+    data: attendanceRecords,
+    total: totalCount
+  });
 
+});
+
+async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month) {
+      throw new Error('Year and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 1); // Start of the next month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await AttendanceProcess.countDocuments({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).exec();
+          return { count };
+      } else {
+          const records = await AttendanceProcess.find({
+              date: {
+                  $gte: startDate,
+                  $lt: endDate
+              }
+          }).skip(skip).limit(limit).exec();
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}

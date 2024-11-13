@@ -3432,4 +3432,37 @@ attendanceRouter.post('/process-attendance', authController.protect, attendanceC
  */
 attendanceRouter.delete('/process-attendance', authController.protect, attendanceController.deleteAttendance);
 
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance-by-month:
+ *   post:
+ *     summary: Get a Process Attendance
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         month:
+ *                             type: string
+ *                         year:
+ *                             type: string
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance-by-month', authController.protect, attendanceController.GetProcessAttendance);
+
 module.exports = attendanceRouter;
