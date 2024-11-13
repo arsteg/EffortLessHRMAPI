@@ -240,6 +240,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     role: req.body.role,
     phone: req.body.phone,
+    jobTitle: req.body.jobTitle,
     isSuperAdmin: false,
     status:"Active",
     createdOn: new Date(),

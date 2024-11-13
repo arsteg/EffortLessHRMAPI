@@ -306,45 +306,8 @@ router.patch('/resetPassword/:token', authController.resetPassword);
  *                              type: string
  *                          phone:
  *                              type: string
- *                          mobile:
- *                              type: string
- *                          emergancyContactName:
- *                              type: string
- *                          emergancyContactNumber:
- *                              type: string
- *                          Gender:
- *                              type: string
- *                          DOB:
- *                              type: string
- *                              format: date-time
- *                          MaritalStatus:
- *                              type: string
- *                          MarraigeAniversary:
- *                              type: string
- *                              format: date-time
- *                          PassportDetails:
- *                              type: string
- *                          Pancard:
- *                              type: string
- *                          AadharNumber:
- *                              type: string
- *                          Disability:
- *                              type: string
- *                          FatherHusbandName:
- *                              type: string
- *                          NoOfChildren:
- *                              type: string
- *                          BankName:
- *                              type: string
- *                          BankAccountNumber:
- *                              type: string
- *                          BankIFSCCode:
- *                              type: string
- *                          BankBranch:
- *                              type: string
- *                          BankAddress:
- *                              type: string
- *              
+ *                          jobTitle:
+ *                              type: string        
  *      produces:
  *          - application/json
  *      responses:
