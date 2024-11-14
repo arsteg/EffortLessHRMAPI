@@ -2403,13 +2403,14 @@ async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, 
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
   const endDate = new Date(year, month, 1); // Start of the next month
-
+console.log(startDate);
+console.log(endDate);
   // Fetch records from the database
   try {
       // Check if skip and limit are provided
       if (skip > 0 || limit > 0) {
           const count = await AttendanceProcess.countDocuments({
-              date: {
+            runDate: {
                   $gte: startDate,
                   $lt: endDate
               }
@@ -2417,7 +2418,7 @@ async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, 
           return { count };
       } else {
           const records = await AttendanceProcess.find({
-              date: {
+            runDate: {
                   $gte: startDate,
                   $lt: endDate
               }
