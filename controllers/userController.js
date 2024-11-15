@@ -40,6 +40,8 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 var mongoose = require("mongoose");
 const constants = require('../constants');
 const { BlobServiceClient } = require("@azure/storage-blob");
+const OTP = require("../models/commons/otp");
+const sendEmail = require('../utils/email');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -1848,3 +1850,87 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
     });
   }
 );
+
+exports.generateOTP = catchAsync(
+  async (req, res, next) => {
+  try {
+      // Generate a random 4-digit pincode
+      const otp = Math.floor(1000 + Math.random() * 9000);
+
+      // Create a new pincode document
+      const newOTP = new OTP({
+          otp: otp,
+          email: req.body.email,
+          createdAt: new Date(),
+          status: 'active'
+      });
+console.log(newOTP);
+      // Save the pincode in the database
+      const message=`Your OTP is ${otp}`;
+      await newOTP.save();
+      console.log(message);
+      console.log("hello1");
+      try {
+        await sendEmail({
+          email: req.body.email,
+          subject:'OTP',
+          message
+        });
+       
+      } catch (err) {   
+       console.log(err);
+        return next(
+          new AppError(
+            'There was an error sending the email. Try again later.',
+            500
+          )
+      );
+    }
+      // Send the pincode via email
+     
+
+      res.status(200).json({ message: 'OTP generated and emailed successfully.' });
+  } catch (error) {
+      res.status(500).json({ message: 'Error generating OTP'+error });
+  }
+});
+
+exports.verifyOTP = catchAsync(
+  async (req, res, next) => {
+  try {
+      const { email, otp } = req.body;
+      const existingOTP = await OTP.findOne({ email, otp });
+
+      if (!existingOTP || existingOTP.status !== 'active') {
+          return res.status(400).json({ message: 'Invalid or expired OTP.' });
+      }
+
+      // Update pincode status to verified
+      existingOTP.status = 'verified';
+      await existingOTP.save();
+
+      res.status(200).json({ message: 'OTP verified successfully.' });
+  } catch (error) {
+      res.status(500).json({ message: 'Error verifying OTP' });
+  }
+});
+
+exports.cancelOTP = catchAsync(
+  async (req, res, next) => {
+  try {
+      const { email, otp } = req.body;
+      const existingOTP = await OTP.findOne({ email, otp });
+
+      if (!existingOTP) {
+          return res.status(400).json({ message: 'OTP not found.' });
+      }
+
+      // Update pincode status to cancelled
+      existingOTP.status = 'cancelled';
+      await existingOTP.save();
+
+      res.status(200).json({ message: 'OTP cancelled successfully.' });
+  } catch (error) {
+      res.status(500).json({ message: 'Error cancelling OTP' });
+  }
+});
