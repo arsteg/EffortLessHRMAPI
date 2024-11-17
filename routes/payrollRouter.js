@@ -3944,15 +3944,15 @@ router.put('/payrolluser-attendance-summary/:id', authController.protect, payrol
 
 /**
  * @swagger
- * /api/v1/payroll/payroll-variable-pay-deductions:
+ * /api/v1/payroll/payroll-variable-pay:
  *   post:
- *     summary: Add a new Payroll Variable Pay Deduction
+ *     summary: Add a new Payroll Variable Pay
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
  *     requestBody:
- *       description: Payroll Variable Pay Deduction details
+ *       description: Payroll Variable Pay details
  *       required: true
  *       content:
  *         application/json:
@@ -3964,7 +3964,8 @@ router.put('/payrolluser-attendance-summary/:id', authController.protect, payrol
  *                 required: true
  *               variableDeduction:
  *                 type: string
- *                 required: true
+ *               variableAllowance:
+ *                 type: string
  *               amount:
  *                 type: number
  *                 required: true
@@ -3976,19 +3977,19 @@ router.put('/payrolluser-attendance-summary/:id', authController.protect, payrol
  *                 required: true
  *     responses:
  *       201:
- *         description: Payroll Variable Pay Deduction successfully created
+ *         description: Payroll Variable Pay successfully created
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-router.post('/payroll-variable-pay-deductions', payrollController.addPayrollVariablePayDeduction);
+router.post('/payroll-variable-pay', payrollController.addPayrollVariablePay);
 
 /**
  * @swagger
- * /api/v1/payroll/payroll-variable-pay-deductions-by-payrolluser/{payrollUser}:
+ * /api/v1/payroll/payroll-variable-pay-by-payrolluser/{payrollUser}:
  *   get:
- *     summary: Get a Payroll Variable Pay Deduction by payrollUser
+ *     summary: Get a Payroll Variable Pay by payrollUser
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
@@ -3999,22 +4000,22 @@ router.post('/payroll-variable-pay-deductions', payrollController.addPayrollVari
  *         required: true
  *         schema:
  *           type: string
- *         description: PayrollUser ID for which the deduction is being retrieved
+ *         description: PayrollUser ID for which the Variable Pay is being retrieved
  *     responses:
  *       200:
- *         description: Successful response with Payroll Variable Pay Deduction
+ *         description: Successful response with Payroll Variable Pay
  *       404:
- *         description: Payroll Variable Pay Deduction not found
+ *         description: Payroll Variable Pay not found
  *       500:
  *         description: Internal server error
  */
-router.get('/payroll-variable-pay-deductions-by-payrolluser/:payrollUser', payrollController.getPayrollVariablePayDeductionByPayrollUser);
+router.get('/payroll-variable-pay-by-payrolluser/:payrollUser', payrollController.getPayrollVariablePayByPayrollUser);
 
 /**
  * @swagger
- * /api/v1/payroll/payroll-variable-pay-deductions/{id}:
+ * /api/v1/payroll/payroll-variable-pay/{id}:
  *   put:
- *     summary: Update a Payroll Variable Pay Deduction by ID
+ *     summary: Update a Payroll Variable Pay by ID
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
@@ -4025,9 +4026,9 @@ router.get('/payroll-variable-pay-deductions-by-payrolluser/:payrollUser', payro
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the Payroll Variable Pay Deduction
+ *         description: ID of the Payroll Variable Pay
  *     requestBody:
- *       description: Updated Payroll Variable Pay Deduction details
+ *       description: Updated Payroll Variable Pay details
  *       required: true
  *       content:
  *         application/json:
@@ -4038,6 +4039,8 @@ router.get('/payroll-variable-pay-deductions-by-payrolluser/:payrollUser', payro
  *                 type: string
  *               variableDeduction:
  *                 type: string
+ *               variableAllowance:
+ *                 type: string
  *               amount:
  *                 type: number
  *               month:
@@ -4046,19 +4049,19 @@ router.get('/payroll-variable-pay-deductions-by-payrolluser/:payrollUser', payro
  *                 type: number
  *     responses:
  *       200:
- *         description: Successful response with the updated Payroll Variable Pay Deduction
+ *         description: Successful response with the updated Payroll Variable Pay
  *       404:
- *         description: Payroll Variable Pay Deduction not found
+ *         description: Payroll Variable Pay not found
  *       500:
  *         description: Internal server error
  */
-router.put('/payroll-variable-pay-deductions/:id', payrollController.updatePayrollVariablePayDeduction);
+router.put('/payroll-variable-pay/:id', payrollController.updatePayrollVariablePay);
 
 /**
  * @swagger
- * /api/v1/payroll/payroll-variable-pay-deductions/{id}:
+ * /api/v1/payroll/payroll-variable-pay/{id}:
  *   delete:
- *     summary: Delete a Payroll Variable Pay Deduction by ID
+ *     summary: Delete a Payroll Variable Pay by ID
  *     tags: [Payroll Management]
  *     security: [{
  *         bearerAuth: []
@@ -4069,127 +4072,16 @@ router.put('/payroll-variable-pay-deductions/:id', payrollController.updatePayro
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the Payroll Variable Pay Deduction
+ *         description: ID of the Payroll Variable Pay
  *     responses:
  *       204:
- *         description: Payroll Variable Pay Deduction successfully deleted
+ *         description: Payroll Variable Pay successfully deleted
  *       404:
- *         description: Payroll Variable Pay Deduction not found
+ *         description: Payroll Variable Pay not found
  *       500:
  *         description: Internal server error
  */
-router.delete('/payroll-variable-pay-deductions/:id', payrollController.deletePayrollVariablePayDeduction);
-
-/**
- * @swagger
- * /api/v1/payroll/payroll-variable-pay-allowances:
- *   post:
- *     summary: Add a new PayrollVariablePayAllowance
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: PayrollVariablePayAllowance details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               payrollUser:
- *                 type: string
- *                 required: true
- *               variableAllowance:
- *                 type: string
- *                 required: true
- *               Month:
- *                 type: number
- *                 required: true
- *               year:
- *                 type: number
- *                 required: true
- *               amount:
- *                 type: number
- *     responses:
- *       201:
- *         description: PayrollVariablePayAllowance successfully created
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/payroll-variable-pay-allowances', authController.protect, payrollController.createPayrollVariablePayAllowance);
-
-/**
- * @swagger
- * /api/v1/payroll/payroll-variable-pay-allowances-by-payrolluser/{payrollUser}:
- *   get:
- *     summary: Get a PayrollVariablePayAllowance by payrollUser
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: payrollUser
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the payroll user
- *     responses:
- *       200:
- *         description: Successful response with the PayrollVariablePayAllowance
- *       404:
- *         description: PayrollVariablePayAllowance not found
- *       500:
- *         description: Internal server error
- */
-router.get('/payroll-variable-pay-allowances-by-payrolluser/:payrollUser', authController.protect, payrollController.getPayrollVariablePayAllowance);
-
-/**
- * @swagger
- * /api/v1/payroll/payroll-variable-pay-allowances/{id}:
- *   put:
- *     summary: Update a PayrollVariablePayAllowance
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the PayrollVariablePayAllowance
- *     requestBody:
- *       description: New PayrollVariablePayAllowance details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               payrollUser:
- *                 type: string
- *               variableAllowance:
- *                 type: string
- *               Month:
- *                 type: number
- *               year:
- *                 type: number
- *               amount:
- *                 type: number
- *     responses:
- *       200:
- *         description: Successful response with the updated PayrollVariablePayAllowance
- *       404:
- *         description: PayrollVariablePayAllowance not found
- *       500:
- *         description: Internal server error
- */
-router.put('/payroll-variable-pay-allowances/:id', authController.protect, payrollController.updatePayrollVariablePayAllowance);
+router.delete('/payroll-variable-pay/:id', payrollController.deletePayrollVariablePay);
 
 // Payroll Manual Arrears routes
 /**

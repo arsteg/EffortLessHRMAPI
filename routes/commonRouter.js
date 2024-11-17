@@ -1,7 +1,7 @@
 const express = require('express');
 const commonController = require('../controllers/commonController');
 const authController = require('../controllers/authController');
-const settingsController = require('../controllers/settingsController');
+const userController = require('../controllers/userController');
 const router = express.Router();
 
 // Country Router
@@ -827,4 +827,72 @@ router.delete('/income-tax-componants/:id', authController.protect, commonContro
  */
 router.post('/income-tax-componants-list', authController.protect, commonController.getIncomeTaxComponantsByCompany);
 
+/**
+ * @swagger
+ * /api/v1/common/generate-otp:
+ *   post:
+ *     summary: Add a new generate otp
+ *     tags: [Common Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Successfully generated a new OTP
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post('/generate-otp',  userController.generateOTP);
+
+
+/**
+ * @swagger
+ *  /api/v1/common/verify-otp:
+ *   put:
+ *     summary: Verify otp
+ *     tags: [Common Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated verified otp
+ */
+router.put('/verify-otp', userController.verifyOTP)
+
+/**
+ * @swagger
+ *  /api/v1/common/cancel-otp:
+ *   put:
+ *     summary: cancel otp
+ *     tags: [Common Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated cancel otp
+ */
+router.put('/cancel-otp', userController.cancelOTP)
 module.exports = router;

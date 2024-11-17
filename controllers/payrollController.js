@@ -35,8 +35,7 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 const PayrollUsers = require('../models/Payroll/PayrollUsers');
 const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
-const PayrollVariablePayDeduction = require('../models/Payroll/PayrollVariablePayDeduction');
-const PayrollVariablePayAllowance = require('../models/Payroll/PayrollVariablePayAllowance');
+const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
 const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
 const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
@@ -3007,7 +3006,7 @@ exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
 });
 
 // Add Payroll Variable Pay Deduction
-exports.addPayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+exports.addPayrollVariablePay = catchAsync(async (req, res, next) => {
   const { payrollUser } = req.body;
 
   // Check if payrollUser exists in the PayrollUsers model
@@ -3025,48 +3024,48 @@ exports.addPayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
 
   // Add companyId to the request body
   req.body.company = companyId;
-  const newDeduction = await PayrollVariablePayDeduction.create(req.body);
+  const newVariablePay = await PayrollVariablePay.create(req.body);
   res.status(201).json({
     status: 'success',
-    data: newDeduction,
+    data: newVariablePay,
   });
 });
 
 // Get Payroll Variable Pay Deduction by payrollUser
-exports.getPayrollVariablePayDeductionByPayrollUser = catchAsync(async (req, res, next) => {
-  const payrollDeduction = await PayrollVariablePayDeduction.find({ payrollUser: req.params.payrollUser });
-  if (!payrollDeduction) {
+exports.getPayrollVariablePayByPayrollUser = catchAsync(async (req, res, next) => {
+  const payrollVariablePay = await PayrollVariablePay.find({ payrollUser: req.params.payrollUser });
+  if (!payrollVariablePay) {
     return next(new AppError('Payroll Variable Pay Deduction not found', 404));
   }
 
   res.status(200).json({
     status: 'success',
-    data: payrollDeduction,
+    data: payrollVariablePay,
   });
 });
 
 // Update Payroll Variable Pay Deduction
-exports.updatePayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
-  const updatedDeduction = await PayrollVariablePayDeduction.findByIdAndUpdate(req.params.id, req.body, {
+exports.updatePayrollVariablePay = catchAsync(async (req, res, next) => {
+  const updatedPayrollVariablePay= await PayrollVariablePay.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
-  if (!updatedDeduction) {
+  if (!updatedPayrollVariablePay) {
     return next(new AppError('Payroll Variable Pay Deduction not found', 404));
   }
 
   res.status(200).json({
     status: 'success',
-    data: updatedDeduction,
+    data: updatedPayrollVariablePay,
   });
 });
 
 // Delete Payroll Variable Pay Deduction
-exports.deletePayrollVariablePayDeduction = catchAsync(async (req, res, next) => {
+exports.deletePayrollVariablePay = catchAsync(async (req, res, next) => {
 
-  const deduction = await PayrollVariablePayDeduction.findByIdAndDelete(req.params.id);
-  if (!deduction) {
+  const payrollVariablePay = await PayrollVariablePay.findByIdAndDelete(req.params.id);
+  if (!payrollVariablePay) {
     return next(new AppError('Payroll Variable Pay Deduction not found', 404));
   }
 
@@ -3074,64 +3073,6 @@ exports.deletePayrollVariablePayDeduction = catchAsync(async (req, res, next) =>
     status: 'success',
     data: null,
   });
-});
-
-
-// Create PayrollVariablePayAllowance
-exports.createPayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
-  const { payrollUser } = req.body;
-
-  // Check if payrollUser exists in the PayrollUsers model
-  const isValidUser = await PayrollUsers.findById(payrollUser);
-  if (!isValidUser) {
-    return next(new AppError('Invalid payroll user', 400));
-  }
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError("Company ID not found in cookies", 400));
-   }
- 
-   // Add companyId to the request body
-   req.body.company = companyId;
-    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.create(req.body);
-    res.status(201).json({
-        status: 'success',
-        data: payrollVariablePayAllowance
-    });
-});
-
-// Get PayrollVariablePayAllowance by payrollUser
-exports.getPayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
-    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.find({ payrollUser: req.params.payrollUser });
-
-    if (!payrollVariablePayAllowance) {
-        return next(new AppError('PayrollVariablePayAllowance not found', 404));
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: payrollVariablePayAllowance
-    });
-});
-
-// Update PayrollVariablePayAllowance
-exports.updatePayrollVariablePayAllowance = catchAsync(async (req, res, next) => {
-    const payrollVariablePayAllowance = await PayrollVariablePayAllowance.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    });
-
-    if (!payrollVariablePayAllowance) {
-        return next(new AppError('PayrollVariablePayAllowance not found', 404));
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: payrollVariablePayAllowance
-    });
 });
 
 // Create Payroll Manual Arrears
