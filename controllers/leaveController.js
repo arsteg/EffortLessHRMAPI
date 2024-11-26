@@ -23,7 +23,7 @@ const { Constants } = require('azure-storage');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const constants = require('../constants');
 const User = require('../models/permissions/userModel');
-const Company = require('../models/Company');
+const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
