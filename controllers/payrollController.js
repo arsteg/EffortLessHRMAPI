@@ -3427,7 +3427,6 @@ exports.createPayrollOvertime = async (req, res) => {
     // Create a new Payroll Overtime entry in the database
     const newOvertime = await PayrollOvertime.create({
       PayrollUser,
-      OverTime,
       LateComing,
       EarlyGoing,
       FinalOvertime
