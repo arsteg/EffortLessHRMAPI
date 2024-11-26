@@ -15,7 +15,7 @@ const Email_template_constant = {
     Attendance_Processing_Update: "Attendance Processing Update",
     Leave_Application_Received_Confiration: "Leave Application Received Confiration",
     CancelReject_Request_Leave_Application: "Leave Application Rejected or Canceled",
-    Leave_Application_Approval_Request: "Leave Application Approval Request",
+    Leave_Application_Approval_Request: "Approval Request Leave Application",
     Your_Leave_Application_Has_Been_Approved: "Your Leave Application Has Been Approved"
     // Add other email templates as needed
   };
