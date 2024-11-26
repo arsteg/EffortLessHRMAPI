@@ -47,7 +47,7 @@ assignLeavesByJobs = async (req, res, next) => {
                 leaveRemaining,
                 closingBalance,
                 leaveTaken,
-                company: req.cookies.companyId // Assuming companyId is stored in cookies
+                company:user.company._id.toString() // Assuming companyId is stored in cookies
             });
             }
             if(leaveCategory.leaveAccrualPeriod ===  constants.Leave_Accrual_Period.Annually)
@@ -143,7 +143,7 @@ assignLeavesByJobs = async (req, res, next) => {
                 leaveRemaining,
                 closingBalance,
                 leaveTaken,
-                company: req.cookies.companyId // Assuming companyId is stored in cookies
+                company: user.company._id.toString() // Assuming companyId is stored in cookies
             });        
             }
             if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Quaterly)
@@ -165,7 +165,7 @@ assignLeavesByJobs = async (req, res, next) => {
                 leaveRemaining,
                 closingBalance,
                 leaveTaken,
-                company: req.cookies.companyId // Assuming companyId is stored in cookies
+                company: user.company._id.toString() // Assuming companyId is stored in cookies
             });
             }
           }
