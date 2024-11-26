@@ -3970,7 +3970,7 @@ router.put('/payrolluser-attendance-summary/:id', authController.protect, payrol
  *                 type: number
  *                 required: true
  *               month:
- *                 type: number
+ *                 type: string
  *                 required: true
  *               year:
  *                 type: number
@@ -4044,7 +4044,7 @@ router.get('/payroll-variable-pay-by-payrolluser/:payrollUser', payrollControlle
  *               amount:
  *                 type: number
  *               month:
- *                 type: number
+ *                 type: string
  *               year:
  *                 type: number
  *     responses:

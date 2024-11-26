@@ -46,7 +46,7 @@ var shiftSchema = new Schema({
     type: String
   },
   latestDeparture: {
-    type: Date
+    type: String
   },
   firstHalfDuration: {
     type: String
