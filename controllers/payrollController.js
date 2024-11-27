@@ -2990,7 +2990,7 @@ exports.getPayrollAttendanceSummaryByUser = catchAsync(async (req, res, next) =>
 // Update PayrollAttendanceSummary by payrollUser
 exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
   const payrollAttendanceSummary = await PayrollAttendanceSummary.findOneAndUpdate(
-    { payrollUser: req.params.payrollUser },
+    { _id: req.params.id },
     req.body,
     { new: true, runValidators: true }
   );
