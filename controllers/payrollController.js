@@ -3250,7 +3250,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
 
 // Get All Payroll Income Tax records
 exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) => {
-    const payrollIncomeTaxes = await PayrollIncomeTax.find({ payrollUser: req.params.payrollUser });
+    const payrollIncomeTaxes = await PayrollIncomeTax.find({ PayrollUser: req.params.payrollUser });
     res.status(200).json({
         status: 'success',
         data: payrollIncomeTaxes
