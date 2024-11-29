@@ -1050,13 +1050,7 @@ const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplic
            });
           
          } catch (err) {   
-          console.log(err);
-           return next(
-             new AppError(
-               'There was an error sending the email. Try again later.',
-               500
-             )
-         );
+          console.error(`Error sending email to user ${user}:`, err); 
        }
       }
   }
