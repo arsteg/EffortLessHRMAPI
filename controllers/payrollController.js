@@ -3529,7 +3529,7 @@ exports.deletePayrollOvertime = async (req, res) => {
 // Get all Payroll Overtime records
 exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
   try {
-    const records = await PayrollOvertime.find({ payrollUser: req.params.payrollUser });
+    const records = await PayrollOvertime.find({ PayrollUser: req.params.payrollUser });
 
     res.status(200).json({
       status: 'success',
