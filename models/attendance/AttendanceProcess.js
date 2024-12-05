@@ -22,6 +22,7 @@ var attendanceProcessSchema = new Schema({
       type: mongoose.Schema.ObjectId,
       ref: 'Company',
       required: true
-    }  
+    },
+    users: []
   }, { collection: 'AttendanceProcess' });
   module.exports = mongoose.model('AttendanceProcess', attendanceProcessSchema);

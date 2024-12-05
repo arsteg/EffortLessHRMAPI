@@ -2386,7 +2386,19 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
   const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
   
   const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
-  
+  if(attendanceRecords)
+    {
+     for(var i = 0; i < attendanceRecords.length; i++) {     
+     const user = await AttendanceProcessUsers.find({}).where('attendanceProcess').equals(attendanceRecords[i]._id).select('user');  
+     if(user) 
+        {
+          attendanceRecords[i].users=user;
+        }
+        else{
+          attendanceRecords[i].users=null;
+        }
+     }
+    }
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,

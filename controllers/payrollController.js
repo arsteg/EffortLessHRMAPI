@@ -2990,7 +2990,7 @@ exports.getPayrollAttendanceSummaryByUser = catchAsync(async (req, res, next) =>
 // Update PayrollAttendanceSummary by payrollUser
 exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
   const payrollAttendanceSummary = await PayrollAttendanceSummary.findOneAndUpdate(
-    { payrollUser: req.params.payrollUser },
+    { _id: req.params.id },
     req.body,
     { new: true, runValidators: true }
   );
@@ -3250,7 +3250,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
 
 // Get All Payroll Income Tax records
 exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) => {
-    const payrollIncomeTaxes = await PayrollIncomeTax.find({ payrollUser: req.params.payrollUser });
+    const payrollIncomeTaxes = await PayrollIncomeTax.find({ PayrollUser: req.params.payrollUser });
     res.status(200).json({
         status: 'success',
         data: payrollIncomeTaxes
@@ -3427,7 +3427,6 @@ exports.createPayrollOvertime = async (req, res) => {
     // Create a new Payroll Overtime entry in the database
     const newOvertime = await PayrollOvertime.create({
       PayrollUser,
-      OverTime,
       LateComing,
       EarlyGoing,
       FinalOvertime
@@ -3530,7 +3529,7 @@ exports.deletePayrollOvertime = async (req, res) => {
 // Get all Payroll Overtime records
 exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
   try {
-    const records = await PayrollOvertime.find({ payrollUser: req.params.payrollUser });
+    const records = await PayrollOvertime.find({ PayrollUser: req.params.payrollUser });
 
     res.status(200).json({
       status: 'success',

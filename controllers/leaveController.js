@@ -23,6 +23,7 @@ const { Constants } = require('azure-storage');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const constants = require('../constants');
 const User = require('../models/permissions/userModel');
+const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -857,7 +858,6 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
 
 exports.deleteEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
-
   await LeaveGrant.findByIdAndDelete(req.params.id);
   res.status(204).json({
     status: 'success',
@@ -991,38 +991,12 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       if(managerTeamsIds)
       {
         console.log(managerTeamsIds);
-        for(var j = 0; j < managerTeamsIds.length; j++) 
+        for(var j = 0; j < managerTeamsIds.length; j++)
           {       
-         const user = await User.findById(managerTeamsIds[j]._id);  
-           
-        const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Approval_Request_Leave_Application).where('company').equals(companyId); 
-        if(emailTemplate)
-        {
-         const template = emailTemplate.contentData;
-         const message = template
-         .replace("{firstName}", user.firstName)
-         .replace("{company}",  req.cookies.companyName)
-         .replace("{company}", req.cookies.companyName)
-         .replace("{lastName}", user.lastName); 
-       console.log(user.email);
-       console.log(emailTemplate.subject);
-            try {
-             await sendEmail({
-               email: user.email,
-               subject: emailTemplate.subject,
-               message
-             });
-            
-           } catch (err) {   
-            console.log(err);
-             return next(
-               new AppError(
-                 'There was an error sending the email. Try again later.',
-                 500
-               )
-           );
-          }
-         }
+            const user = await User.findById(req.body.employee);
+         const manager = await User.findById(managerTeamsIds[j]._id);
+         const companyDetails=await Company.findById(req.cookies.companyId);
+         sendEmailToUsers(user,manager,constants.Email_template_constant.Leave_Application_Approval_Request,newLeaveApplication,companyDetails);        
         }
       }
 
@@ -1036,6 +1010,49 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplication,company) => {
+
+       
+      const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id); 
+   
+      if(emailTemplate)
+      {
+        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)
+        console.log("hii");
+       const template = emailTemplate.contentData;
+       console.log("hii1");
+       const totalDays=leaveApplication.endDate-leaveApplication.startDate;
+       const message = template
+       .replace("{firstName}", manager.firstName)       
+       .replace("{employeeName}", user.firstName + " "+user.lastName)
+       .replace("{employeeName}", user.firstName + " "+user.lastName)
+      
+       .replace("{leaveType}", leaveApplication.leaveCategory)       
+       .replace("{startDate}", leaveApplication.startDate)       
+       .replace("{endDate}", leaveApplication.endDate)       
+       .replace("{totalDays}", totalDays)       
+       .replace("{reason}", leaveApplication.comment)       
+     
+       .replace("{company}",  company.companyName)
+       .replace("{company}", company.companyName)
+       .replace("{lastName}", manager.lastName); 
+      
+       console.log(message);
+       if(attendanceUser.email=="hrmeffortless@gmail.com")
+       {
+          try {
+           await sendEmail({
+             email: attendanceUser.email,
+             subject: emailTemplate.subject,
+             message
+           });
+          
+         } catch (err) {   
+          console.error(`Error sending email to user ${user}:`, err); 
+       }
+      }
   }
 };
 const calculateLeaveDays = (startDate, endDate) => {
@@ -1102,70 +1119,11 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
           // Save the updated leave assigned record
           await leaveAssigned.save();
-
-         
-             const user = await User.findById(req.body.employee);  
-               
-            const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.CancelReject_Request_Leave_Application).where('company').equals(companyId); 
-            if(emailTemplate)
-            {
-             const template = emailTemplate.contentData;
-             const message = template
-             .replace("{firstName}", user.firstName)
-             .replace("{company}",  req.cookies.companyName)
-             .replace("{company}", req.cookies.companyName)
-             .replace("{lastName}", user.lastName); 
-           console.log(user.email);
-           console.log(emailTemplate.subject);
-                try {
-                 await sendEmail({
-                   email: user.email,
-                   subject: emailTemplate.subject,
-                   message
-                 });
-                
-               } catch (err) {   
-                console.log(err);
-                 return next(
-                   new AppError(
-                     'There was an error sending the email. Try again later.',
-                     500
-                   )
-               );
-             }
-          }
+          sendEmailToUsers(req.body.employee,constants.Email_template_constant.CancelReject_Request_Leave_Application,updatedLeaveApplication,req.cookies.companyId);          
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
-          const user = await User.findById(req.body.employee);  
-               
-          const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved).where('company').equals(companyId); 
-          if(emailTemplate)
-          {
-           const template = emailTemplate.contentData;
-           const message = template
-           .replace("{firstName}", user.firstName)
-           .replace("{company}",  req.cookies.companyName)
-           .replace("{company}", req.cookies.companyName)
-           .replace("{lastName}", user.lastName); 
-         console.log(user.email);
-         console.log(emailTemplate.subject);
-              try {
-               await sendEmail({
-                 email: user.email,
-                 subject: emailTemplate.subject,
-                 message
-               });
-              
-             } catch (err) {   
-              console.log(err);
-               return next(
-                 new AppError(
-                   'There was an error sending the email. Try again later.',
-                   500
-                 )
-             );
-           }
-        }
+          sendEmailToUsers(req.body.employee,constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved,updatedLeaveApplication,req.cookies.companyId);  
+         
       }
       }
       catch (error) {

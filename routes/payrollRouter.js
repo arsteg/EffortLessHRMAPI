@@ -4558,9 +4558,6 @@ router.delete('/flexi-benefits-pf-tax/:id', authController.protect, payrollContr
  *               PayrollUser:
  *                 type: string
  *                 required: true
- *               OverTime:
- *                 type: string
- *                 required: true
  *               LateComing:
  *                 type: string
  *                 required: true
@@ -4630,8 +4627,6 @@ router.get('/overtime/:id', authController.protect, payrollController.getPayroll
  *           schema:
  *             type: object
  *             properties:
- *               OverTime:
- *                 type: string
  *               LateComing:
  *                 type: string
  *               EarlyGoing:
