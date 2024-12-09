@@ -163,7 +163,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getTask  = catchAsync(async (req, res, next) => {    
+exports.getTask  = catchAsync(async (req, res, next) => {
 const task = await Task.findById(req.params.id);
 
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
@@ -542,6 +542,17 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
 });
 
 exports.addTask = catchAsync(async (req, res, next) => { 
+  const existingTask = await Task.findOne({
+    company: req.cookies.companyId,
+    taskName: req.body.taskName,
+  });
+
+  if (existingTask) {
+    return res.status(400).json({
+      status: 'failure',
+      message: 'A task with this name already exists for your company.',
+    });
+  }
   const existingUser = await User.findById(req.body.user);
   const existingProject = await Project.findById(req.body.project);
 
