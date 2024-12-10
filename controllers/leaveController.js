@@ -637,45 +637,53 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
 exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
+
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const employeeLeaveAssignmentExists = await EmployeeLeaveAssignment.find({}).where('user').equals(req.body.user);
-  var employeeLeaveAssignment;
-  const leaveTemplate = await LeaveTemplate.findById(req.body.leaveTemplate);
-  if (leaveTemplate && leaveTemplate.approvalType == "template-wise") {
-    req.body.primaryApprover = leaveTemplate.primaryApprover;
-    if (leaveTemplate.secondaryApprover != "") {
-      req.body.secondaryApprover = leaveTemplate.secondaryApprover;
-    }
-    else {
-      req.body.secondaryApprover = null;
-      //delete req.body.secondaryApprover;
-    }
-  }
-  if (employeeLeaveAssignmentExists.length <= 0) {
 
-    employeeLeaveAssignment = await EmployeeLeaveAssignment.create(req.body);
-  }
-  else {
-    employeeLeaveAssignment = await EmployeeLeaveAssignment.findByIdAndUpdate(
-      employeeLeaveAssignmentExists[0]._id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+  // Ensure the request body is an array
+  const assignments = Array.isArray(req.body) ? req.body : [req.body];
+
+  const results = [];
+  for (const assignment of assignments) {
+    // Add companyId to each assignment
+    assignment.company = companyId;
+
+    // Check if the assignment already exists for the user
+    const existingAssignments = await EmployeeLeaveAssignment.find({
+      user: assignment.user,
+    });
+
+    // Fetch the leave template to check for approvalType
+    const leaveTemplate = await LeaveTemplate.findById(assignment.leaveTemplate);
+    if (leaveTemplate && leaveTemplate.approvalType === 'template-wise') {
+      assignment.primaryApprover = leaveTemplate.primaryApprover;
+      assignment.secondaryApprover = leaveTemplate.secondaryApprover || null;
+    }
+
+    // Create or update the assignment
+    let employeeLeaveAssignment;
+    if (existingAssignments.length === 0) {
+      employeeLeaveAssignment = await EmployeeLeaveAssignment.create(assignment);
+    } else {
+      employeeLeaveAssignment = await EmployeeLeaveAssignment.findByIdAndUpdate(
+        existingAssignments[0]._id,
+        assignment,
+        { new: true, runValidators: true }
+      );
+    }
+
+    results.push(employeeLeaveAssignment);
   }
 
   res.status(201).json({
     status: 'success',
-    data: employeeLeaveAssignment,
+    data: results,
   });
 });
+
 
 exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);

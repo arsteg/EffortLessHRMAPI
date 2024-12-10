@@ -846,20 +846,22 @@ router.get('/leave-template-categories',authController.protect, leaveController.
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               user:
- *                 type: string
- *                 required: true
- *               leaveTemplate:
- *                 type: string
- *                 required: true
- *               primaryApprover:
- *                 type: string
- *                 required: false
- *               secondaryApprover:
- *                 type: string
- *                 required: false
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: string
+ *                   required: true
+ *                 leaveTemplate:
+ *                   type: string
+ *                   required: true
+ *                 primaryApprover:
+ *                   type: string
+ *                   required: false
+ *                 secondaryApprover:
+ *                   type: string
+ *                   required: false
  *     responses:
  *       201:
  *         description: EmployeeLeaveAssignment successfully created
