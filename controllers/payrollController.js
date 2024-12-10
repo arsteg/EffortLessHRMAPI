@@ -2987,6 +2987,20 @@ exports.getPayrollAttendanceSummaryByUser = catchAsync(async (req, res, next) =>
   });
 });
 
+// Get PayrollAttendanceSummary by payrollUser
+exports.getPayrollAttendanceSummaryByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollAttendanceSummaries = await PayrollAttendanceSummary.find({ payrollUser: { $in: payrollUserIds } });
+ 
+  res.status(200).json({
+    status: 'success',
+    data: payrollAttendanceSummaries
+  });
+});
+
 // Update PayrollAttendanceSummary by payrollUser
 exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
   const payrollAttendanceSummary = await PayrollAttendanceSummary.findOneAndUpdate(
@@ -3075,6 +3089,17 @@ exports.deletePayrollVariablePay = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getPayrollVariablePayByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollVariablePayList = await PayrollVariablePay.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollVariablePayList
+  });
+});
 // Create Payroll Manual Arrears
 exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
   const { payrollUser } = req.body;
@@ -3123,7 +3148,17 @@ exports.getAllPayrollManualArrearsByPayrollUser = catchAsync(async (req, res, ne
     data: payrollManualArrears
   });
 });
-
+exports.getAllPayrollManualArrearsByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollManualArrears = await PayrollManualArrears.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollManualArrears
+  });
+});
 // Update Payroll Manual Arrears by ID
 exports.updatePayrollManualArrears = catchAsync(async (req, res, next) => {
   const payrollManualArrears = await PayrollManualArrears.findByIdAndUpdate(req.params.id, req.body, {
@@ -3192,6 +3227,17 @@ exports.getPayrollLoanAdvanceByPayrollUser = catchAsync(async (req, res, next) =
     data: payrollLoanAdvance
   });
 });
+exports.getPayrollLoanAdvanceByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollLoanAdvanceList = await PayrollLoanAdvance.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollLoanAdvanceList
+  });
+});
 
 // Update Payroll Loan/Advance by ID
 exports.updatePayrollLoanAdvance = catchAsync(async (req, res, next) => {
@@ -3257,6 +3303,17 @@ exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) 
     });
 });
 
+exports.getAllPayrollIncomeTaxByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollIncomeTaxList = await PayrollIncomeTax.find({ PayrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollIncomeTaxList
+  });
+});
 // Update Payroll Income Tax by ID
 exports.updatePayrollIncomeTax = catchAsync(async (req, res, next) => {
     const payrollIncomeTax = await PayrollIncomeTax.findByIdAndUpdate(req.params.id, req.body, {
@@ -3359,7 +3416,17 @@ exports.getAllFlexiBenefitsAndPFTaxByPyrollUser = async (req, res) => {
     });
   }
 };
-
+exports.getAllFlexiBenefitsAndPFTaxByPyroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFlexiBenefitsPFTaxList = await PayrollFlexiBenefitsPFTax.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFlexiBenefitsPFTaxList
+  });
+});
 // Update Flexi Benefits and PF Tax record by ID
 exports.updateFlexiBenefitsAndPFTax = async (req, res) => {
   try {
@@ -3544,3 +3611,15 @@ exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
     });
   }
 };
+
+exports.getAllPayrollOvertimeByPayroll = catchAsync(async (req, res, next) => {
+  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollUserIds = payrollUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollOvertimeList = await PayrollOvertime.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollOvertimeList
+  });
+});

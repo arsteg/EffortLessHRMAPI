@@ -3904,6 +3904,32 @@ router.get('/payrolluser-attendance-summary-by-payrollUser/:payrollUser', authCo
 
 /**
  * @swagger
+ * /api/v1/payroll/payrolluser-attendance-summary-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get a PayrollAttendanceSummary by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payrollUser
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll attendance summary
+ *       404:
+ *         description: PayrollAttendanceSummary not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payrolluser-attendance-summary-by-payroll/:payroll', authController.protect, payrollController.getPayrollAttendanceSummaryByPayroll);
+
+/**
+ * @swagger
  * /api/v1/payroll/payrolluser-attendance-summary/{id}:
  *   put:
  *     summary: Update a PayrollAttendanceSummary by Id
@@ -4010,6 +4036,31 @@ router.post('/payroll-variable-pay', payrollController.addPayrollVariablePay);
  *         description: Internal server error
  */
 router.get('/payroll-variable-pay-by-payrolluser/:payrollUser', payrollController.getPayrollVariablePayByPayrollUser);
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-variable-pay-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get a Payroll Variable Pay by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Variable Pay
+ *       404:
+ *         description: Payroll Variable Pay not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-variable-pay-by-payroll/:payroll', authController.protect, payrollController.getPayrollVariablePayByPayroll);
 
 /**
  * @swagger
@@ -4182,6 +4233,33 @@ router.get('/payroll-manual-arrears/:id', authController.protect, payrollControl
  */
 router.get('/payroll-manual-arrears-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllPayrollManualArrearsByPayrollUser);
 
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-manual-arrears-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get a Payroll Payroll Manual Arrears
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Manual Arrears
+ *       404:
+ *         description: Payroll Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-manual-arrears-by-payroll/:payroll', authController.protect, payrollController.getAllPayrollManualArrearsByPayroll);
+
 /**
  * @swagger
  * /api/v1/payroll/payroll-manual-arrears/{id}:
@@ -4321,6 +4399,32 @@ router.post('/payroll-loan-advance/', authController.protect, payrollController.
  *         description: Internal server error
  */
 router.get('/payroll-loan-advance-by-payrolluser/:payrollUser', authController.protect, payrollController.getPayrollLoanAdvanceByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-loan-advance-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get a payroll loan advance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll loan advance
+ *       404:
+ *         description: payroll loan advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-loan-advance-by-payroll/:payroll', authController.protect, payrollController.getPayrollLoanAdvanceByPayroll);
 
 /**
  * @swagger
@@ -4473,6 +4577,31 @@ router.get('/flexi-benefits-pf-tax/:id', authController.protect, payrollControll
  *         description: Internal server error
  */
 router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllFlexiBenefitsAndPFTaxByPyrollUser);
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get a flexi-benefits-pf-tax by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the flexi-benefits-pf-tax
+ *       404:
+ *         description: flexi-benefits-pf-tax not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexi-benefits-pf-tax-by-payroll/:payroll', authController.protect, payrollController.getAllFlexiBenefitsAndPFTaxByPyroll);
 
 /**
  * @swagger
@@ -4693,6 +4822,31 @@ router.delete('/overtime/:id', authController.protect, payrollController.deleteP
  */
 router.get('/overtime-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollOvertimeByPayrollUser);
 
+/**
+ * @swagger
+ * /api/v1/payroll/overtime-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get all Payroll Overtime entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/overtime-by-payroll/:payroll', authController.protect, payrollController.getAllPayrollOvertimeByPayroll);
+
+
 // Payroll Income Tax routes
 
 /**
@@ -4783,6 +4937,29 @@ router.get('/incomeTax/:id', authController.protect, payrollController.getPayrol
  *         description: Internal server error
  */
 router.get('/incomeTax-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollIncomeTaxByPayrollUser);
+/**
+ * @swagger
+ * /api/v1/payroll/incomeTax-by-payroll/{payroll}:
+ *   get:
+ *     summary: Get all Payroll incomeTax entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll incomeTax entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/incomeTax-by-payroll/:payroll', authController.protect, payrollController.getAllPayrollIncomeTaxByPayroll);
 
 /**
  * @swagger
