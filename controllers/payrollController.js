@@ -3308,10 +3308,10 @@ exports.getAllPayrollIncomeTaxByPayroll = catchAsync(async (req, res, next) => {
 // Extract _id values from payrollUsers payrollUserIds
 const payrollUserIds = payrollUsers.map(user => user._id);
 // Use the array of IDs to fetch related PayrollAttendanceSummary records
-const payrollLoanAdvanceList = await PayrollIncomeTax.find({ payrollUser: { $in: payrollUserIds } }); 
+const payrollIncomeTaxList = await PayrollIncomeTax.find({ PayrollUser: { $in: payrollUserIds } }); 
   res.status(200).json({
     status: 'success',
-    data: payrollLoanAdvanceList
+    data: payrollIncomeTaxList
   });
 });
 // Update Payroll Income Tax by ID
