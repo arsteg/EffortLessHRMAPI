@@ -4601,7 +4601,7 @@ router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.
  *       500:
  *         description: Internal server error
  */
-router.get('/flexi-benefits-pf-tax-by-payroll/:payroll', authController.protect, payrollController.getPayrollVariablePayByPayroll);
+router.get('/flexi-benefits-pf-tax-by-payroll/:payroll', authController.protect, payrollController.getAllFlexiBenefitsAndPFTaxByPyroll);
 
 /**
  * @swagger
