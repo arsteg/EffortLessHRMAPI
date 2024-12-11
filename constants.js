@@ -26,6 +26,13 @@ const Email_template_constant = {
     Bi_Monthly: "Bi-Monthly",
     Quaterly: "Quaterly"
   };
+  const User_Status = {   
+    Active: "Active",
+    Deleted: "Deleted",
+    Terminated: "Terminated",
+    Inactive: "Inactive",
+    Settled: "Settled"
+  };
   const Leave_Application_Constant = {
     Level_1_Approval_Pending: "Level 1 Approval Pending",
     Level_2_Approval_Pending: "Level 2 Approval Pending",
@@ -37,5 +44,5 @@ const Email_template_constant = {
     // Define company-specific constants if needed
   };
   
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status };
   

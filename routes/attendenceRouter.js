@@ -3355,7 +3355,7 @@ attendanceRouter.post('/process-attendance-lop-by-month', authController.protect
  * @swagger
  * /api/v1/attendance/process-attendance:
  *   post:
- *     summary: Add a Process Attendance LOP
+ *     summary: Process Attendance
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
@@ -3371,8 +3371,6 @@ attendanceRouter.post('/process-attendance-lop-by-month', authController.protect
  *                         attendanceProcessPeriodMonth:
  *                             type: string
  *                         runDate:
- *                             type: string
- *                         status:
  *                             type: string
  *                         exportToPayroll:
  *                             type: string
@@ -3399,9 +3397,56 @@ attendanceRouter.post('/process-attendance', authController.protect, attendanceC
 
 /**
  * @swagger
+ * /api/v1/attendance/process-attendance-fnf:
+ *   post:
+ *     summary: Process Attendance FNF
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         attendanceProcessPeriodYear:
+ *                             type: string
+ *                         attendanceProcessPeriodMonth:
+ *                             type: string
+ *                         runDate:
+ *                             type: string
+ *                         exportToPayroll:
+ *                             type: string
+ *                         isFNF:
+ *                             type: bool
+ *                             default: true
+ *                         users:
+ *                            type: array
+ *                            items:
+ *                              type: object
+ *                              properties:
+ *                                user:
+ *                                  type: string
+ *                                  required: true
+ *                                status:
+ *                                  type: string
+ *                                  required: true
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance-fnf', authController.protect, attendanceController.ProcessAttendance);
+
+/**
+ * @swagger
  * /api/v1/attendance/process-attendance:
  *   delete:
- *     summary: Delete a Process ttendanace
+ *     summary: Delete a Process Attendanace
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
@@ -3464,5 +3509,41 @@ attendanceRouter.delete('/process-attendance', authController.protect, attendanc
  *         description: Internal server error
  */
 attendanceRouter.post('/process-attendance-by-month', authController.protect, attendanceController.GetProcessAttendance);
+
+/**
+ * @swagger
+ * /api/v1/attendance/process-attendance-fnf-by-month:
+ *   post:
+ *     summary: Get a Process Attendance
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
+ *                         month:
+ *                             type: string
+ *                         year:
+ *                             type: string
+ *                         isFNF:
+ *                             type: bool
+ *                             default: true
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/process-attendance-fnf-by-month', authController.protect, attendanceController.GetProcessAttendance);
 
 module.exports = attendanceRouter;

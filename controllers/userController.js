@@ -105,7 +105,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
 
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {
   const users = await User.find({
-    status: { $ne: "Deleted" },
+    status: { $ne: constants.User_Status.Deleted },
     company: req.params.companyId,
   });
   res.status(200).json({
@@ -177,7 +177,7 @@ exports.getMe = (req, res, next) => {
 exports.getUsers = catchAsync(async (req, res, next) => {
   var users = await User.find({
     _id: { $in: req.body.userId },
-    status: { $ne: "Deleted" },
+    status: { $ne: constants.User_Status.Deleted },
   });
   res.status(200).json({
     status: "success",
@@ -193,7 +193,7 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
   for (let i = 0; i < list.length; i++) {
     let manager = await User.findOne({
       _id: { $in: list[i].userId },
-      status: { $ne: "Deleted" },
+      status: { $ne: constants.User_Status.Deleted },
     });
     if (manager) {
       managers.push({
