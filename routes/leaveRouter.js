@@ -830,38 +830,32 @@ router.get('/leave-template-categories-by-template/:leaveTemplateId',authControl
  *         description: Internal server error
  */
 router.get('/leave-template-categories',authController.protect, leaveController.getAllLeaveTemplateCategories);
-
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-assignments:
  *   post:
  *     summary: Create a new EmployeeLeaveAssignment
  *     tags: [Leave Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       description: EmployeeLeaveAssignment details
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: array
- *             items:
- *               type: object
- *               properties:
- *                 user:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: array
+ *                 items:
  *                   type: string
- *                   required: true
- *                 leaveTemplate:
- *                   type: string
- *                   required: true
- *                 primaryApprover:
- *                   type: string
- *                   required: false
- *                 secondaryApprover:
- *                   type: string
- *                   required: false
+ *               leaveTemplate:
+ *                 type: string
+ *               primaryApprover:
+ *                 type: string
+ *               secondaryApprover:
+ *                 type: string
  *     responses:
  *       201:
  *         description: EmployeeLeaveAssignment successfully created
@@ -870,6 +864,7 @@ router.get('/leave-template-categories',authController.protect, leaveController.
  *       500:
  *         description: Internal server error
  */
+
 router.post('/employee-leave-assignments', authController.protect, leaveController.createEmployeeLeaveAssignment);
 
 /**

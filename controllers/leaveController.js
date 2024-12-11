@@ -635,35 +635,42 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
+  const { user, leaveTemplate, primaryApprover, secondaryApprover } = req.body;
 
-  // Check if companyId exists in cookies
+  // Validate required fields
+  if (!user || !Array.isArray(user) || user.length === 0) {
+    return next(new AppError('User field must be a non-empty array', 400));
+  }
+  if (!leaveTemplate) {
+    return next(new AppError('LeaveTemplate is required', 400));
+  }
+
+  const companyId = req.cookies.companyId;
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
 
-  // Ensure the request body is an array
-  const assignments = Array.isArray(req.body) ? req.body : [req.body];
-
   const results = [];
-  for (const assignment of assignments) {
-    // Add companyId to each assignment
-    assignment.company = companyId;
+  for (const userId of user) {
+    const assignment = {
+      user: userId,
+      leaveTemplate,
+      company: companyId,
+      primaryApprover: primaryApprover || null,
+      secondaryApprover: secondaryApprover || null,
+    };
 
-    // Check if the assignment already exists for the user
-    const existingAssignments = await EmployeeLeaveAssignment.find({
-      user: assignment.user,
-    });
-
-    // Fetch the leave template to check for approvalType
-    const leaveTemplate = await LeaveTemplate.findById(assignment.leaveTemplate);
-    if (leaveTemplate && leaveTemplate.approvalType === 'template-wise') {
-      assignment.primaryApprover = leaveTemplate.primaryApprover;
-      assignment.secondaryApprover = leaveTemplate.secondaryApprover || null;
+    const leaveTemplateRecord = await LeaveTemplate.findById(leaveTemplate);
+    if (leaveTemplateRecord && leaveTemplateRecord.approvalType === 'template-wise') {
+      assignment.primaryApprover = leaveTemplateRecord.primaryApprover;
+      assignment.secondaryApprover = leaveTemplateRecord.secondaryApprover || null;
     }
 
-    // Create or update the assignment
+    const existingAssignments = await EmployeeLeaveAssignment.find({
+      user: userId,
+      company: companyId,
+    });
+
     let employeeLeaveAssignment;
     if (existingAssignments.length === 0) {
       employeeLeaveAssignment = await EmployeeLeaveAssignment.create(assignment);
@@ -683,6 +690,7 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
     data: results,
   });
 });
+
 
 
 exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
