@@ -5,19 +5,19 @@ var subscriptionSchema = new Schema({
   userGroupType: {
     type: mongoose.Schema.ObjectId,
     ref: 'UserGroupType',
-    required: true
+    // required: true
   },
   trialPeriodStartDate: {
     type: Date,
-    required: true,
+    // required: true,
   },
   trialPeriodEndDate: {
     type: Date,
-    required: true,
+    // required: true,
   },
   subscriptionAfterTrial: {
     type: String,
-    required: true,
+    // required: true,
   },
   currentPlanId: {
     type: mongoose.Schema.ObjectId,
@@ -27,28 +27,34 @@ var subscriptionSchema = new Schema({
   offer: {
     type: mongoose.Schema.ObjectId,
     ref: 'Offer',
-    required: true
+    // required: true
   },
   offerStartDate: {
     type: Date,
-    required: true,
+    // required: true,
   },
   offerEndDate: {
     type: Date,
-    required: true,
+    // required: true,
   },
   dateSubscribed: {
     type: Date,
-    required: true,
+    // required: true,
   },
   validTo: {
     type: Date,
-    required: true,
+    // required: true,
   },
   dateUnsubscribed: {
     type: Date,
-    required: true,
+    // required: true,
   },
+  subscriptionId:{
+    type: String
+  },
+  companyId: {
+    type: String
+  }
 }, { collection: 'Subscription' });
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

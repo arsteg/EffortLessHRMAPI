@@ -2196,16 +2196,22 @@ exports.ProcessAttendance = async (req, res) => {
 
     try {
        const companyId = req.cookies.companyId;
+       var isFNF=false;
         // Check if companyId exists in cookies
-        if (!companyId) {
+       if (!companyId) {
           return next(new AppError('Company ID not found in cookies', 400));
         }
         req.body.company = companyId;
-        const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, status, exportToPayroll, users,company } = req.body;
+        if(req.body.isFNF)
+        {
+          isFNF=true;
+        }       
+        const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users,company } = req.body;
         // Extract companyId from req.cookies
        let existingProcess = await AttendanceProcess.findOne({
         attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
-        attendanceProcessPeriodYear: attendanceProcessPeriodYear
+        attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+        isFNF: isFNF,
     });
 
     if (existingProcess) {
@@ -2214,32 +2220,43 @@ exports.ProcessAttendance = async (req, res) => {
             message: 'Attendance process for this period already exists'
         });
     }
-
         // 1. Insert a new AttendanceProcess record
         let attendanceProcess = await AttendanceProcess.create({
             attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
             attendanceProcessPeriodYear: attendanceProcessPeriodYear,
             runDate: new Date(runDate),
-            status,
+            isFNF:isFNF,
             exportToPayroll,
             company
         });
-
+      
         // 2. Prepare AttendanceProcessUsers records for bulk insert
         const attendanceProcessUsers = users.map(userEntry => ({
             attendanceProcess: attendanceProcess._id,
             user: userEntry.user,
             status: userEntry.status
         }));
-
+     
         // 3. Insert multiple AttendanceProcessUsers records
         await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
-
-        await sendEmailToUsers(attendanceProcessUsers);
+     
+        //await sendEmailToUsers(attendanceProcessUsers);
 //loop for user
 //send email to user that your ttdance is processed
 //Send email to managers that respective users has attendance process
 
+if(isFNF)
+{
+  // make user as settled if its
+  // 1) Get user from collection 
+  for (let userEntry of users) {
+  const user = await User.findById(userEntry.user);
+  // 2) Check if POSTed current password is correct 
+  // 3) If so, update password
+  user.status = constants.User_Status.Settled; 
+  await user.save();
+  }
+}
         return res.status(201).json({
             status: 'success',
             message: 'Attendance processed successfully',
@@ -2255,6 +2272,7 @@ exports.ProcessAttendance = async (req, res) => {
         });
     }
 };
+
 const sendEmailToUsers = async (attendanceProcessUsers) => {
   for (const userEntry of attendanceProcessUsers) {
       const { user, status } = userEntry;
@@ -2270,19 +2288,18 @@ const sendEmailToUsers = async (attendanceProcessUsers) => {
        .replace("{company}",  req.cookies.companyName)
        .replace("{company}", req.cookies.companyName)
        .replace("{lastName}", attendanceUser.lastName); 
-     console.log(attendanceUser.email);
-     console.log(emailTemplate.subject);
+        console.log(attendanceUser.email);
+        console.log(emailTemplate.subject);
           try {
            await sendEmail({
              email: attendanceUser.email,
              subject: emailTemplate.subject,
              message
-           });
-          
+           });          
          } catch (err) {   
           console.error(`Error sending email to user ${user}:`, err);
        }
-  }
+   }
 }
 };
 // Controller to delete attendance process and associated users
@@ -2382,10 +2399,14 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
 exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-
-  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
+  var isFNF=false;
+  if(req.body.isFNF)
+  {
+    isFNF=req.body.isFNF;
+  }
+  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit,isFNF);
   
-  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
+  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,0,0,isFNF);
   if(attendanceRecords)
     {
      for(var i = 0; i < attendanceRecords.length; i++) {     
@@ -2407,7 +2428,7 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
 
 });
 
-async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0,isFNF=false) {
   // Validate input
   if (!year || !month) {
       throw new Error('Year and month are required');
@@ -2425,7 +2446,8 @@ console.log(endDate);
             runDate: {
                   $gte: startDate,
                   $lt: endDate
-              }
+              },
+              "isFNF": isFNF
           }).exec();
           return { count };
       } else {
@@ -2433,7 +2455,8 @@ console.log(endDate);
             runDate: {
                   $gte: startDate,
                   $lt: endDate
-              }
+              },
+              "isFNF": isFNF
           }).skip(skip).limit(limit).exec();
           return records;
       }

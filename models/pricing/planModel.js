@@ -6,6 +6,9 @@ var planSchema = new Schema({
     type: String,
     required: true
   },
+  planId:{
+    type: String
+  },
   software: {
     type: mongoose.Schema.ObjectId,
     ref: 'Software'

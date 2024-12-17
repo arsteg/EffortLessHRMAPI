@@ -17,6 +17,15 @@ const Invoice= require('../models/pricing/invoiceModel');
 const User = require('../models/permissions/userModel');
 const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
+const Razorpay = require('razorpay');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY,
+  key_secret: process.env.RAZORPAY_SECRET,
+  headers: {
+    "X-Razorpay-Account": "PWAQUL4NNnybvx"
+  }
+});
 
 exports.createSoftware = catchAsync(async (req, res, next) => {
   const { name,description,accessLink} = req.body;
@@ -177,8 +186,25 @@ exports.createPlan = catchAsync(async (req, res, next) => {
       });
     }
     else{
-    const plan = await Plan.create({ name: name,software: software,currentprice: currentprice,IsActive: IsActive });
-  
+      // Creating Plan in RazorPay
+      const razorpayPlan = await  razorpay.plans.create({
+        "period": "monthly",
+        "interval": 1,
+        "item": {
+          "name": name,
+          "amount": currentprice * 100,
+          "currency": "INR",
+          "description": "Description for the test plan"
+        },
+      })
+      const plan = await Plan.create({ 
+        name: name,
+        software: software,
+        currentprice: currentprice,
+        IsActive: IsActive,
+        planId: razorpayPlan.id // Razorpay Plan Id
+      });
+      
       res.status(201).json({
         status: 'success',
         data: plan,
@@ -1121,27 +1147,37 @@ exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
 exports.addSubscriptionDetails = async (req, res) => {
   try {
     // Basic validation for required fields
-    if (!req.body.currentPlanId || !req.body.offer || !req.body.userGroupType) {
-      return res.status(400).json({ error: 'Plan, offer, and userGroupType are required fields' });
-    }
+    // if (!req.body.currentPlanId || !req.body.offer || !req.body.userGroupType) {
+    //   return res.status(400).json({ error: 'Plan, offer, and userGroupType are required fields' });
+    // }
 
     // Check if userGroupType ID is valid
-    const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
-    if (!isValidUserGroupType) {
-      return res.status(400).json({ error: 'Invalid userGroupType ID' });
-    }
+    // const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
+    // if (!isValidUserGroupType) {
+    //   return res.status(400).json({ error: 'Invalid userGroupType ID' });
+    // }
 
     // Check if offer ID is valid
-    const isValidOffer = await Offer.findById(req.body.offer);
-    if (!isValidOffer) {
-      return res.status(400).json({ error: 'Invalid offer ID' });
-    }
+    // const isValidOffer = await Offer.findById(req.body.offer);
+    // if (!isValidOffer) {
+    //   return res.status(400).json({ error: 'Invalid offer ID' });
+    // }
 
     // Check if currentPlanId ID is valid
     const isValidCurrentPlan = await Plan.findById(req.body.currentPlanId);
     if (!isValidCurrentPlan) {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
+
+    // Fetch Razorpay plan id from mongoDb Plans
+    const razorpayPlanid = isValidCurrentPlan.planId
+
+    // Create new Subscription in Razorpay
+    const rzaorpaySubscription = await razorpay.subscriptions.create({
+      "plan_id": razorpayPlanid,
+      "quantity": 1, // number of licenses
+      "total_count": 1
+    })
 
     // Create a new subscription instance
     const newSubscription = new Subscription({
@@ -1156,6 +1192,8 @@ exports.addSubscriptionDetails = async (req, res) => {
       dateSubscribed: req.body.dateSubscribed,
       validTo: req.body.validTo,
       dateUnsubscribed: req.body.dateUnsubscribed,
+      subscriptionId: rzaorpaySubscription.id,
+      companyId: req.body.companyId
     });
 
     // Save the new subscription to the database

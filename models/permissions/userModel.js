@@ -49,7 +49,9 @@ const userSchema = new mongoose.Schema({
     type: Boolean
   },
   status: {
-    type: String
+    type: String,
+    enum: ['Active', 'Deleted','Terminated','Inactive','Settled'],
+    default: 'Active'
   },
   company: {
     type: mongoose.Schema.ObjectId,
@@ -247,6 +249,7 @@ userSchema.methods.correctPassword = async function(
 ) {
   // Because passwords select is set to false, we can't access it directly with 'this' keyword
   // Compare non hashed password with hashed one
+  console.log("correctPassword called");
   return await bcrpyt.compare(candidatePassword, userPassword);
 };
 

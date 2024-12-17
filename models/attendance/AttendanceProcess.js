@@ -18,6 +18,10 @@ var attendanceProcessSchema = new Schema({
       type: Boolean,
       required: true
     },
+    isFNF: {
+      type: Boolean,
+      required: true
+    },
     company: {
       type: mongoose.Schema.ObjectId,
       ref: 'Company',

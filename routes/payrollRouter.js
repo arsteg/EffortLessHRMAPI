@@ -4376,7 +4376,7 @@ router.post('/payroll-loan-advance/', authController.protect, payrollController.
 
 /**
  * @swagger
- * /api/v1/payroll/payroll-loan-advance-y-payrolluser/{payrollUser}:
+ * /api/v1/payroll/payroll-loan-advance-by-payrolluser/{payrollUser}:
  *   get:
  *     summary: Get Payroll Loan/Advance by payrollUser
  *     tags: [Payroll Management]

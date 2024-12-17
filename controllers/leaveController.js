@@ -635,47 +635,63 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  const { user, leaveTemplate, primaryApprover, secondaryApprover } = req.body;
+
+  // Validate required fields
+  if (!user || !Array.isArray(user) || user.length === 0) {
+    return next(new AppError('User field must be a non-empty array', 400));
+  }
+  if (!leaveTemplate) {
+    return next(new AppError('LeaveTemplate is required', 400));
+  }
+
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError('Company ID not found in cookies', 400));
   }
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const employeeLeaveAssignmentExists = await EmployeeLeaveAssignment.find({}).where('user').equals(req.body.user);
-  var employeeLeaveAssignment;
-  const leaveTemplate = await LeaveTemplate.findById(req.body.leaveTemplate);
-  if (leaveTemplate && leaveTemplate.approvalType == "template-wise") {
-    req.body.primaryApprover = leaveTemplate.primaryApprover;
-    if (leaveTemplate.secondaryApprover != "") {
-      req.body.secondaryApprover = leaveTemplate.secondaryApprover;
-    }
-    else {
-      req.body.secondaryApprover = null;
-      //delete req.body.secondaryApprover;
-    }
-  }
-  if (employeeLeaveAssignmentExists.length <= 0) {
 
-    employeeLeaveAssignment = await EmployeeLeaveAssignment.create(req.body);
-  }
-  else {
-    employeeLeaveAssignment = await EmployeeLeaveAssignment.findByIdAndUpdate(
-      employeeLeaveAssignmentExists[0]._id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+  const results = [];
+  for (const userId of user) {
+    const assignment = {
+      user: userId,
+      leaveTemplate,
+      company: companyId,
+      primaryApprover: primaryApprover || null,
+      secondaryApprover: secondaryApprover || null,
+    };
+
+    const leaveTemplateRecord = await LeaveTemplate.findById(leaveTemplate);
+    if (leaveTemplateRecord && leaveTemplateRecord.approvalType === 'template-wise') {
+      assignment.primaryApprover = leaveTemplateRecord.primaryApprover;
+      assignment.secondaryApprover = leaveTemplateRecord.secondaryApprover || null;
+    }
+
+    const existingAssignments = await EmployeeLeaveAssignment.find({
+      user: userId,
+      company: companyId,
+    });
+
+    let employeeLeaveAssignment;
+    if (existingAssignments.length === 0) {
+      employeeLeaveAssignment = await EmployeeLeaveAssignment.create(assignment);
+    } else {
+      employeeLeaveAssignment = await EmployeeLeaveAssignment.findByIdAndUpdate(
+        existingAssignments[0]._id,
+        assignment,
+        { new: true, runValidators: true }
+      );
+    }
+
+    results.push(employeeLeaveAssignment);
   }
 
   res.status(201).json({
     status: 'success',
-    data: employeeLeaveAssignment,
+    data: results,
   });
 });
+
+
 
 exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);

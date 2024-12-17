@@ -86,7 +86,7 @@ exports.signup = catchAsync(async(req, res, next) => {
     role: req.body.role,   
     isSuperAdmin: false,
     company:company,
-    status:"Active",   
+    status:constants.User_Status.Active,   
     active:true,
     createdOn: new Date(Date.now()),
     updatedOn: new Date(Date.now())    
@@ -192,7 +192,7 @@ else
     role: role.id,   
     isSuperAdmin: false,
     company:company.id,
-    status:"Active",
+    status:constants.User_Status.Active,
     active:true,
     createdOn: new Date(Date.now()),
     updatedOn: new Date(Date.now())
@@ -242,7 +242,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     phone: req.body.phone,
     jobTitle: req.body.jobTitle,
     isSuperAdmin: false,
-    status:"Active",
+    status:constants.User_Status.Active,
     createdOn: new Date(),
     updatedOn: new Date(),
     createdBy: req.cookies.userId,
@@ -301,7 +301,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const userValid = await User.findOne({
     email,
-    'status': { $ne: 'Deleted' }
+    'status': { $ne: constants.User_Status.Deleted }
   }).select('+password');
   if (!userValid || !(await user.correctPassword(password, userValid.password))) {
     return next(new AppError(`Deleted User.`, 401));
@@ -485,7 +485,7 @@ exports.sendLog = catchAsync(async (req, res, next) => {
           
       }
  
-  const userListmy = await User.find({}).where("status").equals("Active");  
+  const userListmy = await User.find({}).where("status").equals(constants.User_Status.Active);  
   const userList = await User.find({}).where("email").equals("sapana@arsteg.com");  
    
   if(userList)
