@@ -316,6 +316,12 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
  *               IsActive:
  *                 type: boolean
  *                 required: true
+ *               description:
+ *                  type: string
+ *               notes1:
+ *                  type: string
+ *               notes2:
+ *                  type: string
  *     responses:
  *       201:
  *         description: Plan entry successfully created
@@ -2205,5 +2211,8 @@ router.get('/invoice',  authController.protect, pricingController.getAllInvoices
   *         description: Internal server error
   */
  router.get('/user-in-group/:userGroupId', authController.protect, pricingController.getUsersByGroup);
+
+ // Razorpay Webhook
+  router.post('/verify-payment', pricingController.verifyPayment);
 
 module.exports = router;

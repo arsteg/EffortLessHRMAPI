@@ -18,13 +18,14 @@ const User = require('../models/permissions/userModel');
 const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
-  headers: {
-    "X-Razorpay-Account": "PWAQUL4NNnybvx"
-  }
+  // headers: {
+  //   "X-Razorpay-Account": "PWAQUL4NNnybvx"
+  // }
 });
 
 exports.createSoftware = catchAsync(async (req, res, next) => {
@@ -176,8 +177,9 @@ res.status(200).json({
 });
 
 exports.createPlan = catchAsync(async (req, res, next) => {
-  const { name,software,currentprice,IsActive} = req.body; 
-    const planExists = await Software.findOne({ name: name,software: software});
+  const { name,software,currentprice,IsActive, description, notes1, notes2} = req.body; 
+    // const planExists = await Software.findOne({ name: name,software: software});
+    const planExists = await Plan.findOne({ name: name});
     if(planExists)
     {
       res.status(500).json({
@@ -194,8 +196,12 @@ exports.createPlan = catchAsync(async (req, res, next) => {
           "name": name,
           "amount": currentprice * 100,
           "currency": "INR",
-          "description": "Description for the test plan"
+          "description": description,
         },
+        "notes": {
+          "notes_key_1": notes1,
+          "notes_key_2": notes2
+        }
       })
       const plan = await Plan.create({ 
         name: name,
@@ -213,7 +219,17 @@ exports.createPlan = catchAsync(async (req, res, next) => {
 });  
 
 exports.getPlan = catchAsync(async (req, res, next) => {
-const plan = await Plan.findById(req.params.id);
+let id;
+// catching invalid id
+try { id = mongoose.Types.ObjectId(req.params.id); }
+catch (err) { id = null; }
+
+const plan = await Plan.find({
+  $or: [
+    {_id :id},
+    {name: req.params.id}
+  ]
+})
 if(plan) {
     const softwares = await Software.find({})
       .where('_id').equals(plan.software);
@@ -1169,42 +1185,50 @@ exports.addSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
 
-    // Fetch Razorpay plan id from mongoDb Plans
-    const razorpayPlanid = isValidCurrentPlan.planId
-
-    // Create new Subscription in Razorpay
-    const rzaorpaySubscription = await razorpay.subscriptions.create({
-      "plan_id": razorpayPlanid,
-      "quantity": 1, // number of licenses
-      "total_count": 1
-    })
-
-    // Create a new subscription instance
-    const newSubscription = new Subscription({
-      userGroupType: req.body.userGroupType,
-      trialPeriodStartDate: req.body.trialPeriodStartDate,
-      trialPeriodEndDate: req.body.trialPeriodEndDate,
-      subscriptionAfterTrial: req.body.subscriptionAfterTrial,
-      currentPlanId: req.body.currentPlanId,
-      offer: req.body.offer,
-      offerStartDate: req.body.offerStartDate,
-      offerEndDate: req.body.offerEndDate,
-      dateSubscribed: req.body.dateSubscribed,
-      validTo: req.body.validTo,
-      dateUnsubscribed: req.body.dateUnsubscribed,
-      subscriptionId: rzaorpaySubscription.id,
-      companyId: req.body.companyId
-    });
-
-    // Save the new subscription to the database
-    const savedSubscription = await newSubscription.save();
-
-    res.status(201).json({
-      status: 'success',
-      data: {
-        subscription: savedSubscription,
-      },
-    });
+    const subscription = await Subscription.findOne({companyId: req.cookies.companyId});
+    // If already have a subscription
+    if(subscription) {
+      res.status(201).json({
+        status: 'success',
+        data: {subscription},
+      });
+    } else {
+      // Fetch Razorpay plan id from mongoDb Plans
+      const razorpayPlanid = isValidCurrentPlan.planId
+  
+      // Create new Subscription in Razorpay
+      const razorpaySubscription = await razorpay.subscriptions.create({
+        "plan_id": razorpayPlanid,
+        "quantity": 1, // number of licenses
+        "total_count": 120
+      })
+      // Create a new subscription instance
+      const newSubscription = new Subscription({
+        userGroupType: req.body.userGroupType,
+        trialPeriodStartDate: req.body.trialPeriodStartDate,
+        trialPeriodEndDate: req.body.trialPeriodEndDate,
+        subscriptionAfterTrial: req.body.subscriptionAfterTrial,
+        currentPlanId: req.body.currentPlanId,
+        offer: req.body.offer,
+        offerStartDate: req.body.offerStartDate,
+        offerEndDate: req.body.offerEndDate,
+        dateSubscribed: req.body.dateSubscribed,
+        validTo: req.body.validTo,
+        dateUnsubscribed: req.body.dateUnsubscribed,
+        subscriptionId: razorpaySubscription.id,
+        companyId: req.cookies.companyId
+      });
+  
+      // Save the new subscription to the database
+      const savedSubscription = await newSubscription.save();
+  
+      res.status(201).json({
+        status: 'success',
+        data: {
+          subscription: savedSubscription,
+        },
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -1901,5 +1925,44 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Verify Payment Status
+exports.verifyPayment = catchAsync(async (req, res, next) => {
+  try {
+
+    const webhookBody = req.body;
+    const razorpaySignature = req.headers['x-razorpay-signature'];
+
+    // Create a hash using your secret and the payload received
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_SECRET)
+      .update(JSON.stringify(webhookBody))
+      .digest('hex');
+
+    // Compare the generated signature with the Razorpay signature sent in the webhook
+    if (generatedSignature === razorpaySignature) {
+      // Signature is valid, proceed with your logic
+      console.log('Webhook signature verified');
+
+      // Handle the subscription payment success or failure
+      const event = webhookBody.event;
+      const payload = webhookBody.payload;
+      console.log(event);
+      if (event === 'payment.authorized') {
+        console.log('Payment Authorized:', payload);
+      } else if (event === 'payment.captured') {
+        console.log('Payment Captured:', payload);
+      }
+      res.status(200).send('Success');
+    } else {
+      // Signature mismatch, do not process the event
+      console.log('Signature mismatch');
+      res.status(400).send('Invalid signature');
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
   }
 });
