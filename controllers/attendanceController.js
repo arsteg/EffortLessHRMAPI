@@ -2078,6 +2078,9 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
            });
     
            if (existingRecord) {
+            res.status(200).json({
+              status: 'fail'
+            });
            }
           else
           {
