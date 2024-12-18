@@ -2079,7 +2079,8 @@ exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
     
            if (existingRecord) {
             res.status(200).json({
-              status: 'fail'
+              status: 'fail',
+              message: 'Lop Already Processed for respective uer'
             });
            }
           else
