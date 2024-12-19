@@ -64,7 +64,7 @@ const employeeSalutatoryDetailsSchema = new Schema({
     default: false
   },
   taxRegime: {
-    type: Boolean,
+    type: String,
     default: false
   },
   taxRegimeUpdated: {

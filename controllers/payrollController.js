@@ -3617,7 +3617,7 @@ exports.getAllPayrollOvertimeByPayroll = catchAsync(async (req, res, next) => {
 // Extract _id values from payrollUsers payrollUserIds
 const payrollUserIds = payrollUsers.map(user => user._id);
 // Use the array of IDs to fetch related PayrollAttendanceSummary records
-const payrollOvertimeList = await PayrollOvertime.find({ payrollUser: { $in: payrollUserIds } }); 
+const payrollOvertimeList = await PayrollOvertime.find({ PayrollUser: { $in: payrollUserIds } }); 
   res.status(200).json({
     status: 'success',
     data: payrollOvertimeList
