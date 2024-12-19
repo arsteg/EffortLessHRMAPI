@@ -1502,7 +1502,7 @@ router.delete('/employee-salary-tax-salutaory-settings/:id', authController.prot
  *               isComeUnderGratuityPaymentAct:
  *                 type: boolean
  *               taxRegime:
- *                 type: boolean
+ *                 type: string
  *               taxRegimeUpdated:
  *                 type: string
  *                 format: date
@@ -1629,7 +1629,7 @@ router.get('/employee-salutatory-details-by-user/:userId', authController.protec
  *               isComeUnderGratuityPaymentAct:
  *                 type: boolean
  *               taxRegime:
- *                 type: boolean
+ *                 type: string
  *               taxRegimeUpdated:
  *                 type: string
  *                 format: date
