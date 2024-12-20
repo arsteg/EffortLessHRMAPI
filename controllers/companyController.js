@@ -11,6 +11,7 @@ const SubDepartment = require('../models/Company/SubDepartment');
 const Designation = require("../models/Company/Designation");
 const Band = require("../models/Company/Band");
 const Signatory = require("../models/Company/Signatory");
+const TaxSlab = require('../models/Company/TaxSlab');
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
@@ -868,3 +869,131 @@ exports.deleteSignatory = async (req, res, next) => {
     });
   }
 };
+
+// Add a new tax slab
+exports.createTaxSlab = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId; // Get company from cookies
+  
+  // Validate if company value exists in cookies
+  if (!companyId) {
+    return res.status(500).json({
+      status: 'failure',
+      message: 'Company information missing in cookies',
+    });
+  }
+  req.body.company = companyId; // Set company in the request body
+
+  const { IncomeTaxSlabs, minAmount, maxAmount, taxPercentage,regime, cycle, company, holidayapplicableEmployee } = req.body;
+
+  const taxSlab = await TaxSlab.create({
+    IncomeTaxSlabs,
+    minAmount,
+    maxAmount,
+    taxPercentage,
+    regime,
+    cycle,
+    company,
+    holidayapplicableEmployee,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: taxSlab,
+  });
+});
+
+// Get all tax slabs by company
+exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
+  const { companyId } = req.params;
+  
+  const taxSlabs = await TaxSlab.find({ company: companyId });
+
+  if (!taxSlabs || taxSlabs.length === 0) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'No tax slabs found for this company',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: taxSlabs,
+  });
+});
+
+// Get all tax slabs by year
+exports.getTaxSlabsByYear = catchAsync(async (req, res, next) => {
+  const { year } = req.params;
+
+  const taxSlabs = await TaxSlab.find({ year });
+
+  if (!taxSlabs || taxSlabs.length === 0) {
+    return res.status(404).json({
+      status: 'fail',
+      message: `No tax slabs found for the year ${year}`,
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: taxSlabs,
+  });
+});
+
+// Update a tax slab
+exports.updateTaxSlab = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  const taxSlab = await TaxSlab.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+
+  if (!taxSlab) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Tax slab not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: taxSlab,
+  });
+});
+
+// Get a tax slab by ID
+exports.getTaxSlabById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const taxSlab = await TaxSlab.findById(id);
+
+  if (!taxSlab) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Tax slab not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: taxSlab,
+  });
+});
+
+// Delete a tax slab
+exports.deleteTaxSlab = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const taxSlab = await TaxSlab.findByIdAndDelete(id);
+
+  if (!taxSlab) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Tax slab not found',
+    });
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});

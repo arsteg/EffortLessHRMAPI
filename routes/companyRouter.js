@@ -1224,4 +1224,195 @@ router
     companyController.deleteCompany
   );
 
+ /**
+ * @swagger
+ * /api/v1/company/tax-slabs:
+ *   post:
+ *     summary: Add a new tax slab
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Tax slab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               IncomeTaxSlabs:
+ *                 type: string
+ *                 required: true
+ *               minAmount:
+ *                 type: number
+ *                 required: true
+ *               maxAmount:
+ *                 type: number
+ *                 required: true
+ *               taxPercentage:
+ *                 type: number
+ *                 required: true
+ *               cycle:
+ *                 type: string
+ *                 required: true
+ *               regime:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Tax slab successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/tax-slabs',authController.protect, companyController.createTaxSlab);
+
+/**
+ * @swagger
+ * /api/v1/company/tax-slabs-by-company:
+ *   get:
+ *     summary: Get all tax slabs by company
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the company
+ *     responses:
+ *       200:
+ *         description: Successful response with tax slabs
+ *       404:
+ *         description: No tax slabs found for the company
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/tax-slabs-by-company',authController.protect, companyController.getTaxSlabsByCompany);
+
+/**
+ * @swagger
+ * /api/v1/company/tax-slabs-by-year/{year}:
+ *   get:
+ *     summary: Get all tax slabs by year
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Year of the tax slabs
+ *     responses:
+ *       200:
+ *         description: Successful response with tax slabs
+ *       404:
+ *         description: No tax slabs found for the year
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/tax-slabs-by-year/:year',authController.protect, companyController.getTaxSlabsByYear);
+
+/**
+ * @swagger
+ * /api/v1/company/tax-slabs/{id}:
+ *   put:
+ *     summary: Update a tax slab by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the tax slab
+ *     requestBody:
+ *       description: Updated tax slab details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               IncomeTaxSlabs:
+ *                 type: string
+ *               minAmout:
+ *                 type: number
+ *               maxAmount:
+ *                 type: number
+ *               taxPercentage:
+ *                 type: number
+ *               year:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *               holidayapplicableEmployee:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Tax slab successfully updated
+ *       404:
+ *         description: Tax slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/tax-slabs/:id',authController.protect, companyController.updateTaxSlab);
+
+/**
+ * @swagger
+ * /api/v1/company/tax-slabs/{id}:
+ *   get:
+ *     summary: Get a tax slab by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the tax slab
+ *     responses:
+ *       200:
+ *         description: Successful response with the tax slab
+ *       404:
+ *         description: Tax slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/tax-slabs/:id',authController.protect, companyController.getTaxSlabById);
+
+/**
+ * @swagger
+ * /api/v1/company/tax-slabs/{id}:
+ *   delete:
+ *     summary: Delete a tax slab by ID
+ *     tags: [Company Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the tax slab
+ *     responses:
+ *       204:
+ *         description: Tax slab successfully deleted
+ *       404:
+ *         description: Tax slab not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/tax-slabs/:id',authController.protect, companyController.deleteTaxSlab);
+
 module.exports = router;
