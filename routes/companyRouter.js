@@ -1271,27 +1271,31 @@ router.post('/tax-slabs',authController.protect, companyController.createTaxSlab
 /**
  * @swagger
  * /api/v1/company/tax-slabs-by-company:
- *   get:
- *     summary: Get all tax slabs by company
- *     tags: [Company Management]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: companyId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the company
+ *   post:
+ *     summary: Get a Tax Slab by compnny
+ *     tags: [Company Management] 
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         skip:
+ *                             type: string
+ *                         next:
+ *                             type: string
  *     responses:
  *       200:
- *         description: Successful response with tax slabs
+ *         description: Successful response with the GeneralSettings
  *       404:
- *         description: No tax slabs found for the company
+ *         description: GeneralSettings not found
  *       500:
  *         description: Internal server error
  */
-router.get('/tax-slabs-by-company',authController.protect, companyController.getTaxSlabsByCompany);
+router.post('/tax-slabs-by-company',authController.protect, companyController.getTaxSlabsByCompany);
 
 /**
  * @swagger
@@ -1343,20 +1347,18 @@ router.get('/tax-slabs-by-year/:year',authController.protect, companyController.
  *             properties:
  *               IncomeTaxSlabs:
  *                 type: string
- *               minAmout:
+ *               minAmount:
  *                 type: number
  *               maxAmount:
  *                 type: number
  *               taxPercentage:
  *                 type: number
- *               year:
+ *               cycle:
  *                 type: string
- *               company:
+ *                 required: true
+ *               regime:
  *                 type: string
- *               holidayapplicableEmployee:
- *                 type: array
- *                 items:
- *                   type: string
+ *                 required: true
  *     responses:
  *       200:
  *         description: Tax slab successfully updated

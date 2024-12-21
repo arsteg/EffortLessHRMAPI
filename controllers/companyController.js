@@ -901,23 +901,27 @@ exports.createTaxSlab = catchAsync(async (req, res, next) => {
     data: taxSlab,
   });
 });
-
-// Get all tax slabs by company
 exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
-  const { companyId } = req.params;
-  
-  const taxSlabs = await TaxSlab.find({ company: companyId });
-
-  if (!taxSlabs || taxSlabs.length === 0) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'No tax slabs found for this company',
-    });
-  }
-
+  const skip = parseInt(req.body.skip) || 0;
+    const limit = parseInt(req.body.next) || 10;   
+    const years = req.body.years || null;  
+    const query = {
+      company: req.cookies.companyId };
+    if (years && years.length > 0) {
+      const startDate = new Date(Math.min(...years), 0, 1); // Start of the earliest year
+      const endDate = new Date(Math.max(...years), 11, 31, 23, 59, 59); // End of the latest year
+      query.date = {
+        $gte: startDate,
+        $lte: endDate
+      };
+    }    
+    // Get the total count of documents that match the query
+    const totalCount = await TaxSlab.countDocuments(query);
+    const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
   res.status(200).json({
     status: 'success',
     data: taxSlabs,
+    total: totalCount
   });
 });
 
