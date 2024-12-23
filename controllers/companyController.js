@@ -903,18 +903,9 @@ exports.createTaxSlab = catchAsync(async (req, res, next) => {
 });
 exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;   
-    const years = req.body.years || null;  
+    const limit = parseInt(req.body.next) || 10;  
     const query = {
-      company: req.cookies.companyId };
-    if (years && years.length > 0) {
-      const startDate = new Date(Math.min(...years), 0, 1); // Start of the earliest year
-      const endDate = new Date(Math.max(...years), 11, 31, 23, 59, 59); // End of the latest year
-      query.date = {
-        $gte: startDate,
-        $lte: endDate
-      };
-    }    
+      company: req.cookies.companyId };   
     // Get the total count of documents that match the query
     const totalCount = await TaxSlab.countDocuments(query);
     const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
@@ -926,15 +917,16 @@ exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
 });
 
 // Get all tax slabs by year
-exports.getTaxSlabsByYear = catchAsync(async (req, res, next) => {
-  const { year } = req.params;
-
-  const taxSlabs = await TaxSlab.find({ year });
+exports.getTaxSlabsByCycle = catchAsync(async (req, res, next) => {
+  const { cycle } = req.params;
+  const query = {
+    cycle: cycle };
+  const taxSlabs = await TaxSlab.find(query);
 
   if (!taxSlabs || taxSlabs.length === 0) {
     return res.status(404).json({
       status: 'fail',
-      message: `No tax slabs found for the year ${year}`,
+      message: `No tax slabs found for the year ${cycle}`,
     });
   }
 

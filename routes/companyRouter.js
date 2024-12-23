@@ -1299,7 +1299,7 @@ router.post('/tax-slabs-by-company',authController.protect, companyController.ge
 
 /**
  * @swagger
- * /api/v1/company/tax-slabs-by-year/{year}:
+ * /api/v1/company/tax-slabs-by-cycle/{cycle}:
  *   get:
  *     summary: Get all tax slabs by year
  *     tags: [Company Management]
@@ -1307,7 +1307,7 @@ router.post('/tax-slabs-by-company',authController.protect, companyController.ge
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: year
+ *         name: cycle
  *         required: true
  *         schema:
  *           type: string
@@ -1316,11 +1316,11 @@ router.post('/tax-slabs-by-company',authController.protect, companyController.ge
  *       200:
  *         description: Successful response with tax slabs
  *       404:
- *         description: No tax slabs found for the year
+ *         description: No tax slabs found for the cycle
  *       500:
  *         description: Internal server error
  */
-router.get('/tax-slabs-by-year/:year',authController.protect, companyController.getTaxSlabsByYear);
+router.get('/tax-slabs-by-cycle/:cycle',authController.protect, companyController.getTaxSlabsByCycle);
 
 /**
  * @swagger
