@@ -322,6 +322,10 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
  *                  type: string
  *               notes2:
  *                  type: string
+ *               frequency:
+ *                  type: string
+ *               interval:
+ *                  type: number
  *     responses:
  *       201:
  *         description: Plan entry successfully created
@@ -1737,6 +1741,38 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
   *         description: Internal server error
   */
 router.get('/subscription', authController.protect, pricingController.getAllSubscriptionDetails);
+
+/**
+  * @swagger
+  * /api/v1/pricing/pause-resume-subscription:
+  *   post:
+  *     summary: Pause a razorpay subscription and update the document
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     requestBody:
+  *       description: Razorpay Subscription ID
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               subscriptionId:
+  *                 type: string
+  *                 required: true
+  *                 description: sub_00000000000001
+  *               action:
+  *                 type: string
+  *                 description: pause | resume, By default - pause
+  *     responses:
+  *       200:
+  *         description: Successful response with updated subscription details
+  *       500:
+  *         description: Internal server error
+  */
+router.post('/pause-resume-subscription', authController.protect, pricingController.pauseResumeSubscription);
 
 /**
  * @swagger

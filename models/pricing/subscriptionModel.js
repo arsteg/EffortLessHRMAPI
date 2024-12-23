@@ -54,7 +54,10 @@ var subscriptionSchema = new Schema({
   },
   companyId: {
     type: String
-  }
+  },
+  razorpaySubscription: {
+    type: Object
+  },
 }, { collection: 'Subscription' });
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);
