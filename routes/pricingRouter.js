@@ -2066,6 +2066,32 @@ router.get('/invoice/:id',  authController.protect, pricingController.getInvoice
 
 /**
  * @swagger
+ * /api/v1/pricing/subscription-invoice/{id}:
+ *   get:
+ *     summary: Get invoice by Subscription ID
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Subscription ID of the Invoice
+ *     responses:
+ *       200:
+ *         description: Successful response with the Invoice
+ *       404:
+ *         description: Invoice not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/subscription-invoice/:id',  authController.protect, pricingController.getInvoiceBySubscriptionId);
+
+/**
+ * @swagger
  * /api/v1/pricing/invoice/{id}:
  *   put:
  *     summary: Update invoice by ID

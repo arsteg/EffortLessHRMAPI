@@ -1773,6 +1773,39 @@ exports.getInvoiceById = async (req, res) => {
     });
   }
 };
+exports.getInvoiceBySubscriptionId = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    // Validate if subscription ID is provided 
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    // Check if the invoice with the provided ID exists
+    const invoice = await Invoice.find({subscription_id: subscriptionId})
+      .populate('subscription')
+      .exec();
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        invoice: invoice,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
 // Controller method
 exports.updateInvoiceById = async (req, res) => {
   try {
@@ -2057,18 +2090,28 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
       // Handle the subscription payment success or failure
       const event = webhookBody.event;
       const payload = webhookBody.payload;
-      console.log(event);
-      if (event === "payment.authorized") {
-        console.log("Payment Authorized:", payload);
-      } else if (event === "payment.captured") {
-        console.log(" Captured:", payload);
-      } else if (event.includes("subscription")) {
-        if (payload.subscription.entity.id) {
+      console.log(event, webhookBody, payload);
+      if (event === "subscription.activated") {
+        const subscription = payload.subscription;
+        const payment = payload.payment;
+        if (subscription.entity.id) {
           await Subscription.findOneAndUpdate(
-            { subscriptionId: payload.subscription.entity.id },
-            { razorpaySubscription: payload.subscription.entity }
+            { subscriptionId: subscription.entity.id },
+            { razorpaySubscription: subscription.entity }
           );
+
+          if (payment.entity.id) {
+            await Invoice.create({
+              date: new Date(),
+              subscription_id: subscription.entity.id,
+              invoice_id: payment.entity.invoice_id,
+              IsPaid: true,
+              amount: payment.entity.amount / 100,
+              payment_info: payment.entity
+            })
+          }
         }
+
       }
       res.status(200).send('Success');
     } else {
