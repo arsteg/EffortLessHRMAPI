@@ -1418,9 +1418,9 @@ exports.getShortLeaveByUser = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await ShortLeave.countDocuments({ employee: req.params.userId });
+    const totalCount = await ShortLeave.countDocuments({ employee: req.params.userId, status: req.body.status });
 
-    const shortLeaves = await ShortLeave.find({ employee: req.params.userId }).skip(parseInt(skip))
+    const shortLeaves = await ShortLeave.find({ employee: req.params.userId, status: req.body.status }).skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
       status: 'success',

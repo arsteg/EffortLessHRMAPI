@@ -786,7 +786,7 @@ router.delete('/leave-template/:id', authController.protect, leaveController.del
  *       500:
  *         description: Internal server error
  */
-router.post('/leave-template-categories',authController.protect, leaveController.createLeaveTemplateCategory);
+router.post('/leave-template-categories', authController.protect, leaveController.createLeaveTemplateCategory);
 
 /**
  * @swagger
@@ -812,7 +812,7 @@ router.post('/leave-template-categories',authController.protect, leaveController
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-template-categories-by-template/:leaveTemplateId',authController.protect, leaveController.getLeaveTemplateCategoryByTemplate);
+router.get('/leave-template-categories-by-template/:leaveTemplateId', authController.protect, leaveController.getLeaveTemplateCategoryByTemplate);
 
 /**
  * @swagger
@@ -829,7 +829,7 @@ router.get('/leave-template-categories-by-template/:leaveTemplateId',authControl
  *       500:
  *         description: Internal server error
  */
-router.get('/leave-template-categories',authController.protect, leaveController.getAllLeaveTemplateCategories);
+router.get('/leave-template-categories', authController.protect, leaveController.getAllLeaveTemplateCategories);
 /**
  * @swagger
  * /api/v1/Leave/employee-leave-assignments:
@@ -1666,6 +1666,8 @@ router.delete('/short-leave/:id', authController.protect, leaveController.delete
  *                         skip:
  *                             type: string
  *                         next:
+ *                             type: string
+ *                         status:
  *                             type: string
  *     responses:
  *       200:
