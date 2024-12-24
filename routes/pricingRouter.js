@@ -1773,6 +1773,37 @@ router.get('/subscription', authController.protect, pricingController.getAllSubs
   *         description: Internal server error
   */
 router.post('/pause-resume-subscription', authController.protect, pricingController.pauseResumeSubscription);
+/**
+  * @swagger
+  * /api/v1/pricing/cancel-subscription:
+  *   post:
+  *     summary: Cancel a razorpay subscription and update the document
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     requestBody:
+  *       description: Razorpay Subscription ID
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               subscriptionId:
+  *                 type: string
+  *                 required: true
+  *                 description: sub_00000000000001
+  *               cancelAtCycleEnd:
+  *                 type: boolean
+  *                 description: true | false, By default - true
+  *     responses:
+  *       200:
+  *         description: Successful response with updated subscription details
+  *       500:
+  *         description: Internal server error
+  */
+  router.post('/cancel-subscription', authController.protect, pricingController.cancelSubscription);
 
 /**
  * @swagger

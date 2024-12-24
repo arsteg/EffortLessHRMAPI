@@ -1193,7 +1193,10 @@ exports.addSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
 
-    const subscription = await Subscription.findOne({companyId: req.cookies.companyId});
+    const subscription = await Subscription.findOne({
+      companyId: req.cookies.companyId,
+      "razorpaySubscription.status": {$nin: ["cancelled"]}
+    });
     // If already have a subscription
     if(subscription) {
       res.status(201).json({
@@ -1433,6 +1436,46 @@ exports.pauseResumeSubscription = async (req, res) => {
       status: 'success',
       data: {
         subscription: updatedSubscription,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(err.statusCode || 500).json({
+      status: 'error',
+      message: err?.error?.description || 'Internal server error',
+    });
+  }
+};
+
+exports.cancelSubscription = async (req, res) => {
+  try {
+    const subscriptionId = req.body.subscriptionId;
+    const cancelAtCycleEnd = req.body.cancelAtCycleEnd === 0 ? 0 : 1; // default is 1, if no value is provided
+    const subscription = await razorpay.subscriptions.cancel(subscriptionId, 
+      cancelAtCycleEnd === 1 
+    );
+    
+    // Find the subscription by subscriptionId and update
+    const updatedSubscription = await Subscription.findOneAndUpdate(
+      {subscriptionId: subscriptionId},
+      {
+        razorpaySubscription: subscription,
+        dateUnsubscribed: new Date()
+      }
+    );
+
+    const fetchedSubscription = await Subscription.findOne({
+      subscriptionId: subscriptionId
+    })
+
+    if (!updatedSubscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscription: fetchedSubscription,
       },
     });
   } catch (err) {
