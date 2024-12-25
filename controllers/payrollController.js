@@ -40,8 +40,9 @@ const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
 const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
 const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
 const PayrollFlexiBenefitsPFTax = require('../models/Payroll/PayrollFlexiBenefitsAndPFTax'); 
-const PayrollOvertime = require('../models/Payroll/PayrollOvertime'); // Assume this is your Mongoose model
-
+const PayrollOvertime = require('../models/Payroll/PayrollOvertime');
+const PayrollFNF = require('../models/Payroll/PayrollFNF');
+const constants = require('../constants');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2783,6 +2784,7 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
 exports.addPayroll = catchAsync(async (req, res, next) => {
     // Extract companyId from req.cookies
     const companyId = req.cookies.companyId;
@@ -3622,4 +3624,88 @@ const payrollOvertimeList = await PayrollOvertime.find({ PayrollUser: { $in: pay
     status: 'success',
     data: payrollOvertimeList
   });
+});
+
+exports.addPayrollFNF = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  req.body.status = constants.Payroll_FNF.Pending;
+const payrollFNF = await PayrollFNF.create(req.body);
+res.status(201).json({
+  status: 'success',
+  data: payrollFNF
+});
+});
+
+exports.getPayrollFNF = catchAsync(async (req, res, next) => {
+const payrollFNF = await PayrollFNF.findById(req.params.id);
+if (!payrollFNF) {
+  return next(new AppError('Payroll not found', 404));
+}
+res.status(200).json({
+  status: 'success',
+  data: payrollFNF
+});
+});
+
+exports.updatePayrollFNF = catchAsync(async (req, res, next) => {
+const { id } = req.params;
+const { status } = req.body;
+try {
+    const updatedPayroll = await PayrollFNF.findByIdAndUpdate(
+        id,
+        { status, updatedDate: new Date() }, // Update only status and updatedDate
+        { new: true } // Return the updated document
+    );
+
+    if (!updatedPayroll) {
+        return res.status(404).json({ message: 'Payroll not found.' });
+    }
+
+    res.status(200).json(updatedPayroll);
+} catch (error) {
+    res.status(500).json({ message: error.message });
+}
+});
+
+exports.deletePayrollFNF = catchAsync(async (req, res, next) => {
+const payrollfnf = await PayrollFNF.findByIdAndDelete(req.params.id);
+if (!payrollfnf) {
+  return next(new AppError('Payroll not found', 404));
+}
+res.status(204).json({
+  status: 'success',
+  data: null
+});
+});
+
+exports.getPayrollFNFByCompany = catchAsync(async (req, res, next) => {
+const skip = parseInt(req.body.skip) || 0;
+const limit = parseInt(req.body.next) || 10;
+// Extract companyId from req.cookies
+const companyId = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!companyId) {
+  return next(new AppError("Company ID not found in cookies", 400));
+}
+
+const totalCount = await PayrollFNF.countDocuments({ company: companyId });
+
+const payrollFNF = await PayrollFNF.find({ company: companyId })
+  .skip(parseInt(skip))
+  .limit(parseInt(limit));
+
+res.status(200).json({
+  status: "success",
+  data: payrollFNF,
+  total: totalCount,
+});
 });
