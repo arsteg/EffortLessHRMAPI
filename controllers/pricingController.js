@@ -1309,6 +1309,38 @@ exports.getSubscriptionDetailsById = async (req, res) => {
   }
 };
 
+exports.activateSubscription = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+    // Find the subscription by ID
+    const subscription = await Subscription.findOneAndUpdate(
+      {subscriptionId: subscriptionId},
+      {"razorpaySubscription.status": "active"}
+  );
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    // Activate the subscription
+    subscription.razorpaySubscription.status = 'active';
+    subscription.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscription,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+}
+
 exports.updateSubscriptionDetails = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
@@ -2091,6 +2123,7 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
       const event = webhookBody.event;
       const payload = webhookBody.payload;
       console.log(event, webhookBody, payload);
+      // Subscription Activated
       if (event === "subscription.activated") {
         const subscription = payload.subscription;
         const payment = payload.payment;
@@ -2110,6 +2143,18 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
               payment_info: payment.entity
             })
           }
+        }
+
+      }
+
+      // Subscriptions other events except activated
+      if (event !== "subscription.activated" && event.includes("subscription")) {
+        const subscription = payload.subscription;
+        if (subscription.entity.id) {
+          await Subscription.findOneAndUpdate(
+            { subscriptionId: subscription.entity.id },
+            { razorpaySubscription: subscription.entity }
+          );
         }
 
       }

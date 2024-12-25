@@ -360,7 +360,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/plan/:id', authController.protect, pricingController.getPlan);
+ router.get('/plan/:id', pricingController.getPlan);
  
  /**
   * @swagger
@@ -1586,7 +1586,45 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
  *       500:
  *         description: Internal server error
  */
- router.post('/subscription', authController.protect, pricingController.addSubscriptionDetails);
+ router.post('/subscription', pricingController.addSubscriptionDetails);
+
+/**
+ * @swagger
+ * /api/v1/pricing/activate-subscription/{id}:
+ *   post:
+ *     summary: Activate Subscription
+ *     tags: [Pricing Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Plan Offer Details
+ *     requestBody:
+ *       description: New plan offer details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan:
+ *                 type: string
+ *               offer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Plan Offer Details
+ *       404:
+ *         description: Plan Offer Details not found
+ *       500:
+ *         description: Internal server error
+ */
+ router.post('/activate-subscription/:id', pricingController.activateSubscription);
 
 /**
   * @swagger

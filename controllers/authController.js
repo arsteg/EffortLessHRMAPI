@@ -376,6 +376,22 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
   // Grant access to protected route
+  const subscription = await Subscription.findOne({
+    $and:[{
+      companyId: currentUser.company.id,
+      'razorpaySubscription.status': 'active'
+    } ]
+  });
+  
+  if (!subscription) {
+    return next(
+      new AppError(
+        'Your subscription is not active. Please contact your administrator.',
+        401
+      ).sendErrorJson(res)
+  );
+  }
+
   req.user = currentUser;  
   next();
 });
