@@ -5381,7 +5381,7 @@ router.post('/users-by-payroll-fnf', authController.protect, payrollController.g
 
 /**
  * @swagger
- * /api/v1/payroll/payrollFNFAttendanceSummary:
+ * /api/v1/payroll/payroll-fnf-attendance-summary:
  *   post:
  *     summary: Add a PayrollFNFAttendanceSummary
  *     tags: [Payroll Management]
@@ -5451,11 +5451,11 @@ router.post('/users-by-payroll-fnf', authController.protect, payrollController.g
  *       500:
  *         description: Internal server error
  */
-router.post('/payrollFNFAttendanceSummary',authController.protect, payrollController.addPayrollFNFAttendanceSummary);
+router.post('/payroll-fnf-attendance-summary',authController.protect, payrollController.addPayrollFNFAttendanceSummary);
 
 /**
  * @swagger
- * /api/v1/payroll/payrollFNFAttendanceSummary/{payrollFNFUser}:
+ * /api/v1/payroll/payroll-fnf-attendance-summary/{payrollFNFUser}:
  *   get:
  *     summary: Get a PayrollFNFAttendanceSummary by payrollFNFUser
  *     tags: [Payroll Management]
@@ -5477,11 +5477,11 @@ router.post('/payrollFNFAttendanceSummary',authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.get('/payrollFNFAttendanceSummary/:payrollFNFUser',authController.protect, payrollController.getPayrollFNFAttendanceSummaryByUser);
+router.get('/payroll-fnf-attendance-summary/:payrollFNFUser',authController.protect, payrollController.getPayrollFNFAttendanceSummaryByUser);
 
 /**
  * @swagger
- * /api/v1/payroll/payrollFNFAttendanceSummary/{id}:
+ * /api/v1/payroll/payroll-fnf-attendance-summary/{id}:
  *   put:
  *     summary: Update a PayrollFNFAttendanceSummary by ID
  *     tags: [Payroll Management]
@@ -5551,11 +5551,11 @@ router.get('/payrollFNFAttendanceSummary/:payrollFNFUser',authController.protect
  *       500:
  *         description: Internal server error
  */
-router.put('/payrollFNFAttendanceSummary/:id',authController.protect, payrollController.updatePayrollFNFAttendanceSummary);
+router.put('/payroll-fnf-attendance-summary/:id',authController.protect, payrollController.updatePayrollFNFAttendanceSummary);
 
 /**
  * @swagger
- * /api/v1/payroll/payrollFNFAttendanceSummary/{id}:
+ * /api/v1/payroll/payroll-fnf-attendance-summary/{id}:
  *   delete:
  *     summary: Delete a PayrollFNFAttendanceSummary by ID
  *     tags: [Payroll Management]
@@ -5577,6 +5577,173 @@ router.put('/payrollFNFAttendanceSummary/:id',authController.protect, payrollCon
  *       500:
  *         description: Internal server error
  */
-router.delete('/payrollFNFAttendanceSummary/:id',authController.protect, payrollController.deletePayrollFNFAttendanceSummary);
+router.delete('/payroll-fnf-attendance-summary/:id',authController.protect, payrollController.deletePayrollFNFAttendanceSummary);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-variable-pay:
+ *   post:
+ *     summary: Add a new Payroll FNF Variable Pay
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll FNF Variable Pay details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               variableDeduction:
+ *                 type: string
+ *               variableAllowance:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               month:
+ *                 type: string
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll FNF Variable Pay successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-variable-pay', payrollController.addPayrollFNFVariablePay);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-variable-pay-by-payrollfnfuser/{payrollFNFUser}:
+ *   get:
+ *     summary: Get a Payroll FNF Variable Pay by payrollFNFUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: PayrollFNFUser ID for which the Variable Pay is being retrieved
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Variable Pay
+ *       404:
+ *         description: Payroll FNF Variable Pay not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-variable-pay-by-payrollfnfuser/:payrollFNFUser', payrollController.getPayrollFNFVariablePayByPayrollFNFUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-variable-pay-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get a Payroll FNF Variable Pay by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll FNF
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Variable Pay
+ *       404:
+ *         description: Payroll Variable Pay not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-variable-pay-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getPayrollFNFVariablePayByPayrollFNF);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-variable-pay/{id}:
+ *   put:
+ *     summary: Update a Payroll FNF Variable Pay by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Variable Pay
+ *     requestBody:
+ *       description: Updated Payroll FNF Variable Pay details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *               variableDeduction:
+ *                 type: string
+ *               variableAllowance:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               month:
+ *                 type: string
+ *               year:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll FNF Variable Pay
+ *       404:
+ *         description: Payroll FNF Variable Pay not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-variable-pay/:id', payrollController.updatePayrollFNFVariablePay);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-variable-pay/{id}:
+ *   delete:
+ *     summary: Delete a Payroll FNF Variable Pay by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Variable Pay
+ *     responses:
+ *       204:
+ *         description: Payroll FNF Variable Pay successfully deleted
+ *       404:
+ *         description: Payroll FNF Variable Pay not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-variable-pay/:id', payrollController.deletePayrollFNFVariablePay);
 
 module.exports = router;

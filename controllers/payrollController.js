@@ -45,6 +45,7 @@ const PayrollFNF = require('../models/Payroll/PayrollFNF');
 const PayrollFNFUsers = require('../models/Payroll/PayrollFNFUsers');
 const PayrollFNFAttendanceSummary = require('../models/Payroll/PayrollFNFAttendanceSummary');
 
+const PayrollFNFVariablePay = require('../models/Payroll/PayrollFNFVariablePay');
 const constants = require('../constants');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -3105,6 +3106,7 @@ const payrollVariablePayList = await PayrollVariablePay.find({ payrollUser: { $i
     data: payrollVariablePayList
   });
 });
+
 // Create Payroll Manual Arrears
 exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
   const { payrollUser } = req.body;
@@ -3860,5 +3862,87 @@ exports.deletePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) =>
   res.status(204).json({
     status: 'success',
     data: null,
+  });
+});
+
+// Add Payroll Variable Pay Deduction
+exports.addPayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const newVariablePay = await PayrollFNFVariablePay.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: newVariablePay,
+  });
+});
+
+// Get Payroll Variable Pay Deduction by payrollUser
+exports.getPayrollFNFVariablePayByPayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFVariablePay = await PayrollFNFVariablePay.find({ payrollUser: req.params.payrollFNFUser });
+  if (!payrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFVariablePay,
+  });
+});
+
+// Update Payroll Variable Pay Deduction
+exports.updatePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+  const updatedPayrollFNFVariablePay= await PayrollFNFVariablePay.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedPayrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedPayrollFNFVariablePay,
+  });
+});
+
+// Delete Payroll Variable Pay Deduction
+exports.deletePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+
+  const payrollFNFVariablePay = await PayrollFNFVariablePay.findByIdAndDelete(req.params.id);
+  if (!payrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getPayrollFNFVariablePayByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFVariablePayList = await PayrollFNFVariablePay.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFVariablePayList
   });
 });
