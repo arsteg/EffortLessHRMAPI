@@ -3820,7 +3820,7 @@ console.log(payrollFNFUser);
 
 // Get a PayrollFNFAttendanceSummary by payrollFNFUser
 exports.getPayrollFNFAttendanceSummaryByUser = catchAsync(async (req, res, next) => {
-  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.findOne({
+  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.find({
     payrollFNFUser: req.params.payrollFNFUser,
   });  
 
