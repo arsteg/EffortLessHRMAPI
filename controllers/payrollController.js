@@ -3829,7 +3829,19 @@ exports.getPayrollFNFAttendanceSummaryByUser = catchAsync(async (req, res, next)
     data: payrollFNFAttendanceSummary,
   });
 });
-
+// Get PayrollAttendanceSummary by payrollUser
+exports.getPayrollFNFAttendanceSummaryByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFAttendanceSummaries = await PayrollFNFAttendanceSummary.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
+ 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFAttendanceSummaries
+  });
+});
 // Update a PayrollFNFAttendanceSummary
 exports.updatePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
   const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.findByIdAndUpdate(

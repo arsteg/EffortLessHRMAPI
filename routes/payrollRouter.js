@@ -5455,6 +5455,32 @@ router.post('/payroll-fnf-attendance-summary',authController.protect, payrollCon
 
 /**
  * @swagger
+ * /api/v1/payroll/payroll-fnf-attendance-summary-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get a PayrollFNFAttendanceSummary by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payrollFNF
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll FNF attendance summary
+ *       404:
+ *         description: PayrollFNFAttendanceSummary not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-attendance-summary-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getPayrollFNFAttendanceSummaryByPayrollFNF);
+
+/**
+ * @swagger
  * /api/v1/payroll/payroll-fnf-attendance-summary/{payrollFNFUser}:
  *   get:
  *     summary: Get a PayrollFNFAttendanceSummary by payrollFNFUser

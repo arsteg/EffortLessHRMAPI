@@ -52,9 +52,21 @@ const Email_template_constant = {
     Finilized: "Finilized",
     Exit_Interview_Completed: "Exit Interview Completed"
   };
+  const Payroll_User_FNF = {   
+    InProgress: "InProgress",
+    Pending: "Pending",
+    OnHold: "OnHold",
+    Processed: "Processed",
+    Approved: "Approved",
+    Paid: "Paid",
+    Cleared: "Cleared",
+    Rejected: "Rejected",
+    Finilized: "Finilized",
+    Exit_Interview_Completed: "Exit Interview Completed"
+  };
   const COMPANIES = {
     // Define company-specific constants if needed
   };
   
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF};
   
