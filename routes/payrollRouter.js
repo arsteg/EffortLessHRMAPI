@@ -5772,4 +5772,203 @@ router.put('/payroll-fnf-variable-pay/:id', payrollController.updatePayrollFNFVa
  */
 router.delete('/payroll-fnf-variable-pay/:id', payrollController.deletePayrollFNFVariablePay);
 
+// Payroll FNF Manual Arrears routes
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears:
+ *   post:
+ *     summary: Create a new Payroll FNF Manual Arrears entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll FNF Manual Arrears details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               manualArrears:
+ *                 type: number
+ *                 required: true
+ *               arrearDays:
+ *                 type: number
+ *                 required: true
+ *               lopReversalDays:
+ *                 type: number
+ *                 required: true
+ *               salaryRevisionDays:
+ *                 type: number
+ *                 required: true
+ *               lopReversalArrears:
+ *                 type: number
+ *                 required: true
+ *               totalArrears:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll FNF Manual Arrears successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-manual-arrears/', authController.protect, payrollController.createPayrollFNFManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears/{id}:
+ *   get:
+ *     summary: Get Payroll FNF Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Manual Arrears
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll FNF Manual Arrears details
+ *       404:
+ *         description: Payroll FNF Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-manual-arrears/:id', authController.protect, payrollController.getPayrollFNFManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears-by-payrollFNFuser/{payrollFNFUser}:
+ *   get:
+ *     summary: Get all Payroll FNF Manual Arrears
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Manual Arrears
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll FNF Manual Arrears entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-manual-arrears-by-payrollFNFuser/:payrollFNFUser', authController.protect, payrollController.getAllPayrollFNFManualArrearsByPayrollFNFUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get a Payroll Payroll FNF Manual Arrears
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Manual Arrears
+ *       404:
+ *         description: Payroll Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-manual-arrears-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFManualArrearsByPayrollFNF);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears/{id}:
+ *   put:
+ *     summary: Update Payroll FNF Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Manual Arrears
+ *     requestBody:
+ *       description: New Payroll FNF Manual Arrears details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *               manualArrears:
+ *                 type: number
+ *               arrearDays:
+ *                 type: number
+ *               lopReversalDays:
+ *                 type: number
+ *               salaryRevisionDays:
+ *                 type: number
+ *               lopReversalArrears:
+ *                 type: number
+ *               totalArrears:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll FNF Manual Arrears
+ *       404:
+ *         description: Payroll FNF Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-manual-arrears/:id', authController.protect, payrollController.updatePayrollFNFManualArrears);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-manual-arrears/{id}:
+ *   delete:
+ *     summary: Delete Payroll FNF Manual Arrears by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Manual Arrears
+ *     responses:
+ *       204:
+ *         description: Payroll FNF Manual Arrears successfully deleted
+ *       404:
+ *         description: Payroll FNF Manual Arrears not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-manual-arrears/:id', authController.protect, payrollController.deletePayrollFNFManualArrears);
+
 module.exports = router;
