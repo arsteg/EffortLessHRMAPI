@@ -5971,4 +5971,220 @@ router.put('/payroll-fnf-manual-arrears/:id', authController.protect, payrollCon
  */
 router.delete('/payroll-fnf-manual-arrears/:id', authController.protect, payrollController.deletePayrollFNFManualArrears);
 
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation:
+ *   post:
+ *     summary: Add a new Payroll FNF Termination Compensation
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll FNF Termination Compensation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               terminationDate:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               noticePeriod:
+ *                 type: integer
+ *                 required: true
+ *               gratuityEligible:
+ *                 type: integer
+ *               yearsOfService:
+ *                 type: integer
+ *               gratuityAmount:
+ *                 type: integer
+ *               severancePay:
+ *                 type: integer
+ *               retirementBenefits:
+ *                 type: integer
+ *               redeploymentCompensation:
+ *                 type: integer
+ *               outplacementServices:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *                 enum: ['pending', 'completed', 'paid']
+ *                 default: 'pending'
+ *     responses:
+ *       201:
+ *         description: Payroll FNF Termination Compensation successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-termination-compensation', authController.protect, payrollController.addPayrollFNFTerminationCompensation);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation/{payrollFNFUser}:
+ *   get:
+ *     summary: Get a Payroll FNF Termination Compensation by payrollFNFUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll FNF user
+ *     responses:
+ *       200:
+ *         description: Payroll FNF Termination Compensation found
+ *       404:
+ *         description: Payroll FNF Termination Compensation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-termination-compensation/:payrollFNFUser', authController.protect, payrollController.getPayrollFNFTerminationCompensationByUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation/{id}:
+ *   get:
+ *     summary: Get a Payroll FNF Termination Compensation by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll FNF Termination Compensation
+ *     responses:
+ *       200:
+ *         description: Payroll FNF Termination Compensation found
+ *       404:
+ *         description: Payroll FNF Termination Compensation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-termination-compensation/:id', authController.protect, payrollController.getPayrollFNFTerminationCompensationById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation/{id}:
+ *   put:
+ *     summary: Update a Payroll FNF Termination Compensation
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll FNF Termination Compensation
+ *     requestBody:
+ *       description: Updated Payroll FNF Termination Compensation details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               terminationDate:
+ *                 type: string
+ *                 format: date
+ *               noticePeriod:
+ *                 type: integer
+ *               gratuityEligible:
+ *                 type: integer
+ *               yearsOfService:
+ *                 type: integer
+ *               gratuityAmount:
+ *                 type: integer
+ *               severancePay:
+ *                 type: integer
+ *               retirementBenefits:
+ *                 type: integer
+ *               redeploymentCompensation:
+ *                 type: integer
+ *               outplacementServices:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *                 enum: ['pending', 'completed', 'paid']
+ *     responses:
+ *       200:
+ *         description: Payroll FNF Termination Compensation successfully updated
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Payroll FNF Termination Compensation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-termination-compensation/:id', authController.protect, payrollController.updatePayrollFNFTerminationCompensation);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation/{id}:
+ *   delete:
+ *     summary: Delete a Payroll FNF Termination Compensation by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll FNF Termination Compensation
+ *     responses:
+ *       204:
+ *         description: Payroll FNF Termination Compensation successfully deleted
+ *       404:
+ *         description: Payroll FNF Termination Compensation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-termination-compensation/:id', authController.protect, payrollController.deletePayrollFNFTerminationCompensation);
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-termination-compensation-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get a Payroll Payroll FNF Termination Compensation
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payrollFNF
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Termination Compensation
+ *       404:
+ *         description: Payroll Termination Compensation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFManualArrearsByPayrollFNF);
+
 module.exports = router;

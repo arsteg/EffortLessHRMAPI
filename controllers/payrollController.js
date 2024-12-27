@@ -35,6 +35,8 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 const PayrollUsers = require('../models/Payroll/PayrollUsers');
 const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
+const PayrollFNFTerminationCompensation = require('../models/Payroll/PayrollFNFTerminationCompensation');
+
 const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
 const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
@@ -4047,5 +4049,84 @@ exports.deletePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: 'success',
     data: null
+  });
+});
+
+/**
+ * Add a new Payroll FNF Termination Compensation
+ */
+exports.addPayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Get Payroll FNF Termination Compensation by payrollFNFUser
+ */
+exports.getPayrollFNFTerminationCompensationByUser = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.find({ payrollFNFUser: req.params.payrollFNFUser });
+  if (!payrollFNFCompensation || payrollFNFCompensation.length === 0) {
+    return next(new AppError('No Payroll FNF Termination Compensation found for this user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Get Payroll FNF Termination Compensation by ID
+ */
+exports.getPayrollFNFTerminationCompensationById = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findById(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Update Payroll FNF Termination Compensation
+ */
+exports.updatePayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!payrollFNFCompensation) {
+    return next(new AppError('Payroll FNF Termination Compensation not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Delete Payroll FNF Termination Compensation
+ */
+exports.deletePayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findByIdAndDelete(req.params.id);
+  if (!payrollFNFCompensation) {
+    return next(new AppError('Payroll FNF Termination Compensation not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (req, res, next) => {
+const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFTerminationCompensation = await PayrollFNFTerminationCompensation.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFTerminationCompensation
   });
 });
