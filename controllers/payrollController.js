@@ -49,6 +49,8 @@ const PayrollFNFAttendanceSummary = require('../models/Payroll/PayrollFNFAttenda
 const PayrollFNFManualArrears = require("../models/Payroll/PayrollFNFManualArrears");
 const PayrollFNFVariablePay = require('../models/Payroll/PayrollFNFVariablePay');
 const constants = require('../constants');
+const PayrollFNFLoanAdvance = require('../models/Payroll/PayrollFNFLoanAdvance');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -4128,5 +4130,65 @@ const payrollFNFTerminationCompensation = await PayrollFNFTerminationCompensatio
   res.status(200).json({
     status: 'success',
     data: payrollFNFTerminationCompensation
+  });
+});
+
+// Add a Payroll FNF Loan Advance
+exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Get Payroll FNF Loan Advance by payrollFNFUser
+exports.getPayrollFNFLoanAdvanceByUser = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ payrollFNFUser: req.params.payrollFNFUser });
+  
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Get Payroll FNF Loan Advance by Loan and Advance ID
+exports.getPayrollFNFLoanAdvanceByLoan = catchAsync(async (req, res, next) => {
+   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ loanAndAdvance: req.params.loanAndAdvance });
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Update a Payroll FNF Loan Advance
+exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollFNFLoanAdvance) {
+    return next(new AppError('Payroll FNF Loan Advance not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Delete a Payroll FNF Loan Advance
+exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndDelete(req.params.id);
+  
+  if (!payrollFNFLoanAdvance) {
+    return next(new AppError('Payroll FNF Loan Advance not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
   });
 });

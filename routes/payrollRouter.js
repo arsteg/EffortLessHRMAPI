@@ -4356,6 +4356,12 @@ router.delete('/payroll-manual-arrears/:id', authController.protect, payrollCont
  *               loanAndAdvance:
  *                 type: string
  *                 required: true
+ *               type:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
  *               disbursementAmount:
  *                 type: number
  *                 required: true
@@ -4449,6 +4455,9 @@ router.get('/payroll-loan-advance-by-payroll/:payroll', authController.protect, 
  *           schema:
  *             type: object
  *             properties:
+ *               amount:
+ *                 type: number
+ *                 required: true
  *               disbursementAmount:
  *                 type: number
  *               status:
@@ -4576,6 +4585,7 @@ router.get('/flexi-benefits-pf-tax/:id', authController.protect, payrollControll
  *         description: Internal server error
  */
 router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllFlexiBenefitsAndPFTaxByPyrollUser);
+
 /**
  * @swagger
  * /api/v1/payroll/flexi-benefits-pf-tax-by-payroll/{payroll}:
@@ -5183,6 +5193,7 @@ router.delete('/fnf/:id',authController.protect, payrollController.deletePayroll
  *         description: Internal server error
  */
 router.post('/fnf/payroll-by-company',authController.protect, payrollController.getPayrollFNFByCompany);
+
 /**
  * @swagger
  * /api/v1/payroll/fnf/users:
@@ -6161,6 +6172,7 @@ router.put('/payroll-fnf-termination-compensation/:id', authController.protect, 
  *         description: Internal server error
  */
 router.delete('/payroll-fnf-termination-compensation/:id', authController.protect, payrollController.deletePayrollFNFTerminationCompensation);
+
 /**
  * @swagger
  * /api/v1/payroll/payroll-fnf-termination-compensation-by-payroll-fnf/{payrollFNF}:
@@ -6186,5 +6198,172 @@ router.delete('/payroll-fnf-termination-compensation/:id', authController.protec
  *         description: Internal server error
  */
 router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFManualArrearsByPayrollFNF);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances:
+ *   post:
+ *     summary: Add a Payroll FNF Loan Advance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll FNF Loan Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *               loanAndAdvance:
+ *                 type: string
+ *               LoanAdvanceAmount:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *               finalSettlementAmount:
+ *                 type: number
+ *               fnfClearanceStatus:
+ *                 type: string
+ *               fnfDate:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Payroll FNF Loan Advance successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-loan-advances', authController.protect, payrollController.addPayrollFNFLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances/{payrollFNFUser}:
+ *   get:
+ *     summary: Get Payroll FNF Loan Advance by payrollFNFUser
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollFNFUser
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll FNF Loan Advance
+ *       404:
+ *         description: Payroll FNF Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-loan-advances/:payrollFNFUser', authController.protect, payrollController.getPayrollFNFLoanAdvanceByUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances-by-loan-advance/{loanAndAdvance}:
+ *   get:
+ *     summary: Get Payroll FNF Loan Advance by Loan and Advance ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: loanAndAdvance
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Loan and Advance
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll FNF Loan Advance
+ *       404:
+ *         description: Payroll FNF Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-loan-advances-by-loan-advance/:loanAndAdvance', authController.protect, payrollController.getPayrollFNFLoanAdvanceByLoan);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances/{id}:
+ *   put:
+ *     summary: Update a Payroll FNF Loan Advance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Loan Advance to update
+ *     requestBody:
+ *       description: Updated Payroll FNF Loan Advance details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *               loanAndAdvance:
+ *                 type: string
+ *               LoanAdvanceAmount:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *               finalSettlementAmount:
+ *                 type: number
+ *               fnfClearanceStatus:
+ *                 type: string
+ *               fnfDate:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payroll FNF Loan Advance successfully updated
+ *       404:
+ *         description: Payroll FNF Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-loan-advances/:id', authController.protect, payrollController.updatePayrollFNFLoanAdvance);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances/{id}:
+ *   delete:
+ *     summary: Delete a Payroll FNF Loan Advance
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Loan Advance to delete
+ *     responses:
+ *       204:
+ *         description: Payroll FNF Loan Advance successfully deleted
+ *       404:
+ *         description: Payroll FNF Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-loan-advances/:id', authController.protect, payrollController.deletePayrollFNFLoanAdvance);
 
 module.exports = router;

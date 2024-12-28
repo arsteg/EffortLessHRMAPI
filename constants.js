@@ -67,6 +67,15 @@ const Email_template_constant = {
   const COMPANIES = {
     // Define company-specific constants if needed
   };
-  
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF};
+  const payroll_LoanAdvance_Status = {   
+    Pending: "Pending",
+    Partially_Cleared: "Partially Cleared",
+    Cleared: "Cleared",
+    Deducted: "Deducted"
+  };
+  const Payroll_LoanAdvance_Type = {   
+    Disbursement: "Disbursement",
+    Repayment: "Repayment"
+  };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type};
   
