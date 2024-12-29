@@ -6366,4 +6366,716 @@ router.put('/payroll-fnf-loan-advances/:id', authController.protect, payrollCont
  */
 router.delete('/payroll-fnf-loan-advances/:id', authController.protect, payrollController.deletePayrollFNFLoanAdvance);
 
+
+// Add a PayrollFNFStatutoryBenefits
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-statutory-benefits:
+ *   post:
+ *     summary: Add a new Payroll FNF Statutory Benefit
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll FNF Statutory Benefit details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *               IsGratuityApplicable:
+ *                 type: boolean
+ *               GratuityAmount:
+ *                 type: number
+ *               IsProvidentFundApplicable:
+ *                 type: boolean
+ *               ProvidentFundAmount:
+ *                 type: number
+ *               ProvidentFundPaymentProcess:
+ *                 type: string
+ *                 enum: [Transfer, Withdraw]
+ *               IsProvidentFundWithdrawFormSubmitted:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Payroll FNF Statutory Benefit successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-statutory-benefits',authController.protect, payrollController.createPayrollFNFStatutoryBenefits);
+
+// Get a PayrollFNFStatutoryBenefits by payrollFNFUser
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-statutory-benefits/{payrollFNFUserId}:
+ *   get:
+ *     summary: Get Payroll FNF Statutory Benefit by User ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUserId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollFNFUser
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll FNF Statutory Benefit
+ *       404:
+ *         description: Payroll FNF Statutory Benefit not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-statutory-benefits/:payrollFNFUserId',authController.protect, payrollController.getPayrollFNFStatutoryBenefitsByUser);
+
+// Get a PayrollFNFStatutoryBenefits by payrollFNF
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-statutory-benefits/payroll/{payrollFNFId}:
+ *   get:
+ *     summary: Get Payroll FNF Statutory Benefit by Payroll FNF ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll FNF Statutory Benefit
+ *       404:
+ *         description: Payroll FNF Statutory Benefit not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-statutory-benefits/payroll/:payrollFNFId',authController.protect, payrollController.getPayrollFNFStatutoryBenefitsByPayrollFNF);
+
+// Update a PayrollFNFStatutoryBenefits
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-statutory-benefits/{id}:
+ *   put:
+ *     summary: Update Payroll FNF Statutory Benefit
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Statutory Benefit
+ *     requestBody:
+ *       description: New details for the Payroll FNF Statutory Benefit
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               IsGratuityApplicable:
+ *                 type: boolean
+ *               GratuityAmount:
+ *                 type: number
+ *               IsProvidentFundApplicable:
+ *                 type: boolean
+ *               ProvidentFundAmount:
+ *                 type: number
+ *               ProvidentFundPaymentProcess:
+ *                 type: string
+ *                 enum: [Transfer, Withdraw]
+ *               IsProvidentFundWithdrawFormSubmitted:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Payroll FNF Statutory Benefit successfully updated
+ *       404:
+ *         description: Payroll FNF Statutory Benefit not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-statutory-benefits/:id',authController.protect, payrollController.updatePayrollFNFStatutoryBenefits);
+
+// Delete a PayrollFNFStatutoryBenefits
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-statutory-benefits/{id}:
+ *   delete:
+ *     summary: Delete Payroll FNF Statutory Benefit by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Statutory Benefit
+ *     responses:
+ *       204:
+ *         description: Payroll FNF Statutory Benefit successfully deleted
+ *       404:
+ *         description: Payroll FNF Statutory Benefit not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-statutory-benefits/:id',authController.protect, payrollController.deletePayrollFNFStatutoryBenefits);
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax:
+ *   post:
+ *     summary: Create a new Payroll FNF Flexi Benefits and PF Tax record
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Flexi Benefits and PF Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: objPect
+ *             properties:
+ *               PayrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               TotalFlexiBenefitAmount:
+ *                 type: number
+ *                 required: true
+ *               TotalProfessionalTaxAmount:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Flexi Benefits and PF Tax record successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-flexi-benefits-pf-tax/', authController.protect, payrollController.createPayrollFNFFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax/{id}:
+ *   get:
+ *     summary: Get a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     responses:
+ *       200:
+ *         description: Successful response with the record details
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, payrollController.getPayrollFNFFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/flexi-benefits-pf-tax-by-payrolluser/{payrollUser}:
+ *   get:
+ *     summary: Get all Payroll Flexi Benefits and PF Tax records
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with all records
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get a flexi-benefits-pf-tax by payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with the flexi-benefits-pf-tax
+ *       404:
+ *         description: flexi-benefits-pf-tax not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNF);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax/{id}:
+ *   put:
+ *     summary: Update a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     requestBody:
+ *       description: Updated Flexi Benefits and PF Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               TotalFlexiBenefitAmount:
+ *                 type: number
+ *               TotalProfessionalTaxAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated record
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, payrollController.updatePayrollFNFFlexiBenefitsAndPFTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Flexi Benefits and PF Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record
+ *     responses:
+ *       204:
+ *         description: Record successfully deleted
+ *       404:
+ *         description: Record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, payrollController.deletePayrollFNFFlexiBenefitsAndPFTax);
+
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime:
+ *   post:
+ *     summary: Add a new Payroll Overtime entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Overtime details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               LateComing:
+ *                 type: string
+ *                 required: true
+ *               EarlyGoing:
+ *                 type: string
+ *                 required: true
+ *               FinalOvertime:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Overtime successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-overtime/', authController.protect, payrollController.createPayrollFNFOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime/{id}:
+ *   get:
+ *     summary: Get Payroll Overtime by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime details
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-overtime/:id', authController.protect, payrollController.getPayrollFNFOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime/{id}:
+ *   put:
+ *     summary: Update Payroll Overtime by ID
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     requestBody:
+ *       description: Updated Payroll Overtime details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               LateComing:
+ *                 type: string
+ *               EarlyGoing:
+ *                 type: string
+ *               FinalOvertime:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payroll Overtime successfully updated
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('payroll-fnf-overtime/:id', authController.protect, payrollController.updatePayrollFNFOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime/{id}:
+ *   delete:
+ *     summary: Delete Payroll Overtime by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payroll Overtime ID
+ *     responses:
+ *       204:
+ *         description: Payroll Overtime successfully deleted
+ *       404:
+ *         description: Payroll Overtime not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-overtime/:id', authController.protect, payrollController.deletePayrollFNFOvertime);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime-by-payroll-fnf-user/{payrollFNFUser}:
+ *   get:
+ *     summary: Get all Payroll Overtime entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll User
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-overtime-by-payroll-fnf-user/:payrollFNFUser', authController.protect, payrollController.getAllPayrollFNFOvertimeByPayrollFNFUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-overtime-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get all Payroll FNF Overtime entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Overtime entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-overtime-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFOvertimeByPayrollFNF);
+
+
+// Payroll Income Tax routes
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax:
+ *   post:
+ *     summary: Create a new Payroll Income Tax record
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll Income Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *                 required: true
+ *               TaxCalculatedMethod:
+ *                 type: string
+ *                 required: true
+ *               TaxCalculated:
+ *                 type: number
+ *                 required: true
+ *               TDSCalculated:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll Income Tax record successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-income-tax/', authController.protect, payrollController.createPayrollFNFIncomeTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax/{id}:
+ *   get:
+ *     summary: Get a Payroll Income Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll Income Tax record
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-income-tax/:id', authController.protect, payrollController.getPayrollFNFIncomeTaxById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax-by-payroll-fnf-user/{payrollFNFUser}:
+ *   get:
+ *     summary: Get all Payroll Income Tax records
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNFUser
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Income Tax records
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-income-tax-by-payroll-fnf-user/:payrollFNFUser', authController.protect, payrollController.getAllPayrollFNFIncomeTaxByPayrollFNFUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get all Payroll incomeTax entries
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll incomeTax entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-income-tax-by-payroll-fnf/:payroll', authController.protect, payrollController.getAllPayrollFNFIncomeTaxByPayrollFNF);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax/{id}:
+ *   put:
+ *     summary: Update a Payroll FNF Income Tax record by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF Income Tax record
+ *     requestBody:
+ *       description: New Payroll FNF Income Tax details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               PayrollUser:
+ *                 type: string
+ *               TaxCalculatedMethod:
+ *                 type: string
+ *               TaxCalculated:
+ *                 type: number
+ *               TDSCalculated:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated Payroll Income Tax record
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-fnf-income-tax/:id', authController.protect, payrollController.updatePayrollFNFIncomeTax);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-income-tax/{id}:
+ *   delete:
+ *     summary: Delete a Payroll Income Tax record by ID
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       204:
+ *         description: Payroll Income Tax record successfully deleted
+ *       404:
+ *         description: Payroll Income Tax record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-fnf-income-tax/:id', authController.protect, payrollController.deletePayrollFNFIncomeTax);
+
 module.exports = router;
