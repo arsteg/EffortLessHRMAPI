@@ -40,9 +40,42 @@ const Email_template_constant = {
     Cancelled: "Cancelled",
     Rejected: "Rejected"
   };
+  const Payroll_FNF = {   
+    InProgress: "InProgress",
+    Pending: "Pending",
+    OnHold: "OnHold",
+    Processed: "Processed",
+    Approved: "Approved",
+    Paid: "Paid",
+    Cleared: "Cleared",
+    Rejected: "Rejected",
+    Finilized: "Finilized",
+    Exit_Interview_Completed: "Exit Interview Completed"
+  };
+  const Payroll_User_FNF = {   
+    InProgress: "InProgress",
+    Pending: "Pending",
+    OnHold: "OnHold",
+    Processed: "Processed",
+    Approved: "Approved",
+    Paid: "Paid",
+    Cleared: "Cleared",
+    Rejected: "Rejected",
+    Finilized: "Finilized",
+    Exit_Interview_Completed: "Exit Interview Completed"
+  };
   const COMPANIES = {
     // Define company-specific constants if needed
   };
-  
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status };
+  const payroll_LoanAdvance_Status = {   
+    Pending: "Pending",
+    Partially_Cleared: "Partially Cleared",
+    Cleared: "Cleared",
+    Deducted: "Deducted"
+  };
+  const Payroll_LoanAdvance_Type = {   
+    Disbursement: "Disbursement",
+    Repayment: "Repayment"
+  };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type};
   

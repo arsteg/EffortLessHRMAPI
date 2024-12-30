@@ -35,13 +35,25 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 const PayrollUsers = require('../models/Payroll/PayrollUsers');
 const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
+const PayrollFNFTerminationCompensation = require('../models/Payroll/PayrollFNFTerminationCompensation');
+
 const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
 const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
 const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
 const PayrollFlexiBenefitsPFTax = require('../models/Payroll/PayrollFlexiBenefitsAndPFTax'); 
-const PayrollOvertime = require('../models/Payroll/PayrollOvertime'); // Assume this is your Mongoose model
-
+const PayrollOvertime = require('../models/Payroll/PayrollOvertime');
+const PayrollFNF = require('../models/Payroll/PayrollFNF');
+const PayrollFNFUsers = require('../models/Payroll/PayrollFNFUsers');
+const PayrollFNFAttendanceSummary = require('../models/Payroll/PayrollFNFAttendanceSummary');
+const PayrollFNFManualArrears = require("../models/Payroll/PayrollFNFManualArrears");
+const PayrollFNFVariablePay = require('../models/Payroll/PayrollFNFVariablePay');
+const constants = require('../constants');
+const PayrollFNFLoanAdvance = require('../models/Payroll/PayrollFNFLoanAdvance');
+const PayrollFNFStatutoryBenefits = require("../models/Payroll/PayrollFNFStatutoryBenefits");
+const PayrollFNFFlexiBenefitsPFTax = require("../models/Payroll/PayrollFNFFlexiBenefitsAndPFTax");
+const PayrollFNFIncomeTax = require('../models/Payroll/PayrollFNFIncomeTax');
+const PayrollFNFOvertime = require('../models/Payroll/PayrollFNFOvertime');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2783,6 +2795,7 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
 exports.addPayroll = catchAsync(async (req, res, next) => {
     // Extract companyId from req.cookies
     const companyId = req.cookies.companyId;
@@ -3100,6 +3113,7 @@ const payrollVariablePayList = await PayrollVariablePay.find({ payrollUser: { $i
     data: payrollVariablePayList
   });
 });
+
 // Create Payroll Manual Arrears
 exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
   const { payrollUser } = req.body;
@@ -3340,6 +3354,7 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
         data: null
     });
 });
+
 // Create Flexi Benefits and PF Tax record
 exports.createFlexiBenefitsAndPFTax = async (req, res) => {
 
@@ -3623,3 +3638,993 @@ const payrollOvertimeList = await PayrollOvertime.find({ PayrollUser: { $in: pay
     data: payrollOvertimeList
   });
 });
+
+exports.addPayrollFNF = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  req.body.status = constants.Payroll_FNF.Pending;
+const payrollFNF = await PayrollFNF.create(req.body);
+res.status(201).json({
+  status: 'success',
+  data: payrollFNF
+});
+});
+
+exports.getPayrollFNF = catchAsync(async (req, res, next) => {
+const payrollFNF = await PayrollFNF.findById(req.params.id);
+if (!payrollFNF) {
+  return next(new AppError('Payroll not found', 404));
+}
+res.status(200).json({
+  status: 'success',
+  data: payrollFNF
+});
+});
+
+exports.updatePayrollFNF = catchAsync(async (req, res, next) => {
+const { id } = req.params;
+const { status } = req.body;
+try {
+    const updatedPayroll = await PayrollFNF.findByIdAndUpdate(
+        id,
+        { status, updatedDate: new Date() }, // Update only status and updatedDate
+        { new: true } // Return the updated document
+    );
+
+    if (!updatedPayroll) {
+        return res.status(404).json({ message: 'Payroll not found.' });
+    }
+
+    res.status(200).json(updatedPayroll);
+} catch (error) {
+    res.status(500).json({ message: error.message });
+}
+});
+
+exports.deletePayrollFNF = catchAsync(async (req, res, next) => {
+const payrollfnf = await PayrollFNF.findByIdAndDelete(req.params.id);
+if (!payrollfnf) {
+  return next(new AppError('Payroll not found', 404));
+}
+res.status(204).json({
+  status: 'success',
+  data: null
+});
+});
+
+exports.getPayrollFNFByCompany = catchAsync(async (req, res, next) => {
+const skip = parseInt(req.body.skip) || 0;
+const limit = parseInt(req.body.next) || 10;
+// Extract companyId from req.cookies
+const companyId = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!companyId) {
+  return next(new AppError("Company ID not found in cookies", 400));
+}
+
+const totalCount = await PayrollFNF.countDocuments({ company: companyId });
+
+const payrollFNF = await PayrollFNF.find({ company: companyId })
+  .skip(parseInt(skip))
+  .limit(parseInt(limit));
+
+res.status(200).json({
+  status: "success",
+  data: payrollFNF,
+  total: totalCount,
+});
+});
+// Add a PayrollUser
+exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  req.body.status = constants.Payroll_User_FNF.Pending;
+  const payrollFNFUsers = await PayrollFNFUsers.create(req.body);
+  res.status(201).json({
+      status: 'success',
+      data: payrollFNFUsers
+  });
+});
+
+// Get a PayrollUser by ID
+exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.findById(req.params.id);
+  if (!payrollFNFUsers) {
+      return next(new AppError('PayrollUser not found', 404));
+  }
+  res.status(200).json({
+      status: 'success',
+      data: payrollFNFUsers
+  });
+});
+
+// Update a payrollFNFUsers by ID
+exports.updatePayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+  });
+
+  if (!payrollFNFUsers) {
+      return next(new AppError('payrollFNFUsers not found', 404));
+  }
+
+  res.status(200).json({
+      status: 'success',
+      data: payrollFNFUsers
+  });
+});
+
+// Delete a payrollFNFUsers by ID
+exports.deletePayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndDelete(req.params.id);
+  
+  if (!payrollFNFUsers) {
+      return next(new AppError('PayrollFNFUsers not found', 404));
+  }
+  
+  res.status(204).json({
+      status: 'success',
+      data: null
+  });
+});
+
+// Get all PayrollUsers by company
+exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) => {
+const skip = parseInt(req.body.skip) || 0;
+const limit = parseInt(req.body.next) || 10;
+// Extract companyId from req.cookies
+const companyId = req.cookies.companyId;
+// Check if companyId exists in cookies
+if (!companyId) {
+  return next(new AppError("Company ID not found in cookies", 400));
+}
+
+const totalCount = await PayrollFNFUsers.countDocuments({ company: companyId, payrollFNF: req.body.payrollFNF });
+
+const payrollFNFUsers = await PayrollFNFUsers.find({ company: companyId, payrollFNF: req.body.payrollFNF })
+  .skip(parseInt(skip))
+  .limit(parseInt(limit));
+
+res.status(200).json({
+  status: "success",
+  data: payrollFNFUsers,
+  total: totalCount,
+});    
+});
+
+// Add a PayrollFNFAttendanceSummary
+exports.addPayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser } = req.body;
+console.log(payrollFNFUser);
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  console.log(isValidUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
+  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFAttendanceSummary,
+  });
+});
+
+// Get a PayrollFNFAttendanceSummary by payrollFNFUser
+exports.getPayrollFNFAttendanceSummaryByUser = catchAsync(async (req, res, next) => {
+  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.find({
+    payrollFNFUser: req.params.payrollFNFUser,
+  });  
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFAttendanceSummary,
+  });
+});
+// Get PayrollAttendanceSummary by payrollUser
+exports.getPayrollFNFAttendanceSummaryByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFAttendanceSummaries = await PayrollFNFAttendanceSummary.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
+ 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFAttendanceSummaries
+  });
+});
+// Update a PayrollFNFAttendanceSummary
+exports.updatePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
+  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!payrollFNFAttendanceSummary) {
+    return next(new AppError('PayrollFNFAttendanceSummary not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFAttendanceSummary,
+  });
+});
+
+// Delete a PayrollFNFAttendanceSummary
+exports.deletePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
+  const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.findByIdAndDelete(req.params.id);
+
+  if (!payrollFNFAttendanceSummary) {
+    return next(new AppError('PayrollFNFAttendanceSummary not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+// Add Payroll Variable Pay Deduction
+exports.addPayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const newVariablePay = await PayrollFNFVariablePay.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: newVariablePay,
+  });
+});
+
+// Get Payroll Variable Pay Deduction by payrollUser
+exports.getPayrollFNFVariablePayByPayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFVariablePay = await PayrollFNFVariablePay.find({ payrollUser: req.params.payrollFNFUser });
+  if (!payrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFVariablePay,
+  });
+});
+
+// Update Payroll Variable Pay Deduction
+exports.updatePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+  const updatedPayrollFNFVariablePay= await PayrollFNFVariablePay.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedPayrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedPayrollFNFVariablePay,
+  });
+});
+
+// Delete Payroll Variable Pay Deduction
+exports.deletePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
+
+  const payrollFNFVariablePay = await PayrollFNFVariablePay.findByIdAndDelete(req.params.id);
+  if (!payrollFNFVariablePay) {
+    return next(new AppError('Payroll FNF Variable Pay Deduction not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getPayrollFNFVariablePayByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFVariablePayList = await PayrollFNFVariablePay.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFVariablePayList
+  });
+});
+
+
+// Create Payroll Manual Arrears
+exports.createPayrollFNFManualArrears = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll FNF user', 400));
+  }
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError("Company ID not found in cookies", 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+  const payrollFNFManualArrears = await PayrollFNFManualArrears.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFManualArrears
+  });
+});
+
+// Get Payroll Manual Arrears by ID
+exports.getPayrollFNFManualArrears = catchAsync(async (req, res, next) => {
+  const payrollFNFManualArrears = await PayrollFNFManualArrears.findById(req.params.id);
+  
+  if (!payrollFNFManualArrears) {
+    return next(new AppError('Payroll FNF Manual Arrears not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFManualArrears
+  });
+});
+
+// Get all Payroll Manual Arrears
+exports.getAllPayrollFNFManualArrearsByPayrollFNFUser = catchAsync(async (req, res, next) => {
+  const payrollFNFManualArrears = await PayrollFNFManualArrears.find({ payrollFNFUser: req.params.payrollFNFUser });
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFManualArrears
+  });
+});
+exports.getAllPayrollFNFManualArrearsByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFManualArrears = await PayrollFNFManualArrears.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFManualArrears
+  });
+});
+// Update Payroll Manual Arrears by ID
+exports.updatePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
+  const payrollFNFManualArrears = await PayrollFNFManualArrears.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollFNFManualArrears) {
+    return next(new AppError('Payroll FNF Manual Arrears not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFManualArrears
+  });
+});
+
+// Delete Payroll Manual Arrears by ID
+exports.deletePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
+  const payrollFNFManualArrears = await PayrollFNFManualArrears.findByIdAndDelete(req.params.id);
+
+  if (!payrollFNFManualArrears) {
+    return next(new AppError('Payroll FNF Manual Arrears not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+/**
+ * Add a new Payroll FNF Termination Compensation
+ */
+exports.addPayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Get Payroll FNF Termination Compensation by payrollFNFUser
+ */
+exports.getPayrollFNFTerminationCompensationByUser = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.find({ payrollFNFUser: req.params.payrollFNFUser });
+  if (!payrollFNFCompensation || payrollFNFCompensation.length === 0) {
+    return next(new AppError('No Payroll FNF Termination Compensation found for this user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Get Payroll FNF Termination Compensation by ID
+ */
+exports.getPayrollFNFTerminationCompensationById = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findById(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Update Payroll FNF Termination Compensation
+ */
+exports.updatePayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!payrollFNFCompensation) {
+    return next(new AppError('Payroll FNF Termination Compensation not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFCompensation
+  });
+});
+
+/**
+ * Delete Payroll FNF Termination Compensation
+ */
+exports.deletePayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
+  const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findByIdAndDelete(req.params.id);
+  if (!payrollFNFCompensation) {
+    return next(new AppError('Payroll FNF Termination Compensation not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (req, res, next) => {
+const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFTerminationCompensation = await PayrollFNFTerminationCompensation.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFTerminationCompensation
+  });
+});
+
+// Add a Payroll FNF Loan Advance
+exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Get Payroll FNF Loan Advance by payrollFNFUser
+exports.getPayrollFNFLoanAdvanceByUser = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ payrollFNFUser: req.params.payrollFNFUser });
+  
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Get Payroll FNF Loan Advance by Loan and Advance ID
+exports.getPayrollFNFLoanAdvanceByLoan = catchAsync(async (req, res, next) => {
+   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ loanAndAdvance: req.params.loanAndAdvance });
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Update a Payroll FNF Loan Advance
+exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollFNFLoanAdvance) {
+    return next(new AppError('Payroll FNF Loan Advance not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });
+});
+
+// Delete a Payroll FNF Loan Advance
+exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndDelete(req.params.id);
+  
+  if (!payrollFNFLoanAdvance) {
+    return next(new AppError('Payroll FNF Loan Advance not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Add PayrollFNFStatutoryBenefits
+exports.createPayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) => {
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: statutoryBenefits
+  });
+});
+
+// Get PayrollFNFStatutoryBenefits by payrollFNFUser
+exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next) => {
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
+    payrollFNFUser: req.params.payrollFNFUserId
+  }).populate('payrollFNFUser');
+  
+  if (!statutoryBenefits) {
+    return next(new AppError('Payroll FNF Statutory Benefits not found for this user', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: statutoryBenefits
+  });
+});
+
+// Get PayrollFNFStatutoryBenefits by payrollFNF
+exports.getPayrollFNFStatutoryBenefitsByPayrollFNF = catchAsync(async (req, res, next) => {
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
+    payrollFNFUser: req.params.payrollFNFId
+  }).populate('payrollFNFUser');
+  
+  if (!statutoryBenefits) {
+    return next(new AppError('Payroll FNF Statutory Benefits not found for this payroll', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: statutoryBenefits
+  });
+});
+
+// Update PayrollFNFStatutoryBenefits
+exports.updatePayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) => {
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findByIdAndUpdate(
+    req.params.id, 
+    req.body, 
+    { new: true, runValidators: true }
+  );
+
+  if (!statutoryBenefits) {
+    return next(new AppError('Payroll FNF Statutory Benefits not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: statutoryBenefits
+  });
+});
+
+// Delete PayrollFNFStatutoryBenefits
+exports.deletePayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) => {
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findByIdAndDelete(req.params.id);
+  
+  if (!statutoryBenefits) {
+    return next(new AppError('Payroll FNF Statutory Benefits not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Create Flexi Benefits and PF Tax record
+exports.createPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
+
+  try {
+    const { PayrollFNFUser, TotalFlexiBenefitAmount, TotalProfessionalTaxAmount } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(PayrollFNFUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll user', 400));
+  }
+    // Create a new record in the database
+    const newRecord = await PayrollFNFFlexiBenefitsPFTax.create({
+      PayrollFNFUser,
+      TotalFlexiBenefitAmount,
+      TotalProfessionalTaxAmount
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        record: newRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get Flexi Benefits and PF Tax record by ID
+exports.getPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const record = await PayrollFNFFlexiBenefitsPFTax.findById(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get all Flexi Benefits and PF Tax records
+exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser = async (req, res) => {
+  try {
+    const records = await PayrollFNFFlexiBenefitsPFTax.find({ payrollUser: req.params.payrollUser });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        records
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payroll });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFFlexiBenefitsPFTaxList = await PayrollFNFFlexiBenefitsPFTax.find({ payrollUser: { $in: payrollUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFFlexiBenefitsPFTaxList
+  });
+});
+// Update Flexi Benefits and PF Tax record by ID
+exports.updatePayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const updatedRecord = await PayrollFNFFlexiBenefitsPFTax.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record: updatedRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Delete Flexi Benefits and PF Tax record by ID
+exports.deletePayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
+  try {
+    const record = await PayrollFNFFlexiBenefitsPFTax.findByIdAndDelete(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Record not found'
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      message: 'Record successfully deleted'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+// Create Payroll Income Tax
+exports.createPayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
+  const { PayrollFNFUser } = req.body;
+
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollFNFUsers.findById(PayrollFNFUser);
+  if (!isValidUser) {
+    return next(new AppError('Invalid payroll FNF user', 400));
+  }
+    const payrollFNFIncomeTax = await PayrollFNFIncomeTax.create(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: payrollFNFIncomeTax
+    });
+});
+
+// Get Payroll Income Tax by ID
+exports.getPayrollFNFIncomeTaxById = catchAsync(async (req, res, next) => {
+    const payrollFNFIncomeTax = await PayrollFNFIncomeTax.findById(req.params.id);
+    if (!payrollFNFIncomeTax) {
+        return next(new AppError('Payroll Income Tax record not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: payrollFNFIncomeTax
+    });
+});
+
+// Get All Payroll Income Tax records
+exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = catchAsync(async (req, res, next) => {
+    const payrollFNFIncomeTaxes = await PayrollFNFIncomeTax.find({ PayrollUser: req.params.payrollFNFUser });
+    res.status(200).json({
+        status: 'success',
+        data: payrollFNFIncomeTaxes
+    });
+});
+
+exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFIncomeTaxList = await PayrollFNFIncomeTax.find({ PayrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFIncomeTaxList
+  });
+});
+// Update Payroll Income Tax by ID
+exports.updatePayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollFNFIncomeTax = await PayrollFNFIncomeTax.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
+    if (!payrollFNFIncomeTax) {
+        return next(new AppError('Payroll FNF Income Tax record not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: payrollFNFIncomeTax
+    });
+});
+
+// Delete Payroll Income Tax by ID
+exports.deletePayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
+    const payrollFNFIncomeTax = await PayrollFNFIncomeTax.findByIdAndDelete(req.params.id);
+    if (!payrollFNFIncomeTax) {
+        return next(new AppError('Payroll FNF Income Tax record not found', 404));
+    }
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
+
+
+// Create Payroll Overtime record
+exports.createPayrollFNFOvertime = async (req, res) => {
+  try {
+    const { PayrollFNFUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
+   
+    // Check if payrollUser exists in the PayrollUsers model
+    const isValidUser = await PayrollFNFUsers.findById(PayrollUser);
+    if (!isValidUser) {
+      return next(new AppError('Invalid payroll user', 400));
+    }
+    // Create a new Payroll Overtime entry in the database
+    const newOvertime = await PayrollFNFOvertime.create({
+      PayrollFNFUser,
+      LateComing,
+      EarlyGoing,
+      FinalOvertime
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        record: newOvertime
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get Payroll Overtime by ID
+exports.getPayrollFNFOvertime = async (req, res) => {
+  try {
+    const record = await PayrollFNFOvertime.findById(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll FNF Overtime record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Update Payroll Overtime by ID
+exports.updatePayrollFNFOvertime = async (req, res) => {
+  try {
+    const updatedRecord = await PayrollFNFOvertime.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll FNF Overtime record not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        record: updatedRecord
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Delete Payroll Overtime by ID
+exports.deletePayrollFNFOvertime = async (req, res) => {
+  try {
+    const record = await PayrollFNFOvertime.findByIdAndDelete(req.params.id);
+
+    if (!record) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Payroll FNF Overtime record not found'
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      message: 'Payroll Overtime record successfully deleted'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+// Get all Payroll Overtime records
+exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
+  try {
+    const records = await PayrollFNFOvertime.find({ PayrollUser: req.params.payrollFNFUser });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        records
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
+exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFOvertimeList = await PayrollFNFOvertime.find({ PayrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFOvertimeList
+  });
+});
+

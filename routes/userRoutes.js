@@ -1705,8 +1705,11 @@ router.delete('/employee-salutatory-details/:id', authController.protect, userCo
  *               amount:
  *                 type: number
  *                 required: true
- *               repaymentFrequency:
- *                 type: string
+ *               noOfInstallment:
+ *                 type: number
+ *                 required: true
+ *               monthlyInstallment:
+ *                 type: number
  *                 required: true
  *     responses:
  *       201:
@@ -1772,8 +1775,12 @@ router.get('/employee-loan-advance/:id', authController.protect, userController.
  *                 type: string
  *               amount:
  *                 type: number
- *               repaymentFrequency:
- *                 type: string
+ *               noOfInstallment:
+ *                 type: number
+ *                 required: true
+ *               monthlyInstallment:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated Employee Loan Advance

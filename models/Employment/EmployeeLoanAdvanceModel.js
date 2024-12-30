@@ -16,8 +16,12 @@ var employeeLoanAdvanceSchema = new Schema({
     type: Number,
     required: true
   },
-  repaymentFrequency: {
-    type: String,
+  noOfInstallment: {
+    type: Number,
+    required: true
+  },
+  monthlyInstallment: {
+    type: Number,
     required: true
   },
   company: {

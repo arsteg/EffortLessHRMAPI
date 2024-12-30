@@ -10,6 +10,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     subject: options.subject,
     html: options.message
 }
+console.log(msg);
   // 2) Actually send the email
  try {
   const response = await sgMail.send(msg);
