@@ -31,6 +31,9 @@ const Email_template_constant = {
     Deleted: "Deleted",
     Terminated: "Terminated",
     Inactive: "Inactive",
+    FNF_Attendance_Processed: "FNF Attendance Processed",
+    FNF_Payroll_Calculated: "FNF Payroll Calculated",
+    FNF_Payment_Processed: "FNF Payment Processed",
     Settled: "Settled"
   };
   const Leave_Application_Constant = {
