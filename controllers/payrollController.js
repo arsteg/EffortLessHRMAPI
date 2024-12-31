@@ -4233,11 +4233,8 @@ exports.createPayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) =>
 exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next) => {
   const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
     payrollFNFUser: req.params.payrollFNFUserId
-  }).populate('payrollFNFUser');
-  
-  if (!statutoryBenefits) {
-    return next(new AppError('Payroll FNF Statutory Benefits not found for this user', 404));
-  }
+  }).populate('payrollFNFUser');  
+ 
 
   res.status(200).json({
     status: 'success',
@@ -4248,12 +4245,9 @@ exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next)
 // Get PayrollFNFStatutoryBenefits by payrollFNF
 exports.getPayrollFNFStatutoryBenefitsByPayrollFNF = catchAsync(async (req, res, next) => {
   const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
-    payrollFNFUser: req.params.payrollFNFId
-  }).populate('payrollFNFUser');
-  
-  if (!statutoryBenefits) {
-    return next(new AppError('Payroll FNF Statutory Benefits not found for this payroll', 404));
-  }
+    payrollFNFUser: req.params.payrollFNF
+  }).populate('payrollFNFUser');  
+ 
 
   res.status(200).json({
     status: 'success',
@@ -4268,11 +4262,7 @@ exports.updatePayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) =>
     req.body, 
     { new: true, runValidators: true }
   );
-
-  if (!statutoryBenefits) {
-    return next(new AppError('Payroll FNF Statutory Benefits not found', 404));
-  }
-
+ 
   res.status(200).json({
     status: 'success',
     data: statutoryBenefits
@@ -4354,7 +4344,7 @@ exports.getPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
 // Get all Flexi Benefits and PF Tax records
 exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser = async (req, res) => {
   try {
-    const records = await PayrollFNFFlexiBenefitsPFTax.find({ payrollUser: req.params.payrollUser });
+    const records = await PayrollFNFFlexiBenefitsPFTax.find({ payrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
       status: 'success',
@@ -4369,12 +4359,12 @@ exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser = async (req, res) 
     });
   }
 };
-exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payroll });
+exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
 // Extract _id values from payrollUsers payrollUserIds
 const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
 // Use the array of IDs to fetch related PayrollAttendanceSummary records
-const payrollFNFFlexiBenefitsPFTaxList = await PayrollFNFFlexiBenefitsPFTax.find({ payrollUser: { $in: payrollUserIds } }); 
+const payrollFNFFlexiBenefitsPFTaxList = await PayrollFNFFlexiBenefitsPFTax.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
   res.status(200).json({
     status: 'success',
     data: payrollFNFFlexiBenefitsPFTaxList

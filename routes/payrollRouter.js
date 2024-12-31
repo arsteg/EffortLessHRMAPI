@@ -6492,7 +6492,7 @@ router.get('/payroll-fnf-statutory-benefits/:payrollFNFUserId',authController.pr
 // Get a PayrollFNFStatutoryBenefits by payrollFNF
 /**
  * @swagger
- * /api/v1/payroll/payroll-fnf-statutory-benefits/payroll/{payrollFNFId}:
+ * /api/v1/payroll/payroll-fnf-statutory-benefits/payroll/{payrollFNF}:
  *   get:
  *     summary: Get Payroll FNF Statutory Benefit by Payroll FNF ID
  *     tags: [Payroll Management]
@@ -6501,7 +6501,7 @@ router.get('/payroll-fnf-statutory-benefits/:payrollFNFUserId',authController.pr
  *     }]
  *     parameters:
  *       - in: path
- *         name: payrollFNFId
+ *         name: payrollFNF
  *         required: true
  *         schema:
  *           type: string
@@ -6514,7 +6514,7 @@ router.get('/payroll-fnf-statutory-benefits/:payrollFNFUserId',authController.pr
  *       500:
  *         description: Internal server error
  */
-router.get('/payroll-fnf-statutory-benefits/payroll/:payrollFNFId',authController.protect, payrollController.getPayrollFNFStatutoryBenefitsByPayrollFNF);
+router.get('/payroll-fnf-statutory-benefits/payroll/:payrollFNF',authController.protect, payrollController.getPayrollFNFStatutoryBenefitsByPayrollFNF);
 
 // Update a PayrollFNFStatutoryBenefits
 /**
@@ -6590,6 +6590,7 @@ router.put('/payroll-fnf-statutory-benefits/:id',authController.protect, payroll
  *         description: Internal server error
  */
 router.delete('/payroll-fnf-statutory-benefits/:id',authController.protect, payrollController.deletePayrollFNFStatutoryBenefits);
+
 /**
  * @swagger
  * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax:
@@ -6654,7 +6655,7 @@ router.get('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, pay
 
 /**
  * @swagger
- * /api/v1/payroll/flexi-benefits-pf-tax-by-payrolluser/{payrollUser}:
+ * /api/v1/payroll/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf-user/{payrollFNFUser}:
  *   get:
  *     summary: Get all Payroll Flexi Benefits and PF Tax records
  *     tags: [Payroll Management]
@@ -6663,7 +6664,7 @@ router.get('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, pay
  *     }]
  *     parameters:
  *       - in: path
- *         name: payrollUser
+ *         name: payrollFNFUser
  *         required: true
  *         schema:
  *           type: string
@@ -6674,7 +6675,7 @@ router.get('/payroll-fnf-flexi-benefits-pf-tax/:id', authController.protect, pay
  *       500:
  *         description: Internal server error
  */
-router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser);
+router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf-user/:payrollFNFUser', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser);
 
 /**
  * @swagger
@@ -6700,7 +6701,7 @@ router.get('/flexi-benefits-pf-tax-by-payrolluser/:payrollUser', authController.
  *       500:
  *         description: Internal server error
  */
-router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNF);
+router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFFlexiBenefitsAndPFTaxByPayrollFNF);
 
 /**
  * @swagger
