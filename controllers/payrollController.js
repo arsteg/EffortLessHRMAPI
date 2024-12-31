@@ -4177,6 +4177,18 @@ exports.getPayrollFNFLoanAdvanceByLoan = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get Payroll FNF Loan Advance by Loan and Advance ID
+exports.getPayrollFNFLoanAdvanceByPayrollFNF = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+// Extract _id values from payrollUsers payrollUserIds
+const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+// Use the array of IDs to fetch related PayrollAttendanceSummary records
+const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+  res.status(200).json({
+    status: 'success',
+    data: payrollFNFLoanAdvance
+  });  
+});
 // Update a Payroll FNF Loan Advance
 exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {

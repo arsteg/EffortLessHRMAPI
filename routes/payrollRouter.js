@@ -6294,6 +6294,32 @@ router.get('/payroll-fnf-loan-advances/:payrollFNFUser', authController.protect,
 
 /**
  * @swagger
+ * /api/v1/payroll/payroll-fnf-loan-advances-by-payroll-fnf/{payrollFNF}:
+ *   get:
+ *     summary: Get Payroll FNF Loan Advance by Payroll FNF
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll FNF
+ *     responses:
+ *       200:
+ *         description: Successful response with the Payroll FNF Loan Advance
+ *       404:
+ *         description: Payroll FNF Loan Advance not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-fnf-loan-advances-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getPayrollFNFLoanAdvanceByPayrollFNF);
+
+/**
+ * @swagger
  * /api/v1/payroll/payroll-fnf-loan-advances-by-loan-advance/{loanAndAdvance}:
  *   get:
  *     summary: Get Payroll FNF Loan Advance by Loan and Advance ID
