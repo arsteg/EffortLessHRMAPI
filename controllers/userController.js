@@ -102,7 +102,28 @@ exports.getUser = catchAsync(async (req, res, next) => {
     },
   });
 });
+exports.getUsersByStatus = catchAsync(async (req, res, next) => {
+  const { status } = req.params;
 
+  // Validate that status is one of the valid statuses in User_Status
+  if (!Object.values(constants.User_Status).includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+  }
+
+  // Find users based on companyId and status, excluding 'Deleted' status
+  const users = await User.find({
+      status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
+      company: req.cookies.companyId,                            // Match users by companyId
+      status: status                                 // Match users by provided status
+  });
+
+  res.status(200).json({
+      status: "success",
+      data: {
+          users: users,
+      },
+  });
+});
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {
   const users = await User.find({
     status: { $ne: constants.User_Status.Deleted },

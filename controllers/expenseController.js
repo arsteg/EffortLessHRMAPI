@@ -1479,18 +1479,7 @@ exports.getAdvance = catchAsync(async (req, res, next) => {
 });
 
 exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
-  try {
-    const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findOne({
-      user: req.params.userId
-    });
-   
-   
-    if (!employeeAdvanceAssignment) {
-      return res.status(404).json({
-        status: 'failure',
-        message: 'Expense assignment not found for the given user.'
-      });
-    }
+  try {    
     // Retrieve applicable categories for the expense template
     const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate);
 

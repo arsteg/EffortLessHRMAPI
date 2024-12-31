@@ -923,13 +923,6 @@ exports.getTaxSlabsByCycle = catchAsync(async (req, res, next) => {
     cycle: cycle };
   const taxSlabs = await TaxSlab.find(query);
 
-  if (!taxSlabs || taxSlabs.length === 0) {
-    return res.status(404).json({
-      status: 'fail',
-      message: `No tax slabs found for the year ${cycle}`,
-    });
-  }
-
   res.status(200).json({
     status: 'success',
     data: taxSlabs,

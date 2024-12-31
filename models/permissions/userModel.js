@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'Deleted','Terminated','Inactive','Settled'],
+    enum: ['Active', 'Deleted','Terminated','Inactive','Settled','FNF Attendance Processed','FNF Payroll Calculated','FNF Payment Processed'],
     default: 'Active'
   },
   company: {

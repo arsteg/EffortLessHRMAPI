@@ -927,18 +927,24 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const cycle = await scheduleController.createFiscalCycle();
     const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
 
-    if (!assignmentExists) {
-      console.log("Leave assignment does not exist. Cannot apply for leave.");
-      return;
+    if (!assignmentExists) {     
+      res.status(201).json({
+        status: 'fail',
+        data: null,
+        message: "Leave assignment does not exist. Cannot apply for leave."
+      });
     }
     // Get the current leave assigned record
     const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
 
     const leaveDays = calculateLeaveDays(startDate, endDate);
     // Check if there are enough leaves available
-    if (leaveAssigned.leaveRemaining < leaveDays) {
-      console.log("Not enough leave balance to apply for this leave.");
-      return;
+    if (leaveAssigned.leaveRemaining < leaveDays) {      
+      res.status(201).json({
+        status: 'fail',
+        data: null,
+        message: "Not enough leave balance to apply for this leave."
+      });
     }
 
 

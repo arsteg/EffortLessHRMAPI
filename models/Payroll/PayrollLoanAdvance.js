@@ -11,9 +11,24 @@ var payrollLoanAdvanceSchema = new Schema({
       ref: 'EmployeeLoanAdvance',
       required: true
     },
+    amount: {
+      type: Number,
+      required: true
+    },
     disbursementAmount: {
       type: Number,
       required: true
+    },
+    type: {
+      type: String,
+      required: true,
+      enum: [
+        'Disbursement',    // Loan/advance given to the employee
+        'Repayment'
+      ],
+    },
+    remainingEMI: {
+      type: Number
     },
     status: {
       type: String,
@@ -27,4 +42,3 @@ var payrollLoanAdvanceSchema = new Schema({
     }
   }, { collection: 'PayrollLoanAdvance' });
   module.exports = mongoose.model('PayrollLoanAdvance', payrollLoanAdvanceSchema);
-  

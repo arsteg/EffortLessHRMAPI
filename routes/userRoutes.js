@@ -154,6 +154,7 @@ router.post('/websignup', authController.webSignup);
  *
  */
 router.post('/login', authController.login);
+
 /**
  * @swagger
  * /api/v1/users/getUsersByCompany/{companyId}:
@@ -183,6 +184,39 @@ router.post('/login', authController.login);
  *
  */
 router.get('/getUsersByCompany/:companyId',authController.protect,userController.getUsersByCompany);
+
+
+/**
+ * @swagger
+ * /api/v1/users/getUsersByStatus/{status}:
+ *  get:
+ *      tags:
+ *          - User Management
+ *      summary: "Get all User Based On CompanyId"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: status
+ *         in: path
+ *         description: Status of the user (e.g., active, inactive)
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [Active, Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
+
 /**
  * @swagger
  * /api/v1/users/getusers:
@@ -1705,8 +1739,11 @@ router.delete('/employee-salutatory-details/:id', authController.protect, userCo
  *               amount:
  *                 type: number
  *                 required: true
- *               repaymentFrequency:
- *                 type: string
+ *               noOfInstallment:
+ *                 type: number
+ *                 required: true
+ *               monthlyInstallment:
+ *                 type: number
  *                 required: true
  *     responses:
  *       201:
@@ -1772,8 +1809,12 @@ router.get('/employee-loan-advance/:id', authController.protect, userController.
  *                 type: string
  *               amount:
  *                 type: number
- *               repaymentFrequency:
- *                 type: string
+ *               noOfInstallment:
+ *                 type: number
+ *                 required: true
+ *               monthlyInstallment:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated Employee Loan Advance
