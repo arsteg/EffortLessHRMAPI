@@ -103,7 +103,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   });
 });
 exports.getUsersByStatus = catchAsync(async (req, res, next) => {
-  const { companyId, status } = req.params;
+  const { status } = req.params;
 
   // Validate that status is one of the valid statuses in User_Status
   if (!Object.values(constants.User_Status).includes(status)) {
@@ -113,7 +113,7 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
   // Find users based on companyId and status, excluding 'Deleted' status
   const users = await User.find({
       status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
-      company: companyId,                            // Match users by companyId
+      company: req.cookies.companyId,                            // Match users by companyId
       status: status                                 // Match users by provided status
   });
 

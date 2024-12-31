@@ -188,7 +188,7 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
 
 /**
  * @swagger
- * /api/v1/users/getUsersByStatus/{companyId}/{status}:
+ * /api/v1/users/getUsersByStatus/{status}:
  *  get:
  *      tags:
  *          - User Management
@@ -197,12 +197,6 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *         bearerAuth: []
  *     }]
  *      parameters:
- *       - name: companyId
- *         in: path
- *         description: Company Id
- *         required: true
- *         schema:
- *           type: string
  *       - name: status
  *         in: path
  *         description: Status of the user (e.g., active, inactive)
@@ -221,7 +215,7 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *                          type: object
  *
  */
-router.get('/getUsersByStatus/:companyId/:status',authController.protect,userController.getUsersByStatus);
+router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
 
 /**
  * @swagger
