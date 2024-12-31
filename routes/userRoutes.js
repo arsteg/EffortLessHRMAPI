@@ -154,6 +154,7 @@ router.post('/websignup', authController.webSignup);
  *
  */
 router.post('/login', authController.login);
+
 /**
  * @swagger
  * /api/v1/users/getUsersByCompany/{companyId}:
@@ -183,6 +184,45 @@ router.post('/login', authController.login);
  *
  */
 router.get('/getUsersByCompany/:companyId',authController.protect,userController.getUsersByCompany);
+
+
+/**
+ * @swagger
+ * /api/v1/users/getUsersByStatus/{companyId}/{status}:
+ *  get:
+ *      tags:
+ *          - User Management
+ *      summary: "Get all User Based On CompanyId"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: companyId
+ *         in: path
+ *         description: Company Id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: status
+ *         in: path
+ *         description: Status of the user (e.g., active, inactive)
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [Active, Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getUsersByStatus/:companyId/:status',authController.protect,userController.getUsersByStatus);
+
 /**
  * @swagger
  * /api/v1/users/getusers:
