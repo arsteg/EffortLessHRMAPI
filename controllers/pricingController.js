@@ -1313,10 +1313,9 @@ exports.activateSubscription = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
     // Find the subscription by ID
-    const subscription = await Subscription.findOneAndUpdate(
-      {subscriptionId: subscriptionId},
-      {"razorpaySubscription.status": "active"}
-  );
+    const subscription = await Subscription.findOne({
+      subscriptionId: subscriptionId,
+    });
 
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
