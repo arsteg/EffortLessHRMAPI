@@ -5267,6 +5267,32 @@ router.get('/fnf/users/:id', authController.protect, payrollController.getPayrol
 
 /**
  * @swagger
+ * /api/v1/payroll/fnf/users-by-userId/{userId}:
+ *   get:
+ *     summary: Get a PayrollFNFUsers by UserID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PayrollFNFUsers
+ *     responses:
+ *       200:
+ *         description: Successful response with the PayrollFNFUsers
+ *       404:
+ *         description: PayrollFNFUsers not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fnf/users-by-userId/:userId', authController.protect, payrollController.getPayrollFNFUserByUserId);
+
+/**
+ * @swagger
  * /api/v1/payroll/fnf/users/{id}:
  *   put:
  *     summary: Update a PayrollFNFUsers by ID

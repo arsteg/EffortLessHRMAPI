@@ -3743,6 +3743,17 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
 });
 
 // Get a PayrollUser by ID
+exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
+  const payrollFNFUsers = await PayrollFNFUsers.find({ user: req.params.userId });
+  if (!payrollFNFUsers) {
+      return next(new AppError('PayrollUser not found', 404));
+  }
+  res.status(200).json({
+      status: 'success',
+      data: payrollFNFUsers
+  });
+});
+// Get a PayrollUser by ID
 exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.findById(req.params.id);
   if (!payrollFNFUsers) {
