@@ -6606,7 +6606,7 @@ router.delete('/payroll-fnf-statutory-benefits/:id',authController.protect, payr
  *       content:
  *         application/json:
  *           schema:
- *             type: objPect
+ *             type: object
  *             properties:
  *               PayrollFNFUser:
  *                 type: string
