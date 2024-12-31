@@ -6197,7 +6197,7 @@ router.delete('/payroll-fnf-termination-compensation/:id', authController.protec
  *       500:
  *         description: Internal server error
  */
-router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFManualArrearsByPayrollFNF);
+router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFTerminationCompensationByPayrollFNF);
 
 /**
  * @swagger
