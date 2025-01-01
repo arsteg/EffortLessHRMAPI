@@ -1,4 +1,4 @@
-const GeneralSetting = require("../models/Payroll/payrollGeneralSettingModel");
+const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel.js");
 const RoundingRule = require("../models/Payroll/roundingRulesModel");
 const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const FixedContribution = require("../models/Payroll/fixedContributionModel");
