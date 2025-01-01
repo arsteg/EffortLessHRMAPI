@@ -4,6 +4,7 @@ const AppError = require("../utils/appError.js");
 const APIFeatures = require("../utils/apiFeatures");
 const userSubordinate = require("../models/userSubordinateModel");
 const ProjectUsers = require("../models/projectUserModel");
+const Subscription = require("../models/pricing/subscriptionModel");
 const TaskUsers = require("../models/taskUserModel");
 const Projects = require("../models/projectModel");
 const timeLog = require("../models/timeLog");
@@ -95,10 +96,19 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const users = await User.findById(req.body.id)
     .where("status")
     .equals("Active");
+  let companySubscription = {status: 'new'};
+  if(users){
+    companySubscription = await Subscription.findOne({
+      companyId: users.company.id,
+      "razorpaySubscription.status": {$nin: ["cancelled"]}
+    })
+    .populate("currentPlanId");
+  }
   res.status(200).json({
     status: "success",
     data: {
       users: users,
+      companySubscription: companySubscription,
     },
   });
 });

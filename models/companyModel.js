@@ -62,6 +62,10 @@ var companyModelSchema = new Schema({
       default: true,
       select: false
     },
+    freeCompany: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     toJSON: { virtuals: true }, // Use virtuals when outputing as JSON

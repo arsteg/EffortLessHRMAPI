@@ -20,6 +20,16 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
 const constants = require('../constants');
+const Subscription = require('../models/pricing/subscriptionModel');
+const Razorpay = require('razorpay');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY || 'rzp_test_xQi4sKdFNrIe2z',
+  key_secret: process.env.RAZORPAY_SECRET || 'TsqTbMnOdEpdpt8LN6NDhujX',
+  headers: {
+    "X-Razorpay-Account": "PWAQUL4NNnybvx"
+  }
+});
 
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -65,11 +75,24 @@ const createAndSendToken = async (user, statusCode, res) => {
   // Remove password from the output
   user.password = undefined;
 
+  const subscription = await Subscription.findOne({
+    companyId: user.company.id,
+    "razorpaySubscription.status": {$nin: ["cancelled"]}
+  }).populate("currentPlanId");
+  
+  let companySubscription = {status: 'new'};
+  if (subscription) {
+    const razorpaySubscription = await razorpay.subscriptions.fetch(subscription.subscriptionId);
+    companySubscription = razorpaySubscription
+  }
+
+
   res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user
+      user,
+      companySubscription
     }
   });
 };
@@ -354,6 +377,73 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
   // Grant access to protected route
+  const subscription = await Subscription.findOne({
+    $and:[{
+      companyId: currentUser.company.id,
+      'razorpaySubscription.status': 'active'
+    } ]
+  });
+
+  
+  if (!subscription) {
+    const companyDetails = await Company.findById(currentUser.company._id);
+    if(!companyDetails.freeCompany){
+      return next(
+        new AppError(
+          'Your subscription is not active. Please contact your administrator.',
+          401
+        ).sendErrorJson(res)
+      );
+    }
+  }
+
+  req.user = currentUser;  
+  next();
+});
+
+exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
+  // 1) Get the token and check if it's there
+  // It is a standard to send header in this format
+  // Key: Authorization
+  // Value: Bearer <TOKEN_VALUE>
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  // If token wasn't specified throw an error
+  if (!token) {
+    return next(
+      new AppError('You are not logged in! Please log in to get access.', 401)
+    );
+  }
+
+  // 2) Token verification
+  // jwt.verify(token, process.env.JWT_SECRET) takes in a callback
+  // In order to not brake our async await way to deal with async code
+  // We can transform it into a promise using promisify from util pckg
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); 
+  // 3) Check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser)
+    return next(
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
+    );
+
+  // 4) Check if user changed password after the token was issued
+  // iat stands for issued at
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password. Please log in again.', 401)
+    );
+  }
+
   req.user = currentUser;  
   next();
 });
