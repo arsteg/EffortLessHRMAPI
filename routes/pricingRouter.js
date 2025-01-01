@@ -449,7 +449,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/plan', authController.protect, pricingController.getAllPlan);
+ router.get('/plan', pricingController.getAllPlan);
  
  /**
  * @swagger

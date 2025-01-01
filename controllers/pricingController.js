@@ -177,7 +177,7 @@ res.status(200).json({
 });
 
 exports.createPlan = catchAsync(async (req, res, next) => {
-  const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval} = req.body; 
+  const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity} = req.body; 
     // const planExists = await Software.findOne({ name: name,software: software});
     const planExists = await Plan.findOne({ name: name});
     if(planExists)
@@ -215,7 +215,8 @@ exports.createPlan = catchAsync(async (req, res, next) => {
           note2: notes2,
         },
         frequency: frequency,
-        interval: interval
+        interval: interval,
+        quantity: quantity || 1
       });
       
       res.status(201).json({
@@ -1210,7 +1211,7 @@ exports.addSubscriptionDetails = async (req, res) => {
       // Create new Subscription in Razorpay
       const razorpaySubscription = await razorpay.subscriptions.create({
         "plan_id": razorpayPlanid,
-        "quantity": 1, // number of licenses
+        "quantity": req.body.quantity || 1, // number of licenses
         "total_count": 120
       })
       // Create a new subscription instance
@@ -1313,17 +1314,16 @@ exports.activateSubscription = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
     // Find the subscription by ID
-    const subscription = await Subscription.findOne({
+    const subscription = await Subscription.findOneAndUpdate({
       subscriptionId: subscriptionId,
+    },
+    {
+        "razorpaySubscription.status": 'active'
     });
 
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
-
-    // Activate the subscription
-    subscription.razorpaySubscription.status = 'active';
-    subscription.save();
 
     res.status(200).json({
       status: 'success',

@@ -33,6 +33,9 @@ var planSchema = new Schema({
   },
   notes:{
     type: Object
+  },
+  quantity: {
+    type: Number
   }
 }, { collection: 'Plan' });
 
