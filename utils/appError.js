@@ -11,7 +11,14 @@ class AppError extends Error {
     this.isOperational = true;
 
     // This function will not occur in stack strace (error.stack)
-    Error.captureStackTrace(this, this.construtor);
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  sendErrorJson(res) {
+    return res.status(this.statusCode).json({
+      status: this.status,
+      message: this.message
+    });
   }
 }
 

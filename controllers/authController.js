@@ -20,6 +20,16 @@ const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const mongoose = require('mongoose');
 const constants = require('../constants');
+const Subscription = require('../models/pricing/subscriptionModel');
+const Razorpay = require('razorpay');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY || 'rzp_test_xQi4sKdFNrIe2z',
+  key_secret: process.env.RAZORPAY_SECRET || 'TsqTbMnOdEpdpt8LN6NDhujX',
+  headers: {
+    "X-Razorpay-Account": "PWAQUL4NNnybvx"
+  }
+});
 
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -65,11 +75,24 @@ const createAndSendToken = async (user, statusCode, res) => {
   // Remove password from the output
   user.password = undefined;
 
+  const subscription = await Subscription.findOne({
+    companyId: user.company.id,
+    "razorpaySubscription.status": {$nin: ["cancelled"]}
+  }).populate("currentPlanId");
+  
+  let companySubscription = {status: 'new'};
+  if (subscription) {
+    const razorpaySubscription = await razorpay.subscriptions.fetch(subscription.subscriptionId);
+    companySubscription = razorpaySubscription
+  }
+
+
   res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user
+      user,
+      companySubscription
     }
   });
 };
@@ -354,6 +377,26 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
   // Grant access to protected route
+  const subscription = await Subscription.findOne({
+    $and:[{
+      companyId: currentUser.company.id,
+      'razorpaySubscription.status': 'active'
+    } ]
+  });
+
+  
+  if (!subscription) {
+    const companyDetails = await Company.findById(currentUser.company._id);
+    if(!companyDetails.freeCompany){
+      return next(
+        new AppError(
+          'Your subscription is not active. Please contact your administrator.',
+          401
+        ).sendErrorJson(res)
+      );
+    }
+  }
+
   req.user = currentUser;  
   next();
 });
