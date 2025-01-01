@@ -2343,7 +2343,10 @@ router.get('/invoice',  authController.protect, pricingController.getAllInvoices
   */
  router.get('/user-in-group/:userGroupId', authController.protect, pricingController.getUsersByGroup);
 
- // Razorpay Webhook
+// Razorpay Webhook
   router.post('/verify-payment', pricingController.verifyPayment);
+
+// Razorpay credentials
+  router.get('/credentials', authController.protectUnsubscribed,  pricingController.razorpayCredential);
 
 module.exports = router;

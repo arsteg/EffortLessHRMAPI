@@ -2100,6 +2100,13 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
   }
 });
 
+exports.razorpayCredential = catchAsync(async (req, res, next) => {
+  res.status(200).json({
+    status: 'success',
+    data: process.env.RAZORPAY_KEY,
+  });
+})
+
 // Verify Payment Status
 exports.verifyPayment = catchAsync(async (req, res, next) => {
   try {
