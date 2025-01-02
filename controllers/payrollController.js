@@ -1,5 +1,5 @@
 const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel.js");
-const RoundingRule = require("../models/Payroll/roundingRulesModel");
+const RoundingRule = require("../models/Payroll/RoundingRulesModel");
 const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const FixedContribution = require("../models/Payroll/fixedContributionModel");
 const catchAsync = require("../utils/catchAsync");
