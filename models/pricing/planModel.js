@@ -21,22 +21,7 @@ var planSchema = new Schema({
     type: Boolean,
     required: true
   },
-  softwares:[],
-  frequency: {
-    type: String
-  },
-  interval: {
-    type: Number
-  },
-  description: {
-    type: String
-  },
-  notes:{
-    type: Object
-  },
-  quantity: {
-    type: Number
-  }
+  softwares:[]
 }, { collection: 'Plan' });
 
 module.exports = mongoose.model('Plan', planSchema);

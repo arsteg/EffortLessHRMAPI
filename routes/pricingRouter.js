@@ -316,16 +316,6 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
  *               IsActive:
  *                 type: boolean
  *                 required: true
- *               description:
- *                  type: string
- *               notes1:
- *                  type: string
- *               notes2:
- *                  type: string
- *               frequency:
- *                  type: string
- *               interval:
- *                  type: number
  *     responses:
  *       201:
  *         description: Plan entry successfully created
@@ -360,7 +350,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/plan/:id', pricingController.getPlan);
+ router.get('/plan/:id', authController.protect, pricingController.getPlan);
  
  /**
   * @swagger
@@ -449,7 +439,7 @@ router.get('/software', authController.protect, pricingController.getAllSoftware
   *       500:
   *         description: Internal server error
   */
- router.get('/plan', pricingController.getAllPlan);
+ router.get('/plan', authController.protect, pricingController.getAllPlan);
  
  /**
  * @swagger
@@ -1586,45 +1576,7 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
  *       500:
  *         description: Internal server error
  */
- router.post('/subscription', pricingController.addSubscriptionDetails);
-
-/**
- * @swagger
- * /api/v1/pricing/activate-subscription/{id}:
- *   post:
- *     summary: Activate Subscription
- *     tags: [Pricing Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Plan Offer Details
- *     requestBody:
- *       description: New plan offer details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               plan:
- *                 type: string
- *               offer:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the updated Plan Offer Details
- *       404:
- *         description: Plan Offer Details not found
- *       500:
- *         description: Internal server error
- */
- router.post('/activate-subscription/:id', pricingController.activateSubscription);
+ router.post('/subscription', authController.protect, pricingController.addSubscriptionDetails);
 
 /**
   * @swagger
@@ -1779,69 +1731,6 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
   *         description: Internal server error
   */
 router.get('/subscription', authController.protect, pricingController.getAllSubscriptionDetails);
-
-/**
-  * @swagger
-  * /api/v1/pricing/pause-resume-subscription:
-  *   post:
-  *     summary: Pause a razorpay subscription and update the document
-  *     tags: [Pricing Management]
-  *     security: [{
-  *         bearerAuth: []
-  *     }]
-  *     requestBody:
-  *       description: Razorpay Subscription ID
-  *       required: true
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             properties:
-  *               subscriptionId:
-  *                 type: string
-  *                 required: true
-  *                 description: sub_00000000000001
-  *               action:
-  *                 type: string
-  *                 description: pause | resume, By default - pause
-  *     responses:
-  *       200:
-  *         description: Successful response with updated subscription details
-  *       500:
-  *         description: Internal server error
-  */
-router.post('/pause-resume-subscription', authController.protect, pricingController.pauseResumeSubscription);
-/**
-  * @swagger
-  * /api/v1/pricing/cancel-subscription:
-  *   post:
-  *     summary: Cancel a razorpay subscription and update the document
-  *     tags: [Pricing Management]
-  *     security: [{
-  *         bearerAuth: []
-  *     }]
-  *     requestBody:
-  *       description: Razorpay Subscription ID
-  *       required: true
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             properties:
-  *               subscriptionId:
-  *                 type: string
-  *                 required: true
-  *                 description: sub_00000000000001
-  *               cancelAtCycleEnd:
-  *                 type: boolean
-  *                 description: true | false, By default - true
-  *     responses:
-  *       200:
-  *         description: Successful response with updated subscription details
-  *       500:
-  *         description: Internal server error
-  */
-  router.post('/cancel-subscription', authController.protect, pricingController.cancelSubscription);
 
 /**
  * @swagger
@@ -2104,32 +1993,6 @@ router.get('/invoice/:id',  authController.protect, pricingController.getInvoice
 
 /**
  * @swagger
- * /api/v1/pricing/subscription-invoice/{id}:
- *   get:
- *     summary: Get invoice by Subscription ID
- *     tags: [Pricing Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Subscription ID of the Invoice
- *     responses:
- *       200:
- *         description: Successful response with the Invoice
- *       404:
- *         description: Invoice not found
- *       500:
- *         description: Internal server error
- */
-router.get('/subscription-invoice/:id',  authController.protect, pricingController.getInvoiceBySubscriptionId);
-
-/**
- * @swagger
  * /api/v1/pricing/invoice/{id}:
  *   put:
  *     summary: Update invoice by ID
@@ -2343,10 +2206,13 @@ router.get('/invoice',  authController.protect, pricingController.getAllInvoices
   */
  router.get('/user-in-group/:userGroupId', authController.protect, pricingController.getUsersByGroup);
 
+<<<<<<< HEAD
 // Razorpay Webhook
   router.post('/verify-payment', pricingController.verifyPayment);
 
 // Razorpay credentials
   router.get('/credentials', authController.protectUnsubscribed,  pricingController.razorpayCredential);
 
+=======
+>>>>>>> parent of c6ff28d (Merge branch 'subscription' into develop)
 module.exports = router;

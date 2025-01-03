@@ -18,14 +18,13 @@ const User = require('../models/permissions/userModel');
 const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
-const crypto = require('crypto');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
-  // headers: {
-  //   "X-Razorpay-Account": "PWAQUL4NNnybvx"
-  // }
+  headers: {
+    "X-Razorpay-Account": "PWAQUL4NNnybvx"
+  }
 });
 
 exports.createSoftware = catchAsync(async (req, res, next) => {
@@ -177,9 +176,8 @@ res.status(200).json({
 });
 
 exports.createPlan = catchAsync(async (req, res, next) => {
-  const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity} = req.body; 
-    // const planExists = await Software.findOne({ name: name,software: software});
-    const planExists = await Plan.findOne({ name: name});
+  const { name,software,currentprice,IsActive} = req.body; 
+    const planExists = await Software.findOne({ name: name,software: software});
     if(planExists)
     {
       res.status(500).json({
@@ -190,33 +188,21 @@ exports.createPlan = catchAsync(async (req, res, next) => {
     else{
       // Creating Plan in RazorPay
       const razorpayPlan = await  razorpay.plans.create({
-        "period": frequency || 'monthly',
-        "interval": interval || 1,
+        "period": "monthly",
+        "interval": 1,
         "item": {
           "name": name,
           "amount": currentprice * 100,
           "currency": "INR",
-          "description": description,
+          "description": "Description for the test plan"
         },
-        "notes": {
-          "notes_key_1": notes1,
-          "notes_key_2": notes2
-        }
       })
       const plan = await Plan.create({ 
         name: name,
         software: software,
         currentprice: currentprice,
         IsActive: IsActive,
-        planId: razorpayPlan.id, // Razorpay Plan Id
-        description: description,
-        notes: {
-          note1: notes1,
-          note2: notes2,
-        },
-        frequency: frequency,
-        interval: interval,
-        quantity: quantity || 1
+        planId: razorpayPlan.id // Razorpay Plan Id
       });
       
       res.status(201).json({
@@ -227,18 +213,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
 });  
 
 exports.getPlan = catchAsync(async (req, res, next) => {
-let id;
-// catching invalid id
-try { id = mongoose.Types.ObjectId(req.params.id); }
-catch (err) { id = null; }
-
-const plan = await Plan.find({
-  $or: [
-    {_id :id},
-    {name: req.params.id},
-    {planId: req.params.id}
-  ]
-})
+const plan = await Plan.findById(req.params.id);
 if(plan) {
     const softwares = await Software.find({})
       .where('_id').equals(plan.software);
@@ -1194,54 +1169,42 @@ exports.addSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
 
-    const subscription = await Subscription.findOne({
-      companyId: req.cookies.companyId,
-      "razorpaySubscription.status": {$nin: ["cancelled"]}
+    // Fetch Razorpay plan id from mongoDb Plans
+    const razorpayPlanid = isValidCurrentPlan.planId
+
+    // Create new Subscription in Razorpay
+    const rzaorpaySubscription = await razorpay.subscriptions.create({
+      "plan_id": razorpayPlanid,
+      "quantity": 1, // number of licenses
+      "total_count": 1
+    })
+
+    // Create a new subscription instance
+    const newSubscription = new Subscription({
+      userGroupType: req.body.userGroupType,
+      trialPeriodStartDate: req.body.trialPeriodStartDate,
+      trialPeriodEndDate: req.body.trialPeriodEndDate,
+      subscriptionAfterTrial: req.body.subscriptionAfterTrial,
+      currentPlanId: req.body.currentPlanId,
+      offer: req.body.offer,
+      offerStartDate: req.body.offerStartDate,
+      offerEndDate: req.body.offerEndDate,
+      dateSubscribed: req.body.dateSubscribed,
+      validTo: req.body.validTo,
+      dateUnsubscribed: req.body.dateUnsubscribed,
+      subscriptionId: rzaorpaySubscription.id,
+      companyId: req.body.companyId
     });
-    // If already have a subscription
-    if(subscription) {
-      res.status(201).json({
-        status: 'success',
-        data: {subscription},
-      });
-    } else {
-      // Fetch Razorpay plan id from mongoDb Plans
-      const razorpayPlanid = isValidCurrentPlan.planId
-  
-      // Create new Subscription in Razorpay
-      const razorpaySubscription = await razorpay.subscriptions.create({
-        "plan_id": razorpayPlanid,
-        "quantity": req.body.quantity || 1, // number of licenses
-        "total_count": 120
-      })
-      // Create a new subscription instance
-      const newSubscription = new Subscription({
-        userGroupType: req.body.userGroupType,
-        trialPeriodStartDate: req.body.trialPeriodStartDate,
-        trialPeriodEndDate: req.body.trialPeriodEndDate,
-        subscriptionAfterTrial: req.body.subscriptionAfterTrial,
-        currentPlanId: req.body.currentPlanId,
-        offer: req.body.offer,
-        offerStartDate: req.body.offerStartDate,
-        offerEndDate: req.body.offerEndDate,
-        dateSubscribed: req.body.dateSubscribed,
-        validTo: req.body.validTo,
-        dateUnsubscribed: req.body.dateUnsubscribed,
-        subscriptionId: razorpaySubscription.id,
-        companyId: req.cookies.companyId,
-        razorpaySubscription: razorpaySubscription
-      });
-  
-      // Save the new subscription to the database
-      const savedSubscription = await newSubscription.save();
-  
-      res.status(201).json({
-        status: 'success',
-        data: {
-          subscription: savedSubscription,
-        },
-      });
-    }
+
+    // Save the new subscription to the database
+    const savedSubscription = await newSubscription.save();
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        subscription: savedSubscription,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -1310,36 +1273,6 @@ exports.getSubscriptionDetailsById = async (req, res) => {
   }
 };
 
-exports.activateSubscription = async (req, res) => {
-  try {
-    const subscriptionId = req.params.id;
-    // Find the subscription by ID
-    const subscription = await Subscription.findOneAndUpdate({
-      subscriptionId: subscriptionId,
-    },
-    {
-        "razorpaySubscription.status": 'active'
-    });
-
-    if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        subscription,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
-}
-
 exports.updateSubscriptionDetails = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
@@ -1405,24 +1338,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
 exports.getAllSubscriptionDetails = async (req, res) => {
   try {
     // Fetch all subscriptions
-    const subscriptions = await Subscription.aggregate([
-      {
-        $lookup: {
-        from: "companies",              // The collection to join with
-        let: { company_id: { $toObjectId: "$companyId" } },  // Convert companyID to ObjectId
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ["$_id", "$$company_id"] }  // Match the converted company_id with _id in companies
-            }
-          }
-        ],
-        as: "companyDetails"            // The alias for the joined data (an array of matched documents)
-      }
-    },
-    {
-      $unwind: "$companyDetails"        // Flatten the result to get a single company object per subscription
-    }]);
+    const subscriptions = await Subscription.find();
 
     res.status(200).json({
       status: 'success',
@@ -1435,85 +1351,6 @@ exports.getAllSubscriptionDetails = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',
-    });
-  }
-};
-
-exports.pauseResumeSubscription = async (req, res) => {
-  try {
-    const subscriptionId = req.body.subscriptionId;
-    const action = req.body.action || 'pause'; // pause or resume
-    let subscription;
-    if(action === 'pause'){
-      subscription = await razorpay.subscriptions.pause(subscriptionId,{
-        "pause_at" : 'now'
-      });
-    } else {
-      subscription = await razorpay.subscriptions.resume(subscriptionId,{
-        "resume_at" : 'now'
-      });
-    }
-    // Find the subscription by subscriptionId and update
-    const updatedSubscription = await Subscription.findOneAndUpdate(
-      {subscriptionId: subscriptionId},
-      {razorpaySubscription: subscription}
-    );
-
-    if (!updatedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        subscription: updatedSubscription,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(err.statusCode || 500).json({
-      status: 'error',
-      message: err?.error?.description || 'Internal server error',
-    });
-  }
-};
-
-exports.cancelSubscription = async (req, res) => {
-  try {
-    const subscriptionId = req.body.subscriptionId;
-    const cancelAtCycleEnd = req.body.cancelAtCycleEnd === 0 ? 0 : 1; // default is 1, if no value is provided
-    const subscription = await razorpay.subscriptions.cancel(subscriptionId, 
-      cancelAtCycleEnd === 1 
-    );
-    
-    // Find the subscription by subscriptionId and update
-    const updatedSubscription = await Subscription.findOneAndUpdate(
-      {subscriptionId: subscriptionId},
-      {
-        razorpaySubscription: subscription,
-        dateUnsubscribed: new Date()
-      }
-    );
-
-    const fetchedSubscription = await Subscription.findOne({
-      subscriptionId: subscriptionId
-    })
-
-    if (!updatedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        subscription: fetchedSubscription,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(err.statusCode || 500).json({
-      status: 'error',
-      message: err?.error?.description || 'Internal server error',
     });
   }
 };
@@ -1804,39 +1641,6 @@ exports.getInvoiceById = async (req, res) => {
     });
   }
 };
-exports.getInvoiceBySubscriptionId = async (req, res) => {
-  try {
-    const subscriptionId = req.params.id;
-
-    // Validate if subscription ID is provided 
-    if (!subscriptionId) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
-    }
-
-    // Check if the invoice with the provided ID exists
-    const invoice = await Invoice.find({subscription_id: subscriptionId})
-      .populate('subscription')
-      .exec();
-
-    if (!invoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        invoice: invoice,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
-};
-
 // Controller method
 exports.updateInvoiceById = async (req, res) => {
   try {
@@ -2098,6 +1902,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
+<<<<<<< HEAD
 });
 
 exports.razorpayCredential = catchAsync(async (req, res, next) => {
@@ -2174,4 +1979,6 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
     console.log(error);
     res.status(400).send(error);
   }
+=======
+>>>>>>> parent of c6ff28d (Merge branch 'subscription' into develop)
 });
