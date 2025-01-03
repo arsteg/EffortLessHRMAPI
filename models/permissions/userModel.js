@@ -165,7 +165,7 @@ const userSchema = new mongoose.Schema({
 userSchema.pre(/^find/,async function(next) {
   this.populate({
     path: 'company',
-    select: 'companyName'
+    select: 'companyName freeCompany'
   }).populate({
     path: 'role',
     select: 'roleName'

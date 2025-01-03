@@ -49,12 +49,16 @@ var subscriptionSchema = new Schema({
     type: Date,
     // required: true,
   },
+  
   subscriptionId:{
     type: String
   },
   companyId: {
     type: String
-  }
+  },
+  razorpaySubscription: {
+    type: Object
+  },
 }, { collection: 'Subscription' });
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

@@ -6,27 +6,31 @@ var invoiceSchema = new Schema({
     type: Date,
     required: true
   },
+  subscription_id:{
+    type: String,
+    required: true
+  },
   subscription: {
     type: mongoose.Schema.ObjectId,
     ref: 'Subscription',
-    required: true
+    // required: true
   },
   planHistory: {
     type: mongoose.Schema.ObjectId,
     ref: 'PlanHistory',
-    required: true
+    // required: true
   },
   invoicePeriodStartDate: {
     type: Date,
-    required: true
+    // required: true
   },
   invoicePeriodEndDate: {
     type: Date,
-    required: true
+    // required: true
   },
   description: {
     type: String,
-    required: true
+    // required: true
   },
   amount: {
     type: Number,
@@ -34,11 +38,18 @@ var invoiceSchema = new Schema({
   },
   dueDate: {
     type: Date,
-    required: true
+    // required: true
   },
   IsPaid: {
     type: Boolean,
     required: true
+  },
+  invoice_id: {
+    type: String,
+    required: true
+  },
+  payment_info: {
+    type: Object
   }
 }, { collection: 'Invoice' });
 
