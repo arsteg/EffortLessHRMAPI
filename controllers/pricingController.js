@@ -226,7 +226,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
       });
     }
   }  catch (error) {
-    console.log(error);
+    console.log(error, process.env.RAZORPAY_KEY);
     res.status(500).json({
       status: 'error',
       error: error,
