@@ -79,7 +79,7 @@ const createAndSendToken = async (user, statusCode, res) => {
     companyId: user.company.id,
     "razorpaySubscription.status": {$nin: ["cancelled"]}
   }).populate("currentPlanId");
-  
+  console.log(subscription)
   let companySubscription = {status: 'new'};
   if (subscription) {
     const razorpaySubscription = await razorpay.subscriptions.fetch(subscription.subscriptionId);
