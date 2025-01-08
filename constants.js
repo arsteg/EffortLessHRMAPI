@@ -29,6 +29,7 @@ const Email_template_constant = {
   const User_Status = {   
     Active: "Active",
     Deleted: "Deleted",
+    Resigned: "Resigned",
     Terminated: "Terminated",
     Inactive: "Inactive",
     FNF_Attendance_Processed: "FNF Attendance Processed",

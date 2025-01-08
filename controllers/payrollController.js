@@ -1807,7 +1807,7 @@ exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
 // Get all FlexiBenefitsCategory by company
 exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
   async (req, res, next) => {
-    const { companyId } = req.cookies.companyId;
+    const companyId  = req.cookies.companyId;   
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
     const totalCount = await FlexiBenefitsCategory.countDocuments({
@@ -3246,7 +3246,7 @@ exports.getPayrollLoanAdvanceByPayroll = catchAsync(async (req, res, next) => {
 // Extract _id values from payrollUsers payrollUserIds
 const payrollUserIds = payrollUsers.map(user => user._id);
 // Use the array of IDs to fetch related PayrollAttendanceSummary records
-const payrollLoanAdvanceList = await PayrollLoanAdvance.find({ payrollUser: { $in: payrollUserIds } }); 
+const payrollLoanAdvanceList = await PayrollLoanAdvance.find({ payrollUser: { $in: payrollUserIds } });
   res.status(200).json({
     status: 'success',
     data: payrollLoanAdvanceList
