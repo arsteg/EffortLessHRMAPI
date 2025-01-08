@@ -217,6 +217,39 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  */
 router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
 
+// Route to get users by empCode
+/**
+ * @swagger
+ * /api/v1/users/getUsersByEmpCode/{empCode}:
+ *  get:
+ *      tags:
+ *          - User Management
+ *      summary: "Get User Based On empcode"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: empCode
+ *         in: path
+ *         description: Employee Code
+ *         required: true
+ *         schema:
+ *           type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getUsersByEmpCode/:empCode',authController.protect,userController.getUsersByEmpCode);
+
+
+
 /**
  * @swagger
  * /api/v1/users/getusers:

@@ -143,6 +143,28 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
       },
   });
 });
+
+// Function to get the list of users by empCode
+exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
+  const { empCode } = req.params;  // Get empCode from route parameter
+
+  // Find appointments that match the empCode
+  const appointments = await Appointment.find({ empCode })
+    .populate('user')  // Populate the user field with user details
+    .select('user empCode company joiningDate confirmationDate');  // Select relevant fields
+
+  // If no appointments are found for the empCode
+  if (!appointments || appointments.length === 0) {
+    return next(new AppError('No users found with the provided empCode.', 404));
+  }
+
+  // Respond with the list of users
+  res.status(200).json({
+    status: 'success',
+    data: appointments.map(appointment => appointment.user)
+  });
+});
+
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {
   const users = await User.find({
     status: { $ne: constants.User_Status.Deleted },
