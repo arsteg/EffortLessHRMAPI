@@ -22,7 +22,7 @@ const mongoose = require('mongoose');
 const constants = require('../constants');
 const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
-
+const Appointment = require("../models/permissions/appointmentModel");
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY || 'rzp_test_xQi4sKdFNrIe2z',
   key_secret: process.env.RAZORPAY_SECRET || 'TsqTbMnOdEpdpt8LN6NDhujX',
@@ -222,6 +222,15 @@ else
   }); 
   if(newUser)
   {
+    const newAppointment = new Appointment({
+      user: newUser._id,   // Linking the user with the attendance record
+      salaryTypePaid: '',
+      joiningDate: null,
+      confirmationDate: null,
+      // Add other necessary fields here as empty or default values
+      company: company.id,
+    });
+    await newAppointment.save();
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
  if(emailTemplate)
@@ -272,6 +281,16 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     updatedBy: req.cookies.userId,
     company: req.cookies.companyId
   }); 
+  const newAppointment = new Appointment({
+    user: newUser._id,   // Linking the user with the attendance record
+    salaryTypePaid: '',
+    joiningDate: null,
+    confirmationDate: null,
+    // Add other necessary fields here as empty or default values
+    company: req.cookies.companyId,
+  });
+  await newAppointment.save();
+ 
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 

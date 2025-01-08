@@ -155,7 +155,8 @@ const userSchema = new mongoose.Schema({
   },
   BankAddress: {
     type: String
-  }
+  },
+  appointment: []
 },
 {
  toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
