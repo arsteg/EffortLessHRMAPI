@@ -335,7 +335,7 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
   const assets = await  Asset.findOne({
     status: req.params.id
   });
-  if (assets.length > 0) {
+  if (assets?.length > 0) {
     return res.status(400).json({
       status: 'failed',
       message: 'Asset Status cannot be deleted as it is associated with existing assets',
@@ -352,13 +352,24 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
-  const assetStatuses = await AssetStatus.find({
-    company: req.cookies.companyId,
-  });
+  const companyId = req.cookies.companyId;
+  // Fetch all AssetStatuses for the company
+  const assetStatuses = await AssetStatus.find({ company: companyId });
+
+   // Check if each AssetStatus is used in any Asset
+   const assetStatusesWithDeletableFlag = await Promise.all(
+    assetStatuses.map(async (status) => {
+      const assetCount = await Asset.countDocuments({ status: status._id });
+      return {
+        ...status.toObject(), // Convert Mongoose document to plain object
+        isDeletable: assetCount === 0, // true if no assets reference this status
+      };
+    })
+  );
   res.status(200).json({
-    status: "success",
-    data: assetStatuses,
-  });
+    status: 'success',
+    data: assetStatusesWithDeletableFlag,
+  });  
 });
 
 exports.createCustomAttribute = catchAsync(async (req, res, next) => {
