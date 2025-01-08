@@ -7,7 +7,127 @@ const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterview
 const SeparationTemplateSettings = require('../models/Separation/SeparationTemplateSettings');
 const InitiateSeparationRequest = require('../models/Separation/InitiateSeparationRequest');
 const SeparationRequest = require('../models/Separation/SeparationRequest'); // Import your SeparationRequest model
+const User = require('../models/permissions/userModel');
+const Resignation = require("../models/Separation/Resignation");
+const { Constants } = require('azure-storage');
+const constants = require('../constants');
+// Add a Resignation
+exports.addResignation = catchAsync(async (req, res, next) => {
+  console.log( req.cookies.companyId);
+  const resignationData = {
+    ...req.body,
+    company:  req.cookies.companyId,  // Company ID from cookies
+  };
 
+  const resignation = await Resignation.create(resignationData);
+  res.status(201).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by User
+exports.getResignationByUser = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findOne({ user: req.params.userId, company: req.cookies.companyId });
+  if (!resignation) {
+    return next(new AppError('No resignation record found for this user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by Resignation Status
+exports.getResignationByStatus = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.find({ resignation_status: req.params.status, company: req.cookies.companyId });
+  if (resignation.length === 0) {
+    return next(new AppError('No resignations found with this status', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by Company
+exports.getResignationByCompany = catchAsync(async (req, res, next) => {
+  const resignations = await Resignation.find({ company: req.cookies.companyId });
+  if (!resignations || resignations.length === 0) {
+    return next(new AppError('No resignations found for this company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignations
+  });
+});
+
+// Update Resignation only if status is "pending"
+exports.updateResignation = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+
+  if (resignation.resignation_status !== 'pending') {
+    return next(new AppError('Resignation status must be pending to update', 400));
+  }
+
+  const updatedResignation = await Resignation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedResignation
+  });
+});
+
+// Change Resignation Status
+exports.changeResignationStatus = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+  resignation.resignation_status = req.body.resignation_status;
+  await resignation.save();
+  if (resignation.resignation_status === 'approved') {
+    const user = await User.findById(resignation.user);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Update the user's status to 'resigned' (or any status that fits your use case)
+    user.status = constants.User_Status.Resigned;
+    await user.save();
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Delete Resignation
+exports.deleteResignation = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+
+  if (resignation.resignation_status !== 'pending') {
+    return next(new AppError('Resignation status must be pending to delete', 400));
+  }
+  const resignationDelete = await Resignation.findByIdAndDelete(req.params.id);
+  if (!resignationDelete) {
+    return next(new AppError('Resignation record not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies

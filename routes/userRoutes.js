@@ -203,7 +203,7 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *         required: true
  *         schema:
  *           type: string
- *           enum: [Active, Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
+ *           enum: [Active,Resigned,Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
  *      produces:
  *          - application/json
  *      responses:
