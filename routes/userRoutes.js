@@ -203,7 +203,7 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *         required: true
  *         schema:
  *           type: string
- *           enum: [Active, Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
+ *           enum: [Active,Resigned,Deleted,Terminated,Inactive,FNF Attendance Processed,FNF Payroll Calculated,FNF Payment Processed,Settled]  # Or any other valid status values
  *      produces:
  *          - application/json
  *      responses:
@@ -216,6 +216,39 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *
  */
 router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
+
+// Route to get users by empCode
+/**
+ * @swagger
+ * /api/v1/users/getUsersByEmpCode/{empCode}:
+ *  get:
+ *      tags:
+ *          - User Management
+ *      summary: "Get User Based On empcode"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: empCode
+ *         in: path
+ *         description: Employee Code
+ *         required: true
+ *         schema:
+ *           type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/getUsersByEmpCode/:empCode',authController.protect,userController.getUsersByEmpCode);
+
+
 
 /**
  * @swagger
@@ -2330,6 +2363,132 @@ router.put('/employee-income-tax-declarations-componant', authController.protect
  *         description: Internal server error
  */
 router.put('/employee-income-tax-declarations-hra', authController.protect, userController.updateEmployeeIncomeTaxDeclarationHRA);
+
+/**
+ * @swagger
+ * /api/v1/users/appointments:
+ *   post:
+ *     summary: Create a new appointment
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Appointment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               salaryTypePaid:
+ *                 type: string
+ *               joiningDate:
+ *                 type: integer
+ *               confirmationDate:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Appointment successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/appointments',  authController.protect, userController.createAppointment);
+
+/**
+ * @swagger
+ * /api/v1/users/appointments/{userId}:
+ *   get:
+ *     summary: Get appointment by user
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the appointment
+ *       404:
+ *         description: No appointment found for this user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/appointments/:userId',  authController.protect, userController.getAppointmentByUser);
+
+/**
+ * @swagger
+ * /api/v1/user/appointments/{id}:
+ *   put:
+ *     summary: Update an appointment
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the appointment
+ *     requestBody:
+ *       description: Updated appointment details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               salaryTypePaid:
+ *                 type: string
+ *               joiningDate:
+ *                 type: integer
+ *               confirmationDate:
+ *                 type: integer
+ *               company:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully updated the appointment
+ *       404:
+ *         description: No appointment found with that ID
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/appointments/:id',  authController.protect, userController.updateAppointment);
+
+/**
+ * @swagger
+ * /api/v1/users/appointments/{id}:
+ *   delete:
+ *     summary: Delete an appointment
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the appointment
+ *     responses:
+ *       204:
+ *         description: Appointment successfully deleted
+ *       404:
+ *         description: No appointment found with that ID
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/appointments/:id',  authController.protect, userController.deleteAppointment);
 
 router
   .route('/:id')

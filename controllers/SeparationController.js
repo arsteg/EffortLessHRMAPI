@@ -7,7 +7,266 @@ const ExitInterviewQuestionAnswers = require('../models/Separation/ExitInterview
 const SeparationTemplateSettings = require('../models/Separation/SeparationTemplateSettings');
 const InitiateSeparationRequest = require('../models/Separation/InitiateSeparationRequest');
 const SeparationRequest = require('../models/Separation/SeparationRequest'); // Import your SeparationRequest model
+const User = require('../models/permissions/userModel');
+const Resignation = require("../models/Separation/Resignation");
+const { Constants } = require('azure-storage');
+const constants = require('../constants');
+const Termination = require('../models/Separation/Termination');
 
+// Add a Resignation
+exports.addResignation = catchAsync(async (req, res, next) => {
+  console.log( req.cookies.companyId);
+  const resignationData = {
+    ...req.body,
+    company:  req.cookies.companyId,  // Company ID from cookies
+  };
+
+  const resignation = await Resignation.create(resignationData);
+  res.status(201).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by User
+exports.getResignationByUser = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findOne({ user: req.params.userId, company: req.cookies.companyId });
+  if (!resignation) {
+    return next(new AppError('No resignation record found for this user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by Resignation Status
+exports.getResignationByStatus = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.find({ resignation_status: req.params.status, company: req.cookies.companyId });
+  if (resignation.length === 0) {
+    return next(new AppError('No resignations found with this status', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Get Resignation by Company
+exports.getResignationByCompany = catchAsync(async (req, res, next) => {
+  const resignations = await Resignation.find({ company: req.cookies.companyId });
+  if (!resignations || resignations.length === 0) {
+    return next(new AppError('No resignations found for this company', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignations
+  });
+});
+
+// Update Resignation only if status is "pending"
+exports.updateResignation = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+
+  if (resignation.resignation_status !== 'pending') {
+    return next(new AppError('Resignation status must be pending to update', 400));
+  }
+
+  const updatedResignation = await Resignation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedResignation
+  });
+});
+
+// Change Resignation Status
+exports.changeResignationStatus = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+  resignation.resignation_status = req.body.resignation_status;
+  await resignation.save();
+  if (resignation.resignation_status === 'approved') {
+    const user = await User.findById(resignation.user);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Update the user's status to 'resigned' (or any status that fits your use case)
+    user.status = constants.User_Status.Resigned;
+    await user.save();
+  }
+  res.status(200).json({
+    status: 'success',
+    data: resignation
+  });
+});
+
+// Delete Resignation
+exports.deleteResignation = catchAsync(async (req, res, next) => {
+  const resignation = await Resignation.findById(req.params.id);
+  if (!resignation) {
+    return next(new AppError('Resignation not found', 404));
+  }
+
+  if (resignation.resignation_status !== 'pending') {
+    return next(new AppError('Resignation status must be pending to delete', 400));
+  }
+  const resignationDelete = await Resignation.findByIdAndDelete(req.params.id);
+  if (!resignationDelete) {
+    return next(new AppError('Resignation record not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// Add a new termination record
+exports.addTermination = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId;  // Fetch company from cookies
+  const { user, termination_date, termination_reason, termination_status } = req.body;
+
+  // Create new termination record
+  const termination = await Termination.create({
+    ...req.body,
+    company: company,
+    user: user,
+    termination_status: termination_status || 'completed',  // default status
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: termination
+  });
+});
+
+// Get termination by user ID
+exports.getTerminationByUser = catchAsync(async (req, res, next) => {
+  const termination = await Termination.findOne({ user: req.params.userId , company: req.cookies.companyId});
+
+  if (!termination) {
+    return next(new AppError('Termination not found for this user', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: termination
+  });
+});
+
+// Get termination by status (pending, completed, appealed)
+exports.getTerminationByStatus = catchAsync(async (req, res, next) => {
+  const terminationStatus = req.params.terminationStatus;
+
+  const terminations = await Termination.find({ termination_status: terminationStatus , company: req.cookies.companyId});
+
+  if (!terminations || terminations.length === 0) {
+    return next(new AppError('No terminations found with that status', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: terminations
+  });
+});
+
+// Get terminations by company (from cookies)
+exports.getTerminationByCompany = catchAsync(async (req, res, next) => {
+  const company = req.cookies.companyId;
+
+  const terminations = await Termination.find({ company: company });
+
+  res.status(200).json({
+    status: 'success',
+    data: terminations
+  });
+});
+
+// Update termination record (only if status is 'pending')
+exports.updateTermination = catchAsync(async (req, res, next) => {
+  const termination = await Termination.findById(req.params.id);
+
+  if (!termination || termination.termination_status !== 'pending') {
+    return next(new AppError('Termination not found or not in pending status', 400));
+  }
+
+  const updatedTermination = await Termination.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedTermination
+  });
+});
+
+ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
+  // Extract new termination status from request body
+  const { termination_status } = req.body;
+
+  // List of valid termination statuses
+  const validStatuses = ['pending', 'completed', 'appealed'];
+
+  // Validate the provided status
+  if (!validStatuses.includes(termination_status)) {
+    return next(new AppError('Invalid termination status provided. Valid statuses are: pending, completed, appealed, resignation.', 400));
+  }
+
+  // Retrieve the termination record by ID
+  const termination = await Termination.findById(req.params.id);
+
+  // If no termination record is found, return 404 error
+  if (!termination) {
+    return next(new AppError('Termination record not found', 404));
+  }
+
+  // Update the termination status
+  termination.termination_status = termination_status;
+
+  // Save the updated termination document
+  const updatedTermination = await termination.save();
+  if ( termination.termination_status === 'completed') {
+    const user = await User.findById(termination.user);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Update the user's status to 'resigned' (or any status that fits your use case)
+    user.status = constants.User_Status.Terminated;
+    await user.save();
+  }
+  // Respond with the updated termination document
+  res.status(200).json({
+    status: 'success',
+    data: updatedTermination
+  });
+});
+
+
+// Delete termination record
+exports.deleteTermination = catchAsync(async (req, res, next) => {
+  const termination = await Termination.findByIdAndDelete(req.params.id);
+
+  if (!termination) {
+    return next(new AppError('Termination not found', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
    // Extract companyId from req.cookies

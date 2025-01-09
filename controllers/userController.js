@@ -43,6 +43,8 @@ const constants = require('../constants');
 const { BlobServiceClient } = require("@azure/storage-blob");
 const OTP = require("../models/commons/otp");
 const sendEmail = require('../utils/email');
+const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
+
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -69,12 +71,19 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   // Run created query
   // .explain() to return more information
   // const document = await features.query.explain();
-  const document = await features.query;
+  const users = await features.query;
+  for (let user of users) {
+    // Fetch the appointments for each user based on the user._id
+    const appointments = await Appointment.find({ user: user._id });
+
+    // Attach the appointments to the user object
+    user.appointment = appointments;
+  }
   res.status(201).json({
     status: "success",
-    results: document.length,
+    results: users.length,
     data: {
-      data: document,
+      data: users,
     },
   });
 });
@@ -134,6 +143,28 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
       },
   });
 });
+
+// Function to get the list of users by empCode
+exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
+  const { empCode } = req.params;  // Get empCode from route parameter
+
+  // Find appointments that match the empCode
+  const appointments = await Appointment.find({ empCode })
+    .populate('user')  // Populate the user field with user details
+    .select('user empCode company joiningDate confirmationDate');  // Select relevant fields
+
+  // If no appointments are found for the empCode
+  if (!appointments || appointments.length === 0) {
+    return next(new AppError('No users found with the provided empCode.', 404));
+  }
+
+  // Respond with the list of users
+  res.status(200).json({
+    status: 'success',
+    data: appointments.map(appointment => appointment.user)
+  });
+});
+
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {
   const users = await User.find({
     status: { $ne: constants.User_Status.Deleted },
@@ -144,6 +175,61 @@ exports.getUsersByCompany = catchAsync(async (req, res, next) => {
     data: {
       users: users,
     },
+  });
+});
+
+// controllers/appointmentController.js
+exports.createAppointment = catchAsync(async (req, res, next) => {
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError("Company ID not found in cookies", 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const appointment = await Appointment.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: appointment
+  });
+});
+
+exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
+  const appointment = await Appointment.findOne({ user: req.params.userId }).populate('company', 'name');
+  if (!appointment) {
+    return next(new AppError('No appointment found for this user', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: appointment
+  });
+});
+
+exports.updateAppointment = catchAsync(async (req, res, next) => {
+  const appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!appointment) {
+    return next(new AppError('No appointment found with that ID', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: appointment
+  });
+});
+
+exports.deleteAppointment = catchAsync(async (req, res, next) => {
+  const appointment = await Appointment.findByIdAndDelete(req.params.id);
+  if (!appointment) {
+    return next(new AppError('No appointment found with that ID', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
   });
 });
 
@@ -1895,7 +1981,7 @@ exports.generateOTP = catchAsync(
           createdAt: new Date(),
           status: 'active'
       });
-console.log(newOTP);
+      console.log(newOTP);
       // Save the pincode in the database
       const message=`Your OTP is ${otp}`;
       await newOTP.save();

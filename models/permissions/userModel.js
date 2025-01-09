@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'Deleted','Terminated','Inactive','Settled','FNF Attendance Processed','FNF Payroll Calculated','FNF Payment Processed'],
+    enum: ['Active', 'Deleted','Resigned','Terminated','Inactive','Settled','FNF Attendance Processed','FNF Payroll Calculated','FNF Payment Processed'],
     default: 'Active'
   },
   company: {
@@ -155,7 +155,8 @@ const userSchema = new mongoose.Schema({
   },
   BankAddress: {
     type: String
-  }
+  },
+  appointment: []
 },
 {
  toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
