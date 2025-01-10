@@ -1207,6 +1207,7 @@ exports.addSubscriptionDetails = async (req, res) => {
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
     // If already have a subscription
+    console.log(subscription.currentPlanId === req.body.currentPlanId)
     if(subscription && subscription.currentPlanId === req.body.currentPlanId) {
       res.status(201).json({
         status: 'success',
