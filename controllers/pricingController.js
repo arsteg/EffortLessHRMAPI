@@ -226,7 +226,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
       });
     }
   }  catch (error) {
-    console.log(error);
+    console.log(error, process.env.RAZORPAY_KEY);
     res.status(500).json({
       status: 'error',
       error: error,
@@ -1202,17 +1202,22 @@ exports.addSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
 
-    const subscription = await Subscription.findOne({
+    const subscriptions = await Subscription.find({
       companyId: req.cookies.companyId,
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
     // If already have a subscription
+    const subscription = subscriptions.find(subscription => {
+      return subscription.currentPlanId.toString() === req.body.currentPlanId && 
+      subscription.razorpaySubscription.status === 'created'
+    });
     if(subscription) {
       res.status(201).json({
         status: 'success',
         data: {subscription},
       });
     } else {
+
       // Fetch Razorpay plan id from mongoDb Plans
       const razorpayPlanid = isValidCurrentPlan.planId
   

@@ -79,7 +79,7 @@ const createAndSendToken = async (user, statusCode, res) => {
     companyId: user.company.id,
     "razorpaySubscription.status": {$nin: ["cancelled"]}
   }).populate("currentPlanId");
-  
+  console.log(subscription)
   let companySubscription = {status: 'new'};
   if (subscription) {
     const razorpaySubscription = await razorpay.subscriptions.fetch(subscription.subscriptionId);
@@ -406,6 +406,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   
   if (!subscription) {
     const companyDetails = await Company.findById(currentUser.company._id);
+    console.log('companyDetails',companyDetails)
     if(!companyDetails.freeCompany){
       return next(
         new AppError(
