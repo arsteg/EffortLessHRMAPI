@@ -1202,17 +1202,16 @@ exports.addSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid currentPlanId ID' });
     }
 
-    const subscription = await Subscription.findOne({
+    const subscription = await Subscription.find({
       companyId: req.cookies.companyId,
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
     // If already have a subscription
-    console.log(subscription.currentPlanId.toString() , req.body.currentPlanId)
     return res.status(201).json({
       status: 'success',
       data: {subscription},
     });
-    if(subscription && subscription.currentPlanId === req.body.currentPlanId) {
+    if(subscription && subscription.currentPlanId.toString() === req.body.currentPlanId) {
       res.status(201).json({
         status: 'success',
         data: {subscription},
