@@ -1207,13 +1207,18 @@ exports.addSubscriptionDetails = async (req, res) => {
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
     // If already have a subscription
-    console.log(subscription.currentPlanId , req.body.currentPlanId)
+    console.log(subscription.currentPlanId.toString() , req.body.currentPlanId)
+    return res.status(201).json({
+      status: 'success',
+      data: {subscription},
+    });
     if(subscription && subscription.currentPlanId === req.body.currentPlanId) {
       res.status(201).json({
         status: 'success',
         data: {subscription},
       });
     } else {
+
       // Fetch Razorpay plan id from mongoDb Plans
       const razorpayPlanid = isValidCurrentPlan.planId
   
