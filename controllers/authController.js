@@ -406,6 +406,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   
   if (!subscription) {
     const companyDetails = await Company.findById(currentUser.company._id);
+    console.log('companyDetails',companyDetails)
     if(!companyDetails.freeCompany){
       return next(
         new AppError(
