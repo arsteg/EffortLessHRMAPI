@@ -199,10 +199,7 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
 
 exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findOne({ user: req.params.userId }).populate('company', 'name');
-  if (!appointment) {
-    return next(new AppError('No appointment found for this user', 404));
-  }
-  res.status(200).json({
+   res.status(200).json({
     status: 'success',
     data: appointment
   });
