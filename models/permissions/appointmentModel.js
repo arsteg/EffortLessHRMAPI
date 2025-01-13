@@ -15,10 +15,10 @@ var appointmentModelSchema = new Schema({
     type: String
   },
   joiningDate: {
-    type: Number
+    type: Date
   },
   confirmationDate: {
-    type: Number
+    type: Date
   },
   company: {
     type: mongoose.Schema.ObjectId,

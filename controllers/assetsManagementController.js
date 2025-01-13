@@ -65,7 +65,7 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
   const customAttributeModel = await  CustomAttributeModel.findOne({
     assetType: req.params.id
   });
-  if (assetExists.length > 0 || customAttributeModel.length > 0) {
+  if (assetExists?.length > 0 || customAttributeModel?.length > 0) {
     return res.status(400).json({
       status: 'failed',
       message: 'AssetType cannot be deleted as it is associated with existing assets',
@@ -95,21 +95,34 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
-  const assetTypes = await AssetType.find({ company: req.cookies.companyId });
-  const allAssetTypes = await Promise.all(
-    assetTypes.map(async (asset) => {
-      const assetObj = asset.toObject(); // Convert to plain JS object
+  const companyId = req.cookies.companyId;
+
+  // Fetch all AssetTypes for the company
+  const assetTypes = await AssetType.find({ company: companyId });
+
+  // Add isDeletable flag and customAttributes to each AssetType
+  const assetTypesWithDeletableFlag = await Promise.all(
+    assetTypes.map(async (assetType) => {
+      const assetTypeObj = assetType.toObject(); // Convert Mongoose document to plain object
+
+      // Check if the AssetType is used in any Asset
+      const assetCount = await Asset.countDocuments({ assetType: assetType._id });
+      assetTypeObj.isDeletable = assetCount === 0; // true if no assets reference this type
+
+      // Fetch customAttributes for the AssetType
       const customAttributes = await CustomAttribute.find({
-        assetType: asset.id,
-        company: req.cookies.companyId,
+        assetType: assetType._id,
+        company: companyId,
       });
-      assetObj.customAttributes = customAttributes;
-      return assetObj;
+      assetTypeObj.customAttributes = customAttributes;
+
+      return assetTypeObj;
     })
-  );  
+  );
+
   res.status(200).json({
     status: "success",
-    data: allAssetTypes,
+    data: assetTypesWithDeletableFlag,
   });
 });
 
