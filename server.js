@@ -65,10 +65,13 @@ const DB = process.env.DATABASE.replace(
   process.env.DATABASE_PASSWORD
 );
 //Connect to database
+mongoose.set('strictQuery', true);
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    socketTimeoutMS: 60000, // 60 seconds
+    connectTimeoutMS: 60000, // 60 seconds
   })
   .then(() => {
     console.log('DB connection successful.');
