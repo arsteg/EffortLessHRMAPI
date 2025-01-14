@@ -75,15 +75,17 @@ const createAndSendToken = async (user, statusCode, res) => {
   // Remove password from the output
   user.password = undefined;
 
-  const subscription = await Subscription.findOne({
+  const subscriptions = await Subscription.find({
     companyId: user.company.id,
     "razorpaySubscription.status": {$nin: ["cancelled"]}
   }).populate("currentPlanId");
-  console.log(subscription)
+  const activeSubscription = subscriptions.find((item)=>{return item.razorpaySubscription.status === 'active'});
   let companySubscription = {status: 'new'};
-  if (subscription) {
-    const razorpaySubscription = await razorpay.subscriptions.fetch(subscription.subscriptionId);
-    companySubscription = razorpaySubscription
+  if(activeSubscription){
+    companySubscription = activeSubscription.razorpaySubscription;
+  } else if(subscriptions.length > 0){
+    const razorpaySubscription = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
+    companySubscription = razorpaySubscription;
   }
 
 
