@@ -1,4 +1,3 @@
-
 const Software = require('../models/pricing/softwareModel');
 const Option = require('../models/pricing/optionModel');
 const Plan = require('../models/pricing/planModel');
@@ -1326,22 +1325,23 @@ exports.getSubscriptionDetailsById = async (req, res) => {
 exports.activateSubscription = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
-    // Find the subscription by ID
-    const subscription = await Subscription.findOneAndUpdate({
-      subscriptionId: subscriptionId,
-    },
-    {
-        "razorpaySubscription.status": 'active'
-    });
+    // Find the subscription by ID and update its status to 'active'
+    await Subscription.findOneAndUpdate(
+      { subscriptionId: subscriptionId },
+      { "razorpaySubscription.status": 'active' }
+    );
 
-    if (!subscription) {
+    // Fetch the updated subscription
+    const updatedSubscription = await Subscription.findOne({ subscriptionId: subscriptionId });
+
+    if (!updatedSubscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
 
     res.status(200).json({
       status: 'success',
       data: {
-        subscription,
+        subscription: updatedSubscription,
       },
     });
   } catch (err) {
