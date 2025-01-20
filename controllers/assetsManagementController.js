@@ -12,20 +12,54 @@ const mongoose = require("mongoose");
 const CustomAttributeModel = require("../models/AssetsManagement/CustomAttributeModel");
 
 exports.addAssetType = catchAsync(async (req, res, next) => {
-  const response = new AssetType({
-    typeName: req.body.typeName,
-    description: req.body.description,
-    company: req.cookies.companyId,
-  });
+  const session = await mongoose.startSession(); // Start a MongoDB session for a transaction
+  session.startTransaction();
 
-  response.save((err, savedAssetType) => {
-    if (err) return console.error(err);
-    console.log(savedAssetType);
-  });
-  res.status(201).json({
-    status: "success",
-    data: response,
-  });
+  try {
+    const { typeName, description, customAttributes} = req.body;
+    const company = req.cookies.companyId;
+
+    // Create the AssetType
+    const assetType = new AssetType({
+      typeName,
+      description,
+      company,
+    });
+
+    const savedAssetType = await assetType.save({ session });
+
+    // Validate and create CustomAttributes
+    if (customAttributes && Array.isArray(customAttributes)) {
+      const customAttributesData = customAttributes.map((attr) => ({
+        attributeName: attr.attributeName,
+        description: attr.description,
+        dataType: attr.dataType,
+        isRequired: attr.isRequired,
+        company: company,
+        assetType: savedAssetType._id,
+      }));
+
+      await CustomAttribute.insertMany(customAttributesData, { session });
+    }
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      status: 'success',
+      message: 'AssetType and CustomAttributes successfully created',
+      data: {
+        assetType: savedAssetType,
+        customAttributes,
+      },
+    });
+  } catch (error) {
+    await session.abortTransaction(); // Roll back in case of any error
+    session.endSession();
+    console.error(error);
+    next(error); // Pass the error to the error handling middleware
+  }
 });
 
 exports.getAssetTypes = catchAsync(async (req, res, next) => {
@@ -42,57 +76,136 @@ exports.getAssetTypes = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAssetType = catchAsync(async (req, res, next) => {
-  const assetType = await AssetType.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!assetType) {
-    return next(new AppError("AssetType not found", 404));
+  const session = await mongoose.startSession(); // Start a MongoDB session for a transaction
+  session.startTransaction();
+
+  try {
+    const { typeName, description, customAttributes } = req.body;
+
+    // Update the AssetType
+    const assetType = await AssetType.findByIdAndUpdate(
+      req.params.id,
+      { typeName, description },
+      {
+        new: true,
+        runValidators: true,
+        session,
+      }
+    );
+
+    if (!assetType) {
+      await session.abortTransaction(); // Roll back in case of error
+      session.endSession();
+      return next(new AppError("AssetType not found", 404));
+    }
+
+    if (customAttributes && Array.isArray(customAttributes)) {
+      // Fetch existing CustomAttributes for the AssetType
+      const existingAttributes = await CustomAttribute.find(
+        { assetType: req.params.id },
+        null,
+        { session }
+      );
+
+      // Separate operations
+      const toDelete = existingAttributes.filter(
+        (attr) => !customAttributes.some((newAttr) => newAttr._id === String(attr._id))
+      );
+      const toUpdate = customAttributes.filter((newAttr) =>
+        existingAttributes.some((attr) => String(attr._id) === newAttr._id)
+      );
+      const toCreate = customAttributes.filter(
+        (newAttr) => !newAttr._id || !existingAttributes.some((attr) => String(attr._id) === newAttr._id)
+      );
+
+      // Delete removed attributes
+      if (toDelete.length > 0) {
+        const deleteIds = toDelete.map((attr) => attr._id);
+        await CustomAttribute.deleteMany({ _id: { $in: deleteIds } }, { session });
+      }
+
+      // Update existing attributes
+      for (const updateAttr of toUpdate) {
+        await CustomAttribute.findByIdAndUpdate(
+          updateAttr._id,
+          {
+            attributeName: updateAttr.attributeName,
+            description: updateAttr.description,
+            dataType: updateAttr.dataType,
+            isRequired: updateAttr.isRequired,
+          },
+          { session }
+        );
+      }
+
+      // Add new attributes
+      if (toCreate.length > 0) {
+        const customAttributesData = toCreate.map((attr) => ({
+          attributeName: attr.attributeName,
+          description: attr.description,
+          dataType: attr.dataType,
+          isRequired: attr.isRequired,
+          company: assetType.company,
+          assetType: assetType._id,
+        }));
+        await CustomAttribute.insertMany(customAttributesData, { session });
+      }
+    }
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      status: "success",
+      message: "AssetType and CustomAttributes successfully updated",
+      data: {
+        assetType,
+        customAttributes,
+      },
+    });
+  } catch (error) {
+    await session.abortTransaction(); // Roll back in case of any error
+    session.endSession();
+    console.error(error);
+    next(error); // Pass the error to the error handling middleware
   }
-  res.status(200).json({
-    status: "success",
-    data: assetType,
-  });
 });
 
+
 exports.deleteAssetType = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const companyId = req.cookies.companyId;
 
   // Check if any Asset references the AssetType
-  const assetExists = await Asset.findOne({
-    assetType: req.params.id,
-    company: req.cookies.companyId,
-  });
-  const customAttributeModel = await  CustomAttributeModel.findOne({
-    assetType: req.params.id
-  });
-  if (assetExists?.length > 0 || customAttributeModel?.length > 0) {
+  const assetExists = await Asset.findOne({ assetType: id, company: companyId });
+
+  if (assetExists) {
     return res.status(400).json({
       status: 'failed',
-      message: 'AssetType cannot be deleted as it is associated with existing assets',
+      message: 'AssetType cannot be deleted as it is associated with existing assets.',
     });
   }
-   // If no assets reference the AssetType, delete all CustomAttributes related to that AssetType
-  await CustomAttribute.deleteMany({
-    assetType: req.params.id,
-    company: req.cookies.companyId,
-  });
+
+  // Check if any CustomAttributes reference the AssetType
+  const customAttributeExists = await CustomAttribute.findOne({ assetType: id, company: companyId });
 
   // Delete the AssetType
-
-  const assetType = await AssetType.findOneAndDelete({
-    _id: req.params.id,
-    company: req.cookies.companyId,
-  });
+  const assetType = await AssetType.findOneAndDelete({ _id: id, company: companyId });
 
   if (!assetType) {
-    return next(new AppError("AssetType not found", 404));
+    return next(new AppError('AssetType not found', 404));
   }
 
+  // Delete all related CustomAttributes after AssetType deletion
+  await CustomAttribute.deleteMany({ assetType: id, company: companyId });
+
   res.status(204).json({
-    status: "success",
+    status: 'success',
     data: null,
   });
 });
+
 
 exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
@@ -425,28 +538,33 @@ exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
-  const assetAttributeValue = await  AssetAttributeValue.findOne({
-    attributeId: req.params.id
+  // Check if the custom attribute is in use
+  const assetAttributeValue = await AssetAttributeValue.findOne({
+    attributeId: req.params.id,
   });
-  if (assetAttributeValue.length > 0) {
+
+  if (assetAttributeValue) {
     return res.status(400).json({
       status: 'failed',
       message: 'Asset Attribute Value cannot be deleted as it is in use',
     });
   }
-  const customAttribute = await CustomAttribute.findByIdAndDelete(
-    req.params.id
-  );
 
+  // Attempt to delete the custom attribute
+  const customAttribute = await CustomAttribute.findByIdAndDelete(req.params.id);
+
+  // If the custom attribute is not found, return a 404 error
   if (!customAttribute) {
-    return next(new AppError("CustomAttribute not found", 404));
+    return next(new AppError('CustomAttribute not found', 404));
   }
 
+  // Respond with success if deletion is successful
   res.status(204).json({
-    status: "success",
+    status: 'success',
     data: null,
   });
 });
+
 
 exports.deleteCustomAttributeByAssetType = catchAsync(
   async (req, res, next) => {
