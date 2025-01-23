@@ -152,11 +152,24 @@ assetsManagementRouter.delete('/assetTypes/:id', assetsManagementController.dele
  * @swagger
  * /api/v1/assetsManagement/allAssetTypes:
  *   get:
- *     summary: Get all assetTypes
+ *     summary: Get all asset types
  *     tags: [Assets Management]
+ *     parameters:
+ *       - in: query
+ *         name: skip
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           description: Number of items to skip for pagination (offset)
+ *       - in: query
+ *         name: next
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           description: Number of items to fetch after skipping the first 'skip' items (limit per page)
  *     responses:
  *       200:
- *         description: Successful response with assetTypes
+ *         description: Successful response with asset types
  *       500:
  *         description: Internal server error
  */
@@ -1472,6 +1485,22 @@ assetsManagementRouter.get('/assetsByType/:assetType', assetsManagementControlle
  *         description: Internal server error
  */
 assetsManagementRouter.get('/unassignedAssets/:userId', assetsManagementController.getUnassignedAssetsForUser);
+
+/**
+ * @swagger
+ * /api/v1/assetsManagement/unassignedAssets}:
+ *   get:
+ *     summary: Get unassigned assets for a specific user
+ *     tags: [Assets Management] 
+ *     responses:
+ *       200:
+ *         description: Successful response with unassigned assets for the user
+ *       400:
+ *         description: Bad request (e.g. invalid user ID)
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.get('/unassignedAssets', assetsManagementController.getUnassignedAssets);
 
 module.exports = assetsManagementRouter;
 
