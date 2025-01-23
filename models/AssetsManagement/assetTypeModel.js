@@ -4,7 +4,8 @@ var Schema = mongoose.Schema;
 var assetTypeSchema = new Schema({
   typeName: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   description: {
     type: String,

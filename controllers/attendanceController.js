@@ -1783,9 +1783,10 @@ const endDate = new Date(year, month, 0); // Last day of the given month
                       }
                   }
               ]);
-
+console.log(timeLogs);
               if (timeLogs) {
                   const attendanceRecords = await Promise.all(timeLogs.map(async log => {
+                    console.log(log._id);
                       const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
                       if (attendannceCount == 0) {
                           const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
@@ -1877,39 +1878,40 @@ async function getLateComingRemarks(userId, logId) {
 
 // Insert attendanceRecords
 async function insertAttendanceRecords(attendanceRecords) {
+  // Check if attendanceRecords is null or undefined and handle accordingly
   if (!attendanceRecords) {
       console.warn('No attendance records provided');
       return;
   }
-  
+
+  // Insert records into the database, avoiding duplicates
   try {
-      await AttendanceRecords.insertMany(attendanceRecords);
-      console.log('Records inserted successfully');
+      // Assuming each attendance record has a unique combination of employeeId and date
+      const insertPromises = attendanceRecords.map(async (record) => {
+          // Check if the record already exists based on unique fields (e.g., employeeId, date)
+          const existingRecord = await AttendanceRecords.findOne({
+              employeeId: record.employeeId,
+              date: record.date
+          });
+
+          // If no record exists, insert it
+          if (!existingRecord) {
+              await AttendanceRecords.create(record);
+              console.log('Inserted:', record);
+          } else {
+              console.log('Duplicate found for record:', record);
+          }
+      });
+
+      // Wait for all insertions to complete
+      await Promise.all(insertPromises);
+
+      console.log('Records processed successfully');
   } catch (error) {
       console.error('Error inserting records:', error);
   }
 }
 
-// Assuming you are using a function to handle the insertion
-async function insertAttendanceRecords(attendanceRecords) {
-  // Check if attendanceRecords is null or undefined and handle accordingly
-  if (!attendanceRecords) {
-      // Handle the null or undefined case
-      // For example, log a message, throw an error, or return a response
-      console.warn('No attendance records provided');
-      return; // or return a specific value or handle it as needed
-  }
-  
-  // Insert records into the database
-  try {
-      await AttendanceRecords.insertMany(attendanceRecords);
-      
-      console.log('Records inserted successfully');
-  } catch (error) {
-      console.error('Error inserting records:', error);
-      // Handle the error accordingly
-  }
-}
 
 function parseTime(timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
@@ -2216,14 +2218,16 @@ exports.ProcessAttendance = async (req, res) => {
         attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
         attendanceProcessPeriodYear: attendanceProcessPeriodYear,
         isFNF: isFNF,
-    });
-
-    if (existingProcess) {
-        return res.status(400).json({
-            status: 'fail',
-            message: 'Attendance process for this period already exists'
-        });
-    }
+       });
+       if(!isFNF)
+        {
+          if (existingProcess) {
+              return res.status(400).json({
+                  status: 'fail',
+                  message: 'Attendance process for this period already exists'
+              });
+          }
+        }
         // 1. Insert a new AttendanceProcess record
         let attendanceProcess = await AttendanceProcess.create({
             attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
