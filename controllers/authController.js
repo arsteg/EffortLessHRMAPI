@@ -46,7 +46,7 @@ const createAndSendToken = async (user, statusCode, res) => {
     ),
     httpOnly: true
   };    
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test')
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development'|| process.env.NODE_ENV === 'test')
   {
       res.cookie('companyId', user.company.id, {
         secure: true,
@@ -329,28 +329,25 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   }); 
  // createAndSendToken(newUser, 201, res);
 });
+
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // 1) Check if email and password exist
+  // 1) Validate email and password input
   if (!email || !password) {
-    return next(new AppError(`Email or password not specified.`, 400));
+    return next(new AppError('Email or password not specified.', 400));
   }
-  // 2) Check if user exitsts && password is correct
-  // Password is hidden for selection (select: false)
-  // So we need to explicitly select it here
-  const user = await User.findOne({ email }).select('+password');
-  if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError(`Incorrect email or password.`, 401));
-  }
-  const userValid = await User.findOne({
+  // 2) Check if user exists and is not deleted, then retrieve password
+  const user = await User.findOne({
     email,
-    'status': { $ne: constants.User_Status.Deleted }
+    status: { $ne: constants.User_Status.Deleted }
   }).select('+password');
-  if (!userValid || !(await user.correctPassword(password, userValid.password))) {
-    return next(new AppError(`Deleted User.`, 401));
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError('Incorrect email or password.', 401));
   }
-   // 3) If everything ok, send token to client
+
+  // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
 
