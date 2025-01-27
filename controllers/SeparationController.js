@@ -31,9 +31,6 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 // Get Resignation by User
 exports.getResignationByUser = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.findOne({ user: req.params.userId, company: req.cookies.companyId });
-  if (!resignation) {
-    return next(new AppError('No resignation record found for this user', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: resignation
@@ -43,10 +40,7 @@ exports.getResignationByUser = catchAsync(async (req, res, next) => {
 // Get Resignation by Resignation Status
 exports.getResignationByStatus = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.find({ resignation_status: req.params.status, company: req.cookies.companyId });
-  if (resignation.length === 0) {
-    return next(new AppError('No resignations found with this status', 404));
-  }
-  res.status(200).json({
+    res.status(200).json({
     status: 'success',
     data: resignation
   });
@@ -55,9 +49,6 @@ exports.getResignationByStatus = catchAsync(async (req, res, next) => {
 // Get Resignation by Company
 exports.getResignationByCompany = catchAsync(async (req, res, next) => {
   const resignations = await Resignation.find({ company: req.cookies.companyId });
-  if (!resignations || resignations.length === 0) {
-    return next(new AppError('No resignations found for this company', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: resignations
@@ -154,11 +145,7 @@ exports.addTermination = catchAsync(async (req, res, next) => {
 exports.getTerminationByUser = catchAsync(async (req, res, next) => {
   const termination = await Termination.findOne({ user: req.params.userId , company: req.cookies.companyId});
 
-  if (!termination) {
-    return next(new AppError('Termination not found for this user', 404));
-  }
-
-  res.status(200).json({
+   res.status(200).json({
     status: 'success',
     data: termination
   });
@@ -169,11 +156,6 @@ exports.getTerminationByStatus = catchAsync(async (req, res, next) => {
   const terminationStatus = req.params.terminationStatus;
 
   const terminations = await Termination.find({ termination_status: terminationStatus , company: req.cookies.companyId});
-
-  if (!terminations || terminations.length === 0) {
-    return next(new AppError('No terminations found with that status', 404));
-  }
-
   res.status(200).json({
     status: 'success',
     data: terminations

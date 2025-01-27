@@ -96,7 +96,7 @@ cron.schedule('0 0 1 * *', async () => {
 // });
 
 //Execute every 10 minutes
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('0 0 1 * *', async () => {
   const currentTime = new Date();
   const formattedTime = currentTime.toLocaleString();
   console.log('Job started'); 

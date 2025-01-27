@@ -6,12 +6,12 @@ const assetsManagementRouter = express.Router();
 
 /**
  * @swagger
- * /api/v1/assetsManagement/assetTypes: 
+ * /api/v1/assetsManagement/assetTypes:
  *   post:
- *     summary: Add a new assetType
+ *     summary: Add a new AssetType along with CustomAttributes
  *     tags: [Assets Management]
  *     requestBody:
- *       description: AssetType details
+ *       description: AssetType and associated CustomAttributes details
  *       required: true
  *       content:
  *         application/json:
@@ -23,13 +23,27 @@ const assetsManagementRouter = express.Router();
  *                 required: true
  *               description:
  *                 type: string
- *                 required: true
- *               company:
- *                 type: string
- *                 required: true
+ *                 required: true 
+ *               customAttributes:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     attributeName:
+ *                       type: string
+ *                       required: true
+ *                     description:
+ *                       type: string
+ *                       required: true
+ *                     dataType:
+ *                       type: string
+ *                       required: true
+ *                     isRequired:
+ *                       type: boolean
+ *                       required: true
  *     responses:
  *       201:
- *         description: AssetType successfully created
+ *         description: AssetType and CustomAttributes successfully created
  *       400:
  *         description: Bad request
  *       500:
@@ -74,7 +88,7 @@ assetsManagementRouter.get('/assetTypes/:id', assetsManagementController.getAsse
  *           type: string
  *         description: ID of the assetType
  *     requestBody:
- *       description: New assetType details
+ *       description: Updated assetType and customAttributes
  *       required: true
  *       content:
  *         application/json:
@@ -85,11 +99,25 @@ assetsManagementRouter.get('/assetTypes/:id', assetsManagementController.getAsse
  *                 type: string
  *               description:
  *                 type: string
- *               company:
- *                 type: string
+ *               customAttributes:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: ID of the custom attribute (required for update/delete)
+ *                     attributeName:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     dataType:
+ *                       type: string
+ *                     isRequired:
+ *                       type: boolean
  *     responses:
  *       200:
- *         description: Successful response with the updated assetType
+ *         description: Successfully updated the assetType and customAttributes
  *       404:
  *         description: AssetType not found
  *       500:
@@ -124,11 +152,24 @@ assetsManagementRouter.delete('/assetTypes/:id', assetsManagementController.dele
  * @swagger
  * /api/v1/assetsManagement/allAssetTypes:
  *   get:
- *     summary: Get all assetTypes
+ *     summary: Get all asset types
  *     tags: [Assets Management]
+ *     parameters:
+ *       - in: query
+ *         name: skip
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           description: Number of items to skip for pagination (offset)
+ *       - in: query
+ *         name: next
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           description: Number of items to fetch after skipping the first 'skip' items (limit per page)
  *     responses:
  *       200:
- *         description: Successful response with assetTypes
+ *         description: Successful response with asset types
  *       500:
  *         description: Internal server error
  */
@@ -1444,6 +1485,22 @@ assetsManagementRouter.get('/assetsByType/:assetType', assetsManagementControlle
  *         description: Internal server error
  */
 assetsManagementRouter.get('/unassignedAssets/:userId', assetsManagementController.getUnassignedAssetsForUser);
+
+/**
+ * @swagger
+ * /api/v1/assetsManagement/unassignedAssets}:
+ *   get:
+ *     summary: Get unassigned assets for a specific user
+ *     tags: [Assets Management] 
+ *     responses:
+ *       200:
+ *         description: Successful response with unassigned assets for the user
+ *       400:
+ *         description: Bad request (e.g. invalid user ID)
+ *       500:
+ *         description: Internal server error
+ */
+assetsManagementRouter.get('/unassignedAssets', assetsManagementController.getUnassignedAssets);
 
 module.exports = assetsManagementRouter;
 

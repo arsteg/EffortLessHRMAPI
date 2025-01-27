@@ -240,9 +240,6 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true
   });
-  if (!appointment) {
-    return next(new AppError('No appointment found with that ID', 404));
-  }
   res.status(200).json({
     status: 'success',
     data: appointment
@@ -251,10 +248,7 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
 
 exports.deleteAppointment = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
-  if (!appointment) {
-    return next(new AppError('No appointment found with that ID', 404));
-  }
-  res.status(204).json({
+   res.status(204).json({
     status: 'success',
     data: null
   });
