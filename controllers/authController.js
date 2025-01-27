@@ -24,12 +24,14 @@ const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
 const Appointment = require("../models/permissions/appointmentModel");
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY || 'rzp_test_xQi4sKdFNrIe2z',
-  key_secret: process.env.RAZORPAY_SECRET || 'TsqTbMnOdEpdpt8LN6NDhujX',
+  key_id: process.env.RAZORPAY_KEY,
+  key_secret: process.env.RAZORPAY_SECRET,
   headers: {
-    "X-Razorpay-Account": "PWAQUL4NNnybvx"
+    "X-Razorpay-Account":process.env.RAZORPAY_MERCHANT || "PWAQUL4NNnybvx"
   }
 });
+const { updateRazorpaySubscription } = require('./pricingController');
+const { logUserAction } = require('./userController');
 
 const signToken = async (id) => {
    return jwt.sign({ id },process.env.JWT_SECRET, {
@@ -83,6 +85,10 @@ const createAndSendToken = async (user, statusCode, res) => {
   let companySubscription = {status: 'new'};
   if(activeSubscription){
     companySubscription = activeSubscription.razorpaySubscription;
+    const addOns = await razorpay.addons.all({
+      subscription_id: companySubscription.id
+    });
+    companySubscription.addOns = addOns.items;
   } else if(subscriptions.length > 0){
     const razorpaySubscription = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
     companySubscription = razorpaySubscription;
@@ -266,6 +272,7 @@ else
 
 });
 exports.CreateUser = catchAsync(async(req, res, next) => {      
+  try{
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -296,37 +303,53 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 
-  if(emailTemplate)
-    {
-  const template = emailTemplate.contentData; 
- 
-  const message = template
-  .replace("{firstName}", newUser.firstName)
-  .replace("{url}", resetURL)
-  .replace("{company}", req.cookies.companyName)
-  .replace("{company}", req.cookies.companyName)
-  .replace("{lastName}", newUser.lastName);
-   try {
-    await sendEmail({
-      email: newUser.email,
-      subject: emailTemplate.subject,
-      message
-    });   
-  } catch (err) {   
-    return next(
-      new AppError(
-        'There was an error sending the email. Try again later.',
-        500
-      )
-    );
+  if(emailTemplate) {
+    const template = emailTemplate.contentData; 
+    const message = template
+    .replace("{firstName}", newUser.firstName)
+    .replace("{url}", resetURL)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{lastName}", newUser.lastName);
+    try {
+      await sendEmail({
+        email: newUser.email,
+        subject: emailTemplate.subject,
+        message
+      });   
+    } catch (err) {   
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      );
+    }
   }
-}
+  const userAction = {
+    userId: newUser._id, 
+    companyId: req.cookies.companyId,
+    oldStatus: newUser.status || '',
+    newStatus: constants.User_Status.Active,
+    timestamp: new Date().toISOString(),
+    action: 'New user added'
+  };
+  await logUserAction(req, userAction, next);
+  await updateRazorpaySubscription(userAction);
   res.status(200).json({
     status: 'success',
     data: {
       User:newUser
     }
-  }); 
+  });
+  }
+  catch(err){
+    console.log(err);
+    res.status(400).json({
+      status: 'failed',
+      error: err
+    })
+  }
  // createAndSendToken(newUser, 201, res);
 });
 exports.login = catchAsync(async (req, res, next) => {
