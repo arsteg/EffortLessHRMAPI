@@ -4244,15 +4244,16 @@ exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next)
 
 // Get PayrollFNFStatutoryBenefits by payrollFNF
 exports.getPayrollFNFStatutoryBenefitsByPayrollFNF = catchAsync(async (req, res, next) => {
-  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
-    payrollFNFUser: req.params.payrollFNF
-  }).populate('payrollFNFUser');  
- 
 
-  res.status(200).json({
-    status: 'success',
-    data: statutoryBenefits
-  });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+  // Extract _id values from payrollUsers payrollUserIds
+  const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+  // Use the array of IDs to fetch related PayrollAttendanceSummary records
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+    res.status(200).json({
+      status: 'success',
+      data: statutoryBenefits
+    }); 
 });
 
 // Update PayrollFNFStatutoryBenefits
