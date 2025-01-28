@@ -1,3 +1,4 @@
+require('dotenv').config(); // Ensure this is at the top of the file
 const Software = require('../models/pricing/softwareModel');
 const Option = require('../models/pricing/optionModel');
 const Plan = require('../models/pricing/planModel');
@@ -18,6 +19,7 @@ const UserInGroup=require('../models/pricing/userInGroupModel');
 const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const constants = require('../constants');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
@@ -177,7 +179,7 @@ res.status(200).json({
 
 exports.createPlan = catchAsync(async (req, res, next) => {
   try {
-    const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity} = req.body; 
+    const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity, type} = req.body; 
     // const planExists = await Software.findOne({ name: name,software: software});
     const planExists = await Plan.findOne({ name: name});
     if(planExists)
@@ -216,7 +218,8 @@ exports.createPlan = catchAsync(async (req, res, next) => {
         },
         frequency: frequency,
         interval: interval,
-        quantity: quantity || 1
+        quantity: quantity || 1,
+        type: type,
       });
       
       res.status(201).json({
@@ -1206,9 +1209,9 @@ exports.addSubscriptionDetails = async (req, res) => {
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
     // If already have a subscription
-    const subscription = subscriptions.find(subscription => {
-      return subscription.currentPlanId.toString() === req.body.currentPlanId && 
-      subscription.razorpaySubscription.status === 'created'
+    const subscription = subscriptions.find(subs => {
+      return subs.currentPlanId._id.toString() === req.body.currentPlanId && 
+      subs.razorpaySubscription.status === 'created'
     });
     if(subscription) {
       res.status(201).json({
@@ -1295,13 +1298,10 @@ exports.removeSubscriptionDetails = async (req, res) => {
 exports.getSubscriptionDetailsById = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
-
-    // Validate if the provided ID is a valid MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
-    }
     // Find the subscription by ID
-    const subscription = await Subscription.findById(subscriptionId);
+    const subscription = await Subscription.findOne({
+        subscriptionId: subscriptionId
+    });
 
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
@@ -1360,33 +1360,6 @@ exports.updateSubscriptionDetails = async (req, res) => {
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
       return res.status(400).json({ error: 'Invalid subscription ID' });
-    }
-
-    // Additional validation for plan, offer, and userGroupType IDs
-    if (
-      !mongoose.Types.ObjectId.isValid(req.body.plan) ||
-      !mongoose.Types.ObjectId.isValid(req.body.offer) ||
-      !mongoose.Types.ObjectId.isValid(req.body.userGroupType)
-    ) {
-      return res.status(400).json({ error: 'Invalid plan, offer, or userGroupType ID' });
-    }
-
-    // Check if userGroupType ID is valid
-    const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
-    if (!isValidUserGroupType) {
-      return res.status(400).json({ error: 'Invalid userGroupType ID' });
-    }
-
-    // Check if offer ID is valid
-    const isValidOffer = await Offer.findById(req.body.offer);
-    if (!isValidOffer) {
-      return res.status(400).json({ error: 'Invalid offer ID' });
-    }
-
-    // Check if plan ID is valid
-    const isValidPlan = await Plan.findById(req.body.plan);
-    if (!isValidPlan) {
-      return res.status(400).json({ error: 'Invalid plan ID' });
     }
 
     // Find the subscription by ID and update
@@ -1825,9 +1798,14 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
     if (!subscriptionId) {
       return res.status(400).json({ error: 'Invalid subscription ID' });
     }
-
-    // Check if the invoice with the provided ID exists
-    const invoice = await Invoice.find({subscription_id: subscriptionId})
+    let payload = { subscriptionId: subscriptionId };
+    // Fetch subscription to check if subscription has customer_id
+    const subscription = await Subscription.findOne(payload);
+    if(subscription && subscription.razorpaySubscription.customer_id){
+      payload = {"payment_info.customer_id": subscription.razorpaySubscription.customer_id}
+    }
+    payload = { subscription_id: subscriptionId };
+    const invoice = await Invoice.find(payload)
       .populate('subscription')
       .exec();
 
@@ -2120,6 +2098,73 @@ exports.razorpayCredential = catchAsync(async (req, res, next) => {
   });
 })
 
+exports.updateRazorpaySubscription = async (userAction) => {
+  try{
+    let companyId = userAction.companyId;
+    if (!companyId) {
+      const company = await User.findById({ id: userAction.userId.id }).populate('company');
+      companyId = company.id;
+    }
+    const subscription = await Subscription.findOne({
+      companyId: companyId,
+      "razorpaySubscription.status": "active"
+    }).populate('currentPlanId');
+    console.log(subscription)
+    if (subscription) {
+      let update;
+      switch(subscription?.currentPlanId?.type){
+        case 'fixed':
+        // Do nothing for fixed subscription
+        break;
+        case 'prorata':
+        // Logic to handle prorata subscription  
+        break;
+
+        case 'max_average':
+        // Create an Add-On for new license and update subscription after payment;  
+        if (constants.Active_Statuses.includes(userAction.newStatus)) {
+          // Update Subscription
+          const updateSubscription = await razorpay.subscriptions.update(subscription.subscriptionId, {
+            "quantity": subscription.razorpaySubscription.quantity + 1,
+            "schedule_change_at": "cycle_end",
+          });
+          if(updateSubscription){
+            await Subscription.findOneAndUpdate(
+              {subscriptionId: subscription.subscriptionId},
+              {$push: { pendingUpdates: {item: userAction }}}
+            );
+          }
+          console.log('Subscription updated: ', updateSubscription);
+          /*
+          // Creating AddOns for new license
+           const params = {
+            item: {
+              name: userAction.action,
+              amount: subscription.currentPlanId.currentprice * 100,
+              currency: 'INR'
+            }
+          }
+          const addon = await razorpay.subscriptions.createAddon(subscription.subscriptionId, params);
+          if(addon && subscription.subscriptionId){
+            update = await Subscription.findOneAndUpdate({subscriptionId: subscription.subscriptionId}, { $push: { addOns: addon } });
+          }
+          console.log("Add-on created for subscription: ", companyId, addon, update); */
+        } 
+        break;
+
+        default: 
+        // Do Nothing
+        break;
+      }
+      return update;
+    }
+    return null;
+  } catch(error){
+    console.log(error)
+    return error;
+  }
+};
+
 // Verify Payment Status
 exports.verifyPayment = catchAsync(async (req, res, next) => {
   try {
@@ -2142,17 +2187,22 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
       const event = webhookBody.event;
       const payload = webhookBody.payload;
       console.log(event, webhookBody, payload);
-      // Subscription Activated
-      if (event === "subscription.activated") {
+
+      // Subscriptions other events except activated
+      if (event.includes("subscription")) {
         const subscription = payload.subscription;
         const payment = payload.payment;
+        // Update Subscription
         if (subscription.entity.id) {
           await Subscription.findOneAndUpdate(
             { subscriptionId: subscription.entity.id },
             { razorpaySubscription: subscription.entity }
           );
-
-          if (payment.entity.id) {
+        }
+        // Add Payment Info
+        if(event === 'subscription.charged'){
+          const existingInvoice = await Invoice.findOne({ "payment_info.id": payment.entity.id });
+          if (!existingInvoice) {
             await Invoice.create({
               date: new Date(),
               subscription_id: subscription.entity.id,
@@ -2162,20 +2212,38 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
               payment_info: payment.entity
             })
           }
-        }
-
-      }
-
-      // Subscriptions other events except activated
-      if (event !== "subscription.activated" && event.includes("subscription")) {
-        const subscription = payload.subscription;
-        if (subscription.entity.id) {
-          await Subscription.findOneAndUpdate(
+          // Remove pending updates once payment is successful
+          const subscriptionDocument = await Subscription.findOne(
             { subscriptionId: subscription.entity.id },
-            { razorpaySubscription: subscription.entity }
           );
+          if(subscriptionDocument.pendingUpdates.length > 0){
+            await Subscription.findOneAndUpdate(
+              { subscriptionId: subscription.entity.id },
+              { pendingUpdates: [] }
+            );
+            const activeUsers = await User.count({ company: mongoose.Types.ObjectId(companySubscription.companyId), status: {$in: constants.Active_Statuses} });
+            const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.entity.id, {
+              "quantity": activeUsers,
+              "schedule_change_at": "cycle_end",
+            });
+            console.log('Subscription updated: ', updateRazorpaySubscription);
+          }
+          /* 
+          // Update Subscription and reset add-ons
+          const companySubscription = await Subscription.findOne({ subscriptionId: subscription.entity.id });
+          if (companySubscription.addOns.length > 0) {
+            const activeUsers = await User.count({ company: mongoose.Types.ObjectId(companySubscription.companyId), status: {$in: constants.Active_Statuses} });
+            console.log('activeUsers', activeUsers, companySubscription.companyId);
+            const updateResponse = await razorpay.subscriptions.update(subscription.entity.id, {
+              "quantity": activeUsers,
+              "schedule_change_at": "cycle_end",
+              "start_at": subscription.entity.current_start - 1,
+            });
+            if (updateResponse) {
+              await Subscription.findOneAndUpdate({ subscriptionId: subscription.entity.id }, { addOns: [] });
+            }
+          } */
         }
-
       }
       res.status(200).send('Success');
     } else {

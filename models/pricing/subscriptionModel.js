@@ -59,6 +59,23 @@ var subscriptionSchema = new Schema({
   razorpaySubscription: {
     type: Object
   },
+  addOns:{
+    type: Array
+  },
+  pendingUpdates:{
+    type: Array
+  },
 }, { collection: 'Subscription' });
+subscriptionSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'currentPlanId',
+      select: 'name type currentprice IsActive frequency'
+    });
+  } catch (error) {
+    console.error("Error populating currentPlanId:", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

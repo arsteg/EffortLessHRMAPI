@@ -13,7 +13,8 @@ var vendorSchema = new Schema({
   },
   email: {
     type: String,
-    required: true
+    required: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address.']  // Assuming you want to validate the email address
   },
   address: {
     type: String,
@@ -21,7 +22,8 @@ var vendorSchema = new Schema({
   },
   phone: {
     type: String,
-    required: true
+    required: true,
+    match: /^[0-9]{10}$/ // Example: Ensures a 10-digit phone number
   },
   company: {
     type: mongoose.Schema.ObjectId,

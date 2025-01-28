@@ -1,11 +1,10 @@
 // This is our run file
+require('dotenv').config({ path: './config.env' }); // Ensure this is at the very top of the file
 const http = require('https');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
 const swaggerConfig = require('./config/swaggerConfig');
 const swaggerJsDoc = require('swagger-jsdoc');
-require('dotenv').config();
 const { Server } = require('socket.io');
 const socket = require('./utils/socket');
 const cron = require("node-cron");
@@ -21,9 +20,6 @@ process.on('uncaughtException', err => {
   console.log(err);
   process.exit(1);
 });
-
-// Load config file (before app)
-dotenv.config({ path: './config.env' });
 
 
 const app = require('./app');

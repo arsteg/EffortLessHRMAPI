@@ -30,6 +30,15 @@ var assetSchema = new Schema({
   },    
   image: {
     type: String    
+  },
+  quantity: {
+    type: Number,
+    required: false,  // Optional for unique assets
+    default: 1
+  },
+  uniqueIdentifier: {
+    type: String,
+    required: false  // Optional for bulk assets
   }
 }, { collection: 'Asset' });
 

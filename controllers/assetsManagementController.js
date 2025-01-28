@@ -206,12 +206,21 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
+  const skip = parseInt(req.query.skip) || 0;  // Default to 0 if 'skip' is not provided
+  const take = parseInt(req.query.next); // Parse 'next' but don't assign a default here
+  
+  // Fetch the total count of AssetTypes for the company (without pagination)
+  const totalRecords = await AssetType.countDocuments({ company: companyId });
 
-  // Fetch all AssetTypes for the company
-  const assetTypes = await AssetType.find({ company: companyId });
+  
+  // Fetch AssetTypes based on the value of 'take'
+  let assetTypesQuery = AssetType.find({ company: companyId }).skip(skip);
+  if (take && take > 0) {
+    assetTypesQuery = assetTypesQuery.limit(take); // Apply limit only if 'take' > 0
+  }
+  const assetTypes = await assetTypesQuery;
 
   // Add isDeletable flag and customAttributes to each AssetType
   const assetTypesWithDeletableFlag = await Promise.all(
@@ -235,6 +244,7 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
+    totalRecords,
     data: assetTypesWithDeletableFlag,
   });
 });
@@ -950,6 +960,19 @@ exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
   // Find all assets that are NOT in the list of assigned assets for the user
   const unassignedAssets = await Asset.find({
     _id: { $nin: assignedAssetIds },
+    company: req.cookies.companyId,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: unassignedAssets,
+  });
+});
+
+exports.getUnassignedAssets = catchAsync(async (req, res, next) => {
+  // Find all assets that are not assigned to any user
+  const unassignedAssets = await Asset.find({
+    _id: { $nin: (await EmployeeAssets.find().distinct('Asset')) },
     company: req.cookies.companyId,
   });
 

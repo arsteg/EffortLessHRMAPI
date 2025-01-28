@@ -22,6 +22,7 @@ var customAttributeSchema = new Schema({
   },
   dataType: {
     type: String,
+    enum: ['string', 'number', 'date', 'boolean'],
     required: true
   },
   isRequired: {
