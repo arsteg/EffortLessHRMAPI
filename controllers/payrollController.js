@@ -4504,8 +4504,8 @@ exports.createPayrollFNFOvertime = async (req, res) => {
   try {
     const { PayrollFNFUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
    
-    // Check if payrollUser exists in the PayrollUsers model
-    const isValidUser = await PayrollFNFUsers.findById(PayrollUser);
+    // Check if PayrollFNFUser exists in the PayrollUsers model
+    const isValidUser = await PayrollFNFUsers.findById(PayrollFNFUser);
     if (!isValidUser) {
       return next(new AppError('Invalid payroll user', 400));
     }
@@ -4614,7 +4614,7 @@ exports.deletePayrollFNFOvertime = async (req, res) => {
 // Get all Payroll Overtime records
 exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
   try {
-    const records = await PayrollFNFOvertime.find({ PayrollUser: req.params.payrollFNFUser });
+    const records = await PayrollFNFOvertime.find({ PayrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
       status: 'success',
