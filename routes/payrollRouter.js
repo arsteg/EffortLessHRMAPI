@@ -6871,7 +6871,7 @@ router.get('/payroll-fnf-overtime/:id', authController.protect, payrollControlle
  *       500:
  *         description: Internal server error
  */
-router.put('payroll-fnf-overtime/:id', authController.protect, payrollController.updatePayrollFNFOvertime);
+router.put('/payroll-fnf-overtime/:id', authController.protect, payrollController.updatePayrollFNFOvertime);
 
 /**
  * @swagger

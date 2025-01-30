@@ -36,10 +36,10 @@ appointmentModelSchema.pre('save', async function(next) {
       let counter = await Counter.findOneAndUpdate(
         { company: this.company },
         { $inc: { counter: 1 } },
-        { new: true, upsert: true }
+        { new: true, upsert: false }
       );
 
-      this.empCode = counter.counter;
+      this.empCode = counter?.counter;
       next();
     } catch (error) {
       next(error);

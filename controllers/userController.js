@@ -44,6 +44,8 @@ const { BlobServiceClient } = require("@azure/storage-blob");
 const OTP = require("../models/commons/otp");
 const sendEmail = require('../utils/email');
 const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
+const UserActionLog = require("../models/Logging/userActionModel");
+const { updateRazorpaySubscription } = require("./pricingController");
 
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
@@ -57,6 +59,24 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 const containerClient = blobServiceClient.getContainerClient(
   process.env.CONTAINER_NAME
 );
+
+exports.logUserAction = catchAsync(async(req, action, next) => {
+  try{
+    const userAction = {
+      userId: action.userId,
+      companyId: action.companyId,
+      oldStatus: action.oldStatus || '',
+      newStatus: action.newStatus,
+      timestamp: action.timestamp,
+      action: action.action
+    }
+    const log = await UserActionLog.create(userAction);
+    return log;
+  } catch(error) {
+    console.log(error);
+    return error;
+  }
+});
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   // To allow for nested GET revicews on tour (hack)
@@ -95,6 +115,16 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   if (!document) {
     return next(new AppError("No document found with that ID", 404));
   }
+  const userAction = {
+    userId: document._id,
+    companyId: req.cookies.companyId,
+    oldStatus: document.status || '',
+    newStatus: "Deleted",
+    timestamp: new Date().toISOString(),
+    action: 'Update razorpay subscription'
+  }
+  await exports.logUserAction(req, userAction, next);
+  await updateRazorpaySubscription(userAction);
   res.status(204).json({
     status: "success",
     data: document,
@@ -262,7 +292,17 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.params.id, { status: "Deleted" });
+  const user = await User.findByIdAndUpdate(req.params.id, { status: "Deleted" });
+  const userAction = {
+    userId: user._id,
+    companyId: req.cookies.companyId,
+    oldStatus: user.status || '',
+    newStatus: "Deleted",
+    timestamp: new Date().toISOString(),
+    action: 'Update razorpay subscription'
+  }
+  await exports.logUserAction(req, userAction, next);
+  await updateRazorpaySubscription(userAction);
   res.status(204).json({
     status: "success",
     data: null,

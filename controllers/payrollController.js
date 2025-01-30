@@ -4244,15 +4244,16 @@ exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next)
 
 // Get PayrollFNFStatutoryBenefits by payrollFNF
 exports.getPayrollFNFStatutoryBenefitsByPayrollFNF = catchAsync(async (req, res, next) => {
-  const statutoryBenefits = await PayrollFNFStatutoryBenefits.findOne({
-    payrollFNFUser: req.params.payrollFNF
-  }).populate('payrollFNFUser');  
- 
 
-  res.status(200).json({
-    status: 'success',
-    data: statutoryBenefits
-  });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
+  // Extract _id values from payrollUsers payrollUserIds
+  const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
+  // Use the array of IDs to fetch related PayrollAttendanceSummary records
+  const statutoryBenefits = await PayrollFNFStatutoryBenefits.find({ payrollFNFUser: { $in: payrollFNFUserIds } }); 
+    res.status(200).json({
+      status: 'success',
+      data: statutoryBenefits
+    }); 
 });
 
 // Update PayrollFNFStatutoryBenefits
@@ -4450,14 +4451,25 @@ exports.getPayrollFNFIncomeTaxById = catchAsync(async (req, res, next) => {
     });
 });
 
-// Get All Payroll Income Tax records
-exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = catchAsync(async (req, res, next) => {
-    const payrollFNFIncomeTaxes = await PayrollFNFIncomeTax.find({ PayrollUser: req.params.payrollFNFUser });
+// Get all Payroll Income Tax records by fnf user
+exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
+  try {
+    const records = await PayrollFNFIncomeTax.find({ PayrollFNFUser: req.params.payrollFNFUser });
+
     res.status(200).json({
-        status: 'success',
-        data: payrollFNFIncomeTaxes
+      status: 'success',
+      data: {
+        records
+      }
     });
-});
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
 
 exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
@@ -4503,8 +4515,8 @@ exports.createPayrollFNFOvertime = async (req, res) => {
   try {
     const { PayrollFNFUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
    
-    // Check if payrollUser exists in the PayrollUsers model
-    const isValidUser = await PayrollFNFUsers.findById(PayrollUser);
+    // Check if PayrollFNFUser exists in the PayrollUsers model
+    const isValidUser = await PayrollFNFUsers.findById(PayrollFNFUser);
     if (!isValidUser) {
       return next(new AppError('Invalid payroll user', 400));
     }
@@ -4613,7 +4625,7 @@ exports.deletePayrollFNFOvertime = async (req, res) => {
 // Get all Payroll Overtime records
 exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
   try {
-    const records = await PayrollFNFOvertime.find({ PayrollUser: req.params.payrollFNFUser });
+    const records = await PayrollFNFOvertime.find({ PayrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
       status: 'success',

@@ -36,6 +36,9 @@ var planSchema = new Schema({
   },
   quantity: {
     type: Number
+  },
+  type: {
+    type: String
   }
 }, { collection: 'Plan' });
 
