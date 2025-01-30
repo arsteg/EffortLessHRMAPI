@@ -21,7 +21,7 @@ assignLeavesByJobs = async (req, res, next) => {
             const category=leaveCategory._id;
             const type = leaveCategory.leaveAccrualPeriod;
             const createdOn = new Date();
-            const startMonth = createdOn.getMonth();        
+            var startMonth = createdOn.getMonth();               
             var openingBalance = 0;
             const leaveApplied = 0;      
             var leaveRemaining = 0;
@@ -61,6 +61,7 @@ assignLeavesByJobs = async (req, res, next) => {
               accruedBalance=(((12-startMonth)+1)*balPerMonth);                      
               openingBalance=accruedBalance;
               leaveRemaining=accruedBalance;
+              startMonth=startMonth+1;
                 try {
                   const leaveAssigned = await LeaveAssigned.create({
                       cycle,
@@ -91,6 +92,7 @@ assignLeavesByJobs = async (req, res, next) => {
             console.log("Semi annually called" + "cycle"+cycle+"employee"+employee._id+"category"+category+"type"+type+"createdOn"+createdOn+"startMonth"+startMonth+
             "endMonth"+endMonth+"openingBalance"+openingBalance+"leaveApplied"+leaveApplied+"accruedBalance"+accruedBalance+"leaveRemaining"+leaveRemaining
             +"closingBalance"+ closingBalance +"leaveTaken"+leaveTaken);
+            startMonth=startMonth+1;
             const existingLeaveAssignment = await LeaveAssigned.findOne({
               employee: employee,
               category: category,
@@ -105,6 +107,7 @@ assignLeavesByJobs = async (req, res, next) => {
           }
           else 
           {
+            startMonth=startMonth+1;
             const leaveAssigned =await LeaveAssigned.create({
                 cycle,
                 employee,
@@ -128,7 +131,8 @@ assignLeavesByJobs = async (req, res, next) => {
             if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Bi_Monthly)
             {
               const endMonth=createdOn.getMonth();       
-              const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;       
+              const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;  
+              startMonth=startMonth+1;     
               const leaveAssigned =  LeaveAssigned.create({
                 cycle,
                 employee,
@@ -151,6 +155,7 @@ assignLeavesByJobs = async (req, res, next) => {
               const accruedBalance=leaveTemplateCategory.accrualRatePerPeriod;
               const endMonth=createdOn.getMonth();
               endMonth.setMonth(startMonth.getMonth() + 4);
+              startMonth=startMonth+1;
               const leaveAssigned =  LeaveAssigned.create({
                 cycle,
                 employee,
