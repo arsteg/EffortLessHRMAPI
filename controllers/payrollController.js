@@ -4451,14 +4451,25 @@ exports.getPayrollFNFIncomeTaxById = catchAsync(async (req, res, next) => {
     });
 });
 
-// Get All Payroll Income Tax records
-exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = catchAsync(async (req, res, next) => {
-    const payrollFNFIncomeTaxes = await PayrollFNFIncomeTax.find({ PayrollUser: req.params.payrollFNFUser });
+// Get all Payroll Income Tax records by fnf user
+exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
+  try {
+    const records = await PayrollFNFIncomeTax.find({ PayrollFNFUser: req.params.payrollFNFUser });
+
     res.status(200).json({
-        status: 'success',
-        data: payrollFNFIncomeTaxes
+      status: 'success',
+      data: {
+        records
+      }
     });
-});
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
+
 
 exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
