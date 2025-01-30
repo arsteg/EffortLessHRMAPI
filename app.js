@@ -2,6 +2,7 @@ var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var zoomRouter = require('./routes/zoomRouter');
+var openaiRouter = require('./routes/openaiRouter');
 var userRouter = require('./routes/userRoutes');
 var timeLogRouter = require('./routes/timeLogRoutes');
 var errorLogRouter = require('./routes/errorLogRouter');
@@ -121,6 +122,7 @@ app.use('/api/v1/attendance', attendanceRouter);
 app.use('/api/v1/pricing', pricingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/zoom', zoomRouter);
+app.use('/api/v1/openai', openaiRouter);
 app.use('/api/v1/payroll', payrollRouter);
 app.use('/api/v1/eventNotifications', eventNotificationRouter);
 
