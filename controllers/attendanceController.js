@@ -2647,3 +2647,64 @@ console.log(endDate);
       throw error; // Rethrow or handle error as needed
   }
 }
+
+// ...existing code...
+
+async function getOvertimeRecordsByUserYearAndMonth(user, year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month || !user) {
+      throw new Error('User ID, year, and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 0, 23, 59, 59); // End of the month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await OvertimeInformation.countDocuments({
+              User: user,
+              CheckInDate: {
+                  $gte: startDate.toISOString(),
+                  $lte: endDate.toISOString()
+              }
+          }).exec();
+          return { count };
+      } else {
+          const records = await OvertimeInformation.find({
+              User: user,
+              CheckInDate: {
+                  $gte: startDate.toISOString(),
+                  $lte: endDate.toISOString()
+              }
+          }).skip(skip).limit(limit).exec();
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}
+
+exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
+  const { user, month, year } = req.body;
+
+  // Validate input
+  if (!user || !month || !year) {
+    return next(new AppError('User ID, month, and year are required', 400));
+  }
+
+  const overtimeRecords = await getOvertimeRecordsByUserYearAndMonth(user, year, month);
+
+  if (!overtimeRecords || overtimeRecords.length === 0) {
+    return next(new AppError('Overtime records not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: overtimeRecords,
+  });
+});
+
+// ...existing code...
