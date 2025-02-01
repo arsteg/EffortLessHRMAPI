@@ -36,6 +36,7 @@ const HolidayCalendar = require('../models/Company/holidayCalendar');
 const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
+const Appointment = require("../models/permissions/appointmentModel"); 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1865,6 +1866,134 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
       data: null
   });
 });
+
+// Controller function to handle the upload and processing of attendance JSON data
+exports.uploadAttendanceJSON = async (req, res, next) => {
+  const attendanceData = req.body; // Array of attendance data sent in the request body
+
+  // Check if the data is an array
+  if (!Array.isArray(attendanceData)) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Invalid format: Data should be an array of objects',
+    });
+  }
+
+  try {
+    const attendanceRecords = [];
+
+    // Loop through the attendance data and process each entry
+    for (let i = 0; i < attendanceData.length; i++) {
+      const { empCode, StartTime, EndTime, Date } = attendanceData[i];
+
+      // Fetch user details using empCode
+      const user = await getUserByEmpCode(empCode);
+
+      if (!user) {
+        console.error(`User with empCode ${empCode} not found`);
+        continue; // Skip if the user is not found
+      }
+
+      // Process each record (this can be adjusted based on your logic)
+      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date,req.cookies.companyId);
+
+      if (attendanceRecord) {
+        attendanceRecords.push(attendanceRecord);
+      }
+    }
+
+    // If there are processed records, insert them into the database
+    if (attendanceRecords.length > 0) {
+      await insertAttendanceRecords(attendanceRecords);
+    }
+
+    // Send response back indicating success
+    res.status(200).json({
+      status: 'success',
+      message: 'Attendance records processed successfully',
+      data: attendanceRecords,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'An error occurred while processing the attendance records',
+    });
+  }
+};
+
+// Helper function to fetch user by empCode
+async function getUserByEmpCode(empCode) {
+  try {
+    console.log(empCode);
+    // Fetch the appointment by empCode and populate the user data
+    const appointments = await Appointment.find({ empCode: empCode })
+      .populate('user')  // Populate the user field with user details
+      .select('user empCode company joiningDate confirmationDate'); // Select relevant fields
+      console.log(appointments);
+    if (appointments && appointments.length > 0) {
+      return appointments[0].user;  // Return the user details from the first matched appointment
+    } else {
+      return null;  // If no appointments found, return null
+    }
+  } catch (error) {
+    console.error('Error fetching user by empCode:', error);
+    return null;
+  }
+}
+
+// Helper function to process each individual attendance record
+async function processAttendanceRecord(user, startTime, endTime, date,companyId) {
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+
+  if (shiftAssignment) {
+    const shift = await Shift.findOne({ _id: shiftAssignment.template });
+
+    if (shift) {
+      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(date) });
+
+      let deviationHour = 0;
+      let isOvertime = false;
+
+      if (shift.startTime && shift.endTime) {
+        const timeWorked = timeLogCount * 10; // Assuming each time log is worth 10 minutes
+
+        const [shiftStartHours, shiftStartMinutes] = shift.startTime.split(':').map(Number);
+        const [shiftEndHours, shiftEndMinutes] = shift.endTime.split(':').map(Number);
+
+        const shiftTotalMinutes = (shiftEndHours * 60 + shiftEndMinutes) - (shiftStartHours * 60 + shiftStartMinutes);
+
+        if (timeWorked < shiftTotalMinutes) {
+          deviationHour = shiftTotalMinutes - timeWorked;
+        }
+        if (timeWorked > shiftTotalMinutes) {
+          deviationHour = timeWorked - shiftTotalMinutes;
+          isOvertime = true;
+        }
+      }
+
+      // Fetch manual entry comment if any
+      const lateComingRemarks = await getLateComingRemarks(user._id, date);
+
+      // Create an attendance record
+      return {
+        date: new Date(date),
+        checkIn: startTime,
+        checkOut: endTime,
+        user: user._id,
+        duration: timeLogCount * 10,
+        deviationHour,
+        shiftTiming: `${shift.startTime} - ${shift.endTime}`,
+        lateComingRemarks,
+        company: companyId, // Assuming companyId is a property on the user model
+        isOvertime,
+      };
+    }
+  }
+
+  return null; // Return null if no valid shift is found
+}
+
 
 // Function to get late coming remarks (if needed)
 async function getLateComingRemarks(userId, logId) {

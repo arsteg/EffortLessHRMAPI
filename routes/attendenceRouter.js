@@ -3189,6 +3189,45 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
  *         description: Internal server error
  */
 attendanceRouter.post('/timelog-mapped-attandance', authController.protect, attendanceController.MappedTimlogToAttandance);
+/**
+ * @swagger
+ * /api/v1/attendance/upload-json:
+ *   post:
+ *     summary: Upload attendance data in JSON format
+ *     tags: [Attendance Management]
+ *     security: [bearerAuth: []]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 EmpCode:
+ *                   type: string
+ *                   format: date
+ *                   description: Employee's Code of entry
+ *                 StartTime:
+ *                   type: string
+ *                   description: Start time of the employee (e.g., "09:00")
+ *                 EndTime:
+ *                   type: string
+ *                   description: End time of the employee (e.g., "17:00")
+ *                 Date:
+ *                   type: string
+ *                   format: date
+ *                   description: Date for the attendance record
+ *     responses:
+ *       200:
+ *         description: Successfully processed the attendance records
+ *       400:
+ *         description: Bad request (invalid input or format)
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/upload-json', authController.protect, attendanceController.uploadAttendanceJSON);
+
 
 /**
  * @swagger
