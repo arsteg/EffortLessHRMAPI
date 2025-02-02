@@ -3499,7 +3499,7 @@ exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
 // Create Payroll Overtime record
 exports.createPayrollOvertime = async (req, res) => {
   try {
-    const { PayrollUser, OverTime, LateComing, EarlyGoing, FinalOvertime } = req.body;
+    const { PayrollUser, LateComing, EarlyGoing, FinalOvertime, OvertimeAmount } = req.body;
    
     // Check if payrollUser exists in the PayrollUsers model
     const isValidUser = await PayrollUsers.findById(PayrollUser);
@@ -3511,7 +3511,8 @@ exports.createPayrollOvertime = async (req, res) => {
       PayrollUser,
       LateComing,
       EarlyGoing,
-      FinalOvertime
+      FinalOvertime,
+      OvertimeAmount
     });
 
     res.status(201).json({
