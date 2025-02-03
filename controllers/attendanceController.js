@@ -1884,10 +1884,10 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
 
     // Loop through the attendance data and process each entry
     for (let i = 0; i < attendanceData.length; i++) {
-      const { empCode, StartTime, EndTime, Date } = attendanceData[i];
+      const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
 
       // Fetch user details using empCode
-      const user = await getUserByEmpCode(empCode);
+      const user = await getUserByEmpCode(EmpCode);
 
       if (!user) {
         console.error(`User with empCode ${empCode} not found`);
