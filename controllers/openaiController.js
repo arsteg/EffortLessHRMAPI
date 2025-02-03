@@ -7,9 +7,11 @@ const Project =  require('../models/projectModel');
 const ProjectUser = require('../models/projectUserModel');
 const Task = require('../models/taskModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require("../utils/appError.js");
+const cookieParser = require('cookie-parser');
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPEN_AI_KEY,
 });
 
 
@@ -84,84 +86,92 @@ exports.testResponse = async (req, res, next) => {
   }
 };
 
-
-
 const allowedModels = {
   project: Project,
   projectUser: ProjectUser,
   task: Task  
 };
 
-exports.runDynamicQuery = catchAsync(async (req, res, next) => {
-  // 1. Validate input parameters
-  const { model, query, options } = req.body;
-  
-  if (!model || !query) {
-    return next(new AppError('Model and query parameters are required', 400));
-  }
-
-  // 2. Validate model selection
-  const Model = allowedModels[model.toLowerCase()];
-  if (!Model) {
-    return next(new AppError('Invalid model specified', 400));
-  }
-
-  // 3. Safely parse query and options
-  let parsedQuery;
-  let parsedOptions = {};
-  
+exports.generateQueryFromText = catchAsync(async (req, res, next) => {
   try {
-    parsedQuery = JSON.parse(query);
-    if (options) {
-      parsedOptions = JSON.parse(options);
+    // 1. Validate input
+    const { model, prompt } = req.body;
+    if (!model || !prompt) {
+      return next(new AppError('Model and prompt parameters are required', 400));
     }
-  } catch (err) {
-    return next(new AppError('Invalid JSON format in query/options', 400));
-  }
 
-  // 4. Security sanitization
-  const sanitizedQuery = {};
-  for (const [key, value] of Object.entries(parsedQuery)) {
-    // Add additional security checks here based on your schema
-    if (typeof value === 'object' && value !== null) {
-      sanitizedQuery[key] = value;
-    } else {
-      sanitizedQuery[key] = { $eq: value };
+    // 2. Validate model selection
+    const Model = allowedModels[model];
+    if (!Model) {
+      return next(new AppError('Invalid model specified', 400));
     }
-  }
 
-  // 5. Build base query
-  let dbQuery = Model.find(sanitizedQuery);
+    // 3. Create a thread for the assistant
+    const thread = await openai.beta.threads.create();
 
-  // 6. Apply query options
-  if (parsedOptions.select) {
-    dbQuery = dbQuery.select(parsedOptions.select);
-  }
-  
-  if (parsedOptions.sort) {
-    dbQuery = dbQuery.sort(parsedOptions.sort);
-  }
-  
-  if (parsedOptions.skip) {
-    dbQuery = dbQuery.skip(Number(parsedOptions.skip));
-  }
-  
-  if (parsedOptions.limit) {
-    dbQuery = dbQuery.limit(Number(parsedOptions.limit));
-  }
-  
-  if (parsedOptions.populate) {
-    dbQuery = dbQuery.populate(parsedOptions.populate);
-  }
+    // 4. Send user prompt to the assistant with strict JSON instructions
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: `Convert the following text into a MongoDB query for the '${model}' collection.
+      Return ONLY the JSON query object without any explanation, markdown, or code blocks.
+      Ensure it's a valid MongoDB query object:\n\n. The text is "${prompt}" for company id "${req.cookies.companyId}"`,
+    });
 
-  // 7. Execute query
-  const results = await dbQuery;
+    // 5. Run the assistant
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: "asst_85TsqvIuBCmF3x8nz573FRq5",
+    });
 
-  res.status(200).json({
-    status: 'success',
-    results: results.length,
-    data: {
-      data: results
+    // 6. Wait for the response with timeout handling
+    const startTime = Date.now();
+    let runStatus;
+    
+    do {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+
+      if (Date.now() - startTime > 30000) {
+        throw new Error("Timeout waiting for assistant response");
+      }
+
+      if (['failed', 'cancelled', 'expired'].includes(runStatus.status)) {
+        throw new Error(`Run terminated with status: ${runStatus.status}`);
+      }
+
+    } while (runStatus.status !== "completed");
+
+    // 7. Retrieve assistant's response
+    const messages = await openai.beta.threads.messages.list(thread.id, { order: 'asc' });
+    const assistantMessage = messages.data
+      .reverse()
+      .find(m => m.role === "assistant" && m.content[0]?.type === 'text');
+
+    if (!assistantMessage) {
+      throw new Error("No assistant response found");
     }
-  });
+
+    // 8. Clean and parse the JSON output
+    const responseText = assistantMessage.content[0].text.value;
+    const cleanJson = responseText.replace(/```json\n|\n```/g, "").trim();
+
+    let parsedQuery;
+    try {
+      parsedQuery = JSON.parse(cleanJson);
+    } catch (error) {
+      throw new Error(`Invalid JSON received: ${responseText}`);
+    }
+
+    // 9. Return the generated query
+    res.status(200).json({
+      status: "success",
+      data: cleanJson,
+    });
+
+  } catch (error) {
+    console.error('Error in generateQueryFromText:', error);
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 });
