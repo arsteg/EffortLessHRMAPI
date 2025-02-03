@@ -3585,4 +3585,38 @@ attendanceRouter.post('/process-attendance-by-month', authController.protect, at
  */
 attendanceRouter.post('/process-attendance-fnf-by-month', authController.protect, attendanceController.GetProcessAttendance);
 
+/**
+ * @swagger
+ * /api/v1/attendance/overtime-by-user:
+ *   post:
+ *     summary: Get overtime records by user ID, month, and year
+ *     tags: [Attendance Management]
+ *     security: [bearerAuth: []]
+ *     requestBody:
+ *       description: User ID, month, and year
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 required: true
+ *               month:
+ *                 type: number
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the overtime records
+ *       404:
+ *         description: Overtime records not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/overtime-by-user', authController.protect, attendanceController.getOvertimeByUser);
+
 module.exports = attendanceRouter;
