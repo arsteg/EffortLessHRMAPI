@@ -36,6 +36,7 @@ const HolidayCalendar = require('../models/Company/holidayCalendar');
 const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
+const Appointment = require("../models/permissions/appointmentModel"); 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1702,8 +1703,7 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
 exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await TimeEntry.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await TimeEntry.countDocuments({ company: req.cookies.companyId }); 
   const timeEntries = await TimeEntry.find({ company: req.cookies.companyId }).skip(parseInt(skip))
   .limit(parseInt(limit));  
   res.status(200).json({
@@ -1737,7 +1737,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
 
   req.body.company = companyId;
   const startDate = new Date(year, month - 1, 1); // First day of the given month
-const endDate = new Date(year, month, 0); // Last day of the given month
+  const endDate = new Date(year, month, 0); // Last day of the given month
   let filter = { status: 'Active', company: req.cookies.companyId };
   // Generate query based on request params
   const features = new APIFeatures(User.find(filter), req.query)
@@ -1762,6 +1762,7 @@ const endDate = new Date(year, month, 0); // Last day of the given month
 
   // Calculate how many days to subtract to get to the last Monday
   const daysToSubtract = lastDayOfWeek === 0 ? 6 : lastDayOfWeek - 1;
+
   // Calculate the last Monday of the previous month
  // const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
@@ -1783,7 +1784,7 @@ const endDate = new Date(year, month, 0); // Last day of the given month
                       }
                   }
               ]);
-console.log(timeLogs);
+        console.log(timeLogs);
               if (timeLogs) {
                   const attendanceRecords = await Promise.all(timeLogs.map(async log => {
                     console.log(log._id);
@@ -1866,6 +1867,134 @@ console.log(timeLogs);
   });
 });
 
+// Controller function to handle the upload and processing of attendance JSON data
+exports.uploadAttendanceJSON = async (req, res, next) => {
+  const attendanceData = req.body; // Array of attendance data sent in the request body
+
+  // Check if the data is an array
+  if (!Array.isArray(attendanceData)) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Invalid format: Data should be an array of objects',
+    });
+  }
+
+  try {
+    const attendanceRecords = [];
+
+    // Loop through the attendance data and process each entry
+    for (let i = 0; i < attendanceData.length; i++) {
+      const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
+
+      // Fetch user details using empCode
+      const user = await getUserByEmpCode(EmpCode);
+
+      if (!user) {
+        console.error(`User with empCode ${empCode} not found`);
+        continue; // Skip if the user is not found
+      }
+
+      // Process each record (this can be adjusted based on your logic)
+      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date,req.cookies.companyId);
+
+      if (attendanceRecord) {
+        attendanceRecords.push(attendanceRecord);
+      }
+    }
+
+    // If there are processed records, insert them into the database
+    if (attendanceRecords.length > 0) {
+      await insertAttendanceRecords(attendanceRecords);
+    }
+
+    // Send response back indicating success
+    res.status(200).json({
+      status: 'success',
+      message: 'Attendance records processed successfully',
+      data: attendanceRecords,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'An error occurred while processing the attendance records',
+    });
+  }
+};
+
+// Helper function to fetch user by empCode
+async function getUserByEmpCode(empCode) {
+  try {
+    console.log(empCode);
+    // Fetch the appointment by empCode and populate the user data
+    const appointments = await Appointment.find({ empCode: empCode })
+      .populate('user')  // Populate the user field with user details
+      .select('user empCode company joiningDate confirmationDate'); // Select relevant fields
+      console.log(appointments);
+    if (appointments && appointments.length > 0) {
+      return appointments[0].user;  // Return the user details from the first matched appointment
+    } else {
+      return null;  // If no appointments found, return null
+    }
+  } catch (error) {
+    console.error('Error fetching user by empCode:', error);
+    return null;
+  }
+}
+
+// Helper function to process each individual attendance record
+async function processAttendanceRecord(user, startTime, endTime, date,companyId) {
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+
+  if (shiftAssignment) {
+    const shift = await Shift.findOne({ _id: shiftAssignment.template });
+
+    if (shift) {
+      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(date) });
+
+      let deviationHour = 0;
+      let isOvertime = false;
+
+      if (shift.startTime && shift.endTime) {
+        const timeWorked = timeLogCount * 10; // Assuming each time log is worth 10 minutes
+
+        const [shiftStartHours, shiftStartMinutes] = shift.startTime.split(':').map(Number);
+        const [shiftEndHours, shiftEndMinutes] = shift.endTime.split(':').map(Number);
+
+        const shiftTotalMinutes = (shiftEndHours * 60 + shiftEndMinutes) - (shiftStartHours * 60 + shiftStartMinutes);
+
+        if (timeWorked < shiftTotalMinutes) {
+          deviationHour = shiftTotalMinutes - timeWorked;
+        }
+        if (timeWorked > shiftTotalMinutes) {
+          deviationHour = timeWorked - shiftTotalMinutes;
+          isOvertime = true;
+        }
+      }
+
+      // Fetch manual entry comment if any
+      const lateComingRemarks = await getLateComingRemarks(user._id, date);
+
+      // Create an attendance record
+      return {
+        date: new Date(date),
+        checkIn: startTime,
+        checkOut: endTime,
+        user: user._id,
+        duration: timeLogCount * 10,
+        deviationHour,
+        shiftTiming: `${shift.startTime} - ${shift.endTime}`,
+        lateComingRemarks,
+        company: companyId, // Assuming companyId is a property on the user model
+        isOvertime,
+      };
+    }
+  }
+
+  return null; // Return null if no valid shift is found
+}
+
+
 // Function to get late coming remarks (if needed)
 async function getLateComingRemarks(userId, logId) {
   const manualTime = await manualTimeRequest.findOne({
@@ -1911,7 +2040,6 @@ async function insertAttendanceRecords(attendanceRecords) {
       console.error('Error inserting records:', error);
   }
 }
-
 
 function parseTime(timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
@@ -2016,88 +2144,134 @@ async function getRecordsByYearAndMonthByUser(year, month, user) {
   }
 }
 exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
-  try {
+  try {   
       // Calculate the start and end dates for the month
-      const startOfMonth = new Date(req.body.year, req.body.month - 1, 1);
+      const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
       const endOfMonth = new Date(req.body.year, req.body.month, 0); // Last day of the month      
-     
-      // Step 1: Get attendance records for the specified month
-      const attendanceRecords = await AttendanceRecords.find({
-          user: req.body.user,
-          company: req.cookies.companyId,
-          date: { $gte: startOfMonth, $lte: endOfMonth },
-      });
+      const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ user: req.body.user });
+      if (attendanceAssignment) {
+          const attandanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attandanceTemplate });
+          if (attandanceTemplate) {          
+              // Step 1: Get attendance records for the specified month
+              const attendanceRecords = await AttendanceRecords.find({
+                  user: req.body.user,
+                  company: req.cookies.companyId,
+                  date: { $gte: startOfMonth, $lte: endOfMonth },
+              });
 
-      // Step 2: Get approved leave applications for the specified month
-      const approvedLeaves = await LeaveApplication.find({
-          user: req.body.user,
-          status: constants.Leave_Application_Constant.app,
-          startDate: { $gte: startOfMonth, $lte: endOfMonth },
-          endDate: { $gte: startOfMonth, $lte: endOfMonth },
-      });
+              // Step 2: Get approved leave applications for the specified month
+              const approvedLeaves = await LeaveApplication.find({
+                  user: req.body.user,
+                  status: constants.Leave_Application_Constant.app,
+                  startDate: { $gte: startOfMonth, $lte: endOfMonth },
+                  endDate: { $gte: startOfMonth, $lte: endOfMonth },
+              });
 
-      // Extract approved leave days
-      const approvedLeaveDays = approvedLeaves.flatMap(leave => {
-          const leaveStart = new Date(leave.startDate);
-          const leaveEnd = new Date(leave.endDate);
-          const leaveDays = [];
+              // Extract approved leave days
+              const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+                  const leaveStart = new Date(leave.startDate);
+                  const leaveEnd = new Date(leave.endDate);
+                  const leaveDays = [];
 
-          for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
-              if (d >= startOfMonth && d <= endOfMonth) {
-                  leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
-              }
-          }
-          return leaveDays;
-      });
-      const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
-      const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
+                  for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
+                      if (d >= startOfMonth && d <= endOfMonth) {
+                          leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
+                      }
+                  }
+                  return leaveDays;
+              });
+              const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
+              const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
 
-       // Iterate through the days of the month
-       const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month      
-       for (let day = 1; day <= daysInMonth; day++) {      
-     
-            const currentDate = new Date(req.body.year, req.body.month-1, day);
-            const dayOfWeek = currentDate.getDay();
+              // Iterate through the days of the month
+              const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month 
             
-           // Check if it's Saturday (6) or Sunday (0) or a holiday
-           if (dayOfWeek === 0 || dayOfWeek === 6 || holidayDates.includes(currentDate.toISOString().split('T')[0])) {
-               continue;
-           }
-           else
-           {
-                     // Check if the day is marked as present in attendance records
-           const currentDateForValidate = new Date(req.body.year, req.body.month-1, day);
-           const isPresent = attendanceRecords.some(record => {
-               return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
-           });
-           // If not present and not an approved leave, mark as LOP
-           if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
-               // Insert into LOP
-               const existingRecord = await LOP.findOne({
-                user: req.body.user,
-                date: currentDate,
-                company: req.cookies.companyId
-           });
-    
-           if (existingRecord) {
-            res.status(200).json({
-              status: 'fail',
-              message: 'Lop Already Processed for respective uer'
-            });
-           }
-          else
-          {
-               const lopRecord = new LOP({
-                   user: req.body.user,
-                   date: currentDate,
-                   company: req.cookies.companyId
-               });
-               await lopRecord.save();
-           }
-          }
-          }
+              for (let day = 1; day <= daysInMonth; day++) {      
+             
+               // Create the date in UTC, setting the time to midnight (start of the day)
+                const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
+                // Convert it back to your local timezone (optional)
+                const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+                const dayOfWeek = currentDate.getDay();  
+                const weeklyOffDays = attandanceTemplate.weeklyOfDays; // e.g., ['Sunday', 'Saturday']
+                const alternateWeekOffRoutine = attandanceTemplate.alternateWeekOffRoutine; // 'none', 'odd', or 'even'
+                const daysForAlternateWeekOffRoutine = attandanceTemplate.daysForAlternateWeekOffRoutine || []; // e.g., ['Sunday', 'Wednesday']                
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];                
+                // Create a set of weekly off days for efficient lookup
+                const weeklyOffDaysSet = new Set(weeklyOffDays);                
+                // Create a set for alternate weekly off days
+                const alternateWeekOffDaysSet = new Set(daysForAlternateWeekOffRoutine);                
+                // Get the name of the day (e.g., 'Sunday', 'Monday')
+                const dayName = daysOfWeek[dayOfWeek];               
+                // Function to get the current week number of the year
+                function getWeekNumber(date) {
+                    const startDate = new Date(date.getFullYear(), 0, 1);
+                    const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000)); // Total days from the start of the year
+                    const weekNumber = Math.ceil((days + 1) / 7); // Week number (1-based)
+                    return weekNumber;
+                }                
+                // Get the current week number
+                const currentWeekNumber = getWeekNumber(currentDate);    
+                // Determine if the week is odd or even
+                const isOddWeek = currentWeekNumber % 2 !== 0; // Odd week if the week number is odd    
+                let currentWeekOffDaysSet;
+                if (alternateWeekOffRoutine === 'odd' || alternateWeekOffRoutine === 'even') {                    
+                    if (alternateWeekOffRoutine === 'odd' && isOddWeek) {
+                        // For odd weeks, use the first set of alternate days                      
+                        currentWeekOffDaysSet = alternateWeekOffDaysSet;
+                    } else if (alternateWeekOffRoutine === 'even' && !isOddWeek) {
+                        // For even weeks, use the alternate days
+                        currentWeekOffDaysSet = alternateWeekOffDaysSet;
+                    }                  
+                    if (currentWeekOffDaysSet && currentWeekOffDaysSet.has) {
+                    const isAlternateWeekOffDay = currentWeekOffDaysSet.has(dayName);   
+                    if (isAlternateWeekOffDay) {                      
+                        // Skip the current day (it's an alternate weekly off or holiday)
+                        continue; // skip or continue logic
+                    }
+                  }
+                }
+               
+                  const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);                
+                
+                  if (!isWeeklyOffDay) {                 
+                  const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month-1, day));   
+               
+                  const isPresent = attendanceRecords.find(record => {
+                  var flag = record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+                  if(flag)
+                  return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+                  });
+                  // If not present and not an approved leave, mark as LOP
+                  if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
+                      // Insert into LOP
+                      const existingRecord = await LOP.findOne({
+                        user: req.body.user,
+                        date: currentDate,
+                        company: req.cookies.companyId
+                  });
+            
+                  if (existingRecord) {
+                    res.status(200).json({
+                      status: 'fail',
+                      message: 'Lop Already Processed for respective uer'
+                    });
+                  }
+                  else
+                  {                  
+                      const lopRecord = new LOP({
+                          user: req.body.user,
+                          date: currentDate,
+                          company: req.cookies.companyId
+                      });
+                      await lopRecord.save();
+                  }
+                  }
+                
+                }
+              }
+            }
        }
-
        res.status(200).json({
         status: 'success'
       });
@@ -2212,7 +2386,7 @@ exports.ProcessAttendance = async (req, res) => {
         {
           isFNF=true;
         }       
-        const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users,company } = req.body;
+       const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users,company } = req.body;
         // Extract companyId from req.cookies
        let existingProcess = await AttendanceProcess.findOne({
         attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
@@ -2249,22 +2423,22 @@ exports.ProcessAttendance = async (req, res) => {
         await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
      
         //await sendEmailToUsers(attendanceProcessUsers);
-//loop for user
-//send email to user that your ttdance is processed
-//Send email to managers that respective users has attendance process
+        //loop for user
+        //send email to user that your ttdance is processed
+        //Send email to managers that respective users has attendance process
 
-if(isFNF)
-{
-  // make user as settled if its
-  // 1) Get user from collection 
-  for (let userEntry of users) {
-  const user = await User.findById(userEntry.user);
-  // 2) Check if POSTed current password is correct 
-  // 3) If so, update password
-  user.status = constants.User_Status.Settled; 
-  await user.save();
-  }
-}
+        if(isFNF)
+        {
+          // make user as settled if its
+          // 1) Get user from collection 
+          for (let userEntry of users) {
+          const user = await User.findById(userEntry.user);
+          // 2) Check if POSTed current password is correct 
+          // 3) If so, update password
+          user.status = constants.User_Status.Settled; 
+          await user.save();
+          }
+        }
         return res.status(201).json({
             status: 'success',
             message: 'Attendance processed successfully',
@@ -2473,3 +2647,64 @@ console.log(endDate);
       throw error; // Rethrow or handle error as needed
   }
 }
+
+// ...existing code...
+
+async function getOvertimeRecordsByUserYearAndMonth(user, year, month, skip = 0, limit = 0) {
+  // Validate input
+  if (!year || !month || !user) {
+      throw new Error('User ID, year, and month are required');
+  }
+  // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 0, 23, 59, 59); // End of the month
+
+  // Fetch records from the database
+  try {
+      // Check if skip and limit are provided
+      if (skip > 0 || limit > 0) {
+          const count = await OvertimeInformation.countDocuments({
+              User: user,
+              CheckInDate: {
+                  $gte: startDate.toISOString(),
+                  $lte: endDate.toISOString()
+              }
+          }).exec();
+          return { count };
+      } else {
+          const records = await OvertimeInformation.find({
+              User: user,
+              CheckInDate: {
+                  $gte: startDate.toISOString(),
+                  $lte: endDate.toISOString()
+              }
+          }).skip(skip).limit(limit).exec();
+          return records;
+      }
+  } catch (error) {
+      console.error('Error fetching records:', error);
+      throw error; // Rethrow or handle error as needed
+  }
+}
+
+exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
+  const { user, month, year } = req.body;
+
+  // Validate input
+  if (!user || !month || !year) {
+    return next(new AppError('User ID, month, and year are required', 400));
+  }
+
+  const overtimeRecords = await getOvertimeRecordsByUserYearAndMonth(user, year, month);
+
+  if (!overtimeRecords || overtimeRecords.length === 0) {
+    return next(new AppError('Overtime records not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: overtimeRecords,
+  });
+});
+
+// ...existing code...

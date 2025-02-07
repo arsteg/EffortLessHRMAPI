@@ -8,7 +8,8 @@ const attendanceTemplateSchema = new Schema({
   },
   attendanceMode: {
     type: [String],
-    required: true
+    required: true,
+    enum: ['Tracker', 'Manually Upload', 'Web Check-In'] 
   },
   missingCheckInCheckoutHandlingMode: {
     type: String,

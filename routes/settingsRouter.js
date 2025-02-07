@@ -164,4 +164,119 @@ router.get('/productivity/GetAll',authController.protect,settingsController.getA
  */
 router.route('/productivity/:id').delete(authController.protect,settingsController.deleteProductivity);
 
+/**
+ * @swagger
+ * /api/v1/settings/user-location:
+ *  post:
+ *      tags:
+ *          - User Location
+ *      summary: "Add user GPS location"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          user:
+ *                              type: string
+ *                              description: user id
+ *                          coordinates:
+ *                              type: array
+ *                              items:
+ *                                 type: number
+ *                              description: GPS coordinates [longitude, latitude]
+ *                          address:
+ *                              type: string
+ *                              description: Address 
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+router.post("/user-location", settingsController.saveUserLocation);
+
+/**
+ * @swagger
+ * /api/v1/settings/user-location:
+ *   get:
+ *     tags:
+ *       - User Location
+ *     summary: "Retrieve user locations"
+ *     description: "Fetches stored user locations with optional filters."
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *         description: "Filter by user ID"
+ *       - in: query
+ *         name: radius
+ *         schema:
+ *           type: number
+ *         description: "Search radius in meters (default: 1000m)"
+ *     responses:
+ *       200:
+ *         description: "Successfully retrieved locations."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       500:
+ *         description: "Internal Server Error."
+ */
+router.get("/user-location", settingsController.getUserLocations);
+
+/**
+ * @swagger
+ * /api/v1/settings/user-location/{userId}:
+ *  put:
+ *      tags:
+ *          - User Location
+ *      summary: "Update user GPS location"
+ *      security: [ { bearerAuth: [] } ]
+ *      parameters:
+ *          - in: path
+ *            name: userId
+ *            required: true
+ *            schema:
+ *                type: string
+ *            description: The user ID whose location needs to be updated
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          coordinates:
+ *                              type: array
+ *                              items:
+ *                                 type: number
+ *                              description: GPS coordinates [longitude, latitude]
+ *                          address:
+ *                              type: string
+ *                              description: Updated address
+ *      responses:
+ *          200:
+ *              description: "Location updated successfully"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *          400:
+ *              description: "Invalid input data"
+ *          404:
+ *              description: "User location not found"
+ *          500:
+ *              description: "Internal Server Error"
+ */
+router.put("/user-location/:userId", settingsController.updateUserLocation);
+
 module.exports = router;

@@ -36,7 +36,7 @@ router.post('/testResponse', openaiController.testResponse);
 
 /**
  * @swagger
- * /api/v1/openai/runQuery:
+ * /api/v1/openai/generateQueryFromText:
  *  post:
  *      tags:
  *          - OpenAI Integration
@@ -63,7 +63,7 @@ router.post('/testResponse', openaiController.testResponse);
  *                          type: object
  *
  */
-router.post('/runQuery', openaiController.runDynamicQuery);
+router.post('/generateQueryFromText', openaiController.generateQueryFromText);
 
 
 

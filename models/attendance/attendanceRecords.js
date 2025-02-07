@@ -19,24 +19,19 @@ var attendanceRecordsSchema = new Schema({
     required: true
   },
   ODHours: {
-    type: Number,
-    required: true
+    type: Number
   },
   SSLHours: {
-    type: Number,
-    required: true
+    type: Number
   },
   beforeProcessing: {
-    type: String,
-    required: true
+    type: String
   },
   afterProcessing: {
-    type: String,
-    required: true
+    type: String
   },
   earlyLateStatus: {
-    type: String,
-    required: true
+    type: String
   },
   deviationHour: {
     type: String,

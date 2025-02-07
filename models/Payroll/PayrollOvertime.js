@@ -17,9 +17,12 @@ var payrollOvertimeSchema = new Schema({
     FinalOvertime: {
       type: String,
       required: true
+    },
+    OvertimeAmount: {
+      type: String,
+      required: true
     }
 
   }, { collection: 'PayrollOvertime' });
   
 module.exports = mongoose.model('PayrollOvertime', payrollOvertimeSchema);
-  
