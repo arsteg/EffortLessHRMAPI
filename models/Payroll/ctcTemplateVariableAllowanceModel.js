@@ -28,5 +28,15 @@ const ctctemplateVariableAllowanceSchema = new Schema({
     type: String
   },
 }, { collection: 'CTCTemplateVariableAllowance' });
-
+ctctemplateVariableAllowanceSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'variableAllowance',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('CTCTemplateVariableAllowance', ctctemplateVariableAllowanceSchema);

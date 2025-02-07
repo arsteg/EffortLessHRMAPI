@@ -15,7 +15,7 @@ const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssig
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
 const UserRegularizationReason = require('../models/attendance/userRegularizationReason');
-const EmployeeOnDutyShift= require('../models/attendance/employeeOnDutyShift');
+const EmployeeOnDutyShift = require('../models/attendance/employeeOnDutyShift');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
 const APIFeatures = require('../utils/apiFeatures');
@@ -24,7 +24,7 @@ const TimeLog = require('../models/timeLog');
 const userOnDutyReason = require('../models/attendance/userOnDutyReason');
 const AttendanceRegularization = require('../models/attendance/attendanceRegularization');
 const AttendanceRegularizationRestrictedIP = require('../models/attendance/attendanceRegularizationRestrictedIP');
-const AttendanceRegularizationRestrictedLocation= require('../models/attendance/attendanceRegularizationRestrictedLocation');
+const AttendanceRegularizationRestrictedLocation = require('../models/attendance/attendanceRegularizationRestrictedLocation');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Attandance = require('../models/attendance/attendanceRecords');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
@@ -36,7 +36,7 @@ const HolidayCalendar = require('../models/Company/holidayCalendar');
 const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
-const Appointment = require("../models/permissions/appointmentModel"); 
+const Appointment = require("../models/permissions/appointmentModel");
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -65,7 +65,7 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
 exports.getGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
-  const generalSettings = await GeneralSettings.find({company:companyId});
+  const generalSettings = await GeneralSettings.find({ company: companyId });
   if (!generalSettings) {
     return next(new AppError('GeneralSettings not found', 404));
   }
@@ -97,7 +97,7 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
 
   const regularizationReason = await RegularizationReason.create(req.body);
   const users = req.body.users;
- 
+
   // Iterate through the users array and add unique user IDs to uniqueUsers array
   const uniqueUsers = new Set(); // Using a Set to store unique user IDs
 
@@ -117,7 +117,7 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
     });
     userRegularizationReasons.push(userRegularizationReason);
   }
-  regularizationReason.userRegularizationReasons=userRegularizationReasons;
+  regularizationReason.userRegularizationReasons = userRegularizationReasons;
   res.status(201).json({
     status: 'success',
     data: regularizationReason
@@ -130,20 +130,18 @@ exports.getRegularizationReason = catchAsync(async (req, res, next) => {
   if (!regularizationReason) {
     return next(new AppError('Regularization Reason not found', 404));
   }
-  if(regularizationReason) 
-      {
-        
-         
-          const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);  
-          if(userRegularizationReasons) 
-            {
-              regularizationReason.userRegularizationReasons = userRegularizationReasons;
-            }
-            else{
-              regularizationReason.userRegularizationReasons=null;
-            }
-          
-      }
+  if (regularizationReason) {
+
+
+    const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);
+    if (userRegularizationReasons) {
+      regularizationReason.userRegularizationReasons = userRegularizationReasons;
+    }
+    else {
+      regularizationReason.userRegularizationReasons = null;
+    }
+
+  }
   res.status(200).json({
     status: 'success',
     data: regularizationReason
@@ -168,7 +166,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
   }
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await UserRegularizationReason.find({ regularizationReason: isRegularizationReason._id });
-  
+
   // Extract the existing user IDs
   const existingUserIds = existingUsers.map(user => user.user.toString());
 
@@ -188,7 +186,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
       regularizationReason: isRegularizationReason._id
     });
   }));
-  
+
   const regularizationReason = await RegularizationReason.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -198,7 +196,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
     return next(new AppError('Regularization Reason not found', 404));
   }
 
-  regularizationReason.userRegularizationReasons =  await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);;
+  regularizationReason.userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);;
   res.status(200).json({
     status: 'success',
     data: regularizationReason
@@ -220,24 +218,22 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await RegularizationReason.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await RegularizationReason.countDocuments({ company: req.cookies.companyId });
+
   const regularizationReasons = await RegularizationReason.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  if(regularizationReasons) 
-      {
-        
-          for(var i = 0; i < regularizationReasons.length; i++) {     
-          const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReasons[i]._id);  
-          if(userRegularizationReasons) 
-            {
-              regularizationReasons[i].userRegularizationReasons = userRegularizationReasons;
-            }
-            else{
-              regularizationReasons[i].userRegularizationReasons=null;
-            }
-          }
+    .limit(parseInt(limit));
+  if (regularizationReasons) {
+
+    for (var i = 0; i < regularizationReasons.length; i++) {
+      const userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReasons[i]._id);
+      if (userRegularizationReasons) {
+        regularizationReasons[i].userRegularizationReasons = userRegularizationReasons;
       }
+      else {
+        regularizationReasons[i].userRegularizationReasons = null;
+      }
+    }
+  }
   res.status(200).json({
     status: 'success',
     data: regularizationReasons,
@@ -251,7 +247,7 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
 
   const onDutyReason = await OnDutyReason.create(req.body);
   const users = req.body.users;
- 
+
   // Iterate through the users array and add unique user IDs to uniqueUsers array
   const uniqueUsers = new Set(); // Using a Set to store unique user IDs
 
@@ -271,7 +267,7 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
     });
     userOnDutyReasons.push(userOnDutyReason);
   }
-  onDutyReason.userOnDutyReason=userOnDutyReasons;
+  onDutyReason.userOnDutyReason = userOnDutyReasons;
   res.status(201).json({
     status: 'success',
     data: onDutyReason
@@ -284,17 +280,15 @@ exports.getOnDutyReason = catchAsync(async (req, res, next) => {
   if (!onDutyReason) {
     return next(new AppError('OnDuty Reason not found', 404));
   }
-  if(onDutyReason) 
-      {      
-         const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);  
-          if(userOnDutyReasons) 
-            {
-              onDutyReason.userOnDutyReason = userOnDutyReasons;
-            }
-            else{
-              onDutyReason.userOnDutyReason=null;
-            }          
-      }
+  if (onDutyReason) {
+    const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);
+    if (userOnDutyReasons) {
+      onDutyReason.userOnDutyReason = userOnDutyReasons;
+    }
+    else {
+      onDutyReason.userOnDutyReason = null;
+    }
+  }
   res.status(200).json({
     status: 'success',
     data: onDutyReason
@@ -319,7 +313,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
   }
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await UserOnDutyReason.find({ onDutyReason: isOnDutyReason._id });
-    // Extract the existing user IDs
+  // Extract the existing user IDs
   const existingUserIds = existingUsers.map(user => user.user.toString());
 
   // Find users to be removed (existing users not present in the request)
@@ -338,7 +332,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
       onDutyReason: isOnDutyReason._id
     });
   }));
-  
+
   const onDutyReason = await OnDutyReason.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -348,7 +342,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
     return next(new AppError('Regularization Reason not found', 404));
   }
 
-  onDutyReason.userOnDutyReason =  await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
+  onDutyReason.userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
   res.status(200).json({
     status: 'success',
     data: onDutyReason
@@ -369,24 +363,22 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await OnDutyReason.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await OnDutyReason.countDocuments({ company: req.cookies.companyId });
+
   const onDutyReasons = await OnDutyReason.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));  
-  if(onDutyReasons) 
-      {
-        
-          for(var i = 0; i < onDutyReasons.length; i++) {     
-          const userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReasons[i]._id);  
-          if(userOnDutyReason) 
-            {
-              onDutyReasons[i].userOnDutyReason = userOnDutyReason;
-            }
-            else{
-              onDutyReasons[i].userOnDutyReason=null;
-            }
-          }
+    .limit(parseInt(limit));
+  if (onDutyReasons) {
+
+    for (var i = 0; i < onDutyReasons.length; i++) {
+      const userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReasons[i]._id);
+      if (userOnDutyReason) {
+        onDutyReasons[i].userOnDutyReason = userOnDutyReason;
       }
+      else {
+        onDutyReasons[i].userOnDutyReason = null;
+      }
+    }
+  }
   res.status(200).json({
     status: 'success',
     data: onDutyReasons,
@@ -405,7 +397,7 @@ exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
- 
+
   const attendanceMode = await AttendanceMode.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -475,7 +467,7 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
- 
+
   const attendanceTemplate = await AttendanceTemplate.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -526,12 +518,11 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 
-  const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });  
- 
-  var attendanceTemplate =null;
-  if(attendanceTemplateAssignments.length>0)
-  {  
-  attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
+  const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });
+
+  var attendanceTemplate = null;
+  if (attendanceTemplateAssignments.length > 0) {
+    attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
   }
   res.status(200).json({
     status: 'success',
@@ -542,10 +533,10 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await AttendanceTemplate.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await AttendanceTemplate.countDocuments({ company: req.cookies.companyId });
+
   const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: attendanceTemplates,
@@ -554,7 +545,7 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
 });
 
 exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
-  
+
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
@@ -583,14 +574,14 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
     const IPDetails = req.body.IPDetails.map(ip => ({
       attendanceRegularization: attendanceRegularization._id,
       IP: ip.IP
-    }));  
+    }));
     attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = await AttendanceRegularizationRestrictedIP.insertMany(IPDetails);
-    
+
   }
 
   // Insert restrictLocationDetails into AttendanceRegularizationRestrictedIP model
   if (req.body.restrictLocationDetails && req.body.restrictLocationDetails.length > 0) {
-  
+
     const locationDetails = req.body.restrictLocationDetails.map(location => ({
       attendanceRegularization: attendanceRegularization._id,
       Location: location.Location,
@@ -599,7 +590,7 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
       Radius: location.Radius
     }));
     attendanceRegularization.AttendanceRegularizationRestrictedLocations = await AttendanceRegularizationRestrictedLocation.insertMany(locationDetails);
-    
+
   }
 
   res.status(201).json({
@@ -613,24 +604,21 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   if (!attendanceRegularization) {
     return next(new AppError("Attendance Regularization not found", 404));
   }
-  if(attendanceRegularization) 
-  {  
-      const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-      if(attendanceRegularizationRestrictedIP) 
-        {
-          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
-        }
-        else{
-          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
-        }
-        const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-      if(attendanceRegularizationRestrictedLocation) 
-        {
-          attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
-        }
-        else{
-          attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
-        }
+  if (attendanceRegularization) {
+    const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+    if (attendanceRegularizationRestrictedIP) {
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+    }
+    else {
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = null;
+    }
+    const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+    if (attendanceRegularizationRestrictedLocation) {
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+    }
+    else {
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations = null;
+    }
   }
 
   res.status(200).json({
@@ -647,24 +635,21 @@ exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next
   if (!attendanceRegularization) {
     return next(new AppError("Attendance Regularization not found", 404));
   }
-  if(attendanceRegularization) 
-  {  
-      const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-      if(attendanceRegularizationRestrictedIP) 
-        {
-          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
-        }
-        else{
-          attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
-        }
-        const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-      if(attendanceRegularizationRestrictedLocation) 
-        {
-          attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
-        }
-        else{
-          attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
-        }
+  if (attendanceRegularization) {
+    const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+    if (attendanceRegularizationRestrictedIP) {
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+    }
+    else {
+      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = null;
+    }
+    const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+    if (attendanceRegularizationRestrictedLocation) {
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+    }
+    else {
+      attendanceRegularization.AttendanceRegularizationRestrictedLocations = null;
+    }
   }
 
   res.status(200).json({
@@ -690,8 +675,8 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   );
 
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));       
-  }             
+    return next(new AppError("Attendance Regularization not found", 404));
+  }
   // Update or create IP records
   if (req.body.IPDetails && req.body.IPDetails.length > 0) {
     await Promise.all(req.body.IPDetails.map(async (ipDetail) => {
@@ -726,22 +711,20 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
     AttendanceRegularizationRestrictedLocation.deleteMany({ Location: { $nin: req.body.restrictLocationDetails.map(location => location.Location) } })
   ]);
 
-  const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-  if(attendanceRegularizationRestrictedIP) 
-    {
-      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
-    }
-    else{
-      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails=null;
-    }
-    const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);  
-  if(attendanceRegularizationRestrictedLocation) 
-    {
-      attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
-    }
-    else{
-      attendanceRegularization.AttendanceRegularizationRestrictedLocations=null;
-    }
+  const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+  if (attendanceRegularizationRestrictedIP) {
+    attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
+  }
+  else {
+    attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = null;
+  }
+  const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+  if (attendanceRegularizationRestrictedLocation) {
+    attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+  }
+  else {
+    attendanceRegularization.AttendanceRegularizationRestrictedLocations = null;
+  }
   res.status(200).json({
     status: "success",
     data: attendanceRegularization
@@ -751,30 +734,27 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await AttendanceRegularization.countDocuments({ company: req.cookies.companyId });  
- 
-  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId }).skip(parseInt(skip)).limit(parseInt(limit));  
-  if(attendanceRegularizations) 
-  {
-    
-      for(var i = 0; i < attendanceRegularizations.length; i++) {     
-        const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);  
-        if(attendanceRegularizationRestrictedIP) 
-          {
-            attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
-          }
-          else{
-            attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails=null;
-          }
-          const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);  
-        if(attendanceRegularizationRestrictedLocation) 
-          {
-            attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
-          }
-          else{
-            attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations=null;
-          }      
+  const totalCount = await AttendanceRegularization.countDocuments({ company: req.cookies.companyId });
+
+  const attendanceRegularizations = await AttendanceRegularization.find({ company: req.cookies.companyId }).skip(parseInt(skip)).limit(parseInt(limit));
+  if (attendanceRegularizations) {
+
+    for (var i = 0; i < attendanceRegularizations.length; i++) {
+      const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);
+      if (attendanceRegularizationRestrictedIP) {
+        attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
       }
+      else {
+        attendanceRegularizations[i].AttendanceRegularizationRestrictedIPDetails = null;
+      }
+      const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularizations[i]._id);
+      if (attendanceRegularizationRestrictedLocation) {
+        attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
+      }
+      else {
+        attendanceRegularizations[i].AttendanceRegularizationRestrictedLocations = null;
+      }
+    }
   }
   res.status(200).json({
     status: "success",
@@ -856,7 +836,7 @@ exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req
 
 // Create a new Attendance Template Assignment
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
-  
+
   // Check if the attendanceTemplate exists
   const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attandanceTemplate });
   if (!attendanceTemplate) {
@@ -871,20 +851,20 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
     primaryApprover = attendanceTemplate.primaryApprover;
     secondaryApprover = attendanceTemplate.primaryApprover;
   }
-// Check if the employee exists
+  // Check if the employee exists
   const employee = await User.findById(req.body.employee);
   if (!employee) {
     return next(new AppError('Invalid employee', 400));
   }
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   req.body.company = companyId;
-  
-   await AttendanceTemplateAssignments.deleteMany({ employee: req.body.employee });
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  req.body.company = companyId;
+
+  await AttendanceTemplateAssignments.deleteMany({ employee: req.body.employee });
 
   // Create the attendance assignment
   const attendanceAssignment = await AttendanceTemplateAssignments.create({
@@ -955,10 +935,10 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });
+
   const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-  .limit(parseInt(limit));
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: attendanceAssignments,
@@ -967,14 +947,14 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
 });
 
 exports.createRoundingInformation = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   // Add companyId to the request body
-   req.body.company = companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
   const roundingInformation = await RoundingInformation.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -1031,10 +1011,10 @@ exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
 exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await RoundingInformation.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await RoundingInformation.countDocuments({ company: req.cookies.companyId });
+
   const roundingInformation = await RoundingInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: roundingInformation,
@@ -1066,13 +1046,13 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => { 
+exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await OvertimeInformation.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await OvertimeInformation.countDocuments({ company: req.cookies.companyId });
+
   const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: overtimeInformation,
@@ -1081,14 +1061,14 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
 });
 
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   // Add companyId to the request body
-   req.body.company = companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
   const onDutyTemplate = await OnDutyTemplate.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -1137,10 +1117,10 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
 exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await OnDutyTemplate.countDocuments({ company: req.cookies.companyId});  
- 
+  const totalCount = await OnDutyTemplate.countDocuments({ company: req.cookies.companyId });
+
   const onDutyTemplates = await OnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: onDutyTemplates,
@@ -1150,26 +1130,26 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
 
 // Create a UserOnDutyTemplate
 exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
-   }
-   // Add companyId to the request body
-   req.body.company = companyId;
-   // Check if the user exists
-   const userExists = await User.exists({ _id: req.body.user });
-   if (!userExists) {
-     return next(new AppError('User not found', 404));
-   }
- 
-   // Check if the duty template exists
-   const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
-   if (!dutyTemplateExists) {
-     return next(new AppError('Duty template not found', 404));
-   }
-   await UserOnDutyTemplate.deleteMany({ user: req.body.user });
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
+  // Add companyId to the request body
+  req.body.company = companyId;
+  // Check if the user exists
+  const userExists = await User.exists({ _id: req.body.user });
+  if (!userExists) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Check if the duty template exists
+  const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
+  if (!dutyTemplateExists) {
+    return next(new AppError('Duty template not found', 404));
+  }
+  await UserOnDutyTemplate.deleteMany({ user: req.body.user });
   const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -1248,10 +1228,10 @@ exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await UserOnDutyTemplate.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await UserOnDutyTemplate.countDocuments({ company: req.cookies.companyId });
+
   const userOnDutyTemplates = await UserOnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: userOnDutyTemplates,
@@ -1268,7 +1248,7 @@ exports.createShift = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
-  const shift = await Shift.create(req.body); 
+  const shift = await Shift.create(req.body);
 
   res.status(201).json({
     status: 'success',
@@ -1319,10 +1299,10 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 exports.getAllShifts = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await Shift.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await Shift.countDocuments({ company: req.cookies.companyId });
+
   const shifts = await Shift.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: shifts,
@@ -1330,12 +1310,11 @@ exports.getAllShifts = catchAsync(async (req, res, next) => {
   });
 });
 exports.getShiftByUser = catchAsync(async (req, res, next) => {
-  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ user: req.params.userId });  
- 
-  var shifts =null;
-  if(shiftTemplateAssignments.length>0)
-  {
-  shifts = await Shift.findById(shiftTemplateAssignments[0].template);
+  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ user: req.params.userId });
+
+  var shifts = null;
+  if (shiftTemplateAssignments.length > 0) {
+    shifts = await Shift.findById(shiftTemplateAssignments[0].template);
   }
   res.status(200).json({
     status: 'success',
@@ -1347,7 +1326,7 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
 
 // Create a new ShiftTemplateAssignment
 exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-  
+
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
@@ -1405,13 +1384,13 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 });
 
 // Get all ShiftTemplateAssignments
-exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => { 
+exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await ShiftTemplateAssignment.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await ShiftTemplateAssignment.countDocuments({ company: req.cookies.companyId });
+
   const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: shiftTemplateAssignments,
@@ -1504,16 +1483,16 @@ exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
 exports.getAllRosterShiftAssignmentsBycompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-// Extract companyId from req.cookies
-const company = req.cookies.companyId;
-// Check if companyId exists in cookies
-if (!company) {
-  return next(new AppError('Company ID not found in cookies', 400));
-}
+  // Extract companyId from req.cookies
+  const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
   const query = { company: company };
   // Get the total count of documents matching the query
   const totalCount = await RosterShiftAssignment.countDocuments(query);
- 
+
   const rosterShiftAssignments = await RosterShiftAssignment.find(query);
   res.status(200).json({
     status: 'success',
@@ -1543,7 +1522,7 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
- //self
+  //self
   const employeeOnDutyRequest = await EmployeeOnDutyRequest.create(req.body);
   if (req.body.onDutyShift && req.body.onDutyShift.length > 0) {
     const employeeOnDutyShift = req.body.onDutyShift.map(shift => ({
@@ -1555,8 +1534,8 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
       endTime: shift.endTime,
       remarks: shift.remarks,
 
-    }));   
-    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);    
+    }));
+    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
   }
   res.status(201).json({
     status: 'success',
@@ -1567,62 +1546,58 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 // Get a DutyRequest by ID
 exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   const dutyRequest = await EmployeeOnDutyRequest.findById(req.params.id);
-  if(dutyRequest) 
-  {
-      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequest._id);  
-      if(employeeOnDutyShifts) 
-        {
-          dutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
-        }
-        else{
-          dutyRequest.employeeOnDutyShifts=null;
-        }
+  if (dutyRequest) {
+    const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequest._id);
+    if (employeeOnDutyShifts) {
+      dutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
+    }
+    else {
+      dutyRequest.employeeOnDutyShifts = null;
+    }
   }
 
   res.status(200).json({
     status: 'success',
     data: dutyRequest
-  });  
+  });
 });
 
 // Update a DutyRequest by ID
 exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   const employeeOnDutyRequest = await EmployeeOnDutyRequest.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
   );
 
   if (!employeeOnDutyRequest) {
-      return next(new AppError('DutyRequest not found', 404));
+    return next(new AppError('DutyRequest not found', 404));
   }
 
-  if(employeeOnDutyRequest) 
-  {  
-      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);  
-      if(employeeOnDutyShifts) 
-        {
-          employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
-        }
-        else{
-          employeeOnDutyRequest.employeeOnDutyShifts=null;
-        }
+  if (employeeOnDutyRequest) {
+    const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);
+    if (employeeOnDutyShifts) {
+      employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
+    }
+    else {
+      employeeOnDutyRequest.employeeOnDutyShifts = null;
+    }
   }
 
   res.status(200).json({
-      status: 'success',
-      data: employeeOnDutyRequest
+    status: 'success',
+    data: employeeOnDutyRequest
   });
 });
 
 // Delete a DutyRequest by ID
 exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   const dutyRequest = await EmployeeOnDutyRequest.findByIdAndDelete(req.params.id);
-  
+
   if (!dutyRequest) {
     return next(new AppError('DutyRequest not found', 404));
   }
-  
+
   res.status(204).json({
     status: 'success',
     data: null
@@ -1633,12 +1608,12 @@ exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-// Extract companyId from req.cookies
-const company = req.cookies.companyId;
-// Check if companyId exists in cookies
-if (!company) {
-  return next(new AppError('Company ID not found in cookies', 400));
-}
+  // Extract companyId from req.cookies
+  const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+    return next(new AppError('Company ID not found in cookies', 400));
+  }
   const query = { company: company };
   if (req.body.status) {
     query.status = req.body.status;
@@ -1648,21 +1623,19 @@ if (!company) {
 
   // Get the regularization requests matching the query with pagination
   const dutyRequests = await EmployeeOnDutyRequest.find(query).skip(parseInt(skip))
-  .limit(parseInt(limit));  
-  if(dutyRequests) 
-  {      
-   for(var i = 0; i < dutyRequests.length; i++) {     
-   
-      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
-      if(employeeOnDutyShifts) 
-        { 
-          dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
-        }
-        else{
-          dutyRequests[i].employeeOnDutyShifts=null;
-        }
+    .limit(parseInt(limit));
+  if (dutyRequests) {
+    for (var i = 0; i < dutyRequests.length; i++) {
+
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);
+      if (employeeOnDutyShifts) {
+        dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
       }
- }
+      else {
+        dutyRequests[i].employeeOnDutyShifts = null;
+      }
+    }
+  }
   res.status(200).json({
     status: 'success',
     data: dutyRequests,
@@ -1673,26 +1646,24 @@ if (!company) {
 exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeOnDutyRequest.countDocuments({  user: req.params.userId }); 
+  const totalCount = await EmployeeOnDutyRequest.countDocuments({ user: req.params.userId });
 
-  const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId}).skip(parseInt(skip))
-  .limit(parseInt(limit));  
- 
-  if(dutyRequests.length>0) 
-    {      
-       for(var i = 0; i < dutyRequests.length; i++) {     
-     
-        const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);  
-        if(employeeOnDutyShifts) 
-          {
-            dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
-          }
-          else{
-            dutyRequests[i].employeeOnDutyShifts=null;
-          }
-        }
+  const dutyRequests = await EmployeeOnDutyRequest.find({ user: req.params.userId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  if (dutyRequests.length > 0) {
+    for (var i = 0; i < dutyRequests.length; i++) {
+
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);
+      if (employeeOnDutyShifts) {
+        dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
+      }
+      else {
+        dutyRequests[i].employeeOnDutyShifts = null;
+      }
+    }
   }
- 
+
   res.status(200).json({
     status: 'success',
     data: dutyRequests,
@@ -1703,9 +1674,9 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
 exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await TimeEntry.countDocuments({ company: req.cookies.companyId }); 
+  const totalCount = await TimeEntry.countDocuments({ company: req.cookies.companyId });
   const timeEntries = await TimeEntry.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));  
+    .limit(parseInt(limit));
   res.status(200).json({
     status: 'success',
     data: timeEntries,
@@ -1715,11 +1686,11 @@ exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
 
 exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
   const timeEntry = await TimeEntry.findByIdAndDelete(req.params.id);
-  
+
   if (!timeEntry) {
     return next(new AppError('TimeEntry not found', 404));
   }
-  
+
   res.status(204).json({
     status: 'success',
     data: null
@@ -1732,7 +1703,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   const year = req.body.year || new Date().getFullYear(); // Default to current year if not provided
 
   if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError('Company ID not found in cookies', 400));
   }
 
   req.body.company = companyId;
@@ -1741,15 +1712,15 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   let filter = { status: 'Active', company: req.cookies.companyId };
   // Generate query based on request params
   const features = new APIFeatures(User.find(filter), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
 
   // Run created query
   const document = await features.query;
 
-//  const endDate = new Date(); // Today's date
+  //  const endDate = new Date(); // Today's date
 
   // Move to the first day of the current month
   const firstDayOfCurrentMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -1764,106 +1735,106 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   const daysToSubtract = lastDayOfWeek === 0 ? 6 : lastDayOfWeek - 1;
 
   // Calculate the last Monday of the previous month
- // const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+  // const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-// Define start and end dates for the selected month
+  // Define start and end dates for the selected month
 
   // Perform additional work on each user
   const modifiedUsers = await Promise.all(document.map(async user => {
-      const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
-      if (shiftAssignment) {
-          const shift = await Shift.findOne({ _id: shiftAssignment.template });
-          if (shift) {
-              const timeLogs = await TimeLog.aggregate([
-                  { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
-                  {
-                      $group: {
-                          _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
-                          startTime: { $min: '$startTime' },
-                          lastTimeLog: { $max: '$endTime' }
-                      }
-                  }
-              ]);
-        console.log(timeLogs);
-              if (timeLogs) {
-                  const attendanceRecords = await Promise.all(timeLogs.map(async log => {
-                    console.log(log._id);
-                      const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
-                      if (attendannceCount == 0) {
-                          const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
-                          let shiftTiming = "";
-                          let deviationHour = "0";
-                          let isOvertime = false;                       
-                          if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
-                              const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
-                              const timeDifference = hours * 60;
-                              const timeWorked = timeLogCount * 10;
-                              if (timeWorked < timeDifference) {
-                                  deviationHour = timeDifference - timeWorked;
-                              }
-                              if (timeDifference < timeWorked) {
-                                  deviationHour = timeWorked - timeDifference;
-                                  isOvertime = true;
-                              }
-                          }
-                          // Fetch manual entry comment if any
-                          const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
-
-                          return {
-                              date: new Date(log._id),
-                              checkIn: log.startTime,
-                              checkOut: log.lastTimeLog,
-                              user: user._id,
-                              duration: timeLogCount * 10,
-                              ODHours: 0,
-                              SSLHours: 0,
-                              beforeProcessing: 'N/A',
-                              afterProcessing: 'N/A',
-                              earlyLateStatus: 'N/A',
-                              deviationHour: deviationHour,
-                              shiftTiming: '00:00',
-                              lateComingRemarks: lateComingRemarks,
-                              company: req.cookies.companyId,
-                              isOvertime: isOvertime,
-                          };
-                      }
-                  }));
-
-                  const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
-
-                 //compare parameters from shift and calculte no of halfdays added based on tmelog
-                 //Need o chaeck flag and if fllag s set then only + applied
-                 //IF isovertimeallowed flag set to true then only overtime will be calculated
-                  // Insert attendanceRecords into AttendanceRecord collection
-                  await insertAttendanceRecords(attendanceRecordsFiltered); 
-                 
-                  // Insert entries into OvertimeInformation for users with isOvertime set to true
-                  const overtimeRecords = attendanceRecordsFiltered
-                      .filter(record => record.isOvertime)
-                      .map(record => ({
-                          User: user._id, // Replace with appropriate user name
-                          AttandanceShift: shift._id,
-                          OverTime: record.deviationHour,                          
-                          ShiftTime: shift.startTime+" "+shift.endTime,
-                          Date: record.date,                          
-                          CheckInDate: record.checkIn,
-                          CheckOutDate: record.checkOut,
-                          CheckInTime: record.checkIn,
-                          CheckOutTime: record.checkOut,
-                          company: companyId,
-                      }));
-                  if (overtimeRecords.length) {
-                      await OvertimeInformation.insertMany(overtimeRecords);
-                  }
-                
-              }
+    const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+    if (shiftAssignment) {
+      const shift = await Shift.findOne({ _id: shiftAssignment.template });
+      if (shift) {
+        const timeLogs = await TimeLog.aggregate([
+          { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+              startTime: { $min: '$startTime' },
+              lastTimeLog: { $max: '$endTime' }
+            }
           }
+        ]);
+        console.log(timeLogs);
+        if (timeLogs) {
+          const attendanceRecords = await Promise.all(timeLogs.map(async log => {
+            console.log(log._id);
+            const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
+            if (attendannceCount == 0) {
+              const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+              let shiftTiming = "";
+              let deviationHour = "0";
+              let isOvertime = false;
+              if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
+                const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
+                const timeDifference = hours * 60;
+                const timeWorked = timeLogCount * 10;
+                if (timeWorked < timeDifference) {
+                  deviationHour = timeDifference - timeWorked;
+                }
+                if (timeDifference < timeWorked) {
+                  deviationHour = timeWorked - timeDifference;
+                  isOvertime = true;
+                }
+              }
+              // Fetch manual entry comment if any
+              const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+
+              return {
+                date: new Date(log._id),
+                checkIn: log.startTime,
+                checkOut: log.lastTimeLog,
+                user: user._id,
+                duration: timeLogCount * 10,
+                ODHours: 0,
+                SSLHours: 0,
+                beforeProcessing: 'N/A',
+                afterProcessing: 'N/A',
+                earlyLateStatus: 'N/A',
+                deviationHour: deviationHour,
+                shiftTiming: '00:00',
+                lateComingRemarks: lateComingRemarks,
+                company: req.cookies.companyId,
+                isOvertime: isOvertime,
+              };
+            }
+          }));
+
+          const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
+
+          //compare parameters from shift and calculte no of halfdays added based on tmelog
+          //Need o chaeck flag and if fllag s set then only + applied
+          //IF isovertimeallowed flag set to true then only overtime will be calculated
+          // Insert attendanceRecords into AttendanceRecord collection
+          await insertAttendanceRecords(attendanceRecordsFiltered);
+
+          // Insert entries into OvertimeInformation for users with isOvertime set to true
+          const overtimeRecords = attendanceRecordsFiltered
+            .filter(record => record.isOvertime)
+            .map(record => ({
+              User: user._id, // Replace with appropriate user name
+              AttandanceShift: shift._id,
+              OverTime: record.deviationHour,
+              ShiftTime: shift.startTime + " " + shift.endTime,
+              Date: record.date,
+              CheckInDate: record.checkIn,
+              CheckOutDate: record.checkOut,
+              CheckInTime: record.checkIn,
+              CheckOutTime: record.checkOut,
+              company: companyId,
+            }));
+          if (overtimeRecords.length) {
+            await OvertimeInformation.insertMany(overtimeRecords);
+          }
+
+        }
       }
+    }
   }));
 
   res.status(201).json({
-      status: 'success',
-      data: null
+    status: 'success',
+    data: null
   });
 });
 
@@ -1895,7 +1866,7 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
       }
 
       // Process each record (this can be adjusted based on your logic)
-      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date,req.cookies.companyId);
+      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
 
       if (attendanceRecord) {
         attendanceRecords.push(attendanceRecord);
@@ -1930,7 +1901,7 @@ async function getUserByEmpCode(empCode) {
     const appointments = await Appointment.find({ empCode: empCode })
       .populate('user')  // Populate the user field with user details
       .select('user empCode company joiningDate confirmationDate'); // Select relevant fields
-      console.log(appointments);
+    console.log(appointments);
     if (appointments && appointments.length > 0) {
       return appointments[0].user;  // Return the user details from the first matched appointment
     } else {
@@ -1943,7 +1914,7 @@ async function getUserByEmpCode(empCode) {
 }
 
 // Helper function to process each individual attendance record
-async function processAttendanceRecord(user, startTime, endTime, date,companyId) {
+async function processAttendanceRecord(user, startTime, endTime, date, companyId) {
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
 
   if (shiftAssignment) {
@@ -1952,11 +1923,20 @@ async function processAttendanceRecord(user, startTime, endTime, date,companyId)
     if (shift) {
       const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(date) });
 
-      let deviationHour = 0;
+      let deviationMinutes = 0;
       let isOvertime = false;
 
-      if (shift.startTime && shift.endTime) {
-        const timeWorked = timeLogCount * 10; // Assuming each time log is worth 10 minutes
+      if (startTime && endTime) {
+        const [startHours, startMinutes] = startTime.split(':').map(Number);
+        const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+        const start = new Date(date);
+        start.setHours(startHours, startMinutes, 0, 0);
+
+        const end = new Date(date);
+        end.setHours(endHours, endMinutes, 0, 0);
+
+        const timeWorked = (end - start) / (1000 * 60); // Time worked in minutes
 
         const [shiftStartHours, shiftStartMinutes] = shift.startTime.split(':').map(Number);
         const [shiftEndHours, shiftEndMinutes] = shift.endTime.split(':').map(Number);
@@ -1964,10 +1944,10 @@ async function processAttendanceRecord(user, startTime, endTime, date,companyId)
         const shiftTotalMinutes = (shiftEndHours * 60 + shiftEndMinutes) - (shiftStartHours * 60 + shiftStartMinutes);
 
         if (timeWorked < shiftTotalMinutes) {
-          deviationHour = shiftTotalMinutes - timeWorked;
+          deviationMinutes = shiftTotalMinutes - timeWorked; // Deviation in minutes
         }
         if (timeWorked > shiftTotalMinutes) {
-          deviationHour = timeWorked - shiftTotalMinutes;
+          deviationMinutes = timeWorked - shiftTotalMinutes; // Deviation in minutes
           isOvertime = true;
         }
       }
@@ -1982,7 +1962,7 @@ async function processAttendanceRecord(user, startTime, endTime, date,companyId)
         checkOut: endTime,
         user: user._id,
         duration: timeLogCount * 10,
-        deviationHour,
+        deviationHour: deviationMinutes,
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
         company: companyId, // Assuming companyId is a property on the user model
@@ -1994,13 +1974,12 @@ async function processAttendanceRecord(user, startTime, endTime, date,companyId)
   return null; // Return null if no valid shift is found
 }
 
-
 // Function to get late coming remarks (if needed)
 async function getLateComingRemarks(userId, logId) {
   const manualTime = await manualTimeRequest.findOne({
-      user: userId,
-      fromDate: { $lte: new Date(logId) },
-      toDate: { $gte: new Date(logId) }
+    user: userId,
+    fromDate: { $lte: new Date(logId) },
+    toDate: { $gte: new Date(logId) }
   });
   return manualTime ? manualTime.reason : 'N/A';
 }
@@ -2009,35 +1988,35 @@ async function getLateComingRemarks(userId, logId) {
 async function insertAttendanceRecords(attendanceRecords) {
   // Check if attendanceRecords is null or undefined and handle accordingly
   if (!attendanceRecords) {
-      console.warn('No attendance records provided');
-      return;
+    console.warn('No attendance records provided');
+    return;
   }
 
   // Insert records into the database, avoiding duplicates
   try {
-      // Assuming each attendance record has a unique combination of employeeId and date
-      const insertPromises = attendanceRecords.map(async (record) => {
-          // Check if the record already exists based on unique fields (e.g., employeeId, date)
-          const existingRecord = await AttendanceRecords.findOne({
-              employeeId: record.employeeId,
-              date: record.date
-          });
-
-          // If no record exists, insert it
-          if (!existingRecord) {
-              await AttendanceRecords.create(record);
-              console.log('Inserted:', record);
-          } else {
-              console.log('Duplicate found for record:', record);
-          }
+    // Assuming each attendance record has a unique combination of employeeId and date
+    const insertPromises = attendanceRecords.map(async (record) => {
+      // Check if the record already exists based on unique fields (e.g., employeeId, date)
+      const existingRecord = await AttendanceRecords.findOne({
+        employeeId: record.employeeId,
+        date: record.date
       });
 
-      // Wait for all insertions to complete
-      await Promise.all(insertPromises);
+      // If no record exists, insert it
+      if (!existingRecord) {
+        await AttendanceRecords.create(record);
+        console.log('Inserted:', record);
+      } else {
+        console.log('Duplicate found for record:', record);
+      }
+    });
 
-      console.log('Records processed successfully');
+    // Wait for all insertions to complete
+    await Promise.all(insertPromises);
+
+    console.log('Records processed successfully');
   } catch (error) {
-      console.error('Error inserting records:', error);
+    console.error('Error inserting records:', error);
   }
 }
 
@@ -2047,13 +2026,13 @@ function parseTime(timeString) {
 }
 
 function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
-  
-  const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay; 
+
+  const differenceInMilliseconds = minHoursPerDayToGetCreditForFullDay;
   // If the end time is before the start time, assume it's the next day
   if (differenceInMilliseconds < 0) {
     differenceInMilliseconds += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
   }
-  
+
   const differenceInMinutes = Math.floor(differenceInMilliseconds / (1000 * 60));
   return differenceInMinutes;
 }
@@ -2062,10 +2041,10 @@ exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
-  
-  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
-  
+  const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+
+  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,
@@ -2074,9 +2053,9 @@ exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
 
 });
 exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
-  
-  const attendanceRecords = await getRecordsByYearAndMonthByUser(req.body.year,req.body.month,req.body.user);
-  
+
+  const attendanceRecords = await getRecordsByYearAndMonthByUser(req.body.year, req.body.month, req.body.user);
+
   res.status(200).json({
     status: 'success',
     data: attendanceRecords
@@ -2086,7 +2065,7 @@ exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
 async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month) {
-      throw new Error('Year and month are required');
+    throw new Error('Year and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
@@ -2094,33 +2073,33 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
 
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided
-      if (skip > 0 || limit > 0) {
-          const count = await AttendanceRecords.countDocuments({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).exec();
-          return { count };
-      } else {
-          const records = await AttendanceRecords.find({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).skip(skip).limit(limit).exec();
-          return records;
-      }
+    // Check if skip and limit are provided
+    if (skip > 0 || limit > 0) {
+      const count = await AttendanceRecords.countDocuments({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).exec();
+      return { count };
+    } else {
+      const records = await AttendanceRecords.find({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).skip(skip).limit(limit).exec();
+      return records;
+    }
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
 async function getRecordsByYearAndMonthByUser(year, month, user) {
   // Validate input
   if (!year || !month) {
-      throw new Error('Year and month are required');
+    throw new Error('Year and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
@@ -2128,207 +2107,206 @@ async function getRecordsByYearAndMonthByUser(year, month, user) {
 
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided     
-          const records = await AttendanceRecords.find({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              },
-              user: user
-          }).exec();
-          return records;
-      
+    // Check if skip and limit are provided     
+    const records = await AttendanceRecords.find({
+      date: {
+        $gte: startDate,
+        $lt: endDate
+      },
+      user: user
+    }).exec();
+    return records;
+
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
-exports.ProcessAttendanceAndLOP = catchAsync (async (req, res, next) => {
-  try {   
-      // Calculate the start and end dates for the month
-      const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
-      const endOfMonth = new Date(req.body.year, req.body.month, 0); // Last day of the month      
-      const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ user: req.body.user });
-      if (attendanceAssignment) {
-          const attandanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attandanceTemplate });
-          if (attandanceTemplate) {          
-              // Step 1: Get attendance records for the specified month
-              const attendanceRecords = await AttendanceRecords.find({
-                  user: req.body.user,
-                  company: req.cookies.companyId,
-                  date: { $gte: startOfMonth, $lte: endOfMonth },
-              });
+exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
+  try {
+    // Calculate the start and end dates for the month
+    const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
+    const endOfMonth = new Date(req.body.year, req.body.month, 0); // Last day of the month      
+    const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ user: req.body.user });
+    if (attendanceAssignment) {
+      const attandanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attandanceTemplate });
+      if (attandanceTemplate) {
+        // Step 1: Get attendance records for the specified month
+        const attendanceRecords = await AttendanceRecords.find({
+          user: req.body.user,
+          company: req.cookies.companyId,
+          date: { $gte: startOfMonth, $lte: endOfMonth },
+        });
 
-              // Step 2: Get approved leave applications for the specified month
-              const approvedLeaves = await LeaveApplication.find({
-                  user: req.body.user,
-                  status: constants.Leave_Application_Constant.app,
-                  startDate: { $gte: startOfMonth, $lte: endOfMonth },
-                  endDate: { $gte: startOfMonth, $lte: endOfMonth },
-              });
+        // Step 2: Get approved leave applications for the specified month
+        const approvedLeaves = await LeaveApplication.find({
+          user: req.body.user,
+          status: constants.Leave_Application_Constant.app,
+          startDate: { $gte: startOfMonth, $lte: endOfMonth },
+          endDate: { $gte: startOfMonth, $lte: endOfMonth },
+        });
 
-              // Extract approved leave days
-              const approvedLeaveDays = approvedLeaves.flatMap(leave => {
-                  const leaveStart = new Date(leave.startDate);
-                  const leaveEnd = new Date(leave.endDate);
-                  const leaveDays = [];
+        // Extract approved leave days
+        const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+          const leaveStart = new Date(leave.startDate);
+          const leaveEnd = new Date(leave.endDate);
+          const leaveDays = [];
 
-                  for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
-                      if (d >= startOfMonth && d <= endOfMonth) {
-                          leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
-                      }
-                  }
-                  return leaveDays;
-              });
-              const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
-              const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
+          for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
+            if (d >= startOfMonth && d <= endOfMonth) {
+              leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
+            }
+          }
+          return leaveDays;
+        });
+        const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
+        const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
 
-              // Iterate through the days of the month
-              const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month 
-            
-              for (let day = 1; day <= daysInMonth; day++) {      
-             
-               // Create the date in UTC, setting the time to midnight (start of the day)
-                const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
-                // Convert it back to your local timezone (optional)
-                const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-                const dayOfWeek = currentDate.getDay();  
-                const weeklyOffDays = attandanceTemplate.weeklyOfDays; // e.g., ['Sunday', 'Saturday']
-                const alternateWeekOffRoutine = attandanceTemplate.alternateWeekOffRoutine; // 'none', 'odd', or 'even'
-                const daysForAlternateWeekOffRoutine = attandanceTemplate.daysForAlternateWeekOffRoutine || []; // e.g., ['Sunday', 'Wednesday']                
-                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];                
-                // Create a set of weekly off days for efficient lookup
-                const weeklyOffDaysSet = new Set(weeklyOffDays);                
-                // Create a set for alternate weekly off days
-                const alternateWeekOffDaysSet = new Set(daysForAlternateWeekOffRoutine);                
-                // Get the name of the day (e.g., 'Sunday', 'Monday')
-                const dayName = daysOfWeek[dayOfWeek];               
-                // Function to get the current week number of the year
-                function getWeekNumber(date) {
-                    const startDate = new Date(date.getFullYear(), 0, 1);
-                    const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000)); // Total days from the start of the year
-                    const weekNumber = Math.ceil((days + 1) / 7); // Week number (1-based)
-                    return weekNumber;
-                }                
-                // Get the current week number
-                const currentWeekNumber = getWeekNumber(currentDate);    
-                // Determine if the week is odd or even
-                const isOddWeek = currentWeekNumber % 2 !== 0; // Odd week if the week number is odd    
-                let currentWeekOffDaysSet;
-                if (alternateWeekOffRoutine === 'odd' || alternateWeekOffRoutine === 'even') {                    
-                    if (alternateWeekOffRoutine === 'odd' && isOddWeek) {
-                        // For odd weeks, use the first set of alternate days                      
-                        currentWeekOffDaysSet = alternateWeekOffDaysSet;
-                    } else if (alternateWeekOffRoutine === 'even' && !isOddWeek) {
-                        // For even weeks, use the alternate days
-                        currentWeekOffDaysSet = alternateWeekOffDaysSet;
-                    }                  
-                    if (currentWeekOffDaysSet && currentWeekOffDaysSet.has) {
-                    const isAlternateWeekOffDay = currentWeekOffDaysSet.has(dayName);   
-                    if (isAlternateWeekOffDay) {                      
-                        // Skip the current day (it's an alternate weekly off or holiday)
-                        continue; // skip or continue logic
-                    }
-                  }
-                }
-               
-                  const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);                
-                
-                  if (!isWeeklyOffDay) {                 
-                  const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month-1, day));   
-               
-                  const isPresent = attendanceRecords.find(record => {
-                  var flag = record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
-                  if(flag)
-                  return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
-                  });
-                  // If not present and not an approved leave, mark as LOP
-                  if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
-                      // Insert into LOP
-                      const existingRecord = await LOP.findOne({
-                        user: req.body.user,
-                        date: currentDate,
-                        company: req.cookies.companyId
-                  });
-            
-                  if (existingRecord) {
-                    res.status(200).json({
-                      status: 'fail',
-                      message: 'Lop Already Processed for respective uer'
-                    });
-                  }
-                  else
-                  {                  
-                      const lopRecord = new LOP({
-                          user: req.body.user,
-                          date: currentDate,
-                          company: req.cookies.companyId
-                      });
-                      await lopRecord.save();
-                  }
-                  }
-                
-                }
+        // Iterate through the days of the month
+        const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month 
+
+        for (let day = 1; day <= daysInMonth; day++) {
+
+          // Create the date in UTC, setting the time to midnight (start of the day)
+          const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
+          // Convert it back to your local timezone (optional)
+          const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+          const dayOfWeek = currentDate.getDay();
+          const weeklyOffDays = attandanceTemplate.weeklyOfDays; // e.g., ['Sunday', 'Saturday']
+          const alternateWeekOffRoutine = attandanceTemplate.alternateWeekOffRoutine; // 'none', 'odd', or 'even'
+          const daysForAlternateWeekOffRoutine = attandanceTemplate.daysForAlternateWeekOffRoutine || []; // e.g., ['Sunday', 'Wednesday']                
+          const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          // Create a set of weekly off days for efficient lookup
+          const weeklyOffDaysSet = new Set(weeklyOffDays);
+          // Create a set for alternate weekly off days
+          const alternateWeekOffDaysSet = new Set(daysForAlternateWeekOffRoutine);
+          // Get the name of the day (e.g., 'Sunday', 'Monday')
+          const dayName = daysOfWeek[dayOfWeek];
+          // Function to get the current week number of the year
+          function getWeekNumber(date) {
+            const startDate = new Date(date.getFullYear(), 0, 1);
+            const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000)); // Total days from the start of the year
+            const weekNumber = Math.ceil((days + 1) / 7); // Week number (1-based)
+            return weekNumber;
+          }
+          // Get the current week number
+          const currentWeekNumber = getWeekNumber(currentDate);
+          // Determine if the week is odd or even
+          const isOddWeek = currentWeekNumber % 2 !== 0; // Odd week if the week number is odd    
+          let currentWeekOffDaysSet;
+          if (alternateWeekOffRoutine === 'odd' || alternateWeekOffRoutine === 'even') {
+            if (alternateWeekOffRoutine === 'odd' && isOddWeek) {
+              // For odd weeks, use the first set of alternate days                      
+              currentWeekOffDaysSet = alternateWeekOffDaysSet;
+            } else if (alternateWeekOffRoutine === 'even' && !isOddWeek) {
+              // For even weeks, use the alternate days
+              currentWeekOffDaysSet = alternateWeekOffDaysSet;
+            }
+            if (currentWeekOffDaysSet && currentWeekOffDaysSet.has) {
+              const isAlternateWeekOffDay = currentWeekOffDaysSet.has(dayName);
+              if (isAlternateWeekOffDay) {
+                // Skip the current day (it's an alternate weekly off or holiday)
+                continue; // skip or continue logic
               }
             }
-       }
-       res.status(200).json({
-        status: 'success'
-      });
-   } catch (error) {
+          }
+
+          const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);
+
+          if (!isWeeklyOffDay) {
+            const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
+
+            const isPresent = attendanceRecords.find(record => {
+              var flag = record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+              if (flag)
+                return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+            });
+            // If not present and not an approved leave, mark as LOP
+            if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
+              // Insert into LOP
+              const existingRecord = await LOP.findOne({
+                user: req.body.user,
+                date: currentDate,
+                company: req.cookies.companyId
+              });
+
+              if (existingRecord) {
+                res.status(200).json({
+                  status: 'fail',
+                  message: 'Lop Already Processed for respective uer'
+                });
+              }
+              else {
+                const lopRecord = new LOP({
+                  user: req.body.user,
+                  date: currentDate,
+                  company: req.cookies.companyId
+                });
+                await lopRecord.save();
+              }
+            }
+
+          }
+        }
+      }
+    }
+    res.status(200).json({
+      status: 'success'
+    });
+  } catch (error) {
     res.status(200).json({
       status: 'fail'
     });
-   }
+  }
 });
 
 exports.ProcessAttendanceUpdate = async (req, res) => {
   try {
-      const { attandanaceProcessPeroid, runDate, status, exportToPayroll, users } = req.body;
+    const { attandanaceProcessPeroid, runDate, status, exportToPayroll, users } = req.body;
 
-      // 1. Create or find the AttendanceProcess record
-      let attendanceProcess = await AttendanceProcess.findOneAndUpdate(
-          { attendanceProcessPeriod: attandanaceProcessPeroid, runDate: new Date(runDate) },
-          { status, exportToPayroll },
-          { new: true, upsert: true }
+    // 1. Create or find the AttendanceProcess record
+    let attendanceProcess = await AttendanceProcess.findOneAndUpdate(
+      { attendanceProcessPeriod: attandanaceProcessPeroid, runDate: new Date(runDate) },
+      { status, exportToPayroll },
+      { new: true, upsert: true }
+    );
+
+    // 2. Loop through the users array and create or update AttendanceProcessUsers
+    for (let userEntry of users) {
+      const { user, status } = userEntry;
+
+      // Create or update user attendance for the process
+      await AttendanceProcessUsers.findOneAndUpdate(
+        { attendanceProcess: attendanceProcess._id, user: user },
+        { status },
+        { new: true, upsert: true }
       );
+    }
 
-      // 2. Loop through the users array and create or update AttendanceProcessUsers
-      for (let userEntry of users) {
-          const { user, status } = userEntry;
-
-          // Create or update user attendance for the process
-          await AttendanceProcessUsers.findOneAndUpdate(
-              { attendanceProcess: attendanceProcess._id, user: user },
-              { status },
-              { new: true, upsert: true }
-          );
+    return res.status(201).json({
+      status: 'success',
+      message: 'Attendance processed successfully',
+      data: {
+        attendanceProcess,
+        users
       }
-
-      return res.status(201).json({
-          status: 'success',
-          message: 'Attendance processed successfully',
-          data: {
-              attendanceProcess,
-              users
-          }
-      });
+    });
   } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-          status: 'error',
-          message: 'Internal server error'
-      });
+    console.error(error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
   }
 };
 exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getLOPRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
-  
-  const attendanceRecords = await getLOPRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
-  
+  const totalCount = await getLOPRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+
+  const attendanceRecords = await getLOPRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,
@@ -2340,7 +2318,7 @@ exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month) {
-      throw new Error('Year and month are required');
+    throw new Error('Year and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
@@ -2348,194 +2326,190 @@ async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
 
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided
-      if (skip > 0 || limit > 0) {
-          const count = await LOP.countDocuments({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).exec();
-          return { count };
-      } else {
-          const records = await LOP.find({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).skip(skip).limit(limit).exec();
-          return records;
-      }
+    // Check if skip and limit are provided
+    if (skip > 0 || limit > 0) {
+      const count = await LOP.countDocuments({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).exec();
+      return { count };
+    } else {
+      const records = await LOP.find({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).skip(skip).limit(limit).exec();
+      return records;
+    }
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
 // Controller to process attendance LOP (Insert method)
 exports.ProcessAttendance = async (req, res) => {
 
-    try {
-       const companyId = req.cookies.companyId;
-       var isFNF=false;
-        // Check if companyId exists in cookies
-       if (!companyId) {
-          return next(new AppError('Company ID not found in cookies', 400));
-        }
-        req.body.company = companyId;
-        if(req.body.isFNF)
-        {
-          isFNF=true;
-        }       
-       const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users,company } = req.body;
-        // Extract companyId from req.cookies
-       let existingProcess = await AttendanceProcess.findOne({
-        attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
-        attendanceProcessPeriodYear: attendanceProcessPeriodYear,
-        isFNF: isFNF,
-       });
-       if(!isFNF)
-        {
-          if (existingProcess) {
-              return res.status(400).json({
-                  status: 'fail',
-                  message: 'Attendance process for this period already exists'
-              });
-          }
-        }
-        // 1. Insert a new AttendanceProcess record
-        let attendanceProcess = await AttendanceProcess.create({
-            attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
-            attendanceProcessPeriodYear: attendanceProcessPeriodYear,
-            runDate: new Date(runDate),
-            isFNF:isFNF,
-            exportToPayroll,
-            company
-        });
-      
-        // 2. Prepare AttendanceProcessUsers records for bulk insert
-        const attendanceProcessUsers = users.map(userEntry => ({
-            attendanceProcess: attendanceProcess._id,
-            user: userEntry.user,
-            status: userEntry.status
-        }));
-     
-        // 3. Insert multiple AttendanceProcessUsers records
-        await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
-     
-        //await sendEmailToUsers(attendanceProcessUsers);
-        //loop for user
-        //send email to user that your ttdance is processed
-        //Send email to managers that respective users has attendance process
-
-        if(isFNF)
-        {
-          // make user as settled if its
-          // 1) Get user from collection 
-          for (let userEntry of users) {
-          const user = await User.findById(userEntry.user);
-          // 2) Check if POSTed current password is correct 
-          // 3) If so, update password
-          user.status = constants.User_Status.Settled; 
-          await user.save();
-          }
-        }
-        return res.status(201).json({
-            status: 'success',
-            message: 'Attendance processed successfully',
-            data: {
-                attendanceProcess,
-                users: attendanceProcessUsers
-            }
-        });
-    } catch (error) {       
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+  try {
+    const companyId = req.cookies.companyId;
+    var isFNF = false;
+    // Check if companyId exists in cookies
+    if (!companyId) {
+      return next(new AppError('Company ID not found in cookies', 400));
     }
+    req.body.company = companyId;
+    if (req.body.isFNF) {
+      isFNF = true;
+    }
+    const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users, company } = req.body;
+    // Extract companyId from req.cookies
+    let existingProcess = await AttendanceProcess.findOne({
+      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+      isFNF: isFNF,
+    });
+    if (!isFNF) {
+      if (existingProcess) {
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Attendance process for this period already exists'
+        });
+      }
+    }
+    // 1. Insert a new AttendanceProcess record
+    let attendanceProcess = await AttendanceProcess.create({
+      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+      runDate: new Date(runDate),
+      isFNF: isFNF,
+      exportToPayroll,
+      company
+    });
+
+    // 2. Prepare AttendanceProcessUsers records for bulk insert
+    const attendanceProcessUsers = users.map(userEntry => ({
+      attendanceProcess: attendanceProcess._id,
+      user: userEntry.user,
+      status: userEntry.status
+    }));
+
+    // 3. Insert multiple AttendanceProcessUsers records
+    await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
+
+    //await sendEmailToUsers(attendanceProcessUsers);
+    //loop for user
+    //send email to user that your ttdance is processed
+    //Send email to managers that respective users has attendance process
+
+    if (isFNF) {
+      // make user as settled if its
+      // 1) Get user from collection 
+      for (let userEntry of users) {
+        const user = await User.findById(userEntry.user);
+        // 2) Check if POSTed current password is correct 
+        // 3) If so, update password
+        user.status = constants.User_Status.Settled;
+        await user.save();
+      }
+    }
+    return res.status(201).json({
+      status: 'success',
+      message: 'Attendance processed successfully',
+      data: {
+        attendanceProcess,
+        users: attendanceProcessUsers
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
 };
 
 const sendEmailToUsers = async (attendanceProcessUsers) => {
   for (const userEntry of attendanceProcessUsers) {
-      const { user, status } = userEntry;
-      
-      const attendanceUser = await User.findById(user);  
-               
-      const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.CancelReject_Request_Leave_Application).where('company').equals(companyId); 
-      if(emailTemplate)
-      {
-       const template = emailTemplate.contentData;
-       const message = template
-       .replace("{firstName}", attendanceUser.firstName)
-       .replace("{company}",  req.cookies.companyName)
-       .replace("{company}", req.cookies.companyName)
-       .replace("{lastName}", attendanceUser.lastName); 
-        console.log(attendanceUser.email);
-        console.log(emailTemplate.subject);
-          try {
-           await sendEmail({
-             email: attendanceUser.email,
-             subject: emailTemplate.subject,
-             message
-           });          
-         } catch (err) {   
-          console.error(`Error sending email to user ${user}:`, err);
-       }
-   }
-}
+    const { user, status } = userEntry;
+
+    const attendanceUser = await User.findById(user);
+
+    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.CancelReject_Request_Leave_Application).where('company').equals(companyId);
+    if (emailTemplate) {
+      const template = emailTemplate.contentData;
+      const message = template
+        .replace("{firstName}", attendanceUser.firstName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{lastName}", attendanceUser.lastName);
+      console.log(attendanceUser.email);
+      console.log(emailTemplate.subject);
+      try {
+        await sendEmail({
+          email: attendanceUser.email,
+          subject: emailTemplate.subject,
+          message
+        });
+      } catch (err) {
+        console.error(`Error sending email to user ${user}:`, err);
+      }
+    }
+  }
 };
 // Controller to delete attendance process and associated users
 exports.deleteAttendance = async (req, res) => {
-    try {
-        const { attandanaceProcessPeroidMonth, attandanaceProcessPeroidYear } = req.body;
+  try {
+    const { attandanaceProcessPeroidMonth, attandanaceProcessPeroidYear } = req.body;
 
-        // 1. Find the AttendanceProcess record
-        let attendanceProcess = await AttendanceProcess.findOne({
-            attendanceProcessPeriodMonth: attandanaceProcessPeroidMonth,
-            attendanceProcessPeriodYear: attandanaceProcessPeroidYear
-        });
+    // 1. Find the AttendanceProcess record
+    let attendanceProcess = await AttendanceProcess.findOne({
+      attendanceProcessPeriodMonth: attandanaceProcessPeroidMonth,
+      attendanceProcessPeriodYear: attandanaceProcessPeroidYear
+    });
 
-        // If no record found, return a 404 error
-        if (!attendanceProcess) {
-            return res.status(404).json({
-                status: 'fail',
-                message: 'Attendance process for this period not found'
-            });
-        }
-        // 2. Check if exportToPayroll is true
-        if (attendanceProcess.exportToPayroll === true) {
-          return res.status(400).json({
-              status: 'fail',
-              message: 'Cannot delete the attendance process as it has already been exported to payroll'
-          });
-        }
-        // 3. Delete the found AttendanceProcess record
-        await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
-
-        // 4. Delete associated AttendanceProcessUsers records
-        await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
-
-        return res.status(200).json({
-            status: 'success',
-            message: 'Attendance process and associated users deleted successfully'
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+    // If no record found, return a 404 error
+    if (!attendanceProcess) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Attendance process for this period not found'
+      });
     }
+    // 2. Check if exportToPayroll is true
+    if (attendanceProcess.exportToPayroll === true) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Cannot delete the attendance process as it has already been exported to payroll'
+      });
+    }
+    // 3. Delete the found AttendanceProcess record
+    await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
+
+    // 4. Delete associated AttendanceProcessUsers records
+    await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Attendance process and associated users deleted successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
 };
 
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit);
-  
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year,req.body.month,0,0);
-  
+  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,
@@ -2547,7 +2521,7 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
 async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month) {
-      throw new Error('Year and month are required');
+    throw new Error('Year and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
@@ -2555,53 +2529,50 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
 
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided
-      if (skip > 0 || limit > 0) {
-          const count = await OvertimeInformation.countDocuments({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).exec();
-          return { count };
-      } else {
-          const records = await OvertimeInformation.find({
-              date: {
-                  $gte: startDate,
-                  $lt: endDate
-              }
-          }).skip(skip).limit(limit).exec();
-          return records;
-      }
+    // Check if skip and limit are provided
+    if (skip > 0 || limit > 0) {
+      const count = await OvertimeInformation.countDocuments({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).exec();
+      return { count };
+    } else {
+      const records = await OvertimeInformation.find({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      }).skip(skip).limit(limit).exec();
+      return records;
+    }
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
 exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  var isFNF=false;
-  if(req.body.isFNF)
-  {
-    isFNF=req.body.isFNF;
+  var isFNF = false;
+  if (req.body.isFNF) {
+    isFNF = req.body.isFNF;
   }
-  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,skip,limit,isFNF);
-  
-  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year,req.body.month,0,0,isFNF);
-  if(attendanceRecords)
-    {
-     for(var i = 0; i < attendanceRecords.length; i++) {     
-     const user = await AttendanceProcessUsers.find({}).where('attendanceProcess').equals(attendanceRecords[i]._id).select('user');  
-     if(user) 
-        {
-          attendanceRecords[i].users=user;
-        }
-        else{
-          attendanceRecords[i].users=null;
-        }
-     }
+  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit, isFNF);
+
+  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0, isFNF);
+  if (attendanceRecords) {
+    for (var i = 0; i < attendanceRecords.length; i++) {
+      const user = await AttendanceProcessUsers.find({}).where('attendanceProcess').equals(attendanceRecords[i]._id).select('user');
+      if (user) {
+        attendanceRecords[i].users = user;
+      }
+      else {
+        attendanceRecords[i].users = null;
+      }
     }
+  }
   res.status(200).json({
     status: 'success',
     data: attendanceRecords,
@@ -2610,41 +2581,41 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
 
 });
 
-async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0,isFNF=false) {
+async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0, isFNF = false) {
   // Validate input
   if (!year || !month) {
-      throw new Error('Year and month are required');
+    throw new Error('Year and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
   const endDate = new Date(year, month, 1); // Start of the next month
-console.log(startDate);
-console.log(endDate);
+  console.log(startDate);
+  console.log(endDate);
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided
-      if (skip > 0 || limit > 0) {
-          const count = await AttendanceProcess.countDocuments({
-            runDate: {
-                  $gte: startDate,
-                  $lt: endDate
-              },
-              "isFNF": isFNF
-          }).exec();
-          return { count };
-      } else {
-          const records = await AttendanceProcess.find({
-            runDate: {
-                  $gte: startDate,
-                  $lt: endDate
-              },
-              "isFNF": isFNF
-          }).skip(skip).limit(limit).exec();
-          return records;
-      }
+    // Check if skip and limit are provided
+    if (skip > 0 || limit > 0) {
+      const count = await AttendanceProcess.countDocuments({
+        runDate: {
+          $gte: startDate,
+          $lt: endDate
+        },
+        "isFNF": isFNF
+      }).exec();
+      return { count };
+    } else {
+      const records = await AttendanceProcess.find({
+        runDate: {
+          $gte: startDate,
+          $lt: endDate
+        },
+        "isFNF": isFNF
+      }).skip(skip).limit(limit).exec();
+      return records;
+    }
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
 
@@ -2653,7 +2624,7 @@ console.log(endDate);
 async function getOvertimeRecordsByUserYearAndMonth(user, year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month || !user) {
-      throw new Error('User ID, year, and month are required');
+    throw new Error('User ID, year, and month are required');
   }
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
@@ -2661,29 +2632,29 @@ async function getOvertimeRecordsByUserYearAndMonth(user, year, month, skip = 0,
 
   // Fetch records from the database
   try {
-      // Check if skip and limit are provided
-      if (skip > 0 || limit > 0) {
-          const count = await OvertimeInformation.countDocuments({
-              User: user,
-              CheckInDate: {
-                  $gte: startDate.toISOString(),
-                  $lte: endDate.toISOString()
-              }
-          }).exec();
-          return { count };
-      } else {
-          const records = await OvertimeInformation.find({
-              User: user,
-              CheckInDate: {
-                  $gte: startDate.toISOString(),
-                  $lte: endDate.toISOString()
-              }
-          }).skip(skip).limit(limit).exec();
-          return records;
-      }
+    // Check if skip and limit are provided
+    if (skip > 0 || limit > 0) {
+      const count = await OvertimeInformation.countDocuments({
+        User: user,
+        CheckInDate: {
+          $gte: startDate.toISOString(),
+          $lte: endDate.toISOString()
+        }
+      }).exec();
+      return { count };
+    } else {
+      const records = await OvertimeInformation.find({
+        User: user,
+        CheckInDate: {
+          $gte: startDate.toISOString(),
+          $lte: endDate.toISOString()
+        }
+      }).skip(skip).limit(limit).exec();
+      return records;
+    }
   } catch (error) {
-      console.error('Error fetching records:', error);
-      throw error; // Rethrow or handle error as needed
+    console.error('Error fetching records:', error);
+    throw error; // Rethrow or handle error as needed
   }
 }
 
