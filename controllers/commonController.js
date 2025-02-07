@@ -522,3 +522,18 @@ exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
     total: totalCount
   });
 });
+
+exports.getGoogleApiKey = catchAsync(
+  async (req, res, next) => {
+  try {
+    res.status(200).json({
+      status: "success",
+      data: process.env.GOOGLE_API_KEY,
+    });
+  } catch (error) {
+    res.status(200).json({
+      status: "failure",
+      data: "",
+    });
+  }
+});

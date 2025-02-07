@@ -895,4 +895,23 @@ router.put('/verify-otp', userController.verifyOTP)
  *         description: The updated cancel otp
  */
 router.put('/cancel-otp', userController.cancelOTP)
+
+/**
+ * @swagger
+ * /api/v1/common/GoogleApiKey:
+ *   get:
+ *     summary: Get an Income Tax Componant by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Common Management] 
+ *     responses:
+ *       200:
+ *         description: Successful response with the Income Tax Componant
+ *       404:
+ *         description: Income Tax Componant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/GoogleApiKey', authController.protect, commonController.getGoogleApiKey)
+
 module.exports = router;
