@@ -5046,6 +5046,30 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
 
 /**
  * @swagger
+ * /api/v1/payroll/generatedPayroll-by-payroll/{payroll}:
+ *   get:
+ *     summary: get generated payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Generated Payroll entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payrollController.getAllGeneratedPayroll);
+
+/**
+ * @swagger
  * /api/v1/payroll/fnf:
  *   post:
  *     summary: Add a new payroll FNF
@@ -5077,6 +5101,7 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
  *         description: Internal server error
  */ 5
 router.post('/fnf/', authController.protect, payrollController.addPayrollFNF);
+
 
 /**
  * @swagger

@@ -41,4 +41,17 @@ var payrollLoanAdvanceSchema = new Schema({
       required: true
     }
   }, { collection: 'PayrollLoanAdvance' });
-  module.exports = mongoose.model('PayrollLoanAdvance', payrollLoanAdvanceSchema);
+
+payrollLoanAdvanceSchema.pre(/^find/, async function(next) {
+  try {
+    this.populate({
+      path: 'loanAndAdvance',
+      select: '_id'
+    });
+  } catch (error) {
+    console.error("Error populating loan and advance:", error);
+  }
+  next();
+});
+
+module.exports = mongoose.model('PayrollLoanAdvance', payrollLoanAdvanceSchema);

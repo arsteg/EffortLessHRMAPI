@@ -28,5 +28,15 @@ const ctctemplateFixedAllowanceSchema = new Schema({
     type: String
   },
 }, { collection: 'CTCTemplateFixedAllowance' });
-
+ctctemplateFixedAllowanceSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'fixedAllowance',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed allowance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('CTCTemplateFixedAllowance', ctctemplateFixedAllowanceSchema);

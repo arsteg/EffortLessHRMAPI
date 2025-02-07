@@ -31,4 +31,16 @@ var employeeLoanAdvanceSchema = new Schema({
   },
 }, { collection: 'EmployeeLoanAdvance' });
 
+employeeLoanAdvanceSchema.pre(/^find/, async function(next) {
+  try {
+    this.populate({
+      path: 'loanAdvancesCategory',
+      select: 'id name'
+    });
+  } catch (error) {
+    console.error("Error populating loan advances category:", error);
+  }
+  next();
+});
+
 module.exports = mongoose.model('EmployeeLoanAdvance', employeeLoanAdvanceSchema);

@@ -17,5 +17,15 @@ var ctctemplateEmployeeDeductionSchema = new Schema({
     required: true
   }
 }, { collection: 'CTCTemplateEmployeeDeduction' });
-
+ctctemplateEmployeeDeductionSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'employeeDeduction',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating employee deductions:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('CTCTemplateEmployeeDeduction', ctctemplateEmployeeDeductionSchema);

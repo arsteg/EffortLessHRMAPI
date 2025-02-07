@@ -30,5 +30,15 @@ const ctctemplateFixedDeductionSchema = new Schema({
     required: true
   }
 }, { collection: 'CTCTemplateFixedDeduction' });
-
+ctctemplateFixedDeductionSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'fixedDeduction',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('CTCTemplateFixedDeduction', ctctemplateFixedDeductionSchema);
