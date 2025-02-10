@@ -1914,6 +1914,7 @@ async function getUserByEmpCode(empCode) {
 }
 
 // Helper function to process each individual attendance record
+
 async function processAttendanceRecord(user, startTime, endTime, date, companyId) {
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
 
@@ -1921,10 +1922,9 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
 
     if (shift) {
-      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(date) });
-
       let deviationMinutes = 0;
       let isOvertime = false;
+      let duration = 0; // Total minutes worked
 
       if (startTime && endTime) {
         const [startHours, startMinutes] = startTime.split(':').map(Number);
@@ -1936,18 +1936,17 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         const end = new Date(date);
         end.setHours(endHours, endMinutes, 0, 0);
 
-        const timeWorked = (end - start) / (1000 * 60); // Time worked in minutes
-
+        duration = (end - start) / (1000 * 60); // Convert milliseconds to minutes
         const [shiftStartHours, shiftStartMinutes] = shift.startTime.split(':').map(Number);
         const [shiftEndHours, shiftEndMinutes] = shift.endTime.split(':').map(Number);
 
         const shiftTotalMinutes = (shiftEndHours * 60 + shiftEndMinutes) - (shiftStartHours * 60 + shiftStartMinutes);
 
-        if (timeWorked < shiftTotalMinutes) {
-          deviationMinutes = shiftTotalMinutes - timeWorked; // Deviation in minutes
+        if (duration < shiftTotalMinutes) {
+          deviationMinutes = shiftTotalMinutes - duration; // Deviation in minutes
         }
-        if (timeWorked > shiftTotalMinutes) {
-          deviationMinutes = timeWorked - shiftTotalMinutes; // Deviation in minutes
+        if (duration > shiftTotalMinutes) {
+          deviationMinutes = duration - shiftTotalMinutes; // Deviation in minutes
           isOvertime = true;
         }
       }
@@ -1961,11 +1960,11 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         checkIn: startTime,
         checkOut: endTime,
         user: user._id,
-        duration: timeLogCount * 10,
+        duration: duration, // Use total worked minutes instead of timeLogCount * 10
         deviationHour: deviationMinutes,
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
-        company: companyId, // Assuming companyId is a property on the user model
+        company: companyId, 
         isOvertime,
       };
     }
