@@ -112,7 +112,7 @@ exports.getUserLocations = async (req, res) => {
       let filter = {};
 
       if (user) filter.user = user;
-      filter.company = req.cookies.companyId;
+      //filter.company = req.cookies.companyId;
       
       const locations = await UserLocation.find(filter);
       
