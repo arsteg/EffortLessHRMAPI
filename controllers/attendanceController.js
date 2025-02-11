@@ -2505,9 +2505,10 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
-
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+console.log(skip);
+console.log(limit);
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
 
   res.status(200).json({
     status: 'success',
@@ -2522,30 +2523,77 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
   if (!year || !month) {
     throw new Error('Year and month are required');
   }
+  console.log(year);
+  console.log(month);
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
   const endDate = new Date(year, month, 1); // Start of the next month
-
+  
+console.log(startDate.toISOString());
+console.log(endDate.toISOString());
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
-    if (skip > 0 || limit > 0) {
-      const count = await OvertimeInformation.countDocuments({
-        date: {
-          $gte: startDate,
-          $lt: endDate
+    if (limit === 0) {
+      const count = await OvertimeInformation.aggregate([
+        {
+          $addFields: {
+            CheckInDate: {
+              $dateFromString: { 
+                dateString: {
+                  $substr: [{ $trim: { input: "$CheckInDate" } }, 4, 24]  // Remove "Mon " and the day part
+                }
+              }
+            }
+          }
+        },
+        {
+          $match: {
+            CheckInDate: {
+              $gte: startDate,  // Compare with the start date
+              $lt: endDate      // Compare with the end date
+            }
+          }
+        },
+        {
+          $count: "count"
         }
-      }).exec();
+      ]);
+    
       return { count };
     } else {
-      const records = await OvertimeInformation.find({
-        date: {
-          $gte: startDate,
-          $lt: endDate
+      const records = await OvertimeInformation.aggregate([
+        {
+          $addFields: {
+            CheckInDate: {
+              $dateFromString: { 
+                dateString: {
+                  $substr: [{ $trim: { input: "$CheckInDate" } }, 4, 24]  // Remove "Mon " and the day part
+                }
+              }
+            }
+          }
+        },
+        {
+          $match: {
+            CheckInDate: {
+              $gte: startDate,  // Compare with the start date
+              $lt: endDate      // Compare with the end date
+            }
+          }
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
         }
-      }).skip(skip).limit(limit).exec();
+      ]);
+    
       return records;
     }
+    
+    
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed

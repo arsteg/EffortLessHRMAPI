@@ -2561,9 +2561,6 @@ router.delete('/variable-deductions/:id', authController.protect, payrollControl
  *               isEffectAttendanceOnEligibility:
  *                 type: boolean
  *                 required: true
- *               company:
- *                 type: string
- *                 required: true
  *     responses:
  *       201:
  *         description: OtherBenefits successfully added
@@ -2631,8 +2628,6 @@ router.post('/other-benefits-by-company', authController.protect, payrollControl
  *                 type: string
  *               isEffectAttendanceOnEligibility:
  *                 type: boolean
- *               company:
- *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with updated OtherBenefits
@@ -4517,7 +4512,7 @@ router.delete('/payroll-loan-advance/:id', authController.protect, payrollContro
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser1:
  *                 type: string
  *                 required: true
  *               TotalFlexiBenefitAmount:
@@ -4693,7 +4688,7 @@ router.delete('/flexi-benefits-pf-tax/:id', authController.protect, payrollContr
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser2:
  *                 type: string
  *                 required: true
  *               LateComing:
@@ -4705,7 +4700,7 @@ router.delete('/flexi-benefits-pf-tax/:id', authController.protect, payrollContr
  *               FinalOvertime:
  *                 type: string
  *                 required: true
- *                OvertimeAmount:
+ *               OvertimeAmount:
  *                 type: string
  *                 required: true
  *     responses:
@@ -4880,7 +4875,7 @@ router.get('/overtime-by-payroll/:payroll', authController.protect, payrollContr
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser3:
  *                 type: string
  *                 required: true
  *               TaxCalculatedMethod:
@@ -5000,7 +4995,7 @@ router.get('/incomeTax-by-payroll/:payroll', authController.protect, payrollCont
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser4:
  *                 type: string
  *               TaxCalculatedMethod:
  *                 type: string
@@ -6997,7 +6992,7 @@ router.get('/payroll-fnf-overtime-by-payroll-fnf/:payrollFNF', authController.pr
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser5:
  *                 type: string
  *                 required: true
  *               TaxCalculatedMethod:
@@ -7117,7 +7112,7 @@ router.get('/payroll-fnf-income-tax-by-payroll-fnf/:payroll', authController.pro
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser:
+ *               PayrollUser7:
  *                 type: string
  *               TaxCalculatedMethod:
  *                 type: string
