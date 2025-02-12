@@ -3539,13 +3539,11 @@ exports.getFlexiBenefitsAndPFTax = async (req, res) => {
 // Get all Flexi Benefits and PF Tax records
 exports.getAllFlexiBenefitsAndPFTaxByPyrollUser = async (req, res) => {
   try {
-    const records = await PayrollFlexiBenefitsPFTax.find({ payrollUser: req.params.payrollUser });
+    const records = await PayrollFlexiBenefitsPFTax.find({ PayrollUser: req.params.payrollUser });
 
     res.status(200).json({
       status: 'success',
-      data: {
-        records
-      }
+      data: records
     });
   } catch (err) {
     res.status(500).json({
@@ -3559,7 +3557,7 @@ exports.getAllFlexiBenefitsAndPFTaxByPyroll = catchAsync(async (req, res, next) 
   // Extract _id values from payrollUsers payrollUserIds
   const payrollUserIds = payrollUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
-  const payrollFlexiBenefitsPFTaxList = await PayrollFlexiBenefitsPFTax.find({ payrollUser: { $in: payrollUserIds } });
+  const payrollFlexiBenefitsPFTaxList = await PayrollFlexiBenefitsPFTax.find({ PayrollUser: { $in: payrollUserIds } });
   res.status(200).json({
     status: 'success',
     data: payrollFlexiBenefitsPFTaxList
