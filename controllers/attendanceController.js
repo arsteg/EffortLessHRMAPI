@@ -37,6 +37,8 @@ const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
+const moment = require('moment'); // Using moment.js for easy date manipulation
+
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1887,8 +1889,8 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
         OverTime: record.deviationHour,
         ShiftTime: record.shiftTiming,
         Date: record.date,
-        CheckInDate: record.checkIn,
-        CheckOutDate: record.checkOut,
+        CheckInDate: record.date,
+        CheckOutDate: record.date,
         CheckInTime: record.checkIn,
         CheckOutTime: record.checkOut,
         company: req.cookies.companyId,
@@ -2007,6 +2009,7 @@ async function getLateComingRemarks(userId, logId) {
 
 // Insert attendanceRecords
 async function insertAttendanceRecords(attendanceRecords) {
+  console.log(attendanceRecords);
   // Check if attendanceRecords is null or undefined and handle accordingly
   if (!attendanceRecords) {
     console.warn('No attendance records provided');
@@ -2026,7 +2029,7 @@ async function insertAttendanceRecords(attendanceRecords) {
       // If no record exists, insert it
       if (!existingRecord) {
         await AttendanceRecords.create(record);
-        console.log('Inserted:', record);
+      
       } else {
         console.log('Duplicate found for record:', record);
       }
@@ -2035,7 +2038,7 @@ async function insertAttendanceRecords(attendanceRecords) {
     // Wait for all insertions to complete
     await Promise.all(insertPromises);
 
-    console.log('Records processed successfully');
+   
   } catch (error) {
     console.error('Error inserting records:', error);
   }
@@ -2548,71 +2551,42 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
   console.log(year);
   console.log(month);
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
-  const startDate = new Date(year, month - 1, 1); // Start of the month
-  const endDate = new Date(year, month, 1); // Start of the next month
+  //const startDate = new Date(year, month - 1, 1); // Start of the month
+  //const endDate = new Date(year, month, 1); // Start of the next month
   
-console.log(startDate.toISOString());
-console.log(endDate.toISOString());
+
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
+  
+    // Convert start and end date based on the year and month
+    const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
+    const endDate = moment(startDate).endOf('month').toDate();
+    console.log(startDate.toISOString());
+console.log(endDate.toISOString());
     if (limit === 0) {
-      const count = await OvertimeInformation.aggregate([
-        {
-          $addFields: {
-            CheckInDate: {
-              $dateFromString: { 
-                dateString: {
-                  $substr: [{ $trim: { input: "$CheckInDate" } }, 4, 24]  // Remove "Mon " and the day part
-                }
-              }
-            }
-          }
-        },
-        {
-          $match: {
-            CheckInDate: {
-              $gte: startDate,  // Compare with the start date
-              $lt: endDate      // Compare with the end date
-            }
-          }
-        },
-        {
-          $count: "count"
+      // Get the count of records for the month
+      const count = await OvertimeInformation.countDocuments({
+        CheckInDate: {
+          $gte: startDate,
+          $lt: endDate
         }
-      ]);
+      }).exec();
     
       return { count };
     } else {
-      const records = await OvertimeInformation.aggregate([
-        {
-          $addFields: {
-            CheckInDate: {
-              $dateFromString: { 
-                dateString: {
-                  $substr: [{ $trim: { input: "$CheckInDate" } }, 4, 24]  // Remove "Mon " and the day part
-                }
-              }
-            }
-          }
-        },
-        {
-          $match: {
-            CheckInDate: {
-              $gte: startDate,  // Compare with the start date
-              $lt: endDate      // Compare with the end date
-            }
-          }
-        },
-        {
-          $skip: skip
-        },
-        {
-          $limit: limit
+      // Get all records for the month, applying skip and limit for pagination
+      const records = await OvertimeInformation.find({
+        CheckInDate: {
+          $gte: startDate,
+          $lt: endDate
         }
-      ]);
+      })
+        .skip(skip)
+        .limit(limit)
+        .exec();
     
-      return records;
+      return records; // Return the actual records
     }
     
     
