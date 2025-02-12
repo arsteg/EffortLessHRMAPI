@@ -2019,7 +2019,7 @@ async function insertAttendanceRecords(attendanceRecords) {
     const insertPromises = attendanceRecords.map(async (record) => {
       // Check if the record already exists based on unique fields (e.g., employeeId, date)
       const existingRecord = await AttendanceRecords.findOne({
-        employeeId: record.employeeId,
+        user: record.employeeId,
         date: record.date
       });
 
