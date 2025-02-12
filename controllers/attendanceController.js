@@ -1792,9 +1792,10 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                 afterProcessing: 'N/A',
                 earlyLateStatus: 'N/A',
                 deviationHour: deviationHour,
-                shiftTiming: '00:00',
+                shiftTiming: `${shift.startTime} - ${shift.endTime}`,       
+                attandanceShift: shift._id, 
                 lateComingRemarks: lateComingRemarks,
-                company: req.cookies.companyId,
+                company: req.cookies.companyId,     
                 isOvertime: isOvertime,
               };
             }
@@ -1861,7 +1862,7 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
       const user = await getUserByEmpCode(EmpCode);
 
       if (!user) {
-        console.error(`User with empCode ${empCode} not found`);
+        console.error(`User with empCode ${EmpCode} not found`);
         continue; // Skip if the user is not found
       }
 
@@ -1872,11 +1873,30 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
         attendanceRecords.push(attendanceRecord);
       }
     }
-
+    console.log(attendanceRecords);
     // If there are processed records, insert them into the database
     if (attendanceRecords.length > 0) {
       await insertAttendanceRecords(attendanceRecords);
     }
+      // Insert entries into OvertimeInformation for users with isOvertime set to true
+      const overtimeRecords = attendanceRecords
+      .filter(record => record.isOvertime)
+      .map(record => ({
+        User: record.user, // Replace with appropriate user name
+        AttandanceShift: record.attandanceShift,
+        OverTime: record.deviationHour,
+        ShiftTime: record.shiftTiming,
+        Date: record.date,
+        CheckInDate: record.checkIn,
+        CheckOutDate: record.checkOut,
+        CheckInTime: record.checkIn,
+        CheckOutTime: record.checkOut,
+        company: req.cookies.companyId,
+      }));
+    if (overtimeRecords.length) {
+      await OvertimeInformation.insertMany(overtimeRecords);
+    }
+
 
     // Send response back indicating success
     res.status(200).json({
@@ -1964,9 +1984,11 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         deviationHour: deviationMinutes,
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
-        company: companyId, 
+        company: companyId,
+        attandanceShift: shift._id,       
         isOvertime,
       };
+      
     }
   }
 

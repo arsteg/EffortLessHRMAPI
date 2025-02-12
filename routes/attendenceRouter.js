@@ -3206,7 +3206,7 @@ attendanceRouter.post('/timelog-mapped-attandance', authController.protect, atte
  *               properties:
  *                 EmpCode:
  *                   type: string
- *                   format: date
+ *                   format: string
  *                   description: Employee's Code of entry
  *                 StartTime:
  *                   type: string
