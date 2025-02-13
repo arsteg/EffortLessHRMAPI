@@ -1,4 +1,5 @@
 const TimeLog = require('../models/timeLog');
+const TimeLogCheckInOut = require('../models/timeLogCheckInOut');
 const CurrentUserDevice = require('../models/currentUserDeviceModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
@@ -470,6 +471,104 @@ try {
     
  });
   
+ exports.userCheckIn = catchAsync(async (req, res, next) => {    
+  try {
+    console.log("=== User Check-In API Called ===");
+
+    const { userId, latitude, longitude, checkInTime, project, task } = req.body;
+    console.log("Received Payload:", { userId, latitude, longitude, checkInTime, project, task });
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Latitude and Longitude are required" });
+    }
+    if (!checkInTime) {
+      return res.status(400).json({ message: "Check-in time is required" });
+    }
+    if (!project || !task) {
+      return res.status(400).json({ message: "Project and Task are required" });
+    }
+
+    // Create new check-in record
+    const checkIn = new TimeLogCheckInOut({
+      user: userId,
+      checkInTime,
+      latitude,
+      longitude,
+      project,
+      task,
+      date: new Date(checkInTime).toISOString().split('T')[0] 
+    });
+    
+    await checkIn.save();
+    console.log("Check-In Saved Successfully!");
+
+    res.status(200).json({ message: "Checked in successfully", data: checkIn });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+exports.userCheckOut = catchAsync(async (req, res, next) => {    
+  try {
+    console.log("=== User Check-Out API Called ===");
+
+    const { userId, latitude, longitude, checkOutTime, project, task } = req.body;
+    console.log("Received Payload:", { userId, latitude, longitude, checkOutTime, project, task });
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Latitude and Longitude are required" });
+    }
+    if (!checkOutTime) {
+      return res.status(400).json({ message: "Check-out time is required" });
+    }
+    if (!project || !task) {
+      return res.status(400).json({ message: "Project and Task are required" });
+    }
+
+    const checkIn = await TimeLogCheckInOut.findOne({ user: userId, checkOutTime: null }).sort({ checkInTime: -1 });
+
+    if (!checkIn) {
+      return res.status(400).json({ message: "No open check-in record found" });
+    }
+    
+    const checkInTime = moment(checkIn.checkInTime);
+    const checkOutMoment = moment(checkOutTime);
+    const durationMinutes = checkOutMoment.diff(checkInTime, 'minutes');
+
+    checkIn.checkOutTime = checkOutTime;
+    await checkIn.save();
+
+    const logsToInsert = [];
+    for (let i = 0; i < durationMinutes; i += 10) {
+        logsToInsert.push({
+            user: userId,
+            project,
+            task,
+            startTime: moment(checkInTime).add(i, 'minutes').toDate(),
+            endTime: moment(checkInTime).add(i + 10, 'minutes').toDate(),
+            date: checkInTime.toISOString().split('T')[0],
+            isManualTime: false
+        });
+    }
+
+    if (logsToInsert.length > 0) {
+        await TimeLog.insertMany(logsToInsert);
+        console.log("Time logs inserted successfully!");
+    }
+
+    res.status(200).json({ message: "Checked out successfully and time logs updated." });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Helper function to get an array of dates within a date range
 function getDatesInRange(startDate, endDate) {
   const dates = [];

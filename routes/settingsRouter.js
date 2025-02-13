@@ -236,6 +236,109 @@ router.get("/user-location", settingsController.getUserLocations);
 
 /**
  * @swagger
+ * /api/v1/settings/user-locations:
+ *   get:
+ *     tags:
+ *       - User Location
+ *     summary: "Retrieve locations for all users"
+ *     description: "Fetches stored locations for all users with optional filters such as radius."
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: radius
+ *         schema:
+ *           type: number
+ *         description: "Search radius in meters (default: 1000m)"
+ *     responses:
+ *       200:
+ *         description: "Successfully retrieved locations for all users."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: string
+ *                     description: "The ID of the user."
+ *                   latitude:
+ *                     type: number
+ *                     description: "The latitude of the user's location."
+ *                   longitude:
+ *                     type: number
+ *                     description: "The longitude of the user's location."
+ *                   address:
+ *                     type: string
+ *                     description: "The address corresponding to the user's location."
+ *       500:
+ *         description: "Internal Server Error."
+ */
+router.get("/user-locations", settingsController.getAllUserLocations);
+
+/**
+ * @swagger
+ * /api/v1/settings/user-location/{userId}:
+ *   delete:
+ *     tags:
+ *       - User Location
+ *     summary: "Delete a user's location"
+ *     description: "Deletes the location for a specific user based on the provided user ID."
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "The ID of the user whose location is to be deleted."
+ *     responses:
+ *       200:
+ *         description: "User location deleted successfully."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "User location deleted successfully."
+ *       404:
+ *         description: "User location not found."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "User location not found."
+ *       500:
+ *         description: "Internal Server Error."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "Internal Server Error."
+ */
+router.delete("/user-location/:userId", settingsController.deleteUserLocation);
+
+/**
+ * @swagger
  * /api/v1/settings/user-location/{userId}:
  *  put:
  *      tags:

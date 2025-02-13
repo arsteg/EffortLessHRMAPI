@@ -127,7 +127,60 @@ exports.getUserLocations = async (req, res) => {
   }
 };
 
+exports.getAllUserLocations = async (req, res) => {
+  try {
+    const { radius = 1000 } = req.query;
+    const companyId = req.cookies.companyId; // Get company ID from cookies
+    
+    if (!companyId) {
+      return res.status(400).json({ message: "Company ID is required." });
+    }
 
+    // Filter by company
+    const filter = { company: companyId };
+
+    // Fetch all user locations for the specified company
+    const locations = await UserLocation.find(filter);
+
+    // Return the locations
+    res.status(200).json({
+      status: "success",
+      data: locations,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+exports.deleteUserLocation = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find and delete the user location
+    const deletedLocation = await UserLocation.findOneAndDelete({ user: userId });
+
+    // If no location is found, return a 404 error
+    if (!deletedLocation) {
+      return res.status(404).json({
+        status: "error",
+        message: "User location not found.",
+      });
+    }
+
+    // Return success response
+    res.status(200).json({
+      status: "success",
+      message: "User location deleted successfully.",
+    });
+  } catch (error) {
+    // Handle any errors
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 exports.updateUserLocation = async (req, res) => {
   try {
       const { userId } = req.params;
