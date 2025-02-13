@@ -8,23 +8,20 @@ const overTimeInformationSchema = new Schema({
         required: true
     },
     AttandanceShift: {
-        type: String,
-        required: true // Assuming this is also required
+        type: mongoose.Schema.ObjectId,
+        ref: 'Shift',
+        required: true
     },
     ShiftTime: {
         type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
         required: true // Assuming OverTime is required
     },
     CheckInDate: {
-        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
-        required: true // Assuming OverTime is required
-    },
-    CheckInDate: {
-        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        type: Date, // Adjust the type if you want a specific format (e.g., Number, etc.)
         required: true // Assuming OverTime is required
     },
     CheckOutDate: {
-        type: String, // Adjust the type if you want a specific format (e.g., Number, etc.)
+        type: Date, // Adjust the type if you want a specific format (e.g., Number, etc.)
         required: true // Assuming OverTime is required
     },
     CheckInTime: {

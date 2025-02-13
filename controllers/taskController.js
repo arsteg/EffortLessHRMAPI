@@ -1041,40 +1041,55 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 // });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  const { skip = 0, next: limit = 10, projectId, userId } = req.body;
-  
-  // Ensure that limit does not exceed a reasonable number
-  const adjustedLimit = Math.min(parseInt(limit), 100); 
+  try {
+    const { skip = 0, next: limit = 10, projectId, userId } = req.body;
+    console.log(`[DEBUG] Received request: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`);
 
-  // Step 1: Find TaskUser documents and populate tasks in a single query
-  const taskUsers = await TaskUser.find({
-    user: userId,
-    task: { $in: await Task.find({ project: projectId }).select('_id') }
-  })
-    .populate('task')
-    .skip(parseInt(skip))
-    .limit(adjustedLimit);
+    // Ensure limit does not exceed 100
+    const adjustedLimit = Math.min(parseInt(limit), 100);
+    console.log(`[DEBUG] Adjusted limit: ${adjustedLimit}`);
 
-  // Step 2: Retrieve the taskCount in a single query
-  const taskCount = await TaskUser.countDocuments({
-    user: userId,
-    task: { $in: await Task.find({ project: projectId }).select('_id') }
-  });
+    // Step 1: Find Task IDs related to the project
+    const taskIds = await Task.find({ project: projectId }).select('_id');
+    
+    // Step 2: Find TaskUser documents
+    const taskUsers = await TaskUser.find({
+      user: userId,
+      task: { $in: taskIds }
+    })
+      .populate('task')
+      .skip(parseInt(skip))
+      .limit(adjustedLimit);
 
-  // Step 3: Extract and attach TaskUsers for each task
-  const taskList = await Promise.all(taskUsers.map(async (taskUser) => {
-    const task = taskUser.task;
-    const taskUserList = await TaskUser.find({ task: task._id });
-    task.TaskUsers = taskUserList;
-    return task;
-  }));
+    // Step 3: Get task count
+    const taskCount = await TaskUser.countDocuments({
+      user: userId,
+      task: { $in: taskIds }
+    });
 
-  res.status(200).json({
-    status: 'success',
-    taskList: taskList,
-    taskCount: taskCount
-  });
+    console.log(`[DEBUG] Task count: ${taskCount}`);
+
+    // Step 4: Attach TaskUsers to each task
+    const taskList = await Promise.all(
+      taskUsers.map(async (taskUser) => {
+        const task = taskUser.task;
+        const taskUserList = await TaskUser.find({ task: task._id });
+        task.TaskUsers = taskUserList;
+        return task;
+      })
+    );  
+
+    res.status(200).json({
+      status: 'success',
+      taskList: taskList,
+      taskCount: taskCount
+    });
+  } catch (error) {
+    console.error(`[ERROR] ${error.message}`, error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
 });
+
 
 
 //Tag management

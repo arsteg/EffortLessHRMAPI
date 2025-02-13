@@ -37,6 +37,11 @@ var attendanceRecordsSchema = new Schema({
     type: String,
     required: true
   },
+  attandanceShift: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Shift',
+    required: true
+  },
   shiftTiming: {
     type: String,
     required: true
@@ -46,11 +51,13 @@ var attendanceRecordsSchema = new Schema({
     required: true
   },
   company: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'company',
     required: true
   },
   user: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
     required: true
   },
   isOvertime: {

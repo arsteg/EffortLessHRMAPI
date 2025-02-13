@@ -37,6 +37,8 @@ const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
+const moment = require('moment'); // Using moment.js for easy date manipulation
+
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -1792,9 +1794,10 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
                 afterProcessing: 'N/A',
                 earlyLateStatus: 'N/A',
                 deviationHour: deviationHour,
-                shiftTiming: '00:00',
+                shiftTiming: `${shift.startTime} - ${shift.endTime}`,       
+                attandanceShift: shift._id, 
                 lateComingRemarks: lateComingRemarks,
-                company: req.cookies.companyId,
+                company: req.cookies.companyId,     
                 isOvertime: isOvertime,
               };
             }
@@ -1861,7 +1864,7 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
       const user = await getUserByEmpCode(EmpCode);
 
       if (!user) {
-        console.error(`User with empCode ${empCode} not found`);
+        console.error(`User with empCode ${EmpCode} not found`);
         continue; // Skip if the user is not found
       }
 
@@ -1872,11 +1875,30 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
         attendanceRecords.push(attendanceRecord);
       }
     }
-
+    console.log(attendanceRecords);
     // If there are processed records, insert them into the database
     if (attendanceRecords.length > 0) {
       await insertAttendanceRecords(attendanceRecords);
     }
+      // Insert entries into OvertimeInformation for users with isOvertime set to true
+      const overtimeRecords = attendanceRecords
+      .filter(record => record.isOvertime)
+      .map(record => ({
+        User: record.user, // Replace with appropriate user name
+        AttandanceShift: record.attandanceShift,
+        OverTime: record.deviationHour,
+        ShiftTime: record.shiftTiming,
+        Date: record.date,
+        CheckInDate: record.date,
+        CheckOutDate: record.date,
+        CheckInTime: record.checkIn,
+        CheckOutTime: record.checkOut,
+        company: req.cookies.companyId,
+      }));
+    if (overtimeRecords.length) {
+      await OvertimeInformation.insertMany(overtimeRecords);
+    }
+
 
     // Send response back indicating success
     res.status(200).json({
@@ -1914,6 +1936,7 @@ async function getUserByEmpCode(empCode) {
 }
 
 // Helper function to process each individual attendance record
+
 async function processAttendanceRecord(user, startTime, endTime, date, companyId) {
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
 
@@ -1921,10 +1944,9 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
 
     if (shift) {
-      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(date) });
-
       let deviationMinutes = 0;
       let isOvertime = false;
+      let duration = 0; // Total minutes worked
 
       if (startTime && endTime) {
         const [startHours, startMinutes] = startTime.split(':').map(Number);
@@ -1936,18 +1958,17 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         const end = new Date(date);
         end.setHours(endHours, endMinutes, 0, 0);
 
-        const timeWorked = (end - start) / (1000 * 60); // Time worked in minutes
-
+        duration = (end - start) / (1000 * 60); // Convert milliseconds to minutes
         const [shiftStartHours, shiftStartMinutes] = shift.startTime.split(':').map(Number);
         const [shiftEndHours, shiftEndMinutes] = shift.endTime.split(':').map(Number);
 
         const shiftTotalMinutes = (shiftEndHours * 60 + shiftEndMinutes) - (shiftStartHours * 60 + shiftStartMinutes);
 
-        if (timeWorked < shiftTotalMinutes) {
-          deviationMinutes = shiftTotalMinutes - timeWorked; // Deviation in minutes
+        if (duration < shiftTotalMinutes) {
+          deviationMinutes = shiftTotalMinutes - duration; // Deviation in minutes
         }
-        if (timeWorked > shiftTotalMinutes) {
-          deviationMinutes = timeWorked - shiftTotalMinutes; // Deviation in minutes
+        if (duration > shiftTotalMinutes) {
+          deviationMinutes = duration - shiftTotalMinutes; // Deviation in minutes
           isOvertime = true;
         }
       }
@@ -1961,13 +1982,15 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         checkIn: startTime,
         checkOut: endTime,
         user: user._id,
-        duration: timeLogCount * 10,
+        duration: duration, // Use total worked minutes instead of timeLogCount * 10
         deviationHour: deviationMinutes,
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
-        company: companyId, // Assuming companyId is a property on the user model
+        company: companyId,
+        attandanceShift: shift._id,       
         isOvertime,
       };
+      
     }
   }
 
@@ -1986,6 +2009,7 @@ async function getLateComingRemarks(userId, logId) {
 
 // Insert attendanceRecords
 async function insertAttendanceRecords(attendanceRecords) {
+  console.log(attendanceRecords);
   // Check if attendanceRecords is null or undefined and handle accordingly
   if (!attendanceRecords) {
     console.warn('No attendance records provided');
@@ -1998,14 +2022,14 @@ async function insertAttendanceRecords(attendanceRecords) {
     const insertPromises = attendanceRecords.map(async (record) => {
       // Check if the record already exists based on unique fields (e.g., employeeId, date)
       const existingRecord = await AttendanceRecords.findOne({
-        employeeId: record.employeeId,
+        user: record.employeeId,
         date: record.date
       });
 
       // If no record exists, insert it
       if (!existingRecord) {
         await AttendanceRecords.create(record);
-        console.log('Inserted:', record);
+      
       } else {
         console.log('Duplicate found for record:', record);
       }
@@ -2014,7 +2038,7 @@ async function insertAttendanceRecords(attendanceRecords) {
     // Wait for all insertions to complete
     await Promise.all(insertPromises);
 
-    console.log('Records processed successfully');
+   
   } catch (error) {
     console.error('Error inserting records:', error);
   }
@@ -2506,9 +2530,10 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
-
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+console.log(skip);
+console.log(limit);
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
 
   res.status(200).json({
     status: 'success',
@@ -2523,30 +2548,48 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
   if (!year || !month) {
     throw new Error('Year and month are required');
   }
+  console.log(year);
+  console.log(month);
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
-  const startDate = new Date(year, month - 1, 1); // Start of the month
-  const endDate = new Date(year, month, 1); // Start of the next month
+  //const startDate = new Date(year, month - 1, 1); // Start of the month
+  //const endDate = new Date(year, month, 1); // Start of the next month
+  
 
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
-    if (skip > 0 || limit > 0) {
+  
+    // Convert start and end date based on the year and month
+    const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
+    const endDate = moment(startDate).endOf('month').toDate();
+    console.log(startDate.toISOString());
+console.log(endDate.toISOString());
+    if (limit === 0) {
+      // Get the count of records for the month
       const count = await OvertimeInformation.countDocuments({
-        date: {
+        CheckInDate: {
           $gte: startDate,
           $lt: endDate
         }
       }).exec();
+    
       return { count };
     } else {
+      // Get all records for the month, applying skip and limit for pagination
       const records = await OvertimeInformation.find({
-        date: {
+        CheckInDate: {
           $gte: startDate,
           $lt: endDate
         }
-      }).skip(skip).limit(limit).exec();
-      return records;
+      })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+    
+      return records; // Return the actual records
     }
+    
+    
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed
