@@ -3332,6 +3332,7 @@ exports.getAllPayrollIncomeTaxByPayroll = catchAsync(async (req, res, next) => {
     data: payrollIncomeTaxList
   });
 });
+
 // Update Payroll Income Tax by ID
 exports.updatePayrollIncomeTax = catchAsync(async (req, res, next) => {
   const payrollIncomeTax = await PayrollIncomeTax.findByIdAndUpdate(req.params.id, req.body, {
@@ -3359,7 +3360,143 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
   });
 });
 
+
 exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
+  console.log(req)
+  const companyId = req.cookies.companyId; // Get companyId from cookies
+  console.log('company:----', companyId);
+  // const payrolls = await Payroll.find({ company: companyId })
+  // console.log('Payrolls:-----', payrolls)
+  if (!companyId) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Company ID is required'
+    });
+  }
+
+  // Step 1: Find all PayrollUsers for the given payroll and company
+  // const payrollUsers = await PayrollUsers.find({
+  //   payroll: payrolls,
+  //   company: companyId // Filter by company
+  // }).populate({
+  //   path: 'user',
+  //   select: 'id firstName lastName email'
+  // });
+  // console.log('payrollusers:---', payrollUsers)
+  // if (!payrollUsers.length) {
+  //   return res.status(200).json({
+  //     status: 'success',
+  //     data: []
+  //   });
+  // }
+
+  // const userIds = payrollUsers.map(user => user.user._id);
+
+  // const salaryDetailsList = await EmployeeSalaryDetails.find({
+  //   user: { $in: userIds },
+  //   company: companyId // Filter by company
+  // })
+  //   .sort({ createdAt: -1 }) // Assuming latest salary is determined by creation date
+  //   .populate({ path: 'user', select: 'firstName lastName email' });
+
+  // const generatedPayrollList = await Promise.all(
+  //   payrollUsers.map(async (payrollUser) => {
+  //     const userSalary = salaryDetailsList.find(salary => salary.user._id.equals(payrollUser.user._id));
+
+  //     const allLoanAdvances = await PayrollLoanAdvance.find({
+  //       payrollUser: payrollUser._id,
+  //       type: 'Disbursement',
+  //       company: companyId
+  //     });
+
+  //     const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
+  //       PayrollUser: payrollUser._id,
+  //       company: companyId
+  //     });
+
+  //     const overtime = await PayrollOvertime.find({
+  //       PayrollUser: payrollUser._id,
+  //       company: companyId
+  //     });
+
+  //     const incomeTax = await PayrollIncomeTax.find({
+  //       PayrollUser: payrollUser._id,
+  //       company: companyId
+  //     });
+
+  //     const attendanceSummary = await PayrollAttendanceSummary.find({
+  //       payrollUser: payrollUser._id,
+  //       company: companyId
+  //     });
+
+  //     if (!userSalary) {
+  //       console.log(`No salary details found for user ${payrollUser.user._id}`);
+  //       return null; // Skip users with no salary details
+  //     }
+
+  //     let monthlySalary = 0;
+  //     let yearlySalary = 0;
+
+  //     if (userSalary?.enteringAmount === 'Monthly') {
+  //       monthlySalary = userSalary.Amount;
+  //       yearlySalary = monthlySalary * 12;
+  //     } else if (userSalary?.enteringAmount === 'Yearly') {
+  //       yearlySalary = userSalary.Amount;
+  //       monthlySalary = yearlySalary / 12;
+  //     }
+
+  //     const [fixedAllowances, fixedDeductions, otherBenefits] = await Promise.all([
+  //       SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
+  //       SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
+  //       SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary._id, company: companyId })
+  //     ]);
+
+  //     const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
+  //     const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
+  //     const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
+
+  //     const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0);
+
+  //     const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
+
+  //     const pfTaxes = flexiBenefits.reduce((sum, pf) => sum + (pf.TotalProfessionalTaxAmount || 0), 0);
+
+  //     const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
+
+  //     const totalIncomeTax = incomeTax.length ? incomeTax[0].TDSCalculated : 0;
+
+  //     return {
+  //       PayrollUser: {
+  //         id: payrollUser._id,
+  //         user: {
+  //           name: `${payrollUser.user.firstName} ${payrollUser.user.lastName}`,
+  //           id: payrollUser.user._id
+  //         }
+  //       },
+  //       attendanceSummary,
+  //       totalOvertime,
+  //       totalFixedAllowance,
+  //       totalOtherBenefit: totalOtherBenefits,
+  //       totalFixedDeduction: totalFixedDeductions,
+  //       totalLoanAdvance: userLoanAdvances,
+  //       totalFlexiBenefits: flexiBenefitsTotal,
+  //       totalPfTax: pfTaxes,
+  //       totalIncomeTax,
+  //       yearlySalary: yearlySalary || 0,
+  //       monthlySalary: monthlySalary || 0
+  //     };
+  //   })
+  // );
+
+  // const filteredPayrollList = generatedPayrollList.filter(Boolean);
+
+  // res.status(200).json({
+  //   status: 'success',
+  //   data: filteredPayrollList
+  // });
+});
+
+exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) => {
   // Step 1: Find all PayrollUsers for the given payroll
   const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll }).populate({
     path: 'user',
