@@ -3360,13 +3360,9 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
-  console.log(req)
   const companyId = req.cookies.companyId; // Get companyId from cookies
-  console.log('company:----', companyId);
-  // const payrolls = await Payroll.find({ company: companyId })
-  // console.log('Payrolls:-----', payrolls)
+   // console.log('Payrolls:-----', payrolls)
   if (!companyId) {
     return res.status(400).json({
       status: 'fail',
@@ -3489,11 +3485,12 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   // );
 
   // const filteredPayrollList = generatedPayrollList.filter(Boolean);
+  const filteredPayrollList = await Payroll.find({ company: companyId })
 
-  // res.status(200).json({
-  //   status: 'success',
-  //   data: filteredPayrollList
-  // });
+  res.status(200).json({
+   status: 'success',
+   data: filteredPayrollList
+  });
 });
 
 exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) => {
