@@ -1810,25 +1810,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
           //IF isovertimeallowed flag set to true then only overtime will be calculated
           // Insert attendanceRecords into AttendanceRecord collection
           await insertAttendanceRecords(attendanceRecordsFiltered);
-
-          // Insert entries into OvertimeInformation for users with isOvertime set to true
-          const overtimeRecords = attendanceRecordsFiltered
-            .filter(record => record.isOvertime)
-            .map(record => ({
-              User: user._id, // Replace with appropriate user name
-              AttandanceShift: shift._id,
-              OverTime: record.deviationHour,
-              ShiftTime: shift.startTime + " " + shift.endTime,
-              Date: record.date,
-              CheckInDate: record.checkIn,
-              CheckOutDate: record.checkOut,
-              CheckInTime: record.checkIn,
-              CheckOutTime: record.checkOut,
-              company: companyId,
-            }));
-          if (overtimeRecords.length) {
-            await OvertimeInformation.insertMany(overtimeRecords);
-          }
+          await insertOvertimeRecords(attendanceRecordsFiltered,req.cookies.companyId);         
 
         }
       }
@@ -1879,26 +1861,8 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
     // If there are processed records, insert them into the database
     if (attendanceRecords.length > 0) {
       await insertAttendanceRecords(attendanceRecords);
-    }
-      // Insert entries into OvertimeInformation for users with isOvertime set to true
-      const overtimeRecords = attendanceRecords
-      .filter(record => record.isOvertime)
-      .map(record => ({
-        User: record.user, // Replace with appropriate user name
-        AttandanceShift: record.attandanceShift,
-        OverTime: record.deviationHour,
-        ShiftTime: record.shiftTiming,
-        Date: record.date,
-        CheckInDate: record.date,
-        CheckOutDate: record.date,
-        CheckInTime: record.checkIn,
-        CheckOutTime: record.checkOut,
-        company: req.cookies.companyId,
-      }));
-    if (overtimeRecords.length) {
-      await OvertimeInformation.insertMany(overtimeRecords);
-    }
-
+      await insertOvertimeRecords(attendanceRecords,req.cookies.companyId);  
+    }     
 
     // Send response back indicating success
     res.status(200).json({
@@ -1987,7 +1951,7 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
         company: companyId,
-        attandanceShift: shift._id,       
+        attandanceShift: shift._id,  
         isOvertime,
       };
       
@@ -2006,10 +1970,56 @@ async function getLateComingRemarks(userId, logId) {
   });
   return manualTime ? manualTime.reason : 'N/A';
 }
+async function insertOvertimeRecords(attendanceRecords, companyId) {
+  const overtimeRecords = attendanceRecords
+    .filter(record => record.isOvertime)
+    .map(record => ({
+      User: record.user, // Replace with appropriate user name
+      AttandanceShift: record.attandanceShift,
+      OverTime: record.deviationHour,
+      ShiftTime: record.shiftTiming,
+      Date: record.date,
+      CheckInDate: record.date,
+      CheckOutDate: record.date,
+      CheckInTime: record.checkIn,
+      CheckOutTime: record.checkOut,
+      company: companyId,
+    }));
+
+  // Remove duplicates within the array based on Date, User, and AttandanceShift
+  const uniqueOvertimeRecords = Array.from(
+    new Map(overtimeRecords.map(record =>
+      [`${record.User}-${record.AttandanceShift}-${record.Date}`, record]
+    )).values()
+  );
+
+  // Check for existing records in the database to avoid duplicates
+  if (uniqueOvertimeRecords.length) {
+    // Fetch existing records from the database that match the User, AttandanceShift, and Date
+    const existingRecords = await OvertimeInformation.find({
+      User: { $in: uniqueOvertimeRecords.map(record => record.User) },
+      AttandanceShift: { $in: uniqueOvertimeRecords.map(record => record.AttandanceShift) },
+      Date: { $in: uniqueOvertimeRecords.map(record => record.Date) },
+    });
+
+    // Filter out records that already exist in the database
+    const newRecords = uniqueOvertimeRecords.filter(record =>
+      !existingRecords.some(existing =>
+        existing.User.toString() === record.User.toString() &&
+        existing.AttandanceShift.toString() === record.AttandanceShift.toString() &&
+        existing.Date === record.Date
+      )
+    );
+
+    // Insert only new records
+    if (newRecords.length) {
+      await OvertimeInformation.insertMany(newRecords);
+    }
+  }
+}
 
 // Insert attendanceRecords
 async function insertAttendanceRecords(attendanceRecords) {
-  console.log(attendanceRecords);
   // Check if attendanceRecords is null or undefined and handle accordingly
   if (!attendanceRecords) {
     console.warn('No attendance records provided');
@@ -2022,7 +2032,7 @@ async function insertAttendanceRecords(attendanceRecords) {
     const insertPromises = attendanceRecords.map(async (record) => {
       // Check if the record already exists based on unique fields (e.g., employeeId, date)
       const existingRecord = await AttendanceRecords.findOne({
-        user: record.employeeId,
+        user: record.user,
         date: record.date
       });
 
@@ -2269,7 +2279,6 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
                 await lopRecord.save();
               }
             }
-
           }
         }
       }
@@ -2531,8 +2540,6 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const limit = parseInt(req.body.next) || 10;
 
   const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
-console.log(skip);
-console.log(limit);
   const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
 
   res.status(200).json({
@@ -2548,8 +2555,6 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
   if (!year || !month) {
     throw new Error('Year and month are required');
   }
-  console.log(year);
-  console.log(month);
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   //const startDate = new Date(year, month - 1, 1); // Start of the month
   //const endDate = new Date(year, month, 1); // Start of the next month
@@ -2562,8 +2567,6 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
     // Convert start and end date based on the year and month
     const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
     const endDate = moment(startDate).endOf('month').toDate();
-    console.log(startDate.toISOString());
-console.log(endDate.toISOString());
     if (limit === 0) {
       // Get the count of records for the month
       const count = await OvertimeInformation.countDocuments({
@@ -2632,8 +2635,6 @@ async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, 
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   const startDate = new Date(year, month - 1, 1); // Start of the month
   const endDate = new Date(year, month, 1); // Start of the next month
-  console.log(startDate);
-  console.log(endDate);
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
