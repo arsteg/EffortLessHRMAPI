@@ -1322,6 +1322,85 @@ exports.getSubscriptionDetailsById = async (req, res) => {
   }
 };
 
+exports.getNextPaymentDetails = async (req, res) => {
+  try {
+    const user = req.user;
+    const subscription = await Subscription.findOne({
+      companyId: user.company.id
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ 
+        "status": "fail",
+        "message": 'Subscription not found' 
+      });
+    }
+
+    let due_date = '';
+    let due_amount = 0;
+    let new_users_amount = 0;
+    if(subscription.razorpaySubscription.current_end) due_date = new Date(subscription.razorpaySubscription.current_end*1000).toISOString();
+    if(subscription.currentPlanId.currentprice) due_amount = subscription.currentPlanId.currentprice;
+    if(subscription.razorpaySubscription.quantity > 1) due_amount = due_amount * subscription.razorpaySubscription.quantity;
+    if(subscription.pendingUpdates.length > 0) new_users_amount = subscription.pendingUpdates.length * subscription.currentPlanId.currentprice;
+    let total_due_amount = due_amount;
+    if(new_users_amount) total_due_amount = new_users_amount + due_amount;
+    res.status(200).json({
+      status: 'success',
+      data: {
+         due_date,
+         due_amount,
+         new_users_amount,
+         total_due_amount
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.getLastInvoice = async (req, res) => {
+  try {
+    const user = req.user;
+    const subscription = await Subscription.findOne({
+      companyId: user.company.id
+    });
+
+
+    if (!subscription) {
+      return res.status(404).json({ 
+        "status": "fail",
+        "message": 'Subscription not found' 
+      });
+    }
+
+    const invoice = await Invoice.find({
+      subscription_id: subscription.subscriptionId
+    }).sort({date: -1}).limit(1);
+
+    const amount = invoice[0].amount
+    const payment_method = invoice[0].payment_info.method;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        amount: amount,
+        payment_method: payment_method
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
 exports.activateSubscription = async (req, res) => {
   try {
     const subscriptionId = req.params.id;

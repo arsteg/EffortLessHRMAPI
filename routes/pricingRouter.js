@@ -1677,6 +1677,44 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
   *         description: Internal server error
   */
  router.get('/subscription/:id', authController.protect, pricingController.getSubscriptionDetailsById);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/last-invoice:
+  *   get:
+  *     summary: Get last invoice details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with the last payment amount and method
+  *       404:
+  *         description: subscription not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/last-invoice', authController.protect, pricingController.getLastInvoice);
+
+ /**
+  * @swagger
+  * /api/v1/pricing/upcoming-payment:
+  *   get:
+  *     summary: Get due payment details
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     responses:
+  *       200:
+  *         description: Successful response with the due amount and date
+  *       404:
+  *         description: subscription not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.get('/upcoming-payment', authController.protect, pricingController.getNextPaymentDetails);
  
 /**
   * @swagger
