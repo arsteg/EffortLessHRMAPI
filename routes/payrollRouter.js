@@ -5041,6 +5041,25 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
 
 /**
  * @swagger
+ * /api/v1/payroll/generatedPayroll-by-company:
+ *   post:
+ *     summary: Get a generatedPayroll by company
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the generatedPayroll
+ *       404:
+ *         description: generatedPayroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/generatedPayroll-by-company',authController.protect, payrollController.getAllGeneratedPayroll);
+
+/**
+ * @swagger
  * /api/v1/payroll/generatedPayroll-by-payroll/{payroll}:
  *   get:
  *     summary: get generated payroll
@@ -5061,17 +5080,17 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
  *       500:
  *         description: Internal server error
  */
-router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payrollController.getAllGeneratedPayroll);
+router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payrollController.getAllGeneratedPayrollByPayrollId);
 
 /**
  * @swagger
  * /api/v1/payroll/fnf:
  *   post:
  *     summary: Add a new payroll FNF
- *     tags: [Payroll Management]
  *     security: [{
- *         bearerAuth: []
+ *       bearerAuth: []
  *     }]
+ *     tags: [Payroll Management]
  *     requestBody:
  *       description: Payroll FNF details
  *       required: true
@@ -5094,9 +5113,8 @@ router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payr
  *         description: Bad request
  *       500:
  *         description: Internal server error
- */ 5
+ */
 router.post('/fnf/', authController.protect, payrollController.addPayrollFNF);
-
 
 /**
  * @swagger
