@@ -2538,19 +2538,17 @@ exports.deleteAttendance = async (req, res) => {
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-
-  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+  
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month);
 
   res.status(200).json({
     status: 'success',
-    data: attendanceRecords,
-    total: totalCount
+    data: attendanceRecords
   });
 
 });
 
-async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getOvertimeRecordsByYearAndMonth(year, month) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -2567,32 +2565,14 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
     // Convert start and end date based on the year and month
     const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
     const endDate = moment(startDate).endOf('month').toDate();
-    if (limit === 0) {
-      // Get the count of records for the month
-      const count = await OvertimeInformation.countDocuments({
-        CheckInDate: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      }).exec();
-    
-      return { count };
-    } else {
       // Get all records for the month, applying skip and limit for pagination
       const records = await OvertimeInformation.find({
         CheckInDate: {
           $gte: startDate,
           $lt: endDate
         }
-      })
-        .skip(skip)
-        .limit(limit)
-        .exec();
-    
+      }).exec();    
       return records; // Return the actual records
-    }
-    
-    
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed
