@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var salaryComponentFixedDeductionSchema = new Schema({  
   fixedDeduction: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'FixedDeduction',
     required: true
   },
   monthlyAmount: {
@@ -20,5 +21,15 @@ var salaryComponentFixedDeductionSchema = new Schema({
     required: true
   }
 }, { collection: 'SalaryComponentFixedDeduction' });
-
+salaryComponentFixedDeductionSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'fixedDeduction',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed allowance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('SalaryComponentFixedDeduction', salaryComponentFixedDeductionSchema);
