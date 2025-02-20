@@ -1,9 +1,10 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var salaryComponentOtherBenefitsSchema = new Schema({  
+var salaryComponentOtherBenefitsSchema = new Schema({
   otherBenefits: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'OtherBenefits',
     required: true
   },
   monthlyAmount: {
@@ -20,5 +21,15 @@ var salaryComponentOtherBenefitsSchema = new Schema({
     required: true
   }
 }, { collection: 'SalaryComponentOtherBenefits' });
-
+salaryComponentOtherBenefitsSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'otherBenefits',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed allowance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('SalaryComponentOtherBenefits', salaryComponentOtherBenefitsSchema);

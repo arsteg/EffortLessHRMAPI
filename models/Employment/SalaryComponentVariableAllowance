@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var salaryComponentVariableAllowanceSchema = new Schema({  
   variableAllowance: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'VariableAllowance',
     required: true
   },
   monthlyAmount: {
@@ -20,5 +21,15 @@ var salaryComponentVariableAllowanceSchema = new Schema({
     required: true
   }
 }, { collection: 'SalaryComponentVariableAllowance' });
-
+salaryComponentVariableAllowanceSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'variableAllowance',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating fixed allowance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('SalaryComponentVariableAllowance', salaryComponentVariableAllowanceSchema);
