@@ -31,15 +31,17 @@ var appointmentModelSchema = new Schema({
 }, { collection: 'Appointment' });
 
 appointmentModelSchema.pre('save', async function(next) {
+  let counter;
   if (this.isNew) {
     try {
-      let counter = await Counter.findOneAndUpdate(
+      // Use upsert: true to either update the existing counter or insert a new one
+      counter = await Counter.findOneAndUpdate(
         { company: this.company },
         { $inc: { counter: 1 } },
-        { new: true, upsert: false }
+        { new: true, upsert: true } // upsert will create a new document if none is found
       );
 
-      this.empCode = counter?.counter;
+      this.empCode = counter?.counter; // Set empCode to the counter value
       next();
     } catch (error) {
       next(error);
@@ -48,5 +50,6 @@ appointmentModelSchema.pre('save', async function(next) {
     next();
   }
 });
+
 appointmentModelSchema.index({ user: 1, company: 1 }, { unique: true });
 module.exports = mongoose.model('Appointment', appointmentModelSchema);
