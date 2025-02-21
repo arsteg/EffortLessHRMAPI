@@ -151,20 +151,39 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
 
 exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
     try {
+        console.log("Received request for getUserProductivityApps");
+        
         const userId = req.params.userId;
-        const productivityApps = await Productivity.find({company:req.cookies.companyId,user:userId});        
+        console.log("User ID:", userId);
+
+        const companyId = req.cookies.companyId;
+        console.log("Company ID:", companyId);
+
+        if (!userId || !companyId) {
+            console.log("Missing userId or companyId");
+            return res.status(400).json({
+                status: 'failed',
+                message: 'Missing userId or companyId'
+            });
+        }
+
+        const productivityApps = await Productivity.find({ company: companyId, user: userId });
+        
+        console.log("Productivity Apps found:", productivityApps.length);
+
         res.status(200).json({
             status: 'success',
             data: productivityApps
-        })
-    }
-    catch (err) {
+        });
+    } catch (err) {
+        console.log("Error fetching productivity apps:", err);
         res.status(400).json({
             status: 'failed',
-            data: err
+            data: err.message || err
         });
     }
 });
+
 
 exports.getproductivities = catchAsync(async (req, res, next) => {
     const productivityData = await Productivity.find();    
@@ -205,18 +224,42 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
 });
 
 exports.updateProductivity = catchAsync(async (req, res, next) => {    
-    const { id } = req.params.id;
-    const { status } = req.body.status;    
-    
-    const productivityData = await Productivity.findByIdAndUpdate(
-        req.body.id,
-        { $set: { status: req.body.status } },
-        { new: true }
-      );
-      res.status(200).json({
-        status: 'success',
-        body: productivityData
-    });
+    try {
+        console.log("Incoming request to update productivity:", req.params, req.body);
+        
+        const { id } = req.params;
+        const { status } = req.body;
+
+        console.log(`Updating Productivity ID: ${id} with Status: ${status}`);
+
+        const productivityData = await Productivity.findByIdAndUpdate(
+            id,
+            { $set: { status: status } },
+            { new: true }
+        );
+
+        if (!productivityData) {
+            console.log(`No productivity record found with ID: ${id}`);
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Productivity record not found'
+            });
+        }
+
+        console.log("Updated Productivity Data:", productivityData);
+
+        res.status(200).json({
+            status: 'success',
+            data: productivityData
+        });
+    } catch (error) {
+        console.error("Error updating productivity:", error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal Server Error',
+            error: error.message
+        });
+    }
 });
 
 exports.deleteProductivity = catchAsync(async (req, res, next) => {

@@ -79,6 +79,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
+  console.log("Request received:", req.body);
   const user = await User.findById(req.body.user);
   let result = [];
   if (!user) {
@@ -138,33 +139,48 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
+  console.log("Entering getManualTimeRequestsByUser method");
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { user: req.params.id };
+
+  console.log(`Request parameters - skip: ${skip}, limit: ${limit}, user ID: ${req.params.id}`);
+
   const totalCount = await manualTimeRequest.countDocuments(query);
+  console.log(`Total documents found: ${totalCount}`);
+
   const manualTimeRequests = await manualTimeRequest
     .find({})
     .where("user")
     .equals(req.params.id)
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
+
+  console.log(`Fetched ${manualTimeRequests.length} manual time requests`);
 
   for (let i = 0; i < manualTimeRequests.length; i++) {
-    manualTimeRequests[i].project = await Project.findById(
-      manualTimeRequests[i].project
-    );
-    manualTimeRequests[i].manager = await User.findById(
-      manualTimeRequests[i].manager
-    );
-    manualTimeRequests[i].task = await Task.findById(
-      manualTimeRequests[i].task
-    );
+    console.log(`Processing request ${i + 1} of ${manualTimeRequests.length}`);
+
+    manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project);
+    console.log(`Project for request ${i + 1}:`, manualTimeRequests[i].project);
+
+    manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager);
+    console.log(`Manager for request ${i + 1}:`, manualTimeRequests[i].manager);
+
+    manualTimeRequests[i].task = await Task.findById(manualTimeRequests[i].task);
+    console.log(`Task for request ${i + 1}:`, manualTimeRequests[i].task);
   }
+
+  console.log("All requests processed successfully");
+
   res.status(200).json({
     status: "success",
     data: manualTimeRequests,
     total: totalCount,
   });
+
+  console.log("Response sent with status 200");
 });
 
 exports.deleteManualTimeRequest = catchAsync(async (req, res, next) => {
