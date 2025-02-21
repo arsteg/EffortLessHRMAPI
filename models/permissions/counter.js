@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 const counterSchema = new mongoose.Schema({
-  company: { type: mongoose.Schema.ObjectId, ref: 'Company', unique: true, required: true },
+  company: { type: String, unique: true, required: true },
   counter: { type: Number, default: 1 }
 });
 

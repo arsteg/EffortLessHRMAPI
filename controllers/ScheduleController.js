@@ -202,6 +202,7 @@ const createFiscalCycle = async () => {
       
       return `${startMonth}_${startYear}-${endMonth}_${startYear}`;
 };
+
   module.exports = {
     doesLeaveAssignmentExist,
     createFiscalCycle,

@@ -31,6 +31,10 @@ var appointmentModelSchema = new Schema({
 }, { collection: 'Appointment' });
 
 appointmentModelSchema.pre('save', async function(next) {
+  if (!this.company) {
+    return next(new Error('Company field is required.'));
+  }
+
   let counter;
   if (this.isNew) {
     try {
@@ -50,6 +54,7 @@ appointmentModelSchema.pre('save', async function(next) {
     next();
   }
 });
+
 
 appointmentModelSchema.index({ user: 1, company: 1 }, { unique: true });
 module.exports = mongoose.model('Appointment', appointmentModelSchema);
