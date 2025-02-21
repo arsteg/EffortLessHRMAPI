@@ -1324,44 +1324,73 @@ exports.getSubscriptionDetailsById = async (req, res) => {
 
 exports.getNextPaymentDetails = async (req, res) => {
   try {
+    console.log("getNextPaymentDetails called");
+
     const user = req.user;
+    console.log("User:", user);
+
     const subscription = await Subscription.findOne({
       companyId: user.company.id
     });
 
+    console.log("Subscription:", subscription);
+
     if (!subscription) {
+      console.log("Subscription not found");
       return res.status(404).json({ 
-        "status": "fail",
-        "message": 'Subscription not found' 
+        status: "fail",
+        message: "Subscription not found" 
       });
     }
 
-    let due_date = '';
+    let due_date = "";
     let due_amount = 0;
     let new_users_amount = 0;
-    if(subscription.razorpaySubscription.current_end) due_date = new Date(subscription.razorpaySubscription.current_end*1000).toISOString();
-    if(subscription.currentPlanId.currentprice) due_amount = subscription.currentPlanId.currentprice;
-    if(subscription.razorpaySubscription.quantity > 1) due_amount = due_amount * subscription.razorpaySubscription.quantity;
-    if(subscription.pendingUpdates.length > 0) new_users_amount = subscription.pendingUpdates.length * subscription.currentPlanId.currentprice;
+
+    if (subscription.razorpaySubscription.current_end) {
+      due_date = new Date(subscription.razorpaySubscription.current_end * 1000).toISOString();
+    }
+    console.log("Due date:", due_date);
+
+    if (subscription.currentPlanId.currentprice) {
+      due_amount = subscription.currentPlanId.currentprice;
+    }
+    console.log("Due amount (before quantity adjustment):", due_amount);
+
+    if (subscription.razorpaySubscription.quantity > 1) {
+      due_amount = due_amount * subscription.razorpaySubscription.quantity;
+    }
+    console.log("Due amount (after quantity adjustment):", due_amount);
+
+    if (subscription.pendingUpdates.length > 0) {
+      new_users_amount = subscription.pendingUpdates.length * subscription.currentPlanId.currentprice;
+    }
+    console.log("New users amount:", new_users_amount);
+
     let total_due_amount = due_amount;
-    if(new_users_amount) total_due_amount = new_users_amount + due_amount;
+    if (new_users_amount) {
+      total_due_amount = new_users_amount + due_amount;
+    }
+    console.log("Total due amount:", total_due_amount);
+
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
-         due_date,
-         due_amount,
-         new_users_amount,
-         total_due_amount
+        due_date,
+        due_amount,
+        new_users_amount,
+        total_due_amount
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in getNextPaymentDetails:", err);
     res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
+      status: "error",
+      message: "Internal server error",
     });
   }
 };
+
 
 exports.getLastInvoice = async (req, res) => {
   try {

@@ -8,13 +8,49 @@ const Productivity = require("../models/productivityModel");
 const TaskUsers = require("../models/taskUserModel");
 const { ObjectId } = require("mongoose").Types;
 
-exports.getHoursWorked = catchAsync(async (req, res, next) => {
-  const userId = req.query.userId;
-  const date = req.query.date;
+const parseDate = (dateString) => {
+  console.log("Raw Date Input:", dateString);
 
-  const startOfDate = new Date(date);
+  if (!dateString) {
+    console.error("Error: Date string is empty or undefined.");
+    return null;
+  }
+
+  // Try direct parsing
+  let parsedDate = new Date(dateString);
+  if (!isNaN(parsedDate)) {
+    return parsedDate;
+  }
+
+  // Fix incorrect time format (e.g., 18.36.52 → 18:36:52)
+  dateString = dateString.replace(/\./g, ":");
+  parsedDate = new Date(dateString);
+
+  if (!isNaN(parsedDate)) {
+    return parsedDate;
+  }
+
+  console.error("Error: Invalid date format -", dateString);
+  return null;
+};
+
+exports.getHoursWorked = catchAsync(async (req, res, next) => {
+  console.log("Received Query Parameters:", req.query);
+
+  const { userId, date: rawDate } = req.query;
+
+  if (!userId || !rawDate) {
+    return res.status(400).json({ status: "fail", message: "User ID and Date are required." });
+  }
+
+  const parsedDate = parseDate(rawDate);
+  if (!parsedDate) {
+    return res.status(400).json({ status: "fail", message: "Invalid date format." });
+  }
+
+  const startOfDate = new Date(parsedDate);
   startOfDate.setHours(0, 0, 0, 0);
-  const endOfDate = new Date(date);
+  const endOfDate = new Date(parsedDate);
   endOfDate.setHours(23, 59, 59, 999);
 
   const startOfPreviousDay = new Date(startOfDate);
@@ -22,98 +58,123 @@ exports.getHoursWorked = catchAsync(async (req, res, next) => {
   const endOfPreviousDay = new Date(endOfDate);
   endOfPreviousDay.setDate(endOfPreviousDay.getDate() - 1);
 
-  const todayLogs = await TimeLog.aggregate([
-    {
-      $match: {
-        user: mongoose.Types.ObjectId(userId),
-        date: { $gte: startOfDate, $lte: endOfDate },
-      },
-    },
-    {
-      $group: {
-        _id: "$user",
-        totalTime: { $sum: { $subtract: ["$endTime", "$startTime"] } },
-      },
-    },
-  ]);
+  console.log("Start of Date:", startOfDate, "| End of Date:", endOfDate);
+  console.log("Start of Previous Day:", startOfPreviousDay, "| End of Previous Day:", endOfPreviousDay);
 
-  const previousDayLogs = await TimeLog.aggregate([
-    {
-      $match: {
-        user: mongoose.Types.ObjectId(userId),
-        date: { $gte: startOfPreviousDay, $lte: endOfPreviousDay },
+  try {
+    const todayLogs = await TimeLog.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(userId),
+          date: { $gte: startOfDate, $lte: endOfDate },
+        },
       },
-    },
-    {
-      $group: {
-        _id: "$user",
-        totalTime: { $sum: { $subtract: ["$endTime", "$startTime"] } },
+      {
+        $group: {
+          _id: "$user",
+          totalTime: { $sum: { $subtract: ["$endTime", "$startTime"] } },
+        },
       },
-    },
-  ]);
+    ]);
 
-  const result = {
-    today: todayLogs.length > 0 ? todayLogs[0].totalTime : 0,
-    previousDay: previousDayLogs.length > 0 ? previousDayLogs[0].totalTime : 0,
-  };
-  res.status(200).json({
-    status: "success",
-    data: result,
-  });
+    const previousDayLogs = await TimeLog.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(userId),
+          date: { $gte: startOfPreviousDay, $lte: endOfPreviousDay },
+        },
+      },
+      {
+        $group: {
+          _id: "$user",
+          totalTime: { $sum: { $subtract: ["$endTime", "$startTime"] } },
+        },
+      },
+    ]);
+
+    console.log("Today Logs:", todayLogs);
+    console.log("Previous Day Logs:", previousDayLogs);
+
+    const result = {
+      today: todayLogs.length > 0 ? todayLogs[0].totalTime : 0,
+      previousDay: previousDayLogs.length > 0 ? previousDayLogs[0].totalTime : 0,
+    };
+
+    res.status(200).json({ status: "success", data: result });
+  } catch (error) {
+    console.error("Error fetching time logs:", error);
+    next(error);
+  }
 });
 
 exports.getWeeklySummary = catchAsync(async (req, res, next) => {
-  const userId = req.query.userId;
-  const date = new Date(req.query.date);
-  const currentWeekStartDate = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate() - date.getDay()
-  );
-  const currentWeekEndDate = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate() - date.getDay() + 6
-  );
-  const previousWeekStartDate = new Date(
-    currentWeekStartDate.getFullYear(),
-    currentWeekStartDate.getMonth(),
-    currentWeekStartDate.getDate() - 7
-  );
-  const previousWeekEndDate = new Date(
-    currentWeekEndDate.getFullYear(),
-    currentWeekEndDate.getMonth(),
-    currentWeekEndDate.getDate() - 7
-  );
+  console.log("Received Query Parameters:", req.query);
 
-  const currentWeekTimeLogs = await TimeLog.find({
-    user: userId,
-    date: { $gte: currentWeekStartDate, $lte: currentWeekEndDate },
-  });
-  const currentWeekTotalHours = currentWeekTimeLogs.reduce(
-    (total, timeLog) =>
-      total + (timeLog.endTime - timeLog.startTime) / (1000 * 60 * 60),
-    0
-  );
+  const { userId, date: rawDate } = req.query;
 
-  const previousWeekTimeLogs = await TimeLog.find({
-    user: userId,
-    date: { $gte: previousWeekStartDate, $lte: previousWeekEndDate },
-  });
-  const previousWeekTotalHours = previousWeekTimeLogs.reduce(
-    (total, timeLog) =>
-      total + (timeLog.endTime - timeLog.startTime) / (1000 * 60 * 60),
-    0
-  );
-  const result = {
-    currentWeek: currentWeekTotalHours,
-    previousWeek: previousWeekTotalHours,
-  };
-  res.status(200).json({
-    status: "success",
-    data: result,
-  });
+  if (!userId || !rawDate) {
+    return res.status(400).json({ status: "fail", message: "User ID and Date are required." });
+  }
+
+  const parsedDate = parseDate(rawDate);
+  if (!parsedDate) {
+    return res.status(400).json({ status: "fail", message: "Invalid date format." });
+  }
+
+  const currentWeekStartDate = new Date(parsedDate);
+  currentWeekStartDate.setDate(parsedDate.getDate() - parsedDate.getDay());
+  currentWeekStartDate.setHours(0, 0, 0, 0);
+
+  const currentWeekEndDate = new Date(currentWeekStartDate);
+  currentWeekEndDate.setDate(currentWeekStartDate.getDate() + 6);
+  currentWeekEndDate.setHours(23, 59, 59, 999);
+
+  const previousWeekStartDate = new Date(currentWeekStartDate);
+  previousWeekStartDate.setDate(previousWeekStartDate.getDate() - 7);
+
+  const previousWeekEndDate = new Date(currentWeekEndDate);
+  previousWeekEndDate.setDate(previousWeekEndDate.getDate() - 7);
+
+  console.log("Current Week:", currentWeekStartDate, "to", currentWeekEndDate);
+  console.log("Previous Week:", previousWeekStartDate, "to", previousWeekEndDate);
+
+  try {
+    const currentWeekTimeLogs = await TimeLog.find({
+      user: mongoose.Types.ObjectId(userId),
+      date: { $gte: currentWeekStartDate, $lte: currentWeekEndDate },
+    });
+
+    const currentWeekTotalHours = currentWeekTimeLogs.reduce(
+      (total, timeLog) => total + (timeLog.endTime - timeLog.startTime) / (1000 * 60 * 60),
+      0
+    );
+
+    const previousWeekTimeLogs = await TimeLog.find({
+      user: mongoose.Types.ObjectId(userId),
+      date: { $gte: previousWeekStartDate, $lte: previousWeekEndDate },
+    });
+
+    const previousWeekTotalHours = previousWeekTimeLogs.reduce(
+      (total, timeLog) => total + (timeLog.endTime - timeLog.startTime) / (1000 * 60 * 60),
+      0
+    );
+
+    console.log("Current Week Total Hours:", currentWeekTotalHours);
+    console.log("Previous Week Total Hours:", previousWeekTotalHours);
+
+    const result = {
+      currentWeek: currentWeekTotalHours,
+      previousWeek: previousWeekTotalHours,
+    };
+
+    res.status(200).json({ status: "success", data: result });
+  } catch (error) {
+    console.error("Error fetching weekly summary:", error);
+    next(error);
+  }
 });
+
+
 
 exports.getMonthlySummary = catchAsync(async (req, res, next) => {
   const { userId, date } = req.query;
