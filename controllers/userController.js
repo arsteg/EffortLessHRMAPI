@@ -2005,7 +2005,7 @@ exports.generateOTP = catchAsync(
       });
       console.log(newOTP);
       // Save the pincode in the database
-      const message = `Your one-time password (OTP) for verification is: ${otp} . Please do not share this OTP with anyone. If you did not request this, please ignore this email or contact our support team immediately.`;
+      const message = `Your one-time password (OTP) for verification is: ${otp}. \n Please do not share this OTP with anyone. If you did not request this, please ignore this email or contact our support team immediately.`;
       await newOTP.save();
       console.log(message);
       console.log("hello1");
