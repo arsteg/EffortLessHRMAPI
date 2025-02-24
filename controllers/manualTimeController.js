@@ -41,6 +41,32 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   if (!project) {
     return next(new AppError(`Project is required.`, 404));
   }
+  const fromDate = new Date(req.body.fromDate);
+  const toDate = new Date(req.body.toDate);
+
+  if (fromDate >= toDate) {    
+    res.status(200).json({
+      status: "failed",
+      data: null,
+      message:'From Date must be earlier than To Date.'
+    });
+  }
+  // Check for overlapping manual time requests for the same user
+  const overlappingRequest = await manualTimeRequest.findOne({
+    user: req.body.user,
+    $or: [
+      { fromDate: { $lt: toDate }, toDate: { $gt: fromDate } }, // Partial overlap
+      { fromDate: { $gte: fromDate, $lt: toDate } }, // Existing entry starts inside new range
+      { toDate: { $gt: fromDate, $lte: toDate } } // Existing entry ends inside new range
+    ]
+  });
+  if (overlappingRequest) {
+    res.status(200).json({
+      status: "failed",
+      data: null,
+      message:'Time entry overlaps with an existing record. Please adjust the time.'
+    });    
+  }
 
   var mtRequest = await manualTimeRequest.create({
     user: req.body.user,
