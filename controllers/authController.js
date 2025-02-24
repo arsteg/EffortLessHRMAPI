@@ -509,10 +509,15 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
-  if (!user) {
-    return next(new AppError('There is no user with email address.', 404));
+  if (!user) {    
+    res.status(200).json({
+      status: 'failed',
+      message: 'No account found with this email address.',
+      data: {
+        user: null
+      }
+    }); 
   }
-
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
   

@@ -3399,7 +3399,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 
       const allLoanAdvances = await PayrollLoanAdvance.find({
         payrollUser: payrollUser._id,
-        type: 'Disbursement',
+        type: 'Repayment',
         company: companyId
       });
 
@@ -3517,7 +3517,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       const allLoanAdvances = await PayrollLoanAdvance.find({
         payrollUser: { $in: payrollUser?._id },
-        type: 'Disbursement'
+        type: 'Repayment'
       });
 
       const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
@@ -3596,7 +3596,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
         totalPfTax: pfTaxes,
-        totalIncomeTax: taxes[0]?.TDSCalculated,
+        totalIncomeTax: taxes[0]?.TDSCalculated || 0,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0
       };
