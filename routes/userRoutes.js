@@ -2426,7 +2426,7 @@ router.get('/appointments/:userId',  authController.protect, userController.getA
 
 /**
  * @swagger
- * /api/v1/user/appointments/{id}:
+ * /api/v1/users/appointments/{id}:
  *   put:
  *     summary: Update an appointment
  *     tags: [User Management]
@@ -2453,8 +2453,6 @@ router.get('/appointments/:userId',  authController.protect, userController.getA
  *                 type: integer
  *               confirmationDate:
  *                 type: integer
- *               company:
- *                 type: string
  *     responses:
  *       200:
  *         description: Successfully updated the appointment
@@ -2489,6 +2487,44 @@ router.put('/appointments/:id',  authController.protect, userController.updateAp
  *         description: Internal server error
  */
 router.delete('/appointments/:id',  authController.protect, userController.deleteAppointment);
+
+/**
+ * @swagger
+ * /api/v1/users/update-profile-picture/{userId}:
+ *   put:
+ *     summary: Update an User profile
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: userId of the user
+ *     requestBody:
+ *       description: Update user profile picture details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profileImage:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   example: {attachmentSize,extention,file} 
+ *     responses:
+ *       200:
+ *         description: Successfully updated the appointment
+ *       404:
+ *         description: No appointment found with that ID
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/update-profile-picture/:userId',  authController.protect, userController.updateUserProfilePicture);
 
 router
   .route('/:id')

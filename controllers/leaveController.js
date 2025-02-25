@@ -11,30 +11,17 @@ const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDay
 const ShortLeave = require("../models/Leave/ShortLeaveModel");
 const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
 const { ObjectId } = require('mongodb');
-const { v1: uuidv1 } = require('uuid');
-// Import ExpenseCategory model
-const { BlobServiceClient } = require('@azure/storage-blob');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const TemplateApplicableCategoryEmployee = require("../models/Leave/TemplateApplicableCategoryEmployeeModel");
 const userSubordinate = require('../models/userSubordinateModel');
 const scheduleController = require('../controllers/ScheduleController');
-const { Constants } = require('azure-storage');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const constants = require('../constants');
 const User = require('../models/permissions/userModel');
 const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-  throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
+const StorageController = require('./storageController');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -955,20 +942,10 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
           || leaveApplicationAttachments[i].attachmentType === null || leaveApplicationAttachments[i].attachmentName === null || leaveApplicationAttachments[i].attachmentSize === null || leaveApplicationAttachments[i].extention === null || leaveApplicationAttachments[i].file === null) {
           return res.status(400).json({ error: 'All attachment properties must be provided' });
         }
-        const blobName = leaveApplicationAttachments[i].attachmentName + "_" + uuidv1() + leaveApplicationAttachments[i].extention;
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-        console.log("\nUploading to Azure storage as blob:\n\t",);
-        // Upload data to the blob
-        var FileString = leaveApplicationAttachments[i].file;
-        const buffer = new Buffer.from(FileString, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-        documentLink = process.env.CONTAINER_URL_BASE_URL + process.env.CONTAINER_NAME + "/" + blobName;
-        console.log(
-          "Blob was uploaded successfully. requestId: ",
-          uploadBlobResponse.requestId
-        );
-
+         leaveApplicationAttachments[i].filePath = leaveApplicationAttachments[i].attachmentName +"_" + uuidv1() + leaveApplicationAttachments[i].extention; 
+                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+         documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, leaveApplicationAttachments[i]);
+             
       }
     }
     const newLeaveApplication = await LeaveApplication.create({

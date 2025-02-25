@@ -142,8 +142,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     updatedOn: new Date(Date.now())    
   }); 
 
-    
-    const rolesToDuplicate = await Role.find({ company: companyId });
+  const rolesToDuplicate = await Role.find({ company: companyId });
     // Step 3: Create new records by cloning and assigning a new id
     const duplicatedRoles= rolesToDuplicate.map((record) => {
       // Create a new object with the same properties as the original record

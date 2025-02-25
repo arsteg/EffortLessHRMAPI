@@ -3,8 +3,6 @@ const TaskUser = require('../models/taskUserModel');
 const User = require('../models/permissions/userModel');
 const TaskAttachments = require('../models/taskAttachmentModel');
 const catchAsync = require('../utils/catchAsync');
-const { BlobServiceClient } = require('@azure/storage-blob');
-const { v1: uuidv1} = require('uuid');
 const AppError = require('../utils/appError');
 const Tag = require('../models/Task/tagModel');
 const TaskTag = require('../models/Task/taskTagModel');
@@ -21,16 +19,8 @@ const timeLog = require('../models/timeLog');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Project = require('../models/projectModel');
 const constants = require('../constants');
+const StorageController = require('./storageController');
 
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
@@ -640,28 +630,17 @@ const taskCount = await Task.countDocuments({
     if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || !req.body.taskAttachments[i].file
       ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
       return res.status(400).json({ error: 'All attachment properties must be provided' });
-    }
-    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-   // Get a block blob client
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    console.log("\nUploading to Azure storage as blob:\n\t", );
-    // Upload data to the blob
-    var FileString =  req.body.taskAttachments[i].file;
-    const buffer = new Buffer.from(FileString, 'base64');
-    const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-    const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-    console.log(
-      "Blob was uploaded successfully. requestId: ",
-      uploadBlobResponse.requestId
-    );
-
+    }  
+    req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+    //req.body.attachment.file = req.body.taskAttachments[i].file;
+    var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
       const newTaskAttachments = await TaskAttachments.create({
       task:newTask._id,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       createdOn: new Date(),
       updatedOn: new Date(),
@@ -840,27 +819,17 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
     return res.status(400).json({ error: 'All attachment properties must be provided' });
   }
-  const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-  // Get a block blob client
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  console.log("\nUploading to Azure storage as blob:\n\t", );
-  // Upload data to the blob
-  var FileString =  req.body.taskAttachments[i].file;
-  const buffer = new Buffer.from(FileString, 'base64');
-  const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-  const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
- 
-  console.log(
-    "Blob was uploaded successfully. requestId: ",
-    uploadBlobResponse.requestId
-  );
+  req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+  //req.body.attachment.file = req.body.taskAttachments[i].file;
+  var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+
     const newTaskAttachment = await TaskAttachments.create({
       task:req.body.taskId,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       comment:req.body.comment,
       createdOn: new Date(),
@@ -1348,20 +1317,10 @@ exports.createComment = catchAsync(async (req, res, next) => {
       ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
       return res.status(400).json({ error: 'All attachment properties must be provided' });
     }
-    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-    // Get a block blob client
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    console.log("\nUploading to Azure storage as blob:\n\t", );
-    // Upload data to the blob
-    var FileString =  req.body.taskAttachments[i].file;
-    const buffer = new Buffer.from(FileString, 'base64');
-    const uploadBlobResponse = await blockBlobClient.upload(buffer , buffer.length);
-    const url = process.env.CONTAINER_URL_BASE_URL + process.env.CONTAINER_NAME + "/"+ blobName; 
-   
-    console.log(
-      "Blob was uploaded successfully. requestId: ",
-      uploadBlobResponse.requestId
-    );
+    req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+    //req.body.attachment.file = req.body.taskAttachments[i].file;
+    var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+ 
     const newTaskUserItem = await TaskAttachments.create({
       task:newComment.task,
       attachmentType:req.body.taskAttachments[i].attachmentType,
@@ -1369,7 +1328,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
       comment:newComment._id,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       createdOn: new Date(),
       updatedOn: new Date(),

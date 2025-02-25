@@ -46,19 +46,7 @@ const sendEmail = require('../utils/email');
 const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
 const UserActionLog = require("../models/Logging/userActionModel");
 const { updateRazorpaySubscription } = require("./pricingController");
-
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-  throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(
-  process.env.CONTAINER_NAME
-);
+const StorageController = require('./storageController.js');
 
 exports.logUserAction = catchAsync(async(req, action, next) => {
   try{
@@ -1467,20 +1455,10 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
           return res.status(400).json({ error: 'All attachment properties must be provided' });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+         var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+              
         // Add the document link to the array
         item.documentLink=documentLink;
       }
@@ -1513,19 +1491,9 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
           return res.status(400).json({ error: 'All attachment properties must be provided' });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+        //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
 
         // Add the document link to the array
         item.documentLink=documentLink;
@@ -1689,20 +1657,10 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
   
-          const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-          
-          // Get a block blob client
-          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  
-          // Upload data to the blob
-          const buffer = Buffer.from(attachment.file, 'base64');
-          const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-  
-          // Generate the document link
-          const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-  
-          console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-  
+          attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+          var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+        
           // Add the document link to the array
           req.body.employeeIncomeTaxDeclarationHRA[j].documentLink=documentLink;
         }
@@ -1720,11 +1678,8 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
             for(var i = 0; i <taxDeclarationHRAs.length; i++) {
             if(taxDeclarationHRAs[i].documentLink)
               {
-                  var url = taxDeclarationHRAs[i].documentLink;     
-                  containerClient.getBlockBlobClient(url).deleteIfExists();
-                  const blockBlobClient = containerClient.getBlockBlobClient(url);
-                  await blockBlobClient.deleteIfExists();
-                  console.log("deleted HRA");
+                 await StorageController.deleteBlobFromContainer(req.cookies.companyId, taxDeclarationHRAs[i].documentLink); 
+              
               }
           }
           await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
@@ -1785,9 +1740,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationComponants.length; i++) {
         if (taxDeclarationComponants[i].documentLink) {
           var url = taxDeclarationComponants[i].documentLink;
-          containerClient.getBlockBlobClient(url).deleteIfExists();
-          const blockBlobClient = containerClient.getBlockBlobClient(url);
-          await blockBlobClient.deleteIfExists();
+            await StorageController.deleteBlobFromContainer(req.cookies.companyId, url); 
+         
           console.log("deleted componant");
         }
       }
@@ -1804,9 +1758,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationHRAs.length; i++) {
         if (taxDeclarationHRAs[i].documentLink) {
           var url = taxDeclarationHRAs[i].documentLink;
-          containerClient.getBlockBlobClient(url).deleteIfExists();
-          const blockBlobClient = containerClient.getBlockBlobClient(url);
-          await blockBlobClient.deleteIfExists();
+          await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url); 
+         
           console.log("deleted HRA");
         }
       }
@@ -1839,8 +1792,13 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
         error: `${req.body.incomeTaxComponent} is not a valid income tax component`,
       });
     }
+    const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
 
-    // Process attachments if they are present
+    if (!employeeIncomeTaxDeclaration) {
+      return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
+    }
+  
+        // Process attachments if they are present
     if (req.body.employeeIncomeTaxDeclarationAttachments) {
       for (
         let i = 0;
@@ -1861,29 +1819,10 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
-
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, "base64");
-        const uploadBlobResponse = await blockBlobClient.upload(
-          buffer,
-          buffer.length
-        );
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log(
-          "Blob was uploaded successfully. requestId: ",
-          uploadBlobResponse.requestId
-        );
-
-        // Add the document link to the array
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+       //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+       // Add the document link to the array
         req.body.documentLink = documentLink;
       }
     }
@@ -1913,6 +1852,12 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
 // Update or create Employee Income Tax Declaration HRA
 exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
   async (req, res, next) => {
+    const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
+
+  if (!employeeIncomeTaxDeclaration) {
+    return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
+  }
+
     // Process attachments if any
     if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
       for (
@@ -1940,27 +1885,10 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+        //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
 
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, "base64");
-        const uploadBlobResponse = await blockBlobClient.upload(
-          buffer,
-          buffer.length
-        );
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log(
-          "Blob was uploaded successfully. requestId: ",
-          uploadBlobResponse.requestId
-        );
 
         // Add the document link to the array
         req.body.documentLink = documentLink;
@@ -2081,4 +2009,25 @@ exports.cancelOTP = catchAsync(
   } catch (error) {
       res.status(500).json({ message: 'Error cancelling OTP' });
   }
+});
+exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
+  
+  const user = await User.findById(req.params.userId); 
+   for(var i = 0; i < req.body.profileImage.length; i++) {
+      if (!req.body.profileImage[i].attachmentSize || !req.body.profileImage[i].extention || !req.body.profileImage[i].file
+        ||req.body.profileImage[i].attachmentSize===null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file===null) {
+        return res.status(400).json({ error: 'All Profile Image properties must be provided' });
+      }
+      const attachmentName=user.firstName;
+      req.body.profileImage[i].filePath = attachmentName +"_" + user._id+ req.body.profileImage[i].extention; 
+     // Get a block blob client
+     var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Profile, req.body.profileImage[i]);
+    console.log(url);
+    await user.save();
+  }
+  
+  res.status(201).json({
+    status: 'success',
+    data: user
+  });
 });

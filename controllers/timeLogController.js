@@ -3,20 +3,11 @@ const TimeLogCheckInOut = require('../models/timeLogCheckInOut');
 const CurrentUserDevice = require('../models/currentUserDeviceModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
-const { v1: uuidv1} = require('uuid');
-const { BlobServiceClient } = require('@azure/storage-blob');
 const { Stream } = require('nodemailer/lib/xoauth2');
 var moment = require('moment'); 
+const constants = require('../constants');
+const StorageController = require('./storageController.js');
 const userSubordinate = require('../models/userSubordinateModel');
-  // AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 const mongoose = require('mongoose');
 
 exports.addLog = catchAsync(async (req, res, next) => { 
@@ -51,19 +42,15 @@ exports.addLog = catchAsync(async (req, res, next) => {
             userId: req.cookies.userId      
           });               
     }
-
-    // Upload Capture image on block blob client
-  const blobName = "Capture" + uuidv1() + `${req.body.filePath}`;
-  // Get a block blob client
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  console.log("\nUploading to Azure storage as blob:\n\t", blobName);
-  // Upload data to the blob
-  var FileString = req.body.fileString;
-  const buffer = new Buffer.from(FileString, 'base64');
-  const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-  const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-  console.log(`process.env.CONTAINER_URL_BASE_URL ${process.env.CONTAINER_URL_BASE_URL} process.env.CONTAINER_NAME ${process.env.CONTAINER_NAME}`);
-  console.log(`Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}, url: ${uploadBlobResponse}`);
+    if (!req.body.document) {
+      req.body.document = []; // Initialize as an empty array if not already initialized
+    }
+     req.body.document.push({
+      filePath: req.body.filePath,
+      file: req.body.fileString, // Assuming this is coming from the attachment
+     });
+  var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Timelog, req.body.document[0]);
+   
   const newTimeLog = await TimeLog.create({
     user: req.body.user,
     task:req.body.task,
@@ -71,7 +58,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     date :req.body.date,
     startTime: req.body.startTime,
     endTime:req.body.endTime,
-    filePath:blobName,
+    filePath:req.body.filePath,
     keysPressed:req.body.keysPressed,
     allKeysPressed:req.body.allKeysPressed,
     clicks:req.body.clicks,
@@ -248,12 +235,9 @@ exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
   if(timeLogsExists)
   {  
     for(var i = 0; i <timeLogsExists.length; i++) {
-    if(timeLogsExists[i].filePath)
+    if(timeLogsExists[i].url)
     {
-        var url = timeLogsExists[i].filePath;     
-        containerClient.getBlockBlobClient(url).deleteIfExists();
-        const blockBlobClient = containerClient.getBlockBlobClient(url);
-        await blockBlobClient.deleteIfExists();      
+      await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists[i].url);     
     }   
     const document = await TimeLog.findByIdAndDelete(timeLogsExists[i]._id);
     if (!document) {
@@ -271,12 +255,9 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);    
   if(timeLogsExists)
   {
-    if(timeLogsExists.filePath)
+    if(timeLogsExists.url)
     {
-        var url = timeLogsExists.filePath;     
-        containerClient.getBlockBlobClient(url).deleteIfExists();
-        const blockBlobClient = containerClient.getBlockBlobClient(url);
-        await blockBlobClient.deleteIfExists();
+      await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url); 
     }
     const document = await TimeLog.findByIdAndDelete(req.body.logs[i].logId);
     if (!document) {
