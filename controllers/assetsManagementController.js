@@ -10,6 +10,7 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require('../utils/appError.js');
 const mongoose = require("mongoose");
 const CustomAttributeModel = require("../models/AssetsManagement/CustomAttributeModel");
+const constants = require('../constants');
 
 exports.addAssetType = catchAsync(async (req, res, next) => {
   const session = await mongoose.startSession(); // Start a MongoDB session for a transaction

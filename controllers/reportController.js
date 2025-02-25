@@ -10,6 +10,8 @@ const User = require('../models/permissions/userModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const mongoose = require('mongoose');
+const constants = require('../constants');
+
 exports.getActivityold = catchAsync(async (req, res, next) => {
 const timeLogsAll = [];
 var timeLogs;

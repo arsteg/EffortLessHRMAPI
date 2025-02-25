@@ -11,6 +11,7 @@ const DocumentUsers = require(`../models/documents/documentUsers`);
 const Template = require(`../models/documents/template`);
 const UserDocuments = require(`../models/documents/userDocuments`);
 const Document = require(`../models/documents/document`);
+const constants = require('../constants');
 //CompanyPolicyDocument
 
 exports.createCompanyPolicyDocument = catchAsync(async (req, res, next) => {  
