@@ -4,6 +4,7 @@ const catchAsync = require('../utils/catchAsync');
 const { v1: uuidv1} = require('uuid');
 
 const { BlobServiceClient } = require('@azure/storage-blob');
+const constants = require('../constants');
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;

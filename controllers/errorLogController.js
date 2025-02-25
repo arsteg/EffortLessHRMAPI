@@ -2,6 +2,7 @@
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const ErrorLog = require('../models/errorLogModel');
+const constants = require('../constants');
 
   // Save Permission List
   exports.getErrorLogList = catchAsync(async (req, res, next) => {    

@@ -4,6 +4,7 @@ const Industry = require('../models/recruitment/industryModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
 const APIFeatures = require('../utils/apiFeatures');
+const constants = require('../constants');
 
 
 //#region Skill region

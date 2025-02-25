@@ -2,6 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const catchMessageAsync= require('../utils/catchMessageAsync');
 const WebSocket = require('ws');
 const express = require('express');
+const constants = require('../constants');
 
 const app = express();
 // Create a new WebSocket server
