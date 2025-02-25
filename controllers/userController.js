@@ -2028,7 +2028,8 @@ exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
       req.body.profileImage[i].filePath = attachmentName +"_" + user._id+ req.body.profileImage[i].extention; 
      // Get a block blob client
      var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Profile, req.body.profileImage[i]);
-    console.log(url);
+
+    user.photo=url;
     await user.save();
   }
   
