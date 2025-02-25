@@ -177,21 +177,31 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
 // Function to get the list of users by empCode
 exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
   const { empCode } = req.params;  // Get empCode from route parameter
+  const companyId = req.cookies.companyId; // Get companyId from cookies
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required in cookies.', 400));
+  }
 
   // Find appointments that match the empCode
   const appointments = await Appointment.find({ empCode })
     .populate('user')  // Populate the user field with user details
     .select('user empCode company joiningDate confirmationDate');  // Select relevant fields
 
-  // If no appointments are found for the empCode
-  if (!appointments || appointments.length === 0) {
-    return next(new AppError('No users found with the provided empCode.', 404));
+  // Filter appointments by companyId
+  const filteredAppointments = appointments.filter(appointment =>
+    appointment.company._id.toString() === companyId
+  );
+
+  // If no appointments are found for the empCode and companyId
+  if (filteredAppointments.length === 0) {
+    return next(new AppError('No users found with the provided empCode and companyId.', 404));
   }
 
-  // Respond with the list of users
+  // Respond with the filtered list of users
   res.status(200).json({
     status: 'success',
-    data: appointments.map(appointment => appointment.user)
+    data: filteredAppointments.map(appointment => appointment.user)
   });
 });
 
