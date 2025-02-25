@@ -33,7 +33,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   const manualTimeRequest = await ManualTimeRequest.find({}).where('task').equals(req.params.id); 
   if (timeLogExists.length > 0 ||manualTimeRequest.lenth > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'TimeLog is already added for the task, We can`t delete task.',
     });
   }
@@ -82,7 +82,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 const document = await Task.findById(req.params.id);
 await document.remove();
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -92,7 +92,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
 
   if (!existingProject) {
     return res.status(400).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'Invalid project',
     });
   }
@@ -146,7 +146,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
   }
   const getTask = await Task.findById(req.params.id);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       data: getTask
     }
@@ -159,7 +159,7 @@ const task = await Task.findById(req.params.id);
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
 const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);    
 res.status(200).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: {
     task: task,
     newTaskUserList:newTaskUserList,
@@ -173,7 +173,7 @@ exports.getTaskUsers  = catchAsync(async (req, res, next) => {
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
   
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
     taskUserList:newTaskUserList
     }
@@ -183,7 +183,7 @@ exports.getTaskUsers  = catchAsync(async (req, res, next) => {
 exports.getTaskAttachments  = catchAsync(async (req, res, next) => {    
     const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
       newTaskAttachmentList:newTaskAttachmentList
       }
@@ -317,7 +317,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
    }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {      
       taskList: taskList,
       taskCount: taskCount
@@ -438,7 +438,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
    }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {      
       taskList: taskList,
       taskCount: taskCount
@@ -449,7 +449,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
       taskUser:newTaskUser
       }
@@ -462,7 +462,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / task',
     });
   }
@@ -497,7 +497,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
       }
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -508,7 +508,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
 exports.getTaskAttachment  = catchAsync(async (req, res, next) => {    
       const newTaskAttachment = await TaskAttachments.find({}).where('_id').equals(req.params.id);  
       res.status(200).json({
-        status: 'success',
+        status:constants.APIResponseStatus.Success,
         data: {
         newTaskAttachment:newTaskAttachment
         }
@@ -524,7 +524,7 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -539,7 +539,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   if (existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'A task with this name already exists for your company.',
     });
   }
@@ -548,7 +548,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingProject) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / project',
     });
   }
@@ -655,7 +655,7 @@ const taskCount = await Task.countDocuments({
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id); 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       newTask: newTask,
       newTaskUserList:newTaskUserList,
@@ -670,7 +670,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / task',
     });
   }
@@ -684,7 +684,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     if(emailOldUser.id===req.body.user)
     {
       res.status(200).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: {      
         Error :"Same user allredy assigned"
       }
@@ -759,7 +759,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
      }
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);  
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {      
       TaskUserList:newTaskUserList
     }
@@ -798,7 +798,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
     }
   }
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -808,7 +808,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
 
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -845,7 +845,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   {  
     const newTaskAttachmentList = await TaskAttachments.find({}).where('comment').equals(req.body.comment);  
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: {
         taskAttachmentList:newTaskAttachmentList
       }
@@ -855,7 +855,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   {
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.body.taskId);  
    res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       taskAttachmentList:newTaskAttachmentList
     }
@@ -869,7 +869,7 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -891,7 +891,7 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
         }
      }
     } res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: {
         taskList: taskList,
         taskCount:taskCount
@@ -933,7 +933,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       taskList: taskList,
       taskCount: taskCount
@@ -956,7 +956,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
       }
    }
   } res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       taskList: taskList
     }
@@ -1003,7 +1003,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 //     }
   
 //   res.status(200).json({
-//     status: 'success',
+//     status:constants.APIResponseStatus.Success,
 //     taskList: taskList,
 //     taskCount:taskCount
 //   });  
@@ -1049,7 +1049,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     );  
 
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       taskList: taskList,
       taskCount: taskCount
     });
@@ -1087,7 +1087,7 @@ exports.addTag = catchAsync(async (req, res, next) => {
   }
 
    res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: newTag
   }); 
 } 
@@ -1102,7 +1102,7 @@ exports.updateTag = catchAsync(async (req, res, next) => {
      tagExists.title=req.body.title;
      const newTag = await Tag.updateOne( { _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title }} ).exec();            
      res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: newTag
     }); 
   } 
@@ -1112,7 +1112,7 @@ exports.deleteTagById = async (req, res) => {
   const taskTag = await TaskTag.find({}).where('tag').equals(req.params.id);  
   if (taskTag.length > 0 ) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'Tag is already added for the task, We can`t delete it.',
     });
   }
@@ -1146,7 +1146,7 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
      if(taskId.length<=1){      
        const allTags = await Tag.find({ company: req.cookies.companyId }).sort({ title: 1 });      
        res.status(200).json({
-        status: 'success',
+        status:constants.APIResponseStatus.Success,
         data: allTags
       });       
     }
@@ -1157,7 +1157,7 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
       // Find all Tag documents that match the tag ids
       const tags = await Tag.find({ _id: { $in: tagIds}}).sort({ title: 1 });
       res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: tags
       });
     }   
@@ -1187,7 +1187,7 @@ exports.createTaskTag = async (req, res) => {
 
   if (!existingTask||!existingTag) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task / tag',
     });
   }
@@ -1253,7 +1253,7 @@ exports.updateTaskTagById = async (req, res) => {
 
   if (!existingTask||!existingTag) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task / tag',
     });
   }
@@ -1292,7 +1292,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
   const existingTask = await Task.findById(req.body.task);
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -1374,7 +1374,7 @@ if(newTaskUserList)
       } 
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: newComment
   });     
 }); 
@@ -1404,7 +1404,7 @@ exports.updateComment = async (req, res) => {
   const existingTask = await Task.findById(req.body.task);
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -1416,7 +1416,7 @@ exports.updateComment = async (req, res) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -1478,7 +1478,7 @@ exports.deleteComment = async (req, res) => {
 exports.getAllComments = catchAsync(async (req, res, next) => { 
   let comments = await Comment.find({task: req.params.id}); 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: comments
   });
 });

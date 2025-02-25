@@ -30,7 +30,7 @@ exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -40,7 +40,7 @@ exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   const generalSetting = await GeneralSetting.create(generalSettingData);
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: generalSetting
   });
 });
@@ -54,7 +54,7 @@ exports.getGeneralSettingByCompany = catchAsync(async (req, res, next) => {
     return next(new AppError('GeneralSetting not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: generalSetting
   });
 });
@@ -65,7 +65,7 @@ exports.getGeneralSetting = catchAsync(async (req, res, next) => {
     return next(new AppError('GeneralSetting not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: generalSetting
   });
 });
@@ -81,7 +81,7 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: generalSetting
   });
 });
@@ -93,7 +93,7 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -102,7 +102,7 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   const leaveCategoryData = { ...req.body, company }; // Assuming req.body contains the general setting data
   const leaveCategory = await LeaveCategory.create(leaveCategoryData);
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveCategory
   });
 });
@@ -113,7 +113,7 @@ exports.getLeaveCategory = catchAsync(async (req, res, next) => {
     return next(new AppError('Leave category not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveCategory
   });
 });
@@ -124,7 +124,7 @@ exports.getLeaveCategoryByTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('Leave category not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategory
   });
 });
@@ -140,7 +140,7 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveCategory
   });
 });
@@ -155,7 +155,7 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
     return next(new AppError('Leave category not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveCategory,
     total: totalCount
   });
@@ -164,7 +164,7 @@ exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);  
   const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategory
   });
 });
@@ -173,12 +173,12 @@ exports.getAllLeaveCategoryByUserV1 = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
   if (!employeeLeaveAssignment) {
     res.status(200).json({
-      status: 'failure'
+      status: constants.APIResponseStatus.Failure,
     });
   }
   const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate }).populate('leaveCategory');
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategory
   });
 });
@@ -201,7 +201,7 @@ exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
     else {
       await LeaveCategory.findByIdAndDelete(req.params.id);
       res.status(204).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: null,
       });
     }
@@ -219,7 +219,7 @@ exports.deleteLeaveTemplate = catchAsync(async (req, res, next) => {
   }
   await LeaveTemplate.findByIdAndDelete(req.params.id);
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -264,7 +264,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
 
   if (existingTemplate) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Label already exists',
     });
   }
@@ -297,7 +297,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
 
   // Send success response
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplate
   });
 });
@@ -307,7 +307,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
     const leaveTemplate = await LeaveTemplate.findById(req.params.id);
     if (!leaveTemplate) {
       res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'LeaveTemplate not found'
       });
       return;
@@ -330,12 +330,12 @@ exports.getLeaveTemplate = async (req, res, next) => {
     const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.id);
     leaveTemplate.cubbingRestrictionCategories = leaveClubbingRestrictions;
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveTemplate
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -355,7 +355,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
 
     if (existingTemplate) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Leave Template Label already exists',
       });
     }
@@ -368,7 +368,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       const result = await LeaveCategory.findById(category.leaveCategory);   
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           message: 'Invalid Category',
         });
       }
@@ -378,7 +378,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     const leaveTemplate = await LeaveTemplate.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!leaveTemplate) {
       res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'LeaveTemplate not found'
       });
       return;
@@ -397,12 +397,12 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       })));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveTemplate
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -479,13 +479,13 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
       }
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveTemplates,
       total: totalCount
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -503,7 +503,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
     const result = await LeaveCategory.findById(category.leaveCategory);
     if (!result) {
       return res.status(400).json({
-        status: 'failure',
+        status:constants.APIResponseStatus.Failure,
         message: 'Invalid Category',
       });
     }
@@ -520,7 +520,7 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
     }
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategories
   });
 
@@ -598,7 +598,7 @@ exports.getLeaveTemplateCategoryByTemplate = catchAsync(async (req, res, next) =
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategories
   });
 });
@@ -616,7 +616,7 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveTemplateCategories
   });
 });
@@ -673,7 +673,7 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   }
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: results,
   });
 });
@@ -686,7 +686,7 @@ exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('EmployeeLeaveAssignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeLeaveAssignment,
   });
 });
@@ -694,7 +694,7 @@ exports.getEmployeeLeaveAssignmentByUser = catchAsync(async (req, res, next) => 
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.find({}).where('user').equals(req.params.userId);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeLeaveAssignment,
   });
 });
@@ -709,7 +709,7 @@ exports.getApplicableLeaveSettingByUser = catchAsync(async (req, res, next) => {
     LeaveTemplate.applicableCategories = LeaveTemplateApplicableCategories;
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: LeaveTemplate,
   });
 });
@@ -724,7 +724,7 @@ exports.deleteEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
 
   await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -736,7 +736,7 @@ exports.getAllEmployeeLeaveAssignments = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignments = await EmployeeLeaveAssignment.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeLeaveAssignments,
     total: totalCount
   });
@@ -777,7 +777,7 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   }
   // Send success response
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leavsGrants
   });
 });
@@ -785,7 +785,7 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
   const leaveGrants = await LeaveGrant.find({}).where('employee').equals(req.params.userId);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveGrants,
   });
 });
@@ -809,7 +809,7 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
   const totalCount = await LeaveGrant.countDocuments({ employee: { $in: objectIdArray }, status: req.body.status });
   const leaveGrants = await LeaveGrant.find({ employee: { $in: objectIdArray }, status: req.body.status }).skip(parseInt(skip)).limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveGrants,
     total: totalCount
   });
@@ -850,7 +850,7 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     await leaveGrant.save();
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveGrant
     });
 
@@ -863,7 +863,7 @@ exports.deleteEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
   await LeaveGrant.findByIdAndDelete(req.params.id);
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -888,7 +888,7 @@ exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const leaveGrants = await LeaveGrant.find(query).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveGrants,
     total: totalCount
   });
@@ -897,7 +897,7 @@ exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 exports.getEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const leaveGrants = await LeaveGrant.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveGrants,
   });
 });
@@ -916,7 +916,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
     if (!assignmentExists) {     
       res.status(201).json({
-        status: 'fail',
+        status: constants.APIResponseStatus.Failure,
         data: null,
         message: "Leave assignment does not exist. Cannot apply for leave."
       });
@@ -928,7 +928,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     // Check if there are enough leaves available
     if (leaveAssigned.leaveRemaining < leaveDays) {      
       res.status(201).json({
-        status: 'fail',
+        status: constants.APIResponseStatus.Failure,
         data: null,
         message: "Not enough leave balance to apply for this leave."
       });
@@ -1004,7 +1004,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: newLeaveApplication
     });
   } catch (error) {
@@ -1132,7 +1132,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: updatedLeaveApplication
     });
   } catch (error) {
@@ -1153,7 +1153,7 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
     // If no leave applications are found, return an empty array
     if (leaveApplications.length === 0) {
       return res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: [],
         total: 0,
       });
@@ -1172,7 +1172,7 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
       }
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveApplications,
       total: totalCount
     });
@@ -1215,7 +1215,7 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveApplications,
     total: totalCount
   });
@@ -1246,7 +1246,7 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   } catch (error) {
@@ -1280,7 +1280,7 @@ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
       }
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveApplications,
       total: totalCount
     });
@@ -1306,7 +1306,7 @@ exports.getEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveApplication
     });
   } catch (error) {
@@ -1320,12 +1320,12 @@ exports.addShortLeave = async (req, res, next) => {
     req.body.company = company; // Set company in the request body
     const shortLeave = await ShortLeave.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: shortLeave
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1336,18 +1336,18 @@ exports.getShortLeave = async (req, res, next) => {
     const shortLeave = await ShortLeave.findById(req.params.id);
     if (!shortLeave) {
       res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'ShortLeave not found'
       });
     } else {
       res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: shortLeave
       });
     }
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1358,18 +1358,18 @@ exports.updateShortLeave = async (req, res, next) => {
     const shortLeave = await ShortLeave.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!shortLeave) {
       res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'ShortLeave not found'
       });
     } else {
       res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: shortLeave
       });
     }
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1380,18 +1380,18 @@ exports.deleteShortLeave = async (req, res, next) => {
     const shortLeave = await ShortLeave.findByIdAndDelete(req.params.id);
     if (!shortLeave) {
       res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'ShortLeave not found'
       });
     } else {
       res.status(204).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: null
       });
     }
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1406,13 +1406,13 @@ exports.getShortLeaveByUser = async (req, res, next) => {
     const shortLeaves = await ShortLeave.find({ employee: req.params.userId, status: req.body.status }).skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: shortLeaves,
       total: totalCount
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1444,7 +1444,7 @@ exports.getShortLeaveByTeam = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: shortLeaves,
     total: totalCount
   });
@@ -1460,14 +1460,14 @@ exports.getAllShortLeave = async (req, res, next) => {
     const shortLeaves = await ShortLeave.find({ company: req.cookies.companyId, status: req.body.status }).skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: shortLeaves,
       total: totalCount
     });
 
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1477,13 +1477,13 @@ exports.getLeaveBalance = async (req, res, next) => {
   try {
     const leaveAssigned = await LeaveAssigned.find({ company: req.cookies.companyId }).where('employee').equals(req.body.user).where('cycle').equals(req.body.cycle).where('category').equals(req.body.category);
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: leaveAssigned
     });
 
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1513,7 +1513,7 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveBalances,
     total: totalCount
   });
@@ -1531,7 +1531,7 @@ exports.getLeaveBalanceByCompany = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: leaveBalances,
     total: totalCount
   });

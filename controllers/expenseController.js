@@ -33,7 +33,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     // Validate if company value exists in cookies
     if (!company) {
       return res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Company information missing in cookies',
       });
     }
@@ -43,7 +43,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
       if(expenseCategoryExists)
       {
         res.status(500).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           message: 'Label already in use for another category',
         });
       }
@@ -51,7 +51,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
       const expenseCategory = await ExpenseCategory.create({ type, label,isMandatory,company });
     
         res.status(201).json({
-          status: 'success',
+          status: constants.apiresponsestatus.success,
           data: expenseCategory,
         });
       }
@@ -61,7 +61,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
 exports.getExpenseCategory = catchAsync(async (req, res, next) => {
   const expenseCategory = await ExpenseCategory.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseCategory,
   });
 });
@@ -74,7 +74,7 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
    
     if (!userExpenseAssignment) {      
       res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: userExpenseAssignment,
       });      
     }
@@ -92,13 +92,13 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
     });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: expenseCategories,
       details: templateCategories
     });
   } catch (error) {
       res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -109,7 +109,7 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
   if(expenseCategoryExists)
   {
       res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Label already in use for another category',
     });
   }
@@ -121,7 +121,7 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
      });
 
       res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: expenseCategory,
       });
   }
@@ -133,7 +133,7 @@ exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
   
   if (applicableCategories.length > 0 || expenseReportExpenses.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Expense Category is already in use. Please delete related records before deleting the Expense Category.',
     });
@@ -145,7 +145,7 @@ await expenseCategoryInstance.remove();
   }
 
   return res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -166,7 +166,7 @@ exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
   const expenseCategories = await ExpenseCategory.find(query).skip(parseInt(skip))
   .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseCategories,
     total: totalCount
   });
@@ -177,7 +177,7 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     // Validate the incoming data
     if (!expenseCategory || !Array.isArray(fields) || fields.length === 0) {
         return res.status(400).json({
-            status: 'failure',
+            status: constants.APIResponseStatus.Failure,
             error: 'Invalid request data',
         });
     }
@@ -207,7 +207,7 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
         createdFields.push(expenseApplicationField);
     }
     res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: createdFields,
     });
 });
@@ -215,7 +215,7 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
 exports.getExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: expenseApplicationField,
     });
 });
@@ -271,7 +271,7 @@ exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
     );
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: updatedFields,
       message: 'Expense application field(s) successfully updated or created',
     });
@@ -338,7 +338,7 @@ exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
       return next(new AppError('Expense application field not found', 404));
     }  
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null,
     });
 });
@@ -360,7 +360,7 @@ exports.getExpenseApplicationFieldsByCategory = catchAsync(async (req, res, next
     }
   }
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: expenseApplicationFields,
 });
 });
@@ -370,7 +370,7 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   // Validate the incoming data
   if (!expenseApplicationField || !Array.isArray(expenseApplicationFieldValues) || expenseApplicationFieldValues.length === 0) {
       return res.status(400).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           error: 'Invalid request data',
       });
   }
@@ -386,7 +386,7 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
       createdFields.push(expenseApplicationFieldValue);
   }
   res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: createdFields,
   });  
 });
@@ -394,7 +394,7 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
 exports.getExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseApplicationFieldValue
   });
 });
@@ -424,7 +424,7 @@ exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: updatedFields,
   });
 });
@@ -436,7 +436,7 @@ exports.deleteExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -446,7 +446,7 @@ exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, 
   const expenseApplicationFieldValues = await ExpenseApplicationFieldValue.find({ expenseApplicationField: expenseApplicationFieldId });
   
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseApplicationFieldValues
   });
 });
@@ -464,7 +464,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
 
   if (existingTemplate) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Policy Label already exists',
     });
   }
@@ -481,7 +481,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
     const result = await ExpenseCategory.findById(category.expenseCategory);
     if (!result) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Invalid Category',
       });
     }
@@ -493,7 +493,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplateCategories =  await updateOrCreateExpenseTemplateCategories(expenseTemplate._id, expenseCategories);
  
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseTemplate,
     categories: expenseTemplateCategories
   });
@@ -573,7 +573,7 @@ exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(req.params.id);
   expenseTemplate.applicableCategories=expenseTemplateApplicableCategories;
     res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseTemplate
   });
 });
@@ -591,7 +591,7 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
 
   if (existingTemplate) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Policy Label already exists',
     });
   }
@@ -610,7 +610,7 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
   const updatedCategories = await updateOrCreateExpenseTemplateCategories(req.params.id, req.body.expenseCategories);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: { expenseTemplate: expenseTemplate, expenseCategories: updatedCategories },
   });
 });
@@ -654,7 +654,7 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   console.log(employeeExpenseAssignment);
   if (employeeExpenseAssignment.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Expense Template is already in use. Please delete related records before deleting the Expense Template.',
     });
@@ -667,7 +667,7 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -697,7 +697,7 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   }
   
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseTemplates,
     total: totalCount
   });
@@ -713,7 +713,7 @@ exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
       const result = await ExpenseCategory.findById(category.expenseCategory);
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
+          status:constants.APIResponseStatus.Failure,
           message: 'Invalid Category',
         });      
     }
@@ -721,7 +721,7 @@ exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
   // Iterate through expenseCategories to create or update records
   const expenseTemplateCategories =  await createExpenseTemplateCategories(mongoose.Types.ObjectId(expenseTemplate), expenseCategories);
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: expenseTemplateCategories     
     });
   
@@ -745,7 +745,7 @@ exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, 
           }
       }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: applicableCategories
   });
 });
@@ -766,7 +766,7 @@ exports.getAllApplicableCategoriesByTemplateId = catchAsync(async (req, res, nex
         }
       }
   } res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: applicableCategories,
   });
 });
@@ -790,7 +790,7 @@ exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, re
         }
       
   } res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: applicableCategories,
   });
 });
@@ -827,7 +827,7 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    }
   
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeExpenseAssignment,
   });
 });
@@ -838,7 +838,7 @@ exports.getEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('EmployeeExpenseAssignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeExpenseAssignment,
   });
 });
@@ -846,7 +846,7 @@ exports.getEmployeeExpenseAssignmentByUser = catchAsync(async (req, res, next) =
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('user').equals(req.params.userId);
   
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeExpenseAssignment,
   });
 });
@@ -861,7 +861,7 @@ exports.getApplicableExpenseSettingByUser = catchAsync(async (req, res, next) =>
   expenseTemplate.applicableCategories = expenseTemplateApplicableCategories;
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseTemplate,
   });
 });
@@ -892,7 +892,7 @@ const expenseReport = await ExpenseReport.find({}).where('employee').equals( req
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeExpenseAssignment,
   });
 });
@@ -911,7 +911,7 @@ if (expenseReport.length>0) {
 }
  await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);  
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -927,7 +927,7 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
   .limit(parseInt(limit));
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: employeeExpenseAssignments,
     total: totalCount
   });
@@ -995,7 +995,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
     );
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         expenseReport
       },
@@ -1025,7 +1025,7 @@ const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expense
       expenseReport.expenseReportExpense=expenseReportExpenses;
    }  
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: expenseReport,
 });
 });
@@ -1055,7 +1055,7 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
       expenseReport.expenseReportExpense=expenseReportExpenses;
    }  
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReport
   });
 });
@@ -1064,7 +1064,7 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
    const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.id);  
   if (expenseReportExpenses.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Expense Report is already in use. Please delete related records before deleting the Expense Report.',
     });
@@ -1076,7 +1076,7 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -1113,7 +1113,7 @@ exports.getExpenseReportsByUser = catchAsync(async (req, res, next) => {
       }  
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReports,
     total: totalCount
   });
@@ -1169,7 +1169,7 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
       }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReports,
     total: totalCount
   });
@@ -1207,7 +1207,7 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
       }  
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReports,
     total: totalCount
   });
@@ -1245,7 +1245,7 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
   }
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReportExpense,
   });
 });
@@ -1265,7 +1265,7 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
   
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReportExpense
   });
 });
@@ -1293,7 +1293,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
 
   if (!updatedExpenseReportExpense) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Expense Report Expense not found',
     });
   }
@@ -1338,7 +1338,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: updatedExpenseReportExpense,
   });
 });
@@ -1350,7 +1350,7 @@ exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
     return next(new AppError('Expense Report Expense not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -1371,7 +1371,7 @@ exports.getAllExpenseReportExpensesByExpenseReport = catchAsync(async (req, res,
       }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReportExpenses
   });
 });
@@ -1398,7 +1398,7 @@ exports.getAllExpenseReportExpenses = catchAsync(async (req, res, next) => {
       }
    }  
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: expenseReportExpenses,
     total: totalCount
   });
@@ -1426,7 +1426,7 @@ exports.createAdvance = catchAsync(async (req, res, next) => {
     });
 
      res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: advance
     });
 });
@@ -1434,7 +1434,7 @@ exports.createAdvance = catchAsync(async (req, res, next) => {
 exports.getAdvance = catchAsync(async (req, res, next) => {
     const advance = await Advance.findById(req.params.id);   
     res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: advance
     });
 });
@@ -1445,13 +1445,13 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
     const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(employeeAdvanceAssignment.advanceTemplate);
 
     res.status(200).json({
-      status: 'success',     
+      status: constants.apiresponsestatus.success,     
       details: templateCategories
     });
   } catch (error) {
     console.error(error); // Log the error for debugging
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -1463,7 +1463,7 @@ exports.updateAdvance = catchAsync(async (req, res, next) => {
         runValidators: true
     });  
     res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: advance
     });
 });
@@ -1471,7 +1471,7 @@ exports.updateAdvance = catchAsync(async (req, res, next) => {
 exports.deleteAdvance = catchAsync(async (req, res, next) => {
     const advance = await Advance.findByIdAndDelete(req.params.id);   
     res.status(204).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: null
     });
 });
@@ -1488,7 +1488,7 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
   const advances = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
     res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: advances,
         total: totalCount
     });
@@ -1500,18 +1500,18 @@ exports.getAdvanceSummaryByEmployee = catchAsync(async (req, res, next) => {
    
     if (!expenseAdvancelist) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Expense Advance not found for the given user.'
       });
     }
     res.status(200).json({
-      status: 'success',     
+      status: constants.apiresponsestatus.success,     
       details: expenseAdvancelist
     });
   } catch (error) {
     console.error(error); // Log the error for debugging
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -1523,7 +1523,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -1533,7 +1533,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
   if(advanceCategoryExists)
     {
       res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Label already in use for another category',
       });
     }
@@ -1541,7 +1541,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
     const advanceCategory = await AdvanceCategory.create({ label,company });
   
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: advanceCategory,
       });
     }
@@ -1551,7 +1551,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
 exports.getAdvanceCategory = catchAsync(async (req, res, next) => {
 const advanceCategory = await AdvanceCategory.findById(req.params.id);
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: advanceCategory,
 });
 });
@@ -1561,7 +1561,7 @@ const advanceCategoryExists = await AdvanceCategory.findOne({ label: req.body.la
 if(advanceCategoryExists)
 {
     res.status(500).json({
-    status: 'failure',
+    status: constants.APIResponseStatus.Failure,
     message: 'Label already in use for another category',
   });
 }
@@ -1573,7 +1573,7 @@ else
    });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: advanceCategory,
     });
 }
@@ -1588,7 +1588,7 @@ if (!advanceCategoryInstance) {
 }
 
 return res.status(204).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: null,
 });
 });
@@ -1603,7 +1603,7 @@ exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
 
 
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: advanceCategories,
   total: totalCount
 });
@@ -1626,7 +1626,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -1639,7 +1639,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
       if(advanceCategoryExists)
         {
           res.status(500).json({
-            status: 'failure',
+            status:constants.APIResponseStatus.Failure,
             message: 'Label already in use for another category',
           });
         }
@@ -1658,7 +1658,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
               const result = await AdvanceCategory.findById(category.advanceCategory);
               if (!result) {
                 return res.status(400).json({
-                  status: 'failure',
+                  status: constants.APIResponseStatus.Failure,
                   message: 'Invalid Category',
                 });
               }
@@ -1675,7 +1675,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
               await advanceTemplate.save();
             } // Send a success response
             res.status(201).json({
-              status: 'success',
+              status: constants.apiresponsestatus.success,
               data: advanceTemplate,
             });
             } 
@@ -1696,7 +1696,7 @@ exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
       }    
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: advanceTemplate
   });
 });
@@ -1711,7 +1711,7 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
 
     if (!advanceTemplate) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Advance Template not found',
       });
     }
@@ -1744,7 +1744,7 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
       const result = await AdvanceCategory.findById(category.advanceCategory);
       if (!result) {
         return res.status(400).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           message: 'Invalid Category',
         });
       }
@@ -1766,14 +1766,14 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
     }
         // Send a success response
         res.status(200).json({
-          status: 'success',
+          status: constants.apiresponsestatus.success,
           data: advanceTemplate,
         });
       } catch (error) {
         // Handle errors and send an error response
         console.error(error);
         res.status(500).json({
-          status: 'error',
+          status: constants.APIResponseStatus.Error,
           message: 'Internal server error',
         });
       };
@@ -1788,7 +1788,7 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -1814,7 +1814,7 @@ exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
     }
   }
    res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: advanceTemplates,
     total: totalCount
   });
@@ -1857,7 +1857,7 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   }
  
  res.status(201).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: employeeAdvanceAssignment,
  });
 });
@@ -1868,7 +1868,7 @@ exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
    return next(new AppError('EmployeeAdavanceAssignment not found', 404));
  }
  res.status(200).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: employeeAdvanceAssignment,
  });
 });
@@ -1885,7 +1885,7 @@ exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) =
    return next(new AppError('EmployeeAdvanceAssignment not found', 404));
  }
  res.status(200).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: employeeAdvanceAssignment,
    total: totalCount
  });
@@ -1918,7 +1918,7 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
  }
 
  res.status(200).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: employeeAdvanceAssignment,
  });
 });
@@ -1935,7 +1935,7 @@ if (advanceReport.length>0) {
 }
 await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
  res.status(204).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: null,
  });
 });
@@ -1949,7 +1949,7 @@ exports.getAllEmployeeAdvanceAssignments = catchAsync(async (req, res, next) => 
  const employeeAdvanceAssignments = await EmployeeAdvanceAssignment.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
  .limit(parseInt(limit));
  res.status(200).json({
-   status: 'success',
+   status: constants.apiresponsestatus.success,
    data: employeeAdvanceAssignments,
    total: totalCount
  });

@@ -41,12 +41,12 @@ exports.getHoursWorked = catchAsync(async (req, res, next) => {
   const { userId, date: rawDate } = req.query;
 
   if (!userId || !rawDate) {
-    return res.status(400).json({ status: "fail", message: "User ID and Date are required." });
+    return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "User ID and Date are required." });
   }
 
   const parsedDate = parseDate(rawDate);
   if (!parsedDate) {
-    return res.status(400).json({ status: "fail", message: "Invalid date format." });
+    return res.status(400).json({ status:constants.APIResponseStatus.Failure, message: "Invalid date format." });
   }
 
   const startOfDate = new Date(parsedDate);
@@ -101,7 +101,7 @@ exports.getHoursWorked = catchAsync(async (req, res, next) => {
       previousDay: previousDayLogs.length > 0 ? previousDayLogs[0].totalTime : 0,
     };
 
-    res.status(200).json({ status: "success", data: result });
+    res.status(200).json({ status: constants.APIResponseStatus.Success, data: result });
   } catch (error) {
     console.error("Error fetching time logs:", error);
     next(error);
@@ -114,12 +114,12 @@ exports.getWeeklySummary = catchAsync(async (req, res, next) => {
   const { userId, date: rawDate } = req.query;
 
   if (!userId || !rawDate) {
-    return res.status(400).json({ status: "fail", message: "User ID and Date are required." });
+    return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "User ID and Date are required." });
   }
 
   const parsedDate = parseDate(rawDate);
   if (!parsedDate) {
-    return res.status(400).json({ status: "fail", message: "Invalid date format." });
+    return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "Invalid date format." });
   }
 
   const currentWeekStartDate = new Date(parsedDate);
@@ -168,7 +168,7 @@ exports.getWeeklySummary = catchAsync(async (req, res, next) => {
       previousWeek: previousWeekTotalHours,
     };
 
-    res.status(200).json({ status: "success", data: result });
+    res.status(200).json({ status: constants.APIResponseStatus.Success, data: result });
   } catch (error) {
     console.error("Error fetching weekly summary:", error);
     next(error);
@@ -238,7 +238,7 @@ exports.getMonthlySummary = catchAsync(async (req, res, next) => {
     : 0;
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: {
       currentMonth,
       previousMonth,
@@ -301,7 +301,7 @@ exports.getTaskwiseHours = catchAsync(async (req, res, next) => {
   ]);
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: timeLogs,
   });
 });
@@ -344,7 +344,7 @@ exports.getTaskwiseStatus = catchAsync(async (req, res, next) => {
   }, {});
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: tasksByProject,
   });
 });
@@ -410,7 +410,7 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
     }
   });
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: [
       { name: "Productive", value: productiveTime / (1000 * 60) },
       { name: "Non-Productive", value: nonProductiveTime / (1000 * 60) },
@@ -444,7 +444,7 @@ exports.getTaskStatusCounts = catchAsync(async (req, res, next) => {
     }
   });
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: [
       { name: "To Do", value: todo },
       { name: "In Progress", value: inProgress },
@@ -496,7 +496,7 @@ exports.getDayWorkStatusByUser = catchAsync(async (req, res, next) => {
   const result = groupByProjectAndCountTasks(results);
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: result,
   });
 });

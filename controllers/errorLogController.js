@@ -8,7 +8,7 @@ const constants = require('../constants');
   exports.getErrorLogList = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         errorLogList: errorLogList
       }
@@ -17,7 +17,7 @@ const constants = require('../constants');
   exports.getErrorLogListByUser = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).where('createdBy').equals(req.params.userId).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         errorLogList: errorLogList
       }
@@ -27,7 +27,7 @@ const constants = require('../constants');
   exports.getErrorLog = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).where('_id').equals(req.params.id).where('company').equals(req.cookies.companyId); 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         errorLogList: errorLogList
       }
@@ -48,7 +48,7 @@ const constants = require('../constants');
     }); 
      */
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         ErrorLog:newErrorLog
       }
@@ -61,7 +61,7 @@ const constants = require('../constants');
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   });

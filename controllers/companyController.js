@@ -20,7 +20,7 @@ exports.deleteCompany = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -34,7 +34,7 @@ exports.updateCompany =  catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: {
       data: document
     }
@@ -44,7 +44,7 @@ exports.updateCompany =  catchAsync(async (req, res, next) => {
 exports.getCompany  = catchAsync(async (req, res, next) => {    
 const company = await Company.findById(req.params.id);  
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: {
     company: company
   }
@@ -54,7 +54,7 @@ res.status(200).json({
  exports.getCompanyList = catchAsync(async (req, res, next) => {    
     const companyList = await Company.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         companyList: companyList
       }
@@ -66,7 +66,7 @@ exports.createHoliday = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -96,7 +96,7 @@ exports.createHoliday = catchAsync(async (req, res, next) => {
   }
   holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: holidayCalendar
   });
 });
@@ -122,7 +122,7 @@ exports.getHoliday = catchAsync(async (req, res, next) => {
           
       }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: holidayCalendar
   });
 });
@@ -177,7 +177,7 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
 
   holidayCalendar.holidayapplicableEmployee =  await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);;
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: holidayCalendar
   });
 });
@@ -189,7 +189,7 @@ exports.deleteHoliday = catchAsync(async (req, res, next) => {
     return next(new AppError('Regularization Reason not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -242,7 +242,7 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
           }
       }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: holidayCalendars,
     total: totalCount
   });
@@ -255,7 +255,7 @@ exports.createZone = async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -263,7 +263,7 @@ exports.createZone = async (req, res, next) => {
   
     const zone = await Zone.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: zone
     });
   } catch (error) {
@@ -276,12 +276,12 @@ exports.getZone = async (req, res, next) => {
     const zone = await Zone.findById(req.params.id);
     if (!zone) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Zone not found'
       });
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: zone
     });
   } catch (error) {
@@ -298,13 +298,13 @@ exports.updateZone = async (req, res, next) => {
 
     if (!zone) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Zone not found'
       });
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: zone
     });
   } catch (error) {
@@ -316,7 +316,7 @@ exports.getZonesByCompanyId = async (req, res, next) => {
   try {
     const zones = await Zone.find({ company: req.cookies.companyId });
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: zones
     });
   } catch (error) {
@@ -329,12 +329,12 @@ exports.deleteZone = async (req, res, next) => {
     const zone = await Zone.findByIdAndDelete(req.params.id);
     if (!zone) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Zone not found'
       });
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   } catch (error) {
@@ -348,7 +348,7 @@ exports.addLocation = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -356,7 +356,7 @@ exports.addLocation = catchAsync(async (req, res, next) => {
   
   const location = await Location.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: location
   });
 });
@@ -368,7 +368,7 @@ exports.getLocation = catchAsync(async (req, res, next) => {
     return next(new AppError('Location not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: location
   });
 });
@@ -383,7 +383,7 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
     return next(new AppError('Location not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: location
   });
 });
@@ -392,7 +392,7 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
 exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => { 
   const locations = await Location.find({ company: req.cookies.companyId });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: locations
   });
 });
@@ -404,7 +404,7 @@ exports.deleteLocation = catchAsync(async (req, res, next) => {
     return next(new AppError('Location not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -416,7 +416,7 @@ exports.createDepartment = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -424,7 +424,7 @@ exports.createDepartment = catchAsync(async (req, res, next) => {
   const { departmentName, departmentCode} = req.body;
   const department = await Department.create({ departmentName, departmentCode, company });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: department
   });
 });
@@ -436,7 +436,7 @@ exports.getDepartment = catchAsync(async (req, res, next) => {
     return next(new AppError('Department not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: department
   });
 });
@@ -451,7 +451,7 @@ exports.updateDepartment = catchAsync(async (req, res, next) => {
     return next(new AppError('Department not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: department
   });
 });
@@ -460,7 +460,7 @@ exports.updateDepartment = catchAsync(async (req, res, next) => {
 exports.getAllDepartmentsByCompanyId = catchAsync(async (req, res, next) => {
   const departments = await Department.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: departments
   });
 });
@@ -472,7 +472,7 @@ exports.deleteDepartment = catchAsync(async (req, res, next) => {
     return next(new AppError('Department not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -486,19 +486,19 @@ exports.createSubDepartment = async (req, res, next) => {
       // Validate if company value exists in cookies
       if (!company) {
         return res.status(500).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           message: 'Company information missing in cookies',
         });
       }
       req.body.company = company; // Set company in the request body
         const subDepartment = await SubDepartment.create(req.body);
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             data: subDepartment
         });
     } catch (err) {
         res.status(400).json({
-            status: 'failure',
+            status: constants.APIResponseStatus.Failure,
             message: err.message
         });
     }
@@ -509,18 +509,18 @@ exports.getSubDepartment = async (req, res, next) => {
         const subDepartment = await SubDepartment.findById(req.params.id);
         if (!subDepartment) {
             res.status(404).json({
-                status: 'failure',
+                status: constants.APIResponseStatus.Failure,
                 message: 'SubDepartment not found'
             });
         } else {
             res.status(200).json({
-                status: 'success',
+                status: constants.apiresponsestatus.success,
                 data: subDepartment
             });
         }
     } catch (err) {
         res.status(500).json({
-            status: 'failure',
+            status: constants.APIResponseStatus.Failure,
             message: err.message
         });
     }
@@ -534,18 +534,18 @@ exports.updateSubDepartment = async (req, res, next) => {
         });
         if (!subDepartment) {
             res.status(404).json({
-                status: 'failure',
+                status:constants.APIResponseStatus.Failure,
                 message: 'SubDepartment not found'
             });
         } else {
             res.status(200).json({
-                status: 'success',
+                status: constants.apiresponsestatus.success,
                 data: subDepartment
             });
         }
     } catch (err) {
         res.status(500).json({
-            status: 'failure',
+            status: constants.APIResponseStatus.Failure,
             message: err.message
         });
     }
@@ -555,12 +555,12 @@ exports.getAllSubDepartmentsByCompanyId = async (req, res, next) => {
     try {
         const subDepartments = await SubDepartment.find({}).where('company').equals(req.cookies.companyId);
         res.status(200).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             data: subDepartments
         });
     } catch (err) {
         res.status(500).json({
-            status: 'failure',
+            status: constants.APIResponseStatus.Failure,
             message: err.message
         });
     }
@@ -571,18 +571,18 @@ exports.deleteSubDepartment = async (req, res, next) => {
         const subDepartment = await SubDepartment.findByIdAndDelete(req.params.id);
         if (!subDepartment) {
             res.status(404).json({
-                status: 'failure',
+                status: constants.APIResponseStatus.Failure,
                 message: 'SubDepartment not found'
             });
         } else {
             res.status(204).json({
-                status: 'success',
+                status: constants.apiresponsestatus.success,
                 data: null
             });
         }
     } catch (err) {
         res.status(500).json({
-            status: 'failure',
+            status:constants.APIResponseStatus.Failure,
             message: err.message
         });
     }
@@ -593,14 +593,14 @@ exports.createDesignation = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!company) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
   req.body.company = company; // Set company in the request body
   const designation = await Designation.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: designation
   });
 });
@@ -611,7 +611,7 @@ exports.getDesignation = catchAsync(async (req, res, next) => {
     return next(new AppError('Designation not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: designation
   });
 });
@@ -627,7 +627,7 @@ exports.updateDesignation = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: designation
   });
 });
@@ -635,7 +635,7 @@ exports.updateDesignation = catchAsync(async (req, res, next) => {
 exports.getAllDesignationsByCompany = catchAsync(async (req, res, next) => {
   const designations = await Designation.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: designations
   });
 });
@@ -648,7 +648,7 @@ exports.deleteDesignation = catchAsync(async (req, res, next) => {
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -660,19 +660,19 @@ exports.createBand = async (req, res, next) => {
     // Validate if company value exists in cookies
     if (!company) {
       return res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Company information missing in cookies',
       });
     }
     req.body.company = company; // Set company in the request body
     const band = await Band.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: band
     });
   } catch (error) {
     res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: error.message
     });
   }
@@ -684,17 +684,17 @@ exports.getBand = async (req, res, next) => {
     const band = await Band.findById(req.params.id);
     if (!band) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Band not found'
       });
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: band
     });
   } catch (error) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: error.message
     });
   }
@@ -706,17 +706,17 @@ exports.updateBand = async (req, res, next) => {
     const band = await Band.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!band) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Band not found'
       });
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: band
     });
   } catch (error) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: error.message
     });
   }
@@ -727,12 +727,12 @@ exports.getAllBandsByCompanyId = async (req, res, next) => {
   try {
     const bands = await Band.find({}).where('company').equals(req.cookies.companyId);
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: bands
     });
   } catch (error) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: error.message
     });
   }
@@ -744,17 +744,17 @@ exports.deleteBand = async (req, res, next) => {
     const band = await Band.findByIdAndDelete(req.params.id);
     if (!band) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Band not found'
       });
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   } catch (error) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: error.message
     });
   }
@@ -768,19 +768,19 @@ exports.createSignatory = async (req, res, next) => {
     // Validate if company value exists in cookies
     if (!company) {
       return res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Company information missing in cookies',
       });
     }
     req.body.company = company; // Set company in the request body
     const signatory = await Signatory.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: signatory
     });
   } catch (err) {
     res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -792,17 +792,17 @@ exports.getSignatory = async (req, res, next) => {
     const signatory = await Signatory.findById(req.params.id);
     if (!signatory) {
       return res.status(404).json({
-        status: 'failure',
+        status:constants.APIResponseStatus.Failure,
         message: 'Signatory not found'
       });
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: signatory
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -817,17 +817,17 @@ exports.updateSignatory = async (req, res, next) => {
     });
     if (!signatory) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Signatory not found'
       });
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: signatory
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -838,12 +838,12 @@ exports.getAllSignatoriesByCompanyId = async (req, res, next) => {
   try {
     const signatories = await Signatory.find({ company: req.cookies.companyId });
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: signatories
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -855,17 +855,17 @@ exports.deleteSignatory = async (req, res, next) => {
     const signatory = await Signatory.findByIdAndDelete(req.params.id);
     if (!signatory) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Signatory not found'
       });
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   } catch (err) {
     res.status(500).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -878,7 +878,7 @@ exports.createTaxSlab = catchAsync(async (req, res, next) => {
   // Validate if company value exists in cookies
   if (!companyId) {
     return res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Company information missing in cookies',
     });
   }
@@ -898,7 +898,7 @@ exports.createTaxSlab = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: taxSlab,
   });
 });
@@ -911,7 +911,7 @@ exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
     const totalCount = await TaxSlab.countDocuments(query);
     const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: taxSlabs,
     total: totalCount
   });
@@ -925,7 +925,7 @@ exports.getTaxSlabsByCycle = catchAsync(async (req, res, next) => {
   const taxSlabs = await TaxSlab.find(query);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: taxSlabs,
   });
 });
@@ -939,13 +939,13 @@ exports.updateTaxSlab = catchAsync(async (req, res, next) => {
 
   if (!taxSlab) {
     return res.status(404).json({
-      status: 'fail',
+      status: constants.APIResponseStatus.Failure,
       message: 'Tax slab not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: taxSlab,
   });
 });
@@ -958,13 +958,13 @@ exports.getTaxSlabById = catchAsync(async (req, res, next) => {
 
   if (!taxSlab) {
     return res.status(404).json({
-      status: 'fail',
+      status: constants.APIResponseStatus.Failure,
       message: 'Tax slab not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: taxSlab,
   });
 });
@@ -977,13 +977,13 @@ exports.deleteTaxSlab = catchAsync(async (req, res, next) => {
 
   if (!taxSlab) {
     return res.status(404).json({
-      status: 'fail',
+      status: constants.APIResponseStatus.Failure,
       message: 'Tax slab not found',
     });
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });

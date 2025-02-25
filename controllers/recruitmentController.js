@@ -12,7 +12,7 @@ const constants = require('../constants');
 exports.getSkill=catchAsync(async (req, res, next) => {
     const skills = await Skill.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: skills
     });    
   });
@@ -20,7 +20,7 @@ exports.getSkill=catchAsync(async (req, res, next) => {
   exports.getAllSkills=catchAsync(async (req, res, next) => {
     const skills = await Skill.findById(req.params.id);   
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: skills
     });    
   });
@@ -32,13 +32,13 @@ exports.getSkill=catchAsync(async (req, res, next) => {
       const newSkill = await Skill.create(req.body);
 
     res.status(201).json({
-      status:'success',
+      status:constants.apiresponsestatus.success,
       data: newSkill
     })
     }
     catch(err){
     res.status(400).json({
-      status:'failed',
+      status:constants.APIResponseStatus.Failure,
       message:err
     })
     }    
@@ -50,7 +50,7 @@ exports.getSkill=catchAsync(async (req, res, next) => {
       return next(new AppError('No skill found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null
     });
   });
@@ -64,7 +64,7 @@ exports.getSkill=catchAsync(async (req, res, next) => {
       return next(new AppError('No skill found with that ID', 404));
     }
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: skill
     });
   });
@@ -81,7 +81,7 @@ exports.getSkill=catchAsync(async (req, res, next) => {
     });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: updatedSkill
     });
   });
@@ -104,7 +104,7 @@ exports.getSkill=catchAsync(async (req, res, next) => {
 exports.getRole=catchAsync(async (req, res, next) => {
   const roles = await Role.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: roles
   });    
 });
@@ -112,7 +112,7 @@ exports.getRole=catchAsync(async (req, res, next) => {
 exports.getAllRoles=catchAsync(async (req, res, next) => {
   const roles = await Role.find();   
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: roles
   });    
 });
@@ -122,14 +122,14 @@ exports.createRole = async(req, res) => {
     console.log(req.body);
     const newRole = await Role.create(req.body);
   res.status(201).json({
-    status:'success',
+    status:constants.apiresponsestatus.success,
     data: newRole
   })
   }
   catch(err){
     console.log(err);
   res.status(400).json({
-    status:'failed',
+    status:constants.APIResponseStatus.Failure,
     message:err
   })
   }    
@@ -141,7 +141,7 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -156,7 +156,7 @@ exports.updateRole =  catchAsync(async (req, res, next) => {
     return next(new AppError('No Role found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: role
   });
 });
@@ -168,7 +168,7 @@ exports.updateRole =  catchAsync(async (req, res, next) => {
 exports.getIndustry=catchAsync(async (req, res, next) => {
   const industries = await Industry.find({}).all();
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: industries
   });    
 });
@@ -176,7 +176,7 @@ exports.getIndustry=catchAsync(async (req, res, next) => {
 exports.getAllIndustries=catchAsync(async (req, res, next) => {
   const industries = await Industry.findById(req.params.id);   
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: industries
   });    
 });
@@ -186,13 +186,13 @@ exports.createIndustry = async(req, res) => {
   try{        
     const newIndustry = await Industry.create(req.body);
   res.status(201).json({
-    status:'success',
+    status:constants.apiresponsestatus.success,
     data: newIndustry
   })
   }
   catch(err){
   res.status(400).json({
-    status:'failed',
+    status:constants.APIResponseStatus.Failure,
     message:err
   })
   }    
@@ -204,7 +204,7 @@ exports.deleteIndustry = catchAsync(async (req, res, next) => {
     return next(new AppError('No Industry found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -218,7 +218,7 @@ exports.updateIndustry =  catchAsync(async (req, res, next) => {
     return next(new AppError('No Industry found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: industry
   });
 });
@@ -235,7 +235,7 @@ exports.updateIndustry = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: updatedIndustry
   });
 });

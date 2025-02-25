@@ -22,7 +22,7 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 
   const resignation = await Resignation.create(resignationData);
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: resignation
   });
 });
@@ -31,7 +31,7 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 exports.getResignationByUser = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.findOne({ user: req.params.userId, company: req.cookies.companyId });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: resignation
   });
 });
@@ -40,7 +40,7 @@ exports.getResignationByUser = catchAsync(async (req, res, next) => {
 exports.getResignationByStatus = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.find({ resignation_status: req.params.status, company: req.cookies.companyId });
     res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: resignation
   });
 });
@@ -49,7 +49,7 @@ exports.getResignationByStatus = catchAsync(async (req, res, next) => {
 exports.getResignationByCompany = catchAsync(async (req, res, next) => {
   const resignations = await Resignation.find({ company: req.cookies.companyId });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: resignations
   });
 });
@@ -71,7 +71,7 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: updatedResignation
   });
 });
@@ -95,7 +95,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
     await user.save();
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: resignation
   });
 });
@@ -116,7 +116,7 @@ exports.deleteResignation = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -135,7 +135,7 @@ exports.addTermination = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: termination
   });
 });
@@ -145,7 +145,7 @@ exports.getTerminationByUser = catchAsync(async (req, res, next) => {
   const termination = await Termination.findOne({ user: req.params.userId , company: req.cookies.companyId});
 
    res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: termination
   });
 });
@@ -156,7 +156,7 @@ exports.getTerminationByStatus = catchAsync(async (req, res, next) => {
 
   const terminations = await Termination.find({ termination_status: terminationStatus , company: req.cookies.companyId});
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: terminations
   });
 });
@@ -168,7 +168,7 @@ exports.getTerminationByCompany = catchAsync(async (req, res, next) => {
   const terminations = await Termination.find({ company: company });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: terminations
   });
 });
@@ -187,7 +187,7 @@ exports.updateTermination = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: updatedTermination
   });
 });
@@ -229,7 +229,7 @@ exports.updateTermination = catchAsync(async (req, res, next) => {
   }
   // Respond with the updated termination document
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: updatedTermination
   });
 });
@@ -244,7 +244,7 @@ exports.deleteTermination = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -261,7 +261,7 @@ exports.createSeparationType = catchAsync(async (req, res, next) => {
 
   const separationType = await SeparationType.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationType,
   });
 });
@@ -269,7 +269,7 @@ exports.createSeparationType = catchAsync(async (req, res, next) => {
 exports.getSeparationType = catchAsync(async (req, res, next) => {
   const separationType = await SeparationType.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: separationType,
   });
 });
@@ -285,7 +285,7 @@ exports.updateSeparationType = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationType,
   });
 });
@@ -297,7 +297,7 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
  
   if (exitInterviewQuestion.length > 0 || initiateSeparationRequest > 0 || separationRequest > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status:constants.APIResponseStatus.Failure,
       data: null,
       message: 'Separation Type is already in use. Please delete related records before deleting the Separation Type.',
     });
@@ -308,7 +308,7 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -316,7 +316,7 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
 exports.getAllSeparationTypes = catchAsync(async (req, res, next) => { 
   const separationTypes = await SeparationType.find({}).where('company').equals(req.cookies.companyId);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationTypes,
   });
 });
@@ -333,7 +333,7 @@ exports.createExitInterviewQuestion = catchAsync(async (req, res, next) => {
 
   const exitInterviewQuestion = await ExitInterviewQuestion.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestion
   });
 });
@@ -341,7 +341,7 @@ exports.createExitInterviewQuestion = catchAsync(async (req, res, next) => {
 exports.getExitInterviewQuestion = catchAsync(async (req, res, next) => {
   const exitInterviewQuestion = await ExitInterviewQuestion.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewQuestion
   });
 });
@@ -357,7 +357,7 @@ exports.updateExitInterviewQuestion = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestion
   });
 });
@@ -366,7 +366,7 @@ exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
   const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('question').equals(req.params.id);  
   if (exitInterviewQuestionAnswers.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Exit Interview Question is already in use. Please delete related records before deleting the Exit Interview Question.',
     });
@@ -377,7 +377,7 @@ exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
     return next(new AppError('ExitInterviewQuestion not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -385,7 +385,7 @@ exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
 exports.getExitInterviewQuestionsBySeparationType = catchAsync(async (req, res, next) => {
   const exitInterviewQuestions = await ExitInterviewQuestion.find().find({}).where('separationType').equals(req.params.separationTypeId);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestions
   });
 });
@@ -393,7 +393,7 @@ exports.getExitInterviewQuestionsBySeparationType = catchAsync(async (req, res, 
 exports.createExitInterviewOptions = catchAsync(async (req, res, next) => {
   const exitInterviewOptions = await ExitInterviewQuestionOptions.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewOptions,
   });
 });
@@ -401,7 +401,7 @@ exports.createExitInterviewOptions = catchAsync(async (req, res, next) => {
 exports.getExitInterviewOptions = catchAsync(async (req, res, next) => {
   const exitInterviewOptions = await ExitInterviewQuestionOptions.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewOptions,
   });
 });
@@ -417,7 +417,7 @@ exports.updateExitInterviewOptions = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewOptions,
   });
 });
@@ -430,7 +430,7 @@ exports.deleteExitInterviewOptions = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -438,7 +438,7 @@ exports.deleteExitInterviewOptions = catchAsync(async (req, res, next) => {
 exports.getAllExitInterviewOptions = catchAsync(async (req, res, next) => {
   const exitInterviewOptions = await ExitInterviewQuestionOptions.find();
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewOptions,
   });
 });
@@ -453,7 +453,7 @@ exports.createExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
   });
 
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestionAnswer,
   });
 });
@@ -461,7 +461,7 @@ exports.createExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 exports.getExitInterviewQuestionAnswer = catchAsync(async (req, res, next) => {
   const exitInterviewQuestionAnswer = await ExitInterviewQuestionAnswers.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewQuestionAnswer,
   });
 });
@@ -482,7 +482,7 @@ exports.updateExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestionAnswer,
   });
 });
@@ -494,7 +494,7 @@ exports.deleteExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
     return next(new AppError('Exit Interview Question Answer not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -502,7 +502,7 @@ exports.deleteExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 exports.getAllExitInterviewQuestionAnswersByQuestion = catchAsync(async (req, res, next) => {
   const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('question').equals(req.params.questionId);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: exitInterviewQuestionAnswers,
   });
 });
@@ -510,7 +510,7 @@ exports.getAllExitInterviewQuestionAnswersByQuestion = catchAsync(async (req, re
 exports.getAllExitInterviewQuestionAnswersByUser = catchAsync(async (req, res, next) => {
   const exitInterviewQuestionAnswers = await ExitInterviewQuestionAnswers.find({}).where('user').equals(req.params.userId);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: exitInterviewQuestionAnswers,
   });
 });
@@ -527,7 +527,7 @@ exports.createSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   
   const separationTemplateSetting = await SeparationTemplateSettings.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationTemplateSetting,
   });
 });
@@ -535,7 +535,7 @@ exports.createSeparationTemplateSetting = catchAsync(async (req, res, next) => {
 exports.getSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   const separationTemplateSetting = await SeparationTemplateSettings.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: separationTemplateSetting,
   });
 });
@@ -555,7 +555,7 @@ exports.updateSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationTemplateSetting,
   });
 });
@@ -570,7 +570,7 @@ exports.deleteSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -578,7 +578,7 @@ exports.deleteSeparationTemplateSetting = catchAsync(async (req, res, next) => {
 exports.getAllSeparationTemplateSettings = catchAsync(async (req, res, next) => {
   const separationTemplateSettings = await SeparationTemplateSettings.find({}).where('company').equals(req.cookies.companyId);;
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationTemplateSettings,
   });
 });
@@ -586,7 +586,7 @@ exports.getAllSeparationTemplateSettings = catchAsync(async (req, res, next) => 
 exports.createInitiateSeparationRequest = catchAsync(async (req, res, next) => {
   const initiateSeparationRequest = await InitiateSeparationRequest.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: initiateSeparationRequest,
   });
 });
@@ -594,7 +594,7 @@ exports.createInitiateSeparationRequest = catchAsync(async (req, res, next) => {
 exports.getInitiateSeparationRequest = catchAsync(async (req, res, next) => {
   const initiateSeparationRequest = await InitiateSeparationRequest.findById(req.params.id).populate('user');
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: initiateSeparationRequest,
   });
 });
@@ -610,7 +610,7 @@ exports.updateInitiateSeparationRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: initiateSeparationRequest,
   });
 });
@@ -623,7 +623,7 @@ exports.deleteInitiateSeparationRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -631,7 +631,7 @@ exports.deleteInitiateSeparationRequest = catchAsync(async (req, res, next) => {
 exports.getAllInitiateSeparationRequests = catchAsync(async (req, res, next) => {
   const initiateSeparationRequests = await InitiateSeparationRequest.find().populate('user');
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: initiateSeparationRequests,
   });
 });
@@ -639,7 +639,7 @@ exports.getAllInitiateSeparationRequests = catchAsync(async (req, res, next) => 
 exports.createSeparationRequest = catchAsync(async (req, res, next) => {
   const separationRequest = await SeparationRequest.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationRequest
   });
 });
@@ -647,7 +647,7 @@ exports.createSeparationRequest = catchAsync(async (req, res, next) => {
 exports.getSeparationRequest = catchAsync(async (req, res, next) => {
   const separationRequest = await SeparationRequest.findById(req.params.id);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: separationRequest
   });
 });
@@ -663,7 +663,7 @@ exports.updateSeparationRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: separationRequest
   });
 });
@@ -671,7 +671,7 @@ exports.updateSeparationRequest = catchAsync(async (req, res, next) => {
 exports.deleteSeparationRequest = catchAsync(async (req, res, next) => {
   const separationRequest = await SeparationRequest.findByIdAndDelete(req.params.id);
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -679,7 +679,7 @@ exports.deleteSeparationRequest = catchAsync(async (req, res, next) => {
 exports.getAllSeparationRequests = catchAsync(async (req, res, next) => {
   const separationRequests = await SeparationRequest.find();
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: separationRequests
   });
 });

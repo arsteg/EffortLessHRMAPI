@@ -48,7 +48,7 @@ const sendErrorProd = (err, res) => {
 
     // 2) Send generic response
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       // Don't leak details to a client
       message: 'Something went very wrong.'
     });
