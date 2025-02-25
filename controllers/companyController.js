@@ -12,6 +12,7 @@ const Designation = require("../models/Company/Designation");
 const Band = require("../models/Company/Band");
 const Signatory = require("../models/Company/Signatory");
 const TaxSlab = require('../models/Company/TaxSlab');
+const constants = require('../constants');
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);
