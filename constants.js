@@ -90,6 +90,13 @@ const Email_template_constant = {
   const Payroll_LoanAdvance_Type = {   
     Disbursement: "Disbursement",
     Repayment: "Repayment"
+  };  
+  const APIResponseStatus = {
+    Success: "Success",
+    Failure: "Failure",
+    Error: "Error",
+    Warning: "Warning",
+    Info: "Info"
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,SubContainers};
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers};
   

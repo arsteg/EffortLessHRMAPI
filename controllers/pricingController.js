@@ -20,6 +20,7 @@ const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const constants = require('../constants');
+const { Constants } = require('azure-storage');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
@@ -1338,8 +1339,14 @@ exports.getNextPaymentDetails = async (req, res) => {
     if (!subscription) {
       console.log("Subscription not found");
       return res.status(404).json({ 
-        status: "fail",
-        message: "Subscription not found" 
+        status: constants.APIResponseStatus.Failure,
+        message: "Subscription not found",
+        data: {
+          due_date:null,
+          due_amount:0,
+          new_users_amount:0,
+          total_due_amount:0
+        },
       });
     }
 
@@ -1374,7 +1381,7 @@ exports.getNextPaymentDetails = async (req, res) => {
     console.log("Total due amount:", total_due_amount);
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: {
         due_date,
         due_amount,
@@ -1385,7 +1392,7 @@ exports.getNextPaymentDetails = async (req, res) => {
   } catch (err) {
     console.error("Error in getNextPaymentDetails:", err);
     res.status(500).json({
-      status: "error",
+      status: constants.APIResponseStatus.Error,
       message: "Internal server error",
     });
   }
@@ -1402,8 +1409,12 @@ exports.getLastInvoice = async (req, res) => {
 
     if (!subscription) {
       return res.status(404).json({ 
-        "status": "fail",
-        "message": 'Subscription not found' 
+        "status": constants.APIResponseStatus.Failure,
+        "message": 'Subscription not found',
+        data: {
+          amount: 0,
+          payment_method: null
+        }, 
       });
     }
 
@@ -1415,7 +1426,7 @@ exports.getLastInvoice = async (req, res) => {
     const payment_method = invoice[0].payment_info.method;
 
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         amount: amount,
         payment_method: payment_method
@@ -1424,7 +1435,7 @@ exports.getLastInvoice = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
