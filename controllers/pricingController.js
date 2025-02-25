@@ -1339,7 +1339,13 @@ exports.getNextPaymentDetails = async (req, res) => {
       console.log("Subscription not found");
       return res.status(404).json({ 
         status: "fail",
-        message: "Subscription not found" 
+        message: "Subscription not found",
+        data: {
+          due_date:null,
+          due_amount:0,
+          new_users_amount:0,
+          total_due_amount:0
+        },
       });
     }
 
@@ -1403,7 +1409,11 @@ exports.getLastInvoice = async (req, res) => {
     if (!subscription) {
       return res.status(404).json({ 
         "status": "fail",
-        "message": 'Subscription not found' 
+        "message": 'Subscription not found',
+        data: {
+          amount: 0,
+          payment_method: null
+        }, 
       });
     }
 
