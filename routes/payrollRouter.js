@@ -546,18 +546,7 @@ router.post('/pf-templates-by-company', authController.protect, payrollControlle
  *               label:
  *                 type: string
  *                 required: true
- *               type:
- *                 type: string
- *                 required: true
- *               isArrearsAffect:
- *                 type: boolean
- *                 default: false
- *               calculatedBy:
- *                 type: string
- *                 required: true
- *               isTaxEnabledOnce:
- *                 type: boolean
- *                 default: false
+ *               
  *               isProvidentFundAffected:
  *                 type: boolean
  *                 default: false
@@ -576,9 +565,7 @@ router.post('/pf-templates-by-company', authController.protect, payrollControlle
  *               isTDSAffected:
  *                 type: boolean
  *                 default: false
- *               isAttendanceToEffectTheEligibility:
- *                 type: boolean
- *                 default: false
+ *              
  *     responses:
  *       201:
  *         description: FixedAllowances successfully added

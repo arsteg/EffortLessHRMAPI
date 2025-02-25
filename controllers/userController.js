@@ -60,8 +60,8 @@ const containerClient = blobServiceClient.getContainerClient(
   process.env.CONTAINER_NAME
 );
 
-exports.logUserAction = catchAsync(async(req, action, next) => {
-  try{
+exports.logUserAction = catchAsync(async (req, action, next) => {
+  try {
     const userAction = {
       userId: action.userId,
       companyId: action.companyId,
@@ -72,7 +72,7 @@ exports.logUserAction = catchAsync(async(req, action, next) => {
     }
     const log = await UserActionLog.create(userAction);
     return log;
-  } catch(error) {
+  } catch (error) {
     console.log(error);
     return error;
   }
@@ -135,13 +135,13 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const users = await User.findById(req.body.id)
     .where("status")
     .equals("Active");
-  let companySubscription = {status: 'new'};
-  if(users){
+  let companySubscription = { status: 'new' };
+  if (users) {
     companySubscription = await Subscription.findOne({
       companyId: users.company.id,
-      "razorpaySubscription.status": {$nin: ["cancelled"]}
+      "razorpaySubscription.status": { $nin: ["cancelled"] }
     })
-    .populate("currentPlanId");
+      .populate("currentPlanId");
   }
   res.status(200).json({
     status: "success",
@@ -156,21 +156,21 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
 
   // Validate that status is one of the valid statuses in User_Status
   if (!Object.values(constants.User_Status).includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
+    return res.status(400).json({ message: 'Invalid status value' });
   }
 
   // Find users based on companyId and status, excluding 'Deleted' status
   const users = await User.find({
-      status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
-      company: req.cookies.companyId,                            // Match users by companyId
-      status: status                                 // Match users by provided status
+    status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
+    company: req.cookies.companyId,                            // Match users by companyId
+    status: status                                 // Match users by provided status
   });
 
   res.status(200).json({
-      status: "success",
-      data: {
-          users: users,
-      },
+    status: "success",
+    data: {
+      users: users,
+    },
   });
 });
 
@@ -229,7 +229,7 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
 
 exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findOne({ user: req.params.userId }).populate('company', 'name');
-   res.status(200).json({
+  res.status(200).json({
     status: 'success',
     data: appointment
   });
@@ -248,7 +248,7 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
 
 exports.deleteAppointment = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
-   res.status(204).json({
+  res.status(204).json({
     status: 'success',
     data: null
   });
@@ -1271,36 +1271,35 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     });
 
   const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
-  const user = await User.findById(req.body.user);  
-               
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification).where('company').equals(companyId); 
-  if(emailTemplate)
-  {
-   const template = emailTemplate.contentData;
-   const message = template
-   .replace("{firstName}", user.firstName)
-   .replace("{company}",  req.cookies.companyName)
-   .replace("{company}", req.cookies.companyName)
-   .replace("{lastName}", user.lastName); 
- console.log(user.email);
- console.log(emailTemplate.subject);
-      try {
-       await sendEmail({
-         email: user.email,
-         subject: emailTemplate.subject,
-         message
-       });
-      
-     } catch (err) {   
+  const user = await User.findById(req.body.user);
+
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification).where('company').equals(companyId);
+  if (emailTemplate) {
+    const template = emailTemplate.contentData;
+    const message = template
+      .replace("{firstName}", user.firstName)
+      .replace("{company}", req.cookies.companyName)
+      .replace("{company}", req.cookies.companyName)
+      .replace("{lastName}", user.lastName);
+    console.log(user.email);
+    console.log(emailTemplate.subject);
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplate.subject,
+        message
+      });
+
+    } catch (err) {
       console.log(err);
-       return next(
-         new AppError(
-           'There was an error sending the email. Try again later.',
-           500
-         )
-     );
-   }
-}
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      );
+    }
+  }
   res.status(201).json({
     status: "success",
     data: employeeLoanAdvances,
@@ -1457,137 +1456,136 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
           ) {
             const attachment = item.employeeIncomeTaxDeclarationAttachments[i];
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
-          !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
+            if (
+              !attachment.attachmentType || !attachment.attachmentName ||
+              !attachment.attachmentSize || !attachment.extention ||
+              !attachment.file || attachment.attachmentType === null ||
+              attachment.attachmentName === null || attachment.attachmentSize === null ||
+              attachment.extention === null || attachment.file === null
+            ) {
+              return res.status(400).json({ error: 'All attachment properties must be provided' });
+            }
+
+            const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
+
+            // Get a block blob client
+            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+            // Upload data to the blob
+            const buffer = Buffer.from(attachment.file, 'base64');
+            const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+
+            // Generate the document link
+            const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+            console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+            // Add the document link to the array
+            item.documentLink = documentLink;
+          }
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        // Return the item with added properties
+        return {
+          ...item,
+          employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+        };
+      }));
 
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
+    const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
+    employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
 
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+    const employeeIncomeTaxDeclarationHRA = await Promise.all(
+      req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
+        // Initialize an array to store links
+        if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
+          for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
+            const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
 
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+            if (
+              !attachment.attachmentType || !attachment.attachmentName ||
+              !attachment.attachmentSize || !attachment.extention ||
+              !attachment.file || attachment.attachmentType === null ||
+              attachment.attachmentName === null || attachment.attachmentSize === null ||
+              attachment.extention === null || attachment.file === null
+            ) {
+              return res.status(400).json({ error: 'All attachment properties must be provided' });
+            }
 
-        // Add the document link to the array
-        item.documentLink=documentLink;
-      }
-    }
+            const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
 
-    // Return the item with added properties
-    return {
-      ...item,
-      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
-    };
-  }));
-  
-  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
-  employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
+            // Get a block blob client
+            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-  const employeeIncomeTaxDeclarationHRA = await Promise.all(
-    req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
-    // Initialize an array to store links
-    if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
-      for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
-        const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
+            // Upload data to the blob
+            const buffer = Buffer.from(attachment.file, 'base64');
+            const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
-          !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
+            // Generate the document link
+            const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
+
+            console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
+
+            // Add the document link to the array
+            item.documentLink = documentLink;
+          }
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
-        // Add the document link to the array
-        item.documentLink=documentLink;
-      }
-    }
-
-    // Return the item with added properties
-    return {
-      ...item,
-      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
-    };
-  }));
+        // Return the item with added properties
+        return {
+          ...item,
+          employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+        };
+      }));
 
 
 
-  const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
-  employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
-  const user = await User.findById(req.body.user);  
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee).where('company').equals(companyId); 
-  if(emailTemplate)
-  {
-   const template = emailTemplate.contentData;
-   const message = template
-   .replace("{firstName}", user.firstName)
-   .replace("{company}",  req.cookies.companyName)
-   .replace("{company}", req.cookies.companyName)
-   .replace("{lastName}", user.lastName); 
- console.log(user.email);
- console.log(emailTemplate.subject);
+    const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
+    employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
+    const user = await User.findById(req.body.user);
+    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee).where('company').equals(companyId);
+    if (emailTemplate) {
+      const template = emailTemplate.contentData;
+      const message = template
+        .replace("{firstName}", user.firstName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{lastName}", user.lastName);
+      console.log(user.email);
+      console.log(emailTemplate.subject);
       try {
-       await sendEmail({
-         email: user.email,
-         subject: emailTemplate.subject,
-         message
-       });
-      
-     } catch (err) {   
-      console.log(err);
-       return next(
-         new AppError(
-           'There was an error sending the email. Try again later.',
-           500
-         )
-     );
+        await sendEmail({
+          email: user.email,
+          subject: emailTemplate.subject,
+          message
+        });
+
+      } catch (err) {
+        console.log(err);
+        return next(
+          new AppError(
+            'There was an error sending the email. Try again later.',
+            500
+          )
+        );
+      }
     }
-  }
-  res.status(201).json({
-    status: 'success',
-    data: employeeIncomeTaxDeclaration
+    res.status(201).json({
+      status: 'success',
+      data: employeeIncomeTaxDeclaration
+    });
   });
-});
 
 // Get All Employee Income Tax Declarations by Company
 exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });
+
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
-      
+    .limit(parseInt(limit));
+  for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
+
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
   }
@@ -1605,22 +1603,21 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
 exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });  
- 
-  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });
 
-  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
-      
+  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
+
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
-    
-    if(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0)
-    { 
-      for(let j=0;j<employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length;j++){  
-      const incomeTaxComponant = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
-      employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section=incomeTaxComponant.section;
-       }
+
+    if (employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0) {
+      for (let j = 0; j < employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length; j++) {
+        const incomeTaxComponant = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
+        employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section = incomeTaxComponant.section;
       }
+    }
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
   }
   if (!employeeIncomeTaxDeclarations) {
@@ -1670,75 +1667,71 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     }
   };
 
-  if(req.body.employeeIncomeTaxDeclarationHRA.length > 0)
-    {
-      for (let j = 0; j < req.body.employeeIncomeTaxDeclarationHRA.length; j++) {  
-     
+  if (req.body.employeeIncomeTaxDeclarationHRA.length > 0) {
+    for (let j = 0; j < req.body.employeeIncomeTaxDeclarationHRA.length; j++) {
+
       if (req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments != null) {
         for (let i = 0; i < req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
 
           const attachment = req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments[i];
-  
+
           if (
-            !attachment.attachmentType || !attachment.attachmentName || 
-            !attachment.attachmentSize || !attachment.extention || 
-            !attachment.file || attachment.attachmentType === null || 
-            attachment.attachmentName === null || attachment.attachmentSize === null || 
+            !attachment.attachmentType || !attachment.attachmentName ||
+            !attachment.attachmentSize || !attachment.extention ||
+            !attachment.file || attachment.attachmentType === null ||
+            attachment.attachmentName === null || attachment.attachmentSize === null ||
             attachment.extention === null || attachment.file === null
           ) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-  
+
           const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-          
+
           // Get a block blob client
           const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  
+
           // Upload data to the blob
           const buffer = Buffer.from(attachment.file, 'base64');
           const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-  
+
           // Generate the document link
           const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-  
+
           console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-  
+
           // Add the document link to the array
-          req.body.employeeIncomeTaxDeclarationHRA[j].documentLink=documentLink;
+          req.body.employeeIncomeTaxDeclarationHRA[j].documentLink = documentLink;
         }
       }
     }
     console.log(req.body.employeeIncomeTaxDeclarationHRA);
     await updateOrCreateRecords(EmployeeIncomeTaxDeclarationHRA, req.body.employeeIncomeTaxDeclarationHRA, 'incomeTaxDeclarationHRA');
+  }
+  else {
+    const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.params.id });
+    if (taxDeclarationHRAs) {
+      console.log(taxDeclarationHRAs.length);
+      for (var i = 0; i < taxDeclarationHRAs.length; i++) {
+        if (taxDeclarationHRAs[i].documentLink) {
+          var url = taxDeclarationHRAs[i].documentLink;
+          containerClient.getBlockBlobClient(url).deleteIfExists();
+          const blockBlobClient = containerClient.getBlockBlobClient(url);
+          await blockBlobClient.deleteIfExists();
+          console.log("deleted HRA");
+        }
+      }
+      await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
     }
-    else
-    {
-        const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.params.id }); 
-        if(taxDeclarationHRAs)
-        { 
-            console.log(taxDeclarationHRAs.length);
-            for(var i = 0; i <taxDeclarationHRAs.length; i++) {
-            if(taxDeclarationHRAs[i].documentLink)
-              {
-                  var url = taxDeclarationHRAs[i].documentLink;     
-                  containerClient.getBlockBlobClient(url).deleteIfExists();
-                  const blockBlobClient = containerClient.getBlockBlobClient(url);
-                  await blockBlobClient.deleteIfExists();
-                  console.log("deleted HRA");
-              }
-          }
-          await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
-         }       
-    }
+  }
 
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
 
-    res.status(200).json({
-      status: "success",
-      data: employeeIncomeTaxDeclaration,
-    });
-  }
+  res.status(200).json({
+    status: "success",
+    data: employeeIncomeTaxDeclaration,
+  });
+}
 );
 
 // Get Employee Income Tax Declaration by ID
@@ -1861,9 +1854,8 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention
+          }`;
 
         // Get a block blob client
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -1940,9 +1932,8 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
+        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention
+          }`;
 
         // Get a block blob client
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -2001,56 +1992,56 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
 
 exports.generateOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       // Generate a random 4-digit pincode
       const otp = Math.floor(1000 + Math.random() * 9000);
 
       // Create a new pincode document
       const newOTP = new OTP({
-          otp: otp,
-          email: req.body.email,
-          createdAt: new Date(),
-          status: 'active'
+        otp: otp,
+        email: req.body.email,
+        createdAt: new Date(),
+        status: 'active'
       });
       console.log(newOTP);
       // Save the pincode in the database
-      const message=`Your OTP is ${otp}`;
+      const message = `Your one-time password (OTP) for verification is: ${otp}. \n Please do not share this OTP with anyone. If you did not request this, please ignore this email or contact our support team immediately.`;
       await newOTP.save();
       console.log(message);
       console.log("hello1");
       try {
         await sendEmail({
           email: req.body.email,
-          subject:'OTP',
+          subject: 'OTP',
           message
         });
-       
-      } catch (err) {   
-       console.log(err);
+
+      } catch (err) {
+        console.log(err);
         return next(
           new AppError(
             'There was an error sending the email. Try again later.',
             500
           )
-      );
-    }
+        );
+      }
       // Send the pincode via email
-     
+
 
       res.status(200).json({ message: 'OTP generated and emailed successfully.' });
-  } catch (error) {
-      res.status(500).json({ message: 'Error generating OTP'+error });
-  }
-});
+    } catch (error) {
+      res.status(500).json({ message: 'Error generating OTP' + error });
+    }
+  });
 
 exports.verifyOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       const { email, otp } = req.body;
       const existingOTP = await OTP.findOne({ email, otp });
 
       if (!existingOTP || existingOTP.status !== 'active') {
-          return res.status(400).json({ message: 'Invalid or expired OTP.' });
+        return res.status(400).json({ message: 'Invalid or expired OTP.' });
       }
 
       // Update pincode status to verified
@@ -2058,19 +2049,19 @@ exports.verifyOTP = catchAsync(
       await existingOTP.save();
 
       res.status(200).json({ message: 'OTP verified successfully.' });
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ message: 'Error verifying OTP' });
-  }
-});
+    }
+  });
 
 exports.cancelOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       const { email, otp } = req.body;
       const existingOTP = await OTP.findOne({ email, otp });
 
       if (!existingOTP) {
-          return res.status(400).json({ message: 'OTP not found.' });
+        return res.status(400).json({ message: 'OTP not found.' });
       }
 
       // Update pincode status to cancelled
@@ -2078,7 +2069,7 @@ exports.cancelOTP = catchAsync(
       await existingOTP.save();
 
       res.status(200).json({ message: 'OTP cancelled successfully.' });
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ message: 'Error cancelling OTP' });
-  }
-});
+    }
+  });
