@@ -19,23 +19,13 @@ const userSubordinate = require('../models/userSubordinateModel');
 const ExpenseTemplateCategoryFieldValues = require('../models/Expense/ExpenseTemplateCategoryFieldValues');
 const User = require('../models/permissions/userModel');
 const { ObjectId } = require('mongodb');
-const { v1: uuidv1} = require('uuid');
-// Import ExpenseCategory model
-const { BlobServiceClient } = require('@azure/storage-blob');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const AdvanceTemplateCategory = require('../models/Expense/AdvanceTemplateCategory');
 const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
+const constants = require('../constants');
+const StorageController = require('./storageController');
 
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
     const company = req.cookies.companyId;
@@ -947,6 +937,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
   const { employee, title, status,amount, expenseReportExpenses } = req.body;
   var documentLink;
+  console.log(status);
   try {
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({
@@ -968,21 +959,10 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
-         // Get a block blob client
-          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-          console.log("\nUploading to Azure storage as blob:\n\t", );
-          // Upload data to the blob
-          var FileString =  expenseAttachments[i].file;
-          const buffer = new Buffer.from(FileString, 'base64');
-          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-          console.log(
-            "Blob was uploaded successfully. requestId: ",
-            uploadBlobResponse.requestId
-          );
-        
-        }
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+          //req.body.attachment.file = req.body.taskAttachments[i].file;
+          var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);
+          }
         }
         const expense = await ExpenseReportExpense.create({
           expenseReport: expenseReport._id,
@@ -1242,21 +1222,12 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
-         // Get a block blob client
-          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-          console.log("\nUploading to Azure storage as blob:\n\t", );
-          // Upload data to the blob
-          var FileString =  expenseAttachments[i].file;
-          const buffer = new Buffer.from(FileString, 'base64');
-          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-          console.log(
-            "Blob was uploaded successfully. requestId: ",
-            uploadBlobResponse.requestId
-          );
-        req.body.documentLink=documentLink;
-        }
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+            //req.body.attachment.file = req.body.taskAttachments[i].file;
+          var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);
+         
+          req.body.documentLink=documentLink;
+  }
   const expenseReportExpense = await ExpenseReportExpense.create(req.body);
 
   // Create ExpenseReportExpenseFields if provided
@@ -1283,7 +1254,7 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
   const expenseReportExpense = await ExpenseReportExpense.findById(req.params.id);
   if(expenseReportExpense)
   {        
- const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpense._id);    
+  const expenseReportExpenseFields = await ExpenseReportExpenseFields.find({}).where('expenseReportExpense').equals(expenseReportExpense._id);    
   if(expenseReportExpenseFields) 
     {
       expenseReportExpense.expenseReportExpenseFields=expenseReportExpenseFields;
@@ -1309,21 +1280,11 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          const blobName = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention;
-         // Get a block blob client
-          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-          console.log("\nUploading to Azure storage as blob:\n\t", );
-          // Upload data to the blob
-          var FileString =  expenseAttachments[i].file;
-          const buffer = new Buffer.from(FileString, 'base64');
-          const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-          documentLink = process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-          console.log(
-            "Blob was uploaded successfully. requestId: ",
-            uploadBlobResponse.requestId
-          );
-        req.body.documentLink=documentLink;
-        }
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+          //req.body.attachment.file = req.body.taskAttachments[i].file;
+       var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);  
+       req.body.documentLink=documentLink;
+  }
   // Update ExpenseReportExpense
   const updatedExpenseReportExpense = await ExpenseReportExpense.findByIdAndUpdate(id, req.body, {
     new: true, // Return the updated document

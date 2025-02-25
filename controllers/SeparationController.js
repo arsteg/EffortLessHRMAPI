@@ -9,7 +9,6 @@ const InitiateSeparationRequest = require('../models/Separation/InitiateSeparati
 const SeparationRequest = require('../models/Separation/SeparationRequest'); // Import your SeparationRequest model
 const User = require('../models/permissions/userModel');
 const Resignation = require("../models/Separation/Resignation");
-const { Constants } = require('azure-storage');
 const constants = require('../constants');
 const Termination = require('../models/Separation/Termination');
 
