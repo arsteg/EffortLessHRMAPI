@@ -58,14 +58,14 @@ exports.addNew = catchAsync(async (req, res, next) => {
                   documents.genericSettingListData=null;
               }
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: documents
         })
 
 
     } catch (err) {
         res.status(400).json({
-            status: 'faied',
+            status: constants.APIResponseStatus.Failure,
             body: err
         })
 
@@ -82,14 +82,14 @@ exports.delete = catchAsync(async (req, res, next) => {
             .deleteMany({genericSetting: req.params.id});
 
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: null
         })
 
 
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status:constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -100,12 +100,12 @@ exports.deleteGenericSettingValue = catchAsync(async (req, res, next) => {
             .findOneAndDelete(req.params.valuesId);
            
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: null
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -116,12 +116,12 @@ exports.deleteGenericSettingListData = catchAsync(async (req, res, next) => {
             .findOneAndDelete(req.params.listDataId);
 
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: null
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -140,12 +140,12 @@ exports.addGenericSettingValue = catchAsync(async (req, res, next) => {
         const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: genericSettingValues
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -165,12 +165,12 @@ exports.addGenericSettingListData = catchAsync(async (req, res, next) => {
         const genericSettingListDatas = await genericSettingListData.find({}).where('genericSetting').equals(req.params.genericSettingId);  
        
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: genericSettingListDatas
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status:constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -181,12 +181,12 @@ exports.getGenericSettingListData = catchAsync(async (req, res, next) => {
         const genericSettingListDatas = await genericSettingListData.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: genericSettingListDatas
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -195,12 +195,12 @@ exports.getGenericSettingValue = catchAsync(async (req, res, next) => {
     try { 
         const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: genericSettingValues
         })
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -227,13 +227,13 @@ exports.getById = catchAsync(async (req, res, next) => {
                    documents.genericSettingListData=null;
                }
         res.status(200).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: documents
         });
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -247,13 +247,13 @@ exports.update = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             data: updateDocument
         })
 
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         })
 
@@ -267,14 +267,14 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
             .findById(req.params.id).where('date').equals(date);
 
         res.status(200).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: getDocumentByDateAndId
         });
 
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -306,13 +306,13 @@ exports.getGenericSettingByUser = catchAsync(async (req, res, next) => {
          }  
         }
          res.status(200).json({
-            status: 'success',
+            status: constants.apiresponsestatus.success,
             body: documents
         });
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }

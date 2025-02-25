@@ -36,7 +36,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
     if(softwareExists)
     {
       res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Label already in use for another software',
       });
     }
@@ -44,7 +44,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
     const software = await Software.create({ name: name,description: description,accessLink: accessLink });
   
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: software,
       });
     }
@@ -54,7 +54,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
 exports.getSoftware = catchAsync(async (req, res, next) => {
 const software = await Software.findById(req.params.id);
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: software,
 });
 });
@@ -64,7 +64,7 @@ const softwareExists = await Software.findOne({ name: req.body.name, description
 if(softwareExists)
 {
     res.status(500).json({
-    status: 'failure',
+    status: constants.APIResponseStatus.Failure,
     message: 'Label already in use for another software',
   });
 }
@@ -76,7 +76,7 @@ else
    });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: software,
     });
 }
@@ -91,7 +91,7 @@ if (!softwareInstance) {
 }
 
 return res.status(204).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: null,
 });
 });
@@ -99,7 +99,7 @@ return res.status(204).json({
 exports.getAllSoftware = catchAsync(async (req, res, next) => {
 const software = await Software.find({});
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: software,
 });
 });
@@ -110,7 +110,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
     if(optionExists)
     {
       res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Label already in use for another option',
       });
     }
@@ -118,7 +118,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
     const option = await Option.create({ name: name });
   
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: option,
       });
     }
@@ -127,7 +127,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
 exports.getOption = catchAsync(async (req, res, next) => {
 const option = await Option.findById(req.params.id);
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: option,
 });
 });
@@ -138,7 +138,7 @@ const optionExists = await Option.findOne({ name: req.body.name,  _id: { $ne: re
 if(optionExists)
 {
     res.status(500).json({
-    status: 'failure',
+    status: constants.APIResponseStatus.Failure,
     message: 'Label already in use for another option',
   });
 }
@@ -150,7 +150,7 @@ else
    });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: option,
     });
 }
@@ -165,7 +165,7 @@ if (!optionInstance) {
 }
 
 return res.status(204).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: null,
 });
 });
@@ -173,7 +173,7 @@ return res.status(204).json({
 exports.getAllOption = catchAsync(async (req, res, next) => {
 const option = await Option.find({});
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: option,
 });
 });
@@ -186,7 +186,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
     if(planExists)
     {
       res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Label already in use for another Plan',
       });
     }
@@ -224,14 +224,14 @@ exports.createPlan = catchAsync(async (req, res, next) => {
       });
       
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: plan,
       });
     }
   }  catch (error) {
     console.log(error, process.env.RAZORPAY_KEY);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       error: error,
     });
   }
@@ -261,7 +261,7 @@ if(plan) {
   
 }
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: plan,
 });
 });
@@ -272,7 +272,7 @@ const planExists = await Plan.findOne({ name: req.body.name,software: req.body.s
 if(planExists)
 {
     res.status(500).json({
-    status: 'failure',
+    status: constants.APIResponseStatus.Failure,
     message: 'Name already in use for Same Software',
   });
 }
@@ -284,7 +284,7 @@ else
    });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: plan,
     });
 }
@@ -298,7 +298,7 @@ if (!planInstance) {
 }
 
 return res.status(204).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: null,
 });
 });
@@ -318,7 +318,7 @@ if(plan) {
   }
 }
 res.status(200).json({
-  status: 'success',
+  status: constants.apiresponsestatus.success,
   data: plan,
 });
 });
@@ -334,7 +334,7 @@ exports.addOptionInclusionDetails = async (req, res, next) => {
 
     if (!existingPlan || !existingOption) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Invalid plan or option ID',
       });
     }
@@ -348,13 +348,13 @@ exports.addOptionInclusionDetails = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: optionIncluded,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -370,7 +370,7 @@ exports.removeOptionInclusionDetails = async (req, res, next) => {
 
     if (!optionIncluded) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Option Inclusion Details not found',
       });
     }
@@ -379,13 +379,13 @@ exports.removeOptionInclusionDetails = async (req, res, next) => {
     await OptionIncluded.findByIdAndDelete(optionIncludedId);
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Option successfully removed from the plan',
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -401,19 +401,19 @@ exports.getOptionInclusionDetails = async (req, res, next) => {
 
     if (!optionIncluded) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Option Inclusion Details not found',
       });
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: optionIncluded,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -424,7 +424,7 @@ exports.getAllOptionInclusionDetails = catchAsync(async (req, res, next) => {
   const optionInclusionDetails = await OptionIncluded.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: optionInclusionDetails,
   });
 });
@@ -442,7 +442,7 @@ exports.updateOptionInclusionDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: optionIncluded,
   });
 });
@@ -463,13 +463,13 @@ exports.addOffer = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: offer,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -485,7 +485,7 @@ exports.removeOffer = async (req, res, next) => {
 
     if (!offer) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Offer Inclusion Details not found',
       });
     }
@@ -494,13 +494,13 @@ exports.removeOffer = async (req, res, next) => {
     await Offer.findByIdAndDelete(offerId);
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Offer successfully removed',
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -516,19 +516,19 @@ exports.getOfferDetails = async (req, res, next) => {
 
     if (!offer) {
       return res.status(404).json({
-        status: 'failure',
+        status:constants.APIResponseStatus.Failure,
         message: 'Offer Inclusion Details not found',
       });
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: offer,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -539,7 +539,7 @@ exports.getAllOfferDetails = catchAsync(async (req, res, next) => {
   const offerDetails = await Offer.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: offerDetails,
   });
 });
@@ -557,7 +557,7 @@ exports.updateOfferDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: offer,
   });
 });
@@ -573,7 +573,7 @@ exports.addIncludeDetails = catchAsync(async (req, res, next) => {
 
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid plan or offer ID',
     });
   }
@@ -585,7 +585,7 @@ exports.addIncludeDetails = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: include,
   });
 });
@@ -599,7 +599,7 @@ exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
 
   if (!include) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Include Details not found',
     });
   }
@@ -608,7 +608,7 @@ exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
   await Include.findByIdAndDelete(includeId);
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     message: 'Plan successfully removed from the offer',
   });
 });
@@ -622,13 +622,13 @@ exports.getIncludeDetails = catchAsync(async (req, res, next) => {
 
   if (!include) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Include Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: include,
   });
 });
@@ -643,13 +643,13 @@ exports.updateIncludeDetails = catchAsync(async (req, res, next) => {
 
   if (!include) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Include Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: include,
   });
 });
@@ -659,7 +659,7 @@ exports.getAllIncludeDetails = catchAsync(async (req, res, next) => {
   const includeDetails = await Include.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: includeDetails,
   });
 });
@@ -672,7 +672,7 @@ exports.addUserGroupType = async (req, res, next) => {
     if(exists)
     {
       res.status(500).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Name already in use for another UserGroup',
       });
     }
@@ -685,7 +685,7 @@ exports.addUserGroupType = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: userGroupType,
     });
   }
@@ -693,7 +693,7 @@ exports.addUserGroupType = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -709,19 +709,19 @@ exports.removeUserGroupType = async (req, res, next) => {
 
     if (!result) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'User Group Type not found',
       });
     }
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'User group type successfully removed',
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -737,19 +737,19 @@ exports.getUserGroupType = async (req, res, next) => {
 
     if (!userGroupType) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'User Group Type not found',
       });
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: userGroupType,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -763,7 +763,7 @@ exports.updateUserGroupType = async (req, res, next) => {
     if(exists)
   {
       res.status(500).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Name already in use for another User Group',
     });
     }
@@ -778,20 +778,20 @@ exports.updateUserGroupType = async (req, res, next) => {
 
       if (!userGroupType) {
         return res.status(404).json({
-          status: 'failure',
+          status: constants.APIResponseStatus.Failure,
           message: 'User Group Type not found',
         });
       }
 
       res.status(200).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: userGroupType,
       });
     }
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        status: 'error',
+        status: constants.APIResponseStatus.Error,
         message: 'Internal server error',
       });
     }
@@ -803,13 +803,13 @@ exports.getAllUserGroupTypes = async (req, res, next) => {
     const userGroupTypes = await UserGroupType.find();
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: userGroupTypes,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -825,7 +825,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
 
   if (existingPrerequisites) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Prerequisites already exist for the given plan and offer',
     });
   }
@@ -836,7 +836,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
 
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid plan or offer ID',
     });
   }
@@ -848,7 +848,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: prerequisites,
   });
 });
@@ -862,7 +862,7 @@ exports.removePrerequisites = catchAsync(async (req, res, next) => {
 
   if (!prerequisites) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'prerequisites Details not found',
     });
   }
@@ -871,7 +871,7 @@ exports.removePrerequisites = catchAsync(async (req, res, next) => {
   await prerequisites.findByIdAndDelete(prerequisitesId);
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     message: 'prerequisites successfully removed',
   });
 });
@@ -885,13 +885,13 @@ exports.getPrerequisitesDetails = catchAsync(async (req, res, next) => {
 
   if (!prerequisites) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'prerequisites Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: prerequisites,
   });
 });
@@ -905,7 +905,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
 
   if (existingPrerequisites) {
     return res.status(400).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'Prerequisites already exist for the given plan and offer',
     });
   }
@@ -916,7 +916,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
 
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid plan or offer ID',
     });
   }
@@ -928,13 +928,13 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
 
   if (!prerequisites) {
     return res.status(404).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'prerequisites Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: prerequisites,
   });
 });
@@ -944,7 +944,7 @@ exports.getAllPrerequisitesDetails = catchAsync(async (req, res, next) => {
   const prerequisitesDetails = await Prerequisites.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: prerequisitesDetails,
   });
 });
@@ -957,7 +957,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
 
  if (existingCompanyPlan) {
    return res.status(400).json({
-     status: 'failure',
+     status: constants.APIResponseStatus.Failure,
      message: 'Company plan already exists for the given plan and company',
    });
  }
@@ -967,7 +967,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
 
   if (!existingPlan || !existingcompany) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid plan or offer ID',
     });
   }
@@ -979,7 +979,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: companyPlan,
   });
 });
@@ -993,7 +993,7 @@ exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
 
   if (!companyPlan) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'CompanyPlan Details not found',
     });
   }
@@ -1002,7 +1002,7 @@ exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
   await companyPlan.findByIdAndDelete(companyPlanId);
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     message: 'CompanyPlan successfully removed',
   });
 });
@@ -1016,13 +1016,13 @@ exports.getCompanyPlanDetails = catchAsync(async (req, res, next) => {
 
   if (!companyPlan) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'CompanyPlan Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: companyPlan,
   });
 });
@@ -1035,7 +1035,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
  
   if (existingCompanyPlan) {
     return res.status(400).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'Company plan already exists for the given plan and company',
     });
   }
@@ -1045,7 +1045,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
  
    if (!existingPlan || !existingcompany) {
      return res.status(400).json({
-       status: 'failure',
+       status: constants.APIResponseStatus.Failure,
        message: 'Invalid plan or offer ID',
      });
    }
@@ -1057,13 +1057,13 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
 
   if (!companyPlan) {
     return res.status(404).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'CompanyPlan Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: companyPlan,
   });
 });
@@ -1073,7 +1073,7 @@ exports.getAllCompanyPlan = catchAsync(async (req, res, next) => {
   const companyPlans = await CompanyPlan.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: companyPlans,
   });
 });
@@ -1089,7 +1089,7 @@ exports.addPlanToOffer = catchAsync(async (req, res, next) => {
 
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid plan or offer ID',
     });
   }
@@ -1101,7 +1101,7 @@ exports.addPlanToOffer = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: planOffer,
   });
 });
@@ -1115,7 +1115,7 @@ exports.removePanFromOffer = catchAsync(async (req, res, next) => {
 
   if (!planOffer) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'PlanOffer Details not found',
     });
   }
@@ -1124,7 +1124,7 @@ exports.removePanFromOffer = catchAsync(async (req, res, next) => {
   await PlanOffer.findByIdAndDelete(planOfferId);
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     message: 'Plan successfully removed from the offer',
   });
 });
@@ -1138,13 +1138,13 @@ exports.getPlanOfferDetails = catchAsync(async (req, res, next) => {
 
   if (!planOffer) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'PlanOffer Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: planOffer,
   });
 });
@@ -1159,13 +1159,13 @@ exports.updatePlanOfferDetails = catchAsync(async (req, res, next) => {
 
   if (!include) {
     return res.status(404).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'PlanOffer Details not found',
     });
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: planOffer,
   });
 });
@@ -1175,7 +1175,7 @@ exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
   const planOffer = await PlanOffer.find();
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: planOffer,
   });
 });
@@ -1216,7 +1216,7 @@ exports.addSubscriptionDetails = async (req, res) => {
     });
     if(subscription) {
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: {subscription},
       });
     } else {
@@ -1252,7 +1252,7 @@ exports.addSubscriptionDetails = async (req, res) => {
       const savedSubscription = await newSubscription.save();
   
       res.status(201).json({
-        status: 'success',
+        status: constants.apiresponsestatus.success,
         data: {
           subscription: savedSubscription,
         },
@@ -1261,7 +1261,7 @@ exports.addSubscriptionDetails = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1284,13 +1284,13 @@ exports.removeSubscriptionDetails = async (req, res) => {
     }
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1309,7 +1309,7 @@ exports.getSubscriptionDetailsById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscription,
       },
@@ -1317,7 +1317,7 @@ exports.getSubscriptionDetailsById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1458,7 +1458,7 @@ exports.activateSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1466,7 +1466,7 @@ exports.activateSubscription = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1493,7 +1493,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1501,7 +1501,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1530,7 +1530,7 @@ exports.getAllSubscriptionDetails = async (req, res) => {
     }]);
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscriptions,
       },
@@ -1538,7 +1538,7 @@ exports.getAllSubscriptionDetails = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1569,7 +1569,7 @@ exports.pauseResumeSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1577,7 +1577,7 @@ exports.pauseResumeSubscription = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(err.statusCode || 500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: err?.error?.description || 'Internal server error',
     });
   }
@@ -1609,7 +1609,7 @@ exports.cancelSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         subscription: fetchedSubscription,
       },
@@ -1617,7 +1617,7 @@ exports.cancelSubscription = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(err.statusCode || 500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: err?.error?.description || 'Internal server error',
     });
   }
@@ -1657,7 +1657,7 @@ console.log("hello");
     });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         planHistory: newPlanHistory,
       },
@@ -1665,7 +1665,7 @@ console.log("hello");
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1688,7 +1688,7 @@ exports.getPlanHistoryById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         planHistory,
       },
@@ -1696,7 +1696,7 @@ exports.getPlanHistoryById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1756,7 +1756,7 @@ exports.updatePlanHistoryById = async (req, res) => {
     );
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         planHistory: updatedPlanHistory,
       },
@@ -1764,7 +1764,7 @@ exports.updatePlanHistoryById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1789,13 +1789,13 @@ exports.deletePlanHistoryById = async (req, res) => {
     await PlanHistory.findByIdAndDelete(planHistoryId);
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1807,7 +1807,7 @@ exports.getAllPlanHistories = async (req, res) => {
     const allPlanHistories = await PlanHistory.find();
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         planHistories: allPlanHistories,
       },
@@ -1815,7 +1815,7 @@ exports.getAllPlanHistories = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1862,7 +1862,7 @@ exports.createInvoice = async (req, res) => {
     const savedInvoice = await newInvoice.save();
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         invoice: savedInvoice,
       },
@@ -1870,7 +1870,7 @@ exports.createInvoice = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1896,7 +1896,7 @@ exports.getInvoiceById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         invoice: invoice,
       },
@@ -1904,7 +1904,7 @@ exports.getInvoiceById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -1933,7 +1933,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         invoice: invoice,
       },
@@ -1941,7 +1941,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -2007,7 +2007,7 @@ exports.updateInvoiceById = async (req, res) => {
     );
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         invoice: updatedInvoice,
       },
@@ -2015,7 +2015,7 @@ exports.updateInvoiceById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -2040,13 +2040,13 @@ exports.deleteInvoiceById = async (req, res) => {
     await Invoice.findByIdAndDelete(invoiceId);
 
     res.status(204).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: null,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -2059,7 +2059,7 @@ exports.getAllInvoices = async (req, res) => {
     const invoices = await Invoice.find();
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: {
         invoices,
       },
@@ -2067,7 +2067,7 @@ exports.getAllInvoices = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -2087,7 +2087,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
     const existingUserGroupType = await UserGroupType.findById(userGroupType);
     if (!existingUserGroupType) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Invalid UserGroupType ID',
       });
     }
@@ -2103,7 +2103,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
 
     if (invalidUserIds.length > 0) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Invalid user IDs: ' + invalidUserIds.join(', '),
       });
     }
@@ -2139,7 +2139,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     const existingUserInGroup = await UserInGroup.findById(userInGroupId);
     if (!existingUserInGroup) {
       return res.status(404).json({
-        status: 'failure',
+        status:constants.APIResponseStatus.Failure,
         message: 'User Group Details not found',
       });
     }
@@ -2148,7 +2148,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     const existingUserGroupType = await UserGroupType.findById(userGroupType);
     if (!existingUserGroupType) {
       return res.status(400).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'Invalid UserGroupType ID',
       });
     }
@@ -2172,7 +2172,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     await existingUserInGroup.save();
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Users in UserGroupType successfully updated',
       data: existingUserInGroup,
     });
@@ -2191,7 +2191,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     const existingUserInGroup = await UserInGroup.findById(userInGroupId);
     if (!existingUserInGroup) {
       return res.status(404).json({
-        status: 'failure',
+        status: constants.APIResponseStatus.Failure,
         message: 'User Group Details not found',
       });
     }
@@ -2200,7 +2200,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     const users = await User.find({ _id: { $in: existingUserInGroup.user } });
 
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Users retrieved successfully',
       data: users,
     });
@@ -2212,7 +2212,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
 
 exports.razorpayCredential = catchAsync(async (req, res, next) => {
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: process.env.RAZORPAY_KEY,
   });
 })
@@ -2364,7 +2364,7 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
           } */
         }
       }
-      res.status(200).send('Success');
+      res.status(200).send(constants.APIResponseStatus.Success);
     } else {
       // Signature mismatch, do not process the event
       console.log('Signature mismatch');

@@ -30,7 +30,7 @@ exports.createApplicationStatus = catchAsync(async (req, res, next) => {
   });  
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: newStatus
   });
 });
@@ -46,7 +46,7 @@ exports.getApplicationStatus = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: status
   });
 });
@@ -65,7 +65,7 @@ exports.updateApplicationStatus = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: status
   });
 });
@@ -81,7 +81,7 @@ exports.deleteApplicationStatus = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -92,7 +92,7 @@ exports.deleteApplicationStatus = catchAsync(async (req, res, next) => {
 exports.getAllApplicationStatusForCompany = catchAsync(async (req, res, next) => {
   const statuses = await ApplicationStatus.find({ company: req.cookies.companyId });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: statuses
   });
 });
@@ -117,7 +117,7 @@ exports.addCandidate = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: newCandidate
   });
 });
@@ -133,7 +133,7 @@ exports.getCandidate = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidate
   });
 });
@@ -152,7 +152,7 @@ exports.updateCandidate = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidate
   });
 });
@@ -168,7 +168,7 @@ exports.deleteCandidate = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -180,7 +180,7 @@ exports.getAllCandidates = catchAsync(async (req, res, next) => {
   const candidates = await Candidate.find({ company: req.cookies.companyId});
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidates
   });
 });
@@ -225,7 +225,7 @@ exports.getAllCandidatesWithData = async (req, res) => {
     }
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: result,
     });
 
@@ -249,7 +249,7 @@ exports.createCandidateApplicationStatus = catchAsync(async (req, res, next) => 
     updatedBy: req.cookies.userId     
   });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateApplicationStatus
   });
 });
@@ -260,7 +260,7 @@ exports.getCandidateApplicationStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('Candidate Application Status not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateApplicationStatus
   });
 });
@@ -276,7 +276,7 @@ exports.updateCandidateApplicationStatus = catchAsync(async (req, res, next) => 
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateApplicationStatus
   });
 });
@@ -289,7 +289,7 @@ exports.deleteCandidateApplicationStatus = catchAsync(async (req, res, next) => 
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null
   });
 });
@@ -297,7 +297,7 @@ exports.deleteCandidateApplicationStatus = catchAsync(async (req, res, next) => 
 exports.getAllCandidateApplicationStatusForCompany = catchAsync(async (req, res, next) => {
   const candidateApplicationStatusList = await CandidateApplicationStatus.find({ company: req.cookies.companyId });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateApplicationStatusList
   });
 });
@@ -319,7 +319,7 @@ exports.addCandidateDataField = catchAsync(async (req, res, next) => {
   
 
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataField,
   });
 });
@@ -330,7 +330,7 @@ exports.getCandidateDataField = catchAsync(async (req, res, next) => {
     return next(new AppError('CandidateDataField not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataField,
   });
 });
@@ -346,7 +346,7 @@ exports.updateCandidateDataField = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataField,
   });
 });
@@ -359,7 +359,7 @@ exports.deleteCandidateDataField = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -372,7 +372,7 @@ exports.getAllCandidateDataFieldsByCompany = catchAsync(async (req, res, next) =
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataFields,
   });
 });
@@ -391,7 +391,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     updatedBy: req.cookies.userId
   });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataFieldValue,
   });
 });
@@ -414,7 +414,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     existingRecord.updatedBy = userId;
     await existingRecord.save();
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Record updated successfully',
       data: existingRecord,
     });
@@ -432,7 +432,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
       updatedBy: userId,
     });
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Record created successfully',
       data: newRecord,
     });
@@ -445,7 +445,7 @@ exports.getCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     return next(new AppError('CandidateDataFieldValue not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataFieldValue,
   });
 });
@@ -461,7 +461,7 @@ exports.updateCandidateDataFieldValue = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataFieldValue,
   });
 });
@@ -474,7 +474,7 @@ exports.deleteCandidateDataFieldValue = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -487,7 +487,7 @@ exports.getAllCandidateDataFieldValuesByCompany = catchAsync(async (req, res, ne
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateDataFieldValues,
   });
 });
@@ -506,7 +506,7 @@ exports.addCandidateInterviewDetails = catchAsync(async (req, res, next) => {
     updatedBy: req.cookies.userId
   });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateInterviewDetails,
   });
 });
@@ -517,7 +517,7 @@ exports.getCandidateInterviewDetails = catchAsync(async (req, res, next) => {
     return next(new AppError('CandidateInterviewDetails not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateInterviewDetails,
   });
 });
@@ -537,7 +537,7 @@ exports.updateCandidateInterviewDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateInterviewDetails,
   });
 });
@@ -552,7 +552,7 @@ exports.deleteCandidateInterviewDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -595,7 +595,7 @@ exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, n
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: candidateInterviewDetails,
   });
 });
@@ -613,7 +613,7 @@ exports.addFeedbackField = catchAsync(async (req, res, next) => {
     updatedBy: req.cookies.userId
   });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackField,
   });
 });
@@ -624,7 +624,7 @@ exports.getFeedbackField = catchAsync(async (req, res, next) => {
     return next(new AppError('FeedbackField not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackField,
   });
 });
@@ -640,7 +640,7 @@ exports.updateFeedbackField = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackField,
   });
 });
@@ -653,7 +653,7 @@ exports.deleteFeedbackField = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -668,7 +668,7 @@ exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackFields,
   });
 });
@@ -712,7 +712,7 @@ exports.getAllCandidatesFeedbackData = async (req, res) => {
         }
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       data: result,
     });
   } catch (error) {
@@ -740,7 +740,7 @@ exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
     existingRecord.updatedBy = userId;
     await existingRecord.save();
     res.status(200).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Record updated successfully',
       data: existingRecord,
     });
@@ -759,7 +759,7 @@ exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.apiresponsestatus.success,
       message: 'Record created successfully',
       data: newRecord,
     });
@@ -772,7 +772,7 @@ exports.getFeedbackFieldValue = catchAsync(async (req, res, next) => {
     return next(new AppError('FeedbackFieldValue not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackFieldValue,
   });
 });
@@ -788,7 +788,7 @@ exports.updateFeedbackFieldValue = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackFieldValue,
   });
 });
@@ -801,7 +801,7 @@ exports.deleteFeedbackFieldValue = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });
@@ -815,7 +815,7 @@ exports.getAllFeedbackFieldValuesByCompany = catchAsync(async (req, res, next) =
     return next(new AppError('No FeedbackFieldValues found for the company', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: feedbackFieldValues,
   });
 });
@@ -830,7 +830,7 @@ exports.createInterviewer = catchAsync(async (req, res, next) => {
       updatedBy: req.cookies.userId
   });
   res.status(201).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: interviewer,
   });
 });
@@ -843,7 +843,7 @@ exports.getAllInterviewers = catchAsync(async (req, res, next) => {
     email: 1,    
   });
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: interviewers,
   });
 });
@@ -859,7 +859,7 @@ exports.updateInterviewer = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: interviewer,
   });
 });
@@ -870,12 +870,12 @@ exports.deleteInterviewer = catchAsync(async (req, res, next) => {
   if (deletedCount.deletedCount === 0) {
     return next(new AppError('Interviewer not found', 404));
     res.status(404).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: 'Interviewer not found'
     });
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.apiresponsestatus.success,
     data: null,
   });
 });

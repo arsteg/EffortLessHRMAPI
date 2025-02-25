@@ -20,7 +20,7 @@ console.log(msg);
 } catch (error) {
   console.error('Error sending email:', error.message);
   // res.status(500).json({
-  //   status: 'failed',
+  //   status: constants.APIResponseStatus.Failure,
   //   message: 'Failed to send email.',
   //   error: error.message,
   // });

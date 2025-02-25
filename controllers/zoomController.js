@@ -61,7 +61,7 @@ exports.createZoomMeeting = async (req, res, next) => {
 
         const response_data = meetingResponse.data;
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: {
               meetingDeatils:response_data
             }
@@ -95,7 +95,7 @@ exports.createMeetingSingture = async (req, res, next) => {
       const signature = KJUR.jws.JWS.sign('HS256', sHeader, sPayload, APPSECREAT);   
 
       res.status(200).json({
-          status: 'success',
+          status:constants.APIResponseStatus.Success,
           data: {
             signature:signature
           }

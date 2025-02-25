@@ -47,7 +47,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
 
   if (fromDate >= toDate) {    
     res.status(200).json({
-      status: "failed",
+      status:constants.APIResponseStatus.Failure,
       data: null,
       message:'From Date must be earlier than To Date.'
     });
@@ -63,7 +63,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   });
   if (overlappingRequest) {
     res.status(200).json({
-      status: "failed",
+      status:constants.APIResponseStatus.Failure,
       data: null,
       message:'Time entry overlaps with an existing record. Please adjust the time.'
     });    
@@ -100,7 +100,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
     });
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: mtRequest,
   });
 });
@@ -159,7 +159,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: updatemanualTimeRequest,
     log: result,
   });
@@ -202,7 +202,7 @@ exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
   console.log("All requests processed successfully");
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: manualTimeRequests,
     total: totalCount,
   });
@@ -213,7 +213,7 @@ exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
 exports.deleteManualTimeRequest = catchAsync(async (req, res, next) => {
   const result = await manualTimeRequest.findByIdAndDelete(req.params.id);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     body: result,
   });
 });
@@ -231,7 +231,7 @@ exports.getManualTimeRequestsForApprovalByUser = catchAsync(
       );
     }
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: manualTimeRequests,
     });
   }
@@ -245,7 +245,7 @@ exports.getManualTimeApprovedRequests = catchAsync(async (req, res, next) => {
     status: "approved",
   });
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: approvedRequests,
   });
 });

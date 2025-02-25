@@ -92,11 +92,11 @@ const Email_template_constant = {
     Repayment: "Repayment"
   };  
   const APIResponseStatus = {
-    Success: "Success",
-    Failure: "Failure",
-    Error: "Error",
-    Warning: "Warning",
-    Info: "Info"
+    Success: "success",
+    Failure: "failure",
+    Error: "error",
+    Warning: "warning",
+    Info: "info"
   };
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers};
   

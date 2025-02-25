@@ -23,7 +23,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
             else
             {
                         res.status(200).json({
-                        status: 'success',
+                        status: constants.APIResponseStatus.Success,
                         data: {
                           MakeThisDeviceActive: false,
                           message: "User is logged in on another device, Do you want to make it active?"
@@ -67,7 +67,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     isManualTime:false
   });  
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       timeLog: newTimeLog
     }
@@ -84,7 +84,7 @@ var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).
     });
     
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeLogs
   });  
 });
@@ -164,7 +164,7 @@ if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
         logs.totalNonProductiveMember=0;
         realtime.push(logs);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: realtime
   });  
 });
@@ -173,7 +173,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   const timeLogs = await TimeLog.find({}).where('user').equals(req.body.user).find({
     "date" : {"$gte": req.body.startDate,"$lte": req.body.endDate}});
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     length:timeLogs.length,
     data: timeLogs
   });  
@@ -181,7 +181,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
 
 exports.getLog = catchAsync(async (req, res, next) => {  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       timeLog: "he"
     }
@@ -196,7 +196,7 @@ exports.getLog = catchAsync(async (req, res, next) => {
 //   });
   
 //   res.status(200).json({
-//     status: 'success',
+//     status: constants.APIResponseStatus.Success,
 //     data: timeLogs
 //   });
 // });
@@ -224,7 +224,7 @@ exports.getLogsWithImages = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeLogs
   });
 });
@@ -246,7 +246,7 @@ exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
   }
 }
 res.status(204).json({
-  status: 'success',
+  status:constants.APIResponseStatus.Success,
   data: null
 });
 });
@@ -269,7 +269,7 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   }
 }
 res.status(204).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: null
 });
 });
@@ -298,7 +298,7 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
     startTime = moment(startTime).add(10, 'm').toDate();      
   }  
    res.status(200).json({
-     status: 'success',
+     status: constants.APIResponseStatus.Success,
      data: {
        timeLog: result
      }
@@ -363,7 +363,7 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
     // Send the response with the matrix and column names   
 
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data:{ matrix, columns } 
     });
 
@@ -440,7 +440,7 @@ try {
   // Send the response with the matrix and column names
   
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: { matrix, columns }
   });
 

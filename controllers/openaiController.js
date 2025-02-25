@@ -73,14 +73,14 @@ exports.testResponse = async (req, res, next) => {
 
     // Send the response
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: assistantMessage.content[0].text.value,
     });
     
   } catch (error) {
     console.error('Error in testResponse:', error);
     res.status(500).json({
-      status: "error",
+      status: constants.APIResponseStatus.Error,
       message: error.message,
       ...(error.response?.data ? { details: error.response.data } : {})
     });
@@ -164,14 +164,14 @@ exports.generateQueryFromText = catchAsync(async (req, res, next) => {
 
     // 9. Return the generated query
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: cleanJson,
     });
 
   } catch (error) {
     console.error('Error in generateQueryFromText:', error);
     res.status(500).json({
-      status: "error",
+      status: constants.APIResponseStatus.Error,
       message: error.message,
     });
   }

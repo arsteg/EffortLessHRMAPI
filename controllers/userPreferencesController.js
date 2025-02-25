@@ -102,7 +102,7 @@ exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
       return next(new AppError('Preference category not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: preferenceCategory
     });
   });
@@ -111,7 +111,7 @@ exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
 exports.getAllPreferenceCategories = catchAsync(async (req, res, next) => {
     
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: preferenceCategories
     });
   });  
@@ -122,7 +122,7 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
       return next(new AppError('Preference option not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: preferenceOption
     });
   });
@@ -134,7 +134,7 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
       return next(new AppError('Preference option not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: preferenceOption
     });
   });  
@@ -143,7 +143,7 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
 exports.getAllPreferenceOptions = catchAsync(async (req, res, next) => {
     const preferenceOptions = await PreferenceOption.find();
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: preferenceOptions
     });
   });
@@ -175,7 +175,7 @@ exports.createUserPreference = catchAsync(async (req, res, next) => {
   }  
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: userPreference
   });
 });
@@ -238,7 +238,7 @@ const userPreferencesAllCat = allPreferenceOptions.map((option) => {
   const result = userPreferencesAllCat.filter((r)=>r.category==categoryId);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: result
   });
 });
@@ -255,7 +255,7 @@ exports.updateUserPreference = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userPreference
   });
 });
@@ -269,7 +269,7 @@ exports.deleteUserPreference = catchAsync(async (req, res, next) => {
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -278,7 +278,7 @@ exports.deleteUserPreference = catchAsync(async (req, res, next) => {
 exports.getAllUserPreferences = catchAsync(async (req, res, next) => {
   const userPreferences = await UserPreference.find();
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userPreferences
   });
 });
@@ -292,7 +292,7 @@ exports.getUserPreferenceByKey = catchAsync(async (req, res, next) => {
 
   if (!preferenceOption) {
     res.status(200).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null
     });
   }
@@ -305,14 +305,14 @@ exports.getUserPreferenceByKey = catchAsync(async (req, res, next) => {
 
   if (!userPreference) {
     res.status(200).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null
     });
   }
 
   // Return the entire UserPreference record or just the preferenceValue
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: userPreference.preferenceValue || userPreference
   });
 });
