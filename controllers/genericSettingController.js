@@ -58,7 +58,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
                   documents.genericSettingListData=null;
               }
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: documents
         })
 
@@ -82,7 +82,7 @@ exports.delete = catchAsync(async (req, res, next) => {
             .deleteMany({genericSetting: req.params.id});
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: null
         })
 
@@ -100,7 +100,7 @@ exports.deleteGenericSettingValue = catchAsync(async (req, res, next) => {
             .findOneAndDelete(req.params.valuesId);
            
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: null
         })
     } catch (err) {
@@ -116,7 +116,7 @@ exports.deleteGenericSettingListData = catchAsync(async (req, res, next) => {
             .findOneAndDelete(req.params.listDataId);
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: null
         })
     } catch (err) {
@@ -140,7 +140,7 @@ exports.addGenericSettingValue = catchAsync(async (req, res, next) => {
         const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: genericSettingValues
         })
     } catch (err) {
@@ -165,7 +165,7 @@ exports.addGenericSettingListData = catchAsync(async (req, res, next) => {
         const genericSettingListDatas = await genericSettingListData.find({}).where('genericSetting').equals(req.params.genericSettingId);  
        
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: genericSettingListDatas
         })
     } catch (err) {
@@ -181,7 +181,7 @@ exports.getGenericSettingListData = catchAsync(async (req, res, next) => {
         const genericSettingListDatas = await genericSettingListData.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: genericSettingListDatas
         })
     } catch (err) {
@@ -195,7 +195,7 @@ exports.getGenericSettingValue = catchAsync(async (req, res, next) => {
     try { 
         const genericSettingValues = await genericSettingValue.find({}).where('genericSetting').equals(req.params.genericSettingId);  
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: genericSettingValues
         })
     } catch (err) {
@@ -227,7 +227,7 @@ exports.getById = catchAsync(async (req, res, next) => {
                    documents.genericSettingListData=null;
                }
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: documents
         });
     }
@@ -247,7 +247,7 @@ exports.update = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: updateDocument
         })
 
@@ -267,7 +267,7 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
             .findById(req.params.id).where('date').equals(date);
 
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: getDocumentByDateAndId
         });
 
@@ -306,7 +306,7 @@ exports.getGenericSettingByUser = catchAsync(async (req, res, next) => {
          }  
         }
          res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: documents
         });
     }

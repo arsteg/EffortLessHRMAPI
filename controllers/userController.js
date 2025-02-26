@@ -88,7 +88,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     user.appointment = appointments;
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     results: users.length,
     data: {
       data: users,
@@ -114,7 +114,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   await exports.logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: document,
   });
 });
@@ -132,7 +132,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
       .populate("currentPlanId");
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       users: users,
       companySubscription: companySubscription,
@@ -155,7 +155,7 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       users: users,
     },
@@ -199,7 +199,7 @@ exports.getUsersByCompany = catchAsync(async (req, res, next) => {
     company: req.params.companyId,
   });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       users: users,
     },
@@ -282,7 +282,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       user: updatedUser,
     },
@@ -302,7 +302,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   await exports.logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -326,7 +326,7 @@ exports.getUsers = catchAsync(async (req, res, next) => {
     status: { $ne: constants.User_Status.Deleted },
   });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: users,
   });
 });
@@ -349,7 +349,7 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: managers,
   });
 });
@@ -369,7 +369,7 @@ exports.getUserProjects = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: projects,
   });
 });
@@ -383,7 +383,7 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const userEmployment = await UserEmployment.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -396,7 +396,7 @@ exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
     return next(new AppError("UserEmployment not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -407,7 +407,7 @@ exports.getUserEmployment = catchAsync(async (req, res, next) => {
     return next(new AppError("UserEmployment not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -427,7 +427,7 @@ exports.updateUserEmployment = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -440,7 +440,7 @@ exports.deleteUserEmployment = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -665,7 +665,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     salaryComponentVariableAllowance;
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -716,7 +716,7 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -761,7 +761,7 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Salary Details not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -1014,7 +1014,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
       .equals(req.params.id);
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -1063,7 +1063,7 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   //const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndDelete(req.params.id);
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1083,7 +1083,7 @@ exports.createEmployeeTaxAndSalutaorySetting = catchAsync(
       req.body
     );
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1101,7 +1101,7 @@ exports.getEmployeeTaxAndSalutaorySetting = catchAsync(
       return next(new AppError("Employee settings not found", 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1127,7 +1127,7 @@ exports.updateEmployeeTaxAndSalutaorySetting = catchAsync(
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1146,7 +1146,7 @@ exports.deleteEmployeeTaxAndSalutaorySetting = catchAsync(
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   }
@@ -1163,7 +1163,7 @@ exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
     req.body
   );
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1175,7 +1175,7 @@ exports.getEmployeeSalutatoryDetailsByUser = catchAsync(
     });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeSalutatoryDetails,
     });
   }
@@ -1188,7 +1188,7 @@ exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Salutatory Details not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1205,7 +1205,7 @@ exports.updateEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1219,7 +1219,7 @@ exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1299,7 +1299,7 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     }
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1312,7 +1312,7 @@ exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1350,7 +1350,7 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1363,7 +1363,7 @@ exports.deleteEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1384,7 +1384,7 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(
       .limit(parseInt(limit));
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeLoanAdvances,
       total: totalCount,
     });
@@ -1407,7 +1407,7 @@ exports.getAllEmployeeLoanAdvancesByUser = catchAsync(
       .limit(parseInt(limit));
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeLoanAdvances,
       total: totalCount,
     });
@@ -1696,7 +1696,7 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclaration,
   });
 }
@@ -1723,7 +1723,7 @@ exports.getEmployeeIncomeTaxDeclarationById = catchAsync(
         .equals(req.params.id);
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclaration,
     });
   }
@@ -1775,7 +1775,7 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   }
@@ -1849,7 +1849,7 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
       );
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclarationComponent,
     });
   }
@@ -1927,7 +1927,7 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclarationHRA,
     });
   }

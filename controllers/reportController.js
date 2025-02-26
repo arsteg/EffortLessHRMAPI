@@ -98,7 +98,7 @@ if(req.body.users!='' && req.body.projects!='')
    }
  
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: timeLogsAll
   });  
 });
@@ -194,7 +194,7 @@ if(req.body.users!='' && req.body.projects!='')
     // Send the response with the matrix and column names
     
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: { matrix, columns }
     });
   
@@ -265,7 +265,7 @@ exports.getProductivityByMember = catchAsync(async (req, res, next) => {
    appWebsiteSummary.TimeSpentNonProductive=timeSpentNonProductive;
   }
    res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: appWebsiteSummary
     });  
 });
@@ -389,7 +389,7 @@ for(var u = 0; u < appwebsiteusers.length; u++)
   }
 }
      res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: appwebsiteproductivity
       });  
 });
@@ -486,7 +486,7 @@ exports.getAppWebsite = catchAsync(async (req, res, next) => {
             }
      }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: appWebsiteAll
     });  
 });
@@ -532,7 +532,7 @@ exports.getleaves = catchAsync(async (req, res, next) => {
 
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: leavesDetails
     });  
   });
@@ -615,7 +615,7 @@ exports.gettimesheet = catchAsync(async (req, res, next) => {
              
        }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: attandanceDetails
     });  
   });
@@ -720,7 +720,7 @@ exports.gettimesheet = catchAsync(async (req, res, next) => {
     console.log("Final attendance details:", attandanceDetails);
 
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: attandanceDetails
     });
 });
@@ -787,7 +787,7 @@ exports.getattandance = catchAsync(async (req, res, next) => {
                     attandanceDetails.push(newLogInUSer);
         }
      res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: attandanceDetails
     });  
   });

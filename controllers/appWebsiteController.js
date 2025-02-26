@@ -34,7 +34,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
               }); 
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: createDocument
         })
 
@@ -56,7 +56,7 @@ exports.delete = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: deleteDocument
         })
 
@@ -73,7 +73,7 @@ exports.getById = catchAsync(async (req, res, next) => {
     try {
         const getDocumentByID = await appWebsite.findById(req.params.id);
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: getDocumentByID
         });
     }
@@ -96,7 +96,7 @@ exports.update = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: updateDocument
         })
 
@@ -120,7 +120,7 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
             .findById(req.params.id).where('date').equals(date);
 
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: getDocumentByDateAndId
         });
 
@@ -138,7 +138,7 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
         let date = req.body.date;
         const getAllDocumentsbyDate = await appWebsite.find({}).where('date').equals(date)
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             body: getAllDocumentsbyDate
         })
     }
@@ -173,7 +173,7 @@ exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
         console.log("Productivity Apps found:", productivityApps.length);
 
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: productivityApps
         });
     } catch (err) {
@@ -189,7 +189,7 @@ exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
 exports.getproductivities = catchAsync(async (req, res, next) => {
     const productivityData = await Productivity.find();    
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         body: productivityData
     });
 });
@@ -197,7 +197,7 @@ exports.getproductivities = catchAsync(async (req, res, next) => {
 exports.getproductivityById = catchAsync(async (req, res, next) => {    
     const productivityData = await Productivity.findById(req.params.id);
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         body: productivityData
     });
 });
@@ -219,7 +219,7 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
           }
     );
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: productivityData
     });
 });
@@ -250,7 +250,7 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
         console.log("Updated Productivity Data:", productivityData);
 
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: productivityData
         });
     } catch (error) {
@@ -267,7 +267,7 @@ exports.deleteProductivity = catchAsync(async (req, res, next) => {
     const productivityData = await Productivity.findByIdAndDelete(req.params.id);
     if (productivityData) {
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: productivityData
         });
     } else {
@@ -288,7 +288,7 @@ exports.addBrowserHistory = catchAsync(async (req, res, next) => {
           }
     );
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: newHistory
     });
 });
@@ -297,7 +297,7 @@ exports.deleteBrowserHistory = catchAsync(async (req, res, next) => {
     const deletedHistory = await BrowserHistory.findByIdAndDelete(req.params.id);
     if (deletedHistory) {
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: deletedHistory
         });
     } else {
@@ -339,7 +339,7 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
     const history = await BrowserHistory.find(filters);
 
     res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: history
     });
 });

@@ -16,7 +16,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   req.body.company =  req.cookies.companyId; 
   const eventNotification = await EventNotification.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   }); 
@@ -27,7 +27,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -41,7 +41,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -52,7 +52,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -60,7 +60,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   exports.getAllEventNotifications = catchAsync(async (req, res, next) => {
     const eventNotifications = await EventNotification.find();
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotifications
     });
   });
@@ -70,7 +70,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     req.body.company =  req.cookies.companyId; 
     const eventNotificationType = await EventNotificationType.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -81,7 +81,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification type not found', 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -97,7 +97,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     }
   
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -110,7 +110,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     }
   
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -138,7 +138,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     try {
         const eventNotificationTypes = await EventNotificationType.find({ company: objectId });
         res.status(200).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: eventNotificationTypes
         });
     } catch (error) {
@@ -151,7 +151,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     req.body.company =  req.cookies.companyId; 
     const userNotification = await UserNotification.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -162,7 +162,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -176,7 +176,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -187,7 +187,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -195,7 +195,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   exports.getAllUserNotifications = catchAsync(async (req, res, next) => {
     const userNotifications = await UserNotification.find({company:req.cookies.companyId});
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userNotifications
     });
   });
@@ -206,7 +206,7 @@ exports.getAllUserNotificationsByNotification = catchAsync(async (req, res, next
   try {
       const userNotifications = await UserNotification.find({company:req.cookies.companyId}).where('notification').equals(req.params.id);
       res.status(200).json({
-          status: constants.apiresponsestatus.success,
+          status: constants.APIResponseStatus.Success,
           data: userNotifications
       });
   } catch (error) {
@@ -236,7 +236,7 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
 
         const userNotification = await UserNotification.create({ user, notification, status: 'unread' });
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: userNotification
         });
     } else if (action === 'unassign') {
@@ -249,7 +249,7 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
         }
 
         res.status(201).json({
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             message: 'Notification successfully unassigned'
         });
     } else {
@@ -272,7 +272,7 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -290,7 +290,7 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
   }); 
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: eventNotifications
   });
 });
@@ -303,7 +303,7 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -316,7 +316,7 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   const eventNotifications = await EventNotification.find({
     _id: { $in: notificationIds }});
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: eventNotifications
   });
 });
@@ -399,7 +399,7 @@ exports.updateRecurringNotifications = async () => {
 
 exports.testMe = catchAsync(async (req, res, next) => {    
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {}
     });
   });

@@ -18,7 +18,7 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
     updatedBy: req.cookies.userId,
   });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: newProductivity,
   });
 });
@@ -32,7 +32,7 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
     return next(new AppError("No productivity found with that ID", 404));
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       data: result,
     },
@@ -42,7 +42,7 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
 exports.get = catchAsync(async (req, res, next) => {
   const result = await productivity.find({ id: req.params.id });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: result,
   });
 });
@@ -53,7 +53,7 @@ exports.getAll = catchAsync(async (req, res, next) => {
     .where("company")
     .equals(req.cookies.companyId);
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: result,
   });
 });
@@ -61,7 +61,7 @@ exports.getAll = catchAsync(async (req, res, next) => {
 exports.deleteProductivity = catchAsync(async (req, res, next) => {
   const result = await productivity.findByIdAndDelete(req.params.id);
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: result,
   });
 });
@@ -87,12 +87,12 @@ exports.saveUserLocation = async (req, res) => {
 
     if (result.modifiedCount > 0) {
         return res.status(200).json( {  
-          status: constants.apiresponsestatus.success,
+          status: constants.APIResponseStatus.Success,
           data: "", 
           message: "Location updated successfully" });
     } else if (result.upsertedCount > 0) {
         return res.status(201).json({ 
-          status: constants.apiresponsestatus.success,
+          status: constants.APIResponseStatus.Success,
           data: "", 
           message: "Location added successfully" });
     } else {
@@ -120,7 +120,7 @@ exports.getUserLocations = async (req, res) => {
       //res.status(200).json({ data: locations });
       
       res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: locations,
       });
   } catch (error) {
@@ -145,7 +145,7 @@ exports.getAllUserLocations = async (req, res) => {
 
     // Return the locations
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: locations,
     });
   } catch (error) {
@@ -170,7 +170,7 @@ exports.deleteUserLocation = async (req, res) => {
 
     // Return success response
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: "User location deleted successfully.",
     });
   } catch (error) {
@@ -205,12 +205,12 @@ exports.updateUserLocation = async (req, res) => {
 
       if (result.modifiedCount > 0) {
           return res.status(200).json( {  
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: "", 
             message: "Location updated successfully" });
       } else if (result.upsertedCount > 0) {
           return res.status(201).json({ 
-            status: constants.apiresponsestatus.success,
+            status: constants.APIResponseStatus.Success,
             data: "", 
             message: "Location added successfully" });
       } else {
