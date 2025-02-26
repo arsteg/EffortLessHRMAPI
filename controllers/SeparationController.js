@@ -22,7 +22,7 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 
   const resignation = await Resignation.create(resignationData);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: resignation
   });
 });
@@ -31,7 +31,7 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 exports.getResignationByUser = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.findOne({ user: req.params.userId, company: req.cookies.companyId });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: resignation
   });
 });
@@ -40,7 +40,7 @@ exports.getResignationByUser = catchAsync(async (req, res, next) => {
 exports.getResignationByStatus = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.find({ resignation_status: req.params.status, company: req.cookies.companyId });
     res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: resignation
   });
 });
@@ -49,7 +49,7 @@ exports.getResignationByStatus = catchAsync(async (req, res, next) => {
 exports.getResignationByCompany = catchAsync(async (req, res, next) => {
   const resignations = await Resignation.find({ company: req.cookies.companyId });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: resignations
   });
 });
@@ -71,7 +71,7 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: updatedResignation
   });
 });
@@ -95,7 +95,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
     await user.save();
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: resignation
   });
 });
@@ -116,7 +116,7 @@ exports.deleteResignation = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -135,7 +135,7 @@ exports.addTermination = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: termination
   });
 });
@@ -145,7 +145,7 @@ exports.getTerminationByUser = catchAsync(async (req, res, next) => {
   const termination = await Termination.findOne({ user: req.params.userId , company: req.cookies.companyId});
 
    res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: termination
   });
 });
@@ -156,7 +156,7 @@ exports.getTerminationByStatus = catchAsync(async (req, res, next) => {
 
   const terminations = await Termination.find({ termination_status: terminationStatus , company: req.cookies.companyId});
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: terminations
   });
 });
@@ -168,7 +168,7 @@ exports.getTerminationByCompany = catchAsync(async (req, res, next) => {
   const terminations = await Termination.find({ company: company });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: terminations
   });
 });

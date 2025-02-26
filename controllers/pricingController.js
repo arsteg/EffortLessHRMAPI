@@ -44,7 +44,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
     const software = await Software.create({ name: name,description: description,accessLink: accessLink });
   
       res.status(201).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: software,
       });
     }
@@ -54,7 +54,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
 exports.getSoftware = catchAsync(async (req, res, next) => {
 const software = await Software.findById(req.params.id);
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: software,
 });
 });
@@ -76,7 +76,7 @@ else
    });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: software,
     });
 }
@@ -91,7 +91,7 @@ if (!softwareInstance) {
 }
 
 return res.status(204).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: null,
 });
 });
@@ -99,7 +99,7 @@ return res.status(204).json({
 exports.getAllSoftware = catchAsync(async (req, res, next) => {
 const software = await Software.find({});
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: software,
 });
 });
@@ -118,7 +118,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
     const option = await Option.create({ name: name });
   
       res.status(201).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: option,
       });
     }
@@ -127,7 +127,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
 exports.getOption = catchAsync(async (req, res, next) => {
 const option = await Option.findById(req.params.id);
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: option,
 });
 });
@@ -150,7 +150,7 @@ else
    });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: option,
     });
 }
@@ -165,7 +165,7 @@ if (!optionInstance) {
 }
 
 return res.status(204).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: null,
 });
 });
@@ -173,7 +173,7 @@ return res.status(204).json({
 exports.getAllOption = catchAsync(async (req, res, next) => {
 const option = await Option.find({});
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: option,
 });
 });
@@ -224,7 +224,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
       });
       
       res.status(201).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: plan,
       });
     }
@@ -261,7 +261,7 @@ if(plan) {
   
 }
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: plan,
 });
 });
@@ -284,7 +284,7 @@ else
    });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: plan,
     });
 }
@@ -298,7 +298,7 @@ if (!planInstance) {
 }
 
 return res.status(204).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: null,
 });
 });
@@ -318,7 +318,7 @@ if(plan) {
   }
 }
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: plan,
 });
 });
@@ -348,7 +348,7 @@ exports.addOptionInclusionDetails = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: optionIncluded,
     });
   } catch (error) {
@@ -379,7 +379,7 @@ exports.removeOptionInclusionDetails = async (req, res, next) => {
     await OptionIncluded.findByIdAndDelete(optionIncludedId);
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Option successfully removed from the plan',
     });
   } catch (error) {
@@ -407,7 +407,7 @@ exports.getOptionInclusionDetails = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: optionIncluded,
     });
   } catch (error) {
@@ -424,7 +424,7 @@ exports.getAllOptionInclusionDetails = catchAsync(async (req, res, next) => {
   const optionInclusionDetails = await OptionIncluded.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: optionInclusionDetails,
   });
 });
@@ -442,7 +442,7 @@ exports.updateOptionInclusionDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: optionIncluded,
   });
 });
@@ -463,7 +463,7 @@ exports.addOffer = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: offer,
     });
   } catch (error) {
@@ -494,7 +494,7 @@ exports.removeOffer = async (req, res, next) => {
     await Offer.findByIdAndDelete(offerId);
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Offer successfully removed',
     });
   } catch (error) {
@@ -522,7 +522,7 @@ exports.getOfferDetails = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: offer,
     });
   } catch (error) {
@@ -539,7 +539,7 @@ exports.getAllOfferDetails = catchAsync(async (req, res, next) => {
   const offerDetails = await Offer.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: offerDetails,
   });
 });
@@ -557,7 +557,7 @@ exports.updateOfferDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: offer,
   });
 });
@@ -585,7 +585,7 @@ exports.addIncludeDetails = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: include,
   });
 });
@@ -608,7 +608,7 @@ exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
   await Include.findByIdAndDelete(includeId);
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     message: 'Plan successfully removed from the offer',
   });
 });
@@ -628,7 +628,7 @@ exports.getIncludeDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: include,
   });
 });
@@ -649,7 +649,7 @@ exports.updateIncludeDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: include,
   });
 });
@@ -659,7 +659,7 @@ exports.getAllIncludeDetails = catchAsync(async (req, res, next) => {
   const includeDetails = await Include.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: includeDetails,
   });
 });
@@ -685,7 +685,7 @@ exports.addUserGroupType = async (req, res, next) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userGroupType,
     });
   }
@@ -715,7 +715,7 @@ exports.removeUserGroupType = async (req, res, next) => {
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'User group type successfully removed',
     });
   } catch (error) {
@@ -743,7 +743,7 @@ exports.getUserGroupType = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userGroupType,
     });
   } catch (error) {
@@ -784,7 +784,7 @@ exports.updateUserGroupType = async (req, res, next) => {
       }
 
       res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: userGroupType,
       });
     }
@@ -803,7 +803,7 @@ exports.getAllUserGroupTypes = async (req, res, next) => {
     const userGroupTypes = await UserGroupType.find();
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: userGroupTypes,
     });
   } catch (error) {
@@ -848,7 +848,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: prerequisites,
   });
 });
@@ -871,7 +871,7 @@ exports.removePrerequisites = catchAsync(async (req, res, next) => {
   await prerequisites.findByIdAndDelete(prerequisitesId);
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     message: 'prerequisites successfully removed',
   });
 });
@@ -891,7 +891,7 @@ exports.getPrerequisitesDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: prerequisites,
   });
 });
@@ -934,7 +934,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: prerequisites,
   });
 });
@@ -944,7 +944,7 @@ exports.getAllPrerequisitesDetails = catchAsync(async (req, res, next) => {
   const prerequisitesDetails = await Prerequisites.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: prerequisitesDetails,
   });
 });
@@ -979,7 +979,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: companyPlan,
   });
 });
@@ -1002,7 +1002,7 @@ exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
   await companyPlan.findByIdAndDelete(companyPlanId);
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     message: 'CompanyPlan successfully removed',
   });
 });
@@ -1022,7 +1022,7 @@ exports.getCompanyPlanDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: companyPlan,
   });
 });
@@ -1063,7 +1063,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: companyPlan,
   });
 });
@@ -1073,7 +1073,7 @@ exports.getAllCompanyPlan = catchAsync(async (req, res, next) => {
   const companyPlans = await CompanyPlan.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: companyPlans,
   });
 });
@@ -1101,7 +1101,7 @@ exports.addPlanToOffer = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: planOffer,
   });
 });
@@ -1124,7 +1124,7 @@ exports.removePanFromOffer = catchAsync(async (req, res, next) => {
   await PlanOffer.findByIdAndDelete(planOfferId);
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     message: 'Plan successfully removed from the offer',
   });
 });
@@ -1144,7 +1144,7 @@ exports.getPlanOfferDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: planOffer,
   });
 });
@@ -1165,7 +1165,7 @@ exports.updatePlanOfferDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: planOffer,
   });
 });
@@ -1175,7 +1175,7 @@ exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
   const planOffer = await PlanOffer.find();
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: planOffer,
   });
 });
@@ -1216,7 +1216,7 @@ exports.addSubscriptionDetails = async (req, res) => {
     });
     if(subscription) {
       res.status(201).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: {subscription},
       });
     } else {
@@ -1252,7 +1252,7 @@ exports.addSubscriptionDetails = async (req, res) => {
       const savedSubscription = await newSubscription.save();
   
       res.status(201).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: {
           subscription: savedSubscription,
         },
@@ -1284,7 +1284,7 @@ exports.removeSubscriptionDetails = async (req, res) => {
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -1309,7 +1309,7 @@ exports.getSubscriptionDetailsById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscription,
       },
@@ -1458,7 +1458,7 @@ exports.activateSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1493,7 +1493,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1530,7 +1530,7 @@ exports.getAllSubscriptionDetails = async (req, res) => {
     }]);
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscriptions,
       },
@@ -1569,7 +1569,7 @@ exports.pauseResumeSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscription: updatedSubscription,
       },
@@ -1609,7 +1609,7 @@ exports.cancelSubscription = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         subscription: fetchedSubscription,
       },
@@ -1657,7 +1657,7 @@ console.log("hello");
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         planHistory: newPlanHistory,
       },
@@ -1688,7 +1688,7 @@ exports.getPlanHistoryById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         planHistory,
       },
@@ -1756,7 +1756,7 @@ exports.updatePlanHistoryById = async (req, res) => {
     );
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         planHistory: updatedPlanHistory,
       },
@@ -1789,7 +1789,7 @@ exports.deletePlanHistoryById = async (req, res) => {
     await PlanHistory.findByIdAndDelete(planHistoryId);
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -1807,7 +1807,7 @@ exports.getAllPlanHistories = async (req, res) => {
     const allPlanHistories = await PlanHistory.find();
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         planHistories: allPlanHistories,
       },
@@ -1862,7 +1862,7 @@ exports.createInvoice = async (req, res) => {
     const savedInvoice = await newInvoice.save();
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         invoice: savedInvoice,
       },
@@ -1896,7 +1896,7 @@ exports.getInvoiceById = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         invoice: invoice,
       },
@@ -1933,7 +1933,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         invoice: invoice,
       },
@@ -2007,7 +2007,7 @@ exports.updateInvoiceById = async (req, res) => {
     );
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         invoice: updatedInvoice,
       },
@@ -2040,7 +2040,7 @@ exports.deleteInvoiceById = async (req, res) => {
     await Invoice.findByIdAndDelete(invoiceId);
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -2059,7 +2059,7 @@ exports.getAllInvoices = async (req, res) => {
     const invoices = await Invoice.find();
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         invoices,
       },
@@ -2172,7 +2172,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     await existingUserInGroup.save();
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Users in UserGroupType successfully updated',
       data: existingUserInGroup,
     });
@@ -2200,7 +2200,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     const users = await User.find({ _id: { $in: existingUserInGroup.user } });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Users retrieved successfully',
       data: users,
     });
@@ -2212,7 +2212,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
 
 exports.razorpayCredential = catchAsync(async (req, res, next) => {
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: process.env.RAZORPAY_KEY,
   });
 })

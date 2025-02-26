@@ -96,7 +96,7 @@ const createAndSendToken = async (user, statusCode, res) => {
 
 
   res.status(statusCode).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     token,
     data: {
       user,
@@ -336,7 +336,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   await logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: {
       User:newUser
     }
@@ -557,7 +557,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success    
+    status: constants.APIResponseStatus.Success    
   }); 
 });
 
@@ -708,7 +708,7 @@ exports.addRole = catchAsync(async (req, res, next) => {
     updatedOn: new Date(Date.now()) 
 });  
 res.status(200).json({
-  status: constants.apiresponsestatus.success,
+  status: constants.APIResponseStatus.Success,
   data: {
     Role:newRole
   }
@@ -729,7 +729,7 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -742,7 +742,7 @@ exports.getRole = catchAsync(async (req, res, next) => {
     return next(new AppError('No role found', 403));
   }  
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: role
   });  
  });
@@ -753,7 +753,7 @@ exports.getRoles = catchAsync(async (req, res, next) => {
     return next(new AppError('No role found', 403));
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: roles
   });   
  });
@@ -774,7 +774,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
     }); 
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: subordinate
     });    
   }});
@@ -790,7 +790,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const activeUserIds = activeUsers.map(user => user._id);
   
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: activeUserIds
   });
       
@@ -803,7 +803,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ''
     });    
  });
@@ -815,7 +815,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found', 403));
   }  
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   });    
 });
@@ -823,7 +823,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
 exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
   const rolePermissions = await RolePermission.find({});   
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: rolePermissions
   });    
 });
@@ -841,7 +841,7 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
       company : req.cookies.companyId
     });
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: rolePermission
     }); 
   }
@@ -863,7 +863,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found with that ID', 404));
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   }); 
 }   
@@ -875,7 +875,7 @@ exports.deleteRolePermission = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found with that ID', 404));
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   });    
 });

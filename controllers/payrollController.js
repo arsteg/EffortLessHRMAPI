@@ -73,7 +73,7 @@ exports.createGeneralSetting = async (req, res, next) => {
   try {
     const generalSetting = await GeneralSetting.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: generalSetting,
     });
   } catch (err) {
@@ -95,12 +95,12 @@ exports.getGeneralSettingByCompanyId = async (req, res, next) => {
       //   error: 'GeneralSetting not found'
       // });
       return res.status(200).json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         data: [],
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: generalSetting,
     });
   } catch (err) {
@@ -130,7 +130,7 @@ exports.updateGeneralSetting = async (req, res, next) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: generalSetting,
     });
   } catch (err) {
@@ -153,7 +153,7 @@ exports.deleteGeneralSetting = async (req, res, next) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -183,7 +183,7 @@ exports.createRoundingRule = async (req, res, next) => {
   req.body.company = companyId;
   const roundingRule = await RoundingRule.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: roundingRule,
   });
 };
@@ -194,7 +194,7 @@ exports.getRoundingRuleById = async (req, res, next) => {
     return next(new AppError("Rounding rule not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: roundingRule,
   });
 };
@@ -214,7 +214,7 @@ exports.updateRoundingRule = async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: roundingRule,
   });
 };
@@ -227,7 +227,7 @@ exports.deleteRoundingRule = async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 };
@@ -248,7 +248,7 @@ exports.getAllRoundingRules = async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: roundingRules,
     total: totalCount,
   });
@@ -257,7 +257,7 @@ exports.getAllRoundingRules = async (req, res, next) => {
 exports.createPFTemplate = catchAsync(async (req, res, next) => {
   const pfTemplate = await PFTemplates.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfTemplate,
   });
 });
@@ -271,7 +271,7 @@ exports.getPFTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError("PF template not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfTemplate,
   });
 });
@@ -294,7 +294,7 @@ exports.updatePFTemplate = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfTemplate,
   });
 });
@@ -310,7 +310,7 @@ exports.deletePFTemplate = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -332,7 +332,7 @@ exports.getAllPFTemplatesByCompany = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfTemplates,
     total: totalCount,
   });
@@ -351,7 +351,7 @@ exports.createFixedAllowances = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const fixedAllowances = await FixedAllowances.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedAllowances,
   });
 });
@@ -362,7 +362,7 @@ exports.getFixedAllowancesById = catchAsync(async (req, res, next) => {
     return next(new AppError("FixedAllowances not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedAllowances,
   });
 });
@@ -382,7 +382,7 @@ exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedAllowances,
   });
 });
@@ -395,7 +395,7 @@ exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
     return next(new AppError("FixedAllowances not found", 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -413,7 +413,7 @@ exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
     .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedAllowances,
     total: totalCount,
   });
@@ -422,7 +422,7 @@ exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
 exports.createFixedContribution = catchAsync(async (req, res, next) => {
   const fixedContributions = await FixedContribution.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedContributions,
   });
 });
@@ -440,7 +440,7 @@ exports.getAllFixedContributions = catchAsync(async (req, res, next) => {
     .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedContributions,
     total: totalCount,
   });
@@ -463,7 +463,7 @@ exports.createFixedContributionSlab = async (req, res, next) => {
       req.body
     );
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: fixedContributionSlab,
     });
   } catch (err) {
@@ -486,7 +486,7 @@ exports.getFixedContributionSlab = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: fixedContributionSlab,
     });
   } catch (err) {
@@ -515,7 +515,7 @@ exports.updateFixedContributionSlab = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: fixedContributionSlab,
     });
   } catch (err) {
@@ -537,7 +537,7 @@ exports.deleteFixedContributionSlab = async (req, res, next) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -562,7 +562,7 @@ exports.getAllFixedContributionSlabs = async (req, res, next) => {
       .skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: fixedContributionSlabs,
       total: totalCount,
     });
@@ -588,7 +588,7 @@ exports.getAllFixedContributionSlabsByState = async (req, res, next) => {
       .skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: fixedContributionSlabs,
       total: totalCount,
     });
@@ -617,7 +617,7 @@ exports.createLWFFixedDeductionMonth = async (req, res, next) => {
       req.body
     );
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: lwfFixedDeductionMonth,
     });
   } catch (err) {
@@ -640,7 +640,7 @@ exports.getLWFFixedDeductionMonth = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: lwfFixedDeductionMonth,
     });
   } catch (err) {
@@ -674,7 +674,7 @@ exports.updateLWFFixedDeductionMonth = async (req, res, next) => {
     res
       .status(200)
       .json({
-        status: constants.apiresponsestatus.success,
+        status: constants.APIResponseStatus.Success,
         message: "LWFFixedDeductionMonths updated successfully",
       });
   } catch (error) {
@@ -694,7 +694,7 @@ exports.deleteLWFFixedDeductionMonth = async (req, res, next) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -711,7 +711,7 @@ exports.getAllLWFFixedDeductionMonths = async (req, res, next) => {
       .where("company")
       .equals(req.cookies.companyId);
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: lwfFixedDeductionMonths,
     });
   } catch (err) {
@@ -727,7 +727,7 @@ exports.getAllPTEligibleStates = async (req, res, next) => {
       .where("company")
       .equals(req.cookies.companyId);
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptEligibleStates,
     });
   } catch (err) {
@@ -751,7 +751,7 @@ exports.createPTConfigureState = catchAsync(async (req, res, next) => {
 
   const ptConfigureState = await PTConfigureStates.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ptConfigureState,
   });
 });
@@ -762,7 +762,7 @@ exports.getPTConfigureState = catchAsync(async (req, res, next) => {
     return next(new AppError("PTConfigureState not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ptConfigureState,
   });
 });
@@ -782,7 +782,7 @@ exports.updatePTConfigureState = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ptConfigureState,
   });
 });
@@ -797,7 +797,7 @@ exports.deletePTConfigureState = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -809,7 +809,7 @@ exports.getAllPTConfigureStatesByCompany = catchAsync(
     });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptConfigureStates,
     });
   }
@@ -855,7 +855,7 @@ exports.addUpdatePTEligibleStates = async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: updatedStates,
   });
 };
@@ -870,7 +870,7 @@ exports.addPTSlab = async (req, res, next) => {
     req.body.company = company;
     const ptSlab = await PTSlab.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptSlab,
     });
   } catch (error) {
@@ -891,7 +891,7 @@ exports.getAllPTSlabs = async (req, res, next) => {
       .skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptSlabs,
       total: totalCount,
     });
@@ -913,7 +913,7 @@ exports.updatePTSlab = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptSlab,
     });
   } catch (error) {
@@ -931,7 +931,7 @@ exports.getPTSlabById = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptSlab,
     });
   } catch (error) {
@@ -949,7 +949,7 @@ exports.deletePTSlab = async (req, res, next) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (error) {
@@ -969,7 +969,7 @@ exports.addPTDeductionMonth = async (req, res, next) => {
 
     const ptDeductionMonth = await PTDeductionMonth.create(req.body);
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptDeductionMonth,
     });
   } catch (err) {
@@ -986,7 +986,7 @@ exports.getAllPTDeductionMonths = async (req, res, next) => {
       req.cookies.companyId
     );
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptDeductionMonths,
     });
   } catch (err) {
@@ -1007,7 +1007,7 @@ exports.getPTDeductionMonthById = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptDeductionMonth,
     });
   } catch (err) {
@@ -1035,7 +1035,7 @@ exports.updatePTDeductionMonth = async (req, res, next) => {
       });
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: ptDeductionMonth,
     });
   } catch (err) {
@@ -1058,7 +1058,7 @@ exports.deletePTDeductionMonth = async (req, res, next) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   } catch (err) {
@@ -1081,7 +1081,7 @@ exports.createCeilingAmount = catchAsync(async (req, res, next) => {
   req.body.roundType = "Round Up";
   const ceilingAmount = await ESICCeilingAmount.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ceilingAmount,
   });
 });
@@ -1099,7 +1099,7 @@ exports.getCeilingAmountsByCompany = catchAsync(async (req, res, next) => {
     .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ceilingAmounts,
     total: totalCount,
   });
@@ -1121,7 +1121,7 @@ exports.updateCeilingAmount = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ceilingAmount,
   });
 });
@@ -1135,7 +1135,7 @@ exports.getCeilingAmountById = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ceilingAmount,
   });
 });
@@ -1151,7 +1151,7 @@ exports.deleteCeilingAmount = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1169,7 +1169,7 @@ exports.addESICContribution = catchAsync(async (req, res, next) => {
 
   const esicContribution = await ESICContribution.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: esicContribution,
   });
 });
@@ -1187,7 +1187,7 @@ exports.getAllESICContributionsByCompany = catchAsync(
       .skip(parseInt(skip))
       .limit(parseInt(limit));
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: esicContributions,
       total: totalCount,
     });
@@ -1209,7 +1209,7 @@ exports.updateESICContribution = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: esicContribution,
   });
 });
@@ -1222,7 +1222,7 @@ exports.getESICContributionById = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: esicContribution,
   });
 });
@@ -1237,7 +1237,7 @@ exports.deleteESICContribution = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1266,7 +1266,7 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
       await VariableAllowanceApplicableEmployee.insertMany(result);
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableAllowance,
   });
 });
@@ -1299,7 +1299,7 @@ exports.getAllVariableAllowancesByCompany = catchAsync(
       }
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: variableAllowances,
       total: totalCount,
     });
@@ -1325,7 +1325,7 @@ exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
     return next(new AppError("Variable allowance not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableAllowance,
   });
 });
@@ -1359,7 +1359,7 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
     return next(new AppError("Variable allowance not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableAllowance,
   });
 });
@@ -1373,7 +1373,7 @@ exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
     return next(new AppError("Variable allowance not found", 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1392,7 +1392,7 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
 
   const fixedDeduction = await FixedDeduction.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedDeduction,
   });
 });
@@ -1414,7 +1414,7 @@ exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
     .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedDeductions,
     total: totalCount,
   });
@@ -1430,7 +1430,7 @@ exports.getFixedDeductionById = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedDeduction,
   });
 });
@@ -1448,7 +1448,7 @@ exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: fixedDeduction,
   });
 });
@@ -1463,7 +1463,7 @@ exports.deleteFixedDeduction = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1492,7 +1492,7 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
       await VariableDeductionApplicableEmployee.insertMany(result);
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableDeduction,
   });
 });
@@ -1528,7 +1528,7 @@ exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableDeductions,
     total: totalCount,
   });
@@ -1552,7 +1552,7 @@ exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableDeduction,
   });
 });
@@ -1584,7 +1584,7 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
     return next(new AppError("Variable deduction not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: variableDeduction,
   });
 });
@@ -1597,7 +1597,7 @@ exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
     return next(new AppError("Variable deduction not found", 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1615,7 +1615,7 @@ exports.createOtherBenefits = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const otherBenefits = await OtherBenefits.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: otherBenefits,
   });
 });
@@ -1633,7 +1633,7 @@ exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
     .skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: otherBenefits,
     total: totalCount,
   });
@@ -1652,7 +1652,7 @@ exports.updateOtherBenefits = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: otherBenefits,
   });
 });
@@ -1667,7 +1667,7 @@ exports.getOtherBenefitsById = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: otherBenefits,
   });
 });
@@ -1682,7 +1682,7 @@ exports.deleteOtherBenefits = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1703,7 +1703,7 @@ exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const loanAdvancesCategory = await LoanAdvancesCategory.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: loanAdvancesCategory,
   });
 });
@@ -1731,7 +1731,7 @@ exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(
       );
     }
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: loanAdvancesCategories,
       total: totalCount,
     });
@@ -1746,7 +1746,7 @@ exports.getLoanAdvancesCategoryById = catchAsync(async (req, res, next) => {
     return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: loanAdvancesCategory,
   });
 });
@@ -1764,7 +1764,7 @@ exports.updateLoanAdvancesCategory = catchAsync(async (req, res, next) => {
     return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: loanAdvancesCategory,
   });
 });
@@ -1777,7 +1777,7 @@ exports.deleteLoanAdvancesCategory = catchAsync(async (req, res, next) => {
     return next(new AppError("Loan Advances Category not found", 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1803,7 +1803,7 @@ exports.createFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   const flexiBenefitsCategory = await FlexiBenefitsCategory.create(req.body);
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: flexiBenefitsCategory,
   });
 });
@@ -1825,7 +1825,7 @@ exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
       .limit(parseInt(limit));
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: flexiBenefitsCategories,
       total: totalCount,
     });
@@ -1849,7 +1849,7 @@ exports.updateFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: updatedCategory,
   });
 });
@@ -1864,7 +1864,7 @@ exports.getFlexiBenefitsCategoryById = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: flexiBenefitsCategory,
   });
 });
@@ -1881,7 +1881,7 @@ exports.deleteFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1898,7 +1898,7 @@ exports.createPFCharge = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const pfCharge = await PFCharge.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfCharge,
   });
 });
@@ -1922,7 +1922,7 @@ exports.getPFChargesByCompany = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: pfCharges,
     total: totalCount,
   });
@@ -2078,7 +2078,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       );
   }
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
   });
 });
@@ -2520,7 +2520,7 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ctcTemplates,
     total: totalCount,
   });
@@ -2590,7 +2590,7 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
   }
   ////
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
   });
 });
@@ -2763,7 +2763,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       );
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
   });
 });
@@ -2795,7 +2795,7 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -2814,7 +2814,7 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
 
   const payroll = await Payroll.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payroll
   });
 });
@@ -2825,7 +2825,7 @@ exports.getPayroll = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payroll
   });
 });
@@ -2857,7 +2857,7 @@ exports.deletePayroll = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -2879,7 +2879,7 @@ exports.getPayrollsByCompany = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrolls,
     total: totalCount,
   });
@@ -2900,7 +2900,7 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const payrollUser = await PayrollUsers.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
 });
@@ -2912,7 +2912,7 @@ exports.getPayrollUser = catchAsync(async (req, res, next) => {
     return next(new AppError('PayrollUser not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
 });
@@ -2929,7 +2929,7 @@ exports.updatePayrollUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
 });
@@ -2943,7 +2943,7 @@ exports.deletePayrollUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -2966,7 +2966,7 @@ exports.getAllPayrollUsersByPayroll = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrolls,
     total: totalCount,
   });
@@ -2985,7 +2985,7 @@ exports.addPayrollAttendanceSummary = catchAsync(async (req, res, next) => {
   const payrollAttendanceSummary = await PayrollAttendanceSummary.create(req.body);
 
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollAttendanceSummary
   });
 });
@@ -2999,7 +2999,7 @@ exports.getPayrollAttendanceSummaryByUser = catchAsync(async (req, res, next) =>
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollAttendanceSummary
   });
 });
@@ -3013,7 +3013,7 @@ exports.getPayrollAttendanceSummaryByPayroll = catchAsync(async (req, res, next)
   const payrollAttendanceSummaries = await PayrollAttendanceSummary.find({ payrollUser: { $in: payrollUserIds } });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollAttendanceSummaries
   });
 });
@@ -3031,7 +3031,7 @@ exports.updatePayrollAttendanceSummary = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollAttendanceSummary
   });
 });
@@ -3057,7 +3057,7 @@ exports.addPayrollVariablePay = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const newVariablePay = await PayrollVariablePay.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: newVariablePay,
   });
 });
@@ -3070,7 +3070,7 @@ exports.getPayrollVariablePayByPayrollUser = catchAsync(async (req, res, next) =
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollVariablePay,
   });
 });
@@ -3087,7 +3087,7 @@ exports.updatePayrollVariablePay = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: updatedPayrollVariablePay,
   });
 });
@@ -3101,7 +3101,7 @@ exports.deletePayrollVariablePay = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -3113,7 +3113,7 @@ exports.getPayrollVariablePayByPayroll = catchAsync(async (req, res, next) => {
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollVariablePayList = await PayrollVariablePay.find({ payrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollVariablePayList
   });
 });
@@ -3139,7 +3139,7 @@ exports.createPayrollManualArrears = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const payrollManualArrears = await PayrollManualArrears.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollManualArrears
   });
 });
@@ -3153,7 +3153,7 @@ exports.getPayrollManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollManualArrears
   });
 });
@@ -3162,7 +3162,7 @@ exports.getPayrollManualArrears = catchAsync(async (req, res, next) => {
 exports.getAllPayrollManualArrearsByPayrollUser = catchAsync(async (req, res, next) => {
   const payrollManualArrears = await PayrollManualArrears.find({ payrollUser: req.params.payrollUser });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollManualArrears
   });
 });
@@ -3173,7 +3173,7 @@ exports.getAllPayrollManualArrearsByPayroll = catchAsync(async (req, res, next) 
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollManualArrears = await PayrollManualArrears.find({ payrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollManualArrears
   });
 });
@@ -3189,7 +3189,7 @@ exports.updatePayrollManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollManualArrears
   });
 });
@@ -3203,7 +3203,7 @@ exports.deletePayrollManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -3229,7 +3229,7 @@ exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const payrollLoanAdvance = await PayrollLoanAdvance.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollLoanAdvance
   });
 });
@@ -3241,7 +3241,7 @@ exports.getPayrollLoanAdvanceByPayrollUser = catchAsync(async (req, res, next) =
     return next(new AppError('Payroll Loan/Advance not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollLoanAdvance
   });
 });
@@ -3252,7 +3252,7 @@ exports.getPayrollLoanAdvanceByPayroll = catchAsync(async (req, res, next) => {
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollLoanAdvanceList = await PayrollLoanAdvance.find({ payrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollLoanAdvanceList
   });
 });
@@ -3267,7 +3267,7 @@ exports.updatePayrollLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Loan/Advance not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollLoanAdvance
   });
 });
@@ -3279,7 +3279,7 @@ exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Loan/Advance not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -3295,7 +3295,7 @@ exports.createPayrollIncomeTax = catchAsync(async (req, res, next) => {
   }
   const payrollIncomeTax = await PayrollIncomeTax.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollIncomeTax
   });
 });
@@ -3307,7 +3307,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Income Tax record not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollIncomeTax
   });
 });
@@ -3316,7 +3316,7 @@ exports.getPayrollIncomeTaxById = catchAsync(async (req, res, next) => {
 exports.getAllPayrollIncomeTaxByPayrollUser = catchAsync(async (req, res, next) => {
   const payrollIncomeTaxes = await PayrollIncomeTax.find({ PayrollUser: req.params.payrollUser });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollIncomeTaxes
   });
 });
@@ -3328,7 +3328,7 @@ exports.getAllPayrollIncomeTaxByPayroll = catchAsync(async (req, res, next) => {
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollIncomeTaxList = await PayrollIncomeTax.find({ PayrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollIncomeTaxList
   });
 });
@@ -3343,7 +3343,7 @@ exports.updatePayrollIncomeTax = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Income Tax record not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollIncomeTax
   });
 });
@@ -3355,7 +3355,7 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Income Tax record not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -3380,7 +3380,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   });
   if (!payrollUsers.length) {
     return res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -3486,7 +3486,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   // const filteredPayrollList = await Payroll.find({ company: companyId })
 
   res.status(200).json({
-   status: constants.apiresponsestatus.success,
+   status: constants.APIResponseStatus.Success,
    data: filteredPayrollList
   });
 });
@@ -3499,7 +3499,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   });
   if (!payrollUsers.length) {
     return res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -3606,7 +3606,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   const filteredPayrollList = generatedPayrollList.filter(Boolean);
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: filteredPayrollList
   });
 });
@@ -3629,7 +3629,7 @@ exports.createFlexiBenefitsAndPFTax = async (req, res) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: newRecord
       }
@@ -3654,7 +3654,7 @@ exports.getFlexiBenefitsAndPFTax = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record
       }
@@ -3673,7 +3673,7 @@ exports.getAllFlexiBenefitsAndPFTaxByPyrollUser = async (req, res) => {
     const records = await PayrollFlexiBenefitsPFTax.find({ PayrollUser: req.params.payrollUser });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: records
     });
   } catch (err) {
@@ -3690,7 +3690,7 @@ exports.getAllFlexiBenefitsAndPFTaxByPyroll = catchAsync(async (req, res, next) 
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFlexiBenefitsPFTaxList = await PayrollFlexiBenefitsPFTax.find({ PayrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFlexiBenefitsPFTaxList
   });
 });
@@ -3711,7 +3711,7 @@ exports.updateFlexiBenefitsAndPFTax = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: updatedRecord
       }
@@ -3737,7 +3737,7 @@ exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Record successfully deleted'
     });
   } catch (err) {
@@ -3768,7 +3768,7 @@ exports.createPayrollOvertime = async (req, res) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: newOvertime
       }
@@ -3794,7 +3794,7 @@ exports.getPayrollOvertime = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record
       }
@@ -3824,7 +3824,7 @@ exports.updatePayrollOvertime = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: updatedRecord
       }
@@ -3850,7 +3850,7 @@ exports.deletePayrollOvertime = async (req, res) => {
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Payroll Overtime record successfully deleted'
     });
   } catch (err) {
@@ -3867,7 +3867,7 @@ exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
     const records = await PayrollOvertime.find({ PayrollUser: req.params.payrollUser });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         records
       }
@@ -3887,7 +3887,7 @@ exports.getAllPayrollOvertimeByPayroll = catchAsync(async (req, res, next) => {
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollOvertimeList = await PayrollOvertime.find({ PayrollUser: { $in: payrollUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollOvertimeList
   });
 });
@@ -3906,7 +3906,7 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
   req.body.status = constants.Payroll_FNF.Pending;
   const payrollFNF = await PayrollFNF.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNF
   });
 });
@@ -3917,7 +3917,7 @@ exports.getPayrollFNF = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNF
   });
 });
@@ -3948,7 +3948,7 @@ exports.deletePayrollFNF = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -3970,7 +3970,7 @@ exports.getPayrollFNFByCompany = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNF,
     total: totalCount,
   });
@@ -3990,7 +3990,7 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   req.body.status = constants.Payroll_User_FNF.Pending;
   const payrollFNFUsers = await PayrollFNFUsers.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
@@ -4002,7 +4002,7 @@ exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
     return next(new AppError('PayrollUser not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
@@ -4013,7 +4013,7 @@ exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
     return next(new AppError('PayrollUser not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
@@ -4030,7 +4030,7 @@ exports.updatePayrollFNFUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
@@ -4044,7 +4044,7 @@ exports.deletePayrollFNFUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4067,7 +4067,7 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
     .limit(parseInt(limit));
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers,
     total: totalCount,
   });
@@ -4085,7 +4085,7 @@ exports.addPayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
   }
   const payrollFNFAttendanceSummary = await PayrollFNFAttendanceSummary.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFAttendanceSummary,
   });
 });
@@ -4097,7 +4097,7 @@ exports.getPayrollFNFAttendanceSummaryByUser = catchAsync(async (req, res, next)
   });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFAttendanceSummary,
   });
 });
@@ -4110,7 +4110,7 @@ exports.getPayrollFNFAttendanceSummaryByPayrollFNF = catchAsync(async (req, res,
   const payrollFNFAttendanceSummaries = await PayrollFNFAttendanceSummary.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFAttendanceSummaries
   });
 });
@@ -4130,7 +4130,7 @@ exports.updatePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) =>
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFAttendanceSummary,
   });
 });
@@ -4144,7 +4144,7 @@ exports.deletePayrollFNFAttendanceSummary = catchAsync(async (req, res, next) =>
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -4170,7 +4170,7 @@ exports.addPayrollFNFVariablePay = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const newVariablePay = await PayrollFNFVariablePay.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: newVariablePay,
   });
 });
@@ -4183,7 +4183,7 @@ exports.getPayrollFNFVariablePayByPayrollFNFUser = catchAsync(async (req, res, n
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFVariablePay,
   });
 });
@@ -4200,7 +4200,7 @@ exports.updatePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: updatedPayrollFNFVariablePay,
   });
 });
@@ -4214,7 +4214,7 @@ exports.deletePayrollFNFVariablePay = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -4226,7 +4226,7 @@ exports.getPayrollFNFVariablePayByPayrollFNF = catchAsync(async (req, res, next)
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFVariablePayList = await PayrollFNFVariablePay.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFVariablePayList
   });
 });
@@ -4253,7 +4253,7 @@ exports.createPayrollFNFManualArrears = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const payrollFNFManualArrears = await PayrollFNFManualArrears.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFManualArrears
   });
 });
@@ -4267,7 +4267,7 @@ exports.getPayrollFNFManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFManualArrears
   });
 });
@@ -4276,7 +4276,7 @@ exports.getPayrollFNFManualArrears = catchAsync(async (req, res, next) => {
 exports.getAllPayrollFNFManualArrearsByPayrollFNFUser = catchAsync(async (req, res, next) => {
   const payrollFNFManualArrears = await PayrollFNFManualArrears.find({ payrollFNFUser: req.params.payrollFNFUser });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFManualArrears
   });
 });
@@ -4287,7 +4287,7 @@ exports.getAllPayrollFNFManualArrearsByPayrollFNF = catchAsync(async (req, res, 
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFManualArrears = await PayrollFNFManualArrears.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFManualArrears
   });
 });
@@ -4303,7 +4303,7 @@ exports.updatePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFManualArrears
   });
 });
@@ -4317,7 +4317,7 @@ exports.deletePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4328,7 +4328,7 @@ exports.deletePayrollFNFManualArrears = catchAsync(async (req, res, next) => {
 exports.addPayrollFNFTerminationCompensation = catchAsync(async (req, res, next) => {
   const payrollFNFCompensation = await PayrollFNFTerminationCompensation.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFCompensation
   });
 });
@@ -4342,7 +4342,7 @@ exports.getPayrollFNFTerminationCompensationByUser = catchAsync(async (req, res,
     return next(new AppError('No Payroll FNF Termination Compensation found for this user', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFCompensation
   });
 });
@@ -4353,7 +4353,7 @@ exports.getPayrollFNFTerminationCompensationByUser = catchAsync(async (req, res,
 exports.getPayrollFNFTerminationCompensationById = catchAsync(async (req, res, next) => {
   const payrollFNFCompensation = await PayrollFNFTerminationCompensation.findById(req.params.id);
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFCompensation
   });
 });
@@ -4370,7 +4370,7 @@ exports.updatePayrollFNFTerminationCompensation = catchAsync(async (req, res, ne
     return next(new AppError('Payroll FNF Termination Compensation not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFCompensation
   });
 });
@@ -4384,7 +4384,7 @@ exports.deletePayrollFNFTerminationCompensation = catchAsync(async (req, res, ne
     return next(new AppError('Payroll FNF Termination Compensation not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4396,7 +4396,7 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFTerminationCompensation = await PayrollFNFTerminationCompensation.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFTerminationCompensation
   });
 });
@@ -4405,7 +4405,7 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
 exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFLoanAdvance
   });
 });
@@ -4415,7 +4415,7 @@ exports.getPayrollFNFLoanAdvanceByUser = catchAsync(async (req, res, next) => {
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ payrollFNFUser: req.params.payrollFNFUser });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFLoanAdvance
   });
 });
@@ -4425,7 +4425,7 @@ exports.getPayrollFNFLoanAdvanceByLoan = catchAsync(async (req, res, next) => {
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findOne({ loanAndAdvance: req.params.loanAndAdvance });
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFLoanAdvance
   });
 });
@@ -4438,7 +4438,7 @@ exports.getPayrollFNFLoanAdvanceByPayrollFNF = catchAsync(async (req, res, next)
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFLoanAdvance
   });
 });
@@ -4454,7 +4454,7 @@ exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFLoanAdvance
   });
 });
@@ -4468,7 +4468,7 @@ exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4477,7 +4477,7 @@ exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
 exports.createPayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) => {
   const statutoryBenefits = await PayrollFNFStatutoryBenefits.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: statutoryBenefits
   });
 });
@@ -4490,7 +4490,7 @@ exports.getPayrollFNFStatutoryBenefitsByUser = catchAsync(async (req, res, next)
 
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: statutoryBenefits
   });
 });
@@ -4504,7 +4504,7 @@ exports.getPayrollFNFStatutoryBenefitsByPayrollFNF = catchAsync(async (req, res,
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const statutoryBenefits = await PayrollFNFStatutoryBenefits.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: statutoryBenefits
   });
 });
@@ -4518,7 +4518,7 @@ exports.updatePayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) =>
   );
 
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: statutoryBenefits
   });
 });
@@ -4532,7 +4532,7 @@ exports.deletePayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) =>
   }
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4556,7 +4556,7 @@ exports.createPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: newRecord
       }
@@ -4582,7 +4582,7 @@ exports.getPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record
       }
@@ -4601,7 +4601,7 @@ exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPyrollFNFUser = async (req, res) 
     const records = await PayrollFNFFlexiBenefitsPFTax.find({ payrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         records
       }
@@ -4620,7 +4620,7 @@ exports.getAllPayrollFNFFlexiBenefitsAndPFTaxByPayrollFNF = catchAsync(async (re
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFFlexiBenefitsPFTaxList = await PayrollFNFFlexiBenefitsPFTax.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFFlexiBenefitsPFTaxList
   });
 });
@@ -4641,7 +4641,7 @@ exports.updatePayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: updatedRecord
       }
@@ -4666,7 +4666,7 @@ exports.deletePayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
       });
     }
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Record successfully deleted'
     });
   } catch (err) {
@@ -4687,7 +4687,7 @@ exports.createPayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
   }
   const payrollFNFIncomeTax = await PayrollFNFIncomeTax.create(req.body);
   res.status(201).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFIncomeTax
   });
 });
@@ -4699,7 +4699,7 @@ exports.getPayrollFNFIncomeTaxById = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll Income Tax record not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFIncomeTax
   });
 });
@@ -4710,7 +4710,7 @@ exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
     const records = await PayrollFNFIncomeTax.find({ PayrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         records
       }
@@ -4731,7 +4731,7 @@ exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFIncomeTaxList = await PayrollFNFIncomeTax.find({ PayrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFIncomeTaxList
   });
 });
@@ -4745,7 +4745,7 @@ exports.updatePayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll FNF Income Tax record not found', 404));
   }
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFIncomeTax
   });
 });
@@ -4757,7 +4757,7 @@ exports.deletePayrollFNFIncomeTax = catchAsync(async (req, res, next) => {
     return next(new AppError('Payroll FNF Income Tax record not found', 404));
   }
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -4782,7 +4782,7 @@ exports.createPayrollFNFOvertime = async (req, res) => {
     });
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: newOvertime
       }
@@ -4808,7 +4808,7 @@ exports.getPayrollFNFOvertime = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record
       }
@@ -4838,7 +4838,7 @@ exports.updatePayrollFNFOvertime = async (req, res) => {
     }
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         record: updatedRecord
       }
@@ -4864,7 +4864,7 @@ exports.deletePayrollFNFOvertime = async (req, res) => {
     }
 
     res.status(204).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'Payroll Overtime record successfully deleted'
     });
   } catch (err) {
@@ -4881,7 +4881,7 @@ exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
     const records = await PayrollFNFOvertime.find({ PayrollFNFUser: req.params.payrollFNFUser });
 
     res.status(200).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       data: {
         records
       }
@@ -4901,7 +4901,7 @@ exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next)
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFOvertimeList = await PayrollFNFOvertime.find({ PayrollFNFUser: { $in: payrollFNFUserIds } });
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: payrollFNFOvertimeList
   });
 });

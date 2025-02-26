@@ -48,7 +48,7 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
     session.endSession();
 
     res.status(201).json({
-      status: constants.apiresponsestatus.success,
+      status: constants.APIResponseStatus.Success,
       message: 'AssetType and CustomAttributes successfully created',
       data: {
         assetType: savedAssetType,
@@ -202,7 +202,7 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
   await CustomAttribute.deleteMany({ assetType: id, company: companyId });
 
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -504,7 +504,7 @@ exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
     })
   );
   res.status(200).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: assetStatusesWithDeletableFlag,
   });  
 });
@@ -571,7 +571,7 @@ exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
 
   // Respond with success if deletion is successful
   res.status(204).json({
-    status: constants.apiresponsestatus.success,
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
