@@ -1530,6 +1530,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
       };
   
       const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.subscriptionId, update);
+
       // Get updated pending subscription
       const pendingUpdate = await razorpay.subscriptions.pendingUpdate(subscription.subscriptionId);
       pendingUpdate.planId = currentPlanId;
@@ -1548,7 +1549,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
         return res.status(404).json({ error: 'Subscription not found' });
       }
       res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: {
           subscription: updatedSubscription,
         },
@@ -1564,7 +1565,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
         return res.status(404).json({ error: 'Subscription not found' });
       }
       res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: {
           subscription: updatedSubscription,
         },
@@ -1573,8 +1574,9 @@ exports.updateSubscriptionDetails = async (req, res) => {
   } catch (err) {
     console.error('err',err);
     res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
+      error: err
     });
   }
 };
@@ -1606,7 +1608,7 @@ exports.cancelSubscriptionUpdates = async (req, res) => {
         return res.status(404).json({ error: 'Subscription not found' });
       }
       return res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: {
           subscription: updatedSubscription,
         },
@@ -1621,7 +1623,7 @@ exports.cancelSubscriptionUpdates = async (req, res) => {
   } catch (err) {
     console.error('err',err);
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error',
     });
   }
@@ -2346,7 +2348,7 @@ exports.updateRazorpaySubscription = async (userAction) => {
     }
     const subscription = await Subscription.findOne({
       companyId: companyId,
-      "razorpaySubscription.status": "active"
+      "razorpaySubscription.status": { $in: ["active", "authenticated"] }
     }).populate('currentPlanId');
     console.log(subscription)
     if (subscription) {
