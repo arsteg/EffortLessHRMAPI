@@ -6,22 +6,22 @@ const fixedAllowancesSchema = new Schema({
     type: String,
     required: true
   },
-  type: {
-    type: String,
-    required: true
-  },
-  isArrearsAffect: {
-    type: Boolean,
-    default: false
-  },
-  calculatedBy: {
-    type: String,
-    required: true
-  },
-  isTaxEnabledOnce: {
-    type: Boolean,
-    default: false
-  },
+  // type: {
+  //   type: String,
+  //   required: true
+  // },
+  // isArrearsAffect: {
+  //   type: Boolean,
+  //   default: false
+  // },
+  // calculatedBy: {
+  //   type: String,
+  //   required: true
+  // },
+  // isTaxEnabledOnce: {
+  //   type: Boolean,
+  //   default: false
+  // },
   isProvidentFundAffected: {
     type: Boolean,
     default: false
@@ -46,10 +46,10 @@ const fixedAllowancesSchema = new Schema({
     type: Boolean,
     default: false
   },
-  isAttendanceToEffectTheEligibility: {
-    type: Boolean,
-    default: false
-  },
+  // isAttendanceToEffectTheEligibility: {
+  //   type: Boolean,
+  //   default: false
+  // },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

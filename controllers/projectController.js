@@ -5,6 +5,7 @@ const Task = require('../models/taskModel');
 const AppError = require('../utils/appError');
 const AppWebsite = require('./../models/commons/appWebsiteModel');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
+const constants = require('../constants');
 
 exports.deleteProject = catchAsync(async (req, res, next) => {
   
@@ -13,7 +14,7 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
   const task = await Task.find({}).where('project').equals(req.params.id).where('company').equals(req.cookies.companyId);  
   if (task.length > 0 || appWebsite.length > 0 || manualTimeRequest.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Project is already in use. Please delete related records before deleting the Project.',
     });
@@ -25,7 +26,7 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -39,7 +40,7 @@ exports.updateProject =  catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -61,7 +62,7 @@ if(project)
        
       }
 res.status(200).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: {
     project: project
   }
@@ -87,7 +88,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
        }
       }
   res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         projectList: projectList,
         projectCount:projectCount
@@ -104,7 +105,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
          }  
       }
       res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         projectList:projectList
       }
@@ -125,7 +126,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
       status:"Active"
     });  
      res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         newProject: newProject
       }
@@ -154,7 +155,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
   }
   const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.body.projectId);  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {      
       ProjectUserList:newProjectUserList
     }
@@ -177,7 +178,7 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
             return next(new AppError('No document found with that ID', 404));
           }
           res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: {
               data: document
             }
@@ -191,14 +192,14 @@ exports.getProjectList = catchAsync(async (req, res, next) => {
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
   exports.getProjectUsers  = catchAsync(async (req, res, next) => {  
     const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.params.id);    
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         projectUserList:newProjectUserList
       }

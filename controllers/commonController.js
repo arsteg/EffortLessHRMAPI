@@ -11,11 +11,12 @@ const UserState = require('../models/Settings/userUIState');
 const AppError = require('../utils/appError');
 const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
+const constants = require('../constants');
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         countryList: countryList
       }
@@ -29,7 +30,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
         Code:req.body.countryName
     });  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         Country:newCountry
       }
@@ -39,7 +40,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getTaskStatusList = catchAsync(async (req, res, next) => {    
     const statusList = await TaskStatus.find({}).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         statusList: statusList
       }
@@ -66,7 +67,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
         company:req.cookies.companyId
     });  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         TaskStatus:newtaskStatus
       }
@@ -78,7 +79,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -89,7 +90,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No Task Status found', 403));
     }  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: taskStatus
     });  
    });
@@ -98,7 +99,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getTaskPriorityList = catchAsync(async (req, res, next) => {    
     const priorityList = await TaskPriority.find({}).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         priorityList: priorityList
       }
@@ -110,7 +111,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
         company:req.cookies.companyId
     });  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         TaskPriority:newTaskPriority
       }
@@ -137,7 +138,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -147,14 +148,14 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No Task Status found', 403));
     }  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: taskPriority
     });  
    })
   exports.getRoleByName = catchAsync(async (req, res, next) => {    
     const role = await Role.find({}).where('roleName').equals(req.body.roleName);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         role: role
       }
@@ -164,7 +165,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getPermissionList = catchAsync(async (req, res, next) => {    
     const permissionList = await Permission.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         permissionList: permissionList
       }
@@ -179,7 +180,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 
     });  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         Permission:newPermission
       }
@@ -191,7 +192,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -204,7 +205,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       return next(new AppError('No permission found', 403));
     }  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: permission
     });  
    });
@@ -213,7 +214,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getRolePermsList = catchAsync(async (req, res, next) => {    
     const rolePermsList = await RolePerms.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         rolePermsList: rolePermsList
       }
@@ -229,7 +230,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       role:req.body.role
     });  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         RolePerms:newRolePerms
       }
@@ -239,7 +240,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getRolePermsByRole = catchAsync(async (req, res, next) => {    
     const rolePerms = await RolePerms.find({}).where('role').equals(req.body.role);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         rolePerms: rolePerms
       }
@@ -250,7 +251,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
   exports.getCountries = catchAsync(async (req, res, next) => {    
     const countries = await Country.find({});  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data:countries 
     });  
   });
@@ -261,7 +262,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       Code:req.body.Code      
     });
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data:newCountry 
     });  
   });
@@ -277,7 +278,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
     newEmailTemplate.isDelete=true;
     const result = await EmailTemplate.create(newEmailTemplate);
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data:result 
     });  
   });
@@ -402,7 +403,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
       req.body.company=companyId;
       const incomeTaxSection = await IncomeTaxSection.create(req.body);
       res.status(201).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: incomeTaxSection
       });
   });
@@ -413,7 +414,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
           return next(new AppError('IncomeTaxSections not found for the given company', 404));
       }
       res.status(200).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: incomeTaxSections
       });
   });
@@ -427,7 +428,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
           return next(new AppError('IncomeTaxSection not found', 404));
       }
       res.status(200).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: incomeTaxSection
       });
   });
@@ -438,7 +439,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
           return next(new AppError('IncomeTaxSection not found', 404));
       }
       res.status(200).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: incomeTaxSection
       });
   });
@@ -449,7 +450,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
           return next(new AppError('IncomeTaxSection not found', 404));
       }
       res.status(204).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: null
       });
   });
@@ -458,7 +459,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
   const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: incomeTaxComponant
   });
 });
@@ -469,7 +470,7 @@ exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
     return next(new AppError('Income Tax Componant not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: incomeTaxComponant
   });
 });
@@ -485,7 +486,7 @@ exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: incomeTaxComponant
   });
 });
@@ -498,7 +499,7 @@ exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
   }
   
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -517,7 +518,7 @@ exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: incomeTaxComponants,
     total: totalCount
   });
@@ -527,12 +528,12 @@ exports.getGoogleApiKey = catchAsync(
   async (req, res, next) => {
   try {
     res.status(200).json({
-      status: "success",
+      status:constants.APIResponseStatus.Success,
       data: process.env.GOOGLE_API_KEY,
     });
   } catch (error) {
     res.status(200).json({
-      status: "failure",
+      status: constants.APIResponseStatus.Failure,
       data: "",
     });
   }

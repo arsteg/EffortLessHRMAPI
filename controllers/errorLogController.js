@@ -2,12 +2,13 @@
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const ErrorLog = require('../models/errorLogModel');
+const constants = require('../constants');
 
   // Save Permission List
   exports.getErrorLogList = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).all();  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         errorLogList: errorLogList
       }
@@ -16,7 +17,7 @@ const ErrorLog = require('../models/errorLogModel');
   exports.getErrorLogListByUser = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).where('createdBy').equals(req.params.userId).where('company').equals(req.cookies.companyId);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         errorLogList: errorLogList
       }
@@ -26,7 +27,7 @@ const ErrorLog = require('../models/errorLogModel');
   exports.getErrorLog = catchAsync(async (req, res, next) => {    
     const errorLogList = await ErrorLog.find({}).where('_id').equals(req.params.id).where('company').equals(req.cookies.companyId); 
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         errorLogList: errorLogList
       }
@@ -47,7 +48,7 @@ const ErrorLog = require('../models/errorLogModel');
     }); 
      */
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         ErrorLog:newErrorLog
       }
@@ -60,7 +61,7 @@ const ErrorLog = require('../models/errorLogModel');
       return next(new AppError('No document found with that ID', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });

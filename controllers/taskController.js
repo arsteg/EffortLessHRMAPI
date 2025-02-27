@@ -3,8 +3,6 @@ const TaskUser = require('../models/taskUserModel');
 const User = require('../models/permissions/userModel');
 const TaskAttachments = require('../models/taskAttachmentModel');
 const catchAsync = require('../utils/catchAsync');
-const { BlobServiceClient } = require('@azure/storage-blob');
-const { v1: uuidv1} = require('uuid');
 const AppError = require('../utils/appError');
 const Tag = require('../models/Task/tagModel');
 const TaskTag = require('../models/Task/taskTagModel');
@@ -21,16 +19,8 @@ const timeLog = require('../models/timeLog');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const Project = require('../models/projectModel');
 const constants = require('../constants');
+const StorageController = require('./storageController');
 
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
@@ -43,7 +33,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   const manualTimeRequest = await ManualTimeRequest.find({}).where('task').equals(req.params.id); 
   if (timeLogExists.length > 0 ||manualTimeRequest.lenth > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'TimeLog is already added for the task, We can`t delete task.',
     });
   }
@@ -92,7 +82,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 const document = await Task.findById(req.params.id);
 await document.remove();
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -102,7 +92,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
 
   if (!existingProject) {
     return res.status(400).json({
-      status: 'failure',
+      status:constants.APIResponseStatus.Failure,
       message: 'Invalid project',
     });
   }
@@ -156,7 +146,7 @@ exports.updateTask =  catchAsync(async (req, res, next) => {
   }
   const getTask = await Task.findById(req.params.id);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       data: getTask
     }
@@ -169,7 +159,7 @@ const task = await Task.findById(req.params.id);
 const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');  
 const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);    
 res.status(200).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: {
     task: task,
     newTaskUserList:newTaskUserList,
@@ -183,7 +173,7 @@ exports.getTaskUsers  = catchAsync(async (req, res, next) => {
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);  
   
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
     taskUserList:newTaskUserList
     }
@@ -193,7 +183,7 @@ exports.getTaskUsers  = catchAsync(async (req, res, next) => {
 exports.getTaskAttachments  = catchAsync(async (req, res, next) => {    
     const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
       newTaskAttachmentList:newTaskAttachmentList
       }
@@ -327,7 +317,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
    }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {      
       taskList: taskList,
       taskCount: taskCount
@@ -448,7 +438,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
    }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {      
       taskList: taskList,
       taskCount: taskCount
@@ -459,7 +449,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
 exports.getTaskUser  = catchAsync(async (req, res, next) => {    
     const newTaskUser = await TaskUser.find({}).where('_id').equals(req.params.id);      
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
       taskUser:newTaskUser
       }
@@ -472,7 +462,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / task',
     });
   }
@@ -507,7 +497,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
       }
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -518,7 +508,7 @@ exports.updateTaskUser =  catchAsync(async (req, res, next) => {
 exports.getTaskAttachment  = catchAsync(async (req, res, next) => {    
       const newTaskAttachment = await TaskAttachments.find({}).where('_id').equals(req.params.id);  
       res.status(200).json({
-        status: 'success',
+        status:constants.APIResponseStatus.Success,
         data: {
         newTaskAttachment:newTaskAttachment
         }
@@ -534,7 +524,7 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -549,7 +539,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   if (existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'A task with this name already exists for your company.',
     });
   }
@@ -558,7 +548,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingProject) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / project',
     });
   }
@@ -640,28 +630,17 @@ const taskCount = await Task.countDocuments({
     if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || !req.body.taskAttachments[i].file
       ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
       return res.status(400).json({ error: 'All attachment properties must be provided' });
-    }
-    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-   // Get a block blob client
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    console.log("\nUploading to Azure storage as blob:\n\t", );
-    // Upload data to the blob
-    var FileString =  req.body.taskAttachments[i].file;
-    const buffer = new Buffer.from(FileString, 'base64');
-    const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-    const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-    console.log(
-      "Blob was uploaded successfully. requestId: ",
-      uploadBlobResponse.requestId
-    );
-
+    }  
+    req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+    //req.body.attachment.file = req.body.taskAttachments[i].file;
+    var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
       const newTaskAttachments = await TaskAttachments.create({
       task:newTask._id,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       createdOn: new Date(),
       updatedOn: new Date(),
@@ -676,7 +655,7 @@ const taskCount = await Task.countDocuments({
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id); 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       newTask: newTask,
       newTaskUserList:newTaskUserList,
@@ -691,7 +670,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
 
   if (!existingUser || !existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid user / task',
     });
   }
@@ -705,7 +684,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     if(emailOldUser.id===req.body.user)
     {
       res.status(200).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: {      
         Error :"Same user allredy assigned"
       }
@@ -780,7 +759,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
      }
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);  
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {      
       TaskUserList:newTaskUserList
     }
@@ -819,7 +798,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
     }
   }
   res.status(204).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -829,7 +808,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
 
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -840,27 +819,17 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
     return res.status(400).json({ error: 'All attachment properties must be provided' });
   }
-  const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-  // Get a block blob client
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  console.log("\nUploading to Azure storage as blob:\n\t", );
-  // Upload data to the blob
-  var FileString =  req.body.taskAttachments[i].file;
-  const buffer = new Buffer.from(FileString, 'base64');
-  const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-  const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
- 
-  console.log(
-    "Blob was uploaded successfully. requestId: ",
-    uploadBlobResponse.requestId
-  );
+  req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+  //req.body.attachment.file = req.body.taskAttachments[i].file;
+  var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+
     const newTaskAttachment = await TaskAttachments.create({
       task:req.body.taskId,
       attachmentType:req.body.taskAttachments[i].attachmentType,
       attachmentName:req.body.taskAttachments[i].attachmentName,
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       comment:req.body.comment,
       createdOn: new Date(),
@@ -876,7 +845,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   {  
     const newTaskAttachmentList = await TaskAttachments.find({}).where('comment').equals(req.body.comment);  
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: {
         taskAttachmentList:newTaskAttachmentList
       }
@@ -886,7 +855,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   {
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.body.taskId);  
    res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       taskAttachmentList:newTaskAttachmentList
     }
@@ -900,7 +869,7 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -922,7 +891,7 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
         }
      }
     } res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       data: {
         taskList: taskList,
         taskCount:taskCount
@@ -964,7 +933,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       taskList: taskList,
       taskCount: taskCount
@@ -987,7 +956,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
       }
    }
   } res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       taskList: taskList
     }
@@ -1034,7 +1003,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 //     }
   
 //   res.status(200).json({
-//     status: 'success',
+//     status:constants.APIResponseStatus.Success,
 //     taskList: taskList,
 //     taskCount:taskCount
 //   });  
@@ -1080,7 +1049,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     );  
 
     res.status(200).json({
-      status: 'success',
+      status:constants.APIResponseStatus.Success,
       taskList: taskList,
       taskCount: taskCount
     });
@@ -1118,7 +1087,7 @@ exports.addTag = catchAsync(async (req, res, next) => {
   }
 
    res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: newTag
   }); 
 } 
@@ -1133,7 +1102,7 @@ exports.updateTag = catchAsync(async (req, res, next) => {
      tagExists.title=req.body.title;
      const newTag = await Tag.updateOne( { _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title }} ).exec();            
      res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: newTag
     }); 
   } 
@@ -1143,7 +1112,7 @@ exports.deleteTagById = async (req, res) => {
   const taskTag = await TaskTag.find({}).where('tag').equals(req.params.id);  
   if (taskTag.length > 0 ) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'Tag is already added for the task, We can`t delete it.',
     });
   }
@@ -1177,7 +1146,7 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
      if(taskId.length<=1){      
        const allTags = await Tag.find({ company: req.cookies.companyId }).sort({ title: 1 });      
        res.status(200).json({
-        status: 'success',
+        status:constants.APIResponseStatus.Success,
         data: allTags
       });       
     }
@@ -1188,7 +1157,7 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
       // Find all Tag documents that match the tag ids
       const tags = await Tag.find({ _id: { $in: tagIds}}).sort({ title: 1 });
       res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: tags
       });
     }   
@@ -1218,7 +1187,7 @@ exports.createTaskTag = async (req, res) => {
 
   if (!existingTask||!existingTag) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task / tag',
     });
   }
@@ -1284,7 +1253,7 @@ exports.updateTaskTagById = async (req, res) => {
 
   if (!existingTask||!existingTag) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task / tag',
     });
   }
@@ -1323,7 +1292,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
   const existingTask = await Task.findById(req.body.task);
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -1348,20 +1317,10 @@ exports.createComment = catchAsync(async (req, res, next) => {
       ||req.body.taskAttachments[i].attachmentType===null || req.body.taskAttachments[i].attachmentName===null || req.body.taskAttachments[i].attachmentSize===null || req.body.taskAttachments[i].extention === null || req.body.taskAttachments[i].file===null) {
       return res.status(400).json({ error: 'All attachment properties must be provided' });
     }
-    const blobName = req.body.taskAttachments[i].attachmentName +"_" + uuidv1() + req.body.taskAttachments[i].extention;
-    // Get a block blob client
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    console.log("\nUploading to Azure storage as blob:\n\t", );
-    // Upload data to the blob
-    var FileString =  req.body.taskAttachments[i].file;
-    const buffer = new Buffer.from(FileString, 'base64');
-    const uploadBlobResponse = await blockBlobClient.upload(buffer , buffer.length);
-    const url = process.env.CONTAINER_URL_BASE_URL + process.env.CONTAINER_NAME + "/"+ blobName; 
-   
-    console.log(
-      "Blob was uploaded successfully. requestId: ",
-      uploadBlobResponse.requestId
-    );
+    req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName; 
+    //req.body.attachment.file = req.body.taskAttachments[i].file;
+    var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+ 
     const newTaskUserItem = await TaskAttachments.create({
       task:newComment.task,
       attachmentType:req.body.taskAttachments[i].attachmentType,
@@ -1369,7 +1328,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
       attachmentSize:req.body.taskAttachments[i].attachmentSize,
       extention:req.body.taskAttachments[i].extention,
       comment:newComment._id,
-      filePath:blobName,
+      filePath:req.body.taskAttachments[i].filePath,
       status:"Active",
       createdOn: new Date(),
       updatedOn: new Date(),
@@ -1415,7 +1374,7 @@ if(newTaskUserList)
       } 
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: newComment
   });     
 }); 
@@ -1445,7 +1404,7 @@ exports.updateComment = async (req, res) => {
   const existingTask = await Task.findById(req.body.task);
   if (!existingTask) {
     return res.status(400).json({
-      status: 'failure',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid task',
     });
   }
@@ -1457,7 +1416,7 @@ exports.updateComment = async (req, res) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -1519,7 +1478,7 @@ exports.deleteComment = async (req, res) => {
 exports.getAllComments = catchAsync(async (req, res, next) => { 
   let comments = await Comment.find({task: req.params.id}); 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: comments
   });
 });

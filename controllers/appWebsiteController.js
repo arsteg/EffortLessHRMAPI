@@ -6,6 +6,7 @@ const catchAsync = require('./../utils/catchAsync');
 const { findById } = require("../models/item");
 const Productivity = require('./../models/productivityModel');
 const BrowserHistory = require('./../models/appsWebsites/browserHistory');
+const constants = require('../constants');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     var appWebsiteKey = req.body.appWebsite.split(".");
@@ -33,14 +34,14 @@ exports.addNew = catchAsync(async (req, res, next) => {
               }); 
 
         res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             body: createDocument
         })
 
 
     } catch (err) {
         res.status(400).json({
-            status: 'faied',
+            status: constants.APIResponseStatus.Failure,
             body: err
         })
 
@@ -55,14 +56,14 @@ exports.delete = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             body: deleteDocument
         })
 
 
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -72,13 +73,13 @@ exports.getById = catchAsync(async (req, res, next) => {
     try {
         const getDocumentByID = await appWebsite.findById(req.params.id);
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             body: getDocumentByID
         });
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status:constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -95,13 +96,13 @@ exports.update = catchAsync(async (req, res, next) => {
 
 
         res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: updateDocument
         })
 
     } catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status:constants.APIResponseStatus.Failure,
             body: err
         })
 
@@ -119,14 +120,14 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
             .findById(req.params.id).where('date').equals(date);
 
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             body: getDocumentByDateAndId
         });
 
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -137,13 +138,13 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
         let date = req.body.date;
         const getAllDocumentsbyDate = await appWebsite.find({}).where('date').equals(date)
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             body: getAllDocumentsbyDate
         })
     }
     catch (err) {
         res.status(400).json({
-            status: 'failed',
+            status: constants.APIResponseStatus.Failure,
             body: err
         });
     }
@@ -151,25 +152,44 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
 
 exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
     try {
+        console.log("Received request for getUserProductivityApps");
+        
         const userId = req.params.userId;
-        const productivityApps = await Productivity.find({company:req.cookies.companyId,user:userId});        
+        console.log("User ID:", userId);
+
+        const companyId = req.cookies.companyId;
+        console.log("Company ID:", companyId);
+
+        if (!userId || !companyId) {
+            console.log("Missing userId or companyId");
+            return res.status(400).json({
+                status: constants.APIResponseStatus.Failure,
+                message: 'Missing userId or companyId'
+            });
+        }
+
+        const productivityApps = await Productivity.find({ company: companyId, user: userId });
+        
+        console.log("Productivity Apps found:", productivityApps.length);
+
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: productivityApps
-        })
-    }
-    catch (err) {
+        });
+    } catch (err) {
+        console.log("Error fetching productivity apps:", err);
         res.status(400).json({
-            status: 'failed',
-            data: err
+            status: constants.APIResponseStatus.Failure,
+            data: err.message || err
         });
     }
 });
 
+
 exports.getproductivities = catchAsync(async (req, res, next) => {
     const productivityData = await Productivity.find();    
     res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         body: productivityData
     });
 });
@@ -177,7 +197,7 @@ exports.getproductivities = catchAsync(async (req, res, next) => {
 exports.getproductivityById = catchAsync(async (req, res, next) => {    
     const productivityData = await Productivity.findById(req.params.id);
     res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         body: productivityData
     });
 });
@@ -199,31 +219,55 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
           }
     );
     res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: productivityData
     });
 });
 
 exports.updateProductivity = catchAsync(async (req, res, next) => {    
-    const { id } = req.params.id;
-    const { status } = req.body.status;    
-    
-    const productivityData = await Productivity.findByIdAndUpdate(
-        req.body.id,
-        { $set: { status: req.body.status } },
-        { new: true }
-      );
-      res.status(200).json({
-        status: 'success',
-        body: productivityData
-    });
+    try {
+        console.log("Incoming request to update productivity:", req.params, req.body);
+        
+        const { id } = req.params;
+        const { status } = req.body;
+
+        console.log(`Updating Productivity ID: ${id} with Status: ${status}`);
+
+        const productivityData = await Productivity.findByIdAndUpdate(
+            id,
+            { $set: { status: status } },
+            { new: true }
+        );
+
+        if (!productivityData) {
+            console.log(`No productivity record found with ID: ${id}`);
+            return res.status(404).json({
+                status: constants.APIResponseStatus.Failure,
+                message: 'Productivity record not found'
+            });
+        }
+
+        console.log("Updated Productivity Data:", productivityData);
+
+        res.status(200).json({
+            status: constants.APIResponseStatus.Success,
+            data: productivityData
+        });
+    } catch (error) {
+        console.error("Error updating productivity:", error);
+        res.status(500).json({
+            status: constants.APIResponseStatus.Error,
+            message: 'Internal Server Error',
+            error: error.message
+        });
+    }
 });
 
 exports.deleteProductivity = catchAsync(async (req, res, next) => {
     const productivityData = await Productivity.findByIdAndDelete(req.params.id);
     if (productivityData) {
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: productivityData
         });
     } else {
@@ -244,7 +288,7 @@ exports.addBrowserHistory = catchAsync(async (req, res, next) => {
           }
     );
     res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: newHistory
     });
 });
@@ -253,7 +297,7 @@ exports.deleteBrowserHistory = catchAsync(async (req, res, next) => {
     const deletedHistory = await BrowserHistory.findByIdAndDelete(req.params.id);
     if (deletedHistory) {
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: deletedHistory
         });
     } else {
@@ -295,7 +339,7 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
     const history = await BrowserHistory.find(filters);
 
     res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: history
     });
 });

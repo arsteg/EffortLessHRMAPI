@@ -1,6 +1,7 @@
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
+const constants = require('../constants');
 
 exports.deleteOne = Model =>
   catchAsync(async (req, res, next) => {
@@ -11,7 +12,7 @@ exports.deleteOne = Model =>
     }
 
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -28,7 +29,7 @@ exports.updateOne = Model =>
     }
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         data: document
       }
@@ -41,7 +42,7 @@ exports.createOne = Model =>
     const newDocument = await Model.create(req.body);
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         data: newDocument
       }
@@ -61,7 +62,7 @@ exports.getOne = (Model, popOptions) =>
     }
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {
         data: document
       }
@@ -88,7 +89,7 @@ exports.getAll = Model =>
     // const document = await features.query.explain();
     const document = await features.query;
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       results: document.length,
       data: {
         data: document

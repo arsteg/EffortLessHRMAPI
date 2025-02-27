@@ -3308,10 +3308,6 @@ attendanceRouter.post('/process-attendance-lop', authController.protect, attenda
  *                 schema:
  *                     type: object
  *                     properties:
- *                         skip:
- *                             type: string
- *                         next:
- *                             type: string
  *                         month:
  *                             type: number
  *                         year:

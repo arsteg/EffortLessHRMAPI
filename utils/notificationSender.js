@@ -17,7 +17,7 @@ const sendNotification = (userId, io, userSocketMap, notificationType, messageTo
   
     // Emit to the specific socket (user) identified by socketId
     const response = {
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: messageToSend
     };
   

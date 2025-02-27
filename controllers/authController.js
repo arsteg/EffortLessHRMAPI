@@ -96,7 +96,7 @@ const createAndSendToken = async (user, statusCode, res) => {
 
 
   res.status(statusCode).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     token,
     data: {
       user,
@@ -142,8 +142,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     updatedOn: new Date(Date.now())    
   }); 
 
-    
-    const rolesToDuplicate = await Role.find({ company: companyId });
+  const rolesToDuplicate = await Role.find({ company: companyId });
     // Step 3: Create new records by cloning and assigning a new id
     const duplicatedRoles= rolesToDuplicate.map((record) => {
       // Create a new object with the same properties as the original record
@@ -337,7 +336,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   await logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       User:newUser
     }
@@ -346,7 +345,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   catch(err){
     console.log(err);
     res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       error: err
     })
   }
@@ -509,10 +508,15 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
-  if (!user) {
-    return next(new AppError('There is no user with email address.', 404));
+  if (!user) {    
+    res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      message: 'No account found with this email address.',
+      data: {
+        user: null
+      }
+    }); 
   }
-
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
   
@@ -553,7 +557,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success'    
+    status: constants.APIResponseStatus.Success    
   }); 
 });
 
@@ -704,7 +708,7 @@ exports.addRole = catchAsync(async (req, res, next) => {
     updatedOn: new Date(Date.now()) 
 });  
 res.status(200).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: {
     Role:newRole
   }
@@ -715,7 +719,7 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
   const user = await User.find({}).where('role').equals(req.params.id);  
   if (user.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       data: null,
       message: 'Role is already in use. Please delete related records before deleting the Role.',
     });
@@ -725,7 +729,7 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
     return next(new AppError('No document found with that ID', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -738,7 +742,7 @@ exports.getRole = catchAsync(async (req, res, next) => {
     return next(new AppError('No role found', 403));
   }  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: role
   });  
  });
@@ -749,7 +753,7 @@ exports.getRoles = catchAsync(async (req, res, next) => {
     return next(new AppError('No role found', 403));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: roles
   });   
  });
@@ -770,7 +774,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
     }); 
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: subordinate
     });    
   }});
@@ -786,7 +790,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const activeUserIds = activeUsers.map(user => user._id);
   
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: activeUserIds
   });
       
@@ -799,7 +803,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   });
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: ''
     });    
  });
@@ -811,7 +815,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found', 403));
   }  
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   });    
 });
@@ -819,7 +823,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
 exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
   const rolePermissions = await RolePermission.find({});   
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rolePermissions
   });    
 });
@@ -837,7 +841,7 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
       company : req.cookies.companyId
     });
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: rolePermission
     }); 
   }
@@ -859,7 +863,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   }); 
 }   
@@ -871,7 +875,7 @@ exports.deleteRolePermission = catchAsync(async (req, res, next) => {
     return next(new AppError('No Role Permission found with that ID', 404));
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rolePermission
   });    
 });

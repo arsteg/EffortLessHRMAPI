@@ -10,6 +10,7 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require('../utils/appError.js');
 const mongoose = require("mongoose");
 const CustomAttributeModel = require("../models/AssetsManagement/CustomAttributeModel");
+const constants = require('../constants');
 
 exports.addAssetType = catchAsync(async (req, res, next) => {
   const session = await mongoose.startSession(); // Start a MongoDB session for a transaction
@@ -47,7 +48,7 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
     session.endSession();
 
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       message: 'AssetType and CustomAttributes successfully created',
       data: {
         assetType: savedAssetType,
@@ -70,7 +71,7 @@ exports.getAssetTypes = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetType not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: assetTypes,
   });
 });
@@ -157,7 +158,7 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
     session.endSession();
 
     res.status(200).json({
-      status: "success",
+      status:constants.APIResponseStatus.Success,
       message: "AssetType and CustomAttributes successfully updated",
       data: {
         assetType,
@@ -182,7 +183,7 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
 
   if (assetExists) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'AssetType cannot be deleted as it is associated with existing assets.',
     });
   }
@@ -201,7 +202,7 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
   await CustomAttribute.deleteMany({ assetType: id, company: companyId });
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -243,7 +244,7 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
   );
 
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     totalRecords,
     data: assetTypesWithDeletableFlag,
   });
@@ -255,7 +256,7 @@ exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
@@ -273,14 +274,14 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
 exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
   const assetAttributeValues = await AssetAttributeValue.find();
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValues,
   });
 });
@@ -291,7 +292,7 @@ exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
@@ -309,7 +310,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
@@ -320,7 +321,7 @@ exports.deleteAssetAttributeValuesByAssetId = catchAsync(async (req, res, next) 
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValues,
   });
 });
@@ -328,7 +329,7 @@ exports.deleteAssetAttributeValuesByAssetId = catchAsync(async (req, res, next) 
 exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
   const assetAttributeValues = await AssetAttributeValue.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: assetAttributeValues,
   });
 });
@@ -354,7 +355,7 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
       );
 
       res.status(200).json({
-        status: "success",
+        status: constants.APIResponseStatus.Success,
         data: assetAttributeValue,
       });
 
@@ -367,7 +368,7 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
       );
 
       res.status(201).json({
-        status: "success",
+        status: constants.APIResponseStatus.Success,
         data: assetAttributeValue,
       });
     }    
@@ -382,7 +383,7 @@ exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
@@ -400,7 +401,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
@@ -414,7 +415,7 @@ exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetAttributeValue not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -422,7 +423,7 @@ exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
 exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
   const assetAttributeValues = await AssetAttributeValue.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: assetAttributeValues,
   });
 });
@@ -433,7 +434,7 @@ exports.createAssetStatus = catchAsync(async (req, res, next) => {
     company: req.cookies.companyId,
   });
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetStatus,
   });
 });
@@ -444,7 +445,7 @@ exports.getAssetStatus = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetStatus not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetStatus,
   });
 });
@@ -462,7 +463,7 @@ exports.updateAssetStatus = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetStatus not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetStatus,
   });
 });
@@ -473,7 +474,7 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
   });
   if (assets?.length > 0) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'Asset Status cannot be deleted as it is associated with existing assets',
     });
   }
@@ -482,7 +483,7 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
     return next(new AppError("AssetStatus not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -503,7 +504,7 @@ exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
     })
   );
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: assetStatusesWithDeletableFlag,
   });  
 });
@@ -511,7 +512,7 @@ exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
 exports.createCustomAttribute = catchAsync(async (req, res, next) => {
   const customAttribute = await CustomAttribute.create(req.body);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: customAttribute,
   });
 });
@@ -522,7 +523,7 @@ exports.getCustomAttribute = catchAsync(async (req, res, next) => {
     return next(new AppError("CustomAttribute not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: customAttribute,
   });
 });
@@ -542,7 +543,7 @@ exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: customAttribute,
   });
 });
@@ -555,7 +556,7 @@ exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
 
   if (assetAttributeValue) {
     return res.status(400).json({
-      status: 'failed',
+      status:constants.APIResponseStatus.Failure,
       message: 'Asset Attribute Value cannot be deleted as it is in use',
     });
   }
@@ -570,7 +571,7 @@ exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
 
   // Respond with success if deletion is successful
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -588,7 +589,7 @@ exports.deleteCustomAttributeByAssetType = catchAsync(
     }
 
     res.status(204).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: customAttributes,
     });
   }
@@ -597,7 +598,7 @@ exports.deleteCustomAttributeByAssetType = catchAsync(
 exports.getAllCustomAttributes = catchAsync(async (req, res, next) => {
   const customAttributes = await CustomAttribute.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: customAttributes,
   });
 });
@@ -621,7 +622,7 @@ exports.addCustomAttributes = catchAsync(async (req, res, next) => {
   );
 
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: addedCustomAttributes,
   });
 });
@@ -632,7 +633,7 @@ exports.getAssetCustomAttributes = catchAsync(async (req, res, next) => {
   const customAttributes = await CustomAttribute.find({company:req.cookies.companyId,assetType:req.params.id});
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: customAttributes,
   });
 });
@@ -640,7 +641,7 @@ exports.getAssetCustomAttributes = catchAsync(async (req, res, next) => {
 exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
   const employeeAsset = await EmployeeAssets.create(req.body);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeAsset,
   });
 });
@@ -653,7 +654,7 @@ exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("EmployeeAsset not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeAsset,
   });
 });
@@ -673,7 +674,7 @@ exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeAsset,
   });
 });
@@ -688,7 +689,7 @@ exports.deleteEmployeeAsset = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -696,7 +697,7 @@ exports.deleteEmployeeAsset = catchAsync(async (req, res, next) => {
 exports.getAllEmployeeAssets = catchAsync(async (req, res, next) => {
   const employeeAssets = await EmployeeAssets.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: employeeAssets,
   });
 });
@@ -714,7 +715,7 @@ exports.createVendor = catchAsync(async (req, res, next) => {
     company: req.cookies.companyId,
   });
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: vendor,
   });
 });
@@ -725,7 +726,7 @@ exports.getVendor = catchAsync(async (req, res, next) => {
     return next(new AppError("Vendor not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: vendor,
   });
 });
@@ -739,7 +740,7 @@ exports.updateVendor = catchAsync(async (req, res, next) => {
     return next(new AppError("Vendor not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: vendor,
   });
 });
@@ -750,7 +751,7 @@ exports.deleteVendor = catchAsync(async (req, res, next) => {
     return next(new AppError("Vendor not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -758,7 +759,7 @@ exports.deleteVendor = catchAsync(async (req, res, next) => {
 exports.getAllVendors = catchAsync(async (req, res, next) => {
   const vendors = await Vendor.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: vendors,
   });
 });
@@ -768,7 +769,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
 exports.addVendorAsset = catchAsync(async (req, res, next) => {
   const vendorAsset = await VendorAssetsPurchased.create(req.body);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: vendorAsset,
   });
 });
@@ -779,7 +780,7 @@ exports.getVendorAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("VendorAsset not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: vendorAsset,
   });
 });
@@ -797,7 +798,7 @@ exports.updateVendorAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("VendorAsset not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: vendorAsset,
   });
 });
@@ -810,7 +811,7 @@ exports.deleteVendorAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("VendorAsset not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -818,7 +819,7 @@ exports.deleteVendorAsset = catchAsync(async (req, res, next) => {
 exports.getAllVendorAssets = catchAsync(async (req, res, next) => {
   const vendorAssets = await VendorAssetsPurchased.find();
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: vendorAssets,
   });
 });
@@ -827,7 +828,7 @@ exports.addAsset = catchAsync(async (req, res, next) => {
   req.body.company = req.cookies.companyId;
   const asset = await Asset.create(req.body);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: asset,
   });
 });
@@ -838,7 +839,7 @@ exports.getAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("Asset not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: asset,
   });
 });
@@ -852,7 +853,7 @@ exports.updateAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("Asset not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: asset,
   });
 });
@@ -861,7 +862,7 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
   const employeeAsset = await EmployeeAssets.find({Asset: req.params.id});
   if (employeeAsset.length > 0 ) {
     return res.status(400).json({
-      status: 'failed',
+      status: constants.APIResponseStatus.Failure,
       message: 'Asset cannot be deleted as it is in use',
     });
   }
@@ -871,7 +872,7 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
     return next(new AppError("Asset not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: null,
   });
 }
@@ -886,7 +887,7 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
 exports.getAllAssets = catchAsync(async (req, res, next) => {
   const assets = await Asset.find();
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assets,
   });
 });
@@ -943,7 +944,7 @@ exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {
     })
   );
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: assetsWithCustomAttributes,
   });
 });
@@ -964,7 +965,7 @@ exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: unassignedAssets,
   });
 });
@@ -977,7 +978,7 @@ exports.getUnassignedAssets = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: unassignedAssets,
   });
 });

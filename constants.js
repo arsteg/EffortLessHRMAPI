@@ -37,7 +37,14 @@ const Email_template_constant = {
     FNF_Payment_Processed: "FNF Payment Processed",
     Settled: "Settled"
   };
-  
+  const SubContainers = {   
+    Profile: "Profile",
+    Timelog: "Timelog",
+    TaskAttachment: "TaskAttachment",
+    ExpenseAttachment: "ExpenseAttachment",
+    LeaveAttachment: "LeaveAttachment",
+    TaxDeclarionAttachment: "TaxDeclarionAttachment"
+  };
   const Active_Statuses = [User_Status.Active, User_Status.Resigned];
   
   const Leave_Application_Constant = {
@@ -83,6 +90,13 @@ const Email_template_constant = {
   const Payroll_LoanAdvance_Type = {   
     Disbursement: "Disbursement",
     Repayment: "Repayment"
+  };  
+  const APIResponseStatus = {
+    Success: "success",
+    Failure: "failure",
+    Error: "error",
+    Warning: "warning",
+    Info: "info"
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses};
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers};
   

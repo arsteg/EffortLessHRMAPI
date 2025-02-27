@@ -59,7 +59,7 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
 
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: generalSettings,
   });
 });
@@ -72,7 +72,7 @@ exports.getGeneralSettings = catchAsync(async (req, res, next) => {
     return next(new AppError('GeneralSettings not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: generalSettings,
   });
 });
@@ -88,7 +88,7 @@ exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: generalSettings,
   });
 });
@@ -121,7 +121,7 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
   }
   regularizationReason.userRegularizationReasons = userRegularizationReasons;
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: regularizationReason
   });
 });
@@ -145,7 +145,7 @@ exports.getRegularizationReason = catchAsync(async (req, res, next) => {
 
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: regularizationReason
   });
 });
@@ -200,7 +200,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
 
   regularizationReason.userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);;
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: regularizationReason
   });
 });
@@ -212,7 +212,7 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
     return next(new AppError('Regularization Reason not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -237,7 +237,7 @@ exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: regularizationReasons,
     total: totalCount
   });
@@ -271,7 +271,7 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
   }
   onDutyReason.userOnDutyReason = userOnDutyReasons;
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyReason
   });
 });
@@ -292,7 +292,7 @@ exports.getOnDutyReason = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyReason
   });
 });
@@ -346,7 +346,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
 
   onDutyReason.userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyReason
   });
 });
@@ -357,7 +357,7 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
     return next(new AppError('OnDutyReason Reason not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -382,7 +382,7 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyReasons,
     total: totalCount
   });
@@ -402,7 +402,7 @@ exports.createAttendanceMode = catchAsync(async (req, res, next) => {
 
   const attendanceMode = await AttendanceMode.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceMode,
   });
 });
@@ -414,7 +414,7 @@ exports.getAttendanceMode = catchAsync(async (req, res, next) => {
     return next(new AppError('Attendance mode not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceMode,
   });
 });
@@ -431,7 +431,7 @@ exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceMode,
   });
 });
@@ -445,7 +445,7 @@ exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -454,7 +454,7 @@ exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
 exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
   const attendanceModes = await AttendanceMode.find();
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceModes,
   });
 });
@@ -472,7 +472,7 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
 
   const attendanceTemplate = await AttendanceTemplate.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceTemplate,
   });
 });
@@ -484,7 +484,7 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('Attendance Template not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceTemplate,
   });
 });
@@ -501,7 +501,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceTemplate,
   });
 });
@@ -513,7 +513,7 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('Attendance Template not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -527,7 +527,7 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
     attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceTemplate,
   });
 });
@@ -540,7 +540,7 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
   const attendanceTemplates = await AttendanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceTemplates,
     total: totalCount
   });
@@ -596,7 +596,7 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
   }
 
   res.status(201).json({
-    status: "success",
+    status:constants.APIResponseStatus.Success,
     data: attendanceRegularization
   });
 });
@@ -624,7 +624,7 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceRegularization
   });
 });
@@ -655,7 +655,7 @@ exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceRegularization
   });
 });
@@ -728,7 +728,7 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
     attendanceRegularization.AttendanceRegularizationRestrictedLocations = null;
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceRegularization
   });
 });
@@ -759,7 +759,7 @@ exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, n
     }
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceRegularizations,
     total: totalCount
   });
@@ -773,7 +773,7 @@ exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -781,7 +781,7 @@ exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
 exports.addAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
   const newLocation = await AttendanceRegularizationRestrictedLocation.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: newLocation
   });
 });
@@ -789,7 +789,7 @@ exports.addAttendanceRegularizationRestrictedLocation = catchAsync(async (req, r
 exports.getAllAttendanceRegularizationRestrictedLocations = catchAsync(async (req, res, next) => {
   const locations = await AttendanceRegularizationRestrictedLocation.find({ attendanceRegularization: req.params.attendanceRegularization });
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: locations
   });
 });
@@ -805,7 +805,7 @@ exports.updateAttendanceRegularizationRestrictedLocation = catchAsync(async (req
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: updatedLocation
   });
 });
@@ -818,7 +818,7 @@ exports.getAttendanceRegularizationRestrictedLocationById = catchAsync(async (re
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: location
   });
 });
@@ -831,7 +831,7 @@ exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -879,7 +879,7 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   });
 
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceAssignment
   });
 });
@@ -891,7 +891,7 @@ exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('Attendance Template Assignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceAssignment,
   });
 });
@@ -916,7 +916,7 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
   await attendanceAssignment.save();
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: attendanceAssignment
   });
 });
@@ -928,7 +928,7 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('Attendance Template Assignment not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -942,7 +942,7 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
   const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceAssignments,
     total: totalCount
   });
@@ -959,7 +959,7 @@ exports.createRoundingInformation = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const roundingInformation = await RoundingInformation.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: roundingInformation,
   });
 });
@@ -970,7 +970,7 @@ exports.getRoundingInformation = catchAsync(async (req, res, next) => {
     return next(new AppError('Rounding information not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: roundingInformation,
   });
 });
@@ -990,7 +990,7 @@ exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: roundingInformation,
   });
 });
@@ -1005,7 +1005,7 @@ exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1018,7 +1018,7 @@ exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
   const roundingInformation = await RoundingInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: roundingInformation,
     total: totalCount
   });
@@ -1032,7 +1032,7 @@ exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
     return next(new AppError('Overtime Information not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: overtimeInformation,
   });
 });
@@ -1043,7 +1043,7 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
     return next(new AppError('Overtime Information not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1056,7 +1056,7 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
   const overtimeInformation = await OvertimeInformation.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: overtimeInformation,
     total: totalCount
   });
@@ -1073,7 +1073,7 @@ exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const onDutyTemplate = await OnDutyTemplate.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyTemplate,
   });
 });
@@ -1084,7 +1084,7 @@ exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('OnDutyTemplate not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyTemplate,
   });
 });
@@ -1100,7 +1100,7 @@ exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyTemplate,
   });
 });
@@ -1111,7 +1111,7 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('OnDutyTemplate not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1124,7 +1124,7 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
   const onDutyTemplates = await OnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: onDutyTemplates,
     total: totalCount
   });
@@ -1154,7 +1154,7 @@ exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   await UserOnDutyTemplate.deleteMany({ user: req.body.user });
   const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userOnDutyTemplate,
   });
 });
@@ -1166,7 +1166,7 @@ exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('UserOnDutyTemplate not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userOnDutyTemplate,
   });
 });
@@ -1178,7 +1178,7 @@ exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
     return next(new AppError('UserOnDutyTemplate not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userOnDutyTemplate,
   });
 });
@@ -1207,7 +1207,7 @@ exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: updatedUserOnDutyTemplate,
   });
 });
@@ -1221,7 +1221,7 @@ exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1235,7 +1235,7 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
   const userOnDutyTemplates = await UserOnDutyTemplate.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: userOnDutyTemplates,
     total: totalCount
   });
@@ -1253,7 +1253,7 @@ exports.createShift = catchAsync(async (req, res, next) => {
   const shift = await Shift.create(req.body);
 
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shift,
   });
 });
@@ -1264,7 +1264,7 @@ exports.getShift = catchAsync(async (req, res, next) => {
     return next(new AppError('Shift not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shift,
   });
 });
@@ -1280,7 +1280,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shift,
   });
 });
@@ -1293,7 +1293,7 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1306,7 +1306,7 @@ exports.getAllShifts = catchAsync(async (req, res, next) => {
   const shifts = await Shift.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shifts,
     total: totalCount
   });
@@ -1319,7 +1319,7 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
     shifts = await Shift.findById(shiftTemplateAssignments[0].template);
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shifts,
   });
 });
@@ -1339,7 +1339,7 @@ exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignment
   });
 });
@@ -1351,7 +1351,7 @@ exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('ShiftTemplateAssignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignment
   });
 });
@@ -1368,7 +1368,7 @@ exports.updateShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignment
   });
 });
@@ -1380,7 +1380,7 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('ShiftTemplateAssignment not found', 404));
   }
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -1394,7 +1394,7 @@ exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignments,
     total: totalCount
   });
@@ -1426,7 +1426,7 @@ exports.createRosterShiftAssignment = catchAsync(async (req, res, next) => {
   const createdAssignments = await RosterShiftAssignment.insertMany(rosterShiftAssignments);
 
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: createdAssignments,
   });
 });
@@ -1438,7 +1438,7 @@ exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
     return next(new AppError('Roster shift assignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rosterShiftAssignment,
   });
 });
@@ -1449,7 +1449,7 @@ exports.getRosterShiftAssignmentByUser = catchAsync(async (req, res, next) => {
     return next(new AppError('Roster shift assignment not found', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rosterShiftAssignment,
   });
 });
@@ -1464,7 +1464,7 @@ exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rosterShiftAssignment,
   });
 });
@@ -1477,7 +1477,7 @@ exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1497,7 +1497,7 @@ exports.getAllRosterShiftAssignmentsBycompany = catchAsync(async (req, res, next
 
   const rosterShiftAssignments = await RosterShiftAssignment.find(query);
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: rosterShiftAssignments,
     total: totalCount
   });
@@ -1540,7 +1540,7 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
     employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
   }
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: employeeOnDutyRequest
   });
 });
@@ -1559,7 +1559,7 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: dutyRequest
   });
 });
@@ -1587,7 +1587,7 @@ exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: employeeOnDutyRequest
   });
 });
@@ -1601,7 +1601,7 @@ exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -1639,7 +1639,7 @@ exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: dutyRequests,
     total: totalCount
   });
@@ -1667,7 +1667,7 @@ exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: dutyRequests,
     total: totalCount
   });
@@ -1680,7 +1680,7 @@ exports.getAllTimeEntriesByCompanyId = catchAsync(async (req, res, next) => {
   const timeEntries = await TimeEntry.find({ company: req.cookies.companyId }).skip(parseInt(skip))
     .limit(parseInt(limit));
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeEntries,
     total: totalCount
   });
@@ -1694,7 +1694,7 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -1818,7 +1818,7 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
   }));
 
   res.status(201).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -1830,7 +1830,7 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
   // Check if the data is an array
   if (!Array.isArray(attendanceData)) {
     return res.status(400).json({
-      status: 'fail',
+      status: constants.APIResponseStatus.Failure,
       message: 'Invalid format: Data should be an array of objects',
     });
   }
@@ -1866,14 +1866,14 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
 
     // Send response back indicating success
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       message: 'Attendance records processed successfully',
       data: attendanceRecords,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'An error occurred while processing the attendance records',
     });
   }
@@ -2080,7 +2080,7 @@ exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
   const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceRecords,
     total: totalCount
   });
@@ -2091,7 +2091,7 @@ exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
   const attendanceRecords = await getRecordsByYearAndMonthByUser(req.body.year, req.body.month, req.body.user);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceRecords
   });
 
@@ -2266,7 +2266,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
               if (existingRecord) {
                 res.status(200).json({
-                  status: 'fail',
+                  status:constants.APIResponseStatus.Failure,
                   message: 'Lop Already Processed for respective uer'
                 });
               }
@@ -2284,11 +2284,11 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
       }
     }
     res.status(200).json({
-      status: 'success'
+      status: constants.APIResponseStatus.Success
     });
   } catch (error) {
     res.status(200).json({
-      status: 'fail'
+      status: constants.APIResponseStatus.Failure
     });
   }
 });
@@ -2317,7 +2317,7 @@ exports.ProcessAttendanceUpdate = async (req, res) => {
     }
 
     return res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       message: 'Attendance processed successfully',
       data: {
         attendanceProcess,
@@ -2327,7 +2327,7 @@ exports.ProcessAttendanceUpdate = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      status: 'error',
+      status: constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -2341,7 +2341,7 @@ exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   const attendanceRecords = await getLOPRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceRecords,
     total: totalCount
   });
@@ -2406,7 +2406,7 @@ exports.ProcessAttendance = async (req, res) => {
     if (!isFNF) {
       if (existingProcess) {
         return res.status(400).json({
-          status: 'fail',
+          status: constants.APIResponseStatus.Failure,
           message: 'Attendance process for this period already exists'
         });
       }
@@ -2448,7 +2448,7 @@ exports.ProcessAttendance = async (req, res) => {
       }
     }
     return res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       message: 'Attendance processed successfully',
       data: {
         attendanceProcess,
@@ -2457,7 +2457,7 @@ exports.ProcessAttendance = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -2505,14 +2505,14 @@ exports.deleteAttendance = async (req, res) => {
     // If no record found, return a 404 error
     if (!attendanceProcess) {
       return res.status(404).json({
-        status: 'fail',
+        status: constants.APIResponseStatus.Failure,
         message: 'Attendance process for this period not found'
       });
     }
     // 2. Check if exportToPayroll is true
     if (attendanceProcess.exportToPayroll === true) {
       return res.status(400).json({
-        status: 'fail',
+        status: constants.APIResponseStatus.Failure,
         message: 'Cannot delete the attendance process as it has already been exported to payroll'
       });
     }
@@ -2523,13 +2523,13 @@ exports.deleteAttendance = async (req, res) => {
     await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
 
     return res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       message: 'Attendance process and associated users deleted successfully'
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      status: 'error',
+      status:constants.APIResponseStatus.Error,
       message: 'Internal server error'
     });
   }
@@ -2538,19 +2538,17 @@ exports.deleteAttendance = async (req, res) => {
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-
-  const totalCount = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+  
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month);
 
   res.status(200).json({
-    status: 'success',
-    data: attendanceRecords,
-    total: totalCount
+    status: constants.APIResponseStatus.Success,
+    data: attendanceRecords
   });
 
 });
 
-async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getOvertimeRecordsByYearAndMonth(year, month) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -2567,32 +2565,14 @@ async function getOvertimeRecordsByYearAndMonth(year, month, skip = 0, limit = 0
     // Convert start and end date based on the year and month
     const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
     const endDate = moment(startDate).endOf('month').toDate();
-    if (limit === 0) {
-      // Get the count of records for the month
-      const count = await OvertimeInformation.countDocuments({
-        CheckInDate: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      }).exec();
-    
-      return { count };
-    } else {
       // Get all records for the month, applying skip and limit for pagination
       const records = await OvertimeInformation.find({
         CheckInDate: {
           $gte: startDate,
           $lt: endDate
         }
-      })
-        .skip(skip)
-        .limit(limit)
-        .exec();
-    
+      }).exec();    
       return records; // Return the actual records
-    }
-    
-    
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed
@@ -2620,7 +2600,7 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: attendanceRecords,
     total: totalCount
   });
@@ -2717,7 +2697,7 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: overtimeRecords,
   });
 });

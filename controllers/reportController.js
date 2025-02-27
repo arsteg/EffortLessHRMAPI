@@ -10,6 +10,8 @@ const User = require('../models/permissions/userModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const manualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
 const mongoose = require('mongoose');
+const constants = require('../constants');
+
 exports.getActivityold = catchAsync(async (req, res, next) => {
 const timeLogsAll = [];
 var timeLogs;
@@ -96,7 +98,7 @@ if(req.body.users!='' && req.body.projects!='')
    }
  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeLogsAll
   });  
 });
@@ -192,7 +194,7 @@ if(req.body.users!='' && req.body.projects!='')
     // Send the response with the matrix and column names
     
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: { matrix, columns }
     });
   
@@ -263,7 +265,7 @@ exports.getProductivityByMember = catchAsync(async (req, res, next) => {
    appWebsiteSummary.TimeSpentNonProductive=timeSpentNonProductive;
   }
    res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: appWebsiteSummary
     });  
 });
@@ -387,31 +389,38 @@ for(var u = 0; u < appwebsiteusers.length; u++)
   }
 }
      res.status(200).json({
-        status: 'success',
+        status: constants.APIResponseStatus.Success,
         data: appwebsiteproductivity
       });  
 });
 
 exports.getAppWebsite = catchAsync(async (req, res, next) => {
   const appWebsiteAll = [];
+  const fromDate = new Date(req.body.fromdate);
+  const toDate = new Date(req.body.todate);
   let filter;
     
-  if(req.body.users.length>0 && req.body.projects.length>0)
-    {
-      filter = { 'userReference': { $in: req.body.users },'projectReference': { $in: req.body.projects } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-    }
-    else if(req.body.projects.length>0)
-    {
-      filter = { 'projectReference': { $in: req.body.projects } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}}; 
-    }  
-    else if(req.body.users.length>0)
-    {
-      filter = { 'userReference': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-    }
-    else{
-        filter={
-          'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-     }
+  if (req.body.users.length > 0 && req.body.projects.length > 0) {
+    filter = { 
+      'userReference': { $in: req.body.users },
+      'projectReference': { $in: req.body.projects },
+      'date': { $gte: fromDate, $lte: toDate }
+    };
+  } else if (req.body.projects.length > 0) {
+    filter = { 
+      'projectReference': { $in: req.body.projects },
+      'date': { $gte: fromDate, $lte: toDate }
+    };
+  } else if (req.body.users.length > 0) {
+    filter = { 
+      'userReference': { $in: req.body.users },
+      'date': { $gte: fromDate, $lte: toDate }
+    };
+  } else {
+    filter = {
+      'date': { $gte: fromDate, $lte: toDate }
+    };
+  }
    
     var appWebsiteusers = await AppWebsite.find(filter).distinct('userReference') 
 
@@ -477,7 +486,7 @@ exports.getAppWebsite = catchAsync(async (req, res, next) => {
             }
      }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: appWebsiteAll
     });  
 });
@@ -523,7 +532,7 @@ exports.getleaves = catchAsync(async (req, res, next) => {
 
 
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: leavesDetails
     });  
   });
@@ -606,94 +615,116 @@ exports.gettimesheet = catchAsync(async (req, res, next) => {
              
        }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: attandanceDetails
     });  
   });
-exports.gettimeline = catchAsync(async (req, res, next) => {
-    var attandanceDetails=[];
+  exports.gettimeline = catchAsync(async (req, res, next) => {
+    console.log("Request received for gettimeline");
+    console.log("Request body:", req.body);
+    console.log("User ID from cookies:", req.cookies.userId);
+
+    var attandanceDetails = [];
     let filter;
     var teamIdsArray = [];
     var teamIds;
-    const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
-    if(ids.length > 0)    
-        { 
-          for(var i = 0; i < ids.length; i++) 
-            {    
-                teamIdsArray.push(ids[i]);        
-            }
-      }
-    if(teamIds==null)    
-      {
-         teamIdsArray.push(req.cookies.userId);
-      } 
- 
-    if(req.body.users.length>0)
-      {
-        filter = { 'user': { $in: req.body.users } , 'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-      }
-    else{
-          filter={'user': { $in: teamIdsArray } ,
-            'date' : {$gte: req.body.fromdate,$lte: req.body.todate}};
-       }
-    const users = await TimeLog.find(filter).distinct('user') 
-    for(var i = 0; i < users.length; i++) 
-       {          
-          let filterProject;
-          if(req.body.projects.length>0)
-          {
-               filterProject = {'project': req.body.projects,'user': users[i], 'date' : {'$gte': req.body.fromdate,'$lte': req.body.todate}};  
-          } 
-          else
-          {
-            filterProject = {'user': users[i],'date' : {'$gte': req.body.fromdate,'$lte': req.body.todate}};  
-        
-          }   
-        const projects = await TimeLog.find(filterProject).distinct('project');      
-        if(projects.length>0) 
-             {
-                  for(var k = 0; k < projects.length; k++) 
-                  {  
-                     const newLogInUSer = {};                       
-                     const allLogs = [];             
-                      const dateFrom = new Date(req.body.fromdate).getDate();
-                      const dateTo = new Date(req.body.todate).getDate();
-                      let days = dateTo - dateFrom;     
-                      const firstTimeLog = await TimeLog.find(filterProject).sort();      
-                      newLogInUSer.StatTime=firstTimeLog[0].startTime;
-                      for(var day = 0;day <= days; day++)
-                      {      
-                        var tomorrow = new Date(req.body.fromdate); // Current date and time
-                        tomorrow.setDate(tomorrow.getDate() + day); // Set it to tomorrow
-                        var end = new Date(req.body.fromdate); // Current date and time
-                        if(req.body.fromdate=== new Date())
-                        {
-                        end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));    
-                        }  
-                        const tomorrowISO = tomorrow.toISOString().split('T')[0];
-                        const endISO = end.toISOString().split('T')[0]; 
-                        let filterAll = {'user': users[i],'project':projects[k],'date' : {'$gte': tomorrowISO,'$lte': endISO}};                  
-                        const timeLogAll = await TimeLog.find(filterAll);      
-                        if(timeLogAll.length>0)    
-                        {
-                          for(var k1 = 0; k1 < timeLogAll.length; k1++) 
-                          {                         
-                          allLogs.push(timeLogAll[k1]);
-                          }
+
+    const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);
+    console.log("Subordinate user IDs:", ids);
+
+    if (ids.length > 0) {
+        for (var i = 0; i < ids.length; i++) {
+            teamIdsArray.push(ids[i]);
+        }
+    }
+
+    if (teamIds == null) {
+        teamIdsArray.push(req.cookies.userId);
+    }
+    
+    console.log("Final teamIdsArray:", teamIdsArray);
+
+    if (req.body.users && req.body.users.length > 0) {
+        filter = { 'user': { $in: req.body.users }, 'date': { $gte: req.body.fromdate, $lte: req.body.todate } };
+    } else {
+        filter = { 'user': { $in: teamIdsArray }, 'date': { $gte: req.body.fromdate, $lte: req.body.todate } };
+    }
+
+    console.log("Filter for fetching users:", filter);
+
+    const users = await TimeLog.find(filter).distinct('user');
+    console.log("Users found:", users);
+
+    for (var i = 0; i < users.length; i++) {
+        let filterProject;
+        if (req.body.projects && req.body.projects.length > 0) {
+            filterProject = { 'project': req.body.projects, 'user': users[i], 'date': { '$gte': req.body.fromdate, '$lte': req.body.todate } };
+        } else {
+            filterProject = { 'user': users[i], 'date': { '$gte': req.body.fromdate, '$lte': req.body.todate } };
+        }
+
+        console.log(`Filter for projects of user ${users[i]}:`, filterProject);
+
+        const projects = await TimeLog.find(filterProject).distinct('project');
+        console.log(`Projects found for user ${users[i]}:`, projects);
+
+        if (projects.length > 0) {
+            for (var k = 0; k < projects.length; k++) {
+                console.log(`Processing project ${projects[k]} for user ${users[i]}`);
+
+                const newLogInUSer = {};
+                const allLogs = [];
+                const dateFrom = new Date(req.body.fromdate).getDate();
+                const dateTo = new Date(req.body.todate).getDate();
+                let days = dateTo - dateFrom;
+
+                const firstTimeLog = await TimeLog.find(filterProject).sort();
+                if (firstTimeLog.length > 0) {
+                    newLogInUSer.StatTime = firstTimeLog[0].startTime;
+                }
+
+                console.log(`Processing logs from ${dateFrom} to ${dateTo} (${days} days)`);
+
+                for (var day = 0; day <= days; day++) {
+                    var tomorrow = new Date(req.body.fromdate);
+                    tomorrow.setDate(tomorrow.getDate() + day);
+                    var end = new Date(req.body.fromdate);
+
+                    if (req.body.fromdate === new Date()) {
+                        end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));
+                    }
+
+                    const tomorrowISO = tomorrow.toISOString().split('T')[0];
+                    const endISO = end.toISOString().split('T')[0];
+                    let filterAll = { 'user': users[i], 'project': projects[k], 'date': { '$gte': tomorrowISO, '$lte': endISO } };
+
+                    console.log(`Fetching logs for user ${users[i]}, project ${projects[k]}, date range: ${tomorrowISO} - ${endISO}`);
+
+                    const timeLogAll = await TimeLog.find(filterAll);
+
+                    if (timeLogAll.length > 0) {
+                        console.log(`Found ${timeLogAll.length} logs for user ${users[i]}, project ${projects[k]} on ${tomorrowISO}`);
+
+                        for (var k1 = 0; k1 < timeLogAll.length; k1++) {
+                            allLogs.push(timeLogAll[k1]);
                         }
-                     
-                      }
-                      
-                      newLogInUSer.logs = allLogs;
-                      attandanceDetails.push(newLogInUSer);
-                  }
-          }             
-       }
+                    }
+                }
+
+                newLogInUSer.logs = allLogs;
+                attandanceDetails.push(newLogInUSer);
+            }
+        }
+    }
+
+    console.log("Final attendance details:", attandanceDetails);
+
     res.status(200).json({
-      status: 'success',
-      data: attandanceDetails
-    });  
-  });
+        status: constants.APIResponseStatus.Success,
+        data: attandanceDetails
+    });
+});
+
 exports.getattandance = catchAsync(async (req, res, next) => {
     var attandanceDetails=[];
     let filter;
@@ -756,7 +787,7 @@ exports.getattandance = catchAsync(async (req, res, next) => {
                     attandanceDetails.push(newLogInUSer);
         }
      res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: attandanceDetails
     });  
   });

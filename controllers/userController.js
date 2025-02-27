@@ -46,22 +46,10 @@ const sendEmail = require('../utils/email');
 const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
 const UserActionLog = require("../models/Logging/userActionModel");
 const { updateRazorpaySubscription } = require("./pricingController");
+const StorageController = require('./storageController.js');
 
-// AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-  throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(
-  process.env.CONTAINER_NAME
-);
-
-exports.logUserAction = catchAsync(async(req, action, next) => {
-  try{
+exports.logUserAction = catchAsync(async (req, action, next) => {
+  try {
     const userAction = {
       userId: action.userId,
       companyId: action.companyId,
@@ -72,7 +60,7 @@ exports.logUserAction = catchAsync(async(req, action, next) => {
     }
     const log = await UserActionLog.create(userAction);
     return log;
-  } catch(error) {
+  } catch (error) {
     console.log(error);
     return error;
   }
@@ -100,7 +88,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     user.appointment = appointments;
   }
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     results: users.length,
     data: {
       data: users,
@@ -126,7 +114,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   await exports.logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: document,
   });
 });
@@ -135,16 +123,16 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const users = await User.findById(req.body.id)
     .where("status")
     .equals("Active");
-  let companySubscription = {status: 'new'};
-  if(users){
+  let companySubscription = { status: 'new' };
+  if (users) {
     companySubscription = await Subscription.findOne({
       companyId: users.company.id,
       "razorpaySubscription.status": {$in: ["active", "authenticated"]}
     })
-    .populate("currentPlanId");
+      .populate("currentPlanId");
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: {
       users: users,
       companySubscription: companySubscription,
@@ -156,42 +144,52 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
 
   // Validate that status is one of the valid statuses in User_Status
   if (!Object.values(constants.User_Status).includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
+    return res.status(400).json({ message: 'Invalid status value' });
   }
 
   // Find users based on companyId and status, excluding 'Deleted' status
   const users = await User.find({
-      status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
-      company: req.cookies.companyId,                            // Match users by companyId
-      status: status                                 // Match users by provided status
+    status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
+    company: req.cookies.companyId,                            // Match users by companyId
+    status: status                                 // Match users by provided status
   });
 
   res.status(200).json({
-      status: "success",
-      data: {
-          users: users,
-      },
+    status: constants.APIResponseStatus.Success,
+    data: {
+      users: users,
+    },
   });
 });
 
 // Function to get the list of users by empCode
 exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
   const { empCode } = req.params;  // Get empCode from route parameter
+  const companyId = req.cookies.companyId; // Get companyId from cookies
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required in cookies.', 400));
+  }
 
   // Find appointments that match the empCode
   const appointments = await Appointment.find({ empCode })
     .populate('user')  // Populate the user field with user details
     .select('user empCode company joiningDate confirmationDate');  // Select relevant fields
 
-  // If no appointments are found for the empCode
-  if (!appointments || appointments.length === 0) {
-    return next(new AppError('No users found with the provided empCode.', 404));
+  // Filter appointments by companyId
+  const filteredAppointments = appointments.filter(appointment =>
+    appointment.company._id.toString() === companyId
+  );
+
+  // If no appointments are found for the empCode and companyId
+  if (filteredAppointments.length === 0) {
+    return next(new AppError('No users found with the provided empCode and companyId.', 404));
   }
 
-  // Respond with the list of users
+  // Respond with the filtered list of users
   res.status(200).json({
-    status: 'success',
-    data: appointments.map(appointment => appointment.user)
+    status:constants.APIResponseStatus.Success,
+    data: filteredAppointments.map(appointment => appointment.user)
   });
 });
 
@@ -201,7 +199,7 @@ exports.getUsersByCompany = catchAsync(async (req, res, next) => {
     company: req.params.companyId,
   });
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: {
       users: users,
     },
@@ -222,15 +220,15 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const appointment = await Appointment.create(req.body);
   res.status(201).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: appointment
   });
 });
 
 exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findOne({ user: req.params.userId }).populate('company', 'name');
-   res.status(200).json({
-    status: 'success',
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
     data: appointment
   });
 });
@@ -241,15 +239,15 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
     runValidators: true
   });
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: appointment
   });
 });
 
 exports.deleteAppointment = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
-   res.status(204).json({
-    status: 'success',
+  res.status(204).json({
+    status: constants.APIResponseStatus.Success,
     data: null
   });
 });
@@ -284,7 +282,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: {
       user: updatedUser,
     },
@@ -304,14 +302,14 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   await exports.logUserAction(req, userAction, next);
   await updateRazorpaySubscription(userAction);
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
 
 exports.createUser = catchAsync(async (req, res, next) => {
   res.status(500).json({
-    status: "error",
+    status: constants.APIResponseStatus.Error,
     message: "This route is not defined! Please use /signup instead",
   });
 });
@@ -328,7 +326,7 @@ exports.getUsers = catchAsync(async (req, res, next) => {
     status: { $ne: constants.User_Status.Deleted },
   });
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: users,
   });
 });
@@ -351,7 +349,7 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: managers,
   });
 });
@@ -371,7 +369,7 @@ exports.getUserProjects = catchAsync(async (req, res, next) => {
     }
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: projects,
   });
 });
@@ -385,7 +383,7 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const userEmployment = await UserEmployment.create(req.body);
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -398,7 +396,7 @@ exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
     return next(new AppError("UserEmployment not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -409,7 +407,7 @@ exports.getUserEmployment = catchAsync(async (req, res, next) => {
     return next(new AppError("UserEmployment not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -429,7 +427,7 @@ exports.updateUserEmployment = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: userEmployment,
   });
 });
@@ -442,7 +440,7 @@ exports.deleteUserEmployment = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -667,7 +665,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     salaryComponentVariableAllowance;
 
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -718,7 +716,7 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -763,7 +761,7 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Salary Details not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -1016,7 +1014,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
       .equals(req.params.id);
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalaryDetails,
   });
 });
@@ -1065,7 +1063,7 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   //const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndDelete(req.params.id);
 
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1085,7 +1083,7 @@ exports.createEmployeeTaxAndSalutaorySetting = catchAsync(
       req.body
     );
     res.status(201).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1103,7 +1101,7 @@ exports.getEmployeeTaxAndSalutaorySetting = catchAsync(
       return next(new AppError("Employee settings not found", 404));
     }
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1129,7 +1127,7 @@ exports.updateEmployeeTaxAndSalutaorySetting = catchAsync(
     }
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeSettings,
     });
   }
@@ -1148,7 +1146,7 @@ exports.deleteEmployeeTaxAndSalutaorySetting = catchAsync(
     }
 
     res.status(204).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   }
@@ -1165,7 +1163,7 @@ exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
     req.body
   );
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1177,7 +1175,7 @@ exports.getEmployeeSalutatoryDetailsByUser = catchAsync(
     });
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeSalutatoryDetails,
     });
   }
@@ -1190,7 +1188,7 @@ exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Salutatory Details not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1207,7 +1205,7 @@ exports.updateEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
   });
 });
@@ -1221,7 +1219,7 @@ exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   }
 
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1271,38 +1269,37 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     });
 
   const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
-  const user = await User.findById(req.body.user);  
-               
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification).where('company').equals(companyId); 
-  if(emailTemplate)
-  {
-   const template = emailTemplate.contentData;
-   const message = template
-   .replace("{firstName}", user.firstName)
-   .replace("{company}",  req.cookies.companyName)
-   .replace("{company}", req.cookies.companyName)
-   .replace("{lastName}", user.lastName); 
- console.log(user.email);
- console.log(emailTemplate.subject);
-      try {
-       await sendEmail({
-         email: user.email,
-         subject: emailTemplate.subject,
-         message
-       });
-      
-     } catch (err) {   
+  const user = await User.findById(req.body.user);
+
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification).where('company').equals(companyId);
+  if (emailTemplate) {
+    const template = emailTemplate.contentData;
+    const message = template
+      .replace("{firstName}", user.firstName)
+      .replace("{company}", req.cookies.companyName)
+      .replace("{company}", req.cookies.companyName)
+      .replace("{lastName}", user.lastName);
+    console.log(user.email);
+    console.log(emailTemplate.subject);
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplate.subject,
+        message
+      });
+
+    } catch (err) {
       console.log(err);
-       return next(
-         new AppError(
-           'There was an error sending the email. Try again later.',
-           500
-         )
-     );
-   }
-}
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      );
+    }
+  }
   res.status(201).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1315,7 +1312,7 @@ exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1353,7 +1350,7 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(200).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
   });
 });
@@ -1366,7 +1363,7 @@ exports.deleteEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     return next(new AppError("Employee Loan Advance not found", 404));
   }
   res.status(204).json({
-    status: "success",
+    status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
@@ -1387,7 +1384,7 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(
       .limit(parseInt(limit));
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeLoanAdvances,
       total: totalCount,
     });
@@ -1410,7 +1407,7 @@ exports.getAllEmployeeLoanAdvancesByUser = catchAsync(
       .limit(parseInt(limit));
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeLoanAdvances,
       total: totalCount,
     });
@@ -1457,137 +1454,116 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
           ) {
             const attachment = item.employeeIncomeTaxDeclarationAttachments[i];
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
-          !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
-        }
+            if (
+              !attachment.attachmentType || !attachment.attachmentName ||
+              !attachment.attachmentSize || !attachment.extention ||
+              !attachment.file || attachment.attachmentType === null ||
+              attachment.attachmentName === null || attachment.attachmentSize === null ||
+              attachment.extention === null || attachment.file === null
+            ) {
+              return res.status(400).json({ error: 'All attachment properties must be provided' });
+            }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+         var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+              
         // Add the document link to the array
         item.documentLink=documentLink;
       }
     }
 
-    // Return the item with added properties
-    return {
-      ...item,
-      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
-    };
-  }));
-  
-  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
-  employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
+        // Return the item with added properties
+        return {
+          ...item,
+          employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+        };
+      }));
 
-  const employeeIncomeTaxDeclarationHRA = await Promise.all(
-    req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
-    // Initialize an array to store links
-    if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
-      for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
-        const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
+    const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
+    employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
 
-        if (
-          !attachment.attachmentType || !attachment.attachmentName || 
-          !attachment.attachmentSize || !attachment.extention || 
-          !attachment.file || attachment.attachmentType === null || 
-          attachment.attachmentName === null || attachment.attachmentSize === null || 
-          attachment.extention === null || attachment.file === null
-        ) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
+    const employeeIncomeTaxDeclarationHRA = await Promise.all(
+      req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
+        // Initialize an array to store links
+        if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
+          for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
+            const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
+
+            if (
+              !attachment.attachmentType || !attachment.attachmentName ||
+              !attachment.attachmentSize || !attachment.extention ||
+              !attachment.file || attachment.attachmentType === null ||
+              attachment.attachmentName === null || attachment.attachmentSize === null ||
+              attachment.extention === null || attachment.file === null
+            ) {
+              return res.status(400).json({ error: 'All attachment properties must be provided' });
+            }
+
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+        //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+
+            // Add the document link to the array
+            item.documentLink = documentLink;
+          }
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-        
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, 'base64');
-        const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-
-        // Add the document link to the array
-        item.documentLink=documentLink;
-      }
-    }
-
-    // Return the item with added properties
-    return {
-      ...item,
-      employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
-    };
-  }));
+        // Return the item with added properties
+        return {
+          ...item,
+          employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id
+        };
+      }));
 
 
 
-  const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
-  employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
-  const user = await User.findById(req.body.user);  
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee).where('company').equals(companyId); 
-  if(emailTemplate)
-  {
-   const template = emailTemplate.contentData;
-   const message = template
-   .replace("{firstName}", user.firstName)
-   .replace("{company}",  req.cookies.companyName)
-   .replace("{company}", req.cookies.companyName)
-   .replace("{lastName}", user.lastName); 
- console.log(user.email);
- console.log(emailTemplate.subject);
+    const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
+    employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
+    const user = await User.findById(req.body.user);
+    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee).where('company').equals(companyId);
+    if (emailTemplate) {
+      const template = emailTemplate.contentData;
+      const message = template
+        .replace("{firstName}", user.firstName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{company}", req.cookies.companyName)
+        .replace("{lastName}", user.lastName);
+      console.log(user.email);
+      console.log(emailTemplate.subject);
       try {
-       await sendEmail({
-         email: user.email,
-         subject: emailTemplate.subject,
-         message
-       });
-      
-     } catch (err) {   
-      console.log(err);
-       return next(
-         new AppError(
-           'There was an error sending the email. Try again later.',
-           500
-         )
-     );
+        await sendEmail({
+          email: user.email,
+          subject: emailTemplate.subject,
+          message
+        });
+
+      } catch (err) {
+        console.log(err);
+        return next(
+          new AppError(
+            'There was an error sending the email. Try again later.',
+            500
+          )
+        );
+      }
     }
-  }
-  res.status(201).json({
-    status: 'success',
-    data: employeeIncomeTaxDeclaration
+    res.status(201).json({
+      status:constants.APIResponseStatus.Success,
+      data: employeeIncomeTaxDeclaration
+    });
   });
-});
 
 // Get All Employee Income Tax Declarations by Company
 exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });  
- 
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });
+
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
-  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
-      
+    .limit(parseInt(limit));
+  for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
+
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
   }
@@ -1595,7 +1571,7 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
     return next(new AppError('No declarations found for this company', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarations,
     total: totalCount
   });
@@ -1605,29 +1581,28 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
 exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });  
- 
-  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
-  .limit(parseInt(limit));
+  const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });
 
-  for(let i=0;i<employeeIncomeTaxDeclarations.length;i++){  
-      
+  const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId }).skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
+
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
-    
-    if(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0)
-    { 
-      for(let j=0;j<employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length;j++){  
-      const incomeTaxComponant = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
-      employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section=incomeTaxComponant.section;
-       }
+
+    if (employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0) {
+      for (let j = 0; j < employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length; j++) {
+        const incomeTaxComponant = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
+        employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section = incomeTaxComponant.section;
       }
+    }
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(employeeIncomeTaxDeclarations[i]._id);
   }
   if (!employeeIncomeTaxDeclarations) {
     return next(new AppError('No declarations found for this company', 404));
   }
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarations,
     total: totalCount
   });
@@ -1670,41 +1645,30 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     }
   };
 
-  if(req.body.employeeIncomeTaxDeclarationHRA.length > 0)
-    {
-      for (let j = 0; j < req.body.employeeIncomeTaxDeclarationHRA.length; j++) {  
-     
+  if (req.body.employeeIncomeTaxDeclarationHRA.length > 0) {
+    for (let j = 0; j < req.body.employeeIncomeTaxDeclarationHRA.length; j++) {
+
       if (req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments != null) {
         for (let i = 0; i < req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
 
           const attachment = req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments[i];
-  
+
           if (
-            !attachment.attachmentType || !attachment.attachmentName || 
-            !attachment.attachmentSize || !attachment.extention || 
-            !attachment.file || attachment.attachmentType === null || 
-            attachment.attachmentName === null || attachment.attachmentSize === null || 
+            !attachment.attachmentType || !attachment.attachmentName ||
+            !attachment.attachmentSize || !attachment.extention ||
+            !attachment.file || attachment.attachmentType === null ||
+            attachment.attachmentName === null || attachment.attachmentSize === null ||
             attachment.extention === null || attachment.file === null
           ) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
   
-          const blobName = `${attachment.attachmentName}_${uuidv1()}${attachment.extention}`;
-          
-          // Get a block blob client
-          const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  
-          // Upload data to the blob
-          const buffer = Buffer.from(attachment.file, 'base64');
-          const uploadBlobResponse = await blockBlobClient.upload(buffer, buffer.length);
-  
-          // Generate the document link
-          const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-  
-          console.log("Blob was uploaded successfully. requestId: ", uploadBlobResponse.requestId);
-  
+          attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+          var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+        
           // Add the document link to the array
-          req.body.employeeIncomeTaxDeclarationHRA[j].documentLink=documentLink;
+          req.body.employeeIncomeTaxDeclarationHRA[j].documentLink = documentLink;
         }
       }
     }
@@ -1720,11 +1684,8 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
             for(var i = 0; i <taxDeclarationHRAs.length; i++) {
             if(taxDeclarationHRAs[i].documentLink)
               {
-                  var url = taxDeclarationHRAs[i].documentLink;     
-                  containerClient.getBlockBlobClient(url).deleteIfExists();
-                  const blockBlobClient = containerClient.getBlockBlobClient(url);
-                  await blockBlobClient.deleteIfExists();
-                  console.log("deleted HRA");
+                 await StorageController.deleteBlobFromContainer(req.cookies.companyId, taxDeclarationHRAs[i].documentLink); 
+              
               }
           }
           await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
@@ -1734,11 +1695,11 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
 
-    res.status(200).json({
-      status: "success",
-      data: employeeIncomeTaxDeclaration,
-    });
-  }
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: employeeIncomeTaxDeclaration,
+  });
+}
 );
 
 // Get Employee Income Tax Declaration by ID
@@ -1762,7 +1723,7 @@ exports.getEmployeeIncomeTaxDeclarationById = catchAsync(
         .equals(req.params.id);
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclaration,
     });
   }
@@ -1785,9 +1746,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationComponants.length; i++) {
         if (taxDeclarationComponants[i].documentLink) {
           var url = taxDeclarationComponants[i].documentLink;
-          containerClient.getBlockBlobClient(url).deleteIfExists();
-          const blockBlobClient = containerClient.getBlockBlobClient(url);
-          await blockBlobClient.deleteIfExists();
+            await StorageController.deleteBlobFromContainer(req.cookies.companyId, url); 
+         
           console.log("deleted componant");
         }
       }
@@ -1804,9 +1764,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationHRAs.length; i++) {
         if (taxDeclarationHRAs[i].documentLink) {
           var url = taxDeclarationHRAs[i].documentLink;
-          containerClient.getBlockBlobClient(url).deleteIfExists();
-          const blockBlobClient = containerClient.getBlockBlobClient(url);
-          await blockBlobClient.deleteIfExists();
+          await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url); 
+         
           console.log("deleted HRA");
         }
       }
@@ -1816,7 +1775,7 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
     }
 
     res.status(204).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: null,
     });
   }
@@ -1839,8 +1798,13 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
         error: `${req.body.incomeTaxComponent} is not a valid income tax component`,
       });
     }
+    const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
 
-    // Process attachments if they are present
+    if (!employeeIncomeTaxDeclaration) {
+      return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
+    }
+  
+        // Process attachments if they are present
     if (req.body.employeeIncomeTaxDeclarationAttachments) {
       for (
         let i = 0;
@@ -1861,29 +1825,10 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
-
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, "base64");
-        const uploadBlobResponse = await blockBlobClient.upload(
-          buffer,
-          buffer.length
-        );
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log(
-          "Blob was uploaded successfully. requestId: ",
-          uploadBlobResponse.requestId
-        );
-
-        // Add the document link to the array
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+       //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+       // Add the document link to the array
         req.body.documentLink = documentLink;
       }
     }
@@ -1904,7 +1849,7 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
       );
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclarationComponent,
     });
   }
@@ -1913,6 +1858,12 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
 // Update or create Employee Income Tax Declaration HRA
 exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
   async (req, res, next) => {
+    const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
+
+  if (!employeeIncomeTaxDeclaration) {
+    return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
+  }
+
     // Process attachments if any
     if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
       for (
@@ -1940,27 +1891,10 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
             .json({ error: "All attachment properties must be provided" });
         }
 
-        const blobName = `${attachment.attachmentName}_${uuidv1()}${
-          attachment.extention
-        }`;
+        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
+        //req.body.attachment.file = req.body.taskAttachments[i].file;
+        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
 
-        // Get a block blob client
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Upload data to the blob
-        const buffer = Buffer.from(attachment.file, "base64");
-        const uploadBlobResponse = await blockBlobClient.upload(
-          buffer,
-          buffer.length
-        );
-
-        // Generate the document link
-        const documentLink = `${process.env.CONTAINER_URL_BASE_URL}${process.env.CONTAINER_NAME}/${blobName}`;
-
-        console.log(
-          "Blob was uploaded successfully. requestId: ",
-          uploadBlobResponse.requestId
-        );
 
         // Add the document link to the array
         req.body.documentLink = documentLink;
@@ -1993,7 +1927,7 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
     }
 
     res.status(200).json({
-      status: "success",
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclarationHRA,
     });
   }
@@ -2001,56 +1935,56 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
 
 exports.generateOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       // Generate a random 4-digit pincode
       const otp = Math.floor(1000 + Math.random() * 9000);
 
       // Create a new pincode document
       const newOTP = new OTP({
-          otp: otp,
-          email: req.body.email,
-          createdAt: new Date(),
-          status: 'active'
+        otp: otp,
+        email: req.body.email,
+        createdAt: new Date(),
+        status: 'active'
       });
       console.log(newOTP);
       // Save the pincode in the database
-      const message=`Your OTP is ${otp}`;
+      const message = `Your one-time password (OTP) for verification is: ${otp}. \n Please do not share this OTP with anyone. If you did not request this, please ignore this email or contact our support team immediately.`;
       await newOTP.save();
       console.log(message);
       console.log("hello1");
       try {
         await sendEmail({
           email: req.body.email,
-          subject:'OTP',
+          subject: 'OTP',
           message
         });
-       
-      } catch (err) {   
-       console.log(err);
+
+      } catch (err) {
+        console.log(err);
         return next(
           new AppError(
             'There was an error sending the email. Try again later.',
             500
           )
-      );
-    }
+        );
+      }
       // Send the pincode via email
-     
+
 
       res.status(200).json({ message: 'OTP generated and emailed successfully.' });
-  } catch (error) {
-      res.status(500).json({ message: 'Error generating OTP'+error });
-  }
-});
+    } catch (error) {
+      res.status(500).json({ message: 'Error generating OTP' + error });
+    }
+  });
 
 exports.verifyOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       const { email, otp } = req.body;
       const existingOTP = await OTP.findOne({ email, otp });
 
       if (!existingOTP || existingOTP.status !== 'active') {
-          return res.status(400).json({ message: 'Invalid or expired OTP.' });
+        return res.status(400).json({ message: 'Invalid or expired OTP.' });
       }
 
       // Update pincode status to verified
@@ -2058,19 +1992,19 @@ exports.verifyOTP = catchAsync(
       await existingOTP.save();
 
       res.status(200).json({ message: 'OTP verified successfully.' });
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ message: 'Error verifying OTP' });
-  }
-});
+    }
+  });
 
 exports.cancelOTP = catchAsync(
   async (req, res, next) => {
-  try {
+    try {
       const { email, otp } = req.body;
       const existingOTP = await OTP.findOne({ email, otp });
 
       if (!existingOTP) {
-          return res.status(400).json({ message: 'OTP not found.' });
+        return res.status(400).json({ message: 'OTP not found.' });
       }
 
       // Update pincode status to cancelled
@@ -2078,7 +2012,29 @@ exports.cancelOTP = catchAsync(
       await existingOTP.save();
 
       res.status(200).json({ message: 'OTP cancelled successfully.' });
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ message: 'Error cancelling OTP' });
   }
+});
+exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
+  
+  const user = await User.findById(req.params.userId); 
+   for(var i = 0; i < req.body.profileImage.length; i++) {
+      if (!req.body.profileImage[i].attachmentSize || !req.body.profileImage[i].extention || !req.body.profileImage[i].file
+        ||req.body.profileImage[i].attachmentSize===null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file===null) {
+        return res.status(400).json({ error: 'All Profile Image properties must be provided' });
+      }
+      const attachmentName=user.firstName;
+      req.body.profileImage[i].filePath = attachmentName +"_" + user._id+ req.body.profileImage[i].extention; 
+     // Get a block blob client
+     var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Profile, req.body.profileImage[i]);
+
+    user.photo=url;
+    await user.save();
+  }
+  
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: user
+  });
 });

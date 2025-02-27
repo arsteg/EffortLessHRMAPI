@@ -1,3 +1,4 @@
+const constants = require('../constants');
 
 const LiveTracking = require('./../models/liveTrackingModel');
 //const express = require('express');
@@ -98,7 +99,7 @@ exports.startStopLivePreview = catchAsync(async (req, res, next) => {
   //         client.send(JSON.stringify({ EventName: "stoplivepreview", UserId: req.body.userId }));
   //       }
   //       res.status(200).json({
-  //         status: 'success'
+  //         status: constants.APIResponseStatus.Success
   //       });
 
   //     }
@@ -117,7 +118,7 @@ exports.closeWebSocket = catchAsync(async (req, res, next) => {
   //     console.log('closed');
   //   }
   //   res.status(200).json({
-  //     status: 'success',
+  //     status: constants.APIResponseStatus.Success,
   //     data: 'Connection closed'
   //   });
   // }
@@ -151,7 +152,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
     }
     const newliveTracking = await LiveTracking.find({}).where('user').equals(req.cookies.userId);  
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       // data: {
       //   liveTracking:newliveTracking
       // }
@@ -172,7 +173,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
         then(liveTrackingEntry => {  
           liveTrackings.push(liveTrackingEntry);
           res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: liveTrackings
           }); 
         });  
@@ -255,12 +256,12 @@ exports.updateUserScreen = catchAsync(async (req, res, next) => {
     sendUsersLiveImagesToApp(req.cookies.userId, req.body.fileString);
     // const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
     res.status(200).json({
-      status: 'success'
+      status: constants.APIResponseStatus.Success
     });
   }
   else{
     res.status(200).json({
-      status: 'fail'
+      status: constants.APIResponseStatus.Failure
     });
   }
 });

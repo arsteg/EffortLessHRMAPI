@@ -3,20 +3,11 @@ const TimeLogCheckInOut = require('../models/timeLogCheckInOut');
 const CurrentUserDevice = require('../models/currentUserDeviceModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError.js');
-const { v1: uuidv1} = require('uuid');
-const { BlobServiceClient } = require('@azure/storage-blob');
 const { Stream } = require('nodemailer/lib/xoauth2');
 var moment = require('moment'); 
+const constants = require('../constants');
+const StorageController = require('./storageController.js');
 const userSubordinate = require('../models/userSubordinateModel');
-  // AZURE STORAGE CONNECTION DETAILS
-const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!AZURE_STORAGE_CONNECTION_STRING) {
-throw Error("Azure Storage Connection string not found");
-}
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
-const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME);
 const mongoose = require('mongoose');
 
 exports.addLog = catchAsync(async (req, res, next) => { 
@@ -32,7 +23,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
             else
             {
                         res.status(200).json({
-                        status: 'success',
+                        status: constants.APIResponseStatus.Success,
                         data: {
                           MakeThisDeviceActive: false,
                           message: "User is logged in on another device, Do you want to make it active?"
@@ -51,19 +42,15 @@ exports.addLog = catchAsync(async (req, res, next) => {
             userId: req.cookies.userId      
           });               
     }
-
-    // Upload Capture image on block blob client
-  const blobName = "Capture" + uuidv1() + `${req.body.filePath}`;
-  // Get a block blob client
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  console.log("\nUploading to Azure storage as blob:\n\t", blobName);
-  // Upload data to the blob
-  var FileString = req.body.fileString;
-  const buffer = new Buffer.from(FileString, 'base64');
-  const uploadBlobResponse = await blockBlobClient.upload(buffer,buffer.length);
-  const url=process.env.CONTAINER_URL_BASE_URL+ process.env.CONTAINER_NAME+"/"+blobName; 
-  console.log(`process.env.CONTAINER_URL_BASE_URL ${process.env.CONTAINER_URL_BASE_URL} process.env.CONTAINER_NAME ${process.env.CONTAINER_NAME}`);
-  console.log(`Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}, url: ${uploadBlobResponse}`);
+    if (!req.body.document) {
+      req.body.document = []; // Initialize as an empty array if not already initialized
+    }
+     req.body.document.push({
+      filePath: req.body.filePath,
+      file: req.body.fileString, // Assuming this is coming from the attachment
+     });
+  var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Timelog, req.body.document[0]);
+   
   const newTimeLog = await TimeLog.create({
     user: req.body.user,
     task:req.body.task,
@@ -71,7 +58,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     date :req.body.date,
     startTime: req.body.startTime,
     endTime:req.body.endTime,
-    filePath:blobName,
+    filePath:req.body.filePath,
     keysPressed:req.body.keysPressed,
     allKeysPressed:req.body.allKeysPressed,
     clicks:req.body.clicks,
@@ -80,7 +67,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     isManualTime:false
   });  
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: {
       timeLog: newTimeLog
     }
@@ -97,7 +84,7 @@ var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).
     });
     
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeLogs
   });  
 });
@@ -177,7 +164,7 @@ if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
         logs.totalNonProductiveMember=0;
         realtime.push(logs);
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     data: realtime
   });  
 });
@@ -186,7 +173,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   const timeLogs = await TimeLog.find({}).where('user').equals(req.body.user).find({
     "date" : {"$gte": req.body.startDate,"$lte": req.body.endDate}});
   res.status(200).json({
-    status: 'success',
+    status:constants.APIResponseStatus.Success,
     length:timeLogs.length,
     data: timeLogs
   });  
@@ -194,7 +181,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
 
 exports.getLog = catchAsync(async (req, res, next) => {  
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: {
       timeLog: "he"
     }
@@ -209,7 +196,7 @@ exports.getLog = catchAsync(async (req, res, next) => {
 //   });
   
 //   res.status(200).json({
-//     status: 'success',
+//     status: constants.APIResponseStatus.Success,
 //     data: timeLogs
 //   });
 // });
@@ -237,7 +224,7 @@ exports.getLogsWithImages = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: timeLogs
   });
 });
@@ -248,12 +235,9 @@ exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
   if(timeLogsExists)
   {  
     for(var i = 0; i <timeLogsExists.length; i++) {
-    if(timeLogsExists[i].filePath)
+    if(timeLogsExists[i].url)
     {
-        var url = timeLogsExists[i].filePath;     
-        containerClient.getBlockBlobClient(url).deleteIfExists();
-        const blockBlobClient = containerClient.getBlockBlobClient(url);
-        await blockBlobClient.deleteIfExists();      
+      await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists[i].url);     
     }   
     const document = await TimeLog.findByIdAndDelete(timeLogsExists[i]._id);
     if (!document) {
@@ -262,7 +246,7 @@ exports.deleteLogTillDate = catchAsync(async (req, res, next) => {
   }
 }
 res.status(204).json({
-  status: 'success',
+  status:constants.APIResponseStatus.Success,
   data: null
 });
 });
@@ -271,12 +255,9 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);    
   if(timeLogsExists)
   {
-    if(timeLogsExists.filePath)
+    if(timeLogsExists.url)
     {
-        var url = timeLogsExists.filePath;     
-        containerClient.getBlockBlobClient(url).deleteIfExists();
-        const blockBlobClient = containerClient.getBlockBlobClient(url);
-        await blockBlobClient.deleteIfExists();
+      await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url); 
     }
     const document = await TimeLog.findByIdAndDelete(req.body.logs[i].logId);
     if (!document) {
@@ -288,7 +269,7 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   }
 }
 res.status(204).json({
-  status: 'success',
+  status: constants.APIResponseStatus.Success,
   data: null
 });
 });
@@ -317,7 +298,7 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
     startTime = moment(startTime).add(10, 'm').toDate();      
   }  
    res.status(200).json({
-     status: 'success',
+     status: constants.APIResponseStatus.Success,
      data: {
        timeLog: result
      }
@@ -382,7 +363,7 @@ exports.addManualTime = catchAsync(async (req, res, next) => {
     // Send the response with the matrix and column names   
 
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data:{ matrix, columns } 
     });
 
@@ -459,7 +440,7 @@ try {
   // Send the response with the matrix and column names
   
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: { matrix, columns }
   });
 

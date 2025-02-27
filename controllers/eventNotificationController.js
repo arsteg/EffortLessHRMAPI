@@ -10,12 +10,13 @@ const EventNotificationType = require('../models/eventNotification/eventNotifica
 const UserNotification   = require('../models/eventNotification/userNotification');
 const NotificationStatus = require('../models/eventNotification/enums.js');
 const moment = require('moment'); 
+const constants = require('../constants');
 
 exports.createEventNotification = catchAsync(async (req, res, next) => {
   req.body.company =  req.cookies.companyId; 
   const eventNotification = await EventNotification.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   }); 
@@ -26,7 +27,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -40,7 +41,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -51,7 +52,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification not found', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotification
     });
   });
@@ -59,7 +60,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   exports.getAllEventNotifications = catchAsync(async (req, res, next) => {
     const eventNotifications = await EventNotification.find();
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotifications
     });
   });
@@ -69,7 +70,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     req.body.company =  req.cookies.companyId; 
     const eventNotificationType = await EventNotificationType.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -80,7 +81,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('Event notification type not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -96,7 +97,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     }
   
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: eventNotificationType
     });
   });
@@ -109,7 +110,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     }
   
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: null
     });
   });
@@ -119,7 +120,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
 
     if (!companyId) {
         return res.status(400).json({
-            status: 'fail',
+            status: constants.APIResponseStatus.Failure,
             message: 'No companyId found in cookies'
         });
     }
@@ -130,14 +131,14 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
         objectId = ObjectId(companyId);
     } catch (error) {
         return res.status(400).json({
-            status: 'fail',
+            status: constants.APIResponseStatus.Failure,
             message: 'Invalid companyId format'
         });
     }
     try {
         const eventNotificationTypes = await EventNotificationType.find({ company: objectId });
         res.status(200).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: eventNotificationTypes
         });
     } catch (error) {
@@ -150,7 +151,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
     req.body.company =  req.cookies.companyId; 
     const userNotification = await UserNotification.create(req.body);
     res.status(201).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -161,7 +162,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -175,7 +176,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -186,7 +187,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
       return next(new AppError('User notification not found', 404));
     }
     res.status(204).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: userNotification
     });
   });
@@ -194,7 +195,7 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   exports.getAllUserNotifications = catchAsync(async (req, res, next) => {
     const userNotifications = await UserNotification.find({company:req.cookies.companyId});
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: userNotifications
     });
   });
@@ -205,12 +206,12 @@ exports.getAllUserNotificationsByNotification = catchAsync(async (req, res, next
   try {
       const userNotifications = await UserNotification.find({company:req.cookies.companyId}).where('notification').equals(req.params.id);
       res.status(200).json({
-          status: 'success',
+          status: constants.APIResponseStatus.Success,
           data: userNotifications
       });
   } catch (error) {
       res.status(400).json({
-          status: 'error',
+          status:constants.APIResponseStatus.Error,
           message: error.message
       });
   }
@@ -220,7 +221,7 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
     const { user, notification, action } = req.body;
     if (!user || !notification || !action) {
         return res.status(400).json({
-            status: 'fail',
+            status: constants.APIResponseStatus.Failure,
             message: 'User, notification, and action are required'
         });
     }
@@ -229,31 +230,31 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
         const existingNotification = await UserNotification.findOne({ user, notification });
         if (existingNotification) {
             return res.status(400).json({
-                status: 'fail',
+                status: constants.APIResponseStatus.Failure,
                 message: 'Notification already assigned to this user'
             });        }
 
         const userNotification = await UserNotification.create({ user, notification, status: 'unread' });
         res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             data: userNotification
         });
     } else if (action === 'unassign') {
         const deletedNotification = await UserNotification.findOneAndDelete({ user, notification });
         if (!deletedNotification) {
             return res.status(400).json({
-                status: 'fail',
+                status: constants.APIResponseStatus.Failure,
                 message: 'Notification not found for this user'
             });
         }
 
         res.status(201).json({
-            status: 'success',
+            status: constants.APIResponseStatus.Success,
             message: 'Notification successfully unassigned'
         });
     } else {
         res.status(400).json({
-            status: 'fail',
+            status: constants.APIResponseStatus.Failure,
             message: 'Invalid action'
         });
     }
@@ -271,7 +272,7 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -289,7 +290,7 @@ exports.getUserNotificationsForToday = catchAsync(async (req, res, next) => {
   }); 
 
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: eventNotifications
   });
 });
@@ -302,7 +303,7 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
 
   if (!userNotifications || userNotifications.length === 0) {
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: []
     });
   }
@@ -315,7 +316,7 @@ exports.getUserNotificationsAll = catchAsync(async (req, res, next) => {
   const eventNotifications = await EventNotification.find({
     _id: { $in: notificationIds }});
   res.status(200).json({
-    status: 'success',
+    status: constants.APIResponseStatus.Success,
     data: eventNotifications
   });
 });
@@ -398,7 +399,7 @@ exports.updateRecurringNotifications = async () => {
 
 exports.testMe = catchAsync(async (req, res, next) => {    
     res.status(200).json({
-      status: 'success',
+      status: constants.APIResponseStatus.Success,
       data: {}
     });
   });
