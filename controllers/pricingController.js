@@ -1326,7 +1326,8 @@ exports.getNextPaymentDetails = async (req, res) => {
   try {
     const user = req.user;
     const subscription = await Subscription.findOne({
-      companyId: user.company.id
+      companyId: user.company.id,
+      "razorpaySubscription.status": {$in: ["active", "authenticated"]}
     });
 
     if (!subscription) {
@@ -1345,6 +1346,13 @@ exports.getNextPaymentDetails = async (req, res) => {
     if(subscription.pendingUpdates.length > 0) new_users_amount = subscription.pendingUpdates.length * subscription.currentPlanId.currentprice;
     let total_due_amount = due_amount;
     if(new_users_amount) total_due_amount = new_users_amount + due_amount;
+
+    if(subscription.scheduledChanges && subscription.scheduledChanges.planId){
+      due_date = new Date(subscription.scheduledChanges.charge_at*1000).toISOString();
+      due_amount = subscription.scheduledChanges.planPrice * subscription.scheduledChanges.quantity;
+      new_users_amount = 0;
+      total_due_amount = due_amount;
+    }
     res.status(200).json({
       status: 'success',
       data: {
@@ -1367,7 +1375,8 @@ exports.getLastInvoice = async (req, res) => {
   try {
     const user = req.user;
     const subscription = await Subscription.findOne({
-      companyId: user.company.id
+      companyId: user.company.id,
+      "razorpaySubscription.status": {$in: ["active", "authenticated"]}
     });
 
 
@@ -1441,25 +1450,128 @@ exports.updateSubscriptionDetails = async (req, res) => {
       return res.status(400).json({ error: 'Invalid subscription ID' });
     }
 
-    // Find the subscription by ID and update
-    const updatedSubscription = await Subscription.findByIdAndUpdate(
-      subscriptionId,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedSubscription) {
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
 
+    if(Object.keys(req.body).length === 0){
+      return res.status(400).json({ error: "Please provide the fields to update" });
+    }
+    // Convert currentPlanId to ObjectId if it's a valid string
+    const { currentPlanId } = req.body;
+    if(currentPlanId){
+      if(currentPlanId === subscription.currentPlanId){
+        return res.status(400).json({ error: "Please select the different plan" });
+      }
+      
+      if (mongoose.Types.ObjectId.isValid(currentPlanId)) {
+        req.body.currentPlanId = new mongoose.Types.ObjectId(currentPlanId);
+      } else {
+        return res.status(400).json({ error: "Invalid currentPlanId" });
+      }
+  
+      const planDetails = await Plan.findById(currentPlanId);
+      if(!planDetails) return res.status(404).json({ error: "Plan not found" });
+      // Update razorpay subscription
+      const activeUsers = await User.count({ company: mongoose.Types.ObjectId(req.user.company.id), status: {$in: constants.Active_Statuses} });
+      const quantity = planDetails.type === 'fixed' ? 1 : activeUsers; 
+      const update = {
+        plan_id: planDetails.planId,
+        quantity: quantity,
+        schedule_change_at: "cycle_end",
+        remaining_count: subscription.razorpaySubscription.remaining_count
+      };
+  
+      const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.subscriptionId, update);
+      // Get updated pending subscription
+      const pendingUpdate = await razorpay.subscriptions.pendingUpdate(subscription.subscriptionId);
+      pendingUpdate.planId = currentPlanId;
+      pendingUpdate.planPrice = planDetails.currentprice;
+      pendingUpdate.planName = planDetails.name;
+      pendingUpdate.planFrequency = planDetails.frequency;
+      // Find the subscription by ID and update
+      const updatedSubscription = await Subscription.findByIdAndUpdate(
+        subscriptionId,
+        {
+          "scheduledChanges": pendingUpdate,
+        },
+        { new: true, runValidators: true }
+      );
+      if (!updatedSubscription) {
+        return res.status(404).json({ error: 'Subscription not found' });
+      }
+      res.status(200).json({
+        status: 'success',
+        data: {
+          subscription: updatedSubscription,
+        },
+      });
+    } else {
+      // Find the subscription by ID and update
+      const updatedSubscription = await Subscription.findByIdAndUpdate(
+        subscriptionId,
+        req.body,
+        { new: true, runValidators: true }
+      );
+      if (!updatedSubscription) {
+        return res.status(404).json({ error: 'Subscription not found' });
+      }
+      res.status(200).json({
+        status: 'success',
+        data: {
+          subscription: updatedSubscription,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('err',err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+exports.cancelSubscriptionUpdates = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    // Validate if the provided ID is a valid MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
+      return res.status(400).json({ error: 'Invalid subscription ID' });
+    }
+
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    // fetch pending updates
+    const pendingUpdates = await razorpay.subscriptions.pendingUpdate(subscription.subscriptionId);
+    if(pendingUpdates){
+      await razorpay.subscriptions.cancelScheduledChanges(subscription.subscriptionId);
+      const updatedSubscription = await Subscription.findByIdAndUpdate(
+        subscriptionId,
+        {scheduledChanges: null},
+        { new: true, runValidators: true }
+      );
+      if (!updatedSubscription) {
+        return res.status(404).json({ error: 'Subscription not found' });
+      }
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          subscription: updatedSubscription,
+        },
+      });
+    }
     res.status(200).json({
       status: 'success',
-      data: {
-        subscription: updatedSubscription,
-      },
+      message: 'No pending updates found',
     });
   } catch (err) {
-    console.error(err);
+    console.error('err',err);
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',
@@ -2304,6 +2416,13 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
             const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.entity.id, {
               "quantity": activeUsers,
               "schedule_change_at": "cycle_end",
+            });
+            console.log('Subscription updated: ', updateRazorpaySubscription);
+          }
+          if(subscriptionDocument.scheduledChanges.planId){
+            const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.entity.id, {
+              currentPlanId: subscriptionDocument.scheduledChanges.planId,
+              scheduledChanges: null
             });
             console.log('Subscription updated: ', updateRazorpaySubscription);
           }

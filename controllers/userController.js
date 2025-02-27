@@ -139,7 +139,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   if(users){
     companySubscription = await Subscription.findOne({
       companyId: users.company.id,
-      "razorpaySubscription.status": {$nin: ["cancelled"]}
+      "razorpaySubscription.status": {$in: ["active", "authenticated"]}
     })
     .populate("currentPlanId");
   }
