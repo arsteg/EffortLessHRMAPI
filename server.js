@@ -13,6 +13,7 @@ const notificationSender = require('./utils/notificationSender');
 const scheduleController = require('./controllers/ScheduleController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 let { setSocketIO } = require('./utils/liveScreenSender');
+let { setLoggerSocketIO } = require('./utils/logger');
 //  import environment variables
 // Handle unhandled exceptions
 // For synchronous code
@@ -26,12 +27,13 @@ const app = require('./app');
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
 const userSocketMap = new Map();
-
+setLoggerSocketIO(io);
 io.on('connection', (client) => {
   client.on('register', (userId) => {    
     console.log(`Registered the user ID ${userId} with the connected socket ID, the client Id is:${client.id}`);
     userSocketMap.set(userId, client.id);    
     setSocketIO(io, client.id, userId);
+    //setLoggerSocketIO(io);
     // Emit the current user list to the new connection
     //io.to(client.id).emit('users-online', getUserList());
   });
