@@ -1800,7 +1800,33 @@ router.get('/plan-offer', authController.protect, pricingController.getAllPlanOf
   *         description: Internal server error
   */
  router.put('/subscription/:id', authController.protect, pricingController.updateSubscriptionDetails);
- 
+
+ /**
+  * @swagger
+  * /api/v1/pricing/cancel-subscription-updates/{id}:
+  *   put:
+  *     summary: Cancel pending subscription updates details by ID
+  *     tags: [Pricing Management]
+  *     security: [{
+  *         bearerAuth: []
+  *     }]
+  *     parameters:
+  *       - in: path
+  *         name: id
+  *         required: true
+  *         schema:
+  *           type: string
+  *         description: ID of the subscription Details
+  *     responses:
+  *       200:
+  *         description: Successful response with the updated subscription Details
+  *       404:
+  *         description: subscription Details not found
+  *       500:
+  *         description: Internal server error
+  */
+ router.put('/cancel-subscription-updates/:id', authController.protect, pricingController.cancelSubscriptionUpdates);
+
 /**
   * @swagger
   * /api/v1/pricing/subscription:

@@ -65,6 +65,10 @@ var subscriptionSchema = new Schema({
   pendingUpdates:{
     type: Array
   },
+  scheduledChanges:{
+    type: Object,
+    default: null
+  },
 }, { collection: 'Subscription' });
 subscriptionSchema.pre(/^find/,async function(next) {
   try {

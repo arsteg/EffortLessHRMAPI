@@ -914,4 +914,91 @@ router.put('/cancel-otp', userController.cancelOTP)
  */
 router.get('/GoogleApiKey', authController.protect, commonController.getGoogleApiKey)
 
+/**
+ * @swagger
+ * /api/v1/common/setSelectedUser:
+ *   post:
+ *     summary: Set Selected User for logging
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *             required:
+ *               - userId
+ *     responses:
+ *       200:
+ *         description: Successfully set the selected user for logging
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 selectedUserForLogging:
+ *                   type: string
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post("/setSelectedUser", authController.protect, commonController.setSelectedUserForLogging)
+/**
+ * @swagger
+ * /api/v1/common/getSelectedUser:
+ *   get:
+ *     summary: Get Selected User for logging
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected user for logging
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 selectedUserForLogging:
+ *                   type: string
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get("/getSelectedUser", authController.protect, commonController.getSelectedUserForLogging);
+
+/**
+ * @swagger
+ * /api/v1/common/testLog:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected user for logging
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 selectedUserForLogging:
+ *                   type: string
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get("/testLog", authController.protect, commonController.testLog);
+
 module.exports = router;
