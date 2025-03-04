@@ -12,8 +12,8 @@ const wss = new WebSocket.Server({ noServer: true });
 const connectedClients = new Set();
 
 // WebSocket upgrade listener for the HTTP server
-const server = app.listen(3000, () => {
-  console.log('WebSocket server is running on port 3000');
+const server = app.listen(4000, () => {
+  console.log('WebSocket server is running on port 4000');
 });
 
 server.on('upgrade', (request, socket, head) => {
