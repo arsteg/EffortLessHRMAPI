@@ -13,7 +13,7 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const constants = require('../constants');
 const globalStore = require('../utils/globalStore');
-const { logEvent } = require('../utils/logger');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
@@ -577,7 +577,7 @@ exports.getSelectedUserForLogging = catchAsync(
 exports.testLog = catchAsync(
   async (req, res, next) => {
   try {    
-    logEvent(req, req.cookies.userId, 'User performed an action');
+    websocketHandler.logEvent(req, 'User performed an action');
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {},

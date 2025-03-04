@@ -9,8 +9,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Name field is required']
   },
   lastName: {
-    type: String,
-    required: [true, 'Name field is required']
+    type: String
   },
   jobTitle: {
     type: String

@@ -3,7 +3,23 @@ const companyController = require('../controllers/companyController');
 const authController = require('../controllers/authController');
 
 const router = express.Router();
-
+/**
+ * @swagger
+ * /api/v1/company/All:
+ *   get:
+ *     summary: Get all companies
+ *     tags: [Company Management]
+ *     security: 
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response with the list of companies
+ *       404:
+ *         description: Companies not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/All', authController.protect, companyController.getAllCompanies);
 /**
  * @swagger
  * /api/v1/company/holiday:
