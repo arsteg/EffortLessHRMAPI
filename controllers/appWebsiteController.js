@@ -7,6 +7,7 @@ const { findById } = require("../models/item");
 const Productivity = require('./../models/productivityModel');
 const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     var appWebsiteKey = req.body.appWebsite.split(".");

@@ -23,6 +23,7 @@ const constants = require('../constants');
 const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
 const Appointment = require("../models/permissions/appointmentModel");
+const  websocketHandler  = require('../utils/websocketHandler');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,

@@ -10,6 +10,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require("../utils/appError.js");
 const cookieParser = require('cookie-parser');
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_KEY,

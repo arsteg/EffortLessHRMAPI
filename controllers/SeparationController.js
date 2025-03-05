@@ -11,6 +11,7 @@ const User = require('../models/permissions/userModel');
 const Resignation = require("../models/Separation/Resignation");
 const constants = require('../constants');
 const Termination = require('../models/Separation/Termination');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 // Add a Resignation
 exports.addResignation = catchAsync(async (req, res, next) => {

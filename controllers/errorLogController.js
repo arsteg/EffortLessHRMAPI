@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const ErrorLog = require('../models/errorLogModel');
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
   // Save Permission List
   exports.getErrorLogList = catchAsync(async (req, res, next) => {    

@@ -9,6 +9,7 @@ const { ObjectId } = require('mongoose').Types;
 const mongoose = require('mongoose');
 const app = express()
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 app.use(express.json);
 
 const preferenceCategories = [{
