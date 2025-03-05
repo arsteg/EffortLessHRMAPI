@@ -8,7 +8,6 @@ const Productivity = require('./../models/productivityModel');
 const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
-
 exports.addNew = catchAsync(async (req, res, next) => {
     websocketHandler.logEvent(req, `User initiated adding a new app/website record. User ID: ${req.body.userReference}, Company ID: ${req.cookies.companyId}`);
     var appWebsiteKey = req.body.appWebsite.split(".");
