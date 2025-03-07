@@ -14,6 +14,10 @@ var feedbackSchema = new Schema({
     type: String, // Could be ObjectId or custom ID depending on your setup    
   },
   provider: {
+    name: {
+      type: String,
+      trim: true      
+    },
     email: {
       type: String,
       trim: true,
@@ -43,7 +47,7 @@ var feedbackSchema = new Schema({
   }],
   submittedAt: {
     type: Date,
-    default: Date.now // Automatically set submission time
+    default: () => new Date().toUTCString(), // Explicitly sets to UTC
   }
 }, { collection: 'feedback', timestamps: true });
 
