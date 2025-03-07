@@ -163,6 +163,7 @@ exports.submitFeedback = catchAsync(async (req, res, next) => {
       provider: {
         email: req.body.provider?.email,
         phoneNumber: req.body.provider?.phoneNumber,
+        name: req.body.provider?.name,
       },
       feedbackValues: req.body.feedbackValues,
     });
