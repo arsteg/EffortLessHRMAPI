@@ -8,7 +8,8 @@ const ptEligibleStatesSchema = new Schema({
     required: true
   },
   state: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'PTConfigureStates', // Assuming the reference is to a State schema
     required: true
   },
   isEligible: {
@@ -16,5 +17,17 @@ const ptEligibleStatesSchema = new Schema({
     default: true // Assuming the default value for isEligible is true
   }
 }, { collection: 'PTEligibleStates' });
+
+ptEligibleStatesSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'state',
+      select: 'id state'
+    });
+  } catch (error) {
+    console.error("Error populating elegible state:", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('PTEligibleStates', ptEligibleStatesSchema);
