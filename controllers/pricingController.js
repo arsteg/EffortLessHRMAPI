@@ -1332,7 +1332,7 @@ exports.getNextPaymentDetails = async (req, res) => {
 
     const subscription = await Subscription.findOne({
       companyId: user.company.id,
-      "razorpaySubscription.status": {$in: ["active", "authenticated"]}
+      "razorpaySubscription.status": {$in: constants.Active_Subscription}
     });
 
     console.log("Subscription:", subscription);
@@ -1357,7 +1357,9 @@ exports.getNextPaymentDetails = async (req, res) => {
 
     if (subscription.razorpaySubscription.current_end) {
       due_date = new Date(subscription.razorpaySubscription.current_end * 1000).toISOString();
-    }
+    } else if(subscription.razorpaySubscription.charge_at) {
+      due_date = new Date(subscription.razorpaySubscription.charge_at * 1000).toISOString();
+    } 
     console.log("Due date:", due_date);
 
     if (subscription.currentPlanId.currentprice) {
@@ -1416,29 +1418,12 @@ exports.getNextPaymentDetails = async (req, res) => {
 exports.getLastInvoice = async (req, res) => {
   try {
     const user = req.user;
-    const subscription = await Subscription.findOne({
-      companyId: user.company.id,
-      "razorpaySubscription.status": {$in: ["active", "authenticated"]}
-    });
-
-
-    if (!subscription) {
-      return res.status(404).json({ 
-        "status": constants.APIResponseStatus.Failure,
-        "message": 'Subscription not found',
-        data: {
-          amount: 0,
-          payment_method: null
-        }, 
-      });
-    }
-
     const invoice = await Invoice.find({
-      subscription_id: subscription.subscriptionId
+      companyId: user.company.id,
     }).sort({date: -1}).limit(1);
 
-    const amount = invoice[0].amount
-    const payment_method = invoice[0].payment_info.method;
+    const amount = invoice[0]?.amount || 0;
+    const payment_method = invoice[0]?.payment_info?.method;
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1487,6 +1472,21 @@ exports.activateSubscription = async (req, res) => {
   }
 }
 
+function getFrequencyDays(frequency) {
+  switch (frequency) {
+    case 'daily':
+      return 1;
+    case 'weekly':
+      return 7;
+    case 'monthly':
+      return 30;
+    case 'yearly':
+      return 365;
+    default:
+      return 0;
+  }
+}
+
 exports.updateSubscriptionDetails = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
@@ -1500,6 +1500,16 @@ exports.updateSubscriptionDetails = async (req, res) => {
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
+
+    const rpSubscription = subscription.razorpaySubscription;
+    const currentPlanFrequency = subscription.currentPlanId.frequency;
+    const frequency = getFrequencyDays(currentPlanFrequency);
+    const planPricePerDay = subscription.currentPlanId.currentprice / frequency;
+    const currentTimestamp = Math.floor(Date.now() / 1000); // Current time in seconds
+    const remainingDays = Math.max(0, Math.floor((rpSubscription.current_end - currentTimestamp) / 86400)); // Convert seconds to days
+    const remainingAmount = Math.max(0, Math.round(remainingDays * planPricePerDay)); // Remaining balance
+    console.log("Remaining:", remainingDays, remainingAmount);
+    console.log('Current subscription:', subscription);
 
     if(Object.keys(req.body).length === 0){
       return res.status(400).json({ error: "Please provide the fields to update" });
@@ -1519,41 +1529,43 @@ exports.updateSubscriptionDetails = async (req, res) => {
   
       const planDetails = await Plan.findById(currentPlanId);
       if(!planDetails) return res.status(404).json({ error: "Plan not found" });
-      // Update razorpay subscription
-      const activeUsers = await User.count({ company: mongoose.Types.ObjectId(req.user.company.id), status: {$in: constants.Active_Statuses} });
-      const quantity = planDetails.type === 'fixed' ? 1 : activeUsers; 
-      const update = {
-        plan_id: planDetails.planId,
-        quantity: quantity,
-        schedule_change_at: "cycle_end",
-        remaining_count: subscription.razorpaySubscription.remaining_count
-      };
-  
-      const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.subscriptionId, update);
+      // Number of days in new plan
+      const newPlanFrequency = getFrequencyDays(planDetails.frequency);
+      const newPlanPricePerDay = planDetails.currentprice / newPlanFrequency;
+      const daysForNewPlan = Math.floor(remainingAmount / newPlanPricePerDay) || 1;
+      const newStartDate = Math.floor(Date.now() / 1000) + daysForNewPlan * 86400; // Future start time
+      console.log("Charge subscription after these many days: ", daysForNewPlan);
 
-      // Get updated pending subscription
-      const pendingUpdate = await razorpay.subscriptions.pendingUpdate(subscription.subscriptionId);
-      pendingUpdate.planId = currentPlanId;
-      pendingUpdate.planPrice = planDetails.currentprice;
-      pendingUpdate.planName = planDetails.name;
-      pendingUpdate.planFrequency = planDetails.frequency;
-      // Find the subscription by ID and update
-      const updatedSubscription = await Subscription.findByIdAndUpdate(
-        subscriptionId,
-        {
-          "scheduledChanges": pendingUpdate,
-        },
-        { new: true, runValidators: true }
-      );
-      if (!updatedSubscription) {
-        return res.status(404).json({ error: 'Subscription not found' });
+      // cancel existing subscription
+      const cancelSubscription = await razorpay.subscriptions.cancel(subscription.subscriptionId, false);
+      console.log('Cancelled subscription:', cancelSubscription);
+      //start new subscription with new plan
+      if(cancelSubscription){
+        const razorpayPlanid = planDetails.planId;
+        const newRpSubscription = await razorpay.subscriptions.create({
+          "plan_id": razorpayPlanid,
+          "quantity": 1,
+          "total_count": 120,
+          "start_at" : newStartDate
+        });
+        const newSubscription = new Subscription({
+          currentPlanId: req.body.currentPlanId,
+          subscriptionId: newRpSubscription.id,
+          companyId: req.cookies.companyId,
+          razorpaySubscription: newRpSubscription
+        });
+    
+        // Save the new subscription to the database
+        const savedSubscription = await newSubscription.save().then(s => s.populate('currentPlanId'));
+        res.status(200).json({
+          status: constants.APIResponseStatus.Success,
+          data: {
+            subscription: savedSubscription,
+          },
+        });      
+      } else {
+        res.status(400).json({ error: "Unable to change the plan" });
       }
-      res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: {
-          subscription: updatedSubscription,
-        },
-      });
     } else {
       // Find the subscription by ID and update
       const updatedSubscription = await Subscription.findByIdAndUpdate(
@@ -2069,6 +2081,38 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
   }
 };
 
+exports.getInvoiceByCompanyId = async (req, res) => {
+  try {
+    const companyId = req.cookies.companyId || req.body.id;
+
+    // Validate if subscription ID is provided 
+    if (!companyId) {
+      return res.status(400).json({ error: 'Invalid companyId ID' });
+    }
+    let payload = { companyId: companyId };
+    const invoice = await Invoice.find(payload)
+      .populate('subscription')
+      .exec();
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+        invoice: invoice,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status:constants.APIResponseStatus.Error,
+      message: 'Internal server error',
+    });
+  }
+};
+
 // Controller method
 exports.updateInvoiceById = async (req, res) => {
   try {
@@ -2348,7 +2392,7 @@ exports.updateRazorpaySubscription = async (userAction) => {
     }
     const subscription = await Subscription.findOne({
       companyId: companyId,
-      "razorpaySubscription.status": { $in: ["active", "authenticated"] }
+      "razorpaySubscription.status": { $in: constants.Active_Subscription }
     }).populate('currentPlanId');
     console.log(subscription)
     if (subscription) {
@@ -2448,49 +2492,12 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
               date: new Date(),
               subscription_id: subscription.entity.id,
               invoice_id: payment.entity.invoice_id,
-              IsPaid: true,
+              isPaid: true,
               amount: payment.entity.amount / 100,
-              payment_info: payment.entity
+              payment_info: payment.entity,
+              companyId:  new mongoose.Types.ObjectId(subscription.companyId)
             })
           }
-          // Remove pending updates once payment is successful
-          const subscriptionDocument = await Subscription.findOne(
-            { subscriptionId: subscription.entity.id },
-          );
-          if(subscriptionDocument.pendingUpdates.length > 0){
-            await Subscription.findOneAndUpdate(
-              { subscriptionId: subscription.entity.id },
-              { pendingUpdates: [] }
-            );
-            const activeUsers = await User.count({ company: mongoose.Types.ObjectId(companySubscription.companyId), status: {$in: constants.Active_Statuses} });
-            const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.entity.id, {
-              "quantity": activeUsers,
-              "schedule_change_at": "cycle_end",
-            });
-            console.log('Subscription updated: ', updateRazorpaySubscription);
-          }
-          if(subscriptionDocument.scheduledChanges.planId){
-            const updateRazorpaySubscription = await razorpay.subscriptions.update(subscription.entity.id, {
-              currentPlanId: subscriptionDocument.scheduledChanges.planId,
-              scheduledChanges: null
-            });
-            console.log('Subscription updated: ', updateRazorpaySubscription);
-          }
-          /* 
-          // Update Subscription and reset add-ons
-          const companySubscription = await Subscription.findOne({ subscriptionId: subscription.entity.id });
-          if (companySubscription.addOns.length > 0) {
-            const activeUsers = await User.count({ company: mongoose.Types.ObjectId(companySubscription.companyId), status: {$in: constants.Active_Statuses} });
-            console.log('activeUsers', activeUsers, companySubscription.companyId);
-            const updateResponse = await razorpay.subscriptions.update(subscription.entity.id, {
-              "quantity": activeUsers,
-              "schedule_change_at": "cycle_end",
-              "start_at": subscription.entity.current_start - 1,
-            });
-            if (updateResponse) {
-              await Subscription.findOneAndUpdate({ subscriptionId: subscription.entity.id }, { addOns: [] });
-            }
-          } */
         }
       }
       res.status(200).send(constants.APIResponseStatus.Success);

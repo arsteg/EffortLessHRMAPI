@@ -79,7 +79,7 @@ const createAndSendToken = async (user, statusCode, res) => {
 
   const subscriptions = await Subscription.find({
     companyId: user.company.id,
-    "razorpaySubscription.status": {$in: ["active", "authenticated"]}
+    "razorpaySubscription.status": {$in: constants.Active_Subscription}
   }).populate("currentPlanId");
   const activeSubscription = subscriptions.find((item)=>{return item.razorpaySubscription.status === 'active'});
   let companySubscription = {status: 'new'};
@@ -420,7 +420,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   const subscription = await Subscription.findOne({
     $and:[{
       companyId: currentUser.company.id,
-      'razorpaySubscription.status':  {$in: ["active", "authenticated"]}
+      'razorpaySubscription.status':  {$in: constants.Active_Subscription}
     } ]
   });
 
