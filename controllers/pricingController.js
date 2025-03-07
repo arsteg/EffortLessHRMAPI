@@ -2478,12 +2478,14 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
       if (event.includes("subscription")) {
         const subscription = payload.subscription;
         const payment = payload.payment;
+        let companyId = '';
         // Update Subscription
         if (subscription.entity.id) {
-          await Subscription.findOneAndUpdate(
+          const sub = await Subscription.findOneAndUpdate(
             { subscriptionId: subscription.entity.id },
             { razorpaySubscription: subscription.entity }
           );
+          companyId = sub.companyId;
         }
         // Add Payment Info
         if(event === 'subscription.charged'){
@@ -2496,7 +2498,7 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
               isPaid: true,
               amount: payment.entity.amount / 100,
               payment_info: payment.entity,
-              companyId:  new mongoose.Types.ObjectId(subscription.companyId)
+              companyId:  new mongoose.Types.ObjectId(companyId)
             })
           }
         }
