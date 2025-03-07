@@ -59,6 +59,8 @@ const SalaryComponentFixedAllowance = require("../models/Employment/SalaryCompon
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
 const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
 const  websocketHandler  = require('../utils/websocketHandler');
+const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -878,6 +880,14 @@ exports.addPTSlab = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getStateWisePTSlabs = catchAsync(async (req, res, next) => {
+  res.status(200).json({
+    status: 'success',
+    data: professionalTaxSlabs
+  });
+});
+
 
 exports.getAllPTSlabs = async (req, res, next) => {
   try {
