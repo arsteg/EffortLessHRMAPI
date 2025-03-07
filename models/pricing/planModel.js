@@ -39,6 +39,9 @@ var planSchema = new Schema({
   },
   type: {
     type: String
+  },
+  users:{
+    type: Number
   }
 }, { collection: 'Plan' });
 

@@ -181,7 +181,7 @@ res.status(200).json({
 
 exports.createPlan = catchAsync(async (req, res, next) => {
   try {
-    const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity, type} = req.body; 
+    const { name,software,currentprice,IsActive, description, notes1, notes2, frequency, interval, quantity, type, users} = req.body; 
     // const planExists = await Software.findOne({ name: name,software: software});
     const planExists = await Plan.findOne({ name: name});
     if(planExists)
@@ -222,6 +222,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
         interval: interval,
         quantity: quantity || 1,
         type: type,
+        users: users,
       });
       
       res.status(201).json({
