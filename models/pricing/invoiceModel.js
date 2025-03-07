@@ -40,7 +40,7 @@ var invoiceSchema = new Schema({
     type: Date,
     // required: true
   },
-  IsPaid: {
+  isPaid: {
     type: Boolean,
     required: true
   },
@@ -50,6 +50,10 @@ var invoiceSchema = new Schema({
   },
   payment_info: {
     type: Object
+  },
+  companyId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company',
   }
 }, { collection: 'Invoice' });
 

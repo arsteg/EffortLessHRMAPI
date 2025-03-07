@@ -154,6 +154,124 @@ router.patch('/fields/update/:id', authController.protect, feedbackController.up
 router.delete('/fields/delete/:id', authController.protect, feedbackController.deleteFeedbackField);
 
 // Feedback Submission Routes
+/**
+ * @swagger
+ * /submit:
+ *   post:
+ *     summary: Submit feedback
+ *     description: Allows a user to submit feedback for a specific company/store, including feedback values based on predefined fields.
+ *     tags: [Feedback Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties: 
+ *               storeId:
+ *                 type: string
+ *                 description: ID of the store where feedback is submitted.
+ *                 example: "store456"
+ *               tableId:
+ *                 type: string
+ *                 description: ID of the table (optional).
+ *                 example: "table789"
+ *               provider:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     description: Email of the feedback provider (optional).
+ *                     example: "customer@example.com"
+ *                   phoneNumber:
+ *                     type: string
+ *                     description: Phone number of the provider (optional).
+ *                     example: "+1234567890"
+ *                   name:
+ *                     type: string
+ *                     description: Name of the provider (optional).
+ *                     example: "John Doe"
+ *               feedbackValues:
+ *                 type: array
+ *                 description: Array of feedback values corresponding to feedback fields.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     field:
+ *                       type: string
+ *                       description: ID of the feedback field.
+ *                       example: "field123"
+ *                     value:
+ *                       type: any
+ *                       description: Value for the feedback field (type depends on field.dataType).
+ *                       example: 4
+ *                 required:
+ *                   - field
+ *     responses:
+ *       201:
+ *         description: Feedback submitted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "feedback789"
+ *                     company:
+ *                       type: string
+ *                       example: "company123"
+ *                     storeId:
+ *                       type: string
+ *                       example: "store456"
+ *                     tableId:
+ *                       type: string
+ *                       example: "table789"
+ *                     provider:
+ *                       type: object
+ *                       properties:
+ *                         email:
+ *                           type: string
+ *                           example: "customer@example.com"
+ *                         phoneNumber:
+ *                           type: string
+ *                           example: "+1234567890"
+ *                         name:
+ *                           type: string
+ *                           example: "John Doe"
+ *                     feedbackValues:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           field:
+ *                             type: string
+ *                             example: "field123"
+ *                           value:
+ *                             type: any
+ *                             example: 4
+ *       400:
+ *         description: Bad request due to invalid input or missing required fields.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "failure"
+ *                 message:
+ *                   type: string
+ *                   example: "Value for required field 'Rating' is missing"
+ *     security:
+ *       - cookieAuth: []
+ */
 router.post('/submit', feedbackController.submitFeedback);
 router.get('/:id', authController.protect, feedbackController.getFeedbackById);
 router.get('/store/:storeId', authController.protect, feedbackController.getFeedbackByStore);

@@ -46,6 +46,20 @@ const Email_template_constant = {
     TaxDeclarionAttachment: "TaxDeclarionAttachment"
   };
   const Active_Statuses = [User_Status.Active, User_Status.Resigned];
+
+  const Subscription_Status = {
+    Active: 'active',
+    Authenticated: 'authenticated',
+    Created: 'created',
+    Pending: 'pending',
+    Halted: 'halted',
+    Cancelled: 'cancelled',
+    Paused: 'paused',
+    Expired: 'expired',
+    Completed: 'completed',
+  };
+
+  const Active_Subscription = [Subscription_Status.Active, Subscription_Status.Authenticated, Subscription_Status.Created];
   
   const Leave_Application_Constant = {
     Level_1_Approval_Pending: "Level 1 Approval Pending",
@@ -110,5 +124,5 @@ Audio: "audio",
 Video: "video",
 File: "file"
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers,WebSocketNotificationType,webSocketContentType};
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, Subscription_Status, Active_Subscription, WebSocketNotificationType, webSocketContentType };
   
