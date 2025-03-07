@@ -112,5 +112,17 @@ const Email_template_constant = {
     Warning: "warning",
     Info: "info"
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, Subscription_Status, Active_Subscription };
+  const WebSocketNotificationType = {
+    Log: "log"                
+  };
+
+  const webSocketContentType = {
+Text: "text",
+JSON: "json",
+Image: "image",
+Audio: "audio",
+Video: "video",
+File: "file"
+  };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, Subscription_Status, Active_Subscription, WebSocketNotificationType, webSocketContentType };
   
