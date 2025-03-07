@@ -26,6 +26,11 @@ var ptSlabSchema = new Schema({
     type: Number,
     required: true
   },
+  state: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'State', // Assuming there's a State schema for reference
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming there's a Company schema for reference
