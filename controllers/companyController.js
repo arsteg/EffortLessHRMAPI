@@ -13,6 +13,16 @@ const Band = require("../models/Company/Band");
 const Signatory = require("../models/Company/Signatory");
 const TaxSlab = require('../models/Company/TaxSlab');
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
+
+
+exports.getAllCompanies = catchAsync(async (req, res, next) => {
+  const companies = await Company.find();
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: companies
+  });
+});
 
 exports.deleteCompany = catchAsync(async (req, res, next) => {
   const document = await Company.findByIdAndDelete(req.params.id);

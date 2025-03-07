@@ -6,10 +6,6 @@ var otherBenefitsSchema = new Schema({
     type: String,
     required: true
   },
-  isEffectAttendanceOnEligibility: {
-    type: Boolean,
-    required: true
-  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

@@ -4,6 +4,7 @@ const { v1: uuidv1 } = require("uuid");
 const UserLocation = require("../models/Settings/userLocation");
 const AppError = require("../utils/appError");
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addProductivity = catchAsync(async (req, res, next) => {
   const newProductivity = await productivity.create({

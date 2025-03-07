@@ -9,6 +9,7 @@ const constants = require('../constants');
 const StorageController = require('./storageController.js');
 const userSubordinate = require('../models/userSubordinateModel');
 const mongoose = require('mongoose');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addLog = catchAsync(async (req, res, next) => { 
  const currentUserActive = await CurrentUserDevice.findOne({}).where('userId').equals(req.cookies.userId).where('companyId').equals(req.cookies.companyId);  

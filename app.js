@@ -38,6 +38,8 @@ var pricingRouter = require(`./routes/pricingRouter`);
 var interviewsRouter = require(`./routes/interviewProcessRouter`);
 var payrollRouter = require(`./routes/payrollRouter`);
 var eventNotificationRouter = require(`./routes/eventNotificationRoutes`);
+var feedbackRouter = require(`./routes/feedbackRouter`);
+var locationRouter = require('./routes/locationRouter');
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
@@ -125,5 +127,7 @@ app.use('/api/v1/zoom', zoomRouter);
 app.use('/api/v1/openai', openaiRouter);
 app.use('/api/v1/payroll', payrollRouter);
 app.use('/api/v1/eventNotifications', eventNotificationRouter);
+app.use('/api/v1/feedback', feedbackRouter);
+app.use('/api/v1/location', locationRouter);
 
 module.exports = app;

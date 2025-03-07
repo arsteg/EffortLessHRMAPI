@@ -32,10 +32,7 @@ var variableDeductionSchema = new Schema({
   deductionStopYear: {
     type: String
   },
-  amountEnterForThisVariableDeduction: {
-    type: String,
-    required: true
-  },
+ 
   amount: {
     type: Number,
     required: true
@@ -44,16 +41,11 @@ var variableDeductionSchema = new Schema({
     type: Number,
     required: true
   },
-  isAttendanceToAffectEligibility: {
-    type: Boolean,
-    required: true
-  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required: true
-  },
-  variableDeductionApplicableEmployees:[]
+  }
 }, { collection: 'VariableDeduction' });
 
 module.exports = mongoose.model('VariableDeduction', variableDeductionSchema);

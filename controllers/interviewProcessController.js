@@ -10,6 +10,7 @@ const  CandidateDataFieldValue = require(`../models/InterviewProcess/candidateDa
 const CandidateInterviewDetails = require(`../models/InterviewProcess/candidateInterviewDetails`);
 const FeedbackField = require(`../models/InterviewProcess/feedbackField`);
 const Interviewer = require(`../models/InterviewProcess/interviewer`);
+const  websocketHandler  = require('../utils/websocketHandler');
 /**
  * Create a new application status
  */

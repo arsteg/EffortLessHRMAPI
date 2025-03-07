@@ -12,6 +12,7 @@ const Template = require(`../models/documents/template`);
 const UserDocuments = require(`../models/documents/userDocuments`);
 const Document = require(`../models/documents/document`);
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 //CompanyPolicyDocument
 
 exports.createCompanyPolicyDocument = catchAsync(async (req, res, next) => {  

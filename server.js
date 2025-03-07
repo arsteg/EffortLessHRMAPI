@@ -13,6 +13,7 @@ const notificationSender = require('./utils/notificationSender');
 const scheduleController = require('./controllers/ScheduleController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 let { setSocketIO } = require('./utils/liveScreenSender');
+
 //  import environment variables
 // Handle unhandled exceptions
 // For synchronous code
@@ -25,13 +26,13 @@ process.on('uncaughtException', err => {
 const app = require('./app');
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
-const userSocketMap = new Map();
 
 io.on('connection', (client) => {
   client.on('register', (userId) => {    
     console.log(`Registered the user ID ${userId} with the connected socket ID, the client Id is:${client.id}`);
     userSocketMap.set(userId, client.id);    
     setSocketIO(io, client.id, userId);
+    setLoggerSocketIO(io);
     // Emit the current user list to the new connection
     //io.to(client.id).emit('users-online', getUserList());
   });
@@ -129,9 +130,9 @@ cron.schedule('0 0 1 * *', async () => {
 // This is important, Heroku won't work with hard coded port
 const port = process.env.PORT || 8080;
 const webSocketPORT = process.env.webSocketPORT|| 8090;
-httpServer.listen(webSocketPORT, () => {
-  console.log(`Web socket Server listening on port ${webSocketPORT}`);
-});
+// httpServer.listen(webSocketPORT, () => {
+//   console.log(`Web socket Server listening on port ${webSocketPORT}`);
+// });
 
 
 // Run server

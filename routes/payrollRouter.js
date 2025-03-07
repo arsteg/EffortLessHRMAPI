@@ -1262,6 +1262,9 @@ router.get('/pt-eligible-states', authController.protect, payrollController.getA
  *           schema:
  *             type: object
  *             properties:
+ *               state:
+ *                 type: string
+ *                 required: true
  *               fromAmount:
  *                 type: string
  *                 required: true
@@ -5043,7 +5046,7 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
  *       500:
  *         description: Internal server error
  */
-router.post('/generatedPayroll-by-company',authController.protect, payrollController.getAllGeneratedPayroll);
+router.post('/generatedPayroll-by-company', authController.protect, payrollController.getAllGeneratedPayroll);
 
 /**
  * @swagger

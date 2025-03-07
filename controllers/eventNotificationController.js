@@ -11,6 +11,7 @@ const UserNotification   = require('../models/eventNotification/userNotification
 const NotificationStatus = require('../models/eventNotification/enums.js');
 const moment = require('moment'); 
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.createEventNotification = catchAsync(async (req, res, next) => {
   req.body.company =  req.cookies.companyId; 

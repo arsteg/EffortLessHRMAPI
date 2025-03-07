@@ -38,6 +38,7 @@ const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUs
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
 const moment = require('moment'); // Using moment.js for easy date manipulation
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   // Extract companyId from req.cookies

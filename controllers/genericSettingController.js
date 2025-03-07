@@ -7,6 +7,7 @@ app.use(express.json);
 const catchAsync = require('../utils/catchAsync');
 const { findById } = require("../models/item"); 
 const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     try {       

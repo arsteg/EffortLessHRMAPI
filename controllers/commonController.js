@@ -12,6 +12,9 @@ const AppError = require('../utils/appError');
 const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const constants = require('../constants');
+const globalStore = require('../utils/globalStore');
+const  websocketHandler  = require('../utils/websocketHandler');
+
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -535,6 +538,54 @@ exports.getGoogleApiKey = catchAsync(
     res.status(200).json({
       status: constants.APIResponseStatus.Failure,
       data: "",
+    });
+  }
+});
+
+exports.setSelectedUserForLogging = catchAsync(
+  async (req, res, next) => {
+  try {    
+    globalStore.selectedUserForLogging = req.body.userId;       
+      res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: globalStore.selectedUserForLogging,
+      });    
+  } catch (error) {
+    res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      data: "",
+    });
+  }
+});
+
+exports.getSelectedUserForLogging = catchAsync(
+  async (req, res, next) => {
+  try {
+    
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: globalStore.selectedUserForLogging,
+    }); 
+  } catch (error) {
+    res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      data: "",
+    });
+  }
+});
+
+exports.testLog = catchAsync(
+  async (req, res, next) => {
+  try {    
+    websocketHandler.logEvent(req, 'User performed an action');
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {},
+    }); 
+  } catch (error) {
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      data: error.message,
     });
   }
 });
