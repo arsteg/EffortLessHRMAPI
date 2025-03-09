@@ -1184,22 +1184,6 @@ exports.getAllPlanOfferDetails = catchAsync(async (req, res, next) => {
 
 exports.addSubscriptionDetails = async (req, res) => {
   try {
-    // Basic validation for required fields
-    // if (!req.body.currentPlanId || !req.body.offer || !req.body.userGroupType) {
-    //   return res.status(400).json({ error: 'Plan, offer, and userGroupType are required fields' });
-    // }
-
-    // Check if userGroupType ID is valid
-    // const isValidUserGroupType = await UserGroupType.findById(req.body.userGroupType);
-    // if (!isValidUserGroupType) {
-    //   return res.status(400).json({ error: 'Invalid userGroupType ID' });
-    // }
-
-    // Check if offer ID is valid
-    // const isValidOffer = await Offer.findById(req.body.offer);
-    // if (!isValidOffer) {
-    //   return res.status(400).json({ error: 'Invalid offer ID' });
-    // }
 
     // Check if currentPlanId ID is valid
     const isValidCurrentPlan = await Plan.findById(req.body.currentPlanId);
@@ -1211,7 +1195,7 @@ exports.addSubscriptionDetails = async (req, res) => {
       companyId: req.cookies.companyId,
       "razorpaySubscription.status": {$nin: ["cancelled"]}
     });
-    // If already have a subscription
+    // If already have a subscription wth selected plan
     const subscription = subscriptions.find(subs => {
       return subs.currentPlanId._id.toString() === req.body.currentPlanId && 
       subs.razorpaySubscription.status === 'created'
@@ -1222,6 +1206,19 @@ exports.addSubscriptionDetails = async (req, res) => {
         data: {subscription},
       });
     } else {
+
+      const subscription = await Subscription.find({
+        "razorpaySubscription.status": 'created',
+        "companyId": req.cookies.companyId
+      });
+      if(subscription.length > 0) {
+        subscription.forEach(async (subs) => {
+          razorpay.subscriptions.cancel(subs.subscriptionId);
+          Subscription.findOneAndUpdate(subs._id, {
+            "razorpaySubscription.status": 'cancelled'
+          });
+        });
+      }
 
       // Fetch Razorpay plan id from mongoDb Plans
       const razorpayPlanid = isValidCurrentPlan.planId
@@ -1537,6 +1534,18 @@ exports.updateSubscriptionDetails = async (req, res) => {
       const daysForNewPlan = Math.floor(remainingAmount / newPlanPricePerDay) || 1;
       const newStartDate = Math.floor(Date.now() / 1000) + daysForNewPlan * 86400; // Future start time
       console.log("Charge subscription after these many days: ", daysForNewPlan);
+
+      if(req.body.confirmation){
+        return res.status(200).json({
+          status: constants.APIResponseStatus.Success,
+          data: {
+            startDate: newStartDate,
+            daysRemaining: daysForNewPlan,
+            remainingDays: remainingDays,
+            remainingAmount: remainingAmount,
+          },
+        });    
+      }
 
       // cancel existing subscription
       const cancelSubscription = await razorpay.subscriptions.cancel(subscription.subscriptionId, false);

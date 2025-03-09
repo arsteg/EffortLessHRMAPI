@@ -45,7 +45,6 @@ const OTP = require("../models/commons/otp");
 const sendEmail = require('../utils/email');
 const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
 const UserActionLog = require("../models/Logging/userActionModel");
-const { updateRazorpaySubscription } = require("./pricingController");
 const StorageController = require('./storageController.js');
 const  websocketHandler  = require('../utils/websocketHandler');
 
@@ -110,10 +109,9 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     oldStatus: document.status || '',
     newStatus: "Deleted",
     timestamp: new Date().toISOString(),
-    action: 'Update razorpay subscription'
+    action: 'User Deleted'
   }
   await exports.logUserAction(req, userAction, next);
-  await updateRazorpaySubscription(userAction);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: document,
@@ -301,7 +299,6 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     action: 'Update razorpay subscription'
   }
   await exports.logUserAction(req, userAction, next);
-  await updateRazorpaySubscription(userAction);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,

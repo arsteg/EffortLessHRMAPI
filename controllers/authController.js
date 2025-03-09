@@ -31,7 +31,6 @@ const razorpay = new Razorpay({
     "X-Razorpay-Account":process.env.RAZORPAY_MERCHANT || "PWAQUL4NNnybvx"
   }
 });
-const { updateRazorpaySubscription } = require('./pricingController');
 const { logUserAction } = require('./userController');
 
 const signToken = async (id) => {
@@ -273,6 +272,22 @@ else
 });
 exports.CreateUser = catchAsync(async(req, res, next) => {      
   try{
+   const subscription = await Subscription.findOne({
+         companyId: req.cookies.companyId,
+         "razorpaySubscription.status": { 
+          $in: constants.Active_Subscription
+        }
+  }).populate('currentPlanId');
+  const activeUsers = await User.count({ 
+    company: mongoose.Types.ObjectId(req.cookies.companyId),
+    status: {$in: constants.Active_Statuses}
+  });
+  if(subscription.currentPlanId.users <= activeUsers){
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      error: 'You have reached the user limit for your subscription plan. You cannot add more than 10 users. Please upgrade your plan to add more users.'
+    })
+  }
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -335,7 +350,6 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     action: 'New user added'
   };
   await logUserAction(req, userAction, next);
-  await updateRazorpaySubscription(userAction);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
