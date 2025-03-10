@@ -60,7 +60,8 @@ exports.getFeedbackFieldById = catchAsync(async (req, res, next) => {
 });
 
 exports.getFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId; // Use URL parameter
+  const companyId = req.cookies.companyId || req.params.companyId; // Use URL parameter
+  
   websocketHandler.logEvent(req, `User initiated fetching feedback fields for company. Company ID: ${companyId}, User ID: ${req.cookies.userId}`);
   try {
     const feedbackFields = await FeedbackField.find({ company: companyId });
