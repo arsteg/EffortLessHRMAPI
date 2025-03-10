@@ -3,6 +3,9 @@ const Feedback = require('../models/feedback/feedbackFormSchema');
 const catchAsync = require('../utils/catchAsync');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
+const feedbackQRCode = require('../models/feedback/feedbackQRCode');
+const QRCode = require('qrcode');
+
 
 // Feedback Field Controllers
 exports.createFeedbackField = catchAsync(async (req, res, next) => {
@@ -303,6 +306,156 @@ exports.deleteFeedback = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.generateBarcode = catchAsync(async (req, res, next) => {
 
+// Existing Feedback Field Controllers (unchanged)
+
+
+// Barcode Controllers
+exports.createBarcode = catchAsync(async (req, res, next) => {
+  websocketHandler.logEvent(req, `User initiated creating a barcode. Company ID: ${req.cookies.companyId}, User ID: ${req.cookies.userId}`);
+  try {
+    const {name,storeId, tableId, url } = req.body;
+    const companyId = req.cookies.companyId;
+    if (!storeId || !tableId || !url) {
+      throw new Error('storeId, tableId, and url are required');
+    }    
+    const fullURL = `${url}&companyId=${req.cookies.companyId}`
+    const qrCodeDataUrl = await QRCode.toDataURL(fullURL); // Generate QR code as base64
+    
+    websocketHandler.logEvent(req, `qrCodeDataUrl: ${qrCodeDataUrl}`);
+
+    const barcode = await feedbackQRCode.create({
+      name,
+      companyId,
+      storeId,
+      tableId,
+      url:fullURL,
+      qrCodeDataUrl
+    });
+
+    websocketHandler.logEvent(req, `User successfully created a barcode. Barcode ID: ${barcode._id}, User ID: ${req.cookies.userId}`);
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: barcode,
+    });
+  } catch (err) {
+    websocketHandler.logEvent(req, `User failed to create a barcode. Error: ${err.message}, Stack: ${err.stack}`);
+    res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: err.message,
+    });
+  }
+});
+
+exports.getBarcodesByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  websocketHandler.logEvent(req, `User initiated fetching barcodes for company. Company ID: ${companyId}, User ID: ${req.cookies.userId}`);
+  try {
+    const barcodes = await feedbackQRCode.find({ company: companyId });
+    if (!barcodes || barcodes.length === 0) {
+      websocketHandler.logEvent(req, `User failed to fetch barcodes. No barcodes found for Company ID: ${companyId}`);
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: 'No barcodes found for this company',
+      });
+    }
+
+    websocketHandler.logEvent(req, `User successfully fetched barcodes. Company ID: ${companyId}, User ID: ${req.cookies.userId}`);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: barcodes,
+    });
+  } catch (err) {
+    websocketHandler.logEvent(req, `User failed to fetch barcodes for company. Error: ${err.message}, Stack: ${err.stack}`);
+    res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: err.message,
+    });
+  }
+});
+
+exports.getBarcodeById = catchAsync(async (req, res, next) => {
+  websocketHandler.logEvent(req, `User initiated fetching a barcode by ID. Barcode ID: ${req.params.id}, User ID: ${req.cookies.userId}`);
+  try {
+    const barcode = await feedbackQRCode.findById(req.params.id);
+    if (!barcode) {
+      websocketHandler.logEvent(req, `User failed to fetch barcode. Barcode ID: ${req.params.id} not found`);
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: 'Barcode not found',
+      });
+    }
+
+    websocketHandler.logEvent(req, `User successfully fetched barcode. Barcode ID: ${barcode._id}, User ID: ${req.cookies.userId}`);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: barcode,
+    });
+  } catch (err) {
+    websocketHandler.logEvent(req, `User failed to fetch barcode by ID. Error: ${err.message}, Stack: ${err.stack}`);
+    res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: err.message,
+    });
+  }
+});
+
+exports.updateBarcode = catchAsync(async (req, res, next) => {
+  websocketHandler.logEvent(req, `User initiated updating a barcode. Barcode ID: ${req.params.id}, User ID: ${req.cookies.userId}`);
+  try {
+    const { storeId, tableId, url } = req.body;
+    const qrCodeDataUrl = url ? await QRCode.toDataURL(url) : undefined; // Regenerate QR code if URL changes
+
+    const barcode = await feedbackQRCode.findByIdAndUpdate(
+      req.params.id,
+      { storeId, tableId, url, ...(qrCodeDataUrl && { qrCodeDataUrl }) },
+      { new: true, runValidators: true }
+    );
+
+    if (!barcode) {
+      websocketHandler.logEvent(req, `User failed to update barcode. Barcode ID: ${req.params.id} not found`);
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: 'Barcode not found',
+      });
+    }
+
+    websocketHandler.logEvent(req, `User successfully updated barcode. Barcode ID: ${barcode._id}, User ID: ${req.cookies.userId}`);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: barcode,
+    });
+  } catch (err) {
+    websocketHandler.logEvent(req, `User failed to update barcode. Error: ${err.message}, Stack: ${err.stack}`);
+    res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: err.message,
+    });
+  }
+});
+
+exports.deleteBarcode = catchAsync(async (req, res, next) => {
+  websocketHandler.logEvent(req, `User initiated deleting a barcode. Barcode ID: ${req.params.id}, User ID: ${req.cookies.userId}`);
+  try {
+    const barcode = await feedbackQRCode.findByIdAndDelete(req.params.id);
+    if (!barcode) {
+      websocketHandler.logEvent(req, `User failed to delete barcode. Barcode ID: ${req.params.id} not found`);
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: 'Barcode not found',
+      });
+    }
+
+    websocketHandler.logEvent(req, `User successfully deleted barcode. Barcode ID: ${barcode._id}, User ID: ${req.cookies.userId}`);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: barcode,
+    });
+  } catch (err) {
+    websocketHandler.logEvent(req, `User failed to delete barcode. Error: ${err.message}, Stack: ${err.stack}`);
+    res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: err.message,
+    });
+  }
 });

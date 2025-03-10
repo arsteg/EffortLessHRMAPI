@@ -3,12 +3,10 @@ var Schema = mongoose.Schema;
 
 var ptSlabSchema = new Schema({  
   fromAmount: {
-    type: String,
-    required: true
+    type: Number
   },
   toAmount: {
-    type: String,
-    required: true
+    type: String
   },
   employeePercentage: {
     type: Number,
@@ -28,7 +26,7 @@ var ptSlabSchema = new Schema({
   },
   state: {
     type: mongoose.Schema.ObjectId,
-    ref: 'State', // Assuming there's a State schema for reference
+    ref: 'PTConfigureStates', // Assuming there's a State schema for reference
     required: true
   },
   company: {
@@ -37,5 +35,17 @@ var ptSlabSchema = new Schema({
     required: true
   }
 }, { collection: 'PTSlab' });
+
+ptSlabSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'state',
+      select: 'id state'
+    });
+  } catch (error) {
+    console.error("Error populating state:", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('PTSlab', ptSlabSchema);

@@ -1,0 +1,626 @@
+{
+    "states": [
+      {
+        "name": "Andhra Pradesh",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 15000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹15,000"
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": 20000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 20001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Assam",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 10000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹10,000"
+          },
+          {
+            "fromAmount": 10001,
+            "toAmount": 15000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": 25000,
+            "employeeAmount": 180,
+            "twelfthMonthAmount": 180,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Bihar",
+        "deductionFrequency": "yearly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 300000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "annual",
+            "notes": "Nil for annual income up to ₹3,00,000"
+          },
+          {
+            "fromAmount": 300001,
+            "toAmount": 500000,
+            "employeeAmount": 1000,
+            "twelfthMonthAmount": 1000,
+            "deductionFrequency": "annual",
+            "notes": "Annual payment due by November 30"
+          },
+          {
+            "fromAmount": 500001,
+            "toAmount": 1000000,
+            "employeeAmount": 2000,
+            "twelfthMonthAmount": 2000,
+            "deductionFrequency": "annual",
+            "notes": null
+          },
+          {
+            "fromAmount": 1000001,
+            "toAmount": null,
+            "employeeAmount": 2500,
+            "twelfthMonthAmount": 2500,
+            "deductionFrequency": "annual",
+            "notes": "Maximum annual limit"
+          }
+        ]
+      },
+      {
+        "name": "Chhattisgarh",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 25000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹25,000 (approximate)"
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Gujarat",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 11999,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹11,999"
+          },
+          {
+            "fromAmount": 12000,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Jharkhand",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 25000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹25,000"
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": 41666,
+            "employeeAmount": 100,
+            "twelfthMonthAmount": 100,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 41667,
+            "toAmount": 66666,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 66667,
+            "toAmount": 83333,
+            "employeeAmount": 175,
+            "twelfthMonthAmount": 175,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 83334,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Karnataka",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 15000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹15,000"
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": "Due by 20th of succeeding month"
+          }
+        ]
+      },
+      {
+        "name": "Kerala",
+        "deductionFrequency": "half-yearly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 11999,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "half-yearly",
+            "notes": "Nil for half-yearly income up to ₹11,999"
+          },
+          {
+            "fromAmount": 12000,
+            "toAmount": 17999,
+            "employeeAmount": 120,
+            "twelfthMonthAmount": 120,
+            "deductionFrequency": "half-yearly",
+            "notes": "Due by August 31 (1st half), February 28 (2nd half)"
+          },
+          {
+            "fromAmount": 18000,
+            "toAmount": 29999,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 30000,
+            "toAmount": 44999,
+            "employeeAmount": 300,
+            "twelfthMonthAmount": 300,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 45000,
+            "toAmount": 59999,
+            "employeeAmount": 450,
+            "twelfthMonthAmount": 450,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 60000,
+            "toAmount": null,
+            "employeeAmount": 500,
+            "twelfthMonthAmount": 500,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Madhya Pradesh",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 18750,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹18,750"
+          },
+          {
+            "fromAmount": 18751,
+            "toAmount": 25000,
+            "employeeAmount": 125,
+            "twelfthMonthAmount": 125,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": 33333,
+            "employeeAmount": 167,
+            "twelfthMonthAmount": 167,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 33334,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Maharashtra",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 7500,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for males up to ₹7,500; females up to ₹25,000"
+          },
+          {
+            "fromAmount": 7501,
+            "toAmount": 10000,
+            "employeeAmount": 175,
+            "twelfthMonthAmount": 175,
+            "deductionFrequency": "monthly",
+            "notes": "Males only; ₹175 for 11 months, ₹300 in February"
+          },
+          {
+            "fromAmount": 10001,
+            "toAmount": 25000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for females up to ₹25,000"
+          },
+          {
+            "fromAmount": 10001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 300,
+            "deductionFrequency": "monthly",
+            "notes": "Males: ₹200 for 11 months, ₹300 in February; Females: ₹200 for 11 months, ₹300 in February above ₹25,000"
+          }
+        ]
+      },
+      {
+        "name": "Meghalaya",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 25000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹25,000"
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": 33333,
+            "employeeAmount": 100,
+            "twelfthMonthAmount": 100,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 33334,
+            "toAmount": 41666,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 41667,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Odisha",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 13904,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹13,904"
+          },
+          {
+            "fromAmount": 13905,
+            "toAmount": 25000,
+            "employeeAmount": 125,
+            "twelfthMonthAmount": 125,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": 40000,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 40001,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "Sikkim",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 20000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹20,000"
+          },
+          {
+            "fromAmount": 20001,
+            "toAmount": 30000,
+            "employeeAmount": 125,
+            "twelfthMonthAmount": 125,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 30001,
+            "toAmount": 40000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 40001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Tamil Nadu",
+        "deductionFrequency": "half-yearly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 21000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "half-yearly",
+            "notes": "Nil for half-yearly income up to ₹21,000"
+          },
+          {
+            "fromAmount": 21001,
+            "toAmount": 30000,
+            "employeeAmount": 135,
+            "twelfthMonthAmount": 135,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 30001,
+            "toAmount": 45000,
+            "employeeAmount": 315,
+            "twelfthMonthAmount": 315,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 45001,
+            "toAmount": 60000,
+            "employeeAmount": 690,
+            "twelfthMonthAmount": 690,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 60001,
+            "toAmount": 75000,
+            "employeeAmount": 1025,
+            "twelfthMonthAmount": 1025,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          },
+          {
+            "fromAmount": 75001,
+            "toAmount": null,
+            "employeeAmount": 1395,
+            "twelfthMonthAmount": 1395,
+            "deductionFrequency": "half-yearly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Telangana",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 15000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹15,000"
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": 20000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 20001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          }
+        ]
+      },
+      {
+        "name": "Tripura",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 7500,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹7,500"
+          },
+          {
+            "fromAmount": 7501,
+            "toAmount": 15000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": null,
+            "employeeAmount": 208,
+            "twelfthMonthAmount": 212,
+            "deductionFrequency": "monthly",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
+        "name": "West Bengal",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 10000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "monthly",
+            "notes": "Nil for salaries up to ₹10,000"
+          },
+          {
+            "fromAmount": 10001,
+            "toAmount": 15000,
+            "employeeAmount": 110,
+            "twelfthMonthAmount": 110,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 15001,
+            "toAmount": 25000,
+            "employeeAmount": 130,
+            "twelfthMonthAmount": 130,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 25001,
+            "toAmount": 40000,
+            "employeeAmount": 150,
+            "twelfthMonthAmount": 150,
+            "deductionFrequency": "monthly",
+            "notes": null
+          },
+          {
+            "fromAmount": 40001,
+            "toAmount": null,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 200,
+            "deductionFrequency": "monthly",
+            "notes": null
+          }
+        ]
+      }
+    ]
+  }

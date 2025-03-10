@@ -1293,6 +1293,9 @@ router.get('/pt-eligible-states', authController.protect, payrollController.getA
  */
 router.post('/pt-slabs', authController.protect, payrollController.addPTSlab);
 
+// Get all state-wise pt slabs
+router.get('/state-wise-pt-slabs', authController.protect, payrollController.getStateWisePTSlabs);
+
 // Get all PTSlabs
 /**
  * @swagger

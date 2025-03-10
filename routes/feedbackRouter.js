@@ -156,7 +156,7 @@ router.delete('/fields/delete/:id', authController.protect, feedbackController.d
 // Feedback Submission Routes
 /**
  * @swagger
- * /submit:
+ * /api/feedback/submit:
  *   post:
  *     summary: Submit feedback
  *     description: Allows a user to submit feedback for a specific company/store, including feedback values based on predefined fields.
@@ -273,7 +273,7 @@ router.delete('/fields/delete/:id', authController.protect, feedbackController.d
  *       - cookieAuth: []
  */
 router.post('/submit', feedbackController.submitFeedback);
-router.get('/:id', authController.protect, feedbackController.getFeedbackById);
+//router.get('/:id', authController.protect, feedbackController.getFeedbackById);
 router.get('/store/:storeId', authController.protect, feedbackController.getFeedbackByStore);
 /**
  * @swagger
@@ -376,7 +376,169 @@ router.get('/store/:storeId', authController.protect, feedbackController.getFeed
  *                                  example: Error message from server
  */
 router.get('/', authController.protect, feedbackController.getFeedbackByCompany);
-
 router.delete('/delete/:id', authController.protect, feedbackController.deleteFeedback);
+
+//barcode API's
+// Barcode Routes
+/**
+ * @swagger
+ * /api/feedback/qrcodes:
+ *   post:
+ *     summary: Create a feedback QRcode
+ *     tags: [Feedback Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string 
+ *               storeId:
+ *                 type: string
+ *               tableId:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *             required:
+ *               - companyId
+ *               - storeId
+ *               - tableId
+ *               - url
+ *     responses:
+ *       201:
+ *         description: Barcode created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
+router.post('/qrcodes', authController.protect, feedbackController.createBarcode);
+
+/**
+ * @swagger
+ * /api/v1/feedback/qrcodes:
+ *  get:
+ *      tags:
+ *          - Feedback Management
+ *      summary: "Get all QRcodes for the authenticated user's company"
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: array
+ *                          items:
+ *                              type: object
+ *      security:
+ *          - cookieAuth: []
+ */
+router.get('/qrcodes', authController.protect, feedbackController.getBarcodesByCompany);
+
+/**
+ * @swagger
+ * /api/v1/feedback/qrcodes/{id}:
+ *  get:
+ *      tags:
+ *          - Feedback Management
+ *      summary: "Get QRcode by ID"
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: Barcode ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *      security:
+ *          - cookieAuth: []
+ */
+router.get('/qrcodes/:id', authController.protect, feedbackController.getBarcodeById);
+
+/**
+ * @swagger
+ * /api/v1/feedback/qrcodes/{id}:
+ *  patch:
+ *      tags:
+ *          - Feedback Management
+ *      summary: "Update a QRCode"
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: Barcode ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          storeId:
+ *                              type: string
+ *                          tableId:
+ *                              type: string
+ *                          url:
+ *                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *      security:
+ *          - cookieAuth: []
+ */
+router.patch('/qrcodes/:id', authController.protect, feedbackController.updateBarcode);
+
+/**
+ * @swagger
+ * /api/v1/feedback/qrcodes/delete/{id}:
+ *  delete:
+ *      tags:
+ *          - Feedback Management
+ *      summary: "Delete a QRCode"
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: Barcode ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *      security:
+ *          - cookieAuth: []
+ */
+router.delete('/qrcodes/:id', authController.protect, feedbackController.deleteBarcode);
+
 
 module.exports = router;

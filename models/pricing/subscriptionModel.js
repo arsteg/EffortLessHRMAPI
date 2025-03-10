@@ -74,7 +74,7 @@ subscriptionSchema.pre(/^find/,async function(next) {
   try {
     this.populate({
       path: 'currentPlanId',
-      select: 'name type currentprice IsActive frequency'
+      select: 'name type currentprice IsActive frequency users'
     });
   } catch (error) {
     console.error("Error populating currentPlanId:", error);
