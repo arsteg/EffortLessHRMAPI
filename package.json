@@ -45,6 +45,7 @@
     "nodemon": "^1.3.3",
     "openai": "^4.80.0",
     "pug": "^3.0.2",
+    "qrcode": "^1.5.4",
     "razorpay": "^2.9.5",
     "slugify": "^1.6.4",
     "socket.io": "^4.5.4",

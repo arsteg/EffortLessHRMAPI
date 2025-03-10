@@ -32,6 +32,7 @@ const wss = initializeWebSocketServer(process.env.webSocketPORT|| 3030);
 // Log event function
 // Function to send logs
 const logEvent = (req, message) => {
+    console.log('Sending log message:', message);
     const userId = req.cookies.userId;
     if (global.selectedUserForLogging && global.selectedUserForLogging === userId) {
         const logMessage = JSON.stringify({
@@ -41,6 +42,7 @@ const logEvent = (req, message) => {
             message,
             timestamp: new Date(),
         });
+        
         broadcastMessage(logMessage);
     }
 };
