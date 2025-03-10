@@ -319,7 +319,7 @@ exports.createBarcode = catchAsync(async (req, res, next) => {
     if (!storeId || !tableId || !url) {
       throw new Error('storeId, tableId, and url are required');
     }    
-    const fullURL = `${url}&companyId=${req.cookies.companyId}`
+    const fullURL = `${process.env.WEBSITE_DOMAIN}${url}&companyId=${req.cookies.companyId}`
     const qrCodeDataUrl = await QRCode.toDataURL(fullURL); // Generate QR code as base64
     
     websocketHandler.logEvent(req, `qrCodeDataUrl: ${qrCodeDataUrl}`);
