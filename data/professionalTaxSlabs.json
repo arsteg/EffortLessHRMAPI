@@ -349,6 +349,52 @@
         ]
       },
       {
+        "name": "Manipur",
+        "deductionFrequency": "monthly",
+        "slabs": [
+          {
+            "fromAmount": 0,
+            "toAmount": 50000,
+            "employeeAmount": 0,
+            "twelfthMonthAmount": 0,
+            "deductionFrequency": "annum",
+            "notes": "Nil for salaries up to 50,000"
+          },
+          {
+            "fromAmount": 50001,
+            "toAmount": 75000,
+            "employeeAmount": 1200,
+            "twelfthMonthAmount": 1200,
+            "deductionFrequency": "annum",
+            "notes": null
+          },
+          {
+            "fromAmount": 75001,
+            "toAmount": 100000,
+            "employeeAmount": 2000,
+            "twelfthMonthAmount": 2000,
+            "deductionFrequency": "annum",
+            "notes": null
+          },
+          {
+            "fromAmount": 100001,
+            "toAmount": 125000,
+            "employeeAmount": 2400,
+            "twelfthMonthAmount": 2400,
+            "deductionFrequency": "annum",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          },
+          {
+            "fromAmount": 125001,
+            "toAmount": null,
+            "employeeAmount": 2500,
+            "twelfthMonthAmount": 2500,
+            "deductionFrequency": "annum",
+            "notes": "₹208 for 11 months, ₹212 for 12th month"
+          }
+        ]
+      },
+      {
         "name": "Meghalaya",
         "deductionFrequency": "monthly",
         "slabs": [
