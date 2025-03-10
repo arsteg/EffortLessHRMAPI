@@ -67,11 +67,16 @@ router.get('/fields/:id', authController.protect, feedbackController.getFeedback
 
 /**
  * @swagger
- * /api/v1/feedback/fields:
+ * /api/v1/feedback/Allfields/{companyId}:
  *  get:
  *      tags:
  *          - Feedback Management
  *      summary: "Get all feedback fields for the authenticated user's company"
+*      parameters:
+ *       - name: companyId
+ *         in: path
+ *         description: companyId
+ *         required: true
  *      produces:
  *          - application/json
  *      responses:
@@ -84,7 +89,7 @@ router.get('/fields/:id', authController.protect, feedbackController.getFeedback
  *                          items:
  *                              type: object
  */
-router.get('/fields', authController.protect, feedbackController.getFeedbackFieldsByCompany);
+router.get('/Allfields/:companyId', feedbackController.getFeedbackFieldsByCompany);
 
 /**
  * @swagger
