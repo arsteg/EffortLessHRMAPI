@@ -58,7 +58,7 @@ const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetail
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel.js");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
 const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 
 exports.createGeneralSetting = async (req, res, next) => {
@@ -81,7 +81,7 @@ exports.createGeneralSetting = async (req, res, next) => {
     });
   } catch (err) {
     res.status(400).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       error: err.message,
     });
   }
@@ -108,7 +108,7 @@ exports.getGeneralSettingByCompanyId = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       error: err.message,
     });
   }
@@ -138,7 +138,7 @@ exports.updateGeneralSetting = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       error: err.message,
     });
   }
@@ -161,7 +161,7 @@ exports.deleteGeneralSetting = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       error: err.message,
     });
   }
@@ -513,7 +513,7 @@ exports.updateFixedContributionSlab = async (req, res, next) => {
       );
     if (!fixedContributionSlab) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: "Fixed Contribution Slab not found",
       });
     }
@@ -535,7 +535,7 @@ exports.deleteFixedContributionSlab = async (req, res, next) => {
       await LWFFixedContributionSlab.findByIdAndDelete(req.params.id);
     if (!fixedContributionSlab) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: "Fixed Contribution Slab not found",
       });
     }
@@ -638,7 +638,7 @@ exports.getLWFFixedDeductionMonth = async (req, res, next) => {
     );
     if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: "LWFFixedContributionMonth not found",
       });
     }
@@ -692,7 +692,7 @@ exports.deleteLWFFixedDeductionMonth = async (req, res, next) => {
       await LWFFixedDeductionMonth.findByIdAndDelete(req.params.id);
     if (!lwfFixedDeductionMonth) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: "LWFFixedDeductionMonth not found",
       });
     }
@@ -702,7 +702,7 @@ exports.deleteLWFFixedDeductionMonth = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message,
     });
   }
@@ -719,7 +719,7 @@ exports.getAllLWFFixedDeductionMonths = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message,
     });
   }
@@ -735,7 +735,7 @@ exports.getAllPTEligibleStates = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message,
     });
   }
@@ -1002,7 +1002,7 @@ exports.getAllPTDeductionMonths = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message,
     });
   }
@@ -1023,7 +1023,7 @@ exports.getPTDeductionMonthById = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message,
     });
   }
@@ -1041,7 +1041,7 @@ exports.updatePTDeductionMonth = async (req, res, next) => {
     );
     if (!ptDeductionMonth) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: "PT Deduction Month not found",
       });
     }
@@ -2020,7 +2020,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
 
       if (!result) {
         return res.status(400).json({
-          status:constants.APIResponseStatus.Failure,
+          status: constants.APIResponseStatus.Failure,
           message: "Invalid Variable Deduction",
         });
       }
@@ -2628,13 +2628,6 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
     name: ctcTemplateData.name,
     _id: { $ne: req.params.id },
   });
-
-  if (existingTemplate) {
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      message: "Name already exists",
-    });
-  }
 
   if (
     !Array.isArray(ctcTemplateFixedAllowance) ||
@@ -3380,10 +3373,10 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
     });
   }
   // Step 1: Find all PayrollUsers for the given payroll and company
-  const payrolls = await Payroll.find({company: companyId});
+  const payrolls = await Payroll.find({ company: companyId });
 
   const payrollUsers = await PayrollUsers.find({
-    payroll: {$in: payrolls.map(p=> p._id)},
+    payroll: { $in: payrolls.map(p => p._id) },
     company: companyId // Filter by company
   }).populate({
     path: 'user',
@@ -3488,7 +3481,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         totalIncomeTax,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
-        payroll:  payrolls.find(p => p._id.equals(payrollUser.payroll))
+        payroll: payrolls.find(p => p._id.equals(payrollUser.payroll))
       };
     })
   );
@@ -3497,8 +3490,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   // const filteredPayrollList = await Payroll.find({ company: companyId })
 
   res.status(200).json({
-   status: constants.APIResponseStatus.Success,
-   data: filteredPayrollList
+    status: constants.APIResponseStatus.Success,
+    data: filteredPayrollList
   });
 });
 
@@ -3659,7 +3652,7 @@ exports.getFlexiBenefitsAndPFTax = async (req, res) => {
 
     if (!record) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Record not found'
       });
     }
@@ -3716,7 +3709,7 @@ exports.updateFlexiBenefitsAndPFTax = async (req, res) => {
 
     if (!updatedRecord) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Record not found'
       });
     }
@@ -3729,7 +3722,7 @@ exports.updateFlexiBenefitsAndPFTax = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -3742,7 +3735,7 @@ exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
 
     if (!record) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Record not found'
       });
     }
@@ -3812,7 +3805,7 @@ exports.getPayrollOvertime = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -3829,7 +3822,7 @@ exports.updatePayrollOvertime = async (req, res) => {
 
     if (!updatedRecord) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Payroll Overtime record not found'
       });
     }
@@ -3885,7 +3878,7 @@ exports.getAllPayrollOvertimeByPayrollUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4600,7 +4593,7 @@ exports.getPayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4659,7 +4652,7 @@ exports.updatePayrollFNFFlexiBenefitsAndPFTax = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4728,7 +4721,7 @@ exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4800,7 +4793,7 @@ exports.createPayrollFNFOvertime = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4813,7 +4806,7 @@ exports.getPayrollFNFOvertime = async (req, res) => {
 
     if (!record) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Payroll FNF Overtime record not found'
       });
     }
@@ -4856,7 +4849,7 @@ exports.updatePayrollFNFOvertime = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: err.message
     });
   }
@@ -4869,7 +4862,7 @@ exports.deletePayrollFNFOvertime = async (req, res) => {
 
     if (!record) {
       return res.status(404).json({
-        status:constants.APIResponseStatus.Error,
+        status: constants.APIResponseStatus.Error,
         message: 'Payroll FNF Overtime record not found'
       });
     }
