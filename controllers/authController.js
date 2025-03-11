@@ -314,7 +314,8 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     company: req.cookies.companyId,
   });
   await newAppointment.save();
- 
+  newUser.appointment = newAppointment
+
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 
@@ -353,7 +354,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
-      User:newUser
+      User:newUser    
     }
   });
   }
