@@ -27,7 +27,7 @@ const initializeWebSocketServer = (port) => {
 };
 
 // Initialize WebSocket server on port 4000
-const wss = initializeWebSocketServer(process.env.webSocketPORT|| 3030);
+const wss = initializeWebSocketServer(process.env.PORT || 3030);
 
 // Log event function
 // Function to send logs
