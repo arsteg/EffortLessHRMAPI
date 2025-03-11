@@ -282,10 +282,10 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     company: mongoose.Types.ObjectId(req.cookies.companyId),
     status: {$in: constants.Active_Statuses}
   });
-  if(subscription.currentPlanId.users <= activeUsers){
+  if(subscription?.currentPlanId?.users <= activeUsers){
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      error: 'You have reached the user limit for your subscription plan. You cannot add more than 10 users. Please upgrade your plan to add more users.'
+      error: `You have reached the user limit for your subscription plan. You cannot add more than ${subscription?.currentPlanId?.users} users. Please upgrade your plan to add more users.`
     })
   }
   const newUser = await User.create({
