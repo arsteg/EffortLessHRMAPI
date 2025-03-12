@@ -49,4 +49,15 @@ var expenseTemplateCategoriesSchema = new Schema({
   expenseTemplateCategoryFieldValues:[]
 }, { collection: 'ExpenseTemplateCategories' });
 
+expenseTemplateCategoriesSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'expenseCategory',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating expense category:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('ExpenseTemplateCategories', expenseTemplateCategoriesSchema);
