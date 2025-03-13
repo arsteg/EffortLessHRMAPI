@@ -59,7 +59,7 @@ const leaveCategorySchema = new Schema({
   },
   isEligibleForEncashmentRecoveryDuringFNF: {
     type: Boolean,
-    required: true
+    default: false
   },
   isWeeklyOffHolidayPartHalfDayIncludedDaTaken: {
     type: Boolean,
