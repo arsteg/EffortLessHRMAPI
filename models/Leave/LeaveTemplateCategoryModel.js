@@ -62,4 +62,15 @@ var leaveTemplateCategorySchema = new Schema({
   templateApplicableCategoryEmployee:[]
 }, { collection: 'LeaveTemplateCategory' });
 
+leaveTemplateCategorySchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'leaveCategory',
+      select: 'id label'
+    });
+  } catch (error) {
+    console.error("Error populating leave Category:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('LeaveTemplateCategory', leaveTemplateCategorySchema);
