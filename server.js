@@ -9,10 +9,10 @@ const { Server } = require('socket.io');
 const socket = require('./utils/socket');
 const cron = require("node-cron");
 const routes = require('./routes');
-const notificationSender = require('./utils/notificationSender');
 const scheduleController = require('./controllers/ScheduleController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
-let { setSocketIO } = require('./utils/liveScreenSender');
+const { initWebSocket } = require('./utils/websocketHandler');
+//let { setSocketIO } = require('./utils/liveScreenSender');
 
 //  import environment variables
 // Handle unhandled exceptions
@@ -22,40 +22,17 @@ process.on('uncaughtException', err => {
   process.exit(1);
 });
 
-
 const app = require('./app');
 const httpServer = http.createServer(app);
-const io = new Server(httpServer, { cors: { origin: '*' } });
-
-io.on('connection', (client) => {
-  client.on('register', (userId) => {    
-    console.log(`Registered the user ID ${userId} with the connected socket ID, the client Id is:${client.id}`);
-    userSocketMap.set(userId, client.id);    
-    setSocketIO(io, client.id, userId);
-    setLoggerSocketIO(io);
-    // Emit the current user list to the new connection
-    //io.to(client.id).emit('users-online', getUserList());
-  });
-
-  // Handle client disconnection
-  client.on('disconnect', () => {
-    // Find the user ID associated with this socket ID    
-    console.log(`Client disconnected`);    
-    for (let [userId, socketId] of userSocketMap.entries()) {
-      if (socketId === client.id) {
-        userSocketMap.delete(userId);
-        break;
-      }
-    }
-  });  
-});
 
 const swaggerSpec = (swaggerJsDoc(swaggerConfig));
 
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/v1/", routes);
-       
+
+
+
 // Get db url from env file and replace <PW> with actual password
 const DB = process.env.DATABASE.replace(  
   '<PASSWORD>',
@@ -120,7 +97,7 @@ cron.schedule('0 0 1 * *', async () => {
     const allUserNotifications = await getUserNotifications(userIds);
     for (let notification of allUserNotifications) {
       if(notification){        
-        notificationSender.sendNotification(notification.user.toString(), io, userSocketMap, 'users-online', notification);
+        //notificationSender.sendNotification(notification.user.toString(), io, userSocketMap, 'users-online', notification);
       }
     }    
   }  
@@ -129,16 +106,14 @@ cron.schedule('0 0 1 * *', async () => {
 
 // This is important, Heroku won't work with hard coded port
 const port = process.env.PORT || 8080;
-const webSocketPORT = process.env.webSocketPORT|| 8090;
-// httpServer.listen(webSocketPORT, () => {
-//   console.log(`Web socket Server listening on port ${webSocketPORT}`);
-// });
-
-
 // Run server
 const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
+  // Initialize WebSocket
+ initWebSocket(server);
 });
+
+ 
 
 // Handle unhandled rejections
 // In the future, unhadled rejections will exit our application

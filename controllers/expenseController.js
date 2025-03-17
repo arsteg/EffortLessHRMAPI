@@ -686,7 +686,7 @@ exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   if(expenseTemplates)
   {
    for(var i = 0; i < expenseTemplates.length; i++) {     
-   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('task').equals(expenseTemplates[i]._id);  
+   const expenseTemplateApplicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('expenseTemplate').equals(expenseTemplates[i]._id);  
    if(expenseTemplateApplicableCategories) 
       {
         expenseTemplates[i].applicableCategories=expenseTemplateApplicableCategories;
@@ -729,7 +729,8 @@ exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllExpenseTemplateApplicableCategories = catchAsync(async (req, res, next) => {
-  const applicableCategories = await ExpenseTemplateApplicableCategories.find({}).where('company').equals(req.cookies.companyId);
+  const companyId = req.cookies.companyId;
+  const applicableCategories = await ExpenseTemplateApplicableCategories.find({ company: companyId });
   if(applicableCategories) 
       {
         

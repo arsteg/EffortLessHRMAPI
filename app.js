@@ -44,7 +44,7 @@ app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
 
-var notificationRoute = require('./routes/notificationRoute');
+
 //app.use(loggingMiddleware);
 
 // var allowedOrigin ="http://localhost:4200";
@@ -104,7 +104,6 @@ app.use('/api/v1/project', projectRouter);
 app.use('/api/v1/task', taskRouter);
 app.use('/api/v1/leave', leaveRouter);
 app.use('/api/v1/recruitment', recruitmentRouter);
-app.use('/api/v1/notification', notificationRoute);
 app.use('/api/v1/userPreferences', userPreferences);
 app.use('/api/v1/appWebsite', appWebsite);
 app.use('/api/v1/report', reportRouter);
