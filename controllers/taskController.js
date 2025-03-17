@@ -13,7 +13,6 @@ const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
-const notification  = require('../controllers/notficationController');
 const { Console } = require('winston/lib/winston/transports');
 const timeLog = require('../models/timeLog');
 const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel');
@@ -1081,7 +1080,7 @@ exports.addTag = catchAsync(async (req, res, next) => {
   });
  let message=req.body.title;
   try {
-     notification.SendNotification(req, res, next, message);
+     //notification.SendNotification(req, res, next, message);
     // Handle success if needed
   } catch (err) {
     // Handle errors if needed
