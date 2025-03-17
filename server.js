@@ -5,8 +5,6 @@ const mongoose = require('mongoose');
 const swaggerUi = require('swagger-ui-express');
 const swaggerConfig = require('./config/swaggerConfig');
 const swaggerJsDoc = require('swagger-jsdoc');
-const { Server } = require('socket.io');
-const socket = require('./utils/socket');
 const cron = require("node-cron");
 const routes = require('./routes');
 const scheduleController = require('./controllers/ScheduleController');
@@ -30,8 +28,6 @@ const swaggerSpec = (swaggerJsDoc(swaggerConfig));
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/v1/", routes);
-
-
 
 // Get db url from env file and replace <PW> with actual password
 const DB = process.env.DATABASE.replace(  
@@ -63,15 +59,6 @@ cron.schedule('0 0 1 * *', async () => {
   await updateRecurringNotifications();
   //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
-
-//execute at every minute
-// cron.schedule('* * * * *', async () => {
-//   console.log('This Job will run every minute...');
-//   //62dfa8d13babb9ac2072863c
-//   //664229eec5a0b7f0dc0b7e0f
-//   notificationSender.sendNotification('62dfa6993babb9ac20728636',io,userSocketMap,'users-online',{'message':'Hello'});
-//   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
-// });
 
 //Execute every 10 minutes
 cron.schedule('0 0 1 * *', async () => {
@@ -112,7 +99,6 @@ const server = app.listen(port, () => {
   // Initialize WebSocket
  initWebSocket(server);
 });
-
  
 
 // Handle unhandled rejections

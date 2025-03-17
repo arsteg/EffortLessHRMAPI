@@ -1,85 +1,122 @@
-// logEvent.js
 const WebSocket = require('ws');
-const global = require('./globalStore'); // Import globalStore
-const constants = require('../constants'); // Import constants
+const constants = require('../constants'); // Assuming this has content types and notification types
 
-let wss;
+class WebSocketManager {
+  constructor() {
+    this.connectedUsers = new Map();
+    this.wss = null;
+  }
 
-const initWebSocket = (server) => {
-  console.log('Initializing WebSocket server:');  
-  wss = new WebSocket.Server({ server });    
-    wss.on('connection', (ws) => {
-        console.log('WebSocket client connected:');
+  // Initialize WebSocket server
+  initialize(server) {
+    this.wss = new WebSocket.Server({ server });
+    console.log('WebSocket server initialized');
 
-        ws.on('message', (message) => {
-            console.log(`Received message from client: ${message}`);
-        });
+    this.wss.on('connection', (ws) => {
+      console.log('New WebSocket client connected');
 
-        ws.on('close', () => {
-            console.log('WebSocket client disconnected');
-        });
-
-        ws.on('error', (error) => {
-            console.error('WebSocket error:', error);
-        });
+      ws.on('message', (message) => this.handleMessage(ws, message));
+      ws.on('close', () => this.handleDisconnect(ws));
+      ws.on('error', (error) => console.error('WebSocket error:', error));
     });
-  };
+  }
 
-// Function to send logs
-const logEvent = (req, message) => {
-    console.log('Sending log message:', message);
-    const userId = req.cookies.userId;
-    if (global.selectedUserForLogging && global.selectedUserForLogging === userId) {
-        const logMessage = JSON.stringify({
-            type: 'log',
-            contentType: constants.webSocketContentType.Text,
-            userId,
-            message,
-            timestamp: new Date(),
-        });        
-        broadcastMessage(logMessage);
+  // Handle incoming messages
+  handleMessage(ws, message) {
+    try {
+      const data = JSON.parse(message);
+      if (data.type === 'auth' && data.userId) {
+        this.connectedUsers.set(data.userId, ws);
+        ws.userId = data.userId;
+        console.log(`User ${data.userId} authenticated. Total users: ${this.connectedUsers.size}`);
+      } else {
+        console.log(`Received message from ${ws.userId || 'unknown'}: ${message}`);
+      }
+    } catch (error) {
+      console.error('Invalid message format:', error);
     }
-};
+  }
 
-// Function to send notifications
-const sendNotification = (userId, notification) => {
-    const notificationMessage = JSON.stringify({
-        type: 'notification',
-        contentType: constants.webSocketContentType.Text,
-        userId,
-        message: notification,
-        timestamp: new Date(),
+  // Handle client disconnection
+  handleDisconnect(ws) {
+    if (ws.userId) {
+      this.connectedUsers.delete(ws.userId);
+      console.log(`User ${ws.userId} disconnected. Total users: ${this.connectedUsers.size}`);
+    }
+  }
+
+  // Generic message sender
+  sendMessage(userIds, notificationType, content, contentType = constants.webSocketContentType.TEXT) {
+    const message = {
+      notificationType,
+      contentType,
+      content,
+      timestamp: new Date().toISOString(),
+    };
+
+    const messageString = JSON.stringify(message);
+
+    userIds.forEach((userId) => {
+      const client = this.connectedUsers.get(userId);
+      if (client && client.readyState === WebSocket.OPEN) {
+        client.send(messageString);
+        console.log(`Sent ${notificationType} (${contentType}) to user ${userId}`);
+      } else {
+        console.warn(`User ${userId} not connected or WebSocket closed`);
+      }
     });
-    broadcastMessage(notificationMessage);
-};
+  }
 
-
-// Helper function to broadcast messages
-// Function to broadcast messages
-const broadcastMessage = (message) => {
-    if (wss) {
-      console.log(`Broadcasting message: "${message}" to ${wss.clients.size} clients`);
-  
-      wss.clients.forEach((client, index) => {
-        console.log(`Client ${index + 1}: readyState = ${client.readyState}`);  
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
-          console.log(`✅ Successfully sent to Client ${index + 1}`);
-        } else {
-          console.warn(`⚠️ Skipped Client ${index + 1}: Connection not open (readyState = ${client.readyState})`);
-        }
-      });
-  
-      console.log("Broadcasting completed.");
-    } else {
-      console.error("❌ WebSocket server (wss) is not initialized.");
+  // Updated sendLog function
+  sendLog(req, message) {
+    const userId = req.cookies?.userId || req.user?.id; // Fallback to req.user.id if cookies unavailable
+    if (!userId) {
+      console.warn('sendLog: No userId found in request');
+      return; // Exit if no userId
     }
-  };
 
- 
-// Export functions for external use
+    if (!this.connectedUsers.has(userId)) {
+      console.warn(`sendLog: User ${userId} is not connected via WebSocket`);
+      return; // Exit if user isn’t connected
+    }
+
+    this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.LOG, message, constants.webSocketContentType.TEXT);
+  }
+
+  // Specific notification helpers
+  sendNotification(userId, content) {
+    this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.NOTIFICATION, content, constants.webSocketContentType.TEXT);
+  }
+
+  sendAlert(userIds, content) {
+    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.ALERT, content, constants.webSocketContentType.TEXT);
+  }
+
+  sendChat(userIds, content) {
+    // Fixed typo: constants.WEB_SOCKET_NOTIFICATION_TYPES.CHAT instead of NOTIFICATION.CHAT
+    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.CHAT, content, constants.webSocketContentType.TEXT);
+  }
+
+  sendScreenshot(userIds, base64Image) {
+    // Fixed typo: constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT instead of NOTIFICATION.SCREENSHOT
+    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT, base64Image, constants.webSocketContentType.IMAGE);
+  }
+
+  // Get connected users
+  getConnectedUsers() {
+    return Array.from(this.connectedUsers.keys());
+  }
+}
+
+// Create and export singleton instance
+const wsManager = new WebSocketManager();
+
 module.exports = {
-    logEvent,
-    sendNotification,
-    initWebSocket
+  initWebSocket: (server) => wsManager.initialize(server),
+  sendLog: (req, message) => wsManager.sendLog(req, message),
+  sendNotification: (userId, content) => wsManager.sendNotification(userId, content),
+  sendAlert: (userIds, content) => wsManager.sendAlert(userIds, content),
+  sendChat: (userIds, content) => wsManager.sendChat(userIds, content),
+  sendScreenshot: (userIds, base64Image) => wsManager.sendScreenshot(userIds, base64Image),
+  getConnectedUsers: () => wsManager.getConnectedUsers(),
 };

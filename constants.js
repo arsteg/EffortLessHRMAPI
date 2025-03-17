@@ -112,17 +112,29 @@ const Email_template_constant = {
     Warning: "warning",
     Info: "info"
   };
-  const WebSocketNotificationType = {
-    Log: "log"                
-  };
+ 
 
   const webSocketContentType = {
-Text: "text",
-JSON: "json",
-Image: "image",
-Audio: "audio",
-Video: "video",
-File: "file"
+ 
+TEXT: 'text',
+  IMAGE: 'image',
+  AUDIO: 'audio',
+  VIDEO: 'video',
+  FILE: 'file',
+  JSON: "json",
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, Subscription_Status, Active_Subscription, WebSocketNotificationType, webSocketContentType };
+
+  const WEB_SOCKET_NOTIFICATION_TYPES = {
+    LOG: 'log',
+    ALERT: 'alert',
+    NOTIFICATION: 'notification',
+    SCREENSHOT: 'screenshot',
+    CHAT: 'chat'
+  };
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,
+    Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
+    Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType };
   
+
+
+ 
