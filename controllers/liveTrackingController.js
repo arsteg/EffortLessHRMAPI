@@ -236,8 +236,8 @@ exports.getLiveTrackingTestData = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getLiveTrackingByUserId = catchAsync(async (req, res, next) => {
-    const liveTrackigExits = await LiveTracking.where('user').equals(req.cookies.userId);
+exports.getLiveTrackingByUserId = catchAsync(async (req, res, next) => { 
+  const liveTrackigExits = await LiveTracking.where('user').equals(req.cookies.userId);
     if(liveTrackigExits.length > 0) {
         res.status(200).json({
           success: true
@@ -251,20 +251,28 @@ exports.getLiveTrackingByUserId = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserScreen = catchAsync(async (req, res, next) => {
-  console.log('updateUserScreen In');
-  const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
-  if (liveTrackigExits.length>0) {
-    sendUsersLiveImagesToApp(req.cookies.userId, req.body.fileString);
-    // const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success
-    });
-  }
-  else{
-    res.status(200).json({
-      status: constants.APIResponseStatus.Failure
-    });
-  }
+  
+  websocketHandler.sendScreenshot([req.cookies.userId], req.body.fileString);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success
+  });
+
+
+  // console.log('updateUserScreen In');
+  // const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
+  // if (liveTrackigExits.length>0) {
+  //   sendUsersLiveImagesToApp(req.cookies.userId, req.body.fileString);
+  //   // const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
+  //   res.status(200).json({
+  //     status: constants.APIResponseStatus.Success
+  //   });
+  // }
+  // else{
+  //   res.status(200).json({
+  //     status: constants.APIResponseStatus.Failure
+  //   });
+  // }
 });
 
 exports.getUsersLiveScreen = catchAsync(async (req, res, next) => {

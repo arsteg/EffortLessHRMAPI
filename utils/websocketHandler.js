@@ -99,7 +99,9 @@ class WebSocketManager {
 
   sendScreenshot(userIds, base64Image) {
     // Fixed typo: constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT instead of NOTIFICATION.SCREENSHOT
+    console.log("Sending screenshot to users:", userIds);
     this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT, base64Image, constants.webSocketContentType.IMAGE);
+    console.log("Screenshot sent to users:", userIds);
   }
 
   // Get connected users

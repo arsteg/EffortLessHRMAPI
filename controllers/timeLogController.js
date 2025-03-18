@@ -91,83 +91,147 @@ var tomorrow = new Date(new Date(req.body.date).setDate(new Date(req.body.date).
 });
 
 exports.getLogInUser = catchAsync(async (req, res, next) => {
-  var teamIdsArray=[];
-  var teamIds='';
-  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);  
-  if(ids.length > 0)    
-      { 
-        for(var i = 0; i < ids.length; i++) 
-          {    
-              teamIdsArray.push(ids[i]);        
-          }
+  var teamIdsArray = [];
+
+  console.log('1. Initial Request Data:', {
+    userId: req.cookies.userId,
+    body: req.body,
+    cookies: req.cookies
+  });
+
+  const ids = await userSubordinate.find({})
+    .distinct('subordinateUserId')
+    .where('userId')
+    .equals(req.cookies.userId);
+
+  console.log('2. Subordinate IDs from DB:', {
+    subordinateIds: ids,
+    count: ids.length
+  });
+
+  if (ids.length > 0) {
+    teamIdsArray = ids;
+  }
+  teamIdsArray.push(req.cookies.userId);
+  console.log('3. Team IDs Array (after adding current user):', {
+    teamIdsArray,
+    totalCount: teamIdsArray.length
+  });
+
+  const timeLogsAll = [];
+  const realtime = [];
+  const logs = {};
+  var timeLogs;
+
+  const today = moment().endOf('day');
+  const date = today.toDate().toISOString().slice(0, 10);
+  var tomorrow = new Date(new Date(date).setDate(new Date(date).getDate() - 7));
+  var end = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
+
+  console.log('4. Date Range for Query:', {
+    today: today.format(),
+    date,
+    tomorrow: tomorrow.toISOString(),
+    end: end.toISOString()
+  });
+
+  console.log('5. Query Conditions:', {
+    users: req.body.users,
+    projects: req.body.projects,
+    tasks: req.body.tasks
+  });
+
+  // Parse req.body.users as an array if it’s a comma-separated string
+  const requestedUsers = req.body.users && req.body.users !== '' 
+    ? (Array.isArray(req.body.users) ? req.body.users : req.body.users.split(',')).filter(u => u && u !== '')
+    : teamIdsArray;
+
+  // Parse req.body.projects and req.body.tasks, filtering out empty/invalid values
+  const mongoose = require('mongoose');
+  const isValidObjectId = (id) => id && id !== '' && mongoose.Types.ObjectId.isValid(id);
+
+  const requestedProjects = req.body.projects && req.body.projects !== '' 
+    ? (Array.isArray(req.body.projects) ? req.body.projects : req.body.projects.split(',')).filter(isValidObjectId)
+    : null;
+
+  const requestedTasks = req.body.tasks && req.body.tasks !== '' 
+    ? (Array.isArray(req.body.tasks) ? req.body.tasks : req.body.tasks.split(',')).filter(isValidObjectId)
+    : null;
+
+  console.log('5a. Parsed Filters:', {
+    requestedUsers,
+    requestedProjects,
+    requestedTasks
+  });
+
+  const userFilter = requestedUsers.length > 0 
+    ? teamIdsArray.filter(id => requestedUsers.includes(id)) 
+    : teamIdsArray;
+
+  const query = { 'user': { $in: userFilter }, 'date': { '$gte': tomorrow, '$lte': end } };
+  if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
+  if (requestedTasks && requestedTasks.length > 0) query.task = { $in: requestedTasks };
+
+  console.log('6. Query Object:', query);
+
+  timeLogs = await TimeLog.find(query).distinct('user');
+  console.log('7. TimeLogs:', timeLogs);
+
+  console.log('8. Distinct Users from TimeLogs:', {
+    timeLogs,
+    count: timeLogs.length
+  });
+
+  for (var i = 0; i < timeLogs.length; i++) {
+    const timeLog = await TimeLog.findOne({
+      'user': timeLogs[i],
+      'date': { '$gte': tomorrow, '$lte': end }
+    });
+    
+    console.log('9. Individual TimeLog Entry:', {
+      index: i,
+      user: timeLogs[i],
+      found: !!timeLog,
+      timeLog: timeLog ? {
+        user: timeLog.user,
+        project: timeLog.project,
+        task: timeLog.task,
+        date: timeLog.date
+      } : null
+    });
+
+    if (timeLog) {
+      const newLogInUSer = {
+        user: timeLog.user,
+        project: timeLog.project?.projectName || 'N/A',
+        task: timeLog.task?.taskName || 'N/A'
+      };
+      timeLogsAll.push(newLogInUSer);
     }
- 
-teamIdsArray.push(req.cookies.userId);
-const timeLogsAll = [];
-const realtime = [];
-const logs = {};  
-var timeLogs;
-const today = moment().endOf('day');
-const date = today.toDate().toISOString().slice(0, 10);
-var tomorrow = new Date(new Date(date).setDate(new Date(date).getDate() + 0));
-let startTime = moment(req.body.startTime).toDate();
-var end = new Date(new Date(tomorrow).setDate(new Date(tomorrow).getDate() + 1));                      
-if(req.body.users!='' && req.body.projects!='' && req.body.tasks!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: req.body.users },'project': { $in: req.body.projects },'task': { $in: req.body.tasks } ,'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');    
   }
-  else if(req.body.users!='' && req.body.tasks!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: req.body.users },'task': { $in: req.body.tasks } ,'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');    
-  }
-  else if(req.body.users!='' && req.body.projects!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: req.body.users },'project': { $in: req.body.projects },'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');    
-  }
-  else if(req.body.tasks!='' && req.body.projects!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: teamIdsArray},'project': { $in: req.body.projects } ,'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');    
-  }
-  else if(req.body.projects!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: teamIdsArray},'project': { $in: req.body.projects } ,'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');    
-  }  
-  else if(req.body.tasks!='')
-  {
-  timeLogs=await TimeLog.find({ 'user': { $in: teamIdsArray},'task': { $in: req.body.tasks },'date' : {'$gte': tomorrow,'$lte': end} }).distinct('user');    
-  }
-  else if(req.body.users!='')
-  {
-   
-  timeLogs=await TimeLog.find({ 'user': { $in: teamIdsArray},'user': { $in: req.body.users },'date' : {'$gte': tomorrow,'$lte': end} }).distinct('user');    
-  }
-  else{
-      timeLogs = await TimeLog.find({'user': { $in: teamIdsArray},'date' : {'$gte': tomorrow,'$lte': end}}).distinct('user');
-  }
-   
-    for(var i = 0; i < timeLogs.length; i++) 
-          {
-           const timeLog = await TimeLog.findOne({'user':timeLogs[i],'date' : {'$gte': tomorrow,'$lte': end}});
-          
-        if(timeLog) 
-          {
-            const newLogInUSer = {};
-            newLogInUSer.user = timeLog.user;
-            newLogInUSer.project = timeLog.project.projectName;
-            newLogInUSer.task = timeLog.task.taskName;
-            timeLogsAll.push(newLogInUSer);
-          }
-  
-        }
-        logs.onlineUsers=timeLogsAll;       
-        logs.totalMember=teamIdsArray.length;
-        logs.activeMember=timeLogsAll.length;
-        logs.totalNonProductiveMember=0;
-        realtime.push(logs);
+
+  console.log('10. Processed TimeLogsAll:', {
+    timeLogsAll,
+    count: timeLogsAll.length
+  });
+
+  logs.onlineUsers = timeLogsAll;
+  logs.totalMember = teamIdsArray.length;
+  logs.activeMember = timeLogsAll.length;
+  logs.totalNonProductiveMember = 0;
+  realtime.push(logs);
+
+  console.log('11. Final Response Data:', {
+    logs,
+    realtime,
+    totalMember: logs.totalMember,
+    activeMember: logs.activeMember
+  });
+
   res.status(200).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: realtime
-  });  
+  });
 });
 
 exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {      
