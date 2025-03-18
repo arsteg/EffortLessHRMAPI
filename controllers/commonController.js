@@ -460,6 +460,8 @@ const  websocketHandler  = require('../utils/websocketHandler');
   
   
 exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  req.body.company = companyId;
   const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
