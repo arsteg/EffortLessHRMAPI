@@ -18,7 +18,22 @@ const incomeTaxComponantSchema = new Schema({
   order:{
     type: Number,
     required: true
+  },
+  company: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Company'
   }
 }, { collection: 'IncomeTaxComponant' });
 
+incomeTaxComponantSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'section',
+      select: 'id section'
+    });
+  } catch (error) {
+    console.error("Error populating section:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('IncomeTaxComponant', incomeTaxComponantSchema);

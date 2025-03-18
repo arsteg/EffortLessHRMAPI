@@ -460,6 +460,8 @@ const  websocketHandler  = require('../utils/websocketHandler');
   
   
 exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  req.body.company = companyId;
   const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -577,7 +579,7 @@ exports.getSelectedUserForLogging = catchAsync(
 exports.testLog = catchAsync(
   async (req, res, next) => {
   try {    
-    websocketHandler.logEvent(req, 'User performed an action');
+    websocketHandler.sendLog(req, 'User performed an action');
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {},

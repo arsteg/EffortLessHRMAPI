@@ -14,7 +14,7 @@ const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addAssetType = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Starting asset type creation');
+  websocketHandler.sendLog(req, 'Starting asset type creation');
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -22,7 +22,7 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
     const { typeName, description, customAttributes} = req.body;
     const company = req.cookies.companyId;
 
-    websocketHandler.logEvent(req, 'Creating new asset type');
+    websocketHandler.sendLog(req, 'Creating new asset type');
     const assetType = new AssetType({
       typeName,
       description,
@@ -33,7 +33,7 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
 
     // Validate and create CustomAttributes
     if (customAttributes && Array.isArray(customAttributes)) {
-      websocketHandler.logEvent(req, 'Creating custom attributes for asset type');
+      websocketHandler.sendLog(req, 'Creating custom attributes for asset type');
       const customAttributesData = customAttributes.map((attr) => ({
         attributeName: attr.attributeName,
         description: attr.description,
@@ -46,11 +46,11 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
       await CustomAttribute.insertMany(customAttributesData, { session });
     }
 
-    websocketHandler.logEvent(req, 'Committing asset type transaction');
+    websocketHandler.sendLog(req, 'Committing asset type transaction');
     await session.commitTransaction();
     session.endSession();
 
-    websocketHandler.logEvent(req, 'Asset type creation successful');
+    websocketHandler.sendLog(req, 'Asset type creation successful');
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       message: 'AssetType and CustomAttributes successfully created',
@@ -60,7 +60,7 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
       },
     });
   } catch (error) {
-    websocketHandler.logEvent(req, 'Error occurred during asset type creation');
+    websocketHandler.sendLog(req, 'Error occurred during asset type creation');
     await session.abortTransaction();
     session.endSession();
     console.error(error);
@@ -69,15 +69,15 @@ exports.addAssetType = catchAsync(async (req, res, next) => {
 });
 
 exports.getAssetTypes = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching asset type by ID');
+  websocketHandler.sendLog(req, 'Fetching asset type by ID');
   const assetTypes = await AssetType.find({
     _id: req.params.id 
   });
   if (!assetTypes) {
-    websocketHandler.logEvent(req, 'Asset type not found');
+    websocketHandler.sendLog(req, 'Asset type not found');
     return next(new AppError("AssetType not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset type retrieved successfully');
+  websocketHandler.sendLog(req, 'Asset type retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: assetTypes,
@@ -85,14 +85,14 @@ exports.getAssetTypes = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAssetType = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Starting asset type update');
+  websocketHandler.sendLog(req, 'Starting asset type update');
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const { typeName, description, customAttributes } = req.body;
 
-    websocketHandler.logEvent(req, 'Updating asset type');
+    websocketHandler.sendLog(req, 'Updating asset type');
     const assetType = await AssetType.findByIdAndUpdate(
       req.params.id,
       { typeName, description },
@@ -104,14 +104,14 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
     );
 
     if (!assetType) {
-      websocketHandler.logEvent(req, 'Asset type not found during update');
+      websocketHandler.sendLog(req, 'Asset type not found during update');
       await session.abortTransaction();
       session.endSession();
       return next(new AppError("AssetType not found", 404));
     }
 
     if (customAttributes && Array.isArray(customAttributes)) {
-      websocketHandler.logEvent(req, 'Processing custom attributes for update');
+      websocketHandler.sendLog(req, 'Processing custom attributes for update');
       const existingAttributes = await CustomAttribute.find(
         { assetType: req.params.id },
         null,
@@ -131,14 +131,14 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
 
       // Delete removed attributes
       if (toDelete.length > 0) {
-        websocketHandler.logEvent(req, 'Deleting removed custom attributes');
+        websocketHandler.sendLog(req, 'Deleting removed custom attributes');
         const deleteIds = toDelete.map((attr) => attr._id);
         await CustomAttribute.deleteMany({ _id: { $in: deleteIds } }, { session });
       }
 
       // Update existing attributes
       for (const updateAttr of toUpdate) {
-        websocketHandler.logEvent(req, 'Updating existing custom attribute');
+        websocketHandler.sendLog(req, 'Updating existing custom attribute');
         await CustomAttribute.findByIdAndUpdate(
           updateAttr._id,
           {
@@ -153,7 +153,7 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
 
       // Add new attributes
       if (toCreate.length > 0) {
-        websocketHandler.logEvent(req, 'Creating new custom attributes');
+        websocketHandler.sendLog(req, 'Creating new custom attributes');
         const customAttributesData = toCreate.map((attr) => ({
           attributeName: attr.attributeName,
           description: attr.description,
@@ -166,11 +166,11 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
       }
     }
 
-    websocketHandler.logEvent(req, 'Committing asset type update transaction');
+    websocketHandler.sendLog(req, 'Committing asset type update transaction');
     await session.commitTransaction();
     session.endSession();
 
-    websocketHandler.logEvent(req, 'Asset type update successful');
+    websocketHandler.sendLog(req, 'Asset type update successful');
     res.status(200).json({
       status:constants.APIResponseStatus.Success,
       message: "AssetType and CustomAttributes successfully updated",
@@ -180,7 +180,7 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
       },
     });
   } catch (error) {
-    websocketHandler.logEvent(req, 'Error occurred during asset type update');
+    websocketHandler.sendLog(req, 'Error occurred during asset type update');
     await session.abortTransaction();
     session.endSession();
     console.error(error);
@@ -190,36 +190,36 @@ exports.updateAssetType = catchAsync(async (req, res, next) => {
 
 
 exports.deleteAssetType = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Starting asset type deletion');
+  websocketHandler.sendLog(req, 'Starting asset type deletion');
   const { id } = req.params;
   const companyId = req.cookies.companyId;
 
-  websocketHandler.logEvent(req, 'Checking for asset references');
+  websocketHandler.sendLog(req, 'Checking for asset references');
   const assetExists = await Asset.findOne({ assetType: id, company: companyId });
 
   if (assetExists) {
-    websocketHandler.logEvent(req, 'Asset type deletion blocked due to existing assets');
+    websocketHandler.sendLog(req, 'Asset type deletion blocked due to existing assets');
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       message: 'AssetType cannot be deleted as it is associated with existing assets.',
     });
   }
 
-  websocketHandler.logEvent(req, 'Checking for custom attribute references');
+  websocketHandler.sendLog(req, 'Checking for custom attribute references');
   const customAttributeExists = await CustomAttribute.findOne({ assetType: id, company: companyId });
 
-  websocketHandler.logEvent(req, 'Deleting asset type');
+  websocketHandler.sendLog(req, 'Deleting asset type');
   const assetType = await AssetType.findOneAndDelete({ _id: id, company: companyId });
 
   if (!assetType) {
-    websocketHandler.logEvent(req, 'Asset type not found during deletion');
+    websocketHandler.sendLog(req, 'Asset type not found during deletion');
     return next(new AppError('AssetType not found', 404));
   }
 
-  websocketHandler.logEvent(req, 'Deleting related custom attributes');
+  websocketHandler.sendLog(req, 'Deleting related custom attributes');
   await CustomAttribute.deleteMany({ assetType: id, company: companyId });
 
-  websocketHandler.logEvent(req, 'Asset type deletion successful');
+  websocketHandler.sendLog(req, 'Asset type deletion successful');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -227,7 +227,7 @@ exports.deleteAssetType = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all asset types');
+  websocketHandler.sendLog(req, 'Fetching all asset types');
   const companyId = req.cookies.companyId;
   const skip = parseInt(req.query.skip) || 0;  // Default to 0 if 'skip' is not provided
   const take = parseInt(req.query.next); // Parse 'next' but don't assign a default here
@@ -243,7 +243,7 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
   }
   const assetTypes = await assetTypesQuery;
 
-  websocketHandler.logEvent(req, 'Processing asset types with deletable flags');
+  websocketHandler.sendLog(req, 'Processing asset types with deletable flags');
   const assetTypesWithDeletableFlag = await Promise.all(
     assetTypes.map(async (assetType) => {
       const assetTypeObj = assetType.toObject(); // Convert Mongoose document to plain object
@@ -263,7 +263,7 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
     })
   );
 
-  websocketHandler.logEvent(req, 'All asset types retrieved successfully');
+  websocketHandler.sendLog(req, 'All asset types retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     totalRecords,
@@ -272,13 +272,13 @@ exports.getAllAssetTypes = catchAsync(async (req, res, next) => {
 });
 
 exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching asset attribute value');
+  websocketHandler.sendLog(req, 'Fetching asset attribute value');
   const assetAttributeValue = await AssetAttributeValue.findById(req.params.id);
   if (!assetAttributeValue) {
-    websocketHandler.logEvent(req, 'Asset attribute value not found');
+    websocketHandler.sendLog(req, 'Asset attribute value not found');
     return next(new AppError("AssetAttributeValue not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset attribute value retrieved successfully');
+  websocketHandler.sendLog(req, 'Asset attribute value retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetAttributeValue,
@@ -286,7 +286,7 @@ exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating asset attribute value');
+  websocketHandler.sendLog(req, 'Updating asset attribute value');
   const assetAttributeValue = await AssetAttributeValue.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -296,19 +296,19 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     }
   );
   if (!assetAttributeValue) {
-    websocketHandler.logEvent(req, 'Asset attribute value not found during update');
+    websocketHandler.sendLog(req, 'Asset attribute value not found during update');
     return next(new AppError("AssetAttributeValue not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset attribute value updated successfully');
+  websocketHandler.sendLog(req, 'Asset attribute value updated successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: assetAttributeValue,
   });
 });
 exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all asset attribute values');
+  websocketHandler.sendLog(req, 'Fetching all asset attribute values');
   const assetAttributeValues = await AssetAttributeValue.find();
-  websocketHandler.logEvent(req, 'All asset attribute values retrieved successfully');
+  websocketHandler.sendLog(req, 'All asset attribute values retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetAttributeValues,
@@ -345,13 +345,13 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetAttributeValuesByAssetId = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Deleting asset attribute values by asset ID');
+  websocketHandler.sendLog(req, 'Deleting asset attribute values by asset ID');
   const assetAttributeValues = await AssetAttributeValue.deleteMany({assetId: req.params.assetId});
   if (!assetAttributeValues) {
-    websocketHandler.logEvent(req, 'No asset attribute values found for deletion');
+    websocketHandler.sendLog(req, 'No asset attribute values found for deletion');
     return next(new AppError("AssetAttributeValue not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset attribute values deleted successfully');
+  websocketHandler.sendLog(req, 'Asset attribute values deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: assetAttributeValues,
@@ -367,10 +367,10 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
 });
 
 exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {  
-  websocketHandler.logEvent(req, 'Starting asset attribute value creation');
+  websocketHandler.sendLog(req, 'Starting asset attribute value creation');
   
   if (req.body.assetId && req.body.attributeId) {    
-    websocketHandler.logEvent(req, 'Checking existing asset attribute value');
+    websocketHandler.sendLog(req, 'Checking existing asset attribute value');
     const recordExists = await AssetAttributeValue.find({assetId: req.body.assetId, attributeId: req.body.attributeId});    
     
     const { assetId, attributeId, value } = req.body;
@@ -378,14 +378,14 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
     const update = { value };    
 
     if(recordExists && recordExists.length > 0){
-      websocketHandler.logEvent(req, 'Updating existing asset attribute value');
+      websocketHandler.sendLog(req, 'Updating existing asset attribute value');
       const assetAttributeValue = await AssetAttributeValue.findOneAndUpdate(
         filter,
         update,
         { new: true } // Update the existing record, don't create a new one
       );
 
-      websocketHandler.logEvent(req, 'Asset attribute value updated successfully');
+      websocketHandler.sendLog(req, 'Asset attribute value updated successfully');
       res.status(200).json({
         status: constants.APIResponseStatus.Success,
         data: assetAttributeValue,
@@ -393,14 +393,14 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
 
     }
     else{
-      websocketHandler.logEvent(req, 'Creating new asset attribute value');
+      websocketHandler.sendLog(req, 'Creating new asset attribute value');
       const assetAttributeValue = await AssetAttributeValue.findOneAndUpdate(
         filter,
         update,
         { new: true, upsert: true } // Create a new record if it doesn't exist
       );
 
-      websocketHandler.logEvent(req, 'Asset attribute value created successfully');
+      websocketHandler.sendLog(req, 'Asset attribute value created successfully');
       res.status(201).json({
         status: constants.APIResponseStatus.Success,
         data: assetAttributeValue,
@@ -441,13 +441,13 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Deleting asset attribute value');
+  websocketHandler.sendLog(req, 'Deleting asset attribute value');
   const assetAttributeValue = await AssetAttributeValue.findByIdAndDelete(req.params.id);
   if (!assetAttributeValue) {
-    websocketHandler.logEvent(req, 'Asset attribute value not found for deletion');
+    websocketHandler.sendLog(req, 'Asset attribute value not found for deletion');
     return next(new AppError("AssetAttributeValue not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset attribute value deleted successfully');
+  websocketHandler.sendLog(req, 'Asset attribute value deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -463,12 +463,12 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
 });
 
 exports.createAssetStatus = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Creating new asset status');
+  websocketHandler.sendLog(req, 'Creating new asset status');
   const assetStatus = await AssetStatus.create({
     statusName: req.body.statusName,
     company: req.cookies.companyId,
   });
-  websocketHandler.logEvent(req, 'Asset status created successfully');
+  websocketHandler.sendLog(req, 'Asset status created successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: assetStatus,
@@ -476,13 +476,13 @@ exports.createAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.getAssetStatus = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching asset status');
+  websocketHandler.sendLog(req, 'Fetching asset status');
   const assetStatus = await AssetStatus.findById(req.params.id);
   if (!assetStatus) {
-    websocketHandler.logEvent(req, 'Asset status not found');
+    websocketHandler.sendLog(req, 'Asset status not found');
     return next(new AppError("AssetStatus not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset status retrieved successfully');
+  websocketHandler.sendLog(req, 'Asset status retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetStatus,
@@ -490,7 +490,7 @@ exports.getAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAssetStatus = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating asset status');
+  websocketHandler.sendLog(req, 'Updating asset status');
   const assetStatus = await AssetStatus.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -500,10 +500,10 @@ exports.updateAssetStatus = catchAsync(async (req, res, next) => {
     }
   );
   if (!assetStatus) {
-    websocketHandler.logEvent(req, 'Asset status not found during update');
+    websocketHandler.sendLog(req, 'Asset status not found during update');
     return next(new AppError("AssetStatus not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset status updated successfully');
+  websocketHandler.sendLog(req, 'Asset status updated successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetStatus,
@@ -511,24 +511,24 @@ exports.updateAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Checking asset status usage before deletion');
+  websocketHandler.sendLog(req, 'Checking asset status usage before deletion');
   const assets = await Asset.findOne({
     status: req.params.id
   });
   if (assets?.length > 0) {
-    websocketHandler.logEvent(req, 'Asset status deletion blocked due to existing assets');
+    websocketHandler.sendLog(req, 'Asset status deletion blocked due to existing assets');
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       message: 'Asset Status cannot be deleted as it is associated with existing assets',
     });
   }
-  websocketHandler.logEvent(req, 'Deleting asset status');
+  websocketHandler.sendLog(req, 'Deleting asset status');
   const assetStatus = await AssetStatus.findByIdAndDelete(req.params.id);
   if (!assetStatus) {
-    websocketHandler.logEvent(req, 'Asset status not found for deletion');
+    websocketHandler.sendLog(req, 'Asset status not found for deletion');
     return next(new AppError("AssetStatus not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset status deleted successfully');
+  websocketHandler.sendLog(req, 'Asset status deleted successfully');
   res.status(204).json({
     status:constants.APIResponseStatus.Success,
     data: null,
@@ -536,12 +536,12 @@ exports.deleteAssetStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all asset statuses');
+  websocketHandler.sendLog(req, 'Fetching all asset statuses');
   const companyId = req.cookies.companyId;
   // Fetch all AssetStatuses for the company
   const assetStatuses = await AssetStatus.find({ company: companyId });
 
-  websocketHandler.logEvent(req, 'Processing asset statuses with deletable flags');
+  websocketHandler.sendLog(req, 'Processing asset statuses with deletable flags');
   const assetStatusesWithDeletableFlag = await Promise.all(
     assetStatuses.map(async (status) => {
       const assetCount = await Asset.countDocuments({ status: status._id });
@@ -551,7 +551,7 @@ exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
       };
     })
   );
-  websocketHandler.logEvent(req, 'All asset statuses retrieved successfully');
+  websocketHandler.sendLog(req, 'All asset statuses retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetStatusesWithDeletableFlag,
@@ -559,9 +559,9 @@ exports.getAllAssetStatuses = catchAsync(async (req, res, next) => {
 });
 
 exports.createCustomAttribute = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Creating new custom attribute');
+  websocketHandler.sendLog(req, 'Creating new custom attribute');
   const customAttribute = await CustomAttribute.create(req.body);
-  websocketHandler.logEvent(req, 'Custom attribute created successfully');
+  websocketHandler.sendLog(req, 'Custom attribute created successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: customAttribute,
@@ -569,13 +569,13 @@ exports.createCustomAttribute = catchAsync(async (req, res, next) => {
 });
 
 exports.getCustomAttribute = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching custom attribute');
+  websocketHandler.sendLog(req, 'Fetching custom attribute');
   const customAttribute = await CustomAttribute.findById(req.params.id);
   if (!customAttribute) {
-    websocketHandler.logEvent(req, 'Custom attribute not found');
+    websocketHandler.sendLog(req, 'Custom attribute not found');
     return next(new AppError("CustomAttribute not found", 404));
   }
-  websocketHandler.logEvent(req, 'Custom attribute retrieved successfully');
+  websocketHandler.sendLog(req, 'Custom attribute retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: customAttribute,
@@ -583,7 +583,7 @@ exports.getCustomAttribute = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating custom attribute');
+  websocketHandler.sendLog(req, 'Updating custom attribute');
   const customAttribute = await CustomAttribute.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -594,11 +594,11 @@ exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
   );
 
   if (!customAttribute) {
-    websocketHandler.logEvent(req, 'Custom attribute not found during update');
+    websocketHandler.sendLog(req, 'Custom attribute not found during update');
     return next(new AppError("CustomAttribute not found", 404));
   }
 
-  websocketHandler.logEvent(req, 'Custom attribute updated successfully');
+  websocketHandler.sendLog(req, 'Custom attribute updated successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: customAttribute,
@@ -606,29 +606,29 @@ exports.updateCustomAttribute = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCustomAttribute = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Checking custom attribute usage before deletion');
+  websocketHandler.sendLog(req, 'Checking custom attribute usage before deletion');
   const assetAttributeValue = await AssetAttributeValue.findOne({
     attributeId: req.params.id,
   });
 
   if (assetAttributeValue) {
-    websocketHandler.logEvent(req, 'Custom attribute deletion blocked due to usage');
+    websocketHandler.sendLog(req, 'Custom attribute deletion blocked due to usage');
     return res.status(400).json({
       status:constants.APIResponseStatus.Failure,
       message: 'Asset Attribute Value cannot be deleted as it is in use',
     });
   }
 
-  websocketHandler.logEvent(req, 'Deleting custom attribute');
+  websocketHandler.sendLog(req, 'Deleting custom attribute');
   const customAttribute = await CustomAttribute.findByIdAndDelete(req.params.id);
 
   // If the custom attribute is not found, return a 404 error
   if (!customAttribute) {
-    websocketHandler.logEvent(req, 'Custom attribute not found for deletion');
+    websocketHandler.sendLog(req, 'Custom attribute not found for deletion');
     return next(new AppError('CustomAttribute not found', 404));
   }
 
-  websocketHandler.logEvent(req, 'Custom attribute deleted successfully');
+  websocketHandler.sendLog(req, 'Custom attribute deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -647,7 +647,7 @@ exports.deleteCustomAttributeByAssetType = catchAsync(
       return next(new AppError("CustomAttribute not found", 404));
     }
 
-  websocketHandler.logEvent(req, 'Custom attributes deleted successfully');
+  websocketHandler.sendLog(req, 'Custom attributes deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: customAttributes,
@@ -655,9 +655,9 @@ exports.deleteCustomAttributeByAssetType = catchAsync(
 });
 
 exports.getAllCustomAttributes = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all custom attributes');
+  websocketHandler.sendLog(req, 'Fetching all custom attributes');
   const customAttributes = await CustomAttribute.find();
-  websocketHandler.logEvent(req, 'All custom attributes retrieved successfully');
+  websocketHandler.sendLog(req, 'All custom attributes retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: customAttributes,
@@ -665,10 +665,10 @@ exports.getAllCustomAttributes = catchAsync(async (req, res, next) => {
 });
 
 exports.addCustomAttributes = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Adding multiple custom attributes');
+  websocketHandler.sendLog(req, 'Adding multiple custom attributes');
   const assetType = await AssetType.findById(req.params.id);
   if (!assetType) {
-    websocketHandler.logEvent(req, 'Asset type not found for adding custom attributes');
+    websocketHandler.sendLog(req, 'Asset type not found for adding custom attributes');
     return next(new AppError("AssetType not found", 404));
   }
 
@@ -684,7 +684,7 @@ exports.addCustomAttributes = catchAsync(async (req, res, next) => {
     arrayCostomAttributes
   );
 
-  websocketHandler.logEvent(req, 'Custom attributes added successfully');
+  websocketHandler.sendLog(req, 'Custom attributes added successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: addedCustomAttributes,
@@ -696,7 +696,7 @@ exports.getAssetCustomAttributes = catchAsync(async (req, res, next) => {
   // Assuming req.body is an array of CustomAttribute objects
   const customAttributes = await CustomAttribute.find({company:req.cookies.companyId,assetType:req.params.id});
 
-  websocketHandler.logEvent(req, 'Asset custom attributes retrieved successfully');
+  websocketHandler.sendLog(req, 'Asset custom attributes retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: customAttributes,
@@ -704,9 +704,9 @@ exports.getAssetCustomAttributes = catchAsync(async (req, res, next) => {
 });
 
 exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Creating new employee asset');
+  websocketHandler.sendLog(req, 'Creating new employee asset');
   const employeeAsset = await EmployeeAssets.create(req.body);
-  websocketHandler.logEvent(req, 'Employee asset created successfully');
+  websocketHandler.sendLog(req, 'Employee asset created successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeAsset,
@@ -714,15 +714,15 @@ exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching employee asset');
+  websocketHandler.sendLog(req, 'Fetching employee asset');
   const employeeAsset = await EmployeeAssets.find({
     employee: req.params.id,
   }).populate("Asset");
   if (!employeeAsset) {
-    websocketHandler.logEvent(req, 'Employee asset not found');
+    websocketHandler.sendLog(req, 'Employee asset not found');
     return next(new AppError("EmployeeAsset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Employee asset retrieved successfully');
+  websocketHandler.sendLog(req, 'Employee asset retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeAsset,
@@ -730,7 +730,7 @@ exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating employee asset');
+  websocketHandler.sendLog(req, 'Updating employee asset');
   const employeeAsset = await EmployeeAssets.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -741,11 +741,11 @@ exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
   );
 
   if (!employeeAsset) {
-    websocketHandler.logEvent(req, 'Employee asset not found during update');
+    websocketHandler.sendLog(req, 'Employee asset not found during update');
     return next(new AppError("EmployeeAsset not found", 404));
   }
 
-  websocketHandler.logEvent(req, 'Employee asset updated successfully');
+  websocketHandler.sendLog(req, 'Employee asset updated successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeAsset,
@@ -753,17 +753,17 @@ exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteEmployeeAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Deleting employee asset');
+  websocketHandler.sendLog(req, 'Deleting employee asset');
   const employeeAsset = await EmployeeAssets.findOneAndDelete({
     Employee: req.params.employeeId,
     Asset: req.params.assetId,
   });
   if (!employeeAsset) {
-    websocketHandler.logEvent(req, 'Employee asset not found for deletion');
+    websocketHandler.sendLog(req, 'Employee asset not found for deletion');
     return next(new AppError("EmployeeAsset not found", 404));
   }
 
-  websocketHandler.logEvent(req, 'Employee asset deleted successfully');
+  websocketHandler.sendLog(req, 'Employee asset deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -771,9 +771,9 @@ exports.deleteEmployeeAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllEmployeeAssets = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all employee assets');
+  websocketHandler.sendLog(req, 'Fetching all employee assets');
   const employeeAssets = await EmployeeAssets.find();
-  websocketHandler.logEvent(req, 'All employee assets retrieved successfully');
+  websocketHandler.sendLog(req, 'All employee assets retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: employeeAssets,
@@ -781,7 +781,7 @@ exports.getAllEmployeeAssets = catchAsync(async (req, res, next) => {
 });
 
 exports.createVendor = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Creating new vendor');
+  websocketHandler.sendLog(req, 'Creating new vendor');
   const { vendorId, vendorName, email, address, phone } = req.body;
 
   const vendor = await Vendor.create({
@@ -792,7 +792,7 @@ exports.createVendor = catchAsync(async (req, res, next) => {
     phone,
     company: req.cookies.companyId,
   });
-  websocketHandler.logEvent(req, 'Vendor created successfully');
+  websocketHandler.sendLog(req, 'Vendor created successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: vendor,
@@ -800,13 +800,13 @@ exports.createVendor = catchAsync(async (req, res, next) => {
 });
 
 exports.getVendor = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching vendor');
+  websocketHandler.sendLog(req, 'Fetching vendor');
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) {
-    websocketHandler.logEvent(req, 'Vendor not found');
+    websocketHandler.sendLog(req, 'Vendor not found');
     return next(new AppError("Vendor not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor retrieved successfully');
+  websocketHandler.sendLog(req, 'Vendor retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: vendor,
@@ -814,16 +814,16 @@ exports.getVendor = catchAsync(async (req, res, next) => {
 });
 
 exports.updateVendor = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating vendor');
+  websocketHandler.sendLog(req, 'Updating vendor');
   const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
   if (!vendor) {
-    websocketHandler.logEvent(req, 'Vendor not found during update');
+    websocketHandler.sendLog(req, 'Vendor not found during update');
     return next(new AppError("Vendor not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor updated successfully');
+  websocketHandler.sendLog(req, 'Vendor updated successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: vendor,
@@ -831,13 +831,13 @@ exports.updateVendor = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteVendor = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Deleting vendor');
+  websocketHandler.sendLog(req, 'Deleting vendor');
   const vendor = await Vendor.findByIdAndDelete(req.params.id);
   if (!vendor) {
-    websocketHandler.logEvent(req, 'Vendor not found for deletion');
+    websocketHandler.sendLog(req, 'Vendor not found for deletion');
     return next(new AppError("Vendor not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor deleted successfully');
+  websocketHandler.sendLog(req, 'Vendor deleted successfully');
   res.status(204).json({
     status:constants.APIResponseStatus.Success,
     data: null,
@@ -845,9 +845,9 @@ exports.deleteVendor = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllVendors = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all vendors');
+  websocketHandler.sendLog(req, 'Fetching all vendors');
   const vendors = await Vendor.find();
-  websocketHandler.logEvent(req, 'All vendors retrieved successfully');
+  websocketHandler.sendLog(req, 'All vendors retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: vendors,
@@ -857,9 +857,9 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
 // controllers/assetsManagementController.js
 
 exports.addVendorAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Adding new vendor asset');
+  websocketHandler.sendLog(req, 'Adding new vendor asset');
   const vendorAsset = await VendorAssetsPurchased.create(req.body);
-  websocketHandler.logEvent(req, 'Vendor asset added successfully');
+  websocketHandler.sendLog(req, 'Vendor asset added successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: vendorAsset,
@@ -867,13 +867,13 @@ exports.addVendorAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getVendorAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching vendor asset');
+  websocketHandler.sendLog(req, 'Fetching vendor asset');
   const vendorAsset = await VendorAssetsPurchased.findById(req.params.id);
   if (!vendorAsset) {
-    websocketHandler.logEvent(req, 'Vendor asset not found');
+    websocketHandler.sendLog(req, 'Vendor asset not found');
     return next(new AppError("VendorAsset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor asset retrieved successfully');
+  websocketHandler.sendLog(req, 'Vendor asset retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: vendorAsset,
@@ -881,7 +881,7 @@ exports.getVendorAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.updateVendorAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating vendor asset');
+  websocketHandler.sendLog(req, 'Updating vendor asset');
   const vendorAsset = await VendorAssetsPurchased.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -891,10 +891,10 @@ exports.updateVendorAsset = catchAsync(async (req, res, next) => {
     }
   );
   if (!vendorAsset) {
-    websocketHandler.logEvent(req, 'Vendor asset not found during update');
+    websocketHandler.sendLog(req, 'Vendor asset not found during update');
     return next(new AppError("VendorAsset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor asset updated successfully');
+  websocketHandler.sendLog(req, 'Vendor asset updated successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: vendorAsset,
@@ -908,7 +908,7 @@ exports.deleteVendorAsset = catchAsync(async (req, res, next) => {
   if (!vendorAsset) {
     return next(new AppError("VendorAsset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Vendor asset deleted successfully');
+  websocketHandler.sendLog(req, 'Vendor asset deleted successfully');
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -916,9 +916,9 @@ exports.deleteVendorAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllVendorAssets = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all vendor assets');
+  websocketHandler.sendLog(req, 'Fetching all vendor assets');
   const vendorAssets = await VendorAssetsPurchased.find();
-  websocketHandler.logEvent(req, 'All vendor assets retrieved successfully');
+  websocketHandler.sendLog(req, 'All vendor assets retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: vendorAssets,
@@ -926,10 +926,10 @@ exports.getAllVendorAssets = catchAsync(async (req, res, next) => {
 });
 
 exports.addAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Adding new asset');
+  websocketHandler.sendLog(req, 'Adding new asset');
   req.body.company = req.cookies.companyId;
   const asset = await Asset.create(req.body);
-  websocketHandler.logEvent(req, 'Asset added successfully');
+  websocketHandler.sendLog(req, 'Asset added successfully');
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: asset,
@@ -937,13 +937,13 @@ exports.addAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching asset');
+  websocketHandler.sendLog(req, 'Fetching asset');
   const asset = await Asset.findById(req.params.id);
   if (!asset) {
-    websocketHandler.logEvent(req, 'Asset not found');
+    websocketHandler.sendLog(req, 'Asset not found');
     return next(new AppError("Asset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset retrieved successfully');
+  websocketHandler.sendLog(req, 'Asset retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: asset,
@@ -951,16 +951,16 @@ exports.getAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Updating asset');
+  websocketHandler.sendLog(req, 'Updating asset');
   const asset = await Asset.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
   if (!asset) {
-    websocketHandler.logEvent(req, 'Asset not found during update');
+    websocketHandler.sendLog(req, 'Asset not found during update');
     return next(new AppError("Asset not found", 404));
   }
-  websocketHandler.logEvent(req, 'Asset updated successfully');
+  websocketHandler.sendLog(req, 'Asset updated successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: asset,
@@ -968,7 +968,7 @@ exports.updateAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAsset = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Checking asset usage before deletion');
+  websocketHandler.sendLog(req, 'Checking asset usage before deletion');
   const employeeAsset = await EmployeeAssets.find({Asset: req.params.id});
   if (employeeAsset.length > 0 ) {
     return res.status(400).json({
@@ -995,9 +995,9 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssets = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all assets');
+  websocketHandler.sendLog(req, 'Fetching all assets');
   const assets = await Asset.find();
-  websocketHandler.logEvent(req, 'All assets retrieved successfully');
+  websocketHandler.sendLog(req, 'All assets retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assets,
@@ -1005,12 +1005,12 @@ exports.getAllAssets = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {  
-  websocketHandler.logEvent(req, 'Fetching assets by asset type');
+  websocketHandler.sendLog(req, 'Fetching assets by asset type');
   const assetTypeId = mongoose.Types.ObjectId(req.params.assetType);  
   // Find assets of the specified assetType
   const assets = await Asset.find({ assetType:assetTypeId,company:req.cookies.companyId }).exec();
 
-  websocketHandler.logEvent(req, 'Processing assets with custom attributes');
+  websocketHandler.sendLog(req, 'Processing assets with custom attributes');
   const assetsWithCustomAttributes = await Promise.all(
     assets.map(async (asset) => {
       // Find custom attributes for the asset's assetType
@@ -1055,7 +1055,7 @@ exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {
       };
     })
   );
-  websocketHandler.logEvent(req, 'Assets by asset type retrieved successfully');
+  websocketHandler.sendLog(req, 'Assets by asset type retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: assetsWithCustomAttributes,
@@ -1063,7 +1063,7 @@ exports.getAllAssetsByAssetTpe = catchAsync(async (req, res, next) => {
 });
 
 exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching unassigned assets for user');
+  websocketHandler.sendLog(req, 'Fetching unassigned assets for user');
   const userId = req.params.userId;
 
   // Find assets assigned to the given user
@@ -1078,7 +1078,7 @@ exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
     company: req.cookies.companyId,
   });
 
-  websocketHandler.logEvent(req, 'Unassigned assets for user retrieved successfully');
+  websocketHandler.sendLog(req, 'Unassigned assets for user retrieved successfully');
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: unassignedAssets,
@@ -1086,13 +1086,13 @@ exports.getUnassignedAssetsForUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getUnassignedAssets = catchAsync(async (req, res, next) => {
-  websocketHandler.logEvent(req, 'Fetching all unassigned assets');
+  websocketHandler.sendLog(req, 'Fetching all unassigned assets');
   const unassignedAssets = await Asset.find({
     _id: { $nin: (await EmployeeAssets.find().distinct('Asset')) },
     company: req.cookies.companyId,
   });
 
-  websocketHandler.logEvent(req, 'All unassigned assets retrieved successfully');
+  websocketHandler.sendLog(req, 'All unassigned assets retrieved successfully');
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
     data: unassignedAssets,
