@@ -6,6 +6,10 @@ var incomeTaxSectionSchema = new Schema({
     type: String,
     required: true
   },
+  isHRA: {
+    type: Boolean,
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
