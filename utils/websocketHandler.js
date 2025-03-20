@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const constants = require('../constants'); // Assuming this has content types and notification types
+const {globalStore} = require('./globalStore'); 
 
 class WebSocketManager {
   constructor() {
@@ -80,7 +81,10 @@ class WebSocketManager {
       return; // Exit if user isn’t connected
     }
 
-    this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.LOG, message, constants.webSocketContentType.TEXT);
+    if(req.cookies?.userId == globalStore?.selectedUserForLogging) {
+      this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.LOG, message, constants.webSocketContentType.TEXT);
+      return; // Exit if user isn’t the same as the one in the request
+    }
   }
 
   // Specific notification helpers
