@@ -594,70 +594,76 @@ exports.testLog = catchAsync(
 
 exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
   try {
-      console.log(`[${new Date().toISOString()}] Starting updateOnlineStatus for request:`, {
-          method: req.method,
-          url: req.url,
-          body: req.body,
-          cookies: req.cookies
-      });
+    console.log(`[${new Date().toISOString()}] Starting updateOnlineStatus for request:`, {
+      method: req.method,
+      url: req.url,
+      body: req.body,
+      cookies: req.cookies
+    });
 
-      const { userId, machineId, isOnline } = req.body;
-      const companyId = req.cookies.companyId; // Get companyId from cookies
+    const { userId, machineId, isOnline } = req.body;
+    const companyId = req.cookies.companyId;
 
-      console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, companyId: ${companyId}`);
+    console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, companyId: ${companyId}`);
 
-      if (!userId || !machineId || typeof isOnline !== 'boolean') {
-          console.log(`[${new Date().toISOString()}] Validation failed: Missing or invalid required fields`);
-          throw new Error('userId, machineId, and isOnline are required');
-      }
+    if (!userId || !machineId || typeof isOnline !== 'boolean') {
+      console.log(`[${new Date().toISOString()}] Validation failed: Missing or invalid required fields`);
+      throw new Error('userId, machineId, and isOnline are required');
+    }
 
-      // Optional: Validate companyId if needed
-      if (!companyId) {
-          console.log(`[${new Date().toISOString()}] Validation failed: companyId missing in cookies`);
-          throw new Error('companyId is required in cookies');
-      }
+    if (!companyId) {
+      console.log(`[${new Date().toISOString()}] Validation failed: companyId missing in cookies`);
+      throw new Error('companyId is required in cookies');
+    }
 
-      console.log(`[${new Date().toISOString()}] Querying database for userId: ${userId}, machineId: ${machineId}`);
-      const userDevice = await UserDevice.findOneAndUpdate(
-          { userId, machineId },
-          { 
-              isOnline,
-              $setOnInsert: { company: companyId } // Set company from cookie when inserting
-          },
-          { upsert: true, new: true }
-      );
+    console.log(`[${new Date().toISOString()}] Querying database for userId: ${userId}, machineId: ${machineId}`);
+    const userDevice = await UserDevice.findOneAndUpdate(
+      { userId, machineId },
+      { 
+        isOnline,
+        $setOnInsert: { company: companyId }
+      },
+      { upsert: true, new: true }
+    );
 
-      console.log(`[${new Date().toISOString()}] Database operation completed. Result:`, {
-          userId: userDevice.userId,
-          machineId: userDevice.machineId,
-          isOnline: userDevice.isOnline,
-          company: userDevice.company?.toString(),
-          wasInserted: !userDevice.__v // If __v is 0, it was inserted
-      });
+    console.log(`[${new Date().toISOString()}] Database operation completed. Result:`, {
+      userId: userDevice.userId,
+      machineId: userDevice.machineId,
+      isOnline: userDevice.isOnline,
+      company: userDevice.company?.toString(),
+      wasInserted: !userDevice.__v
+    });
 
-      websocketHandler.sendLog(req, `User ${userId} on machine ${machineId} marked ${isOnline ? 'online' : 'offline'}`);
-      console.log(`[${new Date().toISOString()}] WebSocket log sent for user ${userId} on machine ${machineId}`);
+    // Send WebSocket message only to the affected user
+    const messageContent = JSON.stringify({ userId, isOnline });
+    websocketHandler.sendAlert(
+      [userId], // Only send to this user
+     
+      messageContent
+    
+    );
+    console.log(`[${new Date().toISOString()}] WebSocket message sent to user ${userId}`);
 
-      const response = {
-          status: constants.APIResponseStatus.Success,
-          data: { userDevice }
-      };
-      console.log(`[${new Date().toISOString()}] Sending success response:`, response);
+    const response = {
+      status: constants.APIResponseStatus.Success,
+      data: { userDevice }
+    };
+    console.log(`[${new Date().toISOString()}] Sending success response:`, response);
 
-      return res.status(200).json(response);
+    return res.status(200).json(response);
   } catch (error) {
-      console.log(`[${new Date().toISOString()}] Error occurred in updateOnlineStatus:`, {
-          message: error.message,
-          stack: error.stack
-      });
+    console.log(`[${new Date().toISOString()}] Error occurred in updateOnlineStatus:`, {
+      message: error.message,
+      stack: error.stack
+    });
 
-      const errorResponse = {
-          status: constants.APIResponseStatus.Failure,
-          data: error.message
-      };
-      console.log(`[${new Date().toISOString()}] Sending failure response:`, errorResponse);
+    const errorResponse = {
+      status: constants.APIResponseStatus.Failure,
+      data: error.message
+    };
+    console.log(`[${new Date().toISOString()}] Sending failure response:`, errorResponse);
 
-      return res.status(200).json(errorResponse);
+    return res.status(200).json(errorResponse);
   }
 });
 
