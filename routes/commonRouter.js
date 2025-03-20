@@ -1001,4 +1001,94 @@ router.get("/getSelectedUser", authController.protect, commonController.getSelec
  */
 router.get("/testLog", authController.protect, commonController.testLog);
 
+/**
+ * @swagger
+ * /api/v1/common/onlineStatus:
+ *   post:
+ *     summary: Update user device online/offline status
+ *     tags: [Common Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - machineId
+ *               - isOnline
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: The ID of the user
+ *               machineId:
+ *                 type: string
+ *                 description: The ID of the machine/device
+ *               isOnline:
+ *                 type: boolean
+ *                 description: Online status of the device
+ *             example:
+ *               userId: "user123"
+ *               machineId: "machine456"
+ *               isOnline: true
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 userDevice:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     machineId:
+ *                       type: string
+ *                     isOnline:
+ *                       type: boolean 
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
+ */
+router.post('/onlineStatus', authController.protect, commonController.updateOnlineStatus);
+/**
+ * @swagger
+ * /api/v1/common/getOnlineUsersByCompany:
+ *   get:
+ *     summary: Get all online users for a company
+ *     tags: [Common Management]
+ *     responses:
+ *       200:
+ *         description: List of online users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     onlineUsers:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           userId:
+ *                             type: string
+ *                           machineId:
+ *                             type: string
+ *                           isOnline:
+ *                             type: boolean
+ *                           company:
+ *                             type: string
+ */
+router.get('/getOnlineUsersByCompany', authController.protect, commonController.getOnlineUsersByCompany);
+
 module.exports = router;

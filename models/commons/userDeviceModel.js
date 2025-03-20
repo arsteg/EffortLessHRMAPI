@@ -5,6 +5,7 @@ const userDeviceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  isOnline: { type: Boolean, default: false },
   machineId: {
     type: String,
     required: true

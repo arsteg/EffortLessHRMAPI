@@ -14,7 +14,7 @@ const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const constants = require('../constants');
 const globalStore = require('../utils/globalStore');
 const  websocketHandler  = require('../utils/websocketHandler');
-
+const UserDevice = require('../models/commons/userDeviceModel');
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -591,3 +591,101 @@ exports.testLog = catchAsync(
     });
   }
 });
+
+exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
+  try {
+      console.log(`[${new Date().toISOString()}] Starting updateOnlineStatus for request:`, {
+          method: req.method,
+          url: req.url,
+          body: req.body,
+          cookies: req.cookies
+      });
+
+      const { userId, machineId, isOnline } = req.body;
+      const companyId = req.cookies.companyId; // Get companyId from cookies
+
+      console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, companyId: ${companyId}`);
+
+      if (!userId || !machineId || typeof isOnline !== 'boolean') {
+          console.log(`[${new Date().toISOString()}] Validation failed: Missing or invalid required fields`);
+          throw new Error('userId, machineId, and isOnline are required');
+      }
+
+      // Optional: Validate companyId if needed
+      if (!companyId) {
+          console.log(`[${new Date().toISOString()}] Validation failed: companyId missing in cookies`);
+          throw new Error('companyId is required in cookies');
+      }
+
+      console.log(`[${new Date().toISOString()}] Querying database for userId: ${userId}, machineId: ${machineId}`);
+      const userDevice = await UserDevice.findOneAndUpdate(
+          { userId, machineId },
+          { 
+              isOnline,
+              $setOnInsert: { company: companyId } // Set company from cookie when inserting
+          },
+          { upsert: true, new: true }
+      );
+
+      console.log(`[${new Date().toISOString()}] Database operation completed. Result:`, {
+          userId: userDevice.userId,
+          machineId: userDevice.machineId,
+          isOnline: userDevice.isOnline,
+          company: userDevice.company?.toString(),
+          wasInserted: !userDevice.__v // If __v is 0, it was inserted
+      });
+
+      websocketHandler.sendLog(req, `User ${userId} on machine ${machineId} marked ${isOnline ? 'online' : 'offline'}`);
+      console.log(`[${new Date().toISOString()}] WebSocket log sent for user ${userId} on machine ${machineId}`);
+
+      const response = {
+          status: constants.APIResponseStatus.Success,
+          data: { userDevice }
+      };
+      console.log(`[${new Date().toISOString()}] Sending success response:`, response);
+
+      return res.status(200).json(response);
+  } catch (error) {
+      console.log(`[${new Date().toISOString()}] Error occurred in updateOnlineStatus:`, {
+          message: error.message,
+          stack: error.stack
+      });
+
+      const errorResponse = {
+          status: constants.APIResponseStatus.Failure,
+          data: error.message
+      };
+      console.log(`[${new Date().toISOString()}] Sending failure response:`, errorResponse);
+
+      return res.status(200).json(errorResponse);
+  }
+});
+
+exports.getOnlineUsersByCompany = catchAsync(async (req, res, next) => {
+  try {
+      const companyId = req.cookies.companyId;
+
+      if (!companyId) {
+          throw new Error('companyId is required in cookies');
+      }
+
+      const onlineUsers = await UserDevice.find({
+          company: companyId,
+          isOnline: true
+      }).select('userId machineId isOnline company');
+
+      websocketHandler.sendLog(req, `Retrieved online users for company ${companyId}`);
+
+      return res.status(200).json({
+          status: constants.APIResponseStatus.Success,
+          data: { onlineUsers }
+      });
+  } catch (error) {
+      return res.status(200).json({
+          status: constants.APIResponseStatus.Failure,
+          data: error.message
+      });
+  }
+});
+
+

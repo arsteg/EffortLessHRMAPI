@@ -540,6 +540,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
   if (existingTask) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
+      data:null,
       message: 'A task with this name already exists for your company.',
     });
   }
@@ -549,6 +550,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
   if (!existingUser || !existingProject) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
+      data:null,
       message: 'Invalid user / project',
     });
   }
