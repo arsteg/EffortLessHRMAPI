@@ -46,7 +46,7 @@ const sendEmail = require('../utils/email');
 const Appointment = require("../models/permissions/appointmentModel");  // Import the Appointment model
 const UserActionLog = require("../models/Logging/userActionModel");
 const StorageController = require('./storageController.js');
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler = require('../utils/websocketHandler');
 
 exports.logUserAction = catchAsync(async (req, action, next) => {
   try {
@@ -126,7 +126,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   if (users) {
     companySubscription = await Subscription.findOne({
       companyId: users.company.id,
-      "razorpaySubscription.status": {$in: constants.Active_Subscription}
+      "razorpaySubscription.status": { $in: constants.Active_Subscription }
     })
       .populate("currentPlanId");
   }
@@ -187,7 +187,7 @@ exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
 
   // Respond with the filtered list of users
   res.status(200).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: filteredAppointments.map(appointment => appointment.user)
   });
 });
@@ -219,7 +219,7 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const appointment = await Appointment.create(req.body);
   res.status(201).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: appointment
   });
 });
@@ -238,7 +238,7 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
     runValidators: true
   });
   res.status(200).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: appointment
   });
 });
@@ -1461,15 +1461,15 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
             ) {
               return res.status(400).json({ error: 'All attachment properties must be provided' });
             }
+            const id = new Date().getTime();
+            attachment[i].filePath = attachment[i].attachmentName + "_" + id + attachment[i].extention;
+            //req.body.attachment.file = req.body.taskAttachments[i].file;
+            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
 
-        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
-                 //req.body.attachment.file = req.body.taskAttachments[i].file;
-         var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
-              
-        // Add the document link to the array
-        item.documentLink=documentLink;
-      }
-    }
+            // Add the document link to the array
+            item.documentLink = documentLink;
+          }
+        }
 
         // Return the item with added properties
         return {
@@ -1497,10 +1497,10 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
             ) {
               return res.status(400).json({ error: 'All attachment properties must be provided' });
             }
-
-        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
-        //req.body.attachment.file = req.body.taskAttachments[i].file;
-        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+            const id = new Date().getTime();
+            attachment[i].filePath = attachment[i].attachmentName + "_" + id + attachment[i].extention;
+            //req.body.attachment.file = req.body.taskAttachments[i].file;
+            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
 
             // Add the document link to the array
             item.documentLink = documentLink;
@@ -1547,7 +1547,7 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
       }
     }
     res.status(201).json({
-      status:constants.APIResponseStatus.Success,
+      status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclaration
     });
   });
@@ -1600,7 +1600,7 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
     return next(new AppError('No declarations found for this company', 404));
   }
   res.status(200).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarations,
     total: totalCount
   });
@@ -1660,11 +1660,11 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
           ) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-  
-          attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
-                 //req.body.attachment.file = req.body.taskAttachments[i].file;
+          const id = new Date().getTime();
+          attachment[i].filePath = attachment[i].attachmentName + "_" + id + attachment[i].extention;
+          //req.body.attachment.file = req.body.taskAttachments[i].file;
           var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
-        
+
           // Add the document link to the array
           req.body.employeeIncomeTaxDeclarationHRA[j].documentLink = documentLink;
         }
@@ -1672,23 +1672,20 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     }
     console.log(req.body.employeeIncomeTaxDeclarationHRA);
     await updateOrCreateRecords(EmployeeIncomeTaxDeclarationHRA, req.body.employeeIncomeTaxDeclarationHRA, 'incomeTaxDeclarationHRA');
+  }
+  else {
+    const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.params.id });
+    if (taxDeclarationHRAs) {
+      console.log(taxDeclarationHRAs.length);
+      for (var i = 0; i < taxDeclarationHRAs.length; i++) {
+        if (taxDeclarationHRAs[i].documentLink) {
+          await StorageController.deleteBlobFromContainer(req.cookies.companyId, taxDeclarationHRAs[i].documentLink);
+
+        }
+      }
+      await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
     }
-    else
-    {
-        const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ _id: req.params.id }); 
-        if(taxDeclarationHRAs)
-        { 
-            console.log(taxDeclarationHRAs.length);
-            for(var i = 0; i <taxDeclarationHRAs.length; i++) {
-            if(taxDeclarationHRAs[i].documentLink)
-              {
-                 await StorageController.deleteBlobFromContainer(req.cookies.companyId, taxDeclarationHRAs[i].documentLink); 
-              
-              }
-          }
-          await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
-         }       
-    }
+  }
 
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({}).where('employeeIncomeTaxDeclaration').equals(req.params.id);
@@ -1744,8 +1741,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationComponants.length; i++) {
         if (taxDeclarationComponants[i].documentLink) {
           var url = taxDeclarationComponants[i].documentLink;
-            await StorageController.deleteBlobFromContainer(req.cookies.companyId, url); 
-         
+          await StorageController.deleteBlobFromContainer(req.cookies.companyId, url);
+
           console.log("deleted componant");
         }
       }
@@ -1762,8 +1759,8 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
       for (var i = 0; i < taxDeclarationHRAs.length; i++) {
         if (taxDeclarationHRAs[i].documentLink) {
           var url = taxDeclarationHRAs[i].documentLink;
-          await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url); 
-         
+          await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url);
+
           console.log("deleted HRA");
         }
       }
@@ -1783,57 +1780,63 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(
 // Update or create Employee Income Tax Declaration component
 exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
   async (req, res, next) => {
-    // Validate income tax component
-    const incomeTaxComponants = await IncomeTaxComponant.find()
-      .select("_id")
-      .exec();
-    const validIncomeTaxComponant = incomeTaxComponants.map((fa) =>
-      fa._id.toString()
-    );
+    try {
+      // Validate income tax component
+      const incomeTaxComponants = await IncomeTaxComponant.find()
+        .select("_id")
+        .exec();
+      const validIncomeTaxComponant = incomeTaxComponants.map((fa) =>
+        fa._id.toString()
+      );
 
-    if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
-      return res.status(400).json({
-        error: `${req.body.incomeTaxComponent} is not a valid income tax component`,
-      });
-    }
-    const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
-
-    if (!employeeIncomeTaxDeclaration) {
-      return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
-    }
-  
-        // Process attachments if they are present
-    if (req.body.employeeIncomeTaxDeclarationAttachments) {
-      for (
-        let i = 0;
-        i < req.body.employeeIncomeTaxDeclarationAttachments.length;
-        i++
-      ) {
-        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
-
-        if (
-          !attachment.attachmentType ||
-          !attachment.attachmentName ||
-          !attachment.attachmentSize ||
-          !attachment.extention ||
-          !attachment.file
-        ) {
-          return res
-            .status(400)
-            .json({ error: "All attachment properties must be provided" });
-        }
-
-        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
-       //req.body.attachment.file = req.body.taskAttachments[i].file;
-        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
-       // Add the document link to the array
-        req.body.documentLink = documentLink;
+      if (!validIncomeTaxComponant.includes(req.body.incomeTaxComponent)) {
+        return res.status(400).json({
+          error: `${req.body.incomeTaxComponent} is not a valid income tax component`,
+        });
       }
-    }
 
-    // Use findOneAndUpdate with upsert option
-    const employeeIncomeTaxDeclarationComponent =
-      await EmployeeIncomeTaxDeclarationComponent.findOneAndUpdate(
+      const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(
+        req.body.employeeIncomeTaxDeclaration
+      );
+
+      if (!employeeIncomeTaxDeclaration) {
+        return res.status(404).json({ error: "Employee Income Tax Declaration not found" });
+      }
+
+      // Process attachments if they are present
+      if (req.body.employeeIncomeTaxDeclarationAttachments) {
+        for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {
+          let attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+
+          // Validate attachment fields
+          if (
+            !attachment.attachmentType ||
+            !attachment.attachmentName ||
+            !attachment.attachmentSize ||
+            !attachment.extention ||
+            !attachment.file
+          ) {
+            return res.status(400).json({
+              error: "All attachment properties must be provided",
+            });
+          }
+          // Generate unique file path
+          const id = new Date().getTime();
+          attachment.filePath = `${attachment.attachmentName}_${id}${attachment.extention}`;
+
+          // Store the file and get the document link
+          const documentLink = await StorageController.createContainerInContainer(
+            req.cookies.companyId,
+            constants.SubContainers.TaxDeclarionAttachment,
+            attachment
+          );
+          // Save document link in the attachment object
+          attachment.documentLink = documentLink;
+        }
+      }
+
+      // Use findOneAndUpdate with upsert option
+      const employeeIncomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.findOneAndUpdate(
         {
           employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
           incomeTaxComponent: req.body.incomeTaxComponent,
@@ -1846,10 +1849,15 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(
         }
       );
 
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: employeeIncomeTaxDeclarationComponent,
-    });
+      res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: employeeIncomeTaxDeclarationComponent,
+      });
+
+    } catch (error) {
+      console.error("Error updating employee income tax declaration component:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
 );
 
@@ -1858,18 +1866,14 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
   async (req, res, next) => {
     const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
 
-  if (!employeeIncomeTaxDeclaration) {
-    return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
-  }
+    if (!employeeIncomeTaxDeclaration) {
+      return res.status(404).json({ error: 'Employee Income Tax Declaration not found' });
+    }
 
     // Process attachments if any
-    if (req.body.employeeIncomeTaxDeclarationAttachments != null) {
-      for (
-        let i = 0;
-        i < req.body.employeeIncomeTaxDeclarationAttachments.length;
-        i++
-      ) {
-        const attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
+    if (req.body.employeeIncomeTaxDeclarationAttachments) {
+      for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {
+        let attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
 
         // Validate attachment fields
         if (
@@ -1877,28 +1881,27 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(
           !attachment.attachmentName ||
           !attachment.attachmentSize ||
           !attachment.extention ||
-          !attachment.file ||
-          attachment.attachmentType === null ||
-          attachment.attachmentName === null ||
-          attachment.attachmentSize === null ||
-          attachment.extention === null ||
-          attachment.file === null
+          !attachment.file
         ) {
-          return res
-            .status(400)
-            .json({ error: "All attachment properties must be provided" });
+          return res.status(400).json({
+            error: "All attachment properties must be provided",
+          });
         }
+        // Generate unique file path
+        const id = new Date().getTime();
+        attachment.filePath = `${attachment.attachmentName}_${id}${attachment.extention}`;
 
-        attachment[i].filePath = attachment[i].attachmentName +"_" + uuidv1() + attachment[i].extention; 
-        //req.body.attachment.file = req.body.taskAttachments[i].file;
-        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
-
-
-        // Add the document link to the array
-        req.body.documentLink = documentLink;
+        // Store the file and get the document link
+        const documentLink = await StorageController.createContainerInContainer(
+          req.cookies.companyId,
+          constants.SubContainers.TaxDeclarionAttachment,
+          attachment
+        );
+        // Save document link in the attachment object
+        attachment.documentLink = documentLink;
       }
     }
-
+    
     // Find an existing record or create a new one
     const existingRecord = await EmployeeIncomeTaxDeclarationHRA.findOne({
       employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
@@ -2012,25 +2015,25 @@ exports.cancelOTP = catchAsync(
       res.status(200).json({ message: 'OTP cancelled successfully.' });
     } catch (error) {
       res.status(500).json({ message: 'Error cancelling OTP' });
-  }
-});
+    }
+  });
 exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
-  
-  const user = await User.findById(req.params.userId); 
-   for(var i = 0; i < req.body.profileImage.length; i++) {
-      if (!req.body.profileImage[i].attachmentSize || !req.body.profileImage[i].extention || !req.body.profileImage[i].file
-        ||req.body.profileImage[i].attachmentSize===null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file===null) {
-        return res.status(400).json({ error: 'All Profile Image properties must be provided' });
-      }
-      const attachmentName=user.firstName;
-      req.body.profileImage[i].filePath = attachmentName +"_" + user._id+ req.body.profileImage[i].extention; 
-     // Get a block blob client
-     var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Profile, req.body.profileImage[i]);
 
-    user.photo=url;
+  const user = await User.findById(req.params.userId);
+  for (var i = 0; i < req.body.profileImage.length; i++) {
+    if (!req.body.profileImage[i].attachmentSize || !req.body.profileImage[i].extention || !req.body.profileImage[i].file
+      || req.body.profileImage[i].attachmentSize === null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file === null) {
+      return res.status(400).json({ error: 'All Profile Image properties must be provided' });
+    }
+    const attachmentName = user.firstName;
+    req.body.profileImage[i].filePath = attachmentName + "_" + user._id + req.body.profileImage[i].extention;
+    // Get a block blob client
+    var url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Profile, req.body.profileImage[i]);
+
+    user.photo = url;
     await user.save();
   }
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: user

@@ -29,7 +29,7 @@ incomeTaxComponantSchema.pre(/^find/,async function(next) {
   try {
     this.populate({
       path: 'section',
-      select: 'id section'
+      select: 'id section isHRA'
     });
   } catch (error) {
     console.error("Error populating section:", error);

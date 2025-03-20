@@ -34,6 +34,9 @@ const employeeIncomeTaxDeclarationComponentSchema = new Schema(
     documentLink: {
       type: String,
     },
+    employeeIncomeTaxDeclarationAttachments: {
+      type: Array
+    },
     employeeIncomeTaxDeclaration: {
       type: mongoose.Schema.ObjectId,
       ref: "EmployeeIncomeTaxDeclaration",
