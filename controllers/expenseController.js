@@ -636,7 +636,7 @@ async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, update
   });
     // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory.toString())
+    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory._id.toString())
   );
   
 
