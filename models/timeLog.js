@@ -5,7 +5,8 @@ var timeLogSchema = new Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: [true, 'User must belong to a user']
+    required: [true, 'User must belong to a user'],
+    index: true 
   },
   task: {
     type: mongoose.Schema.ObjectId,
