@@ -951,6 +951,78 @@ router.get('/GoogleApiKey', authController.protect, commonController.getGoogleAp
  *         description: Server error
  */
 router.post("/setSelectedUser", authController.protect, commonController.setSelectedUserForLogging)
+
+/**
+ * @swagger
+ * /api/v1/common/setLogLevels:
+ *   post:
+ *     summary: Set log levels for logging
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               logLevels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["info", "error", "debug"]
+ *             required:
+ *               - logLevels
+ *     responses:
+ *       200:
+ *         description: Successfully set log levels for logging
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 logLevels:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post("/setLogLevels", authController.protect, commonController.setLogLevels);
+
+/**
+ * @swagger
+ * /api/v1/common/getLogLevels:
+ *   get:
+ *     summary: Get the currently set log levels
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved log levels
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 logLevels:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       500:
+ *         description: Server error
+ */
+router.get("/getLogLevels", authController.protect, commonController.getLogLevels);
+
+
 /**
  * @swagger
  * /api/v1/common/getSelectedUser:

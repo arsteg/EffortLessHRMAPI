@@ -46,6 +46,18 @@ const employeeIncomeTaxDeclarationComponentSchema = new Schema(
   { collection: "EmployeeIncomeTaxDeclarationComponent" }
 );
 
+employeeIncomeTaxDeclarationComponentSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'incomeTaxComponent',
+      select: 'id componantName section'
+    });
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
+
 module.exports = mongoose.model(
   "EmployeeIncomeTaxDeclarationComponent",
   employeeIncomeTaxDeclarationComponentSchema
