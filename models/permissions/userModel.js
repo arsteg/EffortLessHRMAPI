@@ -282,6 +282,14 @@ userSchema.methods.createPasswordResetToken = function() {
 
   return resetToken;
 };
+userSchema.pre(/^find/,async function(next) {
+  this.populate({
+    path: 'role',
+    select: 'id Name'
+  })
+  next();
+});
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
