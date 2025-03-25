@@ -512,7 +512,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
 
         if (existingCategory) {
           const insertedFields = await insertFields(existingCategory, category.expenseTemplateCategoryFieldValues);
-
+          delete category._id;
           // Update the existing category document with newly inserted fields
           return ExpenseTemplateApplicableCategories.findByIdAndUpdate(
             existingCategory._id,
@@ -542,6 +542,7 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
 
     return updatedCategories;
   } catch (err) {
+    console.log(err)
     throw new AppError('Internal server error', 500);
   }
 }
@@ -961,7 +962,8 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+          const id = Date.now().toString(36);
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
           //req.body.attachment.file = req.body.taskAttachments[i].file;
           var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);
           }
@@ -1224,7 +1226,8 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+          const id = Date.now().toString(36);
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
             //req.body.attachment.file = req.body.taskAttachments[i].file;
           var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);
          
@@ -1282,7 +1285,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
             return res.status(400).json({ error: 'All attachment properties must be provided' });
           }
-          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + uuidv1() + expenseAttachments[i].extention; 
+          const id = Date.now().toString(36);
+          expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
           //req.body.attachment.file = req.body.taskAttachments[i].file;
        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);  
        req.body.documentLink=documentLink;
