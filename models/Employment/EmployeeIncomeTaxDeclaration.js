@@ -20,4 +20,16 @@ const employeeIncomeTaxDeclarationSchema = new Schema({
   incomeTaxDeclarationHRA: []
 }, { collection: 'EmployeeIncomeTaxDeclaration' });
 
+employeeIncomeTaxDeclarationSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'user',
+      select: 'id firstName lastName'
+    });
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
+
 module.exports = mongoose.model('EmployeeIncomeTaxDeclaration', employeeIncomeTaxDeclarationSchema);
