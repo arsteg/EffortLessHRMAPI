@@ -333,8 +333,8 @@
           {
             "fromAmount": 10001,
             "toAmount": 25000,
-            "employeeAmount": 0,
-            "twelfthMonthAmount": 0,
+            "employeeAmount": 200,
+            "twelfthMonthAmount": 300,
             "deductionFrequency": "monthly",
             "notes": "Nil for females up to ₹25,000"
           },
