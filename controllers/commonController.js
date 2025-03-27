@@ -15,6 +15,7 @@ const constants = require('../constants');
 const globalStore = require('../utils/globalStore');
 const  websocketHandler  = require('../utils/websocketHandler');
 const UserDevice = require('../models/commons/userDeviceModel');
+const { log } = require('winston');
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -560,6 +561,44 @@ exports.setSelectedUserForLogging = catchAsync(
   }
 });
 
+exports.setLogLevels = catchAsync(async (req, res, next) => {
+  try {
+    if (!Array.isArray(req.body.logLevels)) {
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        message: "logLevels must be an array of strings",
+      });
+    }
+
+    globalStore.logLevels = req.body.logLevels; // Update log levels
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: globalStore.logLevels,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: "Internal server error",
+    });
+  }
+});
+
+exports.getLogLevels = catchAsync(async (req, res, next) => {
+  try {
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: globalStore.logLevels || [],
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: "Internal server error",
+    });
+  }
+});
+
+
 exports.getSelectedUserForLogging = catchAsync(
   async (req, res, next) => {
   try {
@@ -579,7 +618,7 @@ exports.getSelectedUserForLogging = catchAsync(
 exports.testLog = catchAsync(
   async (req, res, next) => {
   try {    
-    websocketHandler.sendLog(req, 'User performed an action');
+    websocketHandler.sendLog(req, 'User performed an action',logType = constants.LOG_TYPES.INFO);
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {},

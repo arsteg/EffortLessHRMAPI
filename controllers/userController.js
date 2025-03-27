@@ -1431,7 +1431,7 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
     for (const item of req.body.employeeIncomeTaxDeclarationComponent) {
       if (!validIncomeTaxComponant.includes(item.incomeTaxComponent)) {
         return res.status(400).json({
-          error: `${item.incomeTaxComponent} is not a valid fixed allowance`,
+          error: `${item.incomeTaxComponent} is not a Income Tax Declaration Component`,
         });
       }
     }
@@ -1462,11 +1462,10 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
               return res.status(400).json({ error: 'All attachment properties must be provided' });
             }
             const id = new Date().getTime();
-            attachment[i].filePath = attachment[i].attachmentName + "_" + id + attachment[i].extention;
+            attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
             //req.body.attachment.file = req.body.taskAttachments[i].file;
-            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
-
-            // Add the document link to the array
+            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment);
+             // Add the document link to the array
             item.documentLink = documentLink;
           }
         }
@@ -1498,9 +1497,9 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(
               return res.status(400).json({ error: 'All attachment properties must be provided' });
             }
             const id = new Date().getTime();
-            attachment[i].filePath = attachment[i].attachmentName + "_" + id + attachment[i].extention;
+            attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
             //req.body.attachment.file = req.body.taskAttachments[i].file;
-            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment[i]);
+            var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaxDeclarionAttachment, attachment);
 
             // Add the document link to the array
             item.documentLink = documentLink;

@@ -40,29 +40,41 @@ const Appointment = require("../models/permissions/appointmentModel");
 const moment = require('moment'); // Using moment.js for easy date manipulation
 const  websocketHandler  = require('../utils/websocketHandler');
 
+// General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+  websocketHandler.sendLog(req, `Extracted companyId from cookies: ${companyId}`, constants.LOG_TYPES.TRACE);
+  
   if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError('Company ID not found in cookies', 400));
   }
+  
   req.body.company = companyId;
   const filter = { company: companyId };
   const update = req.body;
+  websocketHandler.sendLog(req, `Preparing to update general settings with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
   const options = {
-    new: true, // Return the updated document
-    upsert: true, // Create the document if it doesn't exist
-    setDefaultsOnInsert: true, // Apply default values specified in the schema
+    new: true,
+    upsert: true,
+    setDefaultsOnInsert: true,
   };
 
-  const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
-
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: generalSettings,
-  });
+  try {
+    const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
+    websocketHandler.sendLog(req, `Successfully created/updated general settings: ${generalSettings._id}`, constants.LOG_TYPES.INFO);
+    
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: generalSettings,
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error creating general settings: ${error.message}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError('Error creating general settings', 500));
+  }
 });
 
 exports.getGeneralSettings = catchAsync(async (req, res, next) => {
