@@ -541,7 +541,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data:null,
-      message: 'A task with this name already exists for your company.',
+      message: 'A task with this name already exists',
     });
   }
   const existingUser = await User.findById(req.body.user);
