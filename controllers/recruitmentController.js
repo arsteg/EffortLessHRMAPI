@@ -10,235 +10,314 @@ const  websocketHandler  = require('../utils/websocketHandler');
 
 //#region Skill region
 
-exports.getSkill=catchAsync(async (req, res, next) => {
-    const skills = await Skill.find({}).all();  
-    res.status(200).json({
+exports.getSkill = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getSkill process', constants.LOG_TYPES.INFO);
+  const skills = await Skill.find({}).all();  
+  websocketHandler.sendLog(req, `Retrieved ${skills.length} skills`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getSkill process', constants.LOG_TYPES.INFO);
+  
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: skills
-    });    
-  });
-  
-  exports.getAllSkills=catchAsync(async (req, res, next) => {
-    const skills = await Skill.findById(req.params.id);   
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: skills
-    });    
-  });
-  
+  });    
+});
 
-  exports.createSkill = async(req, res) => {
-    try{    
-      console.log('create skill called');
+exports.getAllSkills = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getAllSkills process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching skill with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  const skills = await Skill.findById(req.params.id);   
+  websocketHandler.sendLog(req, `Skill ${req.params.id} ${skills ? 'found' : 'not found'}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getAllSkills process', constants.LOG_TYPES.INFO);
+  
+  res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: skills
+  });    
+});
+
+exports.createSkill = async (req, res) => {
+  websocketHandler.sendLog(req, 'Starting createSkill process', constants.LOG_TYPES.INFO);
+  try {    
+      websocketHandler.sendLog(req, `Creating new skill with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
       const newSkill = await Skill.create(req.body);
+      websocketHandler.sendLog(req, `Successfully created skill with ID: ${newSkill._id}`, constants.LOG_TYPES.INFO);
+      
+      res.status(201).json({
+          status: constants.APIResponseStatus.Success,
+          data: newSkill
+      });
+  } catch (err) {
+      websocketHandler.sendLog(req, `Error creating skill: ${err.message}`, constants.LOG_TYPES.ERROR);
+      res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: err
+      });
+  }    
+};
 
-    res.status(201).json({
-      status:constants.APIResponseStatus.Success,
-      data: newSkill
-    })
-    }
-    catch(err){
-    res.status(400).json({
-      status:constants.APIResponseStatus.Failure,
-      message:err
-    })
-    }    
-  };
+exports.deleteSkill = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteSkill process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Attempting to delete skill with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  const skill = await Skill.findByIdAndDelete(req.params.id);
   
-  exports.deleteSkill = catchAsync(async (req, res, next) => {
-    const skill = await Skill.findByIdAndDelete(req.params.id);
-    if (!skill) {
+  if (!skill) {
+      websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
       return next(new AppError('No skill found with that ID', 404));
-    }
-    res.status(204).json({
+  }
+  
+  websocketHandler.sendLog(req, `Successfully deleted skill with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  res.status(204).json({
       status: constants.APIResponseStatus.Success,
       data: null
-    });
   });
- 
-  exports.updateSkill =  catchAsync(async (req, res, next) => {
-    const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // If not found - add new
-      runValidators: true // Validate data
-    });
-    if (!skill) {
+});
+
+// Note: There are two updateSkill functions in the original code. I'll handle both separately
+exports.updateSkill = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateSkill process (version 1)', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating skill ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
+  const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+  });
+  
+  if (!skill) {
+      websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
       return next(new AppError('No skill found with that ID', 404));
-    }
-    res.status(201).json({
+  }
+  
+  websocketHandler.sendLog(req, `Successfully updated skill ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: skill
-    });
+  });
+});
+
+exports.updateSkill = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateSkill process (version 2)', constants.LOG_TYPES.INFO);
+  
+  const filteredBody = filterObj(req.body, 'Name');
+  websocketHandler.sendLog(req, `Filtered update data: ${JSON.stringify(filteredBody)} for skill ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const updatedSkill = await Skill.findByIdAndUpdate(req.params.id, filteredBody, {
+      new: true,
+      runValidators: true
   });
 
-  exports.updateSkill = catchAsync(async (req, res, next) => {
-      
-    // 2) Filter out unwanted body properties
-    const filteredBody = filterObj(req.body, 'Name');
+  if (!updatedSkill) {
+      websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No skill found with that ID', 404));
+  }
   
-    // 3) Update user document
-    const updatedSkill = await Skill.findByIdAndUpdate(req.params.id, filteredBody, {
-      new: true, // Reutrn updated object instead of old one
-      runValidators: true
-    });
-
-    res.status(200).json({
+  websocketHandler.sendLog(req, `Successfully updated skill ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: updatedSkill
-    });
   });
-  
-  const filterObj = (obj, ...allowedFields) => {
-    const newObj = {};
-    // Loop through every property in an object
-    Object.keys(obj).forEach(el => {
-      // If property is inside allowed fields array
-      // add copy current property to new object
-      if (allowedFields.includes(el)) newObj[el] = obj[el];
-    });
-    return newObj;
-  };
+});
 
-  //#endregion 
-
-  //#region Skill Role
-
-exports.getRole=catchAsync(async (req, res, next) => {
+// Skill Role
+exports.getRole = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getRole process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching role with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const roles = await Role.findById(req.params.id);
+  websocketHandler.sendLog(req, `Role ${req.params.id} ${roles ? 'found' : 'not found'}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getRole process', constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: roles
+      status: constants.APIResponseStatus.Success,
+      data: roles
   });    
 });
 
-exports.getAllRoles=catchAsync(async (req, res, next) => {
+exports.getAllRoles = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getAllRoles process', constants.LOG_TYPES.INFO);
   const roles = await Role.find();   
+  websocketHandler.sendLog(req, `Retrieved ${roles.length} roles`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getAllRoles process', constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: roles
+      status: constants.APIResponseStatus.Success,
+      data: roles
   });    
 });
 
-exports.createRole = async(req, res) => {
-  try{        
-    console.log(req.body);
-    const newRole = await Role.create(req.body);
-  res.status(201).json({
-    status:constants.APIResponseStatus.Success,
-    data: newRole
-  })
-  }
-  catch(err){
-    console.log(err);
-  res.status(400).json({
-    status:constants.APIResponseStatus.Failure,
-    message:err
-  })
+exports.createRole = async (req, res) => {
+  websocketHandler.sendLog(req, 'Starting createRole process', constants.LOG_TYPES.INFO);
+  try {        
+      websocketHandler.sendLog(req, `Creating new role with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+      const newRole = await Role.create(req.body);
+      websocketHandler.sendLog(req, `Successfully created role with ID: ${newRole._id}`, constants.LOG_TYPES.INFO);
+      
+      res.status(201).json({
+          status: constants.APIResponseStatus.Success,
+          data: newRole
+      });
+  } catch (err) {
+      websocketHandler.sendLog(req, `Error creating role: ${err.message}`, constants.LOG_TYPES.ERROR);
+      res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: err
+      });
   }    
 };
 
 exports.deleteRole = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteRole process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Attempting to delete role with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const role = await Role.findByIdAndDelete(req.params.id);
+  
   if (!role) {
-    return next(new AppError('No Role found with that ID', 404));
+      websocketHandler.sendLog(req, `No role found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No Role found with that ID', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted role with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
-    status: constants.APIResponseStatus.Success,
-    data: null
+      status: constants.APIResponseStatus.Success,
+      data: null
   });
 });
 
-exports.updateRole =  catchAsync(async (req, res, next) => {
-  console.log("updateRole is called");
+exports.updateRole = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateRole process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating role ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
   const role = await Role.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
+      new: true,
+      runValidators: true
   });
+  
   if (!role) {
-    return next(new AppError('No Role found with that ID', 404));
+      websocketHandler.sendLog(req, `No role found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No Role found with that ID', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully updated role ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: role
+      status: constants.APIResponseStatus.Success,
+      data: role
   });
 });
 
-//#endregion 
-
-//#region Skill Industry
-
-exports.getIndustry=catchAsync(async (req, res, next) => {
+// Skill Industry
+exports.getIndustry = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getIndustry process', constants.LOG_TYPES.INFO);
   const industries = await Industry.find({}).all();
+  websocketHandler.sendLog(req, `Retrieved ${industries.length} industries`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getIndustry process', constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: industries
+      status: constants.APIResponseStatus.Success,
+      data: industries
   });    
 });
 
-exports.getAllIndustries=catchAsync(async (req, res, next) => {
+exports.getAllIndustries = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getAllIndustries process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching industry with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const industries = await Industry.findById(req.params.id);   
+  websocketHandler.sendLog(req, `Industry ${req.params.id} ${industries ? 'found' : 'not found'}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getAllIndustries process', constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: industries
+      status: constants.APIResponseStatus.Success,
+      data: industries
   });    
 });
 
-
-exports.createIndustry = async(req, res) => {
-  try{        
-    const newIndustry = await Industry.create(req.body);
-  res.status(201).json({
-    status:constants.APIResponseStatus.Success,
-    data: newIndustry
-  })
-  }
-  catch(err){
-  res.status(400).json({
-    status:constants.APIResponseStatus.Failure,
-    message:err
-  })
+exports.createIndustry = async (req, res) => {
+  websocketHandler.sendLog(req, 'Starting createIndustry process', constants.LOG_TYPES.INFO);
+  try {        
+      websocketHandler.sendLog(req, `Creating new industry with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+      const newIndustry = await Industry.create(req.body);
+      websocketHandler.sendLog(req, `Successfully created industry with ID: ${newIndustry._id}`, constants.LOG_TYPES.INFO);
+      
+      res.status(201).json({
+          status: constants.APIResponseStatus.Success,
+          data: newIndustry
+      });
+  } catch (err) {
+      websocketHandler.sendLog(req, `Error creating industry: ${err.message}`, constants.LOG_TYPES.ERROR);
+      res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: err
+      });
   }    
 };
 
 exports.deleteIndustry = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteIndustry process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Attempting to delete industry with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const industry = await Industry.findByIdAndDelete(req.params.id);
+  
   if (!industry) {
-    return next(new AppError('No Industry found with that ID', 404));
+      websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No Industry found with that ID', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted industry with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
-    status: constants.APIResponseStatus.Success,
-    data: null
-  });
-});
-
-exports.updateIndustry =  catchAsync(async (req, res, next) => {
-  const industry = await Industry.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
-  });
-  if (!industry) {
-    return next(new AppError('No Industry found with that ID', 404));
-  }
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: industry
+      status: constants.APIResponseStatus.Success,
+      data: null
   });
 });
 
 exports.updateIndustry = catchAsync(async (req, res, next) => {
-    
-  // 2) Filter out unwanted body properties
-  const filteredBody = filterObj(req.body, 'Name');
+  websocketHandler.sendLog(req, 'Starting updateIndustry process (version 1)', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating industry ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
+  const industry = await Industry.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+  });
+  
+  if (!industry) {
+      websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No Industry found with that ID', 404));
+  }
+  
+  websocketHandler.sendLog(req, `Successfully updated industry ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: industry
+  });
+});
 
-  // 3) Update user document
+exports.updateIndustry = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateIndustry process (version 2)', constants.LOG_TYPES.INFO);
+  
+  const filteredBody = filterObj(req.body, 'Name');
+  websocketHandler.sendLog(req, `Filtered update data: ${JSON.stringify(filteredBody)} for industry ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
   const updatedIndustry = await Industry.findByIdAndUpdate(req.params.id, filteredBody, {
-    new: true, // Reutrn updated object instead of old one
-    runValidators: true
+      new: true,
+      runValidators: true
   });
 
+  if (!updatedIndustry) {
+      websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No Industry found with that ID', 404));
+  }
+  
+  websocketHandler.sendLog(req, `Successfully updated industry ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: updatedIndustry
+      status: constants.APIResponseStatus.Success,
+      data: updatedIndustry
   });
 });
 
 //#endregion 
+
+
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  // Loop through every property in an object
+  Object.keys(obj).forEach(el => {
+    // If property is inside allowed fields array
+    // add copy current property to new object
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  return newObj;
+};

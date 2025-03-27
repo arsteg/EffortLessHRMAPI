@@ -9,200 +9,273 @@ const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.deleteProject = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteProject process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Checking dependencies for project ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   
   const appWebsite = await AppWebsite.find({}).where('projectReference').equals(req.params.id); 
   const manualTimeRequest = await ManualTimeRequest.find({}).where('project').equals(req.params.id); 
   const task = await Task.find({}).where('project').equals(req.params.id).where('company').equals(req.cookies.companyId);  
+  
+  websocketHandler.sendLog(req, `Found ${appWebsite.length} app/websites, ${manualTimeRequest.length} manual time requests, ${task.length} tasks`, constants.LOG_TYPES.DEBUG);
+  
   if (task.length > 0 || appWebsite.length > 0 || manualTimeRequest.length > 0) {
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      data: null,
-      message: 'Project is already in use. Please delete related records before deleting the Project.',
-    });
+      websocketHandler.sendLog(req, `Cannot delete project ${req.params.id} - has existing dependencies`, constants.LOG_TYPES.WARN);
+      return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          data: null,
+          message: 'Project is already in use. Please delete related records before deleting the Project.'
+      });
   }
+  
+  websocketHandler.sendLog(req, `Attempting to delete project ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const document = await Project.findById(req.params.id);
   await document.remove();
 
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+      websocketHandler.sendLog(req, `No project found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No document found with that ID', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted project ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
-    status: constants.APIResponseStatus.Success,
-    data: null
+      status: constants.APIResponseStatus.Success,
+      data: null
   });
 });
 
-exports.updateProject =  catchAsync(async (req, res, next) => {
+exports.updateProject = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateProject process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating project ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
   const document = await Project.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
+      new: true,
+      runValidators: true
   });
+  
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+      websocketHandler.sendLog(req, `No project found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No document found with that ID', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully updated project ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: {
-      data: document
-    }
+      status: constants.APIResponseStatus.Success,
+      data: {
+          data: document
+      }
   });
 });
 
-exports.getProject  = catchAsync(async (req, res, next) => {    
-const project = await Project.findById(req.params.id); 
-if(project)
-      {       
-       const projectUsers = await ProjectUser.find({}).where('project').equals(project._id);       
-          if(projectUsers) 
-          {
-            project.ProjectUser=projectUsers;
-          }
-          else{
-            project.ProjectUser=null;
-          }
-       
+exports.getProject = catchAsync(async (req, res, next) => {    
+  websocketHandler.sendLog(req, 'Starting getProject process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching project with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const project = await Project.findById(req.params.id); 
+  if(project) {
+      websocketHandler.sendLog(req, `Project ${req.params.id} found`, constants.LOG_TYPES.DEBUG);
+      const projectUsers = await ProjectUser.find({}).where('project').equals(project._id);       
+      if(projectUsers) {
+          project.ProjectUser = projectUsers;
+          websocketHandler.sendLog(req, `Found ${projectUsers.length} project users`, constants.LOG_TYPES.DEBUG);
+      } else {
+          project.ProjectUser = null;
+          websocketHandler.sendLog(req, `No project users found for project ${req.params.id}`, constants.LOG_TYPES.DEBUG);
       }
-res.status(200).json({
-  status: constants.APIResponseStatus.Success,
-  data: {
-    project: project
+  } else {
+      websocketHandler.sendLog(req, `Project ${req.params.id} not found`, constants.LOG_TYPES.WARN);
   }
-});  
-});
- // Get Country List
-exports.getProjectList = catchAsync(async (req, res, next) => {        
- const projectList = await Project.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
- const projectCount = await Project.countDocuments({ "company": req.cookies.companyId });
-  if(projectList)
-      {
-       
-       for(var i = 0; i < projectList.length; i++) {
-       
-       const projectUsers = await ProjectUser.find({}).where('project').equals(projectList[i]._id);  
-       if(projectUsers) 
-          {
-            projectList[i].ProjectUser=projectUsers;
-          }
-          else{
-            projectList[i].ProjectUser=null;
-          }
-       }
-      }
+  
+  websocketHandler.sendLog(req, 'Completed getProject process', constants.LOG_TYPES.INFO);
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {
-        projectList: projectList,
-        projectCount:projectCount
+          project: project
       }
-    });  
-  });
- exports.getProjectListByUser  = catchAsync(async (req, res, next) => {    
-  var projectList=[];
-    const newProjectUserList = await ProjectUser.find({}).where('user').equals(req.body.userId);  
-    if(newProjectUserList)
-      {
-       for(var i = 0; i < newProjectUserList.length; i++) {
-           projectList.push(newProjectUserList[i].project);
-         }  
+  });  
+});
+
+exports.getProjectList = catchAsync(async (req, res, next) => {        
+  websocketHandler.sendLog(req, 'Starting getProjectList process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching projects for company ${req.cookies.companyId} with skip: ${req.body.skip}, limit: ${req.body.next}`, constants.LOG_TYPES.TRACE);
+  
+  const projectList = await Project.find({}).where('company').equals(req.cookies.companyId).skip(req.body.skip).limit(req.body.next);  
+  const projectCount = await Project.countDocuments({ "company": req.cookies.companyId });
+  websocketHandler.sendLog(req, `Retrieved ${projectList.length} projects, total count: ${projectCount}`, constants.LOG_TYPES.DEBUG);
+  
+  if(projectList) {
+      for(var i = 0; i < projectList.length; i++) {
+          const projectUsers = await ProjectUser.find({}).where('project').equals(projectList[i]._id);  
+          if(projectUsers) {
+              projectList[i].ProjectUser = projectUsers;
+              websocketHandler.sendLog(req, `Found ${projectUsers.length} users for project ${projectList[i]._id}`, constants.LOG_TYPES.TRACE);
+          } else {
+              projectList[i].ProjectUser = null;
+              websocketHandler.sendLog(req, `No users found for project ${projectList[i]._id}`, constants.LOG_TYPES.TRACE);
+          }
       }
-      res.status(200).json({
+  }
+  
+  websocketHandler.sendLog(req, 'Completed getProjectList process', constants.LOG_TYPES.INFO);
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {
-        projectList:projectList
+          projectList: projectList,
+          projectCount: projectCount
       }
-    });   
-  });
- exports.addProject = catchAsync(async (req, res, next) => {  
-    const newProject = await Project.create({
+  });  
+});
+
+exports.getProjectListByUser = catchAsync(async (req, res, next) => {    
+  websocketHandler.sendLog(req, 'Starting getProjectListByUser process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching projects for user ${req.body.userId}`, constants.LOG_TYPES.TRACE);
+  var projectList = [];
+  
+  const newProjectUserList = await ProjectUser.find({}).where('user').equals(req.body.userId);  
+  websocketHandler.sendLog(req, `Found ${newProjectUserList.length} project-user associations`, constants.LOG_TYPES.DEBUG);
+  
+  if(newProjectUserList) {
+      for(var i = 0; i < newProjectUserList.length; i++) {
+          projectList.push(newProjectUserList[i].project);
+      }
+      websocketHandler.sendLog(req, `Compiled list of ${projectList.length} projects`, constants.LOG_TYPES.DEBUG);
+  }
+  
+  websocketHandler.sendLog(req, 'Completed getProjectListByUser process', constants.LOG_TYPES.INFO);
+  res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+          projectList: projectList
+      }
+  });   
+});
+
+exports.addProject = catchAsync(async (req, res, next) => {  
+  websocketHandler.sendLog(req, 'Starting addProject process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Creating new project with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
+  const newProject = await Project.create({
       projectName: req.body.projectName,
-      startDate:req.body.startDate,
-      endDate :req.body.endDate,
+      startDate: req.body.startDate,
+      endDate: req.body.endDate,
       notes: req.body.notes,
-      estimatedTime:req.body.estimatedTime,
+      estimatedTime: req.body.estimatedTime,
       createdOn: new Date(Date.now()),
       updatedOn: new Date(Date.now()),
       company: req.cookies.companyId,
       createdBy: req.cookies.userId,
       updatedBy: req.cookies.userId,
-      status:"Active"
-    });  
-     res.status(200).json({
+      status: "Active"
+  });  
+  
+  websocketHandler.sendLog(req, `Successfully created project with ID: ${newProject._id}`, constants.LOG_TYPES.INFO);
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {
-        newProject: newProject
+          newProject: newProject
       }
-    });  
-  });
- exports.addProjectUser = catchAsync(async (req, res, next) => { 
-    // Upload Capture image on block blob client 
-   for(var i = 0; i < req.body.projectUsers.length; i++) {
-   const projectUsersexists = await ProjectUser.find({}).where('project').equals(req.body.projectId).where('user').equals(req.body.projectUsers[i].user);  
+  });  
+});
+
+exports.addProjectUser = catchAsync(async (req, res, next) => { 
+  websocketHandler.sendLog(req, 'Starting addProjectUser process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Adding users to project ${req.body.projectId}`, constants.LOG_TYPES.TRACE);
+  
+  for(var i = 0; i < req.body.projectUsers.length; i++) {
+      const projectUsersexists = await ProjectUser.find({}).where('project').equals(req.body.projectId).where('user').equals(req.body.projectUsers[i].user);  
       
-      if (projectUsersexists.length>0) {
-        return next(new AppError('Project User already exists.', 403));
+      if (projectUsersexists.length > 0) {
+          websocketHandler.sendLog(req, `User ${req.body.projectUsers[i].user} already exists in project ${req.body.projectId}`, constants.LOG_TYPES.WARN);
+          return next(new AppError('Project User already exists.', 403));
+      } else { 
+          const newProjectUsersrItem = await ProjectUser.create({
+              project: req.body.projectId,
+              user: req.body.projectUsers[i].user,
+              company: req.cookies.companyId,
+              status: "Active",
+              createdOn: new Date(),
+              updatedOn: new Date(),
+              createdBy: req.cookies.userId,
+              updatedBy: req.cookies.userId
+          });    
+          websocketHandler.sendLog(req, `Added user ${req.body.projectUsers[i].user} to project ${req.body.projectId}`, constants.LOG_TYPES.TRACE);
       }
-      else{ 
-      const newProjectUsersrItem = await ProjectUser.create({
-        project:req.body.projectId,
-        user:req.body.projectUsers[i].user,
-        company:req.cookies.companyId,
-        status:"Active",
-        createdOn: new Date(),
-        updatedOn: new Date(),
-        createdBy: req.cookies.userId,
-        updatedBy: req.cookies.userId
-      });    
-    }
   }
+  
   const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.body.projectId);  
+  websocketHandler.sendLog(req, `Retrieved ${newProjectUserList.length} users for project ${req.body.projectId}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed addProjectUser process', constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: {      
-      ProjectUserList:newProjectUserList
-    }
+      status: constants.APIResponseStatus.Success,
+      data: {      
+          ProjectUserList: newProjectUserList
+      }
   });
-  });
- exports.updateProjectUser =  catchAsync(async (req, res, next) => {
+});
+
+exports.updateProjectUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateProjectUser process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Checking existing project user with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
   const projectUser = await ProjectUser.findById(req.params.id);
   if (projectUser) {
       const projectUsersexists = await ProjectUser.find({}).where('project').equals(projectUser.project).where('user').equals(req.body.user);  
-      if (projectUsersexists.length>0) {
-        return next(new AppError('Project User already exists.', 403));
-      }
-      else
-      {
+      if (projectUsersexists.length > 0) {
+          websocketHandler.sendLog(req, `User ${req.body.user} already exists in project ${projectUser.project}`, constants.LOG_TYPES.WARN);
+          return next(new AppError('Project User already exists.', 403));
+      } else {
+          websocketHandler.sendLog(req, `Updating project user ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
           const document = await ProjectUser.findByIdAndUpdate(req.params.id, req.body, {
-            new: true, // If not found - add new
-            runValidators: true // Validate data
+              new: true,
+              runValidators: true
           });
           if (!document) {
-            return next(new AppError('No document found with that ID', 404));
+              websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+              return next(new AppError('No document found with that ID', 404));
           }
+          websocketHandler.sendLog(req, `Successfully updated project user ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
           res.status(201).json({
-            status: constants.APIResponseStatus.Success,
-            data: {
-              data: document
-            }
+              status: constants.APIResponseStatus.Success,
+              data: {
+                  data: document
+              }
           });
-    }
-  }
-  });
-  exports.deleteProjectUser = catchAsync(async (req, res, next) => {
-    const document = await ProjectUser.findByIdAndDelete(req.params.id);
-    if (!document) {
+      }
+  } else {
+      websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
       return next(new AppError('No document found with that ID', 404));
-    }
-    res.status(204).json({
+  }
+});
+
+exports.deleteProjectUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteProjectUser process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Attempting to delete project user with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const document = await ProjectUser.findByIdAndDelete(req.params.id);
+  if (!document) {
+      websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No document found with that ID', 404));
+  }
+  
+  websocketHandler.sendLog(req, `Successfully deleted project user ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  res.status(204).json({
       status: constants.APIResponseStatus.Success,
       data: null
-    });
   });
-  exports.getProjectUsers  = catchAsync(async (req, res, next) => {  
-    const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.params.id);    
-    res.status(200).json({
+});
+
+exports.getProjectUsers = catchAsync(async (req, res, next) => {  
+  websocketHandler.sendLog(req, 'Starting getProjectUsers process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching users for project ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const newProjectUserList = await ProjectUser.find({}).where('project').equals(req.params.id);    
+  websocketHandler.sendLog(req, `Retrieved ${newProjectUserList.length} users for project ${req.params.id}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, 'Completed getProjectUsers process', constants.LOG_TYPES.INFO);
+  
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {
-        projectUserList:newProjectUserList
+          projectUserList: newProjectUserList
       }
-    });  
-  });
+  });  
+});
