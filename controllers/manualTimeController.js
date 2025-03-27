@@ -14,78 +14,96 @@ const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting addManualTimeRequest process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Creating manual time request with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+
   const user = await User.findById(req.body.user);
   if (!user) {
-    return next(new AppError(`There is no user with email ${user}}.`, 404));
+      websocketHandler.sendLog(req, `User not found with ID: ${req.body.user}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`There is no user with email ${req.body.user}.`, 404));
   }
-  if (!req.body.date) {
-    return next(new AppError(`Date is required.`, 404));
-  }
+  websocketHandler.sendLog(req, `Found user: ${user._id}`, constants.LOG_TYPES.DEBUG);
 
+  if (!req.body.date) {
+      websocketHandler.sendLog(req, 'Date is missing in request', constants.LOG_TYPES.WARN);
+      return next(new AppError(`Date is required.`, 404));
+  }
   if (!req.body.fromDate) {
-    return next(new AppError(`From Date is required.`, 404));
+      websocketHandler.sendLog(req, 'FromDate is missing in request', constants.LOG_TYPES.WARN);
+      return next(new AppError(`From Date is required.`, 404));
   }
   if (!req.body.toDate) {
-    return next(new AppError(`To Date is required.`, 404));
+      websocketHandler.sendLog(req, 'ToDate is missing in request', constants.LOG_TYPES.WARN);
+      return next(new AppError(`To Date is required.`, 404));
   }
-  const manager = await User.findById(req.body.manager);
 
+  const manager = await User.findById(req.body.manager);
   if (!manager) {
-    return next(new AppError(`There is no manager with id ${user}}.`, 404));
+      websocketHandler.sendLog(req, `Manager not found with ID: ${req.body.manager}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`There is no manager with id ${req.body.manager}.`, 404));
   }
+  websocketHandler.sendLog(req, `Found manager: ${manager._id}`, constants.LOG_TYPES.DEBUG);
 
   const task = await Task.findById(req.body.task);
   if (!task) {
-    return next(new AppError(`There is no task with id ${task}}.`, 404));
+      websocketHandler.sendLog(req, `Task not found with ID: ${req.body.task}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`There is no task with id ${req.body.task}.`, 404));
   }
+  websocketHandler.sendLog(req, `Found task: ${task._id}`, constants.LOG_TYPES.DEBUG);
 
   const project = await Project.findById(req.body.project);
   if (!project) {
-    return next(new AppError(`Project is required.`, 404));
+      websocketHandler.sendLog(req, `Project not found with ID: ${req.body.project}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`Project is required.`, 404));
   }
+  websocketHandler.sendLog(req, `Found project: ${project._id}`, constants.LOG_TYPES.DEBUG);
+
   const fromDate = new Date(req.body.fromDate);
   const toDate = new Date(req.body.toDate);
 
-  if (fromDate >= toDate) {    
-    res.status(200).json({
-      status:constants.APIResponseStatus.Failure,
-      data: null,
-      message:'From Date must be earlier than To Date.'
-    });
+  if (fromDate >= toDate) {
+      websocketHandler.sendLog(req, `Invalid date range: fromDate ${fromDate} >= toDate ${toDate}`, constants.LOG_TYPES.WARN);
+      return res.status(200).json({
+          status: constants.APIResponseStatus.Failure,
+          data: null,
+          message: 'From Date must be earlier than To Date.'
+      });
   }
-  // Check for overlapping manual time requests for the same user
+
   const overlappingRequest = await manualTimeRequest.findOne({
-    user: req.body.user,
-    $or: [
-      { fromDate: { $lt: toDate }, toDate: { $gt: fromDate } }, // Partial overlap
-      { fromDate: { $gte: fromDate, $lt: toDate } }, // Existing entry starts inside new range
-      { toDate: { $gt: fromDate, $lte: toDate } } // Existing entry ends inside new range
-    ]
+      user: req.body.user,
+      $or: [
+          { fromDate: { $lt: toDate }, toDate: { $gt: fromDate } },
+          { fromDate: { $gte: fromDate, $lt: toDate } },
+          { toDate: { $gt: fromDate, $lte: toDate } }
+      ]
   });
   if (overlappingRequest) {
-    res.status(200).json({
-      status:constants.APIResponseStatus.Failure,
-      data: null,
-      message:'Time entry overlaps with an existing record. Please adjust the time.'
-    });    
+      websocketHandler.sendLog(req, `Found overlapping request with ID: ${overlappingRequest._id}`, constants.LOG_TYPES.WARN);
+      return res.status(200).json({
+          status: constants.APIResponseStatus.Failure,
+          data: null,
+          message: 'Time entry overlaps with an existing record. Please adjust the time.'
+      });
   }
 
   var mtRequest = await manualTimeRequest.create({
-    user: req.body.user,
-    date: req.body.date,
-    company: req.cookies.companyId,
-    project: req.body.project,
-    manager: req.body.manager,
-    task: req.body.task,
-    fromDate: req.body.fromDate,
-    toDate: req.body.toDate,
-    status: "pending",
-    reason: req.body.reason,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now()),
-    createdBy: req.cookies.userId,
-    updatedBy: req.cookies.userId,
+      user: req.body.user,
+      date: req.body.date,
+      company: req.cookies.companyId,
+      project: req.body.project,
+      manager: req.body.manager,
+      task: req.body.task,
+      fromDate: req.body.fromDate,
+      toDate: req.body.toDate,
+      status: "pending",
+      reason: req.body.reason,
+      createdOn: new Date(Date.now()),
+      updatedOn: new Date(Date.now()),
+      createdBy: req.cookies.userId,
+      updatedBy: req.cookies.userId,
   });
+  websocketHandler.sendLog(req, `Created manual time request with ID: ${mtRequest._id}`, constants.LOG_TYPES.INFO);
 
   const requestApprovalLink = `${process.env.WEBSITE_DOMAIN}/ManualTimeRequestApproval`;
   const managerName = `${manager.firstName} ${manager.lastName}`;
@@ -94,159 +112,193 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   const emailMessage = `Hi ${managerName}, \n ${userName} has requested you to approve a manual time request.\n Please click the following link to approve or reject this request.\n ${requestApprovalLink} \nThank you `;
 
   if (mtRequest) {
-    await sendEmail({
-      email: manager.email,
-      subject: emailSubject,
-      message: emailMessage,
-    });
+      await sendEmail({
+          email: manager.email,
+          subject: emailSubject,
+          message: emailMessage,
+      });
+      websocketHandler.sendLog(req, `Sent approval email to manager: ${manager.email}`, constants.LOG_TYPES.DEBUG);
   }
+
+  websocketHandler.sendLog(req, 'Completed addManualTimeRequest process', constants.LOG_TYPES.INFO);
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: mtRequest,
+      status: constants.APIResponseStatus.Success,
+      data: mtRequest,
   });
 });
 
 exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
-  console.log("Request received:", req.body);
+  websocketHandler.sendLog(req, 'Starting updateManualTimeRequest process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating manual time request with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+
   const user = await User.findById(req.body.user);
-  let result = [];
   if (!user) {
-    return next(new AppError(`There is no user with email ${user}}.`, 404));
+      websocketHandler.sendLog(req, `User not found with ID: ${req.body.user}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`There is no user with email ${req.body.user}.`, 404));
   }
+  websocketHandler.sendLog(req, `Found user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+
   if (!req.body.date) {
-    return next(new AppError(`Date is required.`, 404));
+      websocketHandler.sendLog(req, 'Date is missing in request', constants.LOG_TYPES.WARN);
+      return next(new AppError(`Date is required.`, 404));
   }
+
   const manager = await User.findById(req.body.manager);
   if (!manager) {
-    return next(new AppError(`There is no manager with id ${user}}.`, 404));
+      websocketHandler.sendLog(req, `Manager not found with ID: ${req.body.manager}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`There is no manager with id ${req.body.manager}.`, 404));
   }
+  websocketHandler.sendLog(req, `Found manager: ${manager._id}`, constants.LOG_TYPES.DEBUG);
+
   const project = await Project.findById(req.body.project);
   if (!project) {
-    return next(new AppError(`Project is required.`, 404));
+      websocketHandler.sendLog(req, `Project not found with ID: ${req.body.project}`, constants.LOG_TYPES.WARN);
+      return next(new AppError(`Project is required.`, 404));
   }
-  req.body.id = req.body.requestId; // Add this line
+  websocketHandler.sendLog(req, `Found project: ${project._id}`, constants.LOG_TYPES.DEBUG);
+
+  req.body.id = req.body.requestId;
   const updatemanualTimeRequest = await manualTimeRequest.findByIdAndUpdate(
-    req.body.id,
-    req.body,
-    {
-      new: false,
-      runValidators: true,
-    }
+      req.body.id,
+      req.body,
+      {
+          new: false,
+          runValidators: true,
+      }
   );
   
   if (updatemanualTimeRequest) {
-    if (req.body.status === "approved") {
-      let startTime = moment(req.body.fromDate).toDate();
-      const endTime = moment(req.body.toDate).toDate();
-      let recordCount = 0;
-      while (startTime < endTime) {
-        var newLog = {
-          user: updatemanualTimeRequest.user,
-          task: updatemanualTimeRequest.task,
-          project: updatemanualTimeRequest.project,
-          date: req.body.fromDate,
-          startTime: startTime,
-          endTime: moment(startTime).add(10, "m").toDate(),
-          keysPressed: 0,
-          clicks: 0,
-          scrolls: 0,
-          filePath: "",
-          isManualTime: true,
-        };
-        let logItem = await TimeLog.create(newLog);
-        recordCount++;
-        startTime = moment(startTime).add(10, "m").toDate();
+      websocketHandler.sendLog(req, `Updated manual time request ID: ${req.body.id}`, constants.LOG_TYPES.INFO);
+      if (req.body.status === "approved") {
+          let startTime = moment(req.body.fromDate).toDate();
+          const endTime = moment(req.body.toDate).toDate();
+          let recordCount = 0;
+          while (startTime < endTime) {
+              var newLog = {
+                  user: updatemanualTimeRequest.user,
+                  task: updatemanualTimeRequest.task,
+                  project: updatemanualTimeRequest.project,
+                  date: req.body.fromDate,
+                  startTime: startTime,
+                  endTime: moment(startTime).add(10, "m").toDate(),
+                  keysPressed: 0,
+                  clicks: 0,
+                  scrolls: 0,
+                  filePath: "",
+                  isManualTime: true,
+              };
+              let logItem = await TimeLog.create(newLog);
+              recordCount++;
+              startTime = moment(startTime).add(10, "m").toDate();
+          }
+          websocketHandler.sendLog(req, `Created ${recordCount} time log entries for approved request`, constants.LOG_TYPES.DEBUG);
       }
-    }
+  } else {
+      websocketHandler.sendLog(req, `No manual time request found with ID: ${req.body.id}`, constants.LOG_TYPES.WARN);
   }
+
+  websocketHandler.sendLog(req, 'Completed updateManualTimeRequest process', constants.LOG_TYPES.INFO);
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: updatemanualTimeRequest,
-    log: result,
+      status: constants.APIResponseStatus.Success,
+      data: updatemanualTimeRequest,
+      log: result, // Note: 'result' is not defined in the original code; this might be a bug
   });
 });
 
 exports.getManualTimeRequestsByUser = catchAsync(async (req, res, next) => {
-  console.log("Entering getManualTimeRequestsByUser method");
-
+  websocketHandler.sendLog(req, 'Starting getManualTimeRequestsByUser process', constants.LOG_TYPES.INFO);
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { user: req.params.id };
-
-  console.log(`Request parameters - skip: ${skip}, limit: ${limit}, user ID: ${req.params.id}`);
+  websocketHandler.sendLog(req, `Fetching requests for user ${req.params.id} with skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.TRACE);
 
   const totalCount = await manualTimeRequest.countDocuments(query);
-  console.log(`Total documents found: ${totalCount}`);
+  websocketHandler.sendLog(req, `Total manual time requests found: ${totalCount}`, constants.LOG_TYPES.DEBUG);
 
   const manualTimeRequests = await manualTimeRequest
-    .find({})
-    .where("user")
-    .equals(req.params.id)
-    .skip(skip)
-    .limit(limit);
-
-  console.log(`Fetched ${manualTimeRequests.length} manual time requests`);
+      .find({})
+      .where("user")
+      .equals(req.params.id)
+      .skip(skip)
+      .limit(limit);
+  websocketHandler.sendLog(req, `Fetched ${manualTimeRequests.length} manual time requests`, constants.LOG_TYPES.DEBUG);
 
   for (let i = 0; i < manualTimeRequests.length; i++) {
-    console.log(`Processing request ${i + 1} of ${manualTimeRequests.length}`);
+      websocketHandler.sendLog(req, `Processing request ${i + 1} of ${manualTimeRequests.length}`, constants.LOG_TYPES.TRACE);
+      
+      manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project);
+      websocketHandler.sendLog(req, `Loaded project ${manualTimeRequests[i].project?._id} for request ${manualTimeRequests[i]._id}`, constants.LOG_TYPES.TRACE);
 
-    manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project);
-    console.log(`Project for request ${i + 1}:`, manualTimeRequests[i].project);
+      manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager);
+      websocketHandler.sendLog(req, `Loaded manager ${manualTimeRequests[i].manager?._id} for request ${manualTimeRequests[i]._id}`, constants.LOG_TYPES.TRACE);
 
-    manualTimeRequests[i].manager = await User.findById(manualTimeRequests[i].manager);
-    console.log(`Manager for request ${i + 1}:`, manualTimeRequests[i].manager);
-
-    manualTimeRequests[i].task = await Task.findById(manualTimeRequests[i].task);
-    console.log(`Task for request ${i + 1}:`, manualTimeRequests[i].task);
+      manualTimeRequests[i].task = await Task.findById(manualTimeRequests[i].task);
+      websocketHandler.sendLog(req, `Loaded task ${manualTimeRequests[i].task?._id} for request ${manualTimeRequests[i]._id}`, constants.LOG_TYPES.TRACE);
   }
 
-  console.log("All requests processed successfully");
-
+  websocketHandler.sendLog(req, 'Completed getManualTimeRequestsByUser process', constants.LOG_TYPES.INFO);
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: manualTimeRequests,
-    total: totalCount,
+      status: constants.APIResponseStatus.Success,
+      data: manualTimeRequests,
+      total: totalCount,
   });
-
-  console.log("Response sent with status 200");
 });
 
 exports.deleteManualTimeRequest = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteManualTimeRequest process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Attempting to delete manual time request with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
   const result = await manualTimeRequest.findByIdAndDelete(req.params.id);
+  if (!result) {
+      websocketHandler.sendLog(req, `No manual time request found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('No document found with that ID', 404));
+  }
+
+  websocketHandler.sendLog(req, `Successfully deleted manual time request ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    body: result,
+      status: constants.APIResponseStatus.Success,
+      body: result,
   });
 });
 
-exports.getManualTimeRequestsForApprovalByUser = catchAsync(
-  async (req, res, next) => {
-    const manualTimeRequests = await manualTimeRequest
+exports.getManualTimeRequestsForApprovalByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getManualTimeRequestsForApprovalByUser process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching approval requests for manager ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
+  const manualTimeRequests = await manualTimeRequest
       .find({})
       .where("manager")
       .equals(req.params.id)
       .populate("user");
-    for (let i = 0; i < manualTimeRequests.length; i++) {
-      manualTimeRequests[i].project = await Project.findById(
-        manualTimeRequests[i].project
-      );
-    }
-    res.status(200).json({
+  websocketHandler.sendLog(req, `Found ${manualTimeRequests.length} requests for approval`, constants.LOG_TYPES.DEBUG);
+
+  for (let i = 0; i < manualTimeRequests.length; i++) {
+      manualTimeRequests[i].project = await Project.findById(manualTimeRequests[i].project);
+      websocketHandler.sendLog(req, `Loaded project ${manualTimeRequests[i].project?._id} for request ${manualTimeRequests[i]._id}`, constants.LOG_TYPES.TRACE);
+  }
+
+  websocketHandler.sendLog(req, 'Completed getManualTimeRequestsForApprovalByUser process', constants.LOG_TYPES.INFO);
+  res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: manualTimeRequests,
-    });
-  }
-);
+  });
+});
 
 exports.getManualTimeApprovedRequests = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getManualTimeApprovedRequests process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching approved requests for user ${req.params.userId}, project ${req.params.projectId}, manager ${req.params.managerId}`, constants.LOG_TYPES.TRACE);
+
   const approvedRequests = await manualTimeRequest.find({
-    user: req.params.userId,
-    project: req.params.projectId,
-    manager: req.params.managerId,
-    status: "approved",
+      user: req.params.userId,
+      project: req.params.projectId,
+      manager: req.params.managerId,
+      status: "approved",
   });
+  websocketHandler.sendLog(req, `Found ${approvedRequests.length} approved requests`, constants.LOG_TYPES.DEBUG);
+
+  websocketHandler.sendLog(req, 'Completed getManualTimeApprovedRequests process', constants.LOG_TYPES.INFO);
   res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: approvedRequests,
+      status: constants.APIResponseStatus.Success,
+      data: approvedRequests,
   });
 });
