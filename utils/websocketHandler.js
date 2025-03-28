@@ -69,22 +69,36 @@ class WebSocketManager {
   }
 
   // Updated sendLog function
-  sendLog(req, message,logType = constants.LOG_TYPES.INFO) {
+  sendLog(req, message, logType) {
     const userId = req.cookies?.userId || req.user?.id; // Fallback to req.user.id if cookies unavailable
     if (!userId) {
       console.warn('sendLog: No userId found in request');
       return; // Exit if no userId
     }
-
+  
     if (!this.connectedUsers.has(userId)) {
       console.warn(`sendLog: User ${userId} is not connected via WebSocket`);
       return; // Exit if user isn’t connected
     }
-
-    if(req.cookies?.userId == globalStore?.selectedUserForLogging) {
-      this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.LOG, message, constants.webSocketContentType.TEXT);
-      return; // Exit if user isn’t the same as the one in the request
+  
+    console.log(`sendLog: Sending log type ${logType}`);
+    // Check if the logType is in globalStore.logLevels
+    if (globalStore?.logLevels.length > 0 && !globalStore?.logLevels?.includes(logType)) {
+      return; // Exit if logType isn’t in the allowed levels
     }
+  
+    // Check if the user matches the selectedUserForLogging (if set)
+    if (globalStore?.selectedUserForLogging && req.cookies?.userId !== globalStore?.selectedUserForLogging) {
+      return; // Exit if user doesn’t match the selected user
+    }
+  
+    // Send the log message via WebSocket
+    this.sendMessage(
+      [userId],
+      constants.WEB_SOCKET_NOTIFICATION_TYPES.LOG,
+      `${logType}: ${message}`, // Optional: Prefix message with logType for clarity
+      constants.webSocketContentType.TEXT
+    );
   }
 
   // Specific notification helpers
@@ -119,7 +133,7 @@ const wsManager = new WebSocketManager();
 
 module.exports = {
   initWebSocket: (server) => wsManager.initialize(server),
-  sendLog: (req, message) => wsManager.sendLog(req, message),
+  sendLog: (req, message,logType) => wsManager.sendLog(req, message,logType),
   sendNotification: (userId, content) => wsManager.sendNotification(userId, content),
   sendAlert: (userIds, content) => wsManager.sendAlert(userIds, content),
   sendChat: (userIds, content) => wsManager.sendChat(userIds, content),
