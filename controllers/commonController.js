@@ -618,7 +618,13 @@ exports.getSelectedUserForLogging = catchAsync(
 exports.testLog = catchAsync(
   async (req, res, next) => {
   try {    
-    websocketHandler.sendLog(req, 'User performed an action',logType = constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, 'User performed an action: INFO',logType = constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, 'User performed an action: TRACE',logType = constants.LOG_TYPES.TRACE);
+    websocketHandler.sendLog(req, 'User performed an action: DEBUG',logType = constants.LOG_TYPES.DEBUG);
+    websocketHandler.sendLog(req, 'User performed an action: WARN',logType = constants.LOG_TYPES.WARN);
+    websocketHandler.sendLog(req, 'User performed an action: ERROR',logType = constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, 'User performed an action: FATAL',logType = constants.LOG_TYPES.FATAL);
+    
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {},
