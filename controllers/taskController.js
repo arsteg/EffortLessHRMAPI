@@ -1072,7 +1072,146 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 });
 
 
+
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject1 execution', constants.LOG_TYPES.TRACE);
+
+  try {
+    const { skip = 0, next: limit = 10, projectId, userId } = req.body;
+    websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
+
+    const adjustedLimit = Math.min(parseInt(limit), 100);
+    websocketHandler.sendLog(req, `Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
+
+    // Step 1: Single aggregation to fetch TaskUsers, tasks, and their associated TaskUsers
+    const taskUserAggregation = await TaskUser.aggregate([
+      // Match TaskUsers for the given user
+      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      // Lookup tasks for the project
+      {
+        $lookup: {
+          from: 'tasks', // Collection name for Task model
+          let: { taskId: '$task' },
+          pipeline: [
+            { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', mongoose.Types.ObjectId(projectId)] }] } } },
+          ],
+          as: 'task',
+        },
+      },
+      // Unwind task array (each TaskUser has one task)
+      { $unwind: { path: '$task', preserveNullAndEmptyArrays: true } },
+      // Filter out null tasks (no match in project)
+      { $match: { 'task': { $ne: null } } },
+      // Lookup all TaskUsers for each task
+      {
+        $lookup: {
+          from: 'TaskUsers', // Matches the collection name in the schema
+          localField: 'task._id',
+          foreignField: 'task',
+          as: 'task.TaskUsers',
+        },
+      },
+      // Apply pagination
+      { $skip: parseInt(skip) },
+      { $limit: adjustedLimit },
+    ]).exec();
+
+    websocketHandler.sendLog(req, `Fetched ${taskUserAggregation.length} TaskUser records with tasks`, constants.LOG_TYPES.INFO);
+
+    // Step 2: Count total TaskUsers for pagination
+    const taskCountAggregation = await TaskUser.aggregate([
+      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'tasks',
+          let: { taskId: '$task' },
+          pipeline: [
+            { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', mongoose.Types.ObjectId(projectId)] }] } } },
+          ],
+          as: 'task',
+        },
+      },
+      { $unwind: { path: '$task', preserveNullAndEmptyArrays: true } },
+      { $match: { 'task': { $ne: null } } },
+      { $count: 'total' },
+    ]).exec();
+
+    const taskCount = taskCountAggregation.length > 0 ? taskCountAggregation[0].total : 0;
+    websocketHandler.sendLog(req, `Total task count: ${taskCount}`, constants.LOG_TYPES.DEBUG);
+
+    // Step 3: Format task list (no additional queries)
+    const taskList = taskUserAggregation.map((taskUser) => {
+      const task = taskUser.task;
+      websocketHandler.sendLog(req, `Processed task ${task._id} with ${task.TaskUsers.length} users`, constants.LOG_TYPES.TRACE);
+      return task;
+    });
+
+    websocketHandler.sendLog(req, `Returning ${taskList.length} tasks`, constants.LOG_TYPES.INFO);
+
+    // Step 4: Return the response
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      taskList,
+      taskCount,
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error in getUserTaskListByProject1: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+exports.getUserTaskListByProject= catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
+
+  try {
+    const { skip = 0, next: limit = 10, projectId, userId } = req.body;
+    const adjustedLimit = Math.min(Number(limit), 100);
+    
+    websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
+
+    // Fetch TaskUser records in one go, populating necessary fields
+    const taskUsers = await TaskUser.find({ 
+      user: userId 
+    })
+      .populate({
+        path: 'task',
+        match: { project: projectId }, // Directly filter tasks by project
+        populate: { path: 'TaskUsers' } // Pre-populate TaskUsers for each task
+      })
+      .skip(Number(skip))
+      .limit(adjustedLimit);
+
+    // Filter out null `task` values (caused by `match` filter above)
+    const validTaskUsers = taskUsers.filter(taskUser => taskUser.task);
+
+    websocketHandler.sendLog(req, `Fetched ${validTaskUsers.length} TaskUser records`, constants.LOG_TYPES.INFO);
+
+    const taskCount = await TaskUser.countDocuments({ 
+      user: userId,
+      task: { $in: validTaskUsers.map(tu => tu.task._id) } 
+    });
+
+    websocketHandler.sendLog(req, `Total task count: ${taskCount}`, constants.LOG_TYPES.DEBUG);
+
+    // Extract and format tasks
+    const taskList = validTaskUsers.map(taskUser => taskUser.task);
+
+    websocketHandler.sendLog(req, `Returning ${taskList.length} tasks`, constants.LOG_TYPES.INFO);
+    
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      taskList,
+      taskCount
+    });
+
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error in getUserTaskListByProject: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+
+exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
   try {
