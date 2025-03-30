@@ -10,6 +10,14 @@ const userDeviceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  project: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Project',   
+  },
+  task: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Task',   
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',   

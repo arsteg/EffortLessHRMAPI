@@ -1099,10 +1099,18 @@ router.get("/testLog", authController.protect, commonController.testLog);
  *               isOnline:
  *                 type: boolean
  *                 description: Online status of the device
+ *               project:
+ *                 type: string
+ *                 description: The ID of the project (optional)
+ *               task:
+ *                 type: string
+ *                 description: The ID of the task (optional)
  *             example:
  *               userId: "user123"
  *               machineId: "machine456"
  *               isOnline: true
+ *               project: "proj789"
+ *               task: "task101"
  *     responses:
  *       200:
  *         description: Status updated successfully
@@ -1121,7 +1129,13 @@ router.get("/testLog", authController.protect, commonController.testLog);
  *                     machineId:
  *                       type: string
  *                     isOnline:
- *                       type: boolean 
+ *                       type: boolean
+ *                     project:
+ *                       type: string
+ *                     task:
+ *                       type: string
+ *                     company:
+ *                       type: string
  *       400:
  *         description: Invalid request
  *       500:
