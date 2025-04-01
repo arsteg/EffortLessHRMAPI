@@ -1071,26 +1071,27 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject1 execution', constants.LOG_TYPES.TRACE);
+  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
   try {
-    const { skip = 0, next: limit = 10, projectId, userId } = req.body;
+    const { skip, next: limit, projectId, userId } = req.body;
     websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
 
-    const adjustedLimit = Math.min(parseInt(limit), 100);
-    websocketHandler.sendLog(req, `Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
+    // Determine if pagination should be applied
+    const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
+    const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0; // Default to 0 if invalid, but only if pagination is applied
+    const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER; // Use max if no pagination
+    websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
     // Step 1: Single aggregation to fetch TaskUsers, tasks, and their associated TaskUsers
-    const taskUserAggregation = await TaskUser.aggregate([
+    let taskUserAggregationPipeline = [
       // Match TaskUsers for the given user
       { $match: { user: mongoose.Types.ObjectId(userId) } },
       // Lookup tasks for the project
       {
         $lookup: {
-          from: 'tasks', // Collection name for Task model
+          from: 'tasks',
           let: { taskId: '$task' },
           pipeline: [
             { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', mongoose.Types.ObjectId(projectId)] }] } } },
@@ -1105,20 +1106,24 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
       // Lookup all TaskUsers for each task
       {
         $lookup: {
-          from: 'TaskUsers', // Matches the collection name in the schema
+          from: 'TaskUsers',
           localField: 'task._id',
           foreignField: 'task',
           as: 'task.TaskUsers',
         },
       },
-      // Apply pagination
-      { $skip: parseInt(skip) },
-      { $limit: adjustedLimit },
-    ]).exec();
+    ];
 
+    // Apply pagination only if specified
+    if (applyPagination) {
+      taskUserAggregationPipeline.push({ $skip: adjustedSkip });
+      taskUserAggregationPipeline.push({ $limit: adjustedLimit });
+    }
+
+    const taskUserAggregation = await TaskUser.aggregate(taskUserAggregationPipeline).exec();
     websocketHandler.sendLog(req, `Fetched ${taskUserAggregation.length} TaskUser records with tasks`, constants.LOG_TYPES.INFO);
 
-    // Step 2: Count total TaskUsers for pagination
+    // Step 2: Count total TaskUsers for pagination (always calculate for consistency)
     const taskCountAggregation = await TaskUser.aggregate([
       { $match: { user: mongoose.Types.ObjectId(userId) } },
       {
@@ -1155,10 +1160,11 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
       taskCount,
     });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error in getUserTaskListByProject1: ${error.message}`, constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, `Error in getUserTaskListByProject: ${error.message}`, constants.LOG_TYPES.ERROR);
     res.status(500).json({ status: 'error', message: error.message });
   }
 });
+
 
 //this method will be removed later
 exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {

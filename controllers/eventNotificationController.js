@@ -513,6 +513,126 @@ exports.testMe = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.addNotificationForUser = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting addNotificationForUser process', constants.LOG_TYPES.INFO);
+    
+    const { name, description, eventNotificationType, date, isRecurring, recurringFrequency, leadTime } = req.body;
+    const userId = req.cookies.userId;
+    websocketHandler.sendLog(req, `User ID from cookies: ${userId}`, constants.LOG_TYPES.TRACE);
+    const companyId = req.cookies.companyId;
+  
+    if (!userId || !companyId) {
+      websocketHandler.sendLog(req, 'Missing userId or companyId in request', constants.LOG_TYPES.WARN);
+      return next(new AppError('User ID and Company ID are required', 400));
+    }
+  
+    websocketHandler.sendLog(req, `Creating event notification with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
+  
+    // Create the EventNotification
+    const eventNotificationData = {
+      name,
+      description,
+      eventNotificationType,
+      date,
+      isRecurring,
+      recurringFrequency: isRecurring ? recurringFrequency : undefined,
+      leadTime,
+      company: companyId
+    };
+    const eventNotification = await EventNotification.create(eventNotificationData);
+    websocketHandler.sendLog(req, `Created event notification with ID: ${eventNotification._id}`, constants.LOG_TYPES.INFO);
+  
+    // Link it to the user via UserNotification
+    const userNotificationData = {
+      user: userId,
+      notification: eventNotification._id,
+      status: 'unread'
+    };
+    const userNotification = await UserNotification.create(userNotificationData);
+    websocketHandler.sendLog(req, `Linked notification ${eventNotification._id} to user ${userId} with UserNotification ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
+  
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+        eventNotification,
+        userNotification
+      }
+    });
+  });
+
+  exports.getAllUserNotifications = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting getAllUserNotifications process', constants.LOG_TYPES.INFO);
+    const userId = req.params.userId || req.cookies.userId; // Allow userId from params or cookies
+  
+    if (!userId) {
+      websocketHandler.sendLog(req, 'Missing userId in request', constants.LOG_TYPES.WARN);
+      return next(new AppError('User ID is required', 400));
+    }
+  
+    websocketHandler.sendLog(req, `Fetching all notifications for user ${userId}`, constants.LOG_TYPES.TRACE);
+  
+    // Fetch all UserNotifications for the user
+    const userNotifications = await UserNotification.find({ user: userId });
+    if (!userNotifications || userNotifications.length === 0) {
+      websocketHandler.sendLog(req, `No notifications found for user ${userId}`, constants.LOG_TYPES.DEBUG);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: []
+      });
+    }
+  
+    // Extract notification IDs
+    const notificationIds = userNotifications.map(un => un.notification);
+    websocketHandler.sendLog(req, `Found ${notificationIds.length} notification IDs for user ${userId}`, constants.LOG_TYPES.DEBUG);
+  
+    // Fetch corresponding EventNotifications
+    const eventNotifications = await EventNotification.find({ _id: { $in: notificationIds } })
+      .populate('eventNotificationType')
+      .populate('company');
+    websocketHandler.sendLog(req, `Retrieved ${eventNotifications.length} event notifications`, constants.LOG_TYPES.DEBUG);
+  
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: eventNotifications
+    });
+  });
+
+  exports.deleteNotificationForUser = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting deleteNotificationForUser process', constants.LOG_TYPES.INFO);
+    const { userId, notificationId } = req.body;
+  
+    if (!userId || !notificationId) {
+      websocketHandler.sendLog(req, 'Missing userId or notificationId in request', constants.LOG_TYPES.WARN);
+      return next(new AppError('User ID and Notification ID are required', 400));
+    }
+  
+    websocketHandler.sendLog(req, `Deleting notification ${notificationId} for user ${userId}`, constants.LOG_TYPES.TRACE);
+  
+    // Delete the UserNotification
+    const userNotification = await UserNotification.findOneAndDelete({
+      user: userId,
+      notification: notificationId
+    });
+    if (!userNotification) {
+      websocketHandler.sendLog(req, `UserNotification not found for user ${userId} and notification ${notificationId}`, constants.LOG_TYPES.WARN);
+      return next(new AppError('User notification link not found', 404));
+    }
+    websocketHandler.sendLog(req, `Deleted UserNotification for user ${userId} and notification ${notificationId}`, constants.LOG_TYPES.INFO);
+  
+    // Delete the EventNotification
+    const eventNotification = await EventNotification.findByIdAndDelete(notificationId);
+    if (!eventNotification) {
+      websocketHandler.sendLog(req, `EventNotification ${notificationId} not found`, constants.LOG_TYPES.WARN);
+      return next(new AppError('Event notification not found', 404));
+    }
+    websocketHandler.sendLog(req, `Deleted EventNotification ${notificationId}`, constants.LOG_TYPES.INFO);
+  
+    res.status(204).json({
+      status: constants.APIResponseStatus.Success,
+      data: null
+    });
+  });
+  
 
 
 

@@ -41,4 +41,4 @@ recurringFrequency: {
   }
 });
 eventNotificationSchema.add(baseSchema);
-module.exports = mongoose.model('EventNotification', eventNotificationSchema);
+module.exports = mongoose.model(' ', eventNotificationSchema);
