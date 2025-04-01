@@ -65,6 +65,7 @@ var taskModelSchema = new Schema({
   project: {
     type: mongoose.Schema.ObjectId,
     ref: 'Project',
+    index: true,
     required: [true, 'Project must belong to a Project']
   },
   parentTask: {

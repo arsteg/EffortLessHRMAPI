@@ -618,7 +618,13 @@ exports.getSelectedUserForLogging = catchAsync(
 exports.testLog = catchAsync(
   async (req, res, next) => {
   try {    
-    websocketHandler.sendLog(req, 'User performed an action',logType = constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, 'User performed an action: INFO',logType = constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, 'User performed an action: TRACE',logType = constants.LOG_TYPES.TRACE);
+    websocketHandler.sendLog(req, 'User performed an action: DEBUG',logType = constants.LOG_TYPES.DEBUG);
+    websocketHandler.sendLog(req, 'User performed an action: WARN',logType = constants.LOG_TYPES.WARN);
+    websocketHandler.sendLog(req, 'User performed an action: ERROR',logType = constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, 'User performed an action: FATAL',logType = constants.LOG_TYPES.FATAL);
+    
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {},
@@ -640,10 +646,10 @@ exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
       cookies: req.cookies
     });
 
-    const { userId, machineId, isOnline } = req.body;
+    const { userId, machineId, isOnline, project, task } = req.body;
     const companyId = req.cookies.companyId;
 
-    console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, companyId: ${companyId}`);
+    console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, project: ${project}, task: ${task}, companyId: ${companyId}`);
 
     if (!userId || !machineId || typeof isOnline !== 'boolean') {
       console.log(`[${new Date().toISOString()}] Validation failed: Missing or invalid required fields`);
@@ -656,12 +662,18 @@ exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
     }
 
     console.log(`[${new Date().toISOString()}] Querying database for userId: ${userId}, machineId: ${machineId}`);
+    const updateData = {
+      isOnline,
+      $setOnInsert: { company: companyId }
+    };
+
+    // Include project and task if provided in the request
+    if (project) updateData.project = project;
+    if (task) updateData.task = task;
+
     const userDevice = await UserDevice.findOneAndUpdate(
       { userId, machineId },
-      { 
-        isOnline,
-        $setOnInsert: { company: companyId }
-      },
+      updateData,
       { upsert: true, new: true }
     );
 
@@ -669,17 +681,17 @@ exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
       userId: userDevice.userId,
       machineId: userDevice.machineId,
       isOnline: userDevice.isOnline,
+      project: userDevice.project?.toString(),
+      task: userDevice.task?.toString(),
       company: userDevice.company?.toString(),
       wasInserted: !userDevice.__v
     });
 
     // Send WebSocket message only to the affected user
-    const messageContent = JSON.stringify({ userId, isOnline });
+    const messageContent = JSON.stringify({ userId, isOnline, project, task });
     websocketHandler.sendAlert(
       [userId], // Only send to this user
-     
       messageContent
-    
     );
     console.log(`[${new Date().toISOString()}] WebSocket message sent to user ${userId}`);
 

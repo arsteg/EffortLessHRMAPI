@@ -11,6 +11,7 @@ var taskUsersModelSchema = new Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
+    index: true,
     required: [true, 'User must belong to a User']
   },
   createdOn: {
