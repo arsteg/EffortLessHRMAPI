@@ -1160,7 +1160,8 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.getUserTaskListByProject= catchAsync(async (req, res, next) => {
+//this method will be removed later
+exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
   try {
@@ -1209,59 +1210,6 @@ exports.getUserTaskListByProject= catchAsync(async (req, res, next) => {
     res.status(500).json({ status: 'error', message: error.message });
   }
 });
-
-
-  exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
-
-    try {
-      const { skip = 0, next: limit = 10, projectId, userId } = req.body;
-      websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
-
-      const adjustedLimit = Math.min(parseInt(limit), 100);
-      websocketHandler.sendLog(req, `Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
-
-      const taskIds = await Task.find({ project: projectId }).select('_id');
-      websocketHandler.sendLog(req, `Found ${taskIds.length} task IDs for project ${projectId}`, constants.LOG_TYPES.DEBUG);
-
-      const taskUsers = await TaskUser.find({
-        user: userId,
-        task: { $in: taskIds }
-      })
-        .populate('task')
-        .skip(parseInt(skip))
-        .limit(adjustedLimit);
-      websocketHandler.sendLog(req, `Fetched ${taskUsers.length} TaskUser records`, constants.LOG_TYPES.INFO);
-
-      const taskCount = await TaskUser.countDocuments({
-        user: userId,
-        task: { $in: taskIds }
-      });
-      websocketHandler.sendLog(req, `Total task count: ${taskCount}`, constants.LOG_TYPES.DEBUG);
-
-      const taskList = await Promise.all(
-        taskUsers.map(async (taskUser) => {
-          const task = taskUser.task;
-          const taskUserList = await TaskUser.find({ task: task._id });
-          task.TaskUsers = taskUserList;
-          websocketHandler.sendLog(req, `Processed task ${task._id} with ${taskUserList.length} users`, constants.LOG_TYPES.TRACE);
-          return task;
-        })
-      );
-
-      websocketHandler.sendLog(req, `Returning ${taskList.length} tasks`, constants.LOG_TYPES.INFO);
-      res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        taskList,
-        taskCount
-      });
-    } catch (error) {
-      websocketHandler.sendLog(req, `Error in getUserTaskListByProject: ${error.message}`, constants.LOG_TYPES.ERROR);
-      res.status(500).json({ status: 'error', message: error.message });
-    }
-  });
-
-
 
 //Tag management
 exports.addTag = catchAsync(async (req, res, next) => {

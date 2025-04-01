@@ -1450,8 +1450,9 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
     // Retrieve applicable categories for the expense template
     const assignment = await EmployeeAdvanceAssignment.findOne({
       user: req.params.userId
-    });   
-    const templateCategories = await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(assignment.advanceTemplate);
+    });
+    
+    const templateCategories = assignment ? await AdvanceTemplateCategory.find({}).where('advanceTemplate').equals(assignment.advanceTemplate) : [];
     res.status(200).json({
       status: constants.APIResponseStatus.Success,     
       details: templateCategories

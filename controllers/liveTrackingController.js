@@ -16,80 +16,6 @@ const catchAsync = require('./../utils/catchAsync');
 const { sendUsersLiveImagesToApp } = require('../utils/liveScreenSender');
 
 
-// var allowedOrigin ="http://localhost:4200";
-// if (process.env.NODE_ENV === 'development') {
-//   allowedOrigin= "http://localhost:4200";
-// } else if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {                        
-//   allowedOrigin= "https://effort-less-hrm-web.vercel.app";
-// }
-// //app.use(compression);
-// app.use(cors(
-//   {
-//     origin: allowedOrigin,
-//     credentials: true, // This MUST be "true" if your endpoint is
-//                      // authenticated via either a session cookie
-//                      // or Authorization header. Otherwise the
-//                      // browser will block the response.
-//     methods: 'POST,GET,PUT,OPTIONS,DELETE, PATCH' // Make sure you're not blocking 
-//                                                // pre-flight OPTIONS requests
-//   }
-// ));
-// app.options('*', cors());
-
-// // Create an HTTP server
-// const server = http.createServer((req, res) => {
-//   res.writeHead(200, { 'Content-Type': 'text/plain' });
-//   res.end('WebSocket server');
-// });
-
-// const io = socketIo(server, {
-//   cors: {
-//     origin: allowedOrigin,
-//     methods: ["GET", "POST"],
-//     credentials: true
-//   }
-// });
-
-// // Start the HTTP server
-// const port = 4000;
-// //const port = 443;
-// server.listen(port, () => {
-//   console.log(`WebSocket server is running on port ${port}`);
-// });
-
-// // // Handle WebSocket upgrade requests
-// // server.on('upgrade', (request, socket, head) => {
-// //   wss.handleUpgrade(request, socket, head, (ws) => {
-// //     wss.emit('connection', ws, request);
-// //   }); 
-// // });
-
-// // WebSocket connection event
-// io.on('connection', (ws) => {
-//   console.log('A new client connected');
-//   let userId = '';   
-
-//   ws.on('message', (message) => {
-//     console.log(`Received message: ${message}`);
-//     userId = message;
-//     //Add the client to the set of connected clients
-//     //clients.add(userId, ws);
-//   });
-//   clients.add(ws);
-//   // WebSocket close event
-//   ws.on('disconnect', () => {
-//     console.log('Client disconnected');
-//     // Remove the client from the set of connected clients
-//     clients.delete(ws);
-//   });
-
-//   // You can also send an initial message to the client upon connection if needed
-//   ws.send('');
-
-// });
-
-//Apis
-
 exports.startStopLivePreview = catchAsync(async (req, res, next) => {
   // try{
   //   clients.forEach(function each(client, clientId) {
@@ -256,23 +182,7 @@ exports.updateUserScreen = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success
-  });
-
-
-  // console.log('updateUserScreen In');
-  // const liveTrackigExits = await LiveTracking.find({}).where('user').equals(req.cookies.userId);    
-  // if (liveTrackigExits.length>0) {
-  //   sendUsersLiveImagesToApp(req.cookies.userId, req.body.fileString);
-  //   // const newliveTracking = await LiveTracking.updateOne( { user: req.cookies.userId}, { $set: { fileString: req.body.fileString }} ).exec();
-  //   res.status(200).json({
-  //     status: constants.APIResponseStatus.Success
-  //   });
-  // }
-  // else{
-  //   res.status(200).json({
-  //     status: constants.APIResponseStatus.Failure
-  //   });
-  // }
+  });  
 });
 
 exports.getUsersLiveScreen = catchAsync(async (req, res, next) => {
