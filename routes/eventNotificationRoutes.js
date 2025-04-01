@@ -497,4 +497,130 @@ router.get('/today', eventNotificationController.getUserNotificationsForToday);
  */
 router.get('/All', eventNotificationController.getUserNotificationsAll);
 
+/**
+ * @swagger
+ * /api/v1/eventNotifications/user/notification:
+ *   post:
+ *     summary: Add a new event notification for a specific user
+ *     tags: [Event Notification]
+ *     requestBody:
+ *       description: Event notification and user details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               description:
+ *                 type: string
+ *                 required: true
+ *               eventNotificationType:
+ *                 type: string
+ *                 required: true
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 required: true
+ *               isRecurring:
+ *                 type: boolean
+ *                 required: true
+ *               recurringFrequency:
+ *                 type: string
+ *                 enum: ['daily', 'weekly', 'monthly', 'annually']
+ *               leadTime:
+ *                 type: number
+ *                 required: true 
+ *     responses:
+ *       201:
+ *         description: Event notification and user link successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     eventNotification:
+ *                       type: object
+ *                     userNotification:
+ *                       type: object
+ *       400:
+ *         description: Bad request (missing required fields)
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/user/notification', eventNotificationController.addNotificationForUser);
+
+/**
+ * @swagger
+ * /api/v1/eventNotifications/user/{userId}/notifications:
+ *   get:
+ *     summary: Get all notifications for a specific user
+ *     tags: [Event Notification]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user
+ *     responses:
+ *       200:
+ *         description: Successful response with all event notifications for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Bad request (missing userId)
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/user/:userId/notifications', eventNotificationController.getAllUserNotifications);
+
+/**
+ * @swagger
+ * /api/v1/eventNotifications/user/notification:
+ *   delete:
+ *     summary: Delete an event notification and its user link
+ *     tags: [Event Notification]
+ *     requestBody:
+ *       description: User and notification IDs to delete
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 required: true
+ *               notificationId:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       204:
+ *         description: Notification and user link successfully deleted
+ *       400:
+ *         description: Bad request (missing required fields)
+ *       404:
+ *         description: Notification or user link not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/user/notification', eventNotificationController.deleteNotificationForUser);
+
 module.exports = router;
