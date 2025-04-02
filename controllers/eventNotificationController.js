@@ -550,7 +550,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     };
     const userNotification = await UserNotification.create(userNotificationData);
     websocketHandler.sendLog(req, `Linked notification ${eventNotification._id} to user ${userId} with UserNotification ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
-  
+    websocketHandler.sendNotification(userId, 'New notification added', `You have a new notification: ${name}`);
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: {

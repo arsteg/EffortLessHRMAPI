@@ -1071,7 +1071,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
+exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
   try {
@@ -1167,7 +1167,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
 
 
 //this method will be removed later
-exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
+exports.getUserTaskListByProject= catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
   try {

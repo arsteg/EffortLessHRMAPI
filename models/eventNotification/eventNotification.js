@@ -15,7 +15,7 @@ const eventNotificationSchema = new Schema({
   eventNotificationType: {
     type: Schema.Types.ObjectId,
     ref: 'EventNotificationType',
-    required: true
+    required: false
   },
   date: {
     type: Date,
@@ -41,4 +41,4 @@ recurringFrequency: {
   }
 });
 eventNotificationSchema.add(baseSchema);
-module.exports = mongoose.model(' ', eventNotificationSchema);
+module.exports = mongoose.model('eventNotification', eventNotificationSchema);
