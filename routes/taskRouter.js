@@ -141,7 +141,7 @@ router.get('/tasklistbyparenttask/:taskId',authController.protect,taskController
  *                          type: object
  *
  */
- router.route('/tasklistbyproject/:projectId').post(authController.protect,taskController.getTaskListByProject);
+ router.post('/tasklistbyproject/:projectId',authController.protect,taskController.getTaskListByProject);
 /**
  * @swagger
  * /api/v1/task/{id}:
