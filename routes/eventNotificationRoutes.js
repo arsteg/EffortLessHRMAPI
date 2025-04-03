@@ -40,10 +40,42 @@ const router = express.Router();
  *                 enum: ['daily', 'weekly', 'monthly', 'yearly']
  *               leadTime:
  *                 type: number
- *                 required: true 
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
+ *                 default: 'scheduled'
  *     responses:
  *       201:
  *         description: Event notification successfully added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     eventNotificationType:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ *                       format: date
+ *                     isRecurring:
+ *                       type: boolean
+ *                     recurringFrequency:
+ *                       type: string
+ *                     leadTime:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *                       enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *       400:
  *         description: Bad request
  *       500:
@@ -53,7 +85,7 @@ router.post('/Notification', eventNotificationController.createEventNotification
 
 /**
  * @swagger
- * /api/v1/eventNotifications/Notification{id}:
+ * /api/v1/eventNotifications/Notification/{id}:
  *   get:
  *     summary: Get an event notification by ID
  *     tags: [Event Notification]
@@ -67,6 +99,34 @@ router.post('/Notification', eventNotificationController.createEventNotification
  *     responses:
  *       200:
  *         description: Successful response with the event notification
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     eventNotificationType:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ *                       format: date
+ *                     isRecurring:
+ *                       type: boolean
+ *                     recurringFrequency:
+ *                       type: string
+ *                     leadTime:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *                       enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *       404:
  *         description: Event notification not found
  *       500:
@@ -113,9 +173,42 @@ router.get('/Notification/:id',  eventNotificationController.getEventNotificatio
  *                 type: number
  *               company:
  *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *     responses:
  *       200:
  *         description: Successful response with the updated event notification
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     eventNotificationType:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ *                       format: date
+ *                     isRecurring:
+ *                       type: boolean
+ *                     recurringFrequency:
+ *                       type: string
+ *                     leadTime:
+ *                       type: number
+ *                     company:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *       404:
  *         description: Event notification not found
  *       500:
@@ -155,6 +248,36 @@ router.delete('/Notification/:id', eventNotificationController.deleteEventNotifi
  *     responses:
  *       200:
  *         description: Successful response with event notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                       type: string
+ *                       description:
+ *                         type: string
+ *                       eventNotificationType:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                       isRecurring:
+ *                         type: boolean
+ *                       recurringFrequency:
+ *                         type: string
+ *                       leadTime:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                         enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *       500:
  *         description: Internal server error
  */
@@ -282,7 +405,6 @@ router.delete('/eventNotificationTypes/:id',  eventNotificationController.delete
  */
 router.get('/eventNotificationTypes',  eventNotificationController.getAllEventNotificationTypes);
 
-// User Notifications
 /**
  * @swagger
  * /api/v1/eventNotifications/userNotifications:
@@ -302,10 +424,6 @@ router.get('/eventNotificationTypes',  eventNotificationController.getAllEventNo
  *                 required: true
  *               notification:
  *                 type: string
- *                 required: true
- *               status:
- *                 type: string
- *                 enum: [unread, read, dismissed]
  *                 required: true
  *     responses:
  *       201:
@@ -524,6 +642,9 @@ router.get('/All', eventNotificationController.getUserNotificationsAll);
  *                 type: string
  *                 format: date
  *                 required: true
+ *               navigationUrl:
+ *                 type: string
+ *                 required: false
  *               isRecurring:
  *                 type: boolean
  *                 required: true
@@ -532,7 +653,11 @@ router.get('/All', eventNotificationController.getUserNotificationsAll);
  *                 enum: ['daily', 'weekly', 'monthly', 'annually']
  *               leadTime:
  *                 type: number
- *                 required: true 
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
+ *                 default: 'unread'
  *     responses:
  *       201:
  *         description: Event notification and user link successfully created
@@ -548,15 +673,40 @@ router.get('/All', eventNotificationController.getUserNotificationsAll);
  *                   properties:
  *                     eventNotification:
  *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         description:
+ *                           type: string
+ *                         eventNotificationType:
+ *                           type: string
+ *                         date:
+ *                           type: string
+ *                           format: date
+ *                         navigationUrl:
+ *                           type: string
+ *                         isRecurring:
+ *                           type: boolean
+ *                         recurringFrequency:
+ *                           type: string
+ *                         leadTime:
+ *                           type: number
+ *                         status:
+ *                           type: string
+ *                           enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *                     userNotification:
  *                       type: object
+ *                       properties:
+ *                         user:
+ *                           type: string
+ *                         notification:
+ *                           type: string
  *       400:
  *         description: Bad request (missing required fields)
  *       500:
  *         description: Internal server error
  */
 router.post('/user/notification', eventNotificationController.addNotificationForUser);
-
 /**
  * @swagger
  * /api/v1/eventNotifications/user/{userId}/notifications:
@@ -584,6 +734,25 @@ router.post('/user/notification', eventNotificationController.addNotificationFor
  *                   type: array
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       eventNotificationType:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                       isRecurring:
+ *                         type: boolean
+ *                       recurringFrequency:
+ *                         type: string
+ *                       leadTime:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                         enum: ['unread', 'scheduled', 'sent', 'delivered', 'read']
  *       400:
  *         description: Bad request (missing userId)
  *       500:

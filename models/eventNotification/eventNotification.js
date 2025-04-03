@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const baseSchema = require('./baseSchema');
 const { RecurringFrequency } = require('../eventNotification/enums');
 const Schema = mongoose.Schema;
+const { NotificationStatus } = require('../eventNotification/enums'); // Corrected import path
 
 const eventNotificationSchema = new Schema({
   name: {
@@ -21,6 +22,10 @@ const eventNotificationSchema = new Schema({
     type: Date,
     required: true
   },
+  navigationUrl: {
+    type: String,
+    required: false
+  },
   isRecurring: {
     type: Boolean,
     required: true
@@ -33,12 +38,18 @@ recurringFrequency: {
   leadTime: {
     type: Number,
     required: true
+  },  
+  status: {
+    type: String,
+    enum: Object.values(NotificationStatus), // Corrected typo
+    required: true,
+     default: 'unread'
   },
   company: {
     type: Schema.Types.ObjectId,
     ref: 'Company',
     required: true
-  }
+  }  
 });
 eventNotificationSchema.add(baseSchema);
 module.exports = mongoose.model('eventNotification', eventNotificationSchema);
