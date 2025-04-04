@@ -14,11 +14,6 @@ const userNotificationSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'EventNotification',
     required: true
-  },
-  status: {
-    type: String,
-    enum: Object.values(NotificationStatus), // Corrected typo
-    required: true
   }
 });
 

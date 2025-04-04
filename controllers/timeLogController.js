@@ -148,8 +148,7 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     : teamIdsArray;
 
   const query = { 
-    userId: { $in: userFilter },
-    isOnline: true
+    userId: { $in: userFilter }    
   };
   
   if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };

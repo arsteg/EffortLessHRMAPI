@@ -12,6 +12,7 @@ const NotificationStatus = require('../models/eventNotification/enums.js');
 const moment = require('moment'); 
 const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
+
 exports.createEventNotification = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createEventNotification process', constants.LOG_TYPES.INFO);
   req.body.company = req.cookies.companyId;
@@ -516,7 +517,7 @@ exports.testMe = catchAsync(async (req, res, next) => {
 exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Starting addNotificationForUser process', constants.LOG_TYPES.INFO);
     
-    const { name, description, eventNotificationType, date, isRecurring, recurringFrequency, leadTime } = req.body;
+    const { name, description, eventNotificationType, date, navigationUrl, isRecurring, recurringFrequency, leadTime,status } = req.body;
     const userId = req.cookies.userId;
     websocketHandler.sendLog(req, `User ID from cookies: ${userId}`, constants.LOG_TYPES.TRACE);
     const companyId = req.cookies.companyId;
@@ -534,10 +535,12 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
       description,
       eventNotificationType,
       date,
+      navigationUrl,
       isRecurring,
       recurringFrequency: isRecurring ? recurringFrequency : undefined,
       leadTime,
-      company: companyId
+      company: companyId,
+      status
     };
     const eventNotification = await EventNotification.create(eventNotificationData);
     websocketHandler.sendLog(req, `Created event notification with ID: ${eventNotification._id}`, constants.LOG_TYPES.INFO);
@@ -545,12 +548,11 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     // Link it to the user via UserNotification
     const userNotificationData = {
       user: userId,
-      notification: eventNotification._id,
-      status: 'unread'
+      notification: eventNotification._id      
     };
     const userNotification = await UserNotification.create(userNotificationData);
     websocketHandler.sendLog(req, `Linked notification ${eventNotification._id} to user ${userId} with UserNotification ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
-    websocketHandler.sendNotification(userId, 'New notification added', `You have a new notification: ${name}`);
+    websocketHandler.sendNotification(userId, eventNotificationData);
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: {
@@ -579,16 +581,15 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
         status: constants.APIResponseStatus.Success,
         data: []
       });
-    }
-  
+    }  
     // Extract notification IDs
     const notificationIds = userNotifications.map(un => un.notification);
     websocketHandler.sendLog(req, `Found ${notificationIds.length} notification IDs for user ${userId}`, constants.LOG_TYPES.DEBUG);
   
     // Fetch corresponding EventNotifications
     const eventNotifications = await EventNotification.find({ _id: { $in: notificationIds } })
-      .populate('eventNotificationType')
-      .populate('company');
+      .populate('eventNotificationType');
+      
     websocketHandler.sendLog(req, `Retrieved ${eventNotifications.length} event notifications`, constants.LOG_TYPES.DEBUG);
   
     res.status(200).json({

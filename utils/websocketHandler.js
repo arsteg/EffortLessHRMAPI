@@ -103,7 +103,7 @@ class WebSocketManager {
 
   // Specific notification helpers
   sendNotification(userId, content) {
-    this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.NOTIFICATION, content, constants.webSocketContentType.TEXT);
+    this.sendMessage([userId], constants.WEB_SOCKET_NOTIFICATION_TYPES.NOTIFICATION, content, constants.webSocketContentType.JSON);
   }
 
   sendAlert(userIds, content) {
