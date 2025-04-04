@@ -20,6 +20,7 @@ const Project = require('../models/projectModel');
 const constants = require('../constants');
 const StorageController = require('./storageController');
 const  websocketHandler  = require('../utils/websocketHandler');
+const eventNotificationController = require('./eventNotificationController'); 
 
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -743,6 +744,46 @@ exports.addTask = catchAsync(async (req, res, next) => {
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(newTask._id);
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);
   websocketHandler.sendLog(req, `Task created with ${newTaskUserList.length} users and ${newTaskAttachmentList.length} attachments`, constants.LOG_TYPES.INFO);
+
+   // Add Event Notification for the assigned user
+   if (req.body.user) {
+    try {
+      const notificationBody = {
+        name: `Task Assigned: ${newTask.taskName}`,
+        description: newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
+        eventNotificationType: 'task_assignment', // Ensure this matches an existing EventNotificationType ID or fetch dynamically
+        date: newTask.startDate || new Date(), // Use task start date or current date
+        navigationUrl: `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`,
+        isRecurring: false, // Set based_structures on your requirements
+        recurringFrequency: null, // Not applicable if not recurring
+        leadTime: 0, // Adjust as needed (e.g., notification lead time in minutes)
+        status: 'unread' // Default status
+      };
+
+      // Simulate the req object for addNotificationForUser
+      const notificationReq = {
+        ...req,
+        body: notificationBody,
+        cookies: {
+          ...req.cookies,
+          userId: req.body.user // Set the userId to the assigned user
+        }
+      };
+
+      // Call the addNotificationForUser function
+      await eventNotificationController.addNotificationForUser(notificationReq, {
+        status: (code) => ({
+          json: (data) => {
+            websocketHandler.sendLog(req, `Event notification created for task ${newTask._id}: ${JSON.stringify(data)}`, constants.LOG_TYPES.INFO);
+          }
+        })
+      }, next);
+    } catch (error) {
+      websocketHandler.sendLog(req, `Failed to create event notification for task ${newTask._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
+      // Don't fail the task creation if notification fails
+    }
+  }
+
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
