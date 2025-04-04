@@ -653,7 +653,6 @@ async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, update
 
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
-  console.log(employeeExpenseAssignment);
   if (employeeExpenseAssignment.length > 0) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
@@ -782,7 +781,6 @@ exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, re
  
   if(applicableCategories) 
   {
-    console.log(applicableCategories._id);
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  
         if(expenseTemplateCategoryFieldValues) 
         {
@@ -938,9 +936,7 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
-  const { employee, title, status,amount, expenseReportExpenses } = req.body;
-  var documentLink;
-  console.log(status);
+  const { employee, title, status,amount, expenseReportExpenses } = req.body;  
   try {
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({

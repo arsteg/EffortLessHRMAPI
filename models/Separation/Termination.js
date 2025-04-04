@@ -45,7 +45,7 @@ var terminationSchema = new Schema({
   },
   termination_status: {
     type: String,  // Status of termination (e.g., pending, completed, appealed)
-    enum: ['pending', 'completed', 'appealed'],
+    enum: ['Pending', 'Completed', 'Appealed','Deleted'],
     required: true,
     default: 'pending'
   },

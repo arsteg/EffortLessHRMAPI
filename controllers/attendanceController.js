@@ -1770,10 +1770,8 @@ exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
             }
           }
         ]);
-        console.log(timeLogs);
         if (timeLogs) {
           const attendanceRecords = await Promise.all(timeLogs.map(async log => {
-            console.log(log._id);
             const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
             if (attendannceCount == 0) {
               const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
@@ -1870,7 +1868,6 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
         attendanceRecords.push(attendanceRecord);
       }
     }
-    console.log(attendanceRecords);
     // If there are processed records, insert them into the database
     if (attendanceRecords.length > 0) {
       await insertAttendanceRecords(attendanceRecords);
@@ -1895,12 +1892,10 @@ exports.uploadAttendanceJSON = async (req, res, next) => {
 // Helper function to fetch user by empCode
 async function getUserByEmpCode(empCode) {
   try {
-    console.log(empCode);
     // Fetch the appointment by empCode and populate the user data
     const appointments = await Appointment.find({ empCode: empCode })
       .populate('user')  // Populate the user field with user details
-      .select('user empCode company joiningDate confirmationDate'); // Select relevant fields
-    console.log(appointments);
+      .select('user empCode company joiningDate confirmationDate'); // Select relevant fields    
     if (appointments && appointments.length > 0) {
       return appointments[0].user;  // Return the user details from the first matched appointment
     } else {
@@ -2188,7 +2183,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
         // Step 2: Get approved leave applications for the specified month
         const approvedLeaves = await LeaveApplication.find({
           user: req.body.user,
-          status: constants.Leave_Application_Constant.app,
+          status: constants.Leave_Application_Constant.Approved,
           startDate: { $gte: startOfMonth, $lte: endOfMonth },
           endDate: { $gte: startOfMonth, $lte: endOfMonth },
         });
@@ -2490,8 +2485,6 @@ const sendEmailToUsers = async (attendanceProcessUsers) => {
         .replace("{company}", req.cookies.companyName)
         .replace("{company}", req.cookies.companyName)
         .replace("{lastName}", attendanceUser.lastName);
-      console.log(attendanceUser.email);
-      console.log(emailTemplate.subject);
       try {
         await sendEmail({
           email: attendanceUser.email,

@@ -55,10 +55,6 @@ const router = express.Router();
  *                 type: boolean
  *               exit_feedback:
  *                 type: string
- *               resignation_status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
- *                 required: true
  *     responses:
  *       201:
  *         description: Resignation record created successfully
@@ -109,7 +105,7 @@ router.get('/resignations-by-user/:userId', authController.protect, separationCo
  *         required: true
  *         schema:
  *           type: string
- *           enum: ['pending', 'completed', 'in-progress', 'approved']
+ *           enum: ['Pending', 'Completed', 'In-Progress', 'Approved']
  *     responses:
  *       200:
  *         description: Successful response with resignation details
@@ -160,9 +156,19 @@ router.get('/resignations-by-company', authController.protect, separationControl
  *           schema:
  *             type: object
  *             properties:
- *               resignation_status:
+ *               resignation_reason:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *               exit_interview_date:
+ *                 type: string
+ *                 format: date
+ *               handover_complete:
+ *                 type: boolean
+ *               company_property_returned:
+ *                 type: boolean
+ *               final_pay_processed:
+ *                 type: boolean
+ *               exit_feedback:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with updated resignation
@@ -198,7 +204,7 @@ router.put('/resignations/:id', authController.protect, separationController.upd
  *             properties:
  *               resignation_status:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *                 enum: ['Pending', 'Completed', 'In-Progress', 'Approved']
  *     responses:
  *       200:
  *         description: Successful response with status change
@@ -208,33 +214,6 @@ router.put('/resignations/:id', authController.protect, separationController.upd
  *         description: Internal server error
  */
 router.patch('/resignations-by-status/:id', authController.protect, separationController.changeResignationStatus);
-
-/**
- * @swagger
- * /api/v1/separation/resignations/{id}:
- *   delete:
- *     summary: Delete a resignation record
- *     tags: [Separation Management]
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Resignation record deleted successfully
- *       404:
- *         description: Resignation not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/resignations/:id', authController.protect, separationController.deleteResignation);
-
-
 
 /**
  * @swagger
@@ -1321,6 +1300,7 @@ router.get('/separation-requests', authController.protect, separationController.
  *                 required: true
  *               termination_date:
  *                 type: string
+ *                 format: date
  *                 required: true
  *               termination_reason:
  *                 type: string
@@ -1337,12 +1317,9 @@ router.get('/separation-requests', authController.protect, separationController.
  *                 type: boolean
  *               exit_interview_date:
  *                 type: string
+ *                 format: date
  *               legal_compliance:
  *                 type: boolean
- *               termination_status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'appealed']
- *                 required: true
  *               unemployment_claim:
  *                 type: boolean
   *     responses:
@@ -1438,10 +1415,28 @@ router.get('/termination-by-company', separationController.getTerminationByCompa
  *             properties:
  *               termination_date:
  *                 type: string
+ *                 format: date
+ *                 required: true
  *               termination_reason:
  *                 type: string
- *               termination_status:
+ *                 required: true
+ *               notice_given:
+ *                 type: boolean
+ *               performance_warnings:
+ *                 type: integer
+ *               severance_paid:
+ *                 type: boolean
+ *               final_pay_processed:
+ *                 type: boolean
+ *               company_property_returned:
+ *                 type: boolean
+ *               exit_interview_date:
  *                 type: string
+ *                 format: date
+ *               legal_compliance:
+ *                 type: boolean
+ *               unemployment_claim:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Termination successfully updated
@@ -1477,7 +1472,7 @@ router.put('/termination/:id', separationController.updateTermination);
  *             properties:
  *               termination_status:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *                 enum: ['Completed', 'Appealed']
  *     responses:
  *       200:
  *         description: Termination status successfully changed
@@ -1489,28 +1484,4 @@ router.put('/termination/:id', separationController.updateTermination);
  *         description: Internal server error
  */
 router.put('/termination-by-status/:id', separationController.changeTerminationStatus);
-
-/**
- * @swagger
- * /api/v1/separation/termination/{id}:
- *   delete:
- *     summary: Delete a termination record by ID
- *     tags: [Separation Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Termination ID
- *     responses:
- *       204:
- *         description: Termination successfully deleted
- *       404:
- *         description: Termination not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/termination/:id', separationController.deleteTermination);
-
 module.exports = router;

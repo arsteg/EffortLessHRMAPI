@@ -250,7 +250,6 @@ userSchema.methods.correctPassword = async function(
 ) {
   // Because passwords select is set to false, we can't access it directly with 'this' keyword
   // Compare non hashed password with hashed one
-  console.log("correctPassword called");
   return await bcrpyt.compare(candidatePassword, userPassword);
 };
 

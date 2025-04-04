@@ -44,9 +44,9 @@ var resignationSchema = new Schema({
   },
   resignation_status: {
     type: String,  // Could be "pending", "completed", "in-progress", etc.
-    enum: ['pending', 'completed', 'in-progress', 'approved'],  // Enum for predefined statuses
+    enum: ['Pending', 'Completed', 'In-Progress', 'Approved','Deleted'],  // Enum for predefined statuses
     required: true,
-    default: 'pending'
+    default: 'Pending'
   },
   company: {
     type: mongoose.Schema.ObjectId,

@@ -68,6 +68,19 @@ const Email_template_constant = {
     Cancelled: "Cancelled",
     Rejected: "Rejected"
   };
+  const Resignation_Status = {
+    Pending: "Pending",
+    Completed: "completed",
+    InProgress: "In-Progress",
+    Approved: "Approved",    
+    Deleted: "Deleted"
+  };
+  const Termination_status = {
+    Pending: "Pending",
+    Completed: "completed",
+    Appealed: "Appealed", 
+    Deleted: "Deleted"
+  };
   const Payroll_FNF = {   
     InProgress: "InProgress",
     Pending: "Pending",
@@ -114,14 +127,13 @@ const Email_template_constant = {
   };
  
 
-  const webSocketContentType = {
- 
-TEXT: 'text',
-  IMAGE: 'image',
-  AUDIO: 'audio',
-  VIDEO: 'video',
-  FILE: 'file',
-  JSON: "json",
+  const webSocketContentType = { 
+    TEXT: 'text',
+    IMAGE: 'image',
+    AUDIO: 'audio',
+    VIDEO: 'video',
+    FILE: 'file',
+    JSON: "json",
   };
 
   const WEB_SOCKET_NOTIFICATION_TYPES = {
@@ -143,7 +155,8 @@ TEXT: 'text',
 
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,
     Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
-    Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES };
+    Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
+    Resignation_Status,Termination_status };
   
 
 

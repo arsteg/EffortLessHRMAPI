@@ -4080,10 +4080,8 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
 // Add a PayrollFNFAttendanceSummary
 exports.addPayrollFNFAttendanceSummary = catchAsync(async (req, res, next) => {
   const { payrollFNFUser } = req.body;
-  console.log(payrollFNFUser);
   // Check if payrollUser exists in the PayrollUsers model
   const isValidUser = await PayrollFNFUsers.findById(payrollFNFUser);
-  console.log(isValidUser);
   if (!isValidUser) {
     return next(new AppError('Invalid payroll user', 400));
   }

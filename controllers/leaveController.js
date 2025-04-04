@@ -974,7 +974,6 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);      
       if(managerTeamsIds)
       {
-        console.log(managerTeamsIds);
         for(var j = 0; j < managerTeamsIds.length; j++)
           {       
             const user = await User.findById(req.body.employee);
@@ -1003,39 +1002,35 @@ const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplic
    
       if(emailTemplate)
       {
-        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)
-        console.log("hii");
-       const template = emailTemplate.contentData;
-       console.log("hii1");
-       const totalDays=leaveApplication.endDate-leaveApplication.startDate;
-       const message = template
-       .replace("{firstName}", manager.firstName)       
-       .replace("{employeeName}", user.firstName + " "+user.lastName)
-       .replace("{employeeName}", user.firstName + " "+user.lastName)
-      
-       .replace("{leaveType}", leaveApplication.leaveCategory)       
-       .replace("{startDate}", leaveApplication.startDate)       
-       .replace("{endDate}", leaveApplication.endDate)       
-       .replace("{totalDays}", totalDays)       
-       .replace("{reason}", leaveApplication.comment)       
-     
-       .replace("{company}",  company.companyName)
-       .replace("{company}", company.companyName)
-       .replace("{lastName}", manager.lastName); 
-      
-       console.log(message);
-       if(attendanceUser.email=="hrmeffortless@gmail.com")
-       {
-          try {
-           await sendEmail({
-             email: attendanceUser.email,
-             subject: emailTemplate.subject,
-             message
-           });
-          
-         } catch (err) {   
-          console.error(`Error sending email to user ${user}:`, err); 
-       }
+        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)     
+          {  
+          const template = emailTemplate.contentData;
+          const totalDays=leaveApplication.endDate-leaveApplication.startDate;
+          const message = template
+          .replace("{firstName}", manager.firstName)       
+          .replace("{employeeName}", user.firstName + " "+user.lastName)
+          .replace("{employeeName}", user.firstName + " "+user.lastName)      
+          .replace("{leaveType}", leaveApplication.leaveCategory)       
+          .replace("{startDate}", leaveApplication.startDate)       
+          .replace("{endDate}", leaveApplication.endDate)       
+          .replace("{totalDays}", totalDays)       
+          .replace("{reason}", leaveApplication.comment)            
+          .replace("{company}",  company.companyName)
+          .replace("{company}", company.companyName)
+          .replace("{lastName}", manager.lastName); 
+          if(attendanceUser.email=="hrmeffortless@gmail.com")
+          {
+              try {
+              await sendEmail({
+                email: attendanceUser.email,
+                subject: emailTemplate.subject,
+                message
+              });
+              
+            } catch (err) {   
+              console.error(`Error sending email to user ${user}:`, err); 
+          }
+          }
       }
   }
 };
@@ -1213,18 +1208,12 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     if (leaveApplication) {
     
         const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);   
-        const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
-      
+        const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);      
         const cycle = await scheduleController.createFiscalCycle();
-        console.log(leaveApplication.employee);
-        console.log(cycle);
-        console.log(leaveApplication.leaveCategory);
         const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
-        console.log(leaveAssigned);
         // Deduct the applied leave days from the leave remaining
         leaveAssigned.leaveRemaining += leaveDays;
         leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
-
         // Save the updated leave assigned record
         await leaveAssigned.save();
       }

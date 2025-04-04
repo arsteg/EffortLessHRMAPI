@@ -1053,10 +1053,9 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     }
   };
 
-  console.log("hello");
   // Handle SalaryComponentPFCharge
   if (req.body.salaryComponentFixedAllowance.length > 0) {
-    console.log("hello12");
+  
     await updateOrCreateRecords(
       SalaryComponentFixedAllowance,
       req.body.salaryComponentFixedAllowance,
@@ -1064,8 +1063,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     );
   }
 
-  if (req.body.salaryComponentPFCharge.length > 0) {
-    console.log("hello12");
+  if (req.body.salaryComponentPFCharge.length > 0) {   
     await updateOrCreateRecords(
       SalaryComponentPFCharge,
       req.body.salaryComponentPFCharge,
@@ -1109,7 +1107,6 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
       "variableAllowance"
     );
   }
-  console.log("hello1");
   const employeeSalaryDetails = await EmployeeSalaryDetails.findByIdAndUpdate(
     req.params.id,
     req.body,

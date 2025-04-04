@@ -17,7 +17,6 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 );
 
 async function createContainerInContainer(parentContainerName, childContainerName, document) {
-  console.log(document);
   // Get the reference to the parent container
   const parentContainerClient = blobServiceClient.getContainerClient(parentContainerName);
 

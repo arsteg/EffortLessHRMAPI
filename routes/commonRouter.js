@@ -555,6 +555,13 @@ router.get('/UserUIState/:key', commonController.getUserUiState);
  *               section:
  *                 type: string
  *                 required: true
+ *               isHRA:
+ *                 type: boolean
+ *                 required: true
+ *                 default: false
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       201:
  *         description: IncomeTaxSection successfully added
@@ -610,6 +617,13 @@ router.get('/income-tax-sections-by-company', authController.protect, commonCont
  *             properties:
  *               section:
  *                 type: string
+ *               isHRA:
+ *                 type: boolean
+ *                 required: true
+ *                 default: false
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated IncomeTaxSection
