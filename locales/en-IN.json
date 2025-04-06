@@ -1,0 +1,42 @@
+{
+  "common": {
+    "success": "Operation completed successfully",
+    "failure": "Operation failed",
+    "notFound": "Record not found",
+    "missingParams": "Missing required parameters",
+    "internalError": "Internal Server Error",
+    "noRecords": "No records found"
+  },
+  "appWebsite": {
+    "addSuccess": "App/website record added successfully for user {userId}",
+    "addFailure": "Failed to add app/website record",
+    "deleteSuccess": "App/website record {recordId} deleted successfully",
+    "deleteFailure": "Failed to delete app/website record",
+    "getByIdSuccess": "App/website record {recordId} retrieved successfully",
+    "getByIdFailure": "Failed to retrieve app/website record",
+    "updateSuccess": "App/website record {recordId} updated successfully",
+    "updateFailure": "Failed to update app/website record",
+    "getByIdAndDateSuccess": "App/website record {recordId} for date {date} retrieved successfully",
+    "getByIdAndDateFailure": "Failed to retrieve app/website record for date",
+    "getAllByDateSuccess": "All app/website records for date {date} retrieved successfully",
+    "getAllByDateFailure": "Failed to retrieve app/website records for date",
+    "getUserProductivityAppsSuccess": "Productivity apps retrieved successfully for user {userId}",
+    "getUserProductivityAppsFailure": "Failed to retrieve productivity apps",
+    "getProductivitiesSuccess": "All productivity records retrieved successfully",
+    "getProductivitiesFailure": "Failed to retrieve productivity records",
+    "getProductivityByIdSuccess": "Productivity record {recordId} retrieved successfully",
+    "getProductivityByIdFailure": "Failed to retrieve productivity record",
+    "addProductivitySuccess": "Productivity record added successfully",
+    "addProductivityFailure": "Failed to add productivity record",
+    "updateProductivitySuccess": "Productivity record {recordId} updated successfully",
+    "updateProductivityFailure": "Failed to update productivity record",
+    "deleteProductivitySuccess": "Productivity record {recordId} deleted successfully",
+    "deleteProductivityFailure": "Failed to delete productivity record",
+    "addBrowserHistorySuccess": "Browser history record added successfully",
+    "addBrowserHistoryFailure": "Failed to add browser history record",
+    "deleteBrowserHistorySuccess": "Browser history record {recordId} deleted successfully",
+    "deleteBrowserHistoryFailure": "Failed to delete browser history record",
+    "getBrowserHistorySuccess": "Browser history records retrieved successfully",
+    "getBrowserHistoryFailure": "Failed to retrieve browser history records"
+  }
+}

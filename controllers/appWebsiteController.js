@@ -8,6 +8,7 @@ const Productivity = require('./../models/productivityModel');
 const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
+
 exports.addNew = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `User initiated adding a new app/website record. User ID: ${req.body.userReference}, Company ID: ${req.cookies.companyId}`);
     var appWebsiteKey = req.body.appWebsite.split(".");
@@ -36,13 +37,15 @@ exports.addNew = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `User successfully added a new app/website record. Record ID: ${createDocument._id}, User ID: ${req.body.userReference}`);
         res.status(201).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.addSuccess', { userId: req.body.userReference }),
             body: createDocument
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to add a new app/website record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.addFailure'),
+            body: err.message
         });
     }
 });
@@ -56,20 +59,22 @@ exports.delete = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to delete an app/website record. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully deleted an app/website record. Record ID: ${deleteDocument._id}, User ID: ${req.cookies.userId}`);
         res.status(201).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.deleteSuccess', { recordId: deleteDocument._id }),
             body: deleteDocument
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to delete an app/website record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.deleteFailure'),
+            body: err.message
         });
     }
 });
@@ -83,20 +88,22 @@ exports.getById = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch an app/website record by ID. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched an app/website record by ID. Record ID: ${getDocumentByID._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getByIdSuccess', { recordId: getDocumentByID._id }),
             body: getDocumentByID
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch an app/website record by ID. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.getByIdFailure'),
+            body: err.message
         });
     }
 });
@@ -113,20 +120,22 @@ exports.update = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to update an app/website record. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully updated an app/website record. Record ID: ${updateDocument._id}, User ID: ${req.cookies.userId}`);
         res.status(201).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.updateSuccess', { recordId: updateDocument._id }),
             data: updateDocument
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to update an app/website record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.updateFailure'),
+            body: err.message
         });
     }
 });
@@ -141,20 +150,22 @@ exports.getByIdAndDate = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch an app/website record by ID and date. Record ID: ${req.params.id}, Date: ${req.body.date} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched an app/website record by ID and date. Record ID: ${getDocumentByDateAndId._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getByIdAndDateSuccess', { recordId: getDocumentByDateAndId._id, date }),
             body: getDocumentByDateAndId
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch an app/website record by ID and date. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.getByIdAndDateFailure'),
+            body: err.message
         });
     }
 });
@@ -169,20 +180,22 @@ exports.getAllbyDate = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch app/website records by date. No records found for Date: ${req.body.date}`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'No records found'
+                message: req.t('common.noRecords')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched all app/website records by date. Date: ${req.body.date}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getAllByDateSuccess', { date }),
             body: getAllDocumentsbyDate
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch app/website records by date. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.getAllByDateFailure'),
+            body: err.message
         });
     }
 });
@@ -197,7 +210,7 @@ exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch productivity apps. Missing userId or companyId`);
             return res.status(400).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Missing userId or companyId'
+                message: req.t('common.missingParams')
             });
         }
 
@@ -207,20 +220,22 @@ exports.getUserProductivityApps = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch productivity apps. No apps found for User ID: ${userId}, Company ID: ${companyId}`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'No productivity apps found'
+                message: req.t('common.noRecords')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched productivity apps. User ID: ${userId}, Company ID: ${companyId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getUserProductivityAppsSuccess', { userId }),
             data: productivityApps
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch productivity apps. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err.message || err
+            message: req.t('appWebsite.getUserProductivityAppsFailure'),
+            data: err.message
         });
     }
 });
@@ -234,20 +249,22 @@ exports.getproductivities = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch productivity records. No records found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'No productivity records found'
+                message: req.t('common.noRecords')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched all productivity records. User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getProductivitiesSuccess'),
             body: productivityData
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch productivity records. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.getProductivitiesFailure'),
+            body: err.message
         });
     }
 });
@@ -261,20 +278,22 @@ exports.getproductivityById = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch a productivity record by ID. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Productivity record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched a productivity record by ID. Record ID: ${productivityData._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getProductivityByIdSuccess', { recordId: productivityData._id }),
             body: productivityData
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch a productivity record by ID. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            body: err
+            message: req.t('appWebsite.getProductivityByIdFailure'),
+            body: err.message
         });
     }
 });
@@ -299,13 +318,15 @@ exports.addProductivity = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `User successfully added a new productivity record. Record ID: ${productivityData._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.addProductivitySuccess'),
             data: productivityData
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to add a new productivity record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err
+            message: req.t('appWebsite.addProductivityFailure'),
+            data: err.message
         });
     }
 });
@@ -326,20 +347,21 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to update a productivity record. Record ID: ${id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Productivity record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully updated a productivity record. Record ID: ${productivityData._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.updateProductivitySuccess', { recordId: productivityData._id }),
             data: productivityData
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to update a productivity record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(500).json({
             status: constants.APIResponseStatus.Error,
-            message: 'Internal Server Error',
+            message: req.t('common.internalError'),
             error: err.message
         });
     }
@@ -354,20 +376,22 @@ exports.deleteProductivity = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to delete a productivity record. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Productivity record not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully deleted a productivity record. Record ID: ${productivityData._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.deleteProductivitySuccess', { recordId: productivityData._id }),
             data: productivityData
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to delete a productivity record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err
+            message: req.t('appWebsite.deleteProductivityFailure'),
+            data: err.message
         });
     }
 });
@@ -388,13 +412,15 @@ exports.addBrowserHistory = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `User successfully added a new browser history record. Record ID: ${newHistory._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.addBrowserHistorySuccess'),
             data: newHistory
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to add a new browser history record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err
+            message: req.t('appWebsite.addBrowserHistoryFailure'),
+            data: err.message
         });
     }
 });
@@ -408,20 +434,22 @@ exports.deleteBrowserHistory = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to delete a browser history record. Record ID: ${req.params.id} not found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'Document not found'
+                message: req.t('common.notFound')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully deleted a browser history record. Record ID: ${deletedHistory._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.deleteBrowserHistorySuccess', { recordId: deletedHistory._id }),
             data: deletedHistory
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to delete a browser history record. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err
+            message: req.t('appWebsite.deleteBrowserHistoryFailure'),
+            data: err.message
         });
     }
 });
@@ -463,20 +491,22 @@ exports.getBrowserHistory = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `User failed to fetch browser history records. No records found`);
             return res.status(404).json({
                 status: constants.APIResponseStatus.Failure,
-                message: 'No records found'
+                message: req.t('common.noRecords')
             });
         }
 
         websocketHandler.sendLog(req, `User successfully fetched browser history records. User ID: ${req.cookies.userId}, Company ID: ${req.cookies.companyId}`);
         res.status(200).json({
             status: constants.APIResponseStatus.Success,
+            message: req.t('appWebsite.getBrowserHistorySuccess'),
             data: history
         });
     } catch (err) {
         websocketHandler.sendLog(req, `User failed to fetch browser history records. Error: ${err.message}, Stack: ${err.stack}`);
         res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            data: err
+            message: req.t('appWebsite.getBrowserHistoryFailure'),
+            data: err.message
         });
     }
 });

@@ -94,8 +94,10 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   }
 
   const document = await Task.findById(req.params.id);
-  await document.remove();
-  websocketHandler.sendLog(req, `Task ${req.params.id} successfully deleted`, constants.LOG_TYPES.INFO);
+  if(document){
+    await document.remove();
+    websocketHandler.sendLog(req, `Task ${req.params.id} successfully deleted`, constants.LOG_TYPES.INFO);
+  }
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,

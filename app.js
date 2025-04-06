@@ -40,11 +40,13 @@ var payrollRouter = require(`./routes/payrollRouter`);
 var eventNotificationRouter = require(`./routes/eventNotificationRoutes`);
 var feedbackRouter = require(`./routes/feedbackRouter`);
 var locationRouter = require('./routes/locationRouter');
+const i18n = require('./config/i18n'); // Import i18n config
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
 
-
+// Initialize i18n middleware
+app.use(i18n.init);
 //app.use(loggingMiddleware);
 
 // var allowedOrigin ="http://localhost:4200";
@@ -84,6 +86,9 @@ app.use((req, res, next) => {
   // } else {
   //   console.log('Unknown environment');
   // }  
+  const locale = req.headers['accept-language'] || req.query.locale || 'en-IN';
+  req.setLocale(locale);
+  
   res.header("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN)
   
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");

@@ -16,6 +16,7 @@ const globalStore = require('../utils/globalStore');
 const  websocketHandler  = require('../utils/websocketHandler');
 const UserDevice = require('../models/commons/userDeviceModel');
 const { log } = require('winston');
+const { format } = require('date-fns');
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     const countryList = await Country.find({}).all();  
@@ -627,7 +628,7 @@ exports.testLog = catchAsync(
     
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      data: {},
+      data: req.t('employee.list'),
     }); 
   } catch (error) {
     return res.status(200).json({

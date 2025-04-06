@@ -1085,7 +1085,7 @@ router.get("/getSelectedUser", authController.protect, commonController.getSelec
  *       500:
  *         description: Server error
  */
-router.get("/testLog", authController.protect, commonController.testLog);
+router.get("/testLog",  commonController.testLog);
 
 /**
  * @swagger
