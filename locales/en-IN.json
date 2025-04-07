@@ -1,11 +1,25 @@
 {
   "common": {
     "success": "Operation completed successfully",
-    "failure": "Operation failed",
-    "notFound": "Record not found",
+    "failure": "Operation failed",    
     "missingParams": "Missing required parameters",
     "internalError": "Internal Server Error",
-    "noRecords": "No records found"
+    "noRecords": "No records found",
+    "notFound": "No document found with that ID",
+    "taskStatusNotFound": "No Task Status found",
+    "taskPriorityNotFound": "No Task Status found",
+    "permissionNotFound": "No permission found",
+    "emailTemplateNotFound": "Email template not found",
+    "systemTemplateDeleteNotAllowed": "System Defined template, User can't delete",
+    "serverError": "Server error",
+    "companyIdMissing": "Company ID not found in cookies",
+    "incomeTaxSectionsNotFound": "IncomeTaxSections not found for the given company",
+    "incomeTaxSectionNotFound": "IncomeTaxSection not found",
+    "incomeTaxComponantNotFound": "Income Tax Componant not found",
+    "userStateNotFound": "No user state found with that key",
+    "invalidLogLevels": "logLevels must be an array of strings",
+    "testLogSuccess": "Test log executed successfully",
+    "requiredFieldsMissing": "userId, machineId, and isOnline are required"
   },
   "appWebsite": {
     "addSuccess": "App/website record added successfully for user {userId}",
@@ -215,5 +229,6 @@
     "updateRolePermissionFailure": "Failed to update role permission",
     "deleteRolePermissionSuccess": "Role permission deleted successfully",
     "deleteRolePermissionFailure": "No role permission found with that ID"
-  }
+  } 
+  
 }
