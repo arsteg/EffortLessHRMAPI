@@ -69,46 +69,70 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
     
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
+      message: req.t('attendance.createGeneralSettingsSuccess', { companyId }),
       data: generalSettings,
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error creating general settings: ${error.message}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Error creating general settings', 500));
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.createGeneralSettingsFailure'),
+      error: error.message
+    });
   }
 });
 
 exports.getGeneralSettings = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Fetching general settings for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   const generalSettings = await GeneralSettings.find({ company: companyId });
-  if (!generalSettings) {
-    return next(new AppError('GeneralSettings not found', 404));
+  
+  if (!generalSettings || generalSettings.length === 0) {
+    websocketHandler.sendLog(req, `No general settings found for company: ${companyId}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getGeneralSettingsFailure')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved general settings for company: ${companyId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getGeneralSettingsSuccess', { companyId }),
     data: generalSettings,
   });
 });
 
 exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating general settings with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const generalSettings = await GeneralSettings.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!generalSettings) {
-    return next(new AppError('GeneralSettings not found', 404));
+    websocketHandler.sendLog(req, `General settings not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.notFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated general settings: ${generalSettings._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateGeneralSettingsSuccess', { recordId: generalSettings._id }),
     data: generalSettings,
   });
 });
 
 exports.createRegularizationReason = catchAsync(async (req, res, next) => {
-  const company = req.cookies.companyId; // Get company from cookies
-  req.body.company = company; // Set company in the request body
+  websocketHandler.sendLog(req, `Creating regularization reason for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
+  const company = req.cookies.companyId;
+  req.body.company = company;
 
   const regularizationReason = await RegularizationReason.create(req.body);
   const users = req.body.users;
@@ -140,10 +164,16 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getRegularizationReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const regularizationReason = await RegularizationReason.findById(req.params.id);
 
   if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
+    websocketHandler.sendLog(req, `Regularization reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getRegularizationReasonFailure')
+    });
   }
   if (regularizationReason) {
 
@@ -164,10 +194,16 @@ exports.getRegularizationReason = catchAsync(async (req, res, next) => {
 });
 
 exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const isRegularizationReason = await RegularizationReason.findById(req.params.id);
 
   if (!isRegularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
+    websocketHandler.sendLog(req, `Regularization reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getRegularizationReasonFailure')
+    });
   }
 
   // Extract the user IDs from the request body
@@ -220,17 +256,28 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
 
 
 exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const regularizationReason = await RegularizationReason.findByIdAndDelete(req.params.id);
   if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
+    websocketHandler.sendLog(req, `Regularization reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.deleteRegularizationReasonFailure')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted regularization reason: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteRegularizationReasonSuccess', { recordId: req.params.id }),
     data: null
   });
 });
 
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all regularization reasons for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await RegularizationReason.countDocuments({ company: req.cookies.companyId });
@@ -251,14 +298,17 @@ exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllRegularizationReasonsSuccess', { companyId: req.cookies.companyId }),
     data: regularizationReasons,
     total: totalCount
   });
 });
 
 exports.createOnDutyReason = catchAsync(async (req, res, next) => {
-  const company = req.cookies.companyId; // Get company from cookies
-  req.body.company = company; // Set company in the request body
+  websocketHandler.sendLog(req, `Creating on-duty reason for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
+  const company = req.cookies.companyId;
+  req.body.company = company;
 
   const onDutyReason = await OnDutyReason.create(req.body);
   const users = req.body.users;
@@ -290,10 +340,16 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnDutyReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const onDutyReason = await OnDutyReason.findById(req.params.id);
 
   if (!onDutyReason) {
-    return next(new AppError('OnDuty Reason not found', 404));
+    websocketHandler.sendLog(req, `On-duty reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getOnDutyReasonFailure')
+    });
   }
   if (onDutyReason) {
     const userOnDutyReasons = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);
@@ -306,15 +362,22 @@ exports.getOnDutyReason = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getOnDutyReasonSuccess', { recordId: onDutyReason._id }),
     data: onDutyReason
   });
 });
 
 exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const isOnDutyReason = await OnDutyReason.findById(req.params.id);
 
   if (!isOnDutyReason) {
-    return next(new AppError('On Duty Reason not found', 404));
+    websocketHandler.sendLog(req, `On-duty reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getOnDutyReasonFailure')
+    });
   }
 
   // Extract the user IDs from the request body
@@ -360,22 +423,34 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
   onDutyReason.userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateOnDutyReasonSuccess', { recordId: onDutyReason._id }),
     data: onDutyReason
   });
 });
 
 exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
   if (!onDutyReason) {
-    return next(new AppError('OnDutyReason Reason not found', 404));
+    websocketHandler.sendLog(req, `On-duty reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.deleteOnDutyReasonFailure')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted on-duty reason: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteOnDutyReasonSuccess', { recordId: req.params.id }),
     data: null
   });
 });
 
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all on-duty reasons for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OnDutyReason.countDocuments({ company: req.cookies.companyId });
@@ -396,6 +471,7 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllOnDutyReasonsSuccess', { companyId: req.cookies.companyId }),
     data: onDutyReasons,
     total: totalCount
   });
@@ -404,11 +480,16 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
 
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating attendance mode for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -422,63 +503,98 @@ exports.createAttendanceMode = catchAsync(async (req, res, next) => {
 
 // Get an attendance mode by ID
 exports.getAttendanceMode = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceMode = await AttendanceMode.findById(req.params.id);
   if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
+    websocketHandler.sendLog(req, `Attendance mode not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getAttendanceModeFailure')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved attendance mode: ${attendanceMode._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAttendanceModeSuccess', { recordId: attendanceMode._id }),
     data: attendanceMode,
   });
 });
 
 // Update an attendance mode by ID
 exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceMode = await AttendanceMode.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
+    websocketHandler.sendLog(req, `Attendance mode not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getAttendanceModeFailure')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated attendance mode: ${attendanceMode._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateAttendanceModeSuccess', { recordId: attendanceMode._id }),
     data: attendanceMode,
   });
 });
 
 // Delete an attendance mode by ID
 exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceMode = await AttendanceMode.findByIdAndDelete(req.params.id);
 
   if (!attendanceMode) {
-    return next(new AppError('Attendance mode not found', 404));
+    websocketHandler.sendLog(req, `Attendance mode not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.deleteAttendanceModeFailure')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully deleted attendance mode: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteAttendanceModeSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 // Get all attendance modes
 exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Fetching all attendance modes', constants.LOG_TYPES.INFO);
+  
   const attendanceModes = await AttendanceMode.find();
+  
+  websocketHandler.sendLog(req, `Successfully retrieved ${attendanceModes.length} attendance modes`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllAttendanceModesSuccess'),
     data: attendanceModes,
   });
 });
 
 // Create a new Attendance Template
 exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating attendance template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -492,38 +608,61 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
 
 // Get an Attendance Template by ID
 exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
   if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceTemplateNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved attendance template: ${attendanceTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAttendanceTemplateSuccess', { recordId: attendanceTemplate._id }),
     data: attendanceTemplate,
   });
 });
 
 // Update an Attendance Template by ID
 exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceTemplate = await AttendanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceTemplateNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated attendance template: ${attendanceTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateAttendanceTemplateSuccess', { recordId: attendanceTemplate._id }),
     data: attendanceTemplate,
   });
 });
 
 // Delete an Attendance Template by ID
 exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceTemplate = await AttendanceTemplate.findByIdAndDelete(req.params.id);
   if (!attendanceTemplate) {
-    return next(new AppError('Attendance Template not found', 404));
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceTemplateNotFound')
+    });
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -532,20 +671,26 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
-
+  websocketHandler.sendLog(req, `Fetching attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
+  
   const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });
 
   var attendanceTemplate = null;
   if (attendanceTemplateAssignments.length > 0) {
     attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAttendanceTemplateByUserSuccess', { userId: req.params.userId }),
     data: attendanceTemplate,
   });
 });
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all attendance templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceTemplate.countDocuments({ company: req.cookies.companyId });
@@ -554,31 +699,44 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllAttendanceTemplatesSuccess', { companyId: req.cookies.companyId }),
     data: attendanceTemplates,
     total: totalCount
   });
 });
 
 exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
-
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Adding attendance regularization for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
   // Check if the attendanceTemplate exists
   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
   if (!templateExists) {
-    return next(new AppError('Invalid attendanceTemplate', 400));
+    websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.invalidAttendanceTemplate')
+    });
   }
 
   // Check if AttendanceRegularization with the same attendanceTemplate already exists
   const existingRegularization = await AttendanceRegularization.findOne({ attendanceTemplate: req.body.attendanceTemplate });
   if (existingRegularization) {
-    return next(new AppError('AttendanceRegularization with this attendanceTemplate already exists', 400));
+    websocketHandler.sendLog(req, `Attendance regularization already exists for template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceRegularizationExists')
+    });
   }
 
   // Create the main AttendanceRegularization document
@@ -615,27 +773,21 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
 });
 
 exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));
+    websocketHandler.sendLog(req, `Attendance regularization not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return next(new AppError('Attendance Regularization not found', 404));
   }
-  if (attendanceRegularization) {
-    const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
-    if (attendanceRegularizationRestrictedIP) {
-      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP;
-    }
-    else {
-      attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = null;
-    }
-    const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
-    if (attendanceRegularizationRestrictedLocation) {
-      attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation;
-    }
-    else {
-      attendanceRegularization.AttendanceRegularizationRestrictedLocations = null;
-    }
-  }
+  
+  const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+  attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP || null;
+  
+  const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
+  attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation || null;
 
+  websocketHandler.sendLog(req, `Successfully retrieved attendance regularization: ${attendanceRegularization._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: attendanceRegularization
@@ -643,12 +795,18 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
 });
 
 exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching attendance regularization by template: ${req.params.templateId}`, constants.LOG_TYPES.INFO);
+  
   const attendanceRegularization = await AttendanceRegularization.findOne({
     attendanceTemplate: req.params.templateId,
     company: req.cookies.companyId,
   });
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));
+    websocketHandler.sendLog(req, `Attendance regularization not found for template: ${req.params.templateId}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getAttendanceRegularizationFailure')
+    });
   }
   if (attendanceRegularization) {
     const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
@@ -669,14 +827,20 @@ exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAttendanceRegularizationByTemplateSuccess', { templateId: req.params.templateId }),
     data: attendanceRegularization
   });
 });
 exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
-  // Check if the attendanceTemplate exists
+  websocketHandler.sendLog(req, `Updating attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
   if (!templateExists) {
-    return next(new AppError('Invalid attendanceTemplate', 400));
+    websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.invalidAttendanceTemplate')
+    });
   }
 
   // Update existing record
@@ -747,6 +911,8 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all attendance regularizations for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceRegularization.countDocuments({ company: req.cookies.companyId });
@@ -773,20 +939,29 @@ exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, n
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllAttendanceRegularizationsSuccess', { companyId: req.cookies.companyId }),
     data: attendanceRegularizations,
     total: totalCount
   });
 });
 
 exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceRegularization = await AttendanceRegularization.findByIdAndDelete(req.params.id);
 
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));
+    websocketHandler.sendLog(req, `Attendance regularization not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.deleteAttendanceRegularizationFailure')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully deleted attendance regularization: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteAttendanceRegularizationSuccess', { recordId: req.params.id }),
     data: null
   });
 });
@@ -800,62 +975,95 @@ exports.addAttendanceRegularizationRestrictedLocation = catchAsync(async (req, r
 });
 
 exports.getAllAttendanceRegularizationRestrictedLocations = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching restricted locations for regularization: ${req.params.attendanceRegularization}`, constants.LOG_TYPES.INFO);
+  
   const locations = await AttendanceRegularizationRestrictedLocation.find({ attendanceRegularization: req.params.attendanceRegularization });
+  
+  websocketHandler.sendLog(req, `Successfully retrieved ${locations.length} restricted locations`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllRestrictedLocationsSuccess', { regularizationId: req.params.attendanceRegularization }),
     data: locations
   });
 });
 
 exports.updateAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const updatedLocation = await AttendanceRegularizationRestrictedLocation.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
 
   if (!updatedLocation) {
-    return next(new AppError('No location found with that ID', 404));
+    websocketHandler.sendLog(req, `Restricted location not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.restrictedLocationNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated restricted location: ${updatedLocation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateRestrictedLocationSuccess', { recordId: updatedLocation._id }),
     data: updatedLocation
   });
 });
 
 exports.getAttendanceRegularizationRestrictedLocationById = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const location = await AttendanceRegularizationRestrictedLocation.findById(req.params.id);
 
   if (!location) {
-    return next(new AppError('No location found with that ID', 404));
+    websocketHandler.sendLog(req, `Restricted location not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.restrictedLocationNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully retrieved restricted location: ${location._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getRestrictedLocationSuccess', { recordId: location._id }),
     data: location
   });
 });
 
 exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const location = await AttendanceRegularizationRestrictedLocation.findByIdAndDelete(req.params.id);
 
   if (!location) {
-    return next(new AppError('No location found with that ID', 404));
+    websocketHandler.sendLog(req, `Restricted location not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.restrictedLocationNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully deleted restricted location: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteRestrictedLocationSuccess', { recordId: req.params.id }),
     data: null
   });
 });
 
 // Create a new Attendance Template Assignment
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
-
-  // Check if the attendanceTemplate exists
+  websocketHandler.sendLog(req, `Creating attendance assignment for employee: ${req.body.employee}`, constants.LOG_TYPES.INFO);
+  
   const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attandanceTemplate });
   if (!attendanceTemplate) {
-    return next(new AppError('Invalid attendanceTemplate', 400));
+    websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attandanceTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.invalidAttendanceTemplate')
+    });
   }
 
   let primaryApprover = req.body.primaryApprover;
@@ -869,13 +1077,21 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   // Check if the employee exists
   const employee = await User.findById(req.body.employee);
   if (!employee) {
-    return next(new AppError('Invalid employee', 400));
+    websocketHandler.sendLog(req, `Invalid employee: ${req.body.employee}`, constants.LOG_TYPES.WARNING);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.invalidEmployee')
+    });
   }
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   req.body.company = companyId;
 
@@ -899,22 +1115,36 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Get an Attendance Template Assignment by ID
 exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
   if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
+    websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceAssignmentNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved attendance assignment: ${attendanceAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAttendanceAssignmentSuccess', { recordId: attendanceAssignment._id }),
     data: attendanceAssignment,
   });
 });
 
 // Update an Attendance Template Assignment by ID
 exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
-  // Check if the attendance assignment exists
+  websocketHandler.sendLog(req, `Updating attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
   if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
+    websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceAssignmentNotFound')
+    });
   }
 
   // Update only primary and secondary approvers if provided in the request body
@@ -936,18 +1166,29 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
   if (!attendanceAssignment) {
-    return next(new AppError('Attendance Template Assignment not found', 404));
+    websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.attendanceAssignmentNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted attendance assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteAttendanceAssignmentSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all attendance assignments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });
@@ -962,11 +1203,16 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
 });
 
 exports.createRoundingInformation = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating rounding information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -978,52 +1224,73 @@ exports.createRoundingInformation = catchAsync(async (req, res, next) => {
 });
 
 exports.getRoundingInformation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const roundingInformation = await RoundingInformation.findById(req.params.id);
   if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
+    websocketHandler.sendLog(req, `Rounding information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.roundingInformationNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved rounding information: ${roundingInformation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getRoundingInformationSuccess', { recordId: roundingInformation._id }),
     data: roundingInformation,
   });
 });
 
 exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  websocketHandler.sendLog(req, `Updating rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
+  const roundingInformation = await RoundingInformation.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
+    websocketHandler.sendLog(req, `Rounding information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.roundingInformationNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated rounding information: ${roundingInformation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateRoundingInformationSuccess', { recordId: roundingInformation._id }),
     data: roundingInformation,
   });
 });
 
 exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
-  const roundingInformation = await RoundingInformation.findByIdAndDelete(
-    req.params.id
-  );
+  websocketHandler.sendLog(req, `Deleting rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
+  const roundingInformation = await RoundingInformation.findByIdAndDelete(req.params.id);
 
   if (!roundingInformation) {
-    return next(new AppError('Rounding information not found', 404));
+    websocketHandler.sendLog(req, `Rounding information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.roundingInformationNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully deleted rounding information: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteRoundingInformationSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all rounding information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await RoundingInformation.countDocuments({ company: req.cookies.companyId });
@@ -1040,28 +1307,48 @@ exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
 
 
 exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching overtime information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const overtimeInformation = await OvertimeInformation.findById(req.params.id);
   if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
+    websocketHandler.sendLog(req, `Overtime information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.overtimeInformationNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved overtime information: ${overtimeInformation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getOvertimeInformationSuccess', { recordId: overtimeInformation._id }),
     data: overtimeInformation,
   });
 });
 
 exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting overtime information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const overtimeInformation = await OvertimeInformation.findByIdAndDelete(req.params.id);
   if (!overtimeInformation) {
-    return next(new AppError('Overtime Information not found', 404));
+    websocketHandler.sendLog(req, `Overtime information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.overtimeInformationNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted overtime information: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteOvertimeInformationSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all overtime information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OvertimeInformation.countDocuments({ company: req.cookies.companyId });
@@ -1070,17 +1357,23 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllOvertimeInformationSuccess', { companyId: req.cookies.companyId }),
     data: overtimeInformation,
     total: totalCount
   });
 });
 
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating on-duty template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -1092,44 +1385,72 @@ exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const onDutyTemplate = await OnDutyTemplate.findById(req.params.id);
   if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `On-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.onDutyTemplateNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved on-duty template: ${onDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getOnDutyTemplateSuccess', { recordId: onDutyTemplate._id }),
     data: onDutyTemplate,
   });
 });
 
 exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const onDutyTemplate = await OnDutyTemplate.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `On-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.onDutyTemplateNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated on-duty template: ${onDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateOnDutyTemplateSuccess', { recordId: onDutyTemplate._id }),
     data: onDutyTemplate,
   });
 });
 
 exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const onDutyTemplate = await OnDutyTemplate.findByIdAndDelete(req.params.id);
   if (!onDutyTemplate) {
-    return next(new AppError('OnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `On-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.onDutyTemplateNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted on-duty template: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteOnDutyTemplateSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all on-duty templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OnDutyTemplate.countDocuments({ company: req.cookies.companyId });
@@ -1138,6 +1459,7 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllOnDutyTemplatesSuccess', { companyId: req.cookies.companyId }),
     data: onDutyTemplates,
     total: totalCount
   });
@@ -1145,7 +1467,8 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
 
 // Create a UserOnDutyTemplate
 exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating user on-duty template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -1156,13 +1479,21 @@ exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   // Check if the user exists
   const userExists = await User.exists({ _id: req.body.user });
   if (!userExists) {
-    return next(new AppError('User not found', 404));
+    websocketHandler.sendLog(req, `User not found: ${req.body.user}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.userNotFound')
+    });
   }
 
   // Check if the duty template exists
   const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
   if (!dutyTemplateExists) {
-    return next(new AppError('Duty template not found', 404));
+    websocketHandler.sendLog(req, `Duty template not found: ${req.body.onDutyTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.onDutyTemplateNotFound')
+    });
   }
   await UserOnDutyTemplate.deleteMany({ user: req.body.user });
   const userOnDutyTemplate = await UserOnDutyTemplate.create(req.body);
@@ -1174,40 +1505,63 @@ exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 // Get a UserOnDutyTemplate by ID
 exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
   if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `User on-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.userOnDutyTemplateNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved user on-duty template: ${userOnDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getUserOnDutyTemplateSuccess', { recordId: userOnDutyTemplate._id }),
     data: userOnDutyTemplate,
   });
 });
 
 // Get a UserOnDutyTemplate by ID
 exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching user on-duty template for user: ${req.params.user}`, constants.LOG_TYPES.INFO);
+  
   const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.params.user });
   if (!userOnDutyTemplate) {
     return next(new AppError('UserOnDutyTemplate not found', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved user on-duty template for user: ${req.params.user}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getUserOnDutyTemplateByUserSuccess', { userId: req.params.user }),
     data: userOnDutyTemplate,
   });
 });
 
 // Update a UserOnDutyTemplate by ID
 exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
-  // Check if the user on duty template exists
+  websocketHandler.sendLog(req, `Updating user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
   if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `User on-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.userOnDutyTemplateNotFound')
+    });
   }
 
   // Check if the duty template exists
   const dutyTemplateExists = await OnDutyTemplate.exists({ _id: req.body.onDutyTemplate });
   if (!dutyTemplateExists) {
-    return next(new AppError('Duty template not found', 404));
+    websocketHandler.sendLog(req, `Duty template not found: ${req.body.onDutyTemplate}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.onDutyTemplateNotFound')
+    });
   }
 
   // Update the user on duty template, excluding the user field
@@ -1219,28 +1573,40 @@ exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
     runValidators: true,
   });
 
+  websocketHandler.sendLog(req, `Successfully updated user on-duty template: ${updatedUserOnDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateUserOnDutyTemplateSuccess', { recordId: updatedUserOnDutyTemplate._id }),
     data: updatedUserOnDutyTemplate,
   });
 });
 
 // Delete a UserOnDutyTemplate by ID
 exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndDelete(req.params.id);
 
   if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
+    websocketHandler.sendLog(req, `User on-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.userOnDutyTemplateNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully deleted user on-duty template: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteUserOnDutyTemplateSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 // Get all UserOnDutyTemplates
 exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all user on-duty templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await UserOnDutyTemplate.countDocuments({ company: req.cookies.companyId });
@@ -1249,17 +1615,23 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllUserOnDutyTemplatesSuccess', { companyId: req.cookies.companyId }),
     data: userOnDutyTemplates,
     total: totalCount
   });
 });
 
 exports.createShift = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating shift for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.missingParams')
+    });
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -1272,54 +1644,83 @@ exports.createShift = catchAsync(async (req, res, next) => {
 });
 
 exports.getShift = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const shift = await Shift.findById(req.params.id);
   if (!shift) {
-    return next(new AppError('Shift not found', 404));
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.shiftNotFound')
+    });
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved shift: ${shift._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getShiftSuccess', { recordId: shift._id }),
     data: shift,
   });
 });
 
 exports.updateShift = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!shift) {
-    return next(new AppError('Shift not found', 404));
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.shiftNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated shift: ${shift._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateShiftSuccess', { recordId: shift._id }),
     data: shift,
   });
 });
 
 exports.deleteShift = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const shift = await Shift.findByIdAndDelete(req.params.id);
 
   if (!shift) {
-    return next(new AppError('Shift not found', 404));
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.shiftNotFound')
+    });
   }
-
+  
+  websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteShiftSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
 
 exports.getAllShifts = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching all shifts for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await Shift.countDocuments({ company: req.cookies.companyId });
 
-  const shifts = await Shift.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const shifts = await Shift.find({ company: req.cookies.companyId }).skip(skip).limit(limit);
+  
+  websocketHandler.sendLog(req, `Successfully retrieved ${shifts.length} shifts`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllShiftsSuccess', { companyId: req.cookies.companyId }),
     data: shifts,
     total: totalCount
   });
@@ -1341,16 +1742,18 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
 
 // Create a new ShiftTemplateAssignment
 exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
-
-  // Extract companyId from req.cookies
+  websocketHandler.sendLog(req, `Creating shift template assignment for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+  
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
   if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError('Company ID not found in cookies', 400));
   }
-  // Add companyId to the request body
+  
   req.body.company = companyId;
   const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
+  
+  websocketHandler.sendLog(req, `Successfully created shift template assignment: ${shiftTemplateAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignment
@@ -1359,10 +1762,15 @@ exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 
 // Get a ShiftTemplateAssignment by ID
 exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching shift template assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const shiftTemplateAssignment = await ShiftTemplateAssignment.findById(req.params.id);
   if (!shiftTemplateAssignment) {
+    websocketHandler.sendLog(req, `Shift template assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError('ShiftTemplateAssignment not found', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully retrieved shift template assignment: ${shiftTemplateAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignment
@@ -1392,9 +1800,12 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   if (!shiftTemplateAssignment) {
     return next(new AppError('ShiftTemplateAssignment not found', 404));
   }
+  
+  websocketHandler.sendLog(req, `Successfully deleted shift assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    data: null
+    message: req.t('attendance.deleteShiftAssignmentSuccess', { recordId: req.params.id }),
+    data: null,
   });
 });
 
@@ -1446,51 +1857,86 @@ exports.createRosterShiftAssignment = catchAsync(async (req, res, next) => {
 
 
 exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getRosterShiftAssignment', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
   const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.id);
+  
   if (!rosterShiftAssignment) {
-    return next(new AppError('Roster shift assignment not found', 404));
+    websocketHandler.sendLog(req, `Roster shift assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.getRosterShiftAssignmentFailure'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully retrieved roster shift assignment: ${rosterShiftAssignment._id}`, constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getRosterShiftAssignmentSuccess', { recordId: req.params.id }),
     data: rosterShiftAssignment,
   });
 });
 
 exports.getRosterShiftAssignmentByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getRosterShiftAssignmentByUser', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching roster shift assignment for user ID: ${req.params.userId}`, constants.LOG_TYPES.TRACE);
+
   const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.userId);
+  
   if (!rosterShiftAssignment) {
-    return next(new AppError('Roster shift assignment not found', 404));
+    websocketHandler.sendLog(req, `Roster shift assignment not found for user ID: ${req.params.userId}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.getRosterShiftAssignmentByUserFailure'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully retrieved roster shift assignment for user: ${rosterShiftAssignment._id}`, constants.LOG_TYPES.INFO);
+  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getRosterShiftAssignmentByUserSuccess', { userId: req.params.userId }),
     data: rosterShiftAssignment,
   });
 });
+
 exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!rosterShiftAssignment) {
-    return next(new AppError('Roster shift assignment not found', 404));
+    websocketHandler.sendLog(req, `Roster shift assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.rosterShiftAssignmentNotFound')
+    });
   }
 
+  websocketHandler.sendLog(req, `Successfully updated roster shift assignment: ${rosterShiftAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.updateRosterShiftAssignmentSuccess', { recordId: rosterShiftAssignment._id }),
     data: rosterShiftAssignment,
   });
 });
 
 exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Deleting roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  
   const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndDelete(req.params.id);
 
   if (!rosterShiftAssignment) {
-    return next(new AppError('Roster shift assignment not found', 404));
+    websocketHandler.sendLog(req, `Roster shift assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.rosterShiftAssignmentNotFound')
+    });
   }
-
+  
+  websocketHandler.sendLog(req, `Successfully deleted roster shift assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.deleteRosterShiftAssignmentSuccess', { recordId: req.params.id }),
     data: null,
   });
 });
@@ -1519,43 +1965,66 @@ exports.getAllRosterShiftAssignmentsBycompany = catchAsync(async (req, res, next
 
 // Create a new DutyRequest
 exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting createEmployeeDutyRequest', constants.LOG_TYPES.INFO);
+
   const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.body.user });
-  if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not assigned for current user', 404));
+  websocketHandler.sendLog(req, `Checked for UserOnDutyTemplate for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
+  
+  if (!userOnDutyTemplate || userOnDutyTemplate.length === 0) {
+    websocketHandler.sendLog(req, `UserOnDutyTemplate not found for user: ${req.body.user}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.userOnDutyTemplateNotFound'), 404));
   }
 
   const employeeOnDutyRequestIsExists = await EmployeeOnDutyRequest.find({ user: req.body.user });
-  if (!employeeOnDutyRequestIsExists) {
-    return next(new AppError('EmployeeOnDutyRequest is already assigned for current user', 404));
+  websocketHandler.sendLog(req, `Checked for existing EmployeeOnDutyRequest for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
+  
+  if (employeeOnDutyRequestIsExists && employeeOnDutyRequestIsExists.length > 0) {
+    websocketHandler.sendLog(req, `EmployeeOnDutyRequest already exists for user: ${req.body.user}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.employeeOnDutyRequestExists'), 404));
   }
 
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+  websocketHandler.sendLog(req, `Extracted companyId from cookies: ${companyId}`, constants.LOG_TYPES.TRACE);
+  
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
-  // Add companyId to the request body
+  
   req.body.company = companyId;
-  //self
-  const employeeOnDutyRequest = await EmployeeOnDutyRequest.create(req.body);
-  if (req.body.onDutyShift && req.body.onDutyShift.length > 0) {
-    const employeeOnDutyShift = req.body.onDutyShift.map(shift => ({
-      employeeOnDutyRequest: employeeOnDutyRequest._id,
-      date: shift.date,
-      shift: shift.shift,
-      shiftDuration: shift.shiftDuration,
-      startTime: shift.startTime,
-      endTime: shift.endTime,
-      remarks: shift.remarks,
+  websocketHandler.sendLog(req, `Preparing to create employee duty request for company: ${companyId}`, constants.LOG_TYPES.DEBUG);
 
-    }));
-    employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
+  try {
+    const employeeOnDutyRequest = await EmployeeOnDutyRequest.create(req.body);
+    websocketHandler.sendLog(req, `Created employee duty request: ${employeeOnDutyRequest._id}`, constants.LOG_TYPES.INFO);
+
+    if (req.body.onDutyShift && req.body.onDutyShift.length > 0) {
+      const employeeOnDutyShift = req.body.onDutyShift.map(shift => ({
+        employeeOnDutyRequest: employeeOnDutyRequest._id,
+        date: shift.date,
+        shift: shift.shift,
+        shiftDuration: shift.shiftDuration,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+        remarks: shift.remarks,
+      }));
+      employeeOnDutyRequest.employeeOnDutyShifts = await EmployeeOnDutyShift.insertMany(employeeOnDutyShift);
+      websocketHandler.sendLog(req, `Inserted ${employeeOnDutyShift.length} employee on-duty shifts`, constants.LOG_TYPES.INFO);
+    }
+
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('attendance.createEmployeeDutyRequestSuccess', { companyId }),
+      data: employeeOnDutyRequest,
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error creating employee duty request: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.createEmployeeDutyRequestFailure'),
+      error: error.message,
+    });
   }
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: employeeOnDutyRequest
-  });
 });
 
 // Get a DutyRequest by ID
@@ -1579,6 +2048,9 @@ exports.getEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
 // Update a DutyRequest by ID
 exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateEmployeeDutyRequest', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Updating employee duty request with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
   const employeeOnDutyRequest = await EmployeeOnDutyRequest.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -1586,77 +2058,98 @@ exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   );
 
   if (!employeeOnDutyRequest) {
-    return next(new AppError('DutyRequest not found', 404));
+    websocketHandler.sendLog(req, `Employee duty request not found for ID: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.updateEmployeeDutyRequestFailure'), 404));
   }
 
   if (employeeOnDutyRequest) {
     const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(employeeOnDutyRequest._id);
-    if (employeeOnDutyShifts) {
-      employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts;
-    }
-    else {
-      employeeOnDutyRequest.employeeOnDutyShifts = null;
-    }
+    websocketHandler.sendLog(req, `Fetched ${employeeOnDutyShifts.length} employee on-duty shifts for request: ${employeeOnDutyRequest._id}`, constants.LOG_TYPES.DEBUG);
+    employeeOnDutyRequest.employeeOnDutyShifts = employeeOnDutyShifts.length > 0 ? employeeOnDutyShifts : null;
   }
+
+  websocketHandler.sendLog(req, `Successfully updated employee duty request: ${employeeOnDutyRequest._id}`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: employeeOnDutyRequest
+    message: req.t('attendance.updateEmployeeDutyRequestSuccess', { recordId: req.params.id }),
+    data: employeeOnDutyRequest,
   });
 });
 
 // Delete a DutyRequest by ID
 exports.deleteEmployeeDutyRequest = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteEmployeeDutyRequest', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Deleting employee duty request with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
   const dutyRequest = await EmployeeOnDutyRequest.findByIdAndDelete(req.params.id);
 
   if (!dutyRequest) {
-    return next(new AppError('DutyRequest not found', 404));
+    websocketHandler.sendLog(req, `Employee duty request not found for ID: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.deleteEmployeeDutyRequestFailure'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully deleted employee duty request: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    data: null
+    message: req.t('attendance.deleteEmployeeDutyRequestSuccess', { recordId: req.params.id }),
+    data: null,
   });
 });
 
 // Get all DutyRequests
 exports.getAllEmployeeDutyRequests = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getAllEmployeeDutyRequests', constants.LOG_TYPES.INFO);
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  // Extract companyId from req.cookies
   const company = req.cookies.companyId;
-  // Check if companyId exists in cookies
+  websocketHandler.sendLog(req, `Extracted companyId from cookies: ${company}`, constants.LOG_TYPES.TRACE);
+
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
+
   const query = { company: company };
   if (req.body.status) {
     query.status = req.body.status;
   }
-  // Get the total count of documents matching the query
-  const totalCount = await EmployeeOnDutyRequest.countDocuments(query);
+  websocketHandler.sendLog(req, `Preparing query: ${JSON.stringify(query)}`, constants.LOG_TYPES.DEBUG);
 
-  // Get the regularization requests matching the query with pagination
-  const dutyRequests = await EmployeeOnDutyRequest.find(query).skip(parseInt(skip))
-    .limit(parseInt(limit));
-  if (dutyRequests) {
-    for (var i = 0; i < dutyRequests.length; i++) {
+  try {
+    const totalCount = await EmployeeOnDutyRequest.countDocuments(query);
+    const dutyRequests = await EmployeeOnDutyRequest.find(query)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit));
 
-      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({}).where('employeeOnDutyRequest').equals(dutyRequests[i]._id);
-      if (employeeOnDutyShifts) {
-        dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts;
-      }
-      else {
-        dutyRequests[i].employeeOnDutyShifts = null;
-      }
+    for (let i = 0; i < dutyRequests.length; i++) {
+      const employeeOnDutyShifts = await EmployeeOnDutyShift.find({})
+        .where('employeeOnDutyRequest')
+        .equals(dutyRequests[i]._id);
+      dutyRequests[i].employeeOnDutyShifts = employeeOnDutyShifts.length > 0 ? employeeOnDutyShifts : null;
+      websocketHandler.sendLog(req, `Fetched ${employeeOnDutyShifts.length} shifts for duty request: ${dutyRequests[i]._id}`, constants.LOG_TYPES.DEBUG);
     }
+
+    websocketHandler.sendLog(req, `Successfully retrieved ${dutyRequests.length} employee duty requests`, constants.LOG_TYPES.INFO);
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('attendance.getAllEmployeeDutyRequestsSuccess', { companyId: company }),
+      data: dutyRequests,
+      total: totalCount,
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error retrieving employee duty requests: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.getAllEmployeeDutyRequestsFailure'),
+      error: error.message,
+    });
   }
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: dutyRequests,
-    total: totalCount
-  });
 });
+
 
 exports.getEmployeeDutyRequestsByUser = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
@@ -1712,182 +2205,179 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.MappedTimlogToAttandance = catchAsync(async (req, res, next) => {
+exports.MappedTimlogToAttendance = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting MappedTimlogToAttendance', constants.LOG_TYPES.INFO);
+
   const companyId = req.cookies.companyId;
-  const month = req.body.month || new Date().getMonth(); // Default to current month if not provided
-  const year = req.body.year || new Date().getFullYear(); // Default to current year if not provided
+  const month = req.body.month || new Date().getMonth() + 1; // +1 since getMonth is 0-based
+  const year = req.body.year || new Date().getFullYear();
+  websocketHandler.sendLog(req, `Extracted companyId: ${companyId}, month: ${month}, year: ${year}`, constants.LOG_TYPES.TRACE);
 
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
 
   req.body.company = companyId;
-  const startDate = new Date(year, month - 1, 1); // First day of the given month
-  const endDate = new Date(year, month, 0); // Last day of the given month
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
   let filter = { status: 'Active', company: req.cookies.companyId };
-  // Generate query based on request params
-  const features = new APIFeatures(User.find(filter), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
+  websocketHandler.sendLog(req, `Preparing user query with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
-  // Run created query
-  const document = await features.query;
+  try {
+    const features = new APIFeatures(User.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const document = await features.query;
 
-  //  const endDate = new Date(); // Today's date
+    await Promise.all(document.map(async user => {
+      const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+      if (shiftAssignment) {
+        const shift = await Shift.findOne({ _id: shiftAssignment.template });
+        if (shift) {
+          const timeLogs = await TimeLog.aggregate([
+            { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
+            {
+              $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                startTime: { $min: '$startTime' },
+                lastTimeLog: { $max: '$endTime' },
+              },
+            },
+          ]);
+          websocketHandler.sendLog(req, `Aggregated ${timeLogs.length} time logs for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
 
-  // Move to the first day of the current month
-  const firstDayOfCurrentMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-
-  // Move to the last day of the previous month
-  const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth.getTime() - 1);
-
-  // Get the day of the week of the last day of the previous month
-  const lastDayOfWeek = lastDayOfPreviousMonth.getDay(); // (0 = Sunday, ..., 6 = Saturday)
-
-  // Calculate how many days to subtract to get to the last Monday
-  const daysToSubtract = lastDayOfWeek === 0 ? 6 : lastDayOfWeek - 1;
-
-  // Calculate the last Monday of the previous month
-  // const startDate = new Date(lastDayOfPreviousMonth.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
-
-  // Define start and end dates for the selected month
-
-  // Perform additional work on each user
-  const modifiedUsers = await Promise.all(document.map(async user => {
-    const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
-    if (shiftAssignment) {
-      const shift = await Shift.findOne({ _id: shiftAssignment.template });
-      if (shift) {
-        const timeLogs = await TimeLog.aggregate([
-          { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
-          {
-            $group: {
-              _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
-              startTime: { $min: '$startTime' },
-              lastTimeLog: { $max: '$endTime' }
-            }
-          }
-        ]);
-        if (timeLogs) {
-          const attendanceRecords = await Promise.all(timeLogs.map(async log => {
-            const attendannceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
-            if (attendannceCount == 0) {
-              const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
-              let shiftTiming = "";
-              let deviationHour = "0";
-              let isOvertime = false;
-              if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
-                const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(":").map(Number);
-                const timeDifference = hours * 60;
-                const timeWorked = timeLogCount * 10;
-                if (timeWorked < timeDifference) {
-                  deviationHour = timeDifference - timeWorked;
+          if (timeLogs) {
+            const attendanceRecords = await Promise.all(timeLogs.map(async log => {
+              const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
+              if (attendanceCount === 0) {
+                const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+                let shiftTiming = '';
+                let deviationHour = '0';
+                let isOvertime = false;
+                if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
+                  const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(':').map(Number);
+                  const timeDifference = hours * 60;
+                  const timeWorked = timeLogCount * 10;
+                  if (timeWorked < timeDifference) {
+                    deviationHour = timeDifference - timeWorked;
+                  }
+                  if (timeDifference < timeWorked) {
+                    deviationHour = timeWorked - timeDifference;
+                    isOvertime = true;
+                  }
                 }
-                if (timeDifference < timeWorked) {
-                  deviationHour = timeWorked - timeDifference;
-                  isOvertime = true;
-                }
+                const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+
+                return {
+                  date: new Date(log._id),
+                  checkIn: log.startTime,
+                  checkOut: log.lastTimeLog,
+                  user: user._id,
+                  duration: timeLogCount * 10,
+                  ODHours: 0,
+                  SSLHours: 0,
+                  beforeProcessing: 'N/A',
+                  afterProcessing: 'N/A',
+                  earlyLateStatus: 'N/A',
+                  deviationHour: deviationHour,
+                  shiftTiming: `${shift.startTime} - ${shift.endTime}`,
+                  attendanceShift: shift._id,
+                  lateComingRemarks: lateComingRemarks,
+                  company: req.cookies.companyId,
+                  isOvertime: isOvertime,
+                };
               }
-              // Fetch manual entry comment if any
-              const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+            }));
 
-              return {
-                date: new Date(log._id),
-                checkIn: log.startTime,
-                checkOut: log.lastTimeLog,
-                user: user._id,
-                duration: timeLogCount * 10,
-                ODHours: 0,
-                SSLHours: 0,
-                beforeProcessing: 'N/A',
-                afterProcessing: 'N/A',
-                earlyLateStatus: 'N/A',
-                deviationHour: deviationHour,
-                shiftTiming: `${shift.startTime} - ${shift.endTime}`,       
-                attandanceShift: shift._id, 
-                lateComingRemarks: lateComingRemarks,
-                company: req.cookies.companyId,     
-                isOvertime: isOvertime,
-              };
-            }
-          }));
+            const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
+            websocketHandler.sendLog(req, `Prepared ${attendanceRecordsFiltered.length} attendance records for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
 
-          const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
-
-          //compare parameters from shift and calculte no of halfdays added based on tmelog
-          //Need o chaeck flag and if fllag s set then only + applied
-          //IF isovertimeallowed flag set to true then only overtime will be calculated
-          // Insert attendanceRecords into AttendanceRecord collection
-          await insertAttendanceRecords(attendanceRecordsFiltered);
-          await insertOvertimeRecords(attendanceRecordsFiltered,req.cookies.companyId);         
-
+            await insertAttendanceRecords(attendanceRecordsFiltered);
+            await insertOvertimeRecords(attendanceRecordsFiltered, req.cookies.companyId);
+            websocketHandler.sendLog(req, `Inserted attendance and overtime records for user: ${user._id}`, constants.LOG_TYPES.INFO);
+          }
         }
       }
-    }
-  }));
+    }));
 
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: null
-  });
+    websocketHandler.sendLog(req, `Successfully mapped time logs to attendance for company: ${companyId}`, constants.LOG_TYPES.INFO);
+
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('attendance.mappedTimlogToAttendanceSuccess', { companyId }),
+      data: null,
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error mapping time logs to attendance: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.mappedTimlogToAttendanceFailure'),
+      error: error.message,
+    });
+  }
 });
 
 // Controller function to handle the upload and processing of attendance JSON data
-exports.uploadAttendanceJSON = async (req, res, next) => {
-  const attendanceData = req.body; // Array of attendance data sent in the request body
+exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting uploadAttendanceJSON', constants.LOG_TYPES.INFO);
 
-  // Check if the data is an array
+  const attendanceData = req.body;
+  websocketHandler.sendLog(req, `Received attendance data with ${attendanceData.length} records`, constants.LOG_TYPES.TRACE);
+
   if (!Array.isArray(attendanceData)) {
+    websocketHandler.sendLog(req, 'Invalid format: Data is not an array', constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid format: Data should be an array of objects',
+      message: req.t('attendance.invalidAttendanceJSONFormat'),
     });
   }
 
   try {
     const attendanceRecords = [];
 
-    // Loop through the attendance data and process each entry
     for (let i = 0; i < attendanceData.length; i++) {
       const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
+      websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
 
-      // Fetch user details using empCode
       const user = await getUserByEmpCode(EmpCode);
 
       if (!user) {
-        console.error(`User with empCode ${EmpCode} not found`);
-        continue; // Skip if the user is not found
+        websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
+        continue;
       }
 
-      // Process each record (this can be adjusted based on your logic)
       const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
-
       if (attendanceRecord) {
         attendanceRecords.push(attendanceRecord);
+        websocketHandler.sendLog(req, `Processed attendance record for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
       }
     }
-    // If there are processed records, insert them into the database
+
     if (attendanceRecords.length > 0) {
       await insertAttendanceRecords(attendanceRecords);
-      await insertOvertimeRecords(attendanceRecords,req.cookies.companyId);  
-    }     
+      await insertOvertimeRecords(attendanceRecords, req.cookies.companyId);
+      websocketHandler.sendLog(req, `Inserted ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.INFO);
+    }
 
-    // Send response back indicating success
+    websocketHandler.sendLog(req, 'Successfully processed attendance records', constants.LOG_TYPES.INFO);
+
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Attendance records processed successfully',
+      message: req.t('attendance.uploadAttendanceJSONSuccess'),
       data: attendanceRecords,
     });
   } catch (error) {
-    console.error(error);
+    websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
-      message: 'An error occurred while processing the attendance records',
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.uploadAttendanceJSONFailure'),
+      error: error.message,
     });
   }
-};
+});
 
 // Helper function to fetch user by empCode
 async function getUserByEmpCode(empCode) {
@@ -2165,181 +2655,179 @@ async function getRecordsByYearAndMonthByUser(year, month, user) {
   }
 }
 exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting ProcessAttendanceAndLOP', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Processing for user: ${req.body.user}, month: ${req.body.month}, year: ${req.body.year}`, constants.LOG_TYPES.TRACE);
+
   try {
-    // Calculate the start and end dates for the month
     const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
-    const endOfMonth = new Date(req.body.year, req.body.month, 0); // Last day of the month      
+    const endOfMonth = new Date(req.body.year, req.body.month, 0);
     const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ user: req.body.user });
+    websocketHandler.sendLog(req, `Fetched attendance assignment for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
+
     if (attendanceAssignment) {
-      const attandanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attandanceTemplate });
-      if (attandanceTemplate) {
-        // Step 1: Get attendance records for the specified month
+      const attendanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attendanceTemplate });
+      websocketHandler.sendLog(req, `Fetched attendance template: ${attendanceTemplate?._id}`, constants.LOG_TYPES.TRACE);
+
+      if (attendanceTemplate) {
         const attendanceRecords = await AttendanceRecords.find({
           user: req.body.user,
           company: req.cookies.companyId,
           date: { $gte: startOfMonth, $lte: endOfMonth },
         });
+        websocketHandler.sendLog(req, `Fetched ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.DEBUG);
 
-        // Step 2: Get approved leave applications for the specified month
         const approvedLeaves = await LeaveApplication.find({
           user: req.body.user,
           status: constants.Leave_Application_Constant.Approved,
           startDate: { $gte: startOfMonth, $lte: endOfMonth },
           endDate: { $gte: startOfMonth, $lte: endOfMonth },
         });
+        websocketHandler.sendLog(req, `Fetched ${approvedLeaves.length} approved leaves`, constants.LOG_TYPES.DEBUG);
 
-        // Extract approved leave days
         const approvedLeaveDays = approvedLeaves.flatMap(leave => {
           const leaveStart = new Date(leave.startDate);
           const leaveEnd = new Date(leave.endDate);
           const leaveDays = [];
-
           for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
             if (d >= startOfMonth && d <= endOfMonth) {
-              leaveDays.push(d.toISOString().split('T')[0]); // Store as ISO string for comparison
+              leaveDays.push(d.toISOString().split('T')[0]);
             }
           }
           return leaveDays;
         });
+
         const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
-        const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]); // Convert holiday dates to ISO strings
+        const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
+        websocketHandler.sendLog(req, `Fetched ${holidays.length} holidays`, constants.LOG_TYPES.DEBUG);
 
-        // Iterate through the days of the month
-        const daysInMonth = endOfMonth.getDate(); // Get the number of days in the month 
-
+        const daysInMonth = endOfMonth.getDate();
         for (let day = 1; day <= daysInMonth; day++) {
-
-          // Create the date in UTC, setting the time to midnight (start of the day)
           const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
-          // Convert it back to your local timezone (optional)
           const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
           const dayOfWeek = currentDate.getDay();
-          const weeklyOffDays = attandanceTemplate.weeklyOfDays; // e.g., ['Sunday', 'Saturday']
-          const alternateWeekOffRoutine = attandanceTemplate.alternateWeekOffRoutine; // 'none', 'odd', or 'even'
-          const daysForAlternateWeekOffRoutine = attandanceTemplate.daysForAlternateWeekOffRoutine || []; // e.g., ['Sunday', 'Wednesday']                
+          const weeklyOffDays = attendanceTemplate.weeklyOffDays;
+          const alternateWeekOffRoutine = attendanceTemplate.alternateWeekOffRoutine;
+          const daysForAlternateWeekOffRoutine = attendanceTemplate.daysForAlternateWeekOffRoutine || [];
           const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          // Create a set of weekly off days for efficient lookup
           const weeklyOffDaysSet = new Set(weeklyOffDays);
-          // Create a set for alternate weekly off days
           const alternateWeekOffDaysSet = new Set(daysForAlternateWeekOffRoutine);
-          // Get the name of the day (e.g., 'Sunday', 'Monday')
           const dayName = daysOfWeek[dayOfWeek];
-          // Function to get the current week number of the year
+
           function getWeekNumber(date) {
             const startDate = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000)); // Total days from the start of the year
-            const weekNumber = Math.ceil((days + 1) / 7); // Week number (1-based)
-            return weekNumber;
+            const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000));
+            return Math.ceil((days + 1) / 7);
           }
-          // Get the current week number
           const currentWeekNumber = getWeekNumber(currentDate);
-          // Determine if the week is odd or even
-          const isOddWeek = currentWeekNumber % 2 !== 0; // Odd week if the week number is odd    
+          const isOddWeek = currentWeekNumber % 2 !== 0;
           let currentWeekOffDaysSet;
           if (alternateWeekOffRoutine === 'odd' || alternateWeekOffRoutine === 'even') {
             if (alternateWeekOffRoutine === 'odd' && isOddWeek) {
-              // For odd weeks, use the first set of alternate days                      
               currentWeekOffDaysSet = alternateWeekOffDaysSet;
             } else if (alternateWeekOffRoutine === 'even' && !isOddWeek) {
-              // For even weeks, use the alternate days
               currentWeekOffDaysSet = alternateWeekOffDaysSet;
             }
-            if (currentWeekOffDaysSet && currentWeekOffDaysSet.has) {
-              const isAlternateWeekOffDay = currentWeekOffDaysSet.has(dayName);
-              if (isAlternateWeekOffDay) {
-                // Skip the current day (it's an alternate weekly off or holiday)
-                continue; // skip or continue logic
-              }
+            if (currentWeekOffDaysSet && currentWeekOffDaysSet.has(dayName)) {
+              continue;
             }
           }
 
           const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);
-
           if (!isWeeklyOffDay) {
             const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
-
             const isPresent = attendanceRecords.find(record => {
-              var flag = record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
-              if (flag)
-                return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
+              return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
             });
-            // If not present and not an approved leave, mark as LOP
+
             if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
-              // Insert into LOP
               const existingRecord = await LOP.findOne({
                 user: req.body.user,
                 date: currentDate,
-                company: req.cookies.companyId
+                company: req.cookies.companyId,
               });
 
               if (existingRecord) {
+                websocketHandler.sendLog(req, `LOP already processed for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.ERROR);
                 res.status(200).json({
-                  status:constants.APIResponseStatus.Failure,
-                  message: 'Lop Already Processed for respective uer'
+                  status: constants.APIResponseStatus.Failure,
+                  message: req.t('attendance.lopAlreadyProcessedForUser', { userId: req.body.user }),
                 });
-              }
-              else {
+                return;
+              } else {
                 const lopRecord = new LOP({
                   user: req.body.user,
                   date: currentDate,
-                  company: req.cookies.companyId
+                  company: req.cookies.companyId,
                 });
                 await lopRecord.save();
+                websocketHandler.sendLog(req, `Inserted LOP record for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.INFO);
               }
             }
           }
         }
       }
     }
+
+    websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${req.body.user}`, constants.LOG_TYPES.INFO);
+
     res.status(200).json({
-      status: constants.APIResponseStatus.Success
+      status: constants.APIResponseStatus.Success,
+      message: req.t('attendance.processAttendanceAndLOPSuccess', { userId: req.body.user }),
     });
   } catch (error) {
-    res.status(200).json({
-      status: constants.APIResponseStatus.Failure
+    websocketHandler.sendLog(req, `Error processing attendance and LOP: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.processAttendanceAndLOPFailure'),
+      error: error.message,
     });
   }
 });
 
-exports.ProcessAttendanceUpdate = async (req, res) => {
-  try {
-    const { attandanaceProcessPeroid, runDate, status, exportToPayroll, users } = req.body;
+exports.ProcessAttendanceUpdate = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting ProcessAttendanceUpdate', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Processing attendance for period: ${req.body.attendanceProcessPeriod}`, constants.LOG_TYPES.TRACE);
 
-    // 1. Create or find the AttendanceProcess record
+  try {
+    const { attendanceProcessPeriod, runDate, status, exportToPayroll, users } = req.body;
+
     let attendanceProcess = await AttendanceProcess.findOneAndUpdate(
-      { attendanceProcessPeriod: attandanaceProcessPeroid, runDate: new Date(runDate) },
+      { attendanceProcessPeriod: attendanceProcessPeriod, runDate: new Date(runDate) },
       { status, exportToPayroll },
       { new: true, upsert: true }
     );
+    websocketHandler.sendLog(req, `Updated/Created attendance process: ${attendanceProcess._id}`, constants.LOG_TYPES.INFO);
 
-    // 2. Loop through the users array and create or update AttendanceProcessUsers
     for (let userEntry of users) {
       const { user, status } = userEntry;
-
-      // Create or update user attendance for the process
       await AttendanceProcessUsers.findOneAndUpdate(
         { attendanceProcess: attendanceProcess._id, user: user },
         { status },
         { new: true, upsert: true }
       );
+      websocketHandler.sendLog(req, `Updated/Created attendance process user: ${user}`, constants.LOG_TYPES.DEBUG);
     }
+
+    websocketHandler.sendLog(req, `Successfully processed attendance for period: ${attendanceProcessPeriod}`, constants.LOG_TYPES.INFO);
 
     return res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Attendance processed successfully',
+      message: req.t('attendance.processAttendanceUpdateSuccess', { attendanceProcessPeriod }),
       data: {
         attendanceProcess,
-        users
-      }
+        users,
+      },
     });
   } catch (error) {
-    console.error(error);
+    websocketHandler.sendLog(req, `Error processing attendance: ${error.message}`, constants.LOG_TYPES.ERROR);
     return res.status(500).json({
-      status: constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.processAttendanceUpdateFailure'),
+      error: error.message,
     });
   }
-};
+});
+
 exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
@@ -2391,155 +2879,132 @@ async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   }
 }
 // Controller to process attendance LOP (Insert method)
-exports.ProcessAttendance = async (req, res) => {
+exports.ProcessAttendance = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting ProcessAttendance', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Processing attendance for period: ${req.body.attendanceProcessPeriodMonth}-${req.body.attendanceProcessPeriodYear}`, constants.LOG_TYPES.TRACE);
 
   try {
     const companyId = req.cookies.companyId;
-    var isFNF = false;
-    // Check if companyId exists in cookies
+    let isFNF = false;
+    websocketHandler.sendLog(req, `Extracted companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
+
     if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('attendance.companyId　　　NotFound'), 400));
     }
+
     req.body.company = companyId;
     if (req.body.isFNF) {
       isFNF = true;
     }
     const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users, company } = req.body;
-    // Extract companyId from req.cookies
+
     let existingProcess = await AttendanceProcess.findOne({
       attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
       attendanceProcessPeriodYear: attendanceProcessPeriodYear,
       isFNF: isFNF,
     });
-    if (!isFNF) {
-      if (existingProcess) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: 'Attendance process for this period already exists'
-        });
-      }
+    if (!isFNF && existingProcess) {
+      websocketHandler.sendLog(req, `Attendance process already exists for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.ERROR);
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('attendance.attendanceProcessExists'),
+      });
     }
-    // 1. Insert a new AttendanceProcess record
+
     let attendanceProcess = await AttendanceProcess.create({
       attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
       attendanceProcessPeriodYear: attendanceProcessPeriodYear,
       runDate: new Date(runDate),
       isFNF: isFNF,
       exportToPayroll,
-      company
+      company,
     });
+    websocketHandler.sendLog(req, `Created attendance process: ${attendanceProcess._id}`, constants.LOG_TYPES.INFO);
 
-    // 2. Prepare AttendanceProcessUsers records for bulk insert
     const attendanceProcessUsers = users.map(userEntry => ({
       attendanceProcess: attendanceProcess._id,
       user: userEntry.user,
-      status: userEntry.status
+      status: userEntry.status,
     }));
 
-    // 3. Insert multiple AttendanceProcessUsers records
     await AttendanceProcessUsers.insertMany(attendanceProcessUsers);
-
-    //await sendEmailToUsers(attendanceProcessUsers);
-    //loop for user
-    //send email to user that your ttdance is processed
-    //Send email to managers that respective users has attendance process
+    websocketHandler.sendLog(req, `Inserted ${attendanceProcessUsers.length} attendance process users`, constants.LOG_TYPES.INFO);
 
     if (isFNF) {
-      // make user as settled if its
-      // 1) Get user from collection 
       for (let userEntry of users) {
         const user = await User.findById(userEntry.user);
-        // 2) Check if POSTed current password is correct 
-        // 3) If so, update password
         user.status = constants.User_Status.Settled;
         await user.save();
+        websocketHandler.sendLog(req, `Updated user status to Settled: ${userEntry.user}`, constants.LOG_TYPES.INFO);
       }
     }
+
+    websocketHandler.sendLog(req, `Successfully processed attendance for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.INFO);
+
     return res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Attendance processed successfully',
+      message: req.t('attendance.processAttendanceSuccess', { attendanceProcessPeriodMonth, attendanceProcessPeriodYear }),
       data: {
         attendanceProcess,
-        users: attendanceProcessUsers
-      }
+        users: attendanceProcessUsers,
+      },
     });
   } catch (error) {
+    websocketHandler.sendLog(req, `Error processing attendance: ${error.message}`, constants.LOG_TYPES.ERROR);
     return res.status(500).json({
-      status:constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.processAttendanceFailure'),
+      error: error.message,
     });
   }
-};
-
-const sendEmailToUsers = async (attendanceProcessUsers) => {
-  for (const userEntry of attendanceProcessUsers) {
-    const { user, status } = userEntry;
-
-    const attendanceUser = await User.findById(user);
-
-    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.CancelReject_Request_Leave_Application).where('company').equals(companyId);
-    if (emailTemplate) {
-      const template = emailTemplate.contentData;
-      const message = template
-        .replace("{firstName}", attendanceUser.firstName)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{lastName}", attendanceUser.lastName);
-      try {
-        await sendEmail({
-          email: attendanceUser.email,
-          subject: emailTemplate.subject,
-          message
-        });
-      } catch (err) {
-        console.error(`Error sending email to user ${user}:`, err);
-      }
-    }
-  }
-};
+});
 // Controller to delete attendance process and associated users
-exports.deleteAttendance = async (req, res) => {
-  try {
-    const { attandanaceProcessPeroidMonth, attandanaceProcessPeroidYear } = req.body;
+exports.deleteAttendance = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting deleteAttendance', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Deleting attendance process for period: ${req.body.attendanceProcessPeriodMonth}-${req.body.attendanceProcessPeriodYear}`, constants.LOG_TYPES.TRACE);
 
-    // 1. Find the AttendanceProcess record
+  try {
+    const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear } = req.body;
+
     let attendanceProcess = await AttendanceProcess.findOne({
-      attendanceProcessPeriodMonth: attandanaceProcessPeroidMonth,
-      attendanceProcessPeriodYear: attandanaceProcessPeroidYear
+      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
     });
 
-    // If no record found, return a 404 error
     if (!attendanceProcess) {
+      websocketHandler.sendLog(req, `Attendance process not found for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.ERROR);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Attendance process for this period not found'
+        message: req.t('attendance.attendanceProcessNotFound'),
       });
     }
-    // 2. Check if exportToPayroll is true
+
     if (attendanceProcess.exportToPayroll === true) {
+      websocketHandler.sendLog(req, `Cannot delete attendance process due to payroll export: ${attendanceProcess._id}`, constants.LOG_TYPES.ERROR);
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Cannot delete the attendance process as it has already been exported to payroll'
+        message: req.t('attendance.cannotDeleteAttendanceProcess'),
       });
     }
-    // 3. Delete the found AttendanceProcess record
-    await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
 
-    // 4. Delete associated AttendanceProcessUsers records
+    await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
     await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
+    websocketHandler.sendLog(req, `Deleted attendance process and associated users: ${attendanceProcess._id}`, constants.LOG_TYPES.INFO);
 
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Attendance process and associated users deleted successfully'
+      message: req.t('attendance.deleteAttendanceSuccess', { attendanceProcessPeriodMonth, attendanceProcessPeriodYear }),
     });
   } catch (error) {
-    console.error(error);
+    websocketHandler.sendLog(req, `Error deleting attendance process: ${error.message}`, constants.LOG_TYPES.ERROR);
     return res.status(500).json({
-      status:constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.deleteAttendanceFailure'),
+      error: error.message,
     });
   }
-};
+});
 
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
@@ -2704,6 +3169,31 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    data: overtimeRecords,
+  });
+});exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getOvertimeByUser', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching overtime records for user: ${req.body.user}, month: ${req.body.month}, year: ${req.body.year}`, constants.LOG_TYPES.TRACE);
+
+  const { user, month, year } = req.body;
+
+  if (!user || !month || !year) {
+    websocketHandler.sendLog(req, 'Missing required fields: user, month, or year', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.getOvertimeByUserFailure'), 400));
+  }
+
+  const overtimeRecords = await getOvertimeRecordsByUserYearAndMonth(user, year, month);
+
+  if (!overtimeRecords || overtimeRecords.length === 0) {
+    websocketHandler.sendLog(req, `No overtime records found for user: ${user}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.getOvertimeByUserFailure'), 404));
+  }
+
+  websocketHandler.sendLog(req, `Successfully retrieved ${overtimeRecords.length} overtime records for user: ${user}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getOvertimeByUserSuccess', { userId: user }),
     data: overtimeRecords,
   });
 });
