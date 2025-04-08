@@ -4988,7 +4988,7 @@ router.get('/incomeTax-by-payroll/:payroll', authController.protect, payrollCont
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser4:
+ *               PayrollUser:
  *                 type: string
  *               TaxCalculatedMethod:
  *                 type: string
@@ -5074,6 +5074,195 @@ router.post('/generatedPayroll-by-company', authController.protect, payrollContr
  *         description: Internal server error
  */
 router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payrollController.getAllGeneratedPayrollByPayrollId);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory:
+ *   post:
+ *     summary: Add a new payroll statutory entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll statutory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               fixedContribution:
+ *                 type: string
+ *               fixedDeduction:
+ *                 type: string
+ *               ContributorType:
+ *                 type: string
+ *               StautoryName:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               month:
+ *                 type: string
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll statutory successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-statutory', authController.protect, payrollController.createPayrollStatutory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   put:
+ *     summary: Update a payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     requestBody:
+ *       description: Updated payroll statutory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fixedContribution:
+ *                 type: string
+ *               fixedDeduction:
+ *                 type: string
+ *               ContributorType:
+ *                 type: string
+ *               StautoryName:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               month:
+ *                 type: string
+ *               year:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated payroll statutory
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-statutory/:id', authController.protect, payrollController.updatePayrollStatutory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory-by-company:
+ *   get:
+ *     summary: Get all payroll statutory entries by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with payroll statutory entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory-by-company', authController.protect, payrollController.getAllPayrollStatutoryByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory-by-payrollUser/{payrollUser}:
+ *   get:
+ *     summary: Get all payroll statutory entries by payroll user
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with payroll statutory entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollStatutoryByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   get:
+ *     summary: Get payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll statutory
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory/:id', authController.protect, payrollController.getPayrollStatutoryById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   delete:
+ *     summary: Delete a payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     responses:
+ *       204:
+ *         description: Payroll statutory successfully deleted
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-statutory/:id', authController.protect, payrollController.deletePayrollStatutory);
 
 /**
  * @swagger

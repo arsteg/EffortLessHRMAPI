@@ -60,6 +60,7 @@ const SalaryComponentFixedDeduction = require("../models/Employment/SalaryCompon
 const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
 const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
+const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -3893,6 +3894,127 @@ exports.getAllPayrollOvertimeByPayroll = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollOvertimeList
+  });
+});
+
+exports.createPayrollStatutory = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError("Company ID not found in cookies", 400));
+   }
+ 
+   // Add companyId to the request body
+   req.body.company = companyId;
+   // Check if payrollUser exists in the PayrollUsers model
+   const isValidUser = await PayrollUsers.findById(req.body.payrollUser);
+   if (!isValidUser) {
+     return next(new AppError('Invalid payroll user', 400));
+   }
+  const payrollStatutory = await PayrollStatutory.create(req.body);
+  
+  res.status(201).json({
+    status: 'success',
+    data: payrollStatutory
+  });
+});
+
+exports.updatePayrollStatutory = catchAsync(async (req, res, next) => {
+  const payrollStatutory = await PayrollStatutory.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true
+    }
+  )
+    .populate('payrollUser')
+    .populate('fixedContribution')
+    .populate('fixedDeduction')
+    .populate('company');
+
+  if (!payrollStatutory) {
+    return next(new AppError('Payroll statutory not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollStatutory
+  });
+});
+
+exports.getAllPayrollStatutoryByCompany = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError("Company ID not found in cookies", 400));
+   }
+ 
+  const payrollStatutories = await PayrollStatutory.find({
+    company: mongoose.Types.ObjectId(companyId)
+  })
+    .populate('payrollUser')
+    .populate('fixedContribution')
+    .populate('fixedDeduction')
+    .populate('company');
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollStatutories
+  });
+});
+
+exports.getAllPayrollStatutoryByPayrollUser = catchAsync(async (req, res, next) => {
+    // Check if payrollUser exists in the PayrollUsers model
+    const isValidUser = await PayrollUsers.findById(req.params.id);
+    if (!isValidUser) {
+      return next(new AppError('Invalid payroll user', 400));
+    }
+  const payrollStatutories = await PayrollStatutory.find({ 
+    payrollUser: mongoose.Types.ObjectId(req.params.id) 
+  })
+    .populate('payrollUser')
+    .populate('fixedContribution')
+    .populate('fixedDeduction')
+    .populate('company');
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollStatutories
+  });
+});
+
+exports.getPayrollStatutoryById = catchAsync(async (req, res, next) => {
+  const payrollStatutory = await PayrollStatutory.findById(req.params.id)
+    .populate('payrollUser')
+    .populate('fixedContribution')
+    .populate('fixedDeduction')
+    .populate('company');
+
+  if (!payrollStatutory) {
+    return next(new AppError('Payroll statutory not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: payrollStatutory
+  });
+});
+
+exports.deletePayrollStatutory = catchAsync(async (req, res, next) => {
+  const payrollStatutory = await PayrollStatutory.findByIdAndDelete(req.params.id);
+  
+  if (!payrollStatutory) {
+    return next(new AppError('Payroll statutory not found', 404));
+  }
+  
+  res.status(204).json({
+    status: 'success',
+    data: null
   });
 });
 
