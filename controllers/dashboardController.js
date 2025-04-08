@@ -44,13 +44,13 @@ exports.getHoursWorked = catchAsync(async (req, res, next) => {
 
   if (!userId || !rawDate) {
       websocketHandler.sendLog(req, 'Missing userId or date in query parameters', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "User ID and Date are required." });
+      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: req.t('dashboardController.userIdAndDateRequired') });
   }
 
   const parsedDate = parseDate(rawDate);
   if (!parsedDate) {
       websocketHandler.sendLog(req, `Invalid date format: ${rawDate}`, constants.LOG_TYPES.WARN);
-      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "Invalid date format." });
+      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: req.t('dashboardController.invalidDateFormat') });
   }
 
   const startOfDate = new Date(parsedDate);
@@ -118,13 +118,13 @@ exports.getWeeklySummary = catchAsync(async (req, res, next) => {
 
   if (!userId || !rawDate) {
       websocketHandler.sendLog(req, 'Missing userId or date in query parameters', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "User ID and Date are required." });
+      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: req.t('dashboardController.userIdAndDateRequired') });
   }
 
   const parsedDate = parseDate(rawDate);
   if (!parsedDate) {
       websocketHandler.sendLog(req, `Invalid date format: ${rawDate}`, constants.LOG_TYPES.WARN);
-      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: "Invalid date format." });
+      return res.status(400).json({ status: constants.APIResponseStatus.Failure, message: req.t('dashboardController.invalidDateFormat') });
   }
 
   const currentWeekStartDate = new Date(parsedDate);
