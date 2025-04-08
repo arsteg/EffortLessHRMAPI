@@ -268,6 +268,22 @@
     "invalidToken": "Invalid token. Please log in again.",
     "tokenExpired": "Your token has expired. Please log in again.",
     "genericError": "Something went very wrong."
+  },
+  "eventNotification": {
+    "eventNotificationNotFound": "Event notification not found",
+    "eventNotificationTypeNotFound": "Event notification type not found",
+    "userNotificationNotFound": "User notification not found",
+    "noCompanyId": "No companyId found in cookies",
+    "invalidCompanyId": "Invalid companyId format",
+    "requiredFieldsMissing": "User, notification, and action are required",
+    "notificationAlreadyAssigned": "Notification already assigned to this user",
+    "notificationNotFoundForUser": "Notification not found for this user",
+    "notificationUnassigned": "Notification successfully unassigned",
+    "invalidAction": "Invalid action",
+    "userAndCompanyIdRequired": "User ID and Company ID are required",
+    "userIdRequired": "User ID is required",
+    "userAndNotificationIdRequired": "User ID and Notification ID are required",
+    "userNotificationLinkNotFound": "User notification link not found"
   }
   
 }
