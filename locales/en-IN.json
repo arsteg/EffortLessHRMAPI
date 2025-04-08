@@ -260,6 +260,14 @@
     "documentUsersNotFound": "DocumentUsers not found",
     "templateNotFound": "No Template found with that ID",
     "userDocumentNotFound": "No document found with that ID"
+  },
+  "error": {
+    "invalidField": "Invalid {path}: {value}.",
+    "duplicateField": "Duplicate field value: {value}, please use another value!",
+    "invalidInputData": "Invalid input data. {errors}.",
+    "invalidToken": "Invalid token. Please log in again.",
+    "tokenExpired": "Your token has expired. Please log in again.",
+    "genericError": "Something went very wrong."
   }
   
 }
