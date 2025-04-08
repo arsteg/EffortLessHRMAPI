@@ -229,6 +229,24 @@
     "updateRolePermissionFailure": "Failed to update role permission",
     "deleteRolePermissionSuccess": "Role permission deleted successfully",
     "deleteRolePermissionFailure": "No role permission found with that ID"
-  } 
+  } ,
+  "company": {    
+    "notFound": "No document found with that ID",
+    "companyIdMissing": "Company information missing in cookies",
+    "serverError": "Server error",
+    "holidayNotFound": "Holiday Calendar not found",
+    "zoneNotFound": "Zone not found",
+    "locationNotFound": "Location not found",
+    "departmentNotFound": "Department not found",
+    "subDepartmentNotFound": "SubDepartment not found",
+    "designationNotFound": "Designation not found",
+    "bandNotFound": "Band not found",
+    "signatoryNotFound": "Signatory not found",
+    "taxSlabNotFound": "Tax slab not found"  
+  },
+  "dashboardController": {
+    "userIdAndDateRequired": "User ID and Date are required.",
+    "invalidDateFormat": "Invalid date format."
+  }
   
 }
