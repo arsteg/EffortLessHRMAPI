@@ -24,6 +24,8 @@ const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
 const Appointment = require("../models/permissions/appointmentModel");
 const  websocketHandler  = require('../utils/websocketHandler');
+const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
+const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -132,87 +134,136 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     newCompany=true;
   }
   var companyId = process.env.DEFAULT_COMPANY_Id;
-  if(company === null){
-    company = await Company.create({
-    companyName: req.body.companyName,
-    contactPerson: req.body.firstName + " "+ req.body.lastName,
-    email: req.body.email,      
-    active:true,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())    
-  }); 
+  if(company === null)
+  {
+          company = await Company.create({
+          companyName: req.body.companyName,
+          contactPerson: req.body.firstName + " "+ req.body.lastName,
+          email: req.body.email,      
+          active:true,
+          createdOn: new Date(Date.now()),
+          updatedOn: new Date(Date.now())    
+        }); 
 
-  const rolesToDuplicate = await Role.find({ company: companyId });
-    // Step 3: Create new records by cloning and assigning a new id
-    const duplicatedRoles= rolesToDuplicate.map((record) => {
-      // Create a new object with the same properties as the original record
-      const duplicatedRole = Object.assign({}, record.toObject());
-      duplicatedRole._id = new mongoose.Types.ObjectId();
-      // Assign a new id to the duplicated record (you can generate new id as you like)
-      duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-      return duplicatedRole;
-  
-    });
-     // Step 4: Save the duplicated records back to the database
-        await Role.insertMany(duplicatedRoles);
-
-    const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
-    // Step 3: Create new records by cloning and assigning a new id
-    const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
-      // Create a new object with the same properties as the original record
-      const duplicatedTaskStatus= Object.assign({}, record.toObject());
-      duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
-   
-      // Assign a new id to the duplicated record (you can generate new id as you like)
-      duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-      return duplicatedTaskStatus;
-    });
-    // Step 4: Save the duplicated records back to the database
-        await TaskStatus.insertMany(duplicatedTaskStatusList);
+        //Copy Master Tables Data from Master Compnay to newly created Company
+        const rolesToDuplicate = await Role.find({ company: companyId });
+        if (taskStatusToDuplicate.length > 0) {   
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedRoles= rolesToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedRole = Object.assign({}, record.toObject());
+          duplicatedRole._id = new mongoose.Types.ObjectId();
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          return duplicatedRole;
       
+        });
+        // Step 4: Save the duplicated records back to the database
+        await Role.insertMany(duplicatedRoles);
+        } else {
+          console.log('No Roles found to duplicate.');
+        }
+        const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
+        if (taskStatusToDuplicate.length > 0) {            
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaskStatus= Object.assign({}, record.toObject());
+            duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
+        
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaskStatus;
+          });
+          // Step 4: Save the duplicated records back to the database
+          await TaskStatus.insertMany(duplicatedTaskStatusList);
+        } else {
+          console.log('No Task Status Templates found to duplicate.');
+        }
         const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
-        // Step 3: Create new records by cloning and assigning a new id
-        const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
-          // Create a new object with the same properties as the original record
-          const duplicatedTaskPriority  = Object.assign({}, record.toObject());
-          // Assign a new id to the duplicated record (you can generate new id as you like)
-          duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-          duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
-          return duplicatedTaskPriority;
-        });
-        await TaskPriority.insertMany(duplicatedTaskPriorityList);
-
+        if (taskPriorityToDuplicate.length > 0) {     
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaskPriority  = Object.assign({}, record.toObject());
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
+            return duplicatedTaskPriority;
+          });
+          await TaskPriority.insertMany(duplicatedTaskPriorityList);
+        } else {
+          console.log('No Task Priority Templates found to duplicate.');
+        }
         const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
+        if (emailTemplateToDuplicate.length > 0) {     
+            // Step 3: Create new records by cloning and assigning a new id
+            const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
+              // Create a new object with the same properties as the original record
+              const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
+              // Assign a new id to the duplicated record (you can generate new id as you like)
+              duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+              duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
+              duplicatedEmailTemplate.isDelete=false;
+              return duplicatedEmailTemplate;
+            });
+            await EmailTemplate.insertMany(duplicatedEmailTemplateList);
+        } else {
+          console.log('No Email Templates found to duplicate.');
+        }
+
+        const taxSectonsToDuplicate = await IncomeTaxSection.find({ company: companyId });
+        if (taxSectonsToDuplicate.length > 0) {
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaxSectionList= taxSectonsToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaxSection = Object.assign({}, record.toObject());
+            duplicatedTaxSection._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaxSection.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaxSection;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await IncomeTaxSection.insertMany(duplicatedTaxSectionList);
+        } else {
+          console.log('No Tax Sections found to duplicate.');
+        }
+
+        const taxComponanatsToDuplicate = await IncomeTaxComponant.find({ company: companyId });
+        if (taxComponanatsToDuplicate.length > 0) {
         // Step 3: Create new records by cloning and assigning a new id
-        const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
-          // Create a new object with the same properties as the original record
-          const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
-          // Assign a new id to the duplicated record (you can generate new id as you like)
-          duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-          duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
-          duplicatedEmailTemplate.isDelete=false;
-          return duplicatedEmailTemplate;
-        });
-        await EmailTemplate.insertMany(duplicatedEmailTemplateList);
+          const duplicatedTaxComponantList= taxComponanatsToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaxComponant = Object.assign({}, record.toObject());
+            duplicatedTaxComponant._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaxComponant.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaxComponant;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await IncomeTaxComponant.insertMany(duplicatedTaxComponantList);
+        } else {
+          console.log('No Tax Componants found to duplicate.');
+        }
+  }
+  var role =null;
+  if(newCompany==true)
+  {
+    role = await Role.findOne({
+      company: company._id,
+      Name: "Admin"
+    });
+  }
+  else
+  {
+      role = await Role.findOne({
+      company: company._id,
+      Name: "User"
+    });
   
   }
-  const roles = await Role.find({ company: company._id });
-  var role =null;
-if(newCompany==true)
-{
-   role = await Role.findOne({
-    company: company._id,
-    Name: "Admin"
-  });
-}
-else
-{
-    role = await Role.findOne({
-     company: company._id,
-     Name: "User"
-   });
- 
-}
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -240,32 +291,32 @@ else
     await newAppointment.save();
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
- if(emailTemplate)
- {
-  const template = emailTemplate.contentData;
-  const message = template
-  .replace("{firstName}", newUser.firstName)
-  .replace("{url}", resetURL)
-  .replace("{company}",  req.cookies.companyName)
-  .replace("{company}", req.cookies.companyName)
-  .replace("{lastName}", newUser.lastName); 
+  if(emailTemplate)
+  {
+    const template = emailTemplate.contentData;
+    const message = template
+    .replace("{firstName}", newUser.firstName)
+    .replace("{url}", resetURL)
+    .replace("{company}",  req.cookies.companyName)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{lastName}", newUser.lastName); 
 
-     try {
-      await sendEmail({
-        email: newUser.email,
-        subject: emailTemplate.subject,
-        message
-      });
-     
-    } catch (err) {   
-      return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
-    );
-   }
-  }
+      try {
+        await sendEmail({
+          email: newUser.email,
+          subject: emailTemplate.subject,
+          message
+        });
+      
+      } catch (err) {   
+        return next(
+          new AppError(
+            'There was an error sending the email. Try again later.',
+            500
+          )
+      );
+    }
+    }
   createAndSendToken(newUser, 201, res);
   }
 
