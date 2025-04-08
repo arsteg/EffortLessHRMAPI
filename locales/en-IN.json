@@ -247,6 +247,19 @@
   "dashboardController": {
     "userIdAndDateRequired": "User ID and Date are required.",
     "invalidDateFormat": "Invalid date format."
+  },
+  "documents": {
+    "companyPolicyDocumentNotFound": "Company Policy Document not found",
+    "companyPolicyDocumentInUse": "Company Policy Document is already in use. Please delete related records before deleting the Company Policy Document.",
+    "entryNotFound": "No entry found with that ID",
+    "documentNotFound": "No document found with that ID",
+    "documentInUse": "Document cannot be deleted as it is in use",
+    "documentAppliedToNotFound": "No DocumentAppliedTo found with that ID",
+    "documentCategoryNotFound": "Document category not found",
+    "documentCategoryInUse": "Document Category cannot be deleted as it is in use",
+    "documentUsersNotFound": "DocumentUsers not found",
+    "templateNotFound": "No Template found with that ID",
+    "userDocumentNotFound": "No document found with that ID"
   }
   
 }
