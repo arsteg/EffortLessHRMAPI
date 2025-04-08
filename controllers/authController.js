@@ -23,79 +23,78 @@ const constants = require('../constants');
 const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
 const Appointment = require("../models/permissions/appointmentModel");
-const websocketHandler = require('../utils/websocketHandler');
-const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
-const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
+const  websocketHandler  = require('../utils/websocketHandler');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
   headers: {
-    "X-Razorpay-Account": process.env.RAZORPAY_MERCHANT || "PWAQUL4NNnybvx"
+    "X-Razorpay-Account":process.env.RAZORPAY_MERCHANT || "PWAQUL4NNnybvx"
   }
 });
 const { logUserAction } = require('./userController');
 
 const signToken = async (id) => {
-  websocketHandler.sendLog(null, `Generating token for user ID: ${id}`, constants.LOG_TYPES.INFO);
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+   return jwt.sign({ id },process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
   });
 };
 
-const createAndSendToken = async (user, statusCode, res) => {
-  websocketHandler.sendLog(null, `Starting createAndSendToken for user: ${user._id}`, constants.LOG_TYPES.INFO);
+const createAndSendToken = async (user, statusCode, res) => {  
   const token = await signToken(user._id);
 
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 
     ),
     httpOnly: true
-  };
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-    res.cookie('companyId', user.company.id, {
-      secure: true,
-      sameSite: 'none'
-    });
-    res.cookie('userId', user._id, {
-      secure: true,
-      sameSite: 'none'
-    });
-    res.cookie('companyName', user.company.companyName, {
-      secure: true,
-      sameSite: 'none'
-    });
-  } else {
+  };    
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development'|| process.env.NODE_ENV === 'test')
+  {
+      res.cookie('companyId', user.company.id, {
+        secure: true,
+        sameSite: 'none'
+      });
+      res.cookie('userId', user._id, {
+        secure: true,
+        sameSite: 'none'
+      });
+      res.cookie('companyName', user.company.companyName, {
+        secure: true,
+        sameSite: 'none'
+      });
+     
+  }
+  else
+  {
     res.cookie('companyId', user.company.id);
     res.cookie('userId', user._id);
     res.cookie('companyName', user.company.companyName);
   }
+  // In production save cookie only in https connection
   if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') cookieOptions.secure = true;
   res.cookie('jwt', token, cookieOptions);
-
+  
+  // Remove password from the output
   user.password = undefined;
 
   const subscriptions = await Subscription.find({
     companyId: user.company.id,
-    "razorpaySubscription.status": { $in: constants.Active_Subscription }
+    "razorpaySubscription.status": {$in: constants.Active_Subscription}
   }).populate("currentPlanId");
-  websocketHandler.sendLog(null, `Fetched ${subscriptions.length} subscriptions for company: ${user.company.id}`, constants.LOG_TYPES.DEBUG);
-  const activeSubscription = subscriptions.find((item) => { return item.razorpaySubscription.status === 'active' });
-  let companySubscription = { status: 'new' };
-  if (activeSubscription) {
+  const activeSubscription = subscriptions.find((item)=>{return item.razorpaySubscription.status === 'active'});
+  let companySubscription = {status: 'new'};
+  if(activeSubscription){
     companySubscription = activeSubscription.razorpaySubscription;
     const addOns = await razorpay.addons.all({
       subscription_id: companySubscription.id
     });
     companySubscription.addOns = addOns.items;
-    websocketHandler.sendLog(null, `Fetched ${addOns.items.length} add-ons for subscription: ${companySubscription.id}`, constants.LOG_TYPES.DEBUG);
-  } else if (subscriptions.length > 0) {
+  } else if(subscriptions.length > 0){
     const razorpaySubscription = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
     companySubscription = razorpaySubscription;
-    websocketHandler.sendLog(null, `Fetched subscription details for ID: ${subscriptions[0].subscriptionId}`, constants.LOG_TYPES.DEBUG);
   }
 
-  websocketHandler.sendLog(null, `Token created and sent for user: ${user._id}`, constants.LOG_TYPES.INFO);
+
   res.status(statusCode).json({
     status: constants.APIResponseStatus.Success,
     token,
@@ -106,12 +105,189 @@ const createAndSendToken = async (user, statusCode, res) => {
   });
 };
 
-exports.signup = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting signup', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Signup attempt for email: ${req.body.email}, companyId: ${req.body.companyId}`, constants.LOG_TYPES.TRACE);
+exports.signup = catchAsync(async(req, res, next) => { 
 
-  const company = await Company.findOne({ _id: req.body.companyId });
-  websocketHandler.sendLog(req, `Fetched company: ${company?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
+  const company = await Company.findOne({_id:req.body.companyId});
+  const newUser = await User.create({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,    
+    role: req.body.role,   
+    isSuperAdmin: false,
+    company:company,
+    status:constants.User_Status.Active,   
+    active:true,
+    createdOn: new Date(Date.now()),
+    updatedOn: new Date(Date.now())    
+  }); 
+  createAndSendToken(newUser, 201, res);
+});
+
+exports.webSignup = catchAsync(async(req, res, next) => {
+  var company = await Company.findOne({companyName:req.body.companyName});
+  var newCompany=false;
+  if(company === null){
+    newCompany=true;
+  }
+  var companyId = process.env.DEFAULT_COMPANY_Id;
+  if(company === null){
+    company = await Company.create({
+    companyName: req.body.companyName,
+    contactPerson: req.body.firstName + " "+ req.body.lastName,
+    email: req.body.email,      
+    active:true,
+    createdOn: new Date(Date.now()),
+    updatedOn: new Date(Date.now())    
+  }); 
+
+  const rolesToDuplicate = await Role.find({ company: companyId });
+    // Step 3: Create new records by cloning and assigning a new id
+    const duplicatedRoles= rolesToDuplicate.map((record) => {
+      // Create a new object with the same properties as the original record
+      const duplicatedRole = Object.assign({}, record.toObject());
+      duplicatedRole._id = new mongoose.Types.ObjectId();
+      // Assign a new id to the duplicated record (you can generate new id as you like)
+      duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+      return duplicatedRole;
+  
+    });
+     // Step 4: Save the duplicated records back to the database
+        await Role.insertMany(duplicatedRoles);
+
+    const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
+    // Step 3: Create new records by cloning and assigning a new id
+    const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
+      // Create a new object with the same properties as the original record
+      const duplicatedTaskStatus= Object.assign({}, record.toObject());
+      duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
+   
+      // Assign a new id to the duplicated record (you can generate new id as you like)
+      duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+      return duplicatedTaskStatus;
+    });
+    // Step 4: Save the duplicated records back to the database
+        await TaskStatus.insertMany(duplicatedTaskStatusList);
+      
+        const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedTaskPriority  = Object.assign({}, record.toObject());
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
+          return duplicatedTaskPriority;
+        });
+        await TaskPriority.insertMany(duplicatedTaskPriorityList);
+
+        const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
+          duplicatedEmailTemplate.isDelete=false;
+          return duplicatedEmailTemplate;
+        });
+        await EmailTemplate.insertMany(duplicatedEmailTemplateList);
+  
+  }
+  const roles = await Role.find({ company: company._id });
+  var role =null;
+if(newCompany==true)
+{
+   role = await Role.findOne({
+    company: company._id,
+    Name: "Admin"
+  });
+}
+else
+{
+    role = await Role.findOne({
+     company: company._id,
+     Name: "User"
+   });
+ 
+}
+  const newUser = await User.create({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,    
+    role: role.id,   
+    isSuperAdmin: false,
+    company:company.id,
+    status:constants.User_Status.Active,
+    active:true,
+    createdOn: new Date(Date.now()),
+    updatedOn: new Date(Date.now())
+  }); 
+  if(newUser)
+  {
+    const newAppointment = new Appointment({
+      user: newUser._id,   // Linking the user with the attendance record
+      salaryTypePaid: '',
+      joiningDate: null,
+      confirmationDate: null,
+      // Add other necessary fields here as empty or default values
+      company: company.id,
+    });
+    await newAppointment.save();
+  const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
+ if(emailTemplate)
+ {
+  const template = emailTemplate.contentData;
+  const message = template
+  .replace("{firstName}", newUser.firstName)
+  .replace("{url}", resetURL)
+  .replace("{company}",  req.cookies.companyName)
+  .replace("{company}", req.cookies.companyName)
+  .replace("{lastName}", newUser.lastName); 
+
+     try {
+      await sendEmail({
+        email: newUser.email,
+        subject: emailTemplate.subject,
+        message
+      });
+     
+    } catch (err) {   
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+    );
+   }
+  }
+  createAndSendToken(newUser, 201, res);
+  }
+
+});
+exports.CreateUser = catchAsync(async(req, res, next) => {      
+  try{
+   const subscription = await Subscription.findOne({
+         companyId: req.cookies.companyId,
+         "razorpaySubscription.status": { 
+          $in: constants.Active_Subscription
+        }
+  }).populate('currentPlanId');
+  const activeUsers = await User.count({ 
+    company: mongoose.Types.ObjectId(req.cookies.companyId),
+    status: {$in: constants.Active_Statuses}
+  });
+  if(subscription?.currentPlanId?.users <= activeUsers){
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      error: `You have reached the user limit for your subscription plan. You cannot add more than ${subscription?.currentPlanId?.users} users. Please upgrade your plan to add more users.`
+    })
+  }
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -119,453 +295,263 @@ exports.signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     role: req.body.role,
+    phone: req.body.phone,
+    jobTitle: req.body.jobTitle,
     isSuperAdmin: false,
-    company: company,
-    status: constants.User_Status.Active,
-    active: true,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())
+    status:constants.User_Status.Active,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId,
+    company: req.cookies.companyId
+  }); 
+  const newAppointment = new Appointment({
+    user: newUser._id,   // Linking the user with the attendance record
+    salaryTypePaid: '',
+    joiningDate: null,
+    confirmationDate: null,
+    // Add other necessary fields here as empty or default values
+    company: req.cookies.companyId,
   });
-  websocketHandler.sendLog(req, `User created: ${newUser._id}`, constants.LOG_TYPES.INFO);
+  await newAppointment.save();
+  newUser.appointment = newAppointment
 
-  createAndSendToken(newUser, 201, res);
-});
-
-exports.webSignup = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting webSignup', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Web signup attempt for email: ${req.body.email}, companyName: ${req.body.companyName}`, constants.LOG_TYPES.TRACE);
-
-  var company = await Company.findOne({ companyName: req.body.companyName });
-  websocketHandler.sendLog(req, `Fetched company: ${company?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
-  var newCompany = false;
-  if (company === null) {
-    newCompany = true;
-  }
-  var companyId = process.env.DEFAULT_COMPANY_Id;
-  if (company === null) {
-    company = await Company.create({
-      companyName: req.body.companyName,
-      contactPerson: req.body.firstName + " " + req.body.lastName,
-      email: req.body.email,
-      active: true,
-      createdOn: new Date(Date.now()),
-      updatedOn: new Date(Date.now())
-    });
-    websocketHandler.sendLog(req, `Created new company: ${company._id}`, constants.LOG_TYPES.INFO);
-
-    const rolesToDuplicate = await Role.find({ company: companyId });
-    if (taskStatusToDuplicate.length > 0) {
-      const duplicatedRoles = rolesToDuplicate.map((record) => {
-        const duplicatedRole = Object.assign({}, record.toObject());
-        duplicatedRole._id = new mongoose.Types.ObjectId();
-        duplicatedRole.company = company._id;
-        return duplicatedRole;
-      });
-      await Role.insertMany(duplicatedRoles);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedRoles.length} roles for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Roles found to duplicate.');
-    }
-    const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
-    if (taskStatusToDuplicate.length > 0) {
-      const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
-        const duplicatedTaskStatus = Object.assign({}, record.toObject());
-        duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
-        duplicatedTaskStatus.company = company._id;
-        return duplicatedTaskStatus;
-      });
-      await TaskStatus.insertMany(duplicatedTaskStatusList);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedTaskStatusList.length} task statuses for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Task Status Templates found to duplicate.');
-    }
-    const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
-    if (taskPriorityToDuplicate.length > 0) {
-      const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
-        const duplicatedTaskPriority = Object.assign({}, record.toObject());
-        duplicatedTaskPriority.company = company._id;
-        duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
-        return duplicatedTaskPriority;
-      });
-      await TaskPriority.insertMany(duplicatedTaskPriorityList);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedTaskPriorityList.length} task priorities for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Task Priority Templates found to duplicate.');
-    }
-    const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
-    if (emailTemplateToDuplicate.length > 0) {
-      const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
-        const duplicatedEmailTemplate = Object.assign({}, record.toObject());
-        duplicatedEmailTemplate.company = company._id;
-        duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
-        duplicatedEmailTemplate.isDelete = false;
-        return duplicatedEmailTemplate;
-      });
-      await EmailTemplate.insertMany(duplicatedEmailTemplateList);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedEmailTemplateList.length} email templates for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Email Templates found to duplicate.');
-    }
-
-    const taxSectonsToDuplicate = await IncomeTaxSection.find({ company: companyId });
-    if (taxSectonsToDuplicate.length > 0) {
-      const duplicatedTaxSectionList = taxSectonsToDuplicate.map((record) => {
-        const duplicatedTaxSection = Object.assign({}, record.toObject());
-        duplicatedTaxSection._id = new mongoose.Types.ObjectId();
-        duplicatedTaxSection.company = company._id;
-        return duplicatedTaxSection;
-      });
-      await IncomeTaxSection.insertMany(duplicatedTaxSectionList);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedTaxSectionList.length} tax sections for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Tax Sections found to duplicate.');
-    }
-
-    const taxComponanatsToDuplicate = await IncomeTaxComponant.find({ company: companyId });
-    if (taxComponanatsToDuplicate.length > 0) {
-      const duplicatedTaxComponantList = taxComponanatsToDuplicate.map((record) => {
-        const duplicatedTaxComponant = Object.assign({}, record.toObject());
-        duplicatedTaxComponant._id = new mongoose.Types.ObjectId();
-        duplicatedTaxComponant.company = company._id;
-        return duplicatedTaxComponant;
-      });
-      await IncomeTaxComponant.insertMany(duplicatedTaxComponantList);
-      websocketHandler.sendLog(req, `Duplicated ${duplicatedTaxComponantList.length} tax components for company: ${company._id}`, constants.LOG_TYPES.DEBUG);
-    } else {
-      console.log('No Tax Componants found to duplicate.');
+  // 3) Send it to user's email
+  const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 
+  if(emailTemplate) {
+    const template = emailTemplate.contentData; 
+    const message = template
+    .replace("{firstName}", newUser.firstName)
+    .replace("{url}", resetURL)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{lastName}", newUser.lastName);
+    try {
+      await sendEmail({
+        email: newUser.email,
+        subject: emailTemplate.subject,
+        message
+      });   
+    } catch (err) {   
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      );
     }
   }
-  var role = null;
-  if (newCompany == true) {
-    role = await Role.findOne({
-      company: company._id,
-      Name: "Admin"
-    });
-  } else {
-    role = await Role.findOne({
-      company: company._id,
-      Name: "User"
-    });
-  }
-  websocketHandler.sendLog(req, `Selected role: ${role?._id || 'not found'} for user`, constants.LOG_TYPES.TRACE);
-
-  const newUser = await User.create({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    role: role.id,
-    isSuperAdmin: false,
-    company: company.id,
-    status: constants.User_Status.Active,
-    active: true,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())
+  const userAction = {
+    userId: newUser._id, 
+    companyId: req.cookies.companyId,
+    oldStatus: newUser.status || '',
+    newStatus: constants.User_Status.Active,
+    timestamp: new Date().toISOString(),
+    action: 'New user added'
+  };
+  await logUserAction(req, userAction, next);
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: {
+      User:newUser    
+    }
   });
-  websocketHandler.sendLog(req, `User created: ${newUser._id}`, constants.LOG_TYPES.INFO);
-
-  if (newUser) {
-    const newAppointment = new Appointment({
-      user: newUser._id,
-      salaryTypePaid: '',
-      joiningDate: null,
-      confirmationDate: null,
-      company: company.id,
-    });
-    await newAppointment.save();
-    websocketHandler.sendLog(req, `Created appointment for user: ${newUser._id}`, constants.LOG_TYPES.INFO);
-
-    const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId);
-    if (emailTemplate) {
-      const template = emailTemplate.contentData;
-      const message = template
-        .replace("{firstName}", newUser.firstName)
-        .replace("{url}", resetURL)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{lastName}", newUser.lastName);
-
-      try {
-        await sendEmail({
-          email: newUser.email,
-          subject: emailTemplate.subject,
-          message
-        });
-        websocketHandler.sendLog(req, `Sent profile update email to: ${newUser.email}`, constants.LOG_TYPES.INFO);
-      } catch (err) {
-        websocketHandler.sendLog(req, `Error sending email to ${newUser.email}: ${err.message}`, constants.LOG_TYPES.ERROR);
-        return next(
-          new AppError(req.t('auth.emailSendFailure'), 500)
-        );
-      }
-    }
-    createAndSendToken(newUser, 201, res);
   }
-});
-
-exports.CreateUser = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting CreateUser', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Creating user with email: ${req.body.email} for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-
-  try {
-    const subscription = await Subscription.findOne({
-      companyId: req.cookies.companyId,
-      "razorpaySubscription.status": {
-        $in: constants.Active_Subscription
-      }
-    }).populate('currentPlanId');
-    const activeUsers = await User.count({
-      company: mongoose.Types.ObjectId(req.cookies.companyId),
-      status: { $in: constants.Active_Statuses }
-    });
-    websocketHandler.sendLog(req, `Checked subscription: ${subscription?._id || 'none'}, active users: ${activeUsers}`, constants.LOG_TYPES.DEBUG);
-
-    if (subscription?.currentPlanId?.users <= activeUsers) {
-      websocketHandler.sendLog(req, `User limit exceeded: ${activeUsers}/${subscription.currentPlanId.users}`, constants.LOG_TYPES.ERROR);
-      return res.status(400).json({
-        status: constants.APIResponseStatus.Failure,
-        error: req.t('auth.userLimitExceeded', { maxUsers: subscription.currentPlanId.users })
-      });
-    }
-    const newUser = await User.create({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
-      role: req.body.role,
-      phone: req.body.phone,
-      jobTitle: req.body.jobTitle,
-      isSuperAdmin: false,
-      status: constants.User_Status.Active,
-      createdOn: new Date(),
-      updatedOn: new Date(),
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId,
-      company: req.cookies.companyId
-    });
-    websocketHandler.sendLog(req, `User created: ${newUser._id}`, constants.LOG_TYPES.INFO);
-
-    const newAppointment = new Appointment({
-      user: newUser._id,
-      salaryTypePaid: '',
-      joiningDate: null,
-      confirmationDate: null,
-      company: req.cookies.companyId,
-    });
-    await newAppointment.save();
-    websocketHandler.sendLog(req, `Created appointment for user: ${newUser._id}`, constants.LOG_TYPES.INFO);
-    newUser.appointment = newAppointment;
-
-    const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
-    const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId);
-    if (emailTemplate) {
-      const template = emailTemplate.contentData;
-      const message = template
-        .replace("{firstName}", newUser.firstName)
-        .replace("{url}", resetURL)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{lastName}", newUser.lastName);
-      try {
-        await sendEmail({
-          email: newUser.email,
-          subject: emailTemplate.subject,
-          message
-        });
-        websocketHandler.sendLog(req, `Sent profile update email to: ${newUser.email}`, constants.LOG_TYPES.INFO);
-      } catch (err) {
-        websocketHandler.sendLog(req, `Error sending email to ${newUser.email}: ${err.message}`, constants.LOG_TYPES.ERROR);
-        return next(
-          new AppError(req.t('auth.emailSendFailure'), 500)
-        );
-      }
-    }
-    const userAction = {
-      userId: newUser._id,
-      companyId: req.cookies.companyId,
-      oldStatus: newUser.status || '',
-      newStatus: constants.User_Status.Active,
-      timestamp: new Date().toISOString(),
-      action: 'New user added'
-    };
-    await logUserAction(req, userAction, next);
-    websocketHandler.sendLog(req, `Logged user action for: ${newUser._id}`, constants.LOG_TYPES.INFO);
-
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: {
-        User: newUser
-      }
-    });
-  } catch (err) {
-    websocketHandler.sendLog(req, `Error creating user: ${err.message}`, constants.LOG_TYPES.ERROR);
+  catch(err){
     console.log(err);
     res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       error: err
-    });
+    })
   }
+ // createAndSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting login', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Login attempt for email: ${req.body.email}`, constants.LOG_TYPES.TRACE);
-
   const { email, password } = req.body;
 
+  // 1) Validate email and password input
   if (!email || !password) {
-    websocketHandler.sendLog(req, 'Email or password not provided', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.emailOrPasswordMissing'), 400));
+    return next(new AppError('Email or password not specified.', 400));
   }
+  // 2) Check if user exists and is not deleted, then retrieve password
   const user = await User.findOne({
     email,
     status: { $ne: constants.User_Status.Deleted }
   }).select('+password');
-  websocketHandler.sendLog(req, `Fetched user: ${user?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    websocketHandler.sendLog(req, `Invalid credentials for email: ${email}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
+    return next(new AppError('Incorrect email or password.', 401));
   }
 
+  // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
 
+// Authentication
 exports.protect = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting protect middleware', constants.LOG_TYPES.INFO);
-
+  // 1) Get the token and check if it's there
+  // It is a standard to send header in this format
+  // Key: Authorization
+  // Value: Bearer <TOKEN_VALUE>
   let token;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
-    websocketHandler.sendLog(req, `Extracted token: ${token.substring(0, 10)}...`, constants.LOG_TYPES.TRACE);
   }
 
+  // If token wasn't specified throw an error
   if (!token) {
-    websocketHandler.sendLog(req, 'No token provided', constants.LOG_TYPES.ERROR);
     return next(
-      new AppError(req.t('auth.notLoggedIn'), 401)
+      new AppError('You are not logged in! Please log in to get access.', 401)
     );
   }
 
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  websocketHandler.sendLog(req, `Token decoded for user ID: ${decoded.id}`, constants.LOG_TYPES.DEBUG);
-
+  // 2) Token verification
+  // jwt.verify(token, process.env.JWT_SECRET) takes in a callback
+  // In order to not brake our async await way to deal with async code
+  // We can transform it into a promise using promisify from util pckg
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); 
+  // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
-  if (!currentUser) {
-    websocketHandler.sendLog(req, `User not found for ID: ${decoded.id}`, constants.LOG_TYPES.ERROR);
+  if (!currentUser)
     return next(
-      new AppError(req.t('auth.userNotFound'), 401)
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
     );
-  }
 
+  // 4) Check if user changed password after the token was issued
+  // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
-    websocketHandler.sendLog(req, `Password changed after token issuance for user: ${currentUser._id}`, constants.LOG_TYPES.ERROR);
     return next(
-      new AppError(req.t('auth.passwordChanged'), 401)
+      new AppError('User recently changed password. Please log in again.', 401)
     );
   }
-
+  // Grant access to protected route
   const subscription = await Subscription.findOne({
-    $and: [{
+    $and:[{
       companyId: currentUser.company.id,
-      'razorpaySubscription.status': { $in: constants.Active_Subscription }
-    }]
+      'razorpaySubscription.status':  {$in: constants.Active_Subscription}
+    } ]
   });
-  websocketHandler.sendLog(req, `Checked subscription for company: ${currentUser.company.id}, found: ${subscription?._id || 'none'}`, constants.LOG_TYPES.DEBUG);
 
+  
   if (!subscription) {
     const companyDetails = await Company.findById(currentUser.company._id);
-    websocketHandler.sendLog(req, `Fetched company details: ${companyDetails?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
-    if (!companyDetails.freeCompany) {
-      websocketHandler.sendLog(req, `Subscription inactive for company: ${currentUser.company.id}`, constants.LOG_TYPES.ERROR);
+    if(!companyDetails.freeCompany){
       return next(
-        new AppError(req.t('auth.subscriptionInactive'), 401).sendErrorJson(res)
+        new AppError(
+          'Your subscription is not active. Please contact your administrator.',
+          401
+        ).sendErrorJson(res)
       );
     }
   }
 
-  req.user = currentUser;
-  websocketHandler.sendLog(req, `Access granted to user: ${currentUser._id}`, constants.LOG_TYPES.INFO);
+  req.user = currentUser;  
   next();
 });
 
 exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting protectUnsubscribed middleware', constants.LOG_TYPES.INFO);
-
+  // 1) Get the token and check if it's there
+  // It is a standard to send header in this format
+  // Key: Authorization
+  // Value: Bearer <TOKEN_VALUE>
   let token;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
-    websocketHandler.sendLog(req, `Extracted token: ${token.substring(0, 10)}...`, constants.LOG_TYPES.TRACE);
   }
 
+  // If token wasn't specified throw an error
   if (!token) {
-    websocketHandler.sendLog(req, 'No token provided', constants.LOG_TYPES.ERROR);
     return next(
-      new AppError(req.t('auth.notLoggedIn'), 401)
+      new AppError('You are not logged in! Please log in to get access.', 401)
     );
   }
 
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  websocketHandler.sendLog(req, `Token decoded for user ID: ${decoded.id}`, constants.LOG_TYPES.DEBUG);
-
+  // 2) Token verification
+  // jwt.verify(token, process.env.JWT_SECRET) takes in a callback
+  // In order to not brake our async await way to deal with async code
+  // We can transform it into a promise using promisify from util pckg
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); 
+  // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
-  if (!currentUser) {
-    websocketHandler.sendLog(req, `User not found for ID: ${decoded.id}`, constants.LOG_TYPES.ERROR);
+  if (!currentUser)
     return next(
-      new AppError(req.t('auth.userNotFound'), 401)
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
     );
-  }
 
+  // 4) Check if user changed password after the token was issued
+  // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
-    websocketHandler.sendLog(req, `Password changed after token issuance for user: ${currentUser._id}`, constants.LOG_TYPES.ERROR);
     return next(
-      new AppError(req.t('auth.passwordChanged'), 401)
+      new AppError('User recently changed password. Please log in again.', 401)
     );
   }
 
-  req.user = currentUser;
-  websocketHandler.sendLog(req, `Access granted to user: ${currentUser._id}`, constants.LOG_TYPES.INFO);
+  req.user = currentUser;  
   next();
 });
 
-exports.forgotPassword = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting forgotPassword', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Password reset request for email: ${req.body.email}`, constants.LOG_TYPES.TRACE);
+// Authorization
+// IMPORTANT: We can use closure if we want to pass parameter to a function but
+// do not run it.
+// exports.restrictTo = (...roles) => {
+//   console.log('calling restrictTo');
+//   return (req, res, next) => {
+//     // roles ['admin', 'lead-guide'] role='user'
+//     if (!roles.includes(req.user.role)) {
+//       return next(
+//         new AppError('You do not have permission to perform this action', 403)
+//       );
+//     }
 
+//     next();
+//   };
+// };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
-  websocketHandler.sendLog(req, `Fetched user: ${user?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
-  if (!user) {
-    websocketHandler.sendLog(req, `No user found for email: ${req.body.email}`, constants.LOG_TYPES.ERROR);
+  if (!user) {    
     res.status(200).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('auth.forgotPasswordNoUser'),
+      message: 'No account found with this email address.',
       data: {
         user: null
       }
-    });
+    }); 
   }
+  // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
+  
+  // Deactivate all validators - thanks to it, we don't have to specify email
   await user.save({ validateBeforeSave: false });
-  websocketHandler.sendLog(req, `Generated reset token for user: ${user._id}`, constants.LOG_TYPES.INFO);
 
-  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;
+
+  // 3) Send it to user's email
+  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;  
   var companyId = process.env.DEFAULT_COMPANY_Id;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Forgot_Password).where('company').equals(companyId);
-  if (emailTemplate) {
-    const template = emailTemplate.contentData;
-    const message = template
-      .replace("{firstName}", user.firstName)
-      .replace("{url}", resetURL)
-      .replace("{lastName}", user.lastName);
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Forgot_Password).where('company').equals(companyId); 
+  if(emailTemplate)
+  {
+    const template = emailTemplate.contentData; 
+    
+    const message = template  
+    .replace("{firstName}", user.firstName)
+    .replace("{url}", resetURL)
+    .replace("{lastName}", user.lastName);
 
     try {
       await sendEmail({
@@ -573,208 +559,191 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         subject: emailTemplate.subject,
         message
       });
-      websocketHandler.sendLog(req, `Sent reset email to: ${user.email}`, constants.LOG_TYPES.INFO);
+      
     } catch (err) {
-      websocketHandler.sendLog(req, `Error sending email to ${user.email}: ${err.message}`, constants.LOG_TYPES.ERROR);
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
       return next(
-        new AppError(req.t('auth.emailSendFailure'), 500)
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
       );
     }
   }
   res.status(200).json({
-    status: constants.APIResponseStatus.Success
-  });
+    status: constants.APIResponseStatus.Success    
+  }); 
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting resetPassword', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Reset password attempt with token: ${req.params.token.substring(0, 10)}...`, constants.LOG_TYPES.TRACE);
-
-  const hashedToken = crypto
+  // 1) Get user based on the token
+    const hashedToken = crypto
     .createHash('sha256')
     .update(req.params.token)
     .digest('hex');
-
-  const user = await User.findOne({
+  
+    const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() }
   });
-  websocketHandler.sendLog(req, `Fetched user: ${user?._id || 'not found'} for token`, constants.LOG_TYPES.TRACE);
-
-  if (!user) {
-    websocketHandler.sendLog(req, `Invalid or expired token: ${hashedToken.substring(0, 10)}...`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.invalidOrExpiredToken'), 400));
-  }
-
+ 
+  // 2) If token has not expired, and there is user, set the new password
+  if (!user) return next(new AppError('Token is invalid or has expired', 400));
+  
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save();
-  websocketHandler.sendLog(req, `Password reset for user: ${user._id}`, constants.LOG_TYPES.INFO);
 
+  // 3) Update changedPasswordAt property for the user
+  // It is set every time that password property changes
+
+  // 4) Log the user in, send JWT
   createAndSendToken(user, 200, res);
 });
-
 exports.sendLog = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting sendLog', constants.LOG_TYPES.INFO);
-
-  const managerIds = await userSubordinate.find({}).distinct("userId");
-  websocketHandler.sendLog(req, `Fetched ${managerIds.length} manager IDs`, constants.LOG_TYPES.DEBUG);
-  if (managerIds) {
-    for (var i = 0; i < managerIds.length; i++) {
-      const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(managerIds[i]);
-      websocketHandler.sendLog(req, `Fetched ${managerTeamsIds.length} subordinate IDs for manager: ${managerIds[i]}`, constants.LOG_TYPES.DEBUG);
-      if (managerTeamsIds) {
-        /*
-        for(var j = 0; j < managerTeamsIds.length; j++) 
-        {       
-          const userSubordinates = await userSubordinate.find({}).where('subordinateUserId').equals(managerTeamsIds[j]._id);  
-          if(userSubordinates)
+ 
+  // Thanks to merging params in routers      
+  // Generate query based on request params
+  const managerIds = await userSubordinate.find({}).distinct("userId");  
+  if(managerIds)
+      {
+          for(var i = 0; i < managerIds.length; i++) 
           {
-          for(var k = 0; k < userSubordinates.length; k++) 
+            const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(managerIds[i]);      
+            if(managerTeamsIds)
             {
-            const timeLogs = await TimeLog.find({}).where('user').equals(userSubordinates[k].subordinateUserId.email).where('date').equals("2023-01-16");       
-            }
+              /*
+              for(var j = 0; j < managerTeamsIds.length; j++) 
+              {       
+                const userSubordinates = await userSubordinate.find({}).where('subordinateUserId').equals(managerTeamsIds[j]._id);  
+                if(userSubordinates)
+                {
+                for(var k = 0; k < userSubordinates.length; k++) 
+                  {
+                  const timeLogs = await TimeLog.find({}).where('user').equals(userSubordinates[k].subordinateUserId.email).where('date').equals("2023-01-16");       
+               
+                   }
+                }
+                
+              }
+              */
+            }           
           }
-        }
-        */
+          
       }
-    }
-  }
-
-  const userListmy = await User.find({}).where("status").equals(constants.User_Status.Active);
-  const userList = await User.find({}).where("email").equals("sapana@arsteg.com");
-  websocketHandler.sendLog(req, `Fetched ${userList.length} users for email: sapana@arsteg.com`, constants.LOG_TYPES.TRACE);
-
-  if (userList) {
-    for (var i = 0; i < userList.length; i++) {
-      try {
-        const timeLogs = await TimeLog.find({}).where('user').equals(userList[i].email).where('date').equals("2023-01-04");
-        websocketHandler.sendLog(req, `Fetched ${timeLogs.length} time logs for user: ${userList[i]._id}`, constants.LOG_TYPES.DEBUG);
-        for (const timeLog of timeLogs) {
-          timeLog.startTime = timeLog.startTime.getHours();
-        }
-        await sendEmailLog({
+ 
+  const userListmy = await User.find({}).where("status").equals(constants.User_Status.Active);  
+  const userList = await User.find({}).where("email").equals("sapana@arsteg.com");  
+   
+  if(userList)
+  {
+    for(var i = 0; i < userList.length; i++) {
+     try {
+      const timeLogs = await TimeLog.find({}).where('user').equals(userList[i].email).where('date').equals("2023-01-04");       
+      for (const timeLog of timeLogs) {       
+          timeLog.startTime = timeLog.startTime.getHours();        
+          } 
+       await sendEmailLog({
           email: userList[i].email,
           subject: 'Tracker Log',
-          data: {
-            name: userList[i].firstName + " " + userList[i].lastName,
-            total: '0.00',
-            logs: timeLogs,
-            managerName: userList[i].firstName + " " + userList[i].lastName
-          },
-          htmlPath: "home.pug"
+        data: {
+        name: userList[i].firstName+" "+userList[i].lastName,
+        total: '0.00',
+        logs:timeLogs,
+        managerName:userList[i].firstName+" "+userList[i].lastName
+        },
+        htmlPath: "home.pug"
         }).then(() => {
-          websocketHandler.sendLog(req, `Sent log email to: ${userList[i].email}`, constants.LOG_TYPES.INFO);
-          console.log('Email has been sent!');
+        console.log('Email has been sent!');
         }).catch((error) => {
-          websocketHandler.sendLog(req, `Error sending log email: ${error.message}`, constants.LOG_TYPES.ERROR);
-          console.log(error);
-        });
-      } catch (err) {
-        websocketHandler.sendLog(req, `Error processing logs for ${userList[i].email}: ${err.message}`, constants.LOG_TYPES.ERROR);
-        return next(
-          new AppError(req.t('auth.emailSendFailure'), 500)
-        );
-      }
+       console.log(error);
+        })  
+    } catch (err) {   
+      return next(
+        new AppError(
+          'There was an error sending the email. Try again later.',
+          500
+        )
+      )
+    }
+     
     }
   }
+ // const timeLogs = await TimeLog.find({}).where('user').equals("sapana@arsteg.com").where('date').equals('2023-01-04');    
 
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    message: req.t('auth.sendLogSuccess')
-  });
+ 
 });
-
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting updatePassword', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Updating password for user ID: ${req.body.id}`, constants.LOG_TYPES.TRACE);
 
+  // 1) Get user from collection
   const user = await User.findById(req.body.id).select('+password');
-  websocketHandler.sendLog(req, `Fetched user: ${user?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
-
+  // 2) Check if POSTed current password is correct 
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    websocketHandler.sendLog(req, `Incorrect current password for user: ${req.body.id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.incorrectCurrentPassword'), 401));
+    return next(new AppError('Your current password is wrong.', 401));
   }
-
+  // 3) If so, update password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
-  websocketHandler.sendLog(req, `Password updated for user: ${user._id}`, constants.LOG_TYPES.INFO);
 
+  // 4) Log user in, send JWT
   createAndSendToken(user, 200, res);
 });
-
 exports.updateUserbyinvitation = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting updateUserbyinvitation', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Updating user by invitation for ID: ${req.body.id}`, constants.LOG_TYPES.TRACE);
-
-  const user = await User.findById(req.body.id);
-  websocketHandler.sendLog(req, `Fetched user: ${user?._id || 'not found'}`, constants.LOG_TYPES.TRACE);
-
+  // 1) Get user from collection
+  const user = await User.findById(req.body.id); 
+  // 3) If so, update password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
-  user.address = req.body.passwordConfirm; // Note: This is unchanged as per original code
-  user.jobTitle = req.body.jobTitle;
-  user.city = req.body.city;
-  user.state = req.body.state;
-  user.country = req.body.country;
-  user.pincode = req.body.pincode;
-  user.phone = req.body.phone;
-  user.extraDetails = req.body.extraDetails;
+  user.address= req.body.passwordConfirm;
+  user.jobTitle=req.body.jobTitle;
+  user.city=req.body.city;
+  user.state=req.body.state;
+  user.country=req.body.country;
+  user.pincode=req.body.pincode;
+  user.phone=req.body.phone;
+  user.extraDetails=req.body.extraDetails;
   await user.save();
-  websocketHandler.sendLog(req, `User updated: ${user._id}`, constants.LOG_TYPES.INFO);
-
+  // 4) Log user in, send JWT
   createAndSendToken(user, 200, res);
 });
+
 
 exports.addRole = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting addRole', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Adding role: ${req.body.name} for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-
-  const newRole = await Role.create({
-    Name: req.body.name,
-    company: req.cookies.companyId,
-    active: true,
+  
+  
+  const newRole = await Role.create({    
+    Name:req.body.name,
+    company:req.cookies.companyId,
+    active:true,   
     createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())
-  });
-  websocketHandler.sendLog(req, `Role created: ${newRole._id}`, constants.LOG_TYPES.INFO);
-
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: {
-      Role: newRole
-    }
-  });
+    updatedOn: new Date(Date.now()) 
+});  
+res.status(200).json({
+  status: constants.APIResponseStatus.Success,
+  data: {
+    Role:newRole
+  }
+}); 
 });
 
-exports.deleteRole = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting deleteRole', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Deleting role with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const user = await User.find({}).where('role').equals(req.params.id);
-  websocketHandler.sendLog(req, `Checked users with role: ${req.params.id}, found: ${user.length}`, constants.LOG_TYPES.DEBUG);
+exports.deleteRole = catchAsync(async (req, res, next) => {  
+  const user = await User.find({}).where('role').equals(req.params.id);  
   if (user.length > 0) {
-    websocketHandler.sendLog(req, `Role ${req.params.id} is in use`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: req.t('auth.roleInUse')
+      message: 'Role is already in use. Please delete related records before deleting the Role.',
     });
   }
   const document = await Role.findByIdAndDelete(req.params.id);
   if (!document) {
-    websocketHandler.sendLog(req, `Role not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.roleNotFound'), 404));
+    return next(new AppError('No document found with that ID', 404));
   }
-  websocketHandler.sendLog(req, `Role deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
-
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
@@ -783,194 +752,148 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
 
 exports.updateRole = factory.updateOne(Role);
 
-exports.getRole = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getRole', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching role with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const role = await Role.find({}).where('_id').equals(req.params.id);
+exports.getRole = catchAsync(async (req, res, next) => {       
+  const role = await Role.find({}).where('_id').equals(req.params.id);   
   if (!role) {
-    websocketHandler.sendLog(req, `Role not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.roleNotFound'), 403));
-  }
-  websocketHandler.sendLog(req, `Role retrieved: ${role[0]?._id}`, constants.LOG_TYPES.INFO);
-
+    return next(new AppError('No role found', 403));
+  }  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: role
-  });
-});
+  });  
+ });
 
-exports.getRoles = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getRoles', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching roles for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-
-  const roles = await Role.find({}).where('company').equals(req.cookies.companyId);
+exports.getRoles = catchAsync(async (req, res, next) => {    
+  const roles = await Role.find({}).where('company').equals(req.cookies.companyId);  
   if (!roles) {
-    websocketHandler.sendLog(req, `No roles found for company: ${req.cookies.companyId}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.roleNotFound'), 403));
+    return next(new AppError('No role found', 403));
   }
-  websocketHandler.sendLog(req, `Retrieved ${roles.length} roles`, constants.LOG_TYPES.INFO);
-
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: roles
-  });
-});
-
-exports.addSubordinate = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting addSubordinate', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Adding subordinate ${req.body.subordinateUserId} to user: ${req.body.userId}`, constants.LOG_TYPES.TRACE);
-
-  const userSubordinates = await userSubordinate.find({}).where('userId').equals(req.body.userId).where('subordinateUserId').equals(req.body.subordinateUserId);
-  if (userSubordinates.length > 0) {
-    websocketHandler.sendLog(req, `Subordinate already exists for user: ${req.body.userId}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.subordinateExists'), 403));
-  } else {
+  });   
+ });
+ 
+exports.addSubordinate = catchAsync(async (req, res, next) => {    
+  
+  const userSubordinates = await userSubordinate.find({}).where('userId').equals(req.body.userId).where('subordinateUserId').equals(req.body.subordinateUserId);  
+  
+  if (userSubordinates.length>0) {
+    return next(new AppError('User subordinate already exists.', 403));
+  }
+  else{    
     const subordinate = await userSubordinate.create({
-      userId: req.body.userId,
-      subordinateUserId: req.body.subordinateUserId,
-      modifiedOn: new Date(Date.now()),
-      modifiedBy: req.cookies.userId
-    });
-    websocketHandler.sendLog(req, `Subordinate created: ${subordinate._id}`, constants.LOG_TYPES.INFO);
+      userId:req.body.userId,
+      subordinateUserId:req.body.subordinateUserId,
+      modifiedOn : new Date(Date.now()),
+      modifiedBy :  req.cookies.userId
+    }); 
 
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: subordinate
-    });
-  }
-});
+    });    
+  }});
 
-exports.getSubordinates = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getSubordinates', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching subordinates for user: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const ids = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(req.params.id);
-  websocketHandler.sendLog(req, `Fetched ${ids.length} subordinate IDs`, constants.LOG_TYPES.DEBUG);
-
+ exports.getSubordinates = catchAsync(async (req, res, next) => {  
+  const ids = await userSubordinate.find({}).distinct("subordinateUserId").where('userId' ).equals(req.params.id);   
+   
   const activeUsers = await User.find({
     _id: { $in: ids },
     active: true
   });
+  
   const activeUserIds = activeUsers.map(user => user._id);
-  websocketHandler.sendLog(req, `Retrieved ${activeUserIds.length} active subordinates`, constants.LOG_TYPES.INFO);
-
+  
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: activeUserIds
   });
-});
+      
+ });
 
-exports.deleteSubordinates = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting deleteSubordinates', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Deleting subordinate ${req.params.subordinateUserId} for user: ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-
-  userSubordinate.deleteOne({ userId: req.params.userId, subordinateUserId: req.params.subordinateUserId }, function (err) {
-    if (err) {
-      websocketHandler.sendLog(req, `Error deleting subordinate: ${err.message}`, constants.LOG_TYPES.ERROR);
-      console.log(err);
-    }
-    websocketHandler.sendLog(req, `Subordinate deleted successfully`, constants.LOG_TYPES.INFO);
+ exports.deleteSubordinates = catchAsync(async (req, res, next) => {  
+   userSubordinate.deleteOne({userId:req.params.userId,subordinateUserId:req.params.subordinateUserId}, function (err) {
+    if(err) console.log(err);
     console.log("Successful deletion");
   });
 
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: ''
-  });
-});
-
-exports.getRolePermission = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getRolePermission', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching role permission with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const rolePermission = await RolePermission.find({}).where('_id').equals(req.params.id);
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: ''
+    });    
+ });
+ //#region Role Permissions
+ exports.getRolePermission = catchAsync(async (req, res, next) => {
+  const rolePermission = await RolePermission.find({}).where('_id').equals(req.params.id);  
+  
   if (!rolePermission) {
-    websocketHandler.sendLog(req, `Role permission not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.getRolePermissionFailure'), 403));
-  }
-  websocketHandler.sendLog(req, `Role permission retrieved: ${rolePermission[0]?._id}`, constants.LOG_TYPES.INFO);
-
+    return next(new AppError('No Role Permission found', 403));
+  }  
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermission
-  });
+  });    
 });
 
-exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getAllRolePermissions', constants.LOG_TYPES.INFO);
-
-  const rolePermissions = await RolePermission.find({});
-  websocketHandler.sendLog(req, `Retrieved ${rolePermissions.length} role permissions`, constants.LOG_TYPES.INFO);
-
+exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
+  const rolePermissions = await RolePermission.find({});   
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermissions
-  });
+  });    
 });
 
-exports.createRolePermission = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting createRolePermission', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Creating role permission for role: ${req.body.roleId}, permission: ${req.body.permissionId}`, constants.LOG_TYPES.TRACE);
-
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);
-  if (rolePermissionexists.length > 0) {
-    websocketHandler.sendLog(req, `Role permission already exists for role: ${req.body.roleId}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
-  } else {
+exports.createRolePermission = catchAsync(async (req, res, next) => { 
+  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
+  
+  if (rolePermissionexists.length>0) {
+    return next(new AppError('Role Permission already exists.', 403));
+  }
+  else{    
     const rolePermission = await RolePermission.create({
-      roleId: req.body.roleId,
-      permissionId: req.body.permissionId,
-      company: req.cookies.companyId
+      roleId:req.body.roleId,
+      permissionId : req.body.permissionId,
+      company : req.cookies.companyId
     });
-    websocketHandler.sendLog(req, `Role permission created: ${rolePermission._id}`, constants.LOG_TYPES.INFO);
-
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: rolePermission
-    });
+    }); 
   }
+    
 });
 
 exports.updateRolePermission = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting updateRolePermission', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Updating role permission with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);
-  if (rolePermissionexists.length > 0) {
-    websocketHandler.sendLog(req, `Role permission already exists for role: ${req.body.roleId}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
-  } else {
-    const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-    if (!rolePermission) {
-      websocketHandler.sendLog(req, `Role permission not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('auth.deleteRolePermissionFailure'), 404));
-    }
-    websocketHandler.sendLog(req, `Role permission updated: ${rolePermission._id}`, constants.LOG_TYPES.INFO);
-
-    res.status(201).json({
-      status: constants.APIResponseStatus.Success,
-      data: rolePermission
-    });
+  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
+  
+  if (rolePermissionexists.length>0) {
+    return next(new AppError('Role Permission already exists.', 403));
   }
-});
-
-exports.deleteRolePermission = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting deleteRolePermission', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Deleting role permission with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  const rolePermission = await RolePermission.findByIdAndDelete(req.params.id);
+  else{ 
+  const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
+    new: true, // If not found - add new
+    runValidators: true // Validate data
+  });
   if (!rolePermission) {
-    websocketHandler.sendLog(req, `Role permission not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('auth.deleteRolePermissionFailure'), 404));
+    return next(new AppError('No Role Permission found with that ID', 404));
   }
-  websocketHandler.sendLog(req, `Role permission deleted: ${rolePermission._id}`, constants.LOG_TYPES.INFO);
-
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermission
-  });
+  }); 
+}   
 });
+
+exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
+  const rolePermission = await RolePermission.findByIdAndDelete(req.params.id);
+  if (!rolePermission) {
+    return next(new AppError('No Role Permission found with that ID', 404));
+  }
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: rolePermission
+  });    
+});
+
+ //#endregion
