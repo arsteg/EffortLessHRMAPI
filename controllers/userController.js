@@ -708,7 +708,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   websocketHandler.sendLog(req, 'Creating employee salary details record', constants.LOG_TYPES.DEBUG);
   const employeeSalaryDetails = await EmployeeSalaryDetails.create(req.body);
-
+  employeeSalaryDetails.BasicSalary = employeeSalaryDetails.Amount;
   const employeeSalaryTaxAndStatutorySetting =
     req.body.employeeSalaryTaxAndStatutorySetting.map((item) => {
       return {

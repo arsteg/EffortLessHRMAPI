@@ -339,7 +339,7 @@
             "notes": "Nil for females up to ₹25,000"
           },
           {
-            "fromAmount": 10001,
+            "fromAmount": 25000,
             "toAmount": null,
             "employeeAmount": 200,
             "twelfthMonthAmount": 300,

@@ -33,6 +33,10 @@ const employeeSalaryDetailsSchema = new Schema({
     type: Number,
     required: true
   },
+  BasicSalary: {
+    type: Number,
+    required: true
+  },
   totalCTCExcludingVariableAndOtherBenefits: {
     type: Number
   },
