@@ -41,7 +41,7 @@ exports.getFeedbackFieldById = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch feedback field. Field ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Feedback field not found',
+        message: req.t('feedback.feedbackFieldNotFound'),
       });
     }
 
@@ -69,7 +69,7 @@ exports.getFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch feedback fields. No fields found for Company ID: ${companyId}`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'No feedback fields found for this company',
+        message:  req.t('feedback.noFeedbackFieldsForCompany'),
       });
     }
 
@@ -99,7 +99,7 @@ exports.updateFeedbackField = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to update feedback field. Field ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Feedback field not found',
+        message: req.t('feedback.feedbackFieldNotFound'),
       });
     }
 
@@ -125,7 +125,7 @@ exports.deleteFeedbackField = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to delete feedback field. Field ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Feedback field not found',
+        message: req.t('feedback.feedbackFieldNotFound'),
       });
     }
 
@@ -153,9 +153,9 @@ exports.submitFeedback = catchAsync(async (req, res, next) => {
 
     for (const fv of req.body.feedbackValues) {
       const field = fieldMap.get(fv.field);
-      if (!field) throw new Error(`Invalid feedback field ID: ${fv.field}`);
+      if (!field) throw new Error(req.t('feedback.invalidFeedbackFieldId', { fieldId: fv.field }));
       if (field.isRequired && (fv.value === undefined || fv.value === null)) {
-        throw new Error(`Value for required field '${field.name}' is missing`);
+        throw new Error(req.t('feedback.requiredFieldMissing', { fieldName: field.name }))
       }
       // Add more type validation if needed (e.g., check dataType matches value)
     }
@@ -194,7 +194,7 @@ exports.getFeedbackById = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch feedback. Feedback ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Feedback not found',
+        message: req.t('feedback.feedbackNotFound'),
       });
     }
 
@@ -228,7 +228,7 @@ exports.getFeedbackByStore = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch feedback. No feedback found for Store ID: ${req.params.storeId}`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'No feedback found for this store',
+        message: req.t('feedback.noFeedbackForStore'),
       });
     }
 
@@ -263,7 +263,7 @@ exports.getFeedbackByCompany = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch feedback. No feedback found for Company ID: ${req.params.companyId}`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'No feedback found for this company',
+        message: req.t('feedback.noFeedbackForCompany'),
       });
     }
 
@@ -289,7 +289,7 @@ exports.deleteFeedback = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to delete feedback. Feedback ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Feedback not found',
+        message:req.t('feedback.feedbackNotFound'),
       });
     }
 
@@ -318,7 +318,7 @@ exports.createBarcode = catchAsync(async (req, res, next) => {
     const {name,storeId, tableId, url } = req.body;
     const companyId = req.cookies.companyId;
     if (!storeId || !tableId || !url) {
-      throw new Error('storeId, tableId, and url are required');
+      throw new Error(req.t('feedback.barcodeRequiredFieldsMissing'))
     }    
     const fullURL = `${process.env.WEBSITE_DOMAIN}${url}&companyId=${req.cookies.companyId}`
     const qrCodeDataUrl = await QRCode.toDataURL(fullURL); // Generate QR code as base64
@@ -357,7 +357,7 @@ exports.getBarcodesByCompany = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch barcodes. No barcodes found for Company ID: ${companyId}`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'No barcodes found for this company',
+        message: req.t('feedback.noBarcodesForCompany'),
       });
     }
 
@@ -383,7 +383,7 @@ exports.getBarcodeById = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to fetch barcode. Barcode ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Barcode not found',
+        message: req.t('feedback.barcodeNotFound'),
       });
     }
 
@@ -417,7 +417,7 @@ exports.updateBarcode = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to update barcode. Barcode ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Barcode not found',
+        message:req.t('feedback.barcodeNotFound')
       });
     }
 
@@ -443,7 +443,7 @@ exports.deleteBarcode = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User failed to delete barcode. Barcode ID: ${req.params.id} not found`);
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Barcode not found',
+        message: req.t('feedback.barcodeNotFound')
       });
     }
 

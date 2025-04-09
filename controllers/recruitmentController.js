@@ -62,7 +62,8 @@ exports.deleteSkill = catchAsync(async (req, res, next) => {
   
   if (!skill) {
       websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No skill found with that ID', 404));
+      return next(new AppError(req.t('recruitment.skillNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully deleted skill with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -84,7 +85,9 @@ exports.updateSkill = catchAsync(async (req, res, next) => {
   
   if (!skill) {
       websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No skill found with that ID', 404));
+      return next(new AppError(req.t('recruitment.skillNotFound'), 404)
+
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully updated skill ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -170,7 +173,9 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
   
   if (!role) {
       websocketHandler.sendLog(req, `No role found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No Role found with that ID', 404));
+      return next(new AppError(req.t('recruitment.roleNotFound'), 404)
+
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully deleted role with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -191,7 +196,8 @@ exports.updateRole = catchAsync(async (req, res, next) => {
   
   if (!role) {
       websocketHandler.sendLog(req, `No role found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No Role found with that ID', 404));
+      return next(new AppError(req.t('recruitment.roleNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully updated role ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -254,7 +260,8 @@ exports.deleteIndustry = catchAsync(async (req, res, next) => {
   
   if (!industry) {
       websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No Industry found with that ID', 404));
+      return next(new AppError(req.t('recruitment.industryNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully deleted industry with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -275,7 +282,8 @@ exports.updateIndustry = catchAsync(async (req, res, next) => {
   
   if (!industry) {
       websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No Industry found with that ID', 404));
+      return next(new AppError(req.t('recruitment.industryNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully updated industry ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -298,7 +306,9 @@ exports.updateIndustry = catchAsync(async (req, res, next) => {
 
   if (!updatedIndustry) {
       websocketHandler.sendLog(req, `No industry found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No Industry found with that ID', 404));
+      return next(new AppError(req.t('recruitment.industryNotFound'), 404)
+
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully updated industry ID: ${req.params.id}`, constants.LOG_TYPES.INFO);

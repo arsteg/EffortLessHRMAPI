@@ -95,13 +95,15 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.findById(req.params.id);
   if (!resignation) {
     websocketHandler.sendLog(req, `Resignation ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Resignation not found', 404));
+    return next(new AppError(req.t('separation.resignationNotFound'), 404)
+  );
   }
   websocketHandler.sendLog(req, `Found resignation with status: ${resignation.resignation_status}`, constants.LOG_TYPES.DEBUG);
 
   if (resignation.resignation_status !== constants.Resignation_Status.Pending) {
     websocketHandler.sendLog(req, `Cannot update resignation ${req.params.id}: status is ${resignation.resignation_status}`, constants.LOG_TYPES.WARN);
-    return next(new AppError('Resignation status must be pending to update', 400));
+    return next(new AppError(req.t('separation.resignationMustBePending'), 400)
+  );
   }
 
   websocketHandler.sendLog(req, `Updating resignation ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -124,14 +126,14 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   const validStatuses = [constants.Resignation_Status.Approved, constants.Resignation_Status.InProgress, constants.Resignation_Status.Completed,constants.Resignation_Status.Deleted];
   if (!validStatuses.includes(resignation_status)) {
   websocketHandler.sendLog(req, `Invalid resignation status: ${resignation_status}`, constants.LOG_TYPES.ERROR);
-  return next(new AppError('Invalid resignation status provided. Valid statuses are: Pending, Completed, Appealed , Deleted.', 400));
+  return next(new AppError(req.t('separation.invalidResignationStatus'), 400));
   }
 
   websocketHandler.sendLog(req, `Fetching resignation ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const resignation = await Resignation.findById(req.params.id);
   if (!resignation) {
   websocketHandler.sendLog(req, `Resignation ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-  return next(new AppError('Resignation not found', 404));
+  return next(new AppError(req.t('separation.resignationNotFound'), 404));
   }
  
   resignation.resignation_status = req.body.resignation_status;
@@ -143,7 +145,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   const user = await User.findById(resignation.user);
   if (!user) {
   websocketHandler.sendLog(req, `User ${resignation.user} not found`, constants.LOG_TYPES.ERROR);
-  return next(new AppError('User not found', 404));
+  return next(new AppError(req.t('separation.userNotFound'), 404));
   }
  
   user.status = constants.User_Status.Resigned;
@@ -240,7 +242,8 @@ exports.updateTermination = catchAsync(async (req, res, next) => {
 
   if (!termination || termination.termination_status !== constants.Termination_status.Pending) {
     websocketHandler.sendLog(req, `Termination ${req.params.id} not found or not pending`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Termination not found or not in pending status', 400));
+    return next(new AppError(req.t('separation.terminationNotFoundOrNotPending'), 400)
+  );
   }
   websocketHandler.sendLog(req, `Found termination with status: ${termination.termination_status}`, constants.LOG_TYPES.DEBUG);
 
@@ -264,14 +267,16 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
  const validStatuses = [constants.Termination_status.Appealed, constants.Termination_status.Completed];
  if (!validStatuses.includes(termination_status)) {
  websocketHandler.sendLog(req, `Invalid termination status: ${termination_status}`, constants.LOG_TYPES.ERROR);
- return next(new AppError('Invalid termination status provided. Valid statuses are: pending, completed, appealed.', 400));
+ return next(new AppError(req.t('separation.invalidTerminationStatus'), 400)
+);
  }
 
  websocketHandler.sendLog(req, `Fetching termination ${req.params.id}`, constants.LOG_TYPES.TRACE);
  const termination = await Termination.findById(req.params.id);
  if (!termination) {
  websocketHandler.sendLog(req, `Termination ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
- return next(new AppError('Termination record not found', 404));
+ return next(new AppError(req.t('separation.terminationRecordNotFound'), 404)
+);
  }
 
  termination.termination_status = termination_status;
@@ -283,9 +288,9 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
  const user = await User.findById(termination.user);
  if (!user) {
  websocketHandler.sendLog(req, `User ${termination.user} not found`, constants.LOG_TYPES.ERROR);
- return next(new AppError('User not found', 404));
+ return next(new AppError(req.t('separation.userNotFound'), 404)
+);
  }
-
  user.status = constants.User_Status.Terminated;
  await user.save();
  websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
@@ -303,7 +308,8 @@ exports.createSeparationType = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('separation.companyIdNotFound'), 400)
+  );
   }
   websocketHandler.sendLog(req, `Using company ID: ${companyId}`, constants.LOG_TYPES.DEBUG);
 
@@ -348,7 +354,9 @@ exports.updateSeparationType = catchAsync(async (req, res, next) => {
 
   if (!separationType) {
     websocketHandler.sendLog(req, `Separation type ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('SeparationType not found', 404));
+    return next(new AppError(req.t('separation.separationTypeNotFound'), 404)
+
+  );
   }
 
   websocketHandler.sendLog(req, `Separation type ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
@@ -372,7 +380,7 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Separation Type is already in use. Please delete related records before deleting the Separation Type.',
+      message: req.t('separation.separationTypeInUse'),
     });
   }
 
@@ -380,7 +388,8 @@ exports.deleteSeparationType = catchAsync(async (req, res, next) => {
   const separationType = await SeparationType.findByIdAndDelete(req.params.id);
   if (!separationType) {
     websocketHandler.sendLog(req, `Separation type ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('SeparationType not found', 404));
+    return next(new AppError(req.t('separation.separationTypeNotFound'), 404)
+  );
   }
 
   websocketHandler.sendLog(req, `Deleted separation type ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -411,7 +420,8 @@ exports.createExitInterviewQuestion = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('separation.companyIdNotFound'), 400)
+  );
   }
   websocketHandler.sendLog(req, `Using company ID: ${companyId}`, constants.LOG_TYPES.DEBUG);
 
@@ -456,9 +466,9 @@ exports.updateExitInterviewQuestion = catchAsync(async (req, res, next) => {
 
   if (!exitInterviewQuestion) {
     websocketHandler.sendLog(req, `Exit interview question ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('ExitInterviewQuestion not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewQuestionNotFound'), 404)
+);
   }
-
   websocketHandler.sendLog(req, `Exit interview question ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
@@ -477,7 +487,7 @@ exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Exit Interview Question is already in use. Please delete related records before deleting the Exit Interview Question.',
+      message: req.t('separation.ExitInterviewQuestionAlreadyInUse'),
     });
   }
 
@@ -485,7 +495,8 @@ exports.deleteExitInterviewQuestion = catchAsync(async (req, res, next) => {
   const exitInterviewQuestion = await ExitInterviewQuestion.findById(req.params.id);
   if (!exitInterviewQuestion) {
     websocketHandler.sendLog(req, `Exit interview question ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('ExitInterviewQuestion not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewQuestionNotFound'), 404)
+  );
   }
 
   await exitInterviewQuestion.remove();
@@ -535,7 +546,8 @@ exports.updateExitInterviewOptions = catchAsync(async (req, res, next) => {
   });
 
   if (!exitInterviewOptions) {
-    return next(new AppError('ExitInterviewQuestionOptions not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewOptionsNotFound'), 404)
+  );
   }
 
   res.status(200).json({
@@ -552,7 +564,8 @@ exports.deleteExitInterviewOptions = catchAsync(async (req, res, next) => {
 
   if (!exitInterviewOptions) {
     websocketHandler.sendLog(req, `Exit interview options ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('ExitInterviewQuestionOptions not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewOptionsNotFound'), 404)
+  );
   }
 
   websocketHandler.sendLog(req, `Deleted exit interview options ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -651,7 +664,8 @@ exports.updateExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 
   if (!exitInterviewQuestionAnswer) {
     websocketHandler.sendLog(req, `Exit interview question answer ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Exit Interview Question Answer not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewAnswerNotFound'), 404)
+);
   }
 
   websocketHandler.sendLog(req, `Exit interview question answer ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
@@ -671,7 +685,9 @@ exports.deleteExitInterviewQuestionAnswer = catchAsync(async (req, res, next) =>
 
   if (!exitInterviewQuestionAnswer) {
     websocketHandler.sendLog(req, `Exit interview question answer ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Exit Interview Question Answer not found', 404));
+    return next(new AppError(req.t('separation.exitInterviewAnswerNotFound'), 404)
+
+  );
   }
 
   websocketHandler.sendLog(req, `Deleted exit interview question answer ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -714,7 +730,8 @@ exports.createSeparationTemplateSetting = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('separation.companyIdNotFound'), 400)
+  );
   }
   websocketHandler.sendLog(req, `Using company ID: ${companyId}`, constants.LOG_TYPES.DEBUG);
 
@@ -763,7 +780,8 @@ exports.updateSeparationTemplateSetting = catchAsync(async (req, res, next) => {
 
   if (!separationTemplateSetting) {
     websocketHandler.sendLog(req, `Separation template setting ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Separation Template Setting not found', 404));
+    return next(new AppError(req.t('separation.separationTemplateSettingNotFound'), 404)
+  );
   }
 
   websocketHandler.sendLog(req, `Separation template setting ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
@@ -782,7 +800,8 @@ exports.deleteSeparationTemplateSetting = catchAsync(async (req, res, next) => {
 
   if (!separationTemplateSetting) {
     websocketHandler.sendLog(req, `Separation template setting ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Separation Template Setting not found', 404));
+    return next(new AppError(req.t('separation.separationTemplateSettingNotFound'), 404)
+  );
   }
 
   websocketHandler.sendLog(req, `Deleted separation template setting ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -848,7 +867,9 @@ exports.updateInitiateSeparationRequest = catchAsync(async (req, res, next) => {
 
   if (!initiateSeparationRequest) {
     websocketHandler.sendLog(req, `Initiate separation request ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('InitiateSeparationRequest not found', 404));
+    return next(new AppError(req.t('separation.initiateSeparationRequestNotFound'), 404)
+
+  );
   }
 
   websocketHandler.sendLog(req, `Initiate separation request ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
@@ -867,7 +888,9 @@ exports.deleteInitiateSeparationRequest = catchAsync(async (req, res, next) => {
 
   if (!initiateSeparationRequest) {
     websocketHandler.sendLog(req, `Initiate separation request ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('InitiateSeparationRequest not found', 404));
+    return next(new AppError(req.t('separation.initiateSeparationRequestNotFound'), 404)
+
+  );
   }
 
   websocketHandler.sendLog(req, `Deleted initiate separation request ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -935,7 +958,9 @@ exports.updateSeparationRequest = catchAsync(async (req, res, next) => {
 
   if (!separationRequest) {
     websocketHandler.sendLog(req, `Separation request ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('Separation Request not found', 404));
+    return next(new AppError(req.t('separation.separationRequestNotFound'), 404)
+
+  );
   }
 
   websocketHandler.sendLog(req, `Separation request ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);

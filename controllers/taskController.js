@@ -41,7 +41,8 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Task deletion prevented due to existing time logs', constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'TimeLog is already added for the task, We can`t delete task.',
+      message: req.t('task.timeLogExists')
+      ,
     });
   }
 
@@ -75,7 +76,8 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
           const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
           if (!document) {
             websocketHandler.sendLog(req, `TaskUser ${newTaskUserList[j]._id} not found for deletion`, constants.LOG_TYPES.ERROR);
-            return next(new AppError('No document found with that ID', 404));
+            return next(new AppError(req.t('task.documentNotFound')
+            , 404));
           } else {
             try {
               await sendEmail({
@@ -113,7 +115,8 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid project ${req.body.project} for task update`, constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid project',
+      message: req.t('task.invalidProject')
+      ,
     });
   }
 
@@ -132,7 +135,8 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
   if (!task) {
     websocketHandler.sendLog(req, `Task ${req.params.id} not found for update`, constants.LOG_TYPES.ERROR);
-    return res.status(404).send({ error: 'Task not found' });
+    return res.status(404).send({ error: req.t('task.taskNotFound')
+    });
   }
 
   const emailTemplate = await EmailTemplate.findOne({})
@@ -345,7 +349,8 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   
   if (!taskUserResults || !taskCountResult) {
     websocketHandler.sendLog(req, 'Failed to execute aggregation queries', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Failed to fetch task list', 500));
+    return next(new AppError(req.t('task.failedToFetchTaskList')
+    , 500));
   }
 
   websocketHandler.sendLog(req, `Aggregation results - tasks: ${taskUserResults.length}, count: ${taskCountResult.length}`, constants.LOG_TYPES.INFO);
@@ -501,7 +506,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid user ${req.body.user} or task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid user / task',
+      message: req.t('task.invalidUserOrTask') ,
     });
   }
   websocketHandler.sendLog(req, 'User and task validated successfully', constants.LOG_TYPES.DEBUG);
@@ -513,7 +518,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
 
   if (taskUsersexists.length > 0) {
     websocketHandler.sendLog(req, `TaskUser already exists for ID ${req.params.id}`, constants.LOG_TYPES.WARN);
-    return next(new AppError('Task User already exists.', 403));
+    return next(new AppError(req.t('task.taskUserAlreadyExists')    , 403));
   }
 
   websocketHandler.sendLog(req, `Updating TaskUser ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -524,7 +529,9 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
 
   if (!document) {
     websocketHandler.sendLog(req, `TaskUser ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound')
+
+    , 404));
   }
 
   const emailTemplate = await EmailTemplate.findOne({})
@@ -578,7 +585,8 @@ exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
     runValidators: true // Validate data
   });
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound')
+    , 404));
   }
   res.status(201).json({
     status:constants.APIResponseStatus.Success,
@@ -598,7 +606,7 @@ exports.updateTaskAttachments = catchAsync(async (req, res, next) => {
 
   if (!document) {
     websocketHandler.sendLog(req, `TaskAttachment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound'), 404));
   }
 
   websocketHandler.sendLog(req, `TaskAttachment ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
@@ -622,7 +630,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'A task with this name already exists',
+      message: req.t('task.taskAlreadyExists'),
     });
   }
 
@@ -633,7 +641,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Invalid user / project',
+      message: req.t('task.invalidUserOrTask')  ,
     });
   }
   websocketHandler.sendLog(req, 'User and project validated', constants.LOG_TYPES.DEBUG);
@@ -720,7 +728,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
           !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
           !req.body.taskAttachments[i].file) {
         websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-        return res.status(400).json({ error: 'All attachment properties must be provided' });
+        return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+
+        });
       }
       req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
       const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
@@ -806,7 +816,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid user ${req.body.user} or task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid user / task',
+      message: req.t('task.invalidUserOrTask')      ,
     });
   }
   websocketHandler.sendLog(req, 'User and task validated', constants.LOG_TYPES.DEBUG);
@@ -822,7 +832,9 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User ${req.body.user} already assigned to task ${req.body.task}`, constants.LOG_TYPES.WARN);
       return res.status(200).json({
         status: constants.APIResponseStatus.Failure,
-        data: { Error: "Same user already assigned" }
+        data: { Error: req.t('task.sameUserAlreadyAssigned')
+
+        }
       });
     }
     newTaskUserItem = await TaskUser.findByIdAndUpdate(taskUsersExists[0].id, req.body, {
@@ -925,7 +937,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
   const document = await TaskUser.findByIdAndDelete(req.params.id);
   if (!document) {
     websocketHandler.sendLog(req, `TaskUser ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound')    , 404));
   }
   websocketHandler.sendLog(req, `Deleted TaskUser ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -962,7 +974,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.taskId}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid task',
+      message: req.t('task.invalidUserOrTask')      ,
     });
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.taskId}`, constants.LOG_TYPES.DEBUG);
@@ -972,7 +984,9 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
         !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
         !req.body.taskAttachments[i].file) {
       websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-      return res.status(400).json({ error: 'All attachment properties must be provided' });
+      return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+
+      });
     }
     req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
     const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
@@ -1016,7 +1030,9 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
   const document = await TaskAttachments.findByIdAndDelete(req.params.id);
   if (!document) {
     websocketHandler.sendLog(req, `TaskAttachment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound')
+
+    , 404));
   }
   websocketHandler.sendLog(req, `Deleted TaskAttachment ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -1271,7 +1287,9 @@ exports.addTag = catchAsync(async (req, res, next) => {
 
   if (tagExists.length > 0) {
     websocketHandler.sendLog(req, `Tag ${req.body.title} already exists`, constants.LOG_TYPES.WARN);
-    res.status(403).send({ error: 'Tag already exists.' });
+    res.status(403).send({ error: (req.t('task.tagAlreadyExists'), 403)
+
+    });
   } else {
     const newTag = await Tag.create({
       title: req.body.title,
@@ -1306,7 +1324,9 @@ exports.updateTag = catchAsync(async (req, res, next) => {
 
   if (tagExists.length === 0) {
     websocketHandler.sendLog(req, `Tag ${req.body.id} does not exist`, constants.LOG_TYPES.ERROR);
-    res.status(403).send({ error: `Tag doesn't exist.` });
+    res.status(403).send({ error: req.t('task.documentNotFound')
+
+    });
   } else {
     tagExists.title = req.body.title;
     const newTag = await Tag.updateOne({ _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title } }).exec();
@@ -1329,7 +1349,7 @@ exports.deleteTagById = async (req, res) => {
     websocketHandler.sendLog(req, `Cannot delete tag ${req.params.id} due to existing task associations`, constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Tag is already added for the task, We can`t delete it.',
+      message: req.t('task.tagInUse')      ,
     });
   }
 
@@ -1343,7 +1363,9 @@ exports.deleteTagById = async (req, res) => {
     res.send(tag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting tag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 
@@ -1360,7 +1382,9 @@ exports.getTagById = async (req, res) => {
     res.send(tag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching tag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 
@@ -1399,7 +1423,9 @@ exports.getTags = async (req, res) => {
     res.send(tags);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching tags: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 //end tag management
@@ -1416,7 +1442,9 @@ exports.createTaskTag = async (req, res) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task} or tag ${req.body.tag}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid task / tag',
+      message: req.t('task.invalidTaskOrTag')
+
+      ,
     });
   }
   websocketHandler.sendLog(req, 'Task and tag validated', constants.LOG_TYPES.DEBUG);
@@ -1489,7 +1517,9 @@ exports.getTaskTagById = async (req, res) => {
     res.send(taskTag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching TaskTag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 
@@ -1502,7 +1532,7 @@ exports.updateTaskTagById = async (req, res) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task} or tag ${req.body.tag}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid task / tag',
+      message: req.t('task.invalidTaskOrTag')  ,
     });
   }
   websocketHandler.sendLog(req, 'Task and tag validated', constants.LOG_TYPES.DEBUG);
@@ -1537,7 +1567,9 @@ exports.deleteTaskTagById = async (req, res) => {
     res.send(taskTag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting TaskTag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 
@@ -1554,7 +1586,9 @@ exports.createComment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid task',
+      message: req.t('task.invalidUserOrTask')
+
+      ,
     });
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.task}`, constants.LOG_TYPES.DEBUG);
@@ -1575,7 +1609,9 @@ exports.createComment = catchAsync(async (req, res, next) => {
           !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
           !req.body.taskAttachments[i].file) {
         websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-        return res.status(400).json({ error: 'All attachment properties must be provided' });
+        return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+
+        });
       }
       req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
       const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
@@ -1664,7 +1700,9 @@ exports.getCommentById = async (req, res) => {
     res.send(comment);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching comment ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
+    res.status(500).send({ error: req.t('task.serverError')
+
+    });
   }
 };
 
@@ -1676,7 +1714,7 @@ exports.updateComment = async (req, res) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid task',
+      message:req.t('task.invalidUserOrTask')      ,
     });
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.task}`, constants.LOG_TYPES.DEBUG);
@@ -1687,7 +1725,9 @@ exports.updateComment = async (req, res) => {
   });
   if (!document) {
     websocketHandler.sendLog(req, `Comment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('task.documentNotFound')
+
+    , 404));
   }
   websocketHandler.sendLog(req, `Updated comment ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -1746,7 +1786,9 @@ exports.deleteComment = async (req, res) => {
       res.status(200).json({ message: 'Comment deleted successfully' });
     } else {
       websocketHandler.sendLog(req, `Comment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-      res.status(404).json({ message: 'Comment not found' });
+      res.status(404).json({ message: req.t('task.documentNotFound')
+
+      });
     }
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting comment ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);

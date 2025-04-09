@@ -78,7 +78,9 @@ exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
     const preferenceCategory = preferenceCategories.find(category => category.name === name);
     if (!preferenceCategory) {
         websocketHandler.sendLog(req, `Preference category '${name}' not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError('Preference category not found', 404));
+        return next(new AppError(req.t('userPreferences.categoryNotFound')
+
+        , 404));
     }
     
     websocketHandler.sendLog(req, `Successfully retrieved preference category: ${name}`, constants.LOG_TYPES.INFO);
@@ -105,7 +107,9 @@ exports.getPreferenceOption = catchAsync(async (req, res, next) => {
     const preferenceOption = PreferenceOptions.find(option => option._id === req.params.id);
     if (!preferenceOption) {
         websocketHandler.sendLog(req, `Preference option with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError('Preference option not found', 404));
+        return next(new AppError(req.t('userPreferences.optionNotFound')
+
+        , 404));
     }
     
     websocketHandler.sendLog(req, `Successfully retrieved preference option: ${preferenceOption.name}`, constants.LOG_TYPES.INFO);
@@ -122,7 +126,9 @@ exports.getPreferenceOptionByCategory = catchAsync(async (req, res, next) => {
     const preferenceOption = PreferenceOptions.filter(option => option.category === req.params.categoryId);
     if (!preferenceOption.length) {
         websocketHandler.sendLog(req, `No preference options found for category ${req.params.categoryId}`, constants.LOG_TYPES.WARN);
-        return next(new AppError('Preference option not found', 404));
+        return next(new AppError(req.t('userPreferences.optionNotFound')
+
+        , 404));
     }
     
     websocketHandler.sendLog(req, `Found ${preferenceOption.length} preference options for category ${req.params.categoryId}`, constants.LOG_TYPES.INFO);
@@ -156,7 +162,9 @@ exports.createUserPreference = catchAsync(async (req, res, next) => {
         
         if (userPreferenceExists) {
             websocketHandler.sendLog(req, `Preference already exists for user ${user}`, constants.LOG_TYPES.WARN);
-            return next(new AppError('given preference already exists', 400));
+            return next(new AppError(req.t('userPreferences.preferenceExists')
+
+            , 400));
         }
         
         userPreference = new UserPreference(req.body);
@@ -236,7 +244,9 @@ exports.updateUserPreference = catchAsync(async (req, res, next) => {
 
     if (!userPreference) {
         websocketHandler.sendLog(req, `User preference with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError('User preference not found', 404));
+        return next(new AppError(req.t('userPreferences.preferenceNotFound')
+
+        , 404));
     }
 
     websocketHandler.sendLog(req, `Successfully updated user preference with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -254,7 +264,9 @@ exports.deleteUserPreference = catchAsync(async (req, res, next) => {
     
     if (!userPreference) {
         websocketHandler.sendLog(req, `User preference with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError('User preference not found', 404));
+        return next(new AppError(req.t('userPreferences.preferenceNotFound')
+
+        , 404));
     }
     
     websocketHandler.sendLog(req, `Successfully deleted user preference with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);

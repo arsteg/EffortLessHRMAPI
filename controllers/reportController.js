@@ -187,7 +187,7 @@ exports.getActivity = catchAsync(async (req, res, next) => {
       });
   } catch (error) {
       websocketHandler.sendLog(req, `Error in getActivity: ${error.message}`, constants.LOG_TYPES.ERROR);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: req.t('report.internalServerError') });
   }    
 });
 

@@ -38,7 +38,7 @@ exports.createSoftware = catchAsync(async (req, res, next) => {
     {
       res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Label already in use for another software',
+        message: req.t('pricing.LabelAlreadyInUse'),
       });
     }
     else{
@@ -66,7 +66,7 @@ if(softwareExists)
 {
     res.status(500).json({
     status: constants.APIResponseStatus.Failure,
-    message: 'Label already in use for another software',
+    message: req.t('pricing.LabelAlreadyInUse'),
   });
 }
 else
@@ -88,7 +88,7 @@ exports.deleteSoftware = catchAsync(async (req, res, next) => {
 const softwareInstance = await Software.findById(req.params.id);
 await softwareInstance.remove();
 if (!softwareInstance) {
-  return next(new AppError('Expense category not found', 404));
+  return next(new AppError(req.t('pricing.categoryNotFound'), 404));
 }
 
 return res.status(204).json({
@@ -112,7 +112,7 @@ exports.createOption = catchAsync(async (req, res, next) => {
     {
       res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Label already in use for another option',
+        message: req.t('pricing.LabelAlreadyInUseForAnotherOption'),
       });
     }
     else{
@@ -140,7 +140,7 @@ if(optionExists)
 {
     res.status(500).json({
     status: constants.APIResponseStatus.Failure,
-    message: 'Label already in use for another option',
+    message: req.t('pricing.LabelAlreadyInUseForAnotherOption'),
   });
 }
 else
@@ -162,7 +162,7 @@ exports.deleteOption = catchAsync(async (req, res, next) => {
 const optionInstance = await Option.findById(req.params.id);
 await optionInstance.remove();
 if (!optionInstance) {
-  return next(new AppError('Expense category not found', 404));
+  return next(new AppError(req.t('pricing.categoryNotFound'), 404));
 }
 
 return res.status(204).json({
@@ -188,7 +188,7 @@ exports.createPlan = catchAsync(async (req, res, next) => {
     {
       res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Label already in use for another Plan',
+        message: req.t('pricing.LabelAlreadyInUseForAnotherPlan'),
       });
     }
     else{
@@ -275,7 +275,7 @@ if(planExists)
 {
     res.status(500).json({
     status: constants.APIResponseStatus.Failure,
-    message: 'Name already in use for Same Software',
+    message: req.t('pricing.NameAlreadyInUseForSameSoftware'),  
   });
 }
 else
@@ -296,7 +296,7 @@ exports.deletePlan = catchAsync(async (req, res, next) => {
 const planInstance = await Plan.findById(req.params.id);
 await planInstance.remove();
 if (!planInstance) {
-  return next(new AppError('Expense category not found', 404));
+  return next(new AppError(req.t('common.recordNotFound'), 404));
 }
 
 return res.status(204).json({
@@ -337,7 +337,7 @@ exports.addOptionInclusionDetails = async (req, res, next) => {
     if (!existingPlan || !existingOption) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Invalid plan or option ID',
+        message: req.t('pricing.InvalidPlan'),
       });
     }
 
@@ -357,7 +357,7 @@ exports.addOptionInclusionDetails = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message:req.t('common.InternalServerError'),
     });
   }
 };
@@ -373,7 +373,7 @@ exports.removeOptionInclusionDetails = async (req, res, next) => {
     if (!optionIncluded) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Option Inclusion Details not found',
+        message: req.t('pricing.optioninclusionNotFound'),
       });
     }
 
@@ -382,13 +382,13 @@ exports.removeOptionInclusionDetails = async (req, res, next) => {
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Option successfully removed from the plan',
+      message: req.t('pricing.OptionSuccessfullyRemoved'),
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -404,7 +404,7 @@ exports.getOptionInclusionDetails = async (req, res, next) => {
     if (!optionIncluded) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Option Inclusion Details not found',
+        message: req.t('pricing.optioninclusionNotFound'),
       });
     }
 
@@ -416,7 +416,7 @@ exports.getOptionInclusionDetails = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -440,7 +440,7 @@ exports.updateOptionInclusionDetails = catchAsync(async (req, res, next) => {
   );
 
   if (!optionIncluded) {
-    return next(new AppError('Option Inclusion Details not found', 404));
+    return next(new AppError(req.t('pricing.optioninclusionNotFound'), 404));
   }
 
   res.status(200).json({
@@ -472,7 +472,7 @@ exports.addOffer = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'), 
     });
   }
 };
@@ -488,7 +488,7 @@ exports.removeOffer = async (req, res, next) => {
     if (!offer) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Offer Inclusion Details not found',
+        message: req.t('pricing.offerinclusionNotFound'),
       });
     }
 
@@ -497,13 +497,13 @@ exports.removeOffer = async (req, res, next) => {
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Offer successfully removed',
+      message: reeq.t('pricing.OfferSuccessfullyRemoved'),
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'), 
     });
   }
 };
@@ -519,7 +519,7 @@ exports.getOfferDetails = async (req, res, next) => {
     if (!offer) {
       return res.status(404).json({
         status:constants.APIResponseStatus.Failure,
-        message: 'Offer Inclusion Details not found',
+        message: req.t('pricing.offerinclusionNotFound'),
       });
     }
 
@@ -531,7 +531,7 @@ exports.getOfferDetails = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -555,7 +555,7 @@ exports.updateOfferDetails = catchAsync(async (req, res, next) => {
   );
 
   if (!offer) {
-    return next(new AppError('Offer Inclusion Details not found', 404));
+    return next(new AppError(req.t('pricing.offerinclusionNotFound'), 404));
   }
 
   res.status(200).json({
@@ -576,7 +576,7 @@ exports.addIncludeDetails = catchAsync(async (req, res, next) => {
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid plan or offer ID',
+      message: req.t('pricing.InvalidPlanOrOfferID'),
     });
   }
 
@@ -602,7 +602,7 @@ exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
   if (!include) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Include Details not found',
+      message: req.t('pricing.IncludeDetailsNotFound'),
     });
   }
 
@@ -611,7 +611,7 @@ exports.removeIncludeDetails = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    message: 'Plan successfully removed from the offer',
+    message: req.t('pricing.PlanSuccessfullyRemovedFromTheOffer'),
   });
 });
 
@@ -625,7 +625,7 @@ exports.getIncludeDetails = catchAsync(async (req, res, next) => {
   if (!include) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Include Details not found',
+      message: req.t('pricing.IncludeDetailsNotFound'),
     });
   }
 
@@ -646,7 +646,7 @@ exports.updateIncludeDetails = catchAsync(async (req, res, next) => {
   if (!include) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Include Details not found',
+      message: req.t('pricing.IncludeDetailsNotFound'),
     });
   }
 
@@ -675,7 +675,7 @@ exports.addUserGroupType = async (req, res, next) => {
     {
       res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Name already in use for another UserGroup',
+        message: req.t('pricing.NameAlreadyInUseForAnotherUserGroup'),
       });
     }
     else{
@@ -696,7 +696,7 @@ exports.addUserGroupType = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -724,7 +724,7 @@ exports.removeUserGroupType = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -752,7 +752,7 @@ exports.getUserGroupType = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -794,7 +794,7 @@ exports.updateUserGroupType = async (req, res, next) => {
       console.error(error);
       res.status(500).json({
         status: constants.APIResponseStatus.Error,
-        message: 'Internal server error',
+        message: req.t('common.InternalServerError'),
       });
     }
 };
@@ -812,7 +812,7 @@ exports.getAllUserGroupTypes = async (req, res, next) => {
     console.error(error);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1261,7 +1261,7 @@ exports.addSubscriptionDetails = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1290,7 +1290,7 @@ exports.removeSubscriptionDetails = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1317,7 +1317,7 @@ exports.getSubscriptionDetailsById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1435,7 +1435,7 @@ exports.getLastInvoice = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1466,7 +1466,7 @@ exports.activateSubscription = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 }
@@ -1598,7 +1598,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
     console.error('err',err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
       error: err
     });
   }
@@ -1647,7 +1647,7 @@ exports.cancelSubscriptionUpdates = async (req, res) => {
     console.error('err',err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1684,7 +1684,7 @@ exports.getAllSubscriptionDetails = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1723,7 +1723,7 @@ exports.pauseResumeSubscription = async (req, res) => {
     console.error(err);
     res.status(err.statusCode || 500).json({
       status: constants.APIResponseStatus.Error,
-      message: err?.error?.description || 'Internal server error',
+      message: err?.error?.description || req.t('common.InternalServerError'),
     });
   }
 };
@@ -1763,7 +1763,7 @@ exports.cancelSubscription = async (req, res) => {
     console.error(err);
     res.status(err.statusCode || 500).json({
       status:constants.APIResponseStatus.Error,
-      message: err?.error?.description || 'Internal server error',
+      message: err?.error?.description || req.t('common.InternalServerError'),
     });
   }
 };
@@ -1811,7 +1811,7 @@ console.log("hello");
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1842,7 +1842,7 @@ exports.getPlanHistoryById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1910,7 +1910,7 @@ exports.updatePlanHistoryById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1941,7 +1941,7 @@ exports.deletePlanHistoryById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1961,7 +1961,7 @@ exports.getAllPlanHistories = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2016,7 +2016,7 @@ exports.createInvoice = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2050,7 +2050,7 @@ exports.getInvoiceById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2087,7 +2087,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2119,7 +2119,7 @@ exports.getInvoiceByCompanyId = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2193,7 +2193,7 @@ exports.updateInvoiceById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2224,7 +2224,7 @@ exports.deleteInvoiceById = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2245,7 +2245,7 @@ exports.getAllInvoices = async (req, res) => {
     console.error(err);
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error',
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -2297,7 +2297,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
     res.status(201).json({ message: 'Users successfully added to the userGroup' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: req.t('common.InternalServerError') });
   }
 });
  
@@ -2355,7 +2355,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: req.t('common.InternalServerError') });
   }
 });
 
@@ -2383,7 +2383,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: req.t('common.InternalServerError') });
   }
 });
 

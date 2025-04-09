@@ -9,7 +9,8 @@ exports.deleteOne = Model =>
     const document = await Model.findByIdAndDelete(req.params.id);
 
     if (!document) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('handlerFactory.documentNotFound'), 404));
+
     }
 
     res.status(204).json({
@@ -26,7 +27,8 @@ exports.updateOne = Model =>
     });
 
     if (!document) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('handlerFactory.documentNotFound'), 404));
+
     }
 
     res.status(201).json({
@@ -59,7 +61,8 @@ exports.getOne = (Model, popOptions) =>
     // If there is no tour but id is correct
     if (!document) {
       // We have to return to not let rest of the code exectue
-      return next(new AppError('No document found with that ID.', 404));
+      return next(new AppError(req.t('handlerFactory.documentNotFound'), 404));
+
     }
 
     res.status(201).json({
