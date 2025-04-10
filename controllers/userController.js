@@ -931,7 +931,7 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
       .equals(req.params.id);
 
   if (!employeeSalaryDetails) {
-    return next(new AppError("Employee Salary Details not found", 404));
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1158,7 +1158,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   );
 
   if (!employeeSalaryDetails) {
-    return next(new AppError("Employee Salary Details not found", 404));
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
   }
   employeeSalaryDetails.taxAndSalutaorySetting =
     await EmployeeTaxAndSalutaorySetting.find({})

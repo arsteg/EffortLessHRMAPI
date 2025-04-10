@@ -236,7 +236,7 @@ exports.updateProjectUser = catchAsync(async (req, res, next) => {
           });
           if (!document) {
               websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-              return next(new AppError('No document found with that ID', 404));
+              return next(new AppError(req.t('projectController.noDocumentFound'), 404));
           }
           websocketHandler.sendLog(req, `Successfully updated project user ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
           res.status(201).json({

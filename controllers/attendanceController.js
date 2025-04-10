@@ -49,7 +49,7 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
   
   req.body.company = companyId;
@@ -244,7 +244,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
   });
 
   if (!regularizationReason) {
-    return next(new AppError('Regularization Reason not found', 404));
+    return next(new AppError(req.t('attendance.getRegularizationReasonFailure'), 404));
   }
 
   regularizationReason.userRegularizationReasons = await UserRegularizationReason.find({}).where('regularizationReason').equals(regularizationReason._id);;
@@ -417,7 +417,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
   });
 
   if (!onDutyReason) {
-    return next(new AppError('Regularization Reason not found', 404));
+    return next(new AppError(req.t('attendance.getRegularizationReasonFailure'), 404));
   }
 
   onDutyReason.userOnDutyReason = await UserOnDutyReason.find({}).where('onDutyReason').equals(onDutyReason._id);;
@@ -778,7 +778,7 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
   if (!attendanceRegularization) {
     websocketHandler.sendLog(req, `Attendance regularization not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError('Attendance Regularization not found', 404));
+    return next(new AppError(req.t('attendance.AttendanceRegularizationNF'), 404));
   }
   
   const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
@@ -854,7 +854,7 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   );
 
   if (!attendanceRegularization) {
-    return next(new AppError("Attendance Regularization not found", 404));
+    return next(new AppError(req.t('attendance.AttendanceRegularizationNF'), 404));
   }
   // Update or create IP records
   if (req.body.IPDetails && req.body.IPDetails.length > 0) {
@@ -1472,7 +1472,7 @@ exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
   // Add companyId to the request body
   req.body.company = companyId;
@@ -1530,7 +1530,7 @@ exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
   
   const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.params.user });
   if (!userOnDutyTemplate) {
-    return next(new AppError('UserOnDutyTemplate not found', 404));
+    return next(new AppError(req.t('attendance.UserOnDutyTemplateNF'), 404));
   }
   
   websocketHandler.sendLog(req, `Successfully retrieved user on-duty template for user: ${req.params.user}`, constants.LOG_TYPES.INFO);
@@ -1747,7 +1747,7 @@ exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
   
   req.body.company = companyId;
@@ -1767,7 +1767,7 @@ exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   const shiftTemplateAssignment = await ShiftTemplateAssignment.findById(req.params.id);
   if (!shiftTemplateAssignment) {
     websocketHandler.sendLog(req, `Shift template assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
+    return next(new AppError(req.t('attendance.ShiftTemplateAssignmentNF'), 404));
   }
   
   websocketHandler.sendLog(req, `Successfully retrieved shift template assignment: ${shiftTemplateAssignment._id}`, constants.LOG_TYPES.INFO);
@@ -1785,7 +1785,7 @@ exports.updateShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   });
 
   if (!shiftTemplateAssignment) {
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
+    return next(new AppError(req.t('attendance.ShiftTemplateAssignmentNF'), 404));
   }
 
   res.status(200).json({
@@ -1798,7 +1798,7 @@ exports.updateShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   const shiftTemplateAssignment = await ShiftTemplateAssignment.findByIdAndDelete(req.params.id);
   if (!shiftTemplateAssignment) {
-    return next(new AppError('ShiftTemplateAssignment not found', 404));
+    return next(new AppError(req.t('attendance.ShiftTemplateAssignmentNF'), 404));
   }
   
   websocketHandler.sendLog(req, `Successfully deleted shift assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -1830,7 +1830,7 @@ exports.createRosterShiftAssignment = catchAsync(async (req, res, next) => {
 
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
 
   // Add companyId to the request body
@@ -1948,7 +1948,7 @@ exports.getAllRosterShiftAssignmentsBycompany = catchAsync(async (req, res, next
   const company = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
   const query = { company: company };
   // Get the total count of documents matching the query
@@ -2196,7 +2196,7 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
   const timeEntry = await TimeEntry.findByIdAndDelete(req.params.id);
 
   if (!timeEntry) {
-    return next(new AppError('TimeEntry not found', 404));
+    return next(new AppError(req.t('attendance.TimeEntryNF'), 404));
   }
 
   res.status(204).json({
@@ -3158,13 +3158,13 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
 
   // Validate input
   if (!user || !month || !year) {
-    return next(new AppError('User ID, month, and year are required', 400));
+    return next(new AppError(req.t('attendance.UserIDMonthYearRequired'), 400));
   }
 
   const overtimeRecords = await getOvertimeRecordsByUserYearAndMonth(user, year, month);
 
   if (!overtimeRecords || overtimeRecords.length === 0) {
-    return next(new AppError('Overtime records not found', 404));
+    return next(new AppError(req.t('attendance.OvertimeRecordsNF'), 404));
   }
 
   res.status(200).json({

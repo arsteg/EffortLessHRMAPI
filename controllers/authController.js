@@ -310,10 +310,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
       
       } catch (err) {   
         return next(
-          new AppError(
-            'There was an error sending the email. Try again later.',
-            500
-          )
+          new AppError(req.t('auth.emailSendError'), 500)
       );
     }
     }
@@ -336,7 +333,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   if(subscription?.currentPlanId?.users <= activeUsers){
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      error: `You have reached the user limit for your subscription plan. You cannot add more than ${subscription?.currentPlanId?.users} users. Please upgrade your plan to add more users.`
+      error: req.t('auth.userLimitReached').replace('{userLimit}', subscription?.currentPlanId?.users)
     })
   }
   const newUser = await User.create({
@@ -386,10 +383,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       });   
     } catch (err) {   
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       );
     }
   }
@@ -424,7 +418,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 1) Validate email and password input
   if (!email || !password) {
-    return next(new AppError('Email or password not specified.', 400));
+    return next(new AppError(req.t('auth.emailOrPasswordNotSpecified'), 400));
   }
   // 2) Check if user exists and is not deleted, then retrieve password
   const user = await User.findOne({
@@ -433,9 +427,8 @@ exports.login = catchAsync(async (req, res, next) => {
   }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError('Incorrect email or password.', 401));
+    return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
   }
-
   // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
@@ -457,7 +450,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // If token wasn't specified throw an error
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new AppError(req.t('auth.notLoggedIn'), 401)
     );
   }
 
@@ -470,17 +463,14 @@ exports.protect = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser)
     return next(
-      new AppError(
-        'The user belonging to this token does no longer exist.',
-        401
-      )
+      new AppError(req.t('auth.userNotExist'), 401)
     );
 
   // 4) Check if user changed password after the token was issued
   // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password. Please log in again.', 401)
+      new AppError(req.t('auth.passwordChanged'), 401)
     );
   }
   // Grant access to protected route
@@ -496,10 +486,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     const companyDetails = await Company.findById(currentUser.company._id);
     if(!companyDetails.freeCompany){
       return next(
-        new AppError(
-          'Your subscription is not active. Please contact your administrator.',
-          401
-        ).sendErrorJson(res)
+        new AppError(req.t('auth.subscriptionInactive'), 401).sendErrorJson(res)
       );
     }
   }
@@ -524,7 +511,7 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   // If token wasn't specified throw an error
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new AppError(req.t('auth.notLoggedIn'), 401)
     );
   }
 
@@ -537,17 +524,14 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser)
     return next(
-      new AppError(
-        'The user belonging to this token does no longer exist.',
-        401
-      )
+      new AppError(req.t('auth.userNotExist'), 401)
     );
 
   // 4) Check if user changed password after the token was issued
   // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password. Please log in again.', 401)
+      new AppError(req.t('auth.passwordChanged'), 401)
     );
   }
 
@@ -555,30 +539,13 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   next();
 });
 
-// Authorization
-// IMPORTANT: We can use closure if we want to pass parameter to a function but
-// do not run it.
-// exports.restrictTo = (...roles) => {
-//   console.log('calling restrictTo');
-//   return (req, res, next) => {
-//     // roles ['admin', 'lead-guide'] role='user'
-//     if (!roles.includes(req.user.role)) {
-//       return next(
-//         new AppError('You do not have permission to perform this action', 403)
-//       );
-//     }
-
-//     next();
-//   };
-// };
-
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {    
     res.status(200).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'No account found with this email address.',
+      message: req.t('auth.noAccountFound'),
       data: {
         user: null
       }
@@ -616,10 +583,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       );
     }
   }
@@ -641,7 +605,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   });
  
   // 2) If token has not expired, and there is user, set the new password
-  if (!user) return next(new AppError('Token is invalid or has expired', 400));
+  if (!user) return next(new AppError(req.t('auth.tokenInvalidOrExpired'), 400));
   
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -715,10 +679,7 @@ exports.sendLog = catchAsync(async (req, res, next) => {
         })  
     } catch (err) {   
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       )
     }
      
@@ -734,7 +695,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.body.id).select('+password');
   // 2) Check if POSTed current password is correct 
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    return next(new AppError('Your current password is wrong.', 401));
+    new AppError(req.t('auth.currentPasswordWrong'), 401)
   }
   // 3) If so, update password
   user.password = req.body.password;
@@ -788,12 +749,12 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Role is already in use. Please delete related records before deleting the Role.',
+      message: req.t('auth.roleInUse'),
     });
   }
   const document = await Role.findByIdAndDelete(req.params.id);
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('auth.noDocumentFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -806,7 +767,7 @@ exports.updateRole = factory.updateOne(Role);
 exports.getRole = catchAsync(async (req, res, next) => {       
   const role = await Role.find({}).where('_id').equals(req.params.id);   
   if (!role) {
-    return next(new AppError('No role found', 403));
+    return next(new AppError(req.t('auth.roleNotFound'), 403));
   }  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -817,7 +778,7 @@ exports.getRole = catchAsync(async (req, res, next) => {
 exports.getRoles = catchAsync(async (req, res, next) => {    
   const roles = await Role.find({}).where('company').equals(req.cookies.companyId);  
   if (!roles) {
-    return next(new AppError('No role found', 403));
+    return next(new AppError(req.t('auth.noRoleFound'), 403));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -830,7 +791,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const userSubordinates = await userSubordinate.find({}).where('userId').equals(req.body.userId).where('subordinateUserId').equals(req.body.subordinateUserId);  
   
   if (userSubordinates.length>0) {
-    return next(new AppError('User subordinate already exists.', 403));
+    return next(new AppError(req.t('auth.userSubordinateExists'), 403));
   }
   else{    
     const subordinate = await userSubordinate.create({
@@ -879,7 +840,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const rolePermission = await RolePermission.find({}).where('_id').equals(req.params.id);  
   
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found', 403));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 403));
   }  
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -899,7 +860,7 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
   const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError('Role Permission already exists.', 403));
+    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
   }
   else{    
     const rolePermission = await RolePermission.create({
@@ -919,7 +880,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
   const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError('Role Permission already exists.', 403));
+    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
   }
   else{ 
   const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
@@ -927,7 +888,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
     runValidators: true // Validate data
   });
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found with that ID', 404));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -939,7 +900,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
 exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
   const rolePermission = await RolePermission.findByIdAndDelete(req.params.id);
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found with that ID', 404));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,

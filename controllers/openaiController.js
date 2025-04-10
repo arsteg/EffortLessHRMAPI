@@ -99,13 +99,13 @@ exports.generateQueryFromText = catchAsync(async (req, res, next) => {
     // 1. Validate input
     const { model, prompt } = req.body;
     if (!model || !prompt) {
-      return next(new AppError('Model and prompt parameters are required', 400));
+      return next(new AppError(req.t('openAI.ParametersAreRequired'), 400));
     }
 
     // 2. Validate model selection
     const Model = allowedModels[model];
     if (!Model) {
-      return next(new AppError('Invalid model specified', 400));
+      return next(new AppError(req.t('openAI.invalidModel'), 400));
     }
 
     // 3. Create a thread for the assistant

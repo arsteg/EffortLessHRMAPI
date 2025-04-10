@@ -110,7 +110,7 @@ exports.updateSkill = catchAsync(async (req, res, next) => {
 
   if (!updatedSkill) {
       websocketHandler.sendLog(req, `No skill found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No skill found with that ID', 404));
+      return next(new AppError(req.t('recruitment.skillNotFound'), 404));
   }
   
   websocketHandler.sendLog(req, `Successfully updated skill ID: ${req.params.id}`, constants.LOG_TYPES.INFO);

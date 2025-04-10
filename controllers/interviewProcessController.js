@@ -232,7 +232,7 @@ exports.getAllCandidatesWithData = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: req.t('common.serverError') });
   }
 };
 
@@ -416,7 +416,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     await existingRecord.save();
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record updated successfully',
+      message: req.t('interviewProcess.recordUpdatedSuccessfully'),
       data: existingRecord,
     });
   } else {
@@ -434,7 +434,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     });
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record created successfully',
+      message: req.t('interviewProcess.recordCreatedSuccessfully'),
       data: newRecord,
     });
   }
@@ -869,11 +869,7 @@ exports.deleteInterviewer = catchAsync(async (req, res, next) => {
   const interviewer  = req.params.id; // Extract the interviewer value from request params  
   const deletedCount = await Interviewer.deleteOne({ interviewer }); // Use deleteOne with a query for deletion 
   if (deletedCount.deletedCount === 0) {
-    return next(new AppError(req.t('interviewProcess.interviewerNotFound'), 404));
-    res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      data: 'Interviewer not found'
-    });
+    return next(new AppError(req.t('interviewProcess.interviewerNotFound'), 404));    
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,

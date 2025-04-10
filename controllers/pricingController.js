@@ -712,13 +712,13 @@ exports.removeUserGroupType = async (req, res, next) => {
     if (!result) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'User Group Type not found',
+        message: req.t('pricing.userGroupTypeNotFound'),
       });
     }
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
-      message: 'User group type successfully removed',
+      message: req.t('pricing.userGroupTypeRemoved'),
     });
   } catch (error) {
     console.error(error);
@@ -740,7 +740,7 @@ exports.getUserGroupType = async (req, res, next) => {
     if (!userGroupType) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'User Group Type not found',
+        message: req.t('pricing.userGroupTypeNotFound'),
       });
     }
 
@@ -766,7 +766,7 @@ exports.updateUserGroupType = async (req, res, next) => {
   {
       res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Name already in use for another User Group',
+      message: req.t('pricing.nameAlreadyInUse'),
     });
     }
     else
@@ -781,7 +781,7 @@ exports.updateUserGroupType = async (req, res, next) => {
       if (!userGroupType) {
         return res.status(404).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'User Group Type not found',
+          message: req.t('pricing.userGroupTypeNotFound'),
         });
       }
 
@@ -828,7 +828,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
   if (existingPrerequisites) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Prerequisites already exist for the given plan and offer',
+      message: req.t('pricing.prerequisitesExist'),
     });
   }
 
@@ -839,7 +839,7 @@ exports.addPrerequisites = catchAsync(async (req, res, next) => {
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid plan or offer ID',
+      message: req.t('pricing.invalidPlanOrOfferId'),
     });
   }
 
@@ -865,7 +865,7 @@ exports.removePrerequisites = catchAsync(async (req, res, next) => {
   if (!prerequisites) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'prerequisites Details not found',
+      message: req.t('pricing.prerequisitesNotFound'),
     });
   }
 
@@ -874,7 +874,7 @@ exports.removePrerequisites = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    message: 'prerequisites successfully removed',
+    message: req.t('pricing.prerequisitesRemoved'),
   });
 });
 
@@ -888,7 +888,7 @@ exports.getPrerequisitesDetails = catchAsync(async (req, res, next) => {
   if (!prerequisites) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'prerequisites Details not found',
+      message: req.t('pricing.prerequisitesNotFound'),
     });
   }
 
@@ -908,7 +908,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
   if (existingPrerequisites) {
     return res.status(400).json({
       status:constants.APIResponseStatus.Failure,
-      message: 'Prerequisites already exist for the given plan and offer',
+      message: req.t('pricing.prerequisitesExist'),
     });
   }
 
@@ -919,7 +919,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid plan or offer ID',
+      message: req.t('pricing.invalidPlanOrOfferId'),
     });
   }
   const prerequisites = await Prerequisites.findByIdAndUpdate(
@@ -931,7 +931,7 @@ exports.updatePrerequisitesDetails = catchAsync(async (req, res, next) => {
   if (!prerequisites) {
     return res.status(404).json({
       status:constants.APIResponseStatus.Failure,
-      message: 'prerequisites Details not found',
+      message: req.t('pricing.prerequisitesNotFound'),
     });
   }
 
@@ -960,7 +960,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
  if (existingCompanyPlan) {
    return res.status(400).json({
      status: constants.APIResponseStatus.Failure,
-     message: 'Company plan already exists for the given plan and company',
+     message: req.t('pricing.companyPlanExists'),
    });
  }
   // Check if the CompanyPlan exist
@@ -970,7 +970,7 @@ exports.addCompanyPlan = catchAsync(async (req, res, next) => {
   if (!existingPlan || !existingcompany) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid plan or offer ID',
+      message: req.t('pricing.invalidPlanOrOfferId'),
     });
   }
 
@@ -996,7 +996,7 @@ exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
   if (!companyPlan) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'CompanyPlan Details not found',
+      message: req.t('pricing.companyPlanNotFound'),
     });
   }
 
@@ -1005,7 +1005,7 @@ exports.removeCompanyPlan = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    message: 'CompanyPlan successfully removed',
+    message: req.t('pricing.companyPlanRemoved'),
   });
 });
 
@@ -1019,7 +1019,7 @@ exports.getCompanyPlanDetails = catchAsync(async (req, res, next) => {
   if (!companyPlan) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'CompanyPlan Details not found',
+      message: req.t('pricing.companyPlanNotFound'),
     });
   }
 
@@ -1038,7 +1038,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
   if (existingCompanyPlan) {
     return res.status(400).json({
       status:constants.APIResponseStatus.Failure,
-      message: 'Company plan already exists for the given plan and company',
+      message: req.t('pricing.companyPlanExists'),
     });
   }
    // Check if the CompanyPlan exist
@@ -1048,7 +1048,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
    if (!existingPlan || !existingcompany) {
      return res.status(400).json({
        status: constants.APIResponseStatus.Failure,
-       message: 'Invalid plan or offer ID',
+       message: req.t('pricing.invalidPlanOrOfferId'),
      });
    }
   const companyPlan = await CompanyPlan.findByIdAndUpdate(
@@ -1060,7 +1060,7 @@ exports.updateCompanyPlanDetails = catchAsync(async (req, res, next) => {
   if (!companyPlan) {
     return res.status(404).json({
       status:constants.APIResponseStatus.Failure,
-      message: 'CompanyPlan Details not found',
+      message: req.t('pricing.companyPlanNotFound'),
     });
   }
 
@@ -1092,7 +1092,7 @@ exports.addPlanToOffer = catchAsync(async (req, res, next) => {
   if (!existingPlan || !existingOffer) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Invalid plan or offer ID',
+      message: req.t('pricing.invalidPlanOrOfferId'),
     });
   }
 
@@ -1118,7 +1118,7 @@ exports.removePanFromOffer = catchAsync(async (req, res, next) => {
   if (!planOffer) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'PlanOffer Details not found',
+      message: req.t('pricing.planOfferNotFound'),
     });
   }
 
@@ -1127,7 +1127,7 @@ exports.removePanFromOffer = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
-    message: 'Plan successfully removed from the offer',
+    message: req.t('pricing.planRemovedFromOffer'),
   });
 });
 
@@ -1141,7 +1141,7 @@ exports.getPlanOfferDetails = catchAsync(async (req, res, next) => {
   if (!planOffer) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'PlanOffer Details not found',
+      message: req.t('pricing.planOfferNotFound'),
     });
   }
 
@@ -1162,7 +1162,7 @@ exports.updatePlanOfferDetails = catchAsync(async (req, res, next) => {
   if (!include) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'PlanOffer Details not found',
+      message: req.t('pricing.planOfferNotFound'),
     });
   }
 
@@ -1188,7 +1188,7 @@ exports.addSubscriptionDetails = async (req, res) => {
     // Check if currentPlanId ID is valid
     const isValidCurrentPlan = await Plan.findById(req.body.currentPlanId);
     if (!isValidCurrentPlan) {
-      return res.status(400).json({ error: 'Invalid currentPlanId ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidCurrentPlanId') });
     }
 
     const subscriptions = await Subscription.find({
@@ -1272,14 +1272,14 @@ exports.removeSubscriptionDetails = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     // Find and remove the subscription
     const removedSubscription = await Subscription.findByIdAndRemove(subscriptionId);
 
     if (!removedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     res.status(204).json({
@@ -1304,7 +1304,7 @@ exports.getSubscriptionDetailsById = async (req, res) => {
     });
 
     if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     res.status(200).json({
@@ -1340,7 +1340,7 @@ exports.getNextPaymentDetails = async (req, res) => {
       console.log("Subscription not found");
       return res.status(404).json({ 
         status: constants.APIResponseStatus.Failure,
-        message: "Subscription not found",
+        message: req.t('pricing.subscriptionNotFound'),
         data: {
           due_date:null,
           due_amount:0,
@@ -1408,7 +1408,7 @@ exports.getNextPaymentDetails = async (req, res) => {
     console.error("Error in getNextPaymentDetails:", err);
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: "Internal server error",
+      message: req.t('common.InternalServerError'),
     });
   }
 };
@@ -1453,7 +1453,7 @@ exports.activateSubscription = async (req, res) => {
     const updatedSubscription = await Subscription.findOne({ subscriptionId: subscriptionId });
 
     if (!updatedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     res.status(200).json({
@@ -1492,12 +1492,12 @@ exports.updateSubscriptionDetails = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     const subscription = await Subscription.findById(subscriptionId);
     if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     const rpSubscription = subscription.razorpaySubscription;
@@ -1511,23 +1511,23 @@ exports.updateSubscriptionDetails = async (req, res) => {
     console.log('Current subscription:', subscription);
 
     if(Object.keys(req.body).length === 0){
-      return res.status(400).json({ error: "Please provide the fields to update" });
+      return res.status(400).json({ error: req.t('pricing.pleaseProvideFields') });
     }
     // Convert currentPlanId to ObjectId if it's a valid string
     const { currentPlanId } = req.body;
     if(currentPlanId){
       if(currentPlanId === subscription.currentPlanId){
-        return res.status(400).json({ error: "Please select the different plan" });
+        return res.status(400).json({ error: req.t('pricing.selectDifferentPlan') });
       }
       
       if (mongoose.Types.ObjectId.isValid(currentPlanId)) {
         req.body.currentPlanId = new mongoose.Types.ObjectId(currentPlanId);
       } else {
-        return res.status(400).json({ error: "Invalid currentPlanId" });
+        return res.status(400).json({ error: req.t('pricing.invalidCurrentPlanId') });
       }
   
       const planDetails = await Plan.findById(currentPlanId);
-      if(!planDetails) return res.status(404).json({ error: "Plan not found" });
+      if(!planDetails)  return res.status(404).json({ error: req.t('pricing.planNotFound') });
       // Number of days in new plan
       const newPlanFrequency = getFrequencyDays(planDetails.frequency);
       const newPlanPricePerDay = planDetails.currentprice / newPlanFrequency;
@@ -1575,7 +1575,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
           },
         });      
       } else {
-        res.status(400).json({ error: "Unable to change the plan" });
+        res.status(400).json({ error: req.t('pricing.unableToChangePlan') });
       }
     } else {
       // Find the subscription by ID and update
@@ -1585,7 +1585,7 @@ exports.updateSubscriptionDetails = async (req, res) => {
         { new: true, runValidators: true }
       );
       if (!updatedSubscription) {
-        return res.status(404).json({ error: 'Subscription not found' });
+        return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
       }
       res.status(200).json({
         status: constants.APIResponseStatus.Success,
@@ -1610,12 +1610,12 @@ exports.cancelSubscriptionUpdates = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(subscriptionId)) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     const subscription = await Subscription.findById(subscriptionId);
     if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     // fetch pending updates
@@ -1628,7 +1628,7 @@ exports.cancelSubscriptionUpdates = async (req, res) => {
         { new: true, runValidators: true }
       );
       if (!updatedSubscription) {
-        return res.status(404).json({ error: 'Subscription not found' });
+        return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
       }
       return res.status(200).json({
         status: constants.APIResponseStatus.Success,
@@ -1710,7 +1710,7 @@ exports.pauseResumeSubscription = async (req, res) => {
     );
 
     if (!updatedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     res.status(200).json({
@@ -1750,7 +1750,7 @@ exports.cancelSubscription = async (req, res) => {
     })
 
     if (!updatedSubscription) {
-      return res.status(404).json({ error: 'Subscription not found' });
+      return res.status(404).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     res.status(200).json({
@@ -1778,13 +1778,13 @@ console.log("hello");
       !mongoose.Types.ObjectId.isValid(subscriptionId) ||
       !mongoose.Types.ObjectId.isValid(planId)
     ) {
-      return res.status(400).json({ error: 'Invalid subscriptionId or planId' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     // Check if the subscription with the provided ID exists
     const existingSubscription = await Subscription.findById(subscriptionId);
     if (!existingSubscription) {
-      return res.status(400).json({ error: 'Subscription not found' });
+      return res.status(400).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     // Check if the plan with the provided ID exists
@@ -1822,14 +1822,14 @@ exports.getPlanHistoryById = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
-      return res.status(400).json({ error: 'Invalid plan history ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidPlanHistoryId') });
     }
 
     // Find the plan history by ID
     const planHistory = await PlanHistory.findById(planHistoryId);
 
     if (!planHistory) {
-      return res.status(404).json({ error: 'Plan history not found' });
+      return res.status(404).json({ error: req.t('pricing.planHistoryNotFound') });
     }
 
     res.status(200).json({
@@ -1853,25 +1853,25 @@ exports.updatePlanHistoryById = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
-      return res.status(400).json({ error: 'Invalid plan history ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidPlanHistoryId') });
     }
 
     // Check if the plan history with the provided ID exists
     const existingPlanHistory = await PlanHistory.findById(planHistoryId);
     if (!existingPlanHistory) {
-      return res.status(404).json({ error: 'Plan history not found' });
+      return res.status(404).json({ error: req.t('pricing.planHistoryNotFound') });
     }
 
     // Validate if the provided planId is a valid MongoDB ID
     if (req.body.planId && !mongoose.Types.ObjectId.isValid(req.body.planId)) {
-      return res.status(400).json({ error: 'Invalid plan ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidCurrentPlanId') });
     }
 
     // Check if the plan with the provided ID exists
     if (req.body.planId) {
       const existingPlan = await Plan.findById(req.body.planId);
       if (!existingPlan) {
-        return res.status(400).json({ error: 'Plan not found' });
+        return res.status(400).json({ error: req.t('pricing.planNotFound') });
       }
     }
 
@@ -1889,7 +1889,7 @@ exports.updatePlanHistoryById = async (req, res) => {
         req.body.subscriptionId
       );
       if (!existingSubscription) {
-        return res.status(400).json({ error: 'Subscription not found' });
+        return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
       }
     }
 
@@ -1921,13 +1921,13 @@ exports.deletePlanHistoryById = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(planHistoryId)) {
-      return res.status(400).json({ error: 'Invalid plan history ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidPlanHistoryId') });
     }
 
     // Check if the plan history with the provided ID exists
     const existingPlanHistory = await PlanHistory.findById(planHistoryId);
     if (!existingPlanHistory) {
-      return res.status(404).json({ error: 'Plan history not found' });
+      return res.status(404).json({ error: req.t('pricing.planHistoryNotFound') });
     }
 
     // Delete the plan history by ID
@@ -1940,11 +1940,12 @@ exports.deletePlanHistoryById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: req.t('common.InternalServerError'),
     });
   }
 };
+
 
 exports.getAllPlanHistories = async (req, res) => {
   try {
@@ -1970,24 +1971,24 @@ exports.createInvoice = async (req, res) => {
   try {
     // Validate if the provided subscription ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(req.body.subscription)) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     // Check if the subscription with the provided ID exists
     const existingSubscription = await Subscription.findById(req.body.subscription);
     if (!existingSubscription) {
-      return res.status(400).json({ error: 'Subscription not found' });
+      return res.status(400).json({ error: req.t('pricing.subscriptionNotFound') });
     }
 
     // Validate if the provided plan history ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(req.body.planHistory)) {
-      return res.status(400).json({ error: 'Invalid plan history ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidPlanHistoryId') });
     }
 
     // Check if the plan history with the provided ID exists
     const existingPlanHistory = await PlanHistory.findById(req.body.planHistory);
     if (!existingPlanHistory) {
-      return res.status(400).json({ error: 'Plan history not found' });
+      return res.status(400).json({ error: req.t('pricing.planHistoryNotFound') });
     }
 
     // Create a new invoice
@@ -2028,7 +2029,7 @@ exports.getInvoiceById = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
-      return res.status(400).json({ error: 'Invalid invoice ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidInvoiceId') });
     }
 
     // Check if the invoice with the provided ID exists
@@ -2037,7 +2038,7 @@ exports.getInvoiceById = async (req, res) => {
       .exec();
 
     if (!invoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
+      return res.status(404).json({ error: req.t('pricing.invoiceNotFound') });
     }
 
     res.status(200).json({
@@ -2049,7 +2050,7 @@ exports.getInvoiceById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      status:constants.APIResponseStatus.Error,
+      status: constants.APIResponseStatus.Error,
       message: req.t('common.InternalServerError'),
     });
   }
@@ -2060,7 +2061,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
 
     // Validate if subscription ID is provided 
     if (!subscriptionId) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
     let payload = { subscriptionId: subscriptionId };
     // Fetch subscription to check if subscription has customer_id
@@ -2074,7 +2075,7 @@ exports.getInvoiceBySubscriptionId = async (req, res) => {
       .exec();
 
     if (!invoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
+      return res.status(404).json({ error: req.t('pricing.invoiceNotFound') });
     }
 
     res.status(200).json({
@@ -2098,7 +2099,7 @@ exports.getInvoiceByCompanyId = async (req, res) => {
 
     // Validate if subscription ID is provided 
     if (!companyId) {
-      return res.status(400).json({ error: 'Invalid companyId ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidCompanyId') });
     }
     let payload = { companyId: companyId };
     const invoice = await Invoice.find(payload)
@@ -2106,7 +2107,7 @@ exports.getInvoiceByCompanyId = async (req, res) => {
       .exec();
 
     if (!invoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
+      return res.status(404).json({ error: req.t('pricing.invoiceNotFound') });
     }
 
     res.status(200).json({
@@ -2131,13 +2132,13 @@ exports.updateInvoiceById = async (req, res) => {
 
     // Validate if the provided ID is a valid MongoDB ID
     if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
-      return res.status(400).json({ error: 'Invalid invoice ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidInvoiceId') });
     }
 
     // Check if the invoice with the provided ID exists
     const existingInvoice = await Invoice.findById(invoiceId);
     if (!existingInvoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
+      return res.status(404).json({ error: req.t('pricing.invoiceNotFound') });
     }
 
     // Validate if the provided subscriptionId is a valid MongoDB ID
@@ -2145,7 +2146,7 @@ exports.updateInvoiceById = async (req, res) => {
       req.body.subscriptionId &&
       !mongoose.Types.ObjectId.isValid(req.body.subscriptionId)
     ) {
-      return res.status(400).json({ error: 'Invalid subscription ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidSubscriptionId') });
     }
 
     // Check if the subscription with the provided ID exists
@@ -2154,7 +2155,7 @@ exports.updateInvoiceById = async (req, res) => {
         req.body.subscriptionId
       );
       if (!existingSubscription) {
-        return res.status(400).json({ error: 'Subscription not found' });
+        return res.status(400).json({ error: req.t('pricing.subscriptionNotFound') });
       }
     }
 
@@ -2163,7 +2164,7 @@ exports.updateInvoiceById = async (req, res) => {
       req.body.planHistoryId &&
       !mongoose.Types.ObjectId.isValid(req.body.planHistoryId)
     ) {
-      return res.status(400).json({ error: 'Invalid plan history ID' });
+      return res.status(400).json({ error: req.t('pricing.invalidPlanHistoryId') });
     }
 
     // Check if the plan history with the provided ID exists
@@ -2172,7 +2173,7 @@ exports.updateInvoiceById = async (req, res) => {
         req.body.planHistoryId
       );
       if (!existingPlanHistory) {
-        return res.status(404).json({ error: 'Plan history not found' });
+        return res.status(404).json({ error: req.t('pricing.planHistoryNotFound') });
       }
     }
 
@@ -2203,15 +2204,16 @@ exports.deleteInvoiceById = async (req, res) => {
     const invoiceId = req.params.id;
 
     // Validate if the provided ID is a valid MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
-      return res.status(400).json({ error: 'Invalid invoice ID' });
-    }
+  // Validate if the provided ID is a valid MongoDB ID
+  if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+    return res.status(400).json({ error: req.t('pricing.invalidInvoiceId') });
+  }
 
-    // Check if the invoice with the provided ID exists
-    const existingInvoice = await Invoice.findById(invoiceId);
-    if (!existingInvoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
-    }
+  // Check if the invoice with the provided ID exists
+  const existingInvoice = await Invoice.findById(invoiceId);
+  if (!existingInvoice) {
+    return res.status(404).json({ error: req.t('pricing.invoiceNotFound') });
+  }
 
     // Delete the invoice by ID
     await Invoice.findByIdAndDelete(invoiceId);
@@ -2257,7 +2259,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
 
     // Validate if userGroupType and users are present in the request
     if (!userGroupType || !users || !Array.isArray(users) || users.length === 0) {
-      return res.status(400).json({ error: 'Invalid request payload' });
+      return res.status(400).json({ error: req.t('pricing.InvalidRequestPayload') });
     }
 
     // Check if the UserGroupType exists
@@ -2265,7 +2267,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
     if (!existingUserGroupType) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Invalid UserGroupType ID',
+         message: req.t('pricing.invalidUserGroupTypeId'),
       });
     }
 
@@ -2281,7 +2283,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
     if (invalidUserIds.length > 0) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Invalid user IDs: ' + invalidUserIds.join(', '),
+        message: req.t('pricing.invalidUserIds') + invalidUserIds.join(', '),
       });
     }
 
@@ -2294,7 +2296,7 @@ exports.addUsersInGroup = catchAsync(async (req, res, next) => {
     // Save the new UserInGroup instance to the database
     await userInGroup.save();
 
-    res.status(201).json({ message: 'Users successfully added to the userGroup' });
+    res.status(201).json({ message: req.t('pricing.usersAddedToGroup') });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: req.t('common.InternalServerError') });
@@ -2309,7 +2311,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
 
     // Validate if userGroupType and users are present in the request
     if (!userGroupType || !users || !Array.isArray(users)) {
-      return res.status(400).json({ error: 'Invalid request payload' });
+      return res.status(400).json({ error: req.t('pricing.InvalidRequestPayload') });
     }
 
     // Check if the UserInGroup instance exists
@@ -2317,7 +2319,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     if (!existingUserInGroup) {
       return res.status(404).json({
         status:constants.APIResponseStatus.Failure,
-        message: 'User Group Details not found',
+        message: req.t('pricing.userGroupDetailsNotFound'),
       });
     }
 
@@ -2326,7 +2328,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
     if (!existingUserGroupType) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Invalid UserGroupType ID',
+        message: req.t('pricing.invalidUserGroupTypeId'),
       });
     }
 
@@ -2350,7 +2352,7 @@ exports.UpdateUsersInGroup = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Users in UserGroupType successfully updated',
+      message: req.t('pricing.usersUpdatedInGroup'),
       data: existingUserInGroup,
     });
   } catch (error) {
@@ -2369,7 +2371,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
     if (!existingUserInGroup) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'User Group Details not found',
+        message: req.t('pricing.userGroupDetailsNotFound'),
       });
     }
 
@@ -2378,7 +2380,7 @@ exports.getUsersByGroup = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Users retrieved successfully',
+      message: req.t('pricing.usersRetrieved'),
       data: users,
     });
   } catch (error) {
@@ -2517,7 +2519,7 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
     } else {
       // Signature mismatch, do not process the event
       console.log('Signature mismatch');
-      res.status(400).send('Invalid signature');
+      res.status(400).send(req.t('common.InvalidSignature'));
     }
   } catch (error) {
     console.log(error);

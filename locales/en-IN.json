@@ -109,7 +109,14 @@
     "getAllAssetsByAssetTypeSuccess": "Assets for asset type {assetTypeId} retrieved successfully",
     "getUnassignedAssetsForUserSuccess": "Unassigned assets for user {userId} retrieved successfully",
     "getUnassignedAssetsSuccess": "All unassigned assets retrieved successfully",
-     "attributeInUse": "Asset Attribute Value cannot be deleted as it is in use"
+     "attributeInUse": "Asset Attribute Value cannot be deleted as it is in use",
+     "AssetTypeNotFound": "AssetType not found",
+      "AssetAttributeValueNotFound": "AssetAttributeValue not found",
+      "CustomAttributeNotFound": "CustomAttribute not found",
+      "EmployeeAssetNotFound": "EmployeeAsset not found",
+      "AssetNotFound": "Asset not found"
+      
+
   },
   "attendance": {
     "createGeneralSettingsSuccess": "General settings created successfully for company {companyId}",
@@ -174,7 +181,13 @@
     "deleteAttendanceSuccess": "Attendance process deleted successfully for period {attendanceProcessPeriodMonth}-{attendanceProcessPeriodYear}",
     "deleteAttendanceFailure": "Failed to delete attendance process",
     "getOvertimeByUserSuccess": "Overtime records retrieved successfully for user {userId}",
-    "getOvertimeByUserFailure": "Overtime records not found for user"
+    "getOvertimeByUserFailure": "Overtime records not found for user",
+    "AttendanceRegularizationNF": "Attendance Regularization not found",
+    "UserOnDutyTemplateNF"  : "UserOnDutyTemplate not found",
+    "ShiftTemplateAssignmentNF"  : "ShiftTemplateAssignment not found",
+    "TimeEntryNF"  : "TimeEntry not found",
+    "UserIDMonthYearRequired"  : "User ID, month, and year are required" ,
+    "OvertimeRecordsNF"  : "Overtime records not found"
   },
   "auth": {
     "signupSuccess": "User signed up successfully for company {companyId}",
@@ -229,7 +242,18 @@
     "updateRolePermissionSuccess": "Role permission updated successfully",
     "updateRolePermissionFailure": "Failed to update role permission",
     "deleteRolePermissionSuccess": "Role permission deleted successfully",
-    "deleteRolePermissionFailure": "No role permission found with that ID"
+    "deleteRolePermissionFailure": "No role permission found with that ID",    
+    "emailOrPasswordNotSpecified": "Email or password not specified.",    
+    "emailSendError": "There was an error sending the email. Try again later.",
+    "noAccountFound": "No account found with this email address.",
+    "tokenInvalidOrExpired": "Token is invalid or has expired",
+    "currentPasswordWrong": "Your current password is wrong.",
+    "noDocumentFound": "No document found with that ID",
+    "noRoleFound": "No role found",
+    "userSubordinateExists": "User subordinate already exists.",
+    "noRolePermissionFound": "No Role Permission found",
+    "userLimitReached": "You have reached the user limit for your subscription plan. You cannot add more than {userLimit} users. Please upgrade your plan to add more users."
+    
   } ,
   "company": {    
     "notFound": "No document found with that ID",
@@ -268,7 +292,8 @@
     "invalidInputData": "Invalid input data. {errors}.",
     "invalidToken": "Invalid token. Please log in again.",
     "tokenExpired": "Your token has expired. Please log in again.",
-    "genericError": "Something went very wrong."
+    "genericError": "Something went very wrong.",
+    "noDocumentFound": "No document found with that ID"
   },
   "eventNotification": {
     "eventNotificationNotFound": "Event notification not found",
@@ -356,27 +381,36 @@
     "'RecordCreatedSuccessfully'": "Record created successfully"
   },
   "leave": {
-    "generalSettingNotFound": "General setting not found",
+    "companyInfoMissing": "Company information missing in cookies",
+    "generalSettingNotFound": "GeneralSetting not found",
     "leaveCategoryNotFound": "Leave category not found",
-    "leaveCategorySystemGenerated": "Leave category is system-generated and cannot be deleted",
-    "leaveCategoryInUse": "Leave category is added against a leave template and cannot be deleted",
-    "leaveTemplateNotFound": "Leave template not found",
-    "leaveTemplateLabelRequired": "Label is required",
-    "leaveTemplateLabelExists": "Leave template label already exists",
-    "leaveCategoriesRequired": "Leave categories are required",
-    "leaveCategoryInvalid": "Invalid leave category",
-    "employeeLeaveAssignmentNotFound": "Employee leave assignment not found",
-    "leaveNeedsClosure": "Leave needs to be closed first before deleting assignment",
+    "systemGeneratedLeaveCategory": "Leave Category Sytem Generated, you can not delete found",
+    "leaveCategoryInTemplate": "Leave Category Added against Leave tempalte, you can not delete found",
+    "employeeLeaveAssignmentNotFound": "EmployeeLeaveAssignment not found",
+    "leaveNeedClosure": "Leave Need to close first before delete assignment",
+    "labelRequired": "Label is required",
     "companyIdNotFound": "Company ID not found in cookies",
-    "usersRequired": "Users are required",
-    "leaveAlreadyGranted": "Leave already granted for the same user on the same date",
-    "employeeLeaveGrantNotFound": "Employee leave grant not found",
-    "userInvalid": "Invalid user",
-    "leaveGrantDateExists": "Leave grant for the same user and date already exists",
-    "leaveApplicationNotFound": "Employee leave application not found",
-    "shortLeaveNotFound": "Short leave not found",
-    "leaveTemplateCategoryNotFound": "Leave template category not found",
-    "invalidRequestData": "Invalid request data"
+    "labelExists": "Label already exists",
+    "leaveCategoriesRequired": "Leave Categories are required",
+    "leaveTemplateNotFound": "LeaveTemplate not found",
+    "leaveTemplateLabelExists": "Leave Template Label already exists",
+    "leaveCategoryNotInRequest": "Leave Category Not Exists in Request",
+    "invalidCategory": "Invalid Category",
+    "internalServerError": "Internal server error",
+    "invalidRequestData": "Invalid request data",
+    "usersRequired": "users are required",
+    "leaveAlreadyGranted": "Leave alredy Granted for Same user on same date",
+    "employeeLeaveGrantNotFound": "Employee Leave Grant not found",
+    "invalidUser": "Invalid user",
+    "leaveGrantDateExists": "Leave Grant for the same user and date already exists",
+    "leaveApplicationNotFound": "Employee Leave Application not found",
+    "leaveAssignmentNotExist": "Leave assignment does not exist. Cannot apply for leave.",
+    "insufficientLeaveBalance": "Not enough leave balance to apply for this leave.",
+    "shortLeaveNotFound": "ShortLeave not found",
+    "AttachmentPropertiesMustBeProvided": "All attachment properties must be provided",
+    "InvaliddateFormat": "Invalid date format. Please provide valid dates."  ,
+    "InvalidEndDate": "End date must be after start date.",
+    "ErrorCreatingLeaveTemplateCategory": "Error creating LeaveTemplateCategory"  
   },
   "liveTracking": {
     "userAlreadyAdded": "User already added for live tracking",
@@ -477,7 +511,36 @@
     "'InvalidPlanOrOfferID'": "Invalid plan or offer ID",
     "IncludeDetailsNotFound": "Include Details not found",
     "PlanSuccessfullyRemovedFromTheOffer": "Plan successfully removed from the offer",
-    "NameAlreadyInUseForAnotherUserGroup": "Name already in use for another UserGroup"
+    "NameAlreadyInUseForAnotherUserGroup": "Name already in use for another UserGroup",
+
+    "userGroupTypeNotFound": "User Group Type not found",
+    "userGroupTypeRemoved": "User group type successfully removed",
+    "nameAlreadyInUse": "Name already in use for another User Group",
+    "prerequisitesExist": "Prerequisites already exist for the given plan and offer",
+    "invalidPlanOrOfferId": "Invalid plan or offer ID",    
+    "prerequisitesRemoved": "Prerequisites successfully removed",
+    "companyPlanExists": "Company plan already exists for the given plan and company",    
+    "companyPlanRemoved": "CompanyPlan successfully removed",    
+    "planRemovedFromOffer": "Plan successfully removed from the offer",
+    "invalidCurrentPlanId": "Invalid currentPlanId ID",
+    "subscriptionNotFound": "Subscription not found",
+    "invalidSubscriptionId": "Invalid subscription ID",
+    "planNotFound": "Plan not found",
+    "pleaseProvideFields": "Please provide the fields to update",
+    "selectDifferentPlan": "Please select a different plan",
+    "unableToChangePlan": "Unable to change the plan",
+    "planHistoryNotFound": "Plan history not found",
+    "invalidPlanHistoryId": "Invalid plan history ID",
+    "invoiceNotFound": "Invoice not found",
+    "invalidInvoiceId": "Invalid invoice ID",
+    "userGroupDetailsNotFound": "User Group Details not found",
+    "invalidUserGroupTypeId": "Invalid UserGroupType ID",
+    "invalidUserIds": "Invalid user IDs: ",
+    "usersAddedToGroup": "Users successfully added to the userGroup",
+    "usersUpdatedInGroup": "Users in UserGroupType successfully updated",
+    "usersRetrieved": "Users retrieved successfully",
+    "InvalidRequestPayload": "UserGroupType successfully created",
+    "InvalidSignature": "Invalid Signature"
   },
   "productivity": {
     "modelCreated": "Productivity Model created successfully",
@@ -491,7 +554,8 @@
     "projectNotFound": "No project found with that ID",
     "projectUserNotFound": "No project user found with that ID",
     "projectInUse": "Project is already in use. Please delete related records before deleting the Project.",
-    "projectUserExists": "Project User already exists."
+    "projectUserExists": "Project User already exists.",
+    "noDocumentFound": "No document found with that ID"
   },
   "recruitment": {
     "skillNotFound": "No skill found with that ID",
@@ -597,5 +661,9 @@
     "meetingCreationFailed": "Unable to generate meeting link",
     "internalServerError": "Internal server error",
      "accessTokenFailed": "Failed to get access token"
+  },
+  "openAI": {
+    "ParametersAreRequired": "Model and prompt parameters are required",
+    "invalidModel": "Invalid model specified"    
   }
 }

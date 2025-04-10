@@ -75,7 +75,7 @@ exports.getAssetTypes = catchAsync(async (req, res, next) => {
   });
   if (!assetTypes) {
     websocketHandler.sendLog(req, 'Asset type not found');
-    return next(new AppError("AssetType not found", 404));
+    return next(new AppError(req.t('assetManagement.AssetTypeNotFound'), 404));
   }
   websocketHandler.sendLog(req, 'Asset type retrieved successfully');
   res.status(200).json({
@@ -301,7 +301,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
   );
   if (!assetAttributeValue) {
     websocketHandler.sendLog(req, 'Asset attribute value not found during update');
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   websocketHandler.sendLog(req, 'Asset attribute value updated successfully');
   res.status(200).json({
@@ -322,7 +322,7 @@ exports.getAllAssetAttributeValues = catchAsync(async (req, res, next) => {
 exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
   const assetAttributeValue = await AssetAttributeValue.findById(req.params.id);
   if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -340,7 +340,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     }
   );
   if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   res.status(200).json({
     status:constants.APIResponseStatus.Success,
@@ -353,7 +353,7 @@ exports.deleteAssetAttributeValuesByAssetId = catchAsync(async (req, res, next) 
   const assetAttributeValues = await AssetAttributeValue.deleteMany({assetId: req.params.assetId});
   if (!assetAttributeValues) {
     websocketHandler.sendLog(req, 'No asset attribute values found for deletion');
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   websocketHandler.sendLog(req, 'Asset attribute values deleted successfully');
   res.status(204).json({
@@ -413,14 +413,14 @@ exports.createAssetAttributeValue = catchAsync(async (req, res, next) => {
       });
     }    
   } else {
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
 });
 
 exports.getAssetAttributeValue = catchAsync(async (req, res, next) => {
   const assetAttributeValue = await AssetAttributeValue.findById(req.params.id);
   if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -438,7 +438,7 @@ exports.updateAssetAttributeValue = catchAsync(async (req, res, next) => {
     }
   );
   if (!assetAttributeValue) {
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -451,7 +451,7 @@ exports.deleteAssetAttributeValue = catchAsync(async (req, res, next) => {
   const assetAttributeValue = await AssetAttributeValue.findByIdAndDelete(req.params.id);
   if (!assetAttributeValue) {
     websocketHandler.sendLog(req, 'Asset attribute value not found for deletion');
-    return next(new AppError("AssetAttributeValue not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetAttributeValueNotFound'), 404));
   }
   websocketHandler.sendLog(req, 'Asset attribute value deleted successfully');
   res.status(204).json({
@@ -659,7 +659,7 @@ exports.deleteCustomAttributeByAssetType = catchAsync(
     });
 
     if (!customAttributes) {
-      return next(new AppError("CustomAttribute not found", 404));
+      return next(new AppError(req.t('assetsManagement.CustomAttributeNotFound'), 404));
     }
 
   websocketHandler.sendLog(req, 'Custom attributes deleted successfully');
@@ -739,7 +739,7 @@ exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
   }).populate("Asset");
   if (!employeeAsset) {
     websocketHandler.sendLog(req, 'Employee asset not found');
-    return next(new AppError("EmployeeAsset not found", 404));
+    return next(new AppError(req.t('assetsManagement.EmployeeAssetNotFound'), 404));
   }
   websocketHandler.sendLog(req, 'Employee asset retrieved successfully');
   res.status(200).json({
@@ -762,7 +762,7 @@ exports.updateEmployeeAsset = catchAsync(async (req, res, next) => {
 
   if (!employeeAsset) {
     websocketHandler.sendLog(req, 'Employee asset not found during update');
-    return next(new AppError("EmployeeAsset not found", 404));
+    return next(new AppError(req.t('assetsManagement.EmployeeAssetNotFound'), 404));
   }
 
   websocketHandler.sendLog(req, 'Employee asset updated successfully');
@@ -1015,7 +1015,7 @@ exports.deleteAsset = catchAsync(async (req, res, next) => {
   if(!employeeAsset){
   const asset = await Asset.findByIdAndDelete(req.params.id);
   if (!asset) {
-    return next(new AppError("Asset not found", 404));
+    return next(new AppError(req.t('assetsManagement.AssetNotFound'), 404));
   }
   res.status(204).json({
     status:constants.APIResponseStatus.Success,
