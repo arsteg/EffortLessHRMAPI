@@ -70,14 +70,14 @@ const Email_template_constant = {
   };
   const Resignation_Status = {
     Pending: "Pending",
-    Completed: "completed",
+    Completed: "Completed",
     InProgress: "In-Progress",
     Approved: "Approved",    
     Deleted: "Deleted"
   };
   const Termination_status = {
     Pending: "Pending",
-    Completed: "completed",
+    Completed: "Completed",
     Appealed: "Appealed", 
     Deleted: "Deleted"
   };

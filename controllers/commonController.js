@@ -13,10 +13,45 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const constants = require('../constants');
 const globalStore = require('../utils/globalStore');
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler  = require('../utils/websocketHandler');
 const UserDevice = require('../models/commons/userDeviceModel');
 const { log } = require('winston');
 const { format } = require('date-fns');
+
+exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getTerminationStatusList', constants.LOG_TYPES.INFO);
+  
+  try {
+    const terminationStatusList = constants.Termination_status;    
+    websocketHandler.sendLog(req,`Retrieved ${terminationStatusList.length} termination statuses`, constants.LOG_TYPES.INFO);
+    res.status(200).json({status: constants.APIResponseStatus.Success,data: {statusList: terminationStatusList}});
+    } 
+    catch (error) {
+    websocketHandler.sendLog(req,`Error fetching termination statuses: ${error.message}`,constants.LOG_TYPES.ERROR);
+    res.status(500).json({ error: req.t('common.serverError') });
+    }
+  });
+
+
+  exports.getResignationStatusList = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting getResignationStatusList', constants.LOG_TYPES.INFO);
+  
+    try {
+      const resignationStatusList = constants.Resignation_Status;
+  
+      websocketHandler.sendLog(req,`Retrieved ${resignationStatusList.length} resignation statuses`,constants.LOG_TYPES.INFO);
+  
+      res.status(200).json({status: constants.APIResponseStatus.Success,
+        data: {
+          statusList: resignationStatusList
+        }
+      });
+    } catch (error) {
+      websocketHandler.sendLog(req,`Error fetching resignation statuses: ${error.message}`,constants.LOG_TYPES.ERROR);  
+      res.status(500).json({ error: req.t('common.serverError') });
+    }
+  });
+  
 // Get Country List
  exports.getCountryList = catchAsync(async (req, res, next) => {    
     websocketHandler.sendLog(req, 'Starting getCountryList', constants.LOG_TYPES.INFO); 

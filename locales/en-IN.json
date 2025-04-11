@@ -564,14 +564,17 @@
   },
   "separation": {
     "resignationNotFound": "The resignation was not found.",
+    "companyIdNotFound": "The company ID was not found in cookies. Please ensure you are logged in correctly.",  
     "resignationMustBePending": "The resignation status must be pending to allow updates.",
     "invalidResignationStatus": "The resignation status provided is invalid. Valid statuses are: Pending, Completed, Appealed, Deleted.",
     "userNotFound": "The user was not found.",
     "terminationNotFoundOrNotPending": "The termination was not found or is not in a pending status.",
     "terminationRecordNotFound": "The termination record was not found.",
+    "terminationRecordNotInPendingStatus": "The termination record was not found or Not in Pending List",   
     "invalidTerminationStatus": "The termination status provided is invalid. Valid statuses are: Pending, Completed, Appealed.",
-    "companyIdNotFound": "The company ID was not found in cookies.",
     "separationTypeNotFound": "The separation type was not found.",
+  
+    "existingResignation": "User already has an active resignation.",
     "exitInterviewQuestionNotFound": "The exit interview question was not found.",
     "exitInterviewOptionsNotFound": "The exit interview question options were not found.",
     "exitInterviewAnswerNotFound": "The exit interview question answer was not found.",

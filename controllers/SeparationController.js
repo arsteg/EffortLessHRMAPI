@@ -13,13 +13,39 @@ const constants = require('../constants');
 const Termination = require('../models/Separation/Termination');
 const  websocketHandler  = require('../utils/websocketHandler');
 
-// Add a Resignation
 exports.addResignation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addResignation execution', constants.LOG_TYPES.TRACE);
 
   const companyId = req.cookies.companyId;
-  websocketHandler.sendLog(req, `Using company ID from cookies: ${companyId}`, constants.LOG_TYPES.DEBUG);
+   // Check if companyId exists in cookies
+   if (!companyId) {
+    return next(new AppError(req.t('separation.companyIdNotFound'), 400));
+  }
 
+  websocketHandler.sendLog(req, `Using company ID from cookies: ${companyId}`, constants.LOG_TYPES.DEBUG);
+  
+
+  // Validate resignation_status if provided in req.body
+  if (req.body.resignation_status && !Object.values(constants.Resignation_Status).includes(req.body.resignation_status)) {
+    return next(new AppError(req.t('separation.invalidResignationStatus'), 400));
+  }
+  // Check if user already has an active resignation
+  const userId = req.body.user; // Assuming userId is passed in request body
+  const existingResignation = await Resignation.findOne({
+    user: userId,
+    company: companyId,
+    resignation_status: { 
+      $in: [constants.Resignation_Status.Pending, constants.Resignation_Status.InProgress, constants.Resignation_Status.Approved] 
+    }
+  });
+
+if (existingResignation) {
+  websocketHandler.sendLog(req, `User already has an active resignation with ID: ${existingResignation._id}`, constants.LOG_TYPES.WARNING);
+  return res.status(400).json({
+    status: constants.APIResponseStatus.Error,
+    message: req.t('separation.existingResignation')
+  });
+}
   const resignationData = {
     ...req.body,
     resignation_status: constants.Resignation_Status.Pending,
@@ -29,7 +55,6 @@ exports.addResignation = catchAsync(async (req, res, next) => {
 
   const resignation = await Resignation.create(resignationData);
   websocketHandler.sendLog(req, `Created resignation with ID: ${resignation._id}`, constants.LOG_TYPES.INFO);
-
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: resignation
@@ -41,7 +66,7 @@ exports.getResignationByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getResignationByUser for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
 
   websocketHandler.sendLog(req, `Querying resignation for user ${req.params.userId} in company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  const resignation = await Resignation.findOne({
+  const resignation = await Resignation.find({
     user: req.params.userId,
     company: req.cookies.companyId,
     resignation_status: { $ne: constants.Resignation_Status.Deleted }
@@ -76,9 +101,13 @@ exports.getResignationByStatus = catchAsync(async (req, res, next) => {
 // Update Resignation only if status is "pending"
 exports.getResignationByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getResignationByCompany for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-
+  const companyId = req.cookies.companyId;
+   // Check if companyId exists in cookies
+   if (!companyId) {
+    return next(new AppError(req.t('separation.companyIdNotFound'), 400));
+  }
   websocketHandler.sendLog(req, `Querying resignations for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  const resignations = await Resignation.find({ company: req.cookies.companyId, resignation_status: { $ne: constants.Resignation_Status.Deleted } });
+  const resignations = await Resignation.find({ company: companyId, resignation_status: { $ne: constants.Resignation_Status.Deleted } });
 
   websocketHandler.sendLog(req, `Found ${resignations.length} resignations`, constants.LOG_TYPES.INFO);
 
@@ -95,23 +124,19 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
   const resignation = await Resignation.findById(req.params.id);
   if (!resignation) {
     websocketHandler.sendLog(req, `Resignation ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('separation.resignationNotFound'), 404)
-  );
+    return next(new AppError(req.t('separation.resignationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Found resignation with status: ${resignation.resignation_status}`, constants.LOG_TYPES.DEBUG);
 
   if (resignation.resignation_status !== constants.Resignation_Status.Pending) {
     websocketHandler.sendLog(req, `Cannot update resignation ${req.params.id}: status is ${resignation.resignation_status}`, constants.LOG_TYPES.WARN);
-    return next(new AppError(req.t('separation.resignationMustBePending'), 400)
-  );
+    return next(new AppError(req.t('separation.resignationMustBePending'), 400));
   }
-
   websocketHandler.sendLog(req, `Updating resignation ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const updatedResignation = await Resignation.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
-
   websocketHandler.sendLog(req, `Resignation ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
@@ -119,7 +144,6 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
     data: updatedResignation
   });
 });
-
 exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting changeResignationStatus for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const resignation_status = req.body.resignation_status;
@@ -159,11 +183,16 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   });
  });
 
+
 // Add a new termination record
 exports.addTermination = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addTermination execution', constants.LOG_TYPES.TRACE);
 
   const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+   return next(new AppError(req.t('separation.companyIdNotFound'), 400));
+ }
   websocketHandler.sendLog(req, `Using company ID from cookies: ${company}`, constants.LOG_TYPES.DEBUG);
 
   
@@ -186,7 +215,7 @@ exports.getTerminationByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getTerminationByUser for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
  
   websocketHandler.sendLog(req, `Querying termination for user ${req.params.userId} in company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  const termination = await Termination.findOne({ user: req.params.userId, company: req.cookies.companyId });
+  const termination = await Termination.find({ user: req.params.userId, company: req.cookies.companyId });
  
   if (!termination) {
   websocketHandler.sendLog(req, `No termination found for user ${req.params.userId}`, constants.LOG_TYPES.WARN);
@@ -216,14 +245,23 @@ exports.getTerminationByStatus = catchAsync(async (req, res, next) => {
   });
 });
 
+
 // Get terminations by company (from cookies)
 exports.getTerminationByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getTerminationByCompany for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
 
   const company = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!company) {
+   return next(new AppError(req.t('separation.companyIdNotFound'), 400));
+ }
   websocketHandler.sendLog(req, `Querying terminations for company ${company}`, constants.LOG_TYPES.TRACE);
 
-  const terminations = await Termination.find({ company });
+  const terminations = await Termination.find({ 
+    termination_status: { $ne: constants.Termination_status.Deleted },  // Exclude matching terminationStatus
+    company: req.cookies.companyId                  // Ensure the company matches the cookie ID
+     });
+  
   websocketHandler.sendLog(req, `Found ${terminations.length} terminations`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
@@ -260,46 +298,54 @@ exports.updateTermination = catchAsync(async (req, res, next) => {
     data: updatedTermination
   });
 });
+
 exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
- websocketHandler.sendLog(req, `Starting changeTerminationStatus for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
- const { termination_status } = req.body;
- const validStatuses = [constants.Termination_status.Appealed, constants.Termination_status.Completed];
- if (!validStatuses.includes(termination_status)) {
- websocketHandler.sendLog(req, `Invalid termination status: ${termination_status}`, constants.LOG_TYPES.ERROR);
- return next(new AppError(req.t('separation.invalidTerminationStatus'), 400)
-);
- }
+  websocketHandler.sendLog(req, `Starting changeTerminationStatus for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  const { termination_status } = req.body;
+  const validStatuses = [constants.Termination_status.Appealed, constants.Termination_status.Completed,constants.Termination_status.Deleted];
+  if (!validStatuses.includes(termination_status)) {
+      websocketHandler.sendLog(req, `Invalid termination status: ${termination_status}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.invalidTerminationStatus'), 400));
+    }
 
- websocketHandler.sendLog(req, `Fetching termination ${req.params.id}`, constants.LOG_TYPES.TRACE);
- const termination = await Termination.findById(req.params.id);
- if (!termination) {
- websocketHandler.sendLog(req, `Termination ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
- return next(new AppError(req.t('separation.terminationRecordNotFound'), 404)
-);
- }
+  websocketHandler.sendLog(req, `Fetching termination ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  const termination = await Termination.findById(req.params.id);
+  if (!termination) {
+      websocketHandler.sendLog(req, `Termination ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.terminationRecordNotFound'), 404));
+    }
+  if (!termination.termination_status !== constants.Termination_status.Pending && termination_status==constants.Termination_status.Deleted) {
+    websocketHandler.sendLog(req, `Termination ${req.params.id} Status is not pending to Delete`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.terminationRecordNotInPendingStatus'), 400));
+  }
+  termination.termination_status = termination_status;
+  const updatedTermination = await termination.save();
+  websocketHandler.sendLog(req, `Changed termination status to ${termination_status}`, constants.LOG_TYPES.INFO);
 
- termination.termination_status = termination_status;
- const updatedTermination = await termination.save();
- websocketHandler.sendLog(req, `Changed termination status to ${termination_status}`, constants.LOG_TYPES.INFO);
+  const user = await User.findById(termination.user);
+  if (!user) {
+    websocketHandler.sendLog(req, `User ${termination.user} not found`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.userNotFound'), 404));
+  }
 
- if (termination.termination_status ===constants.Termination_status.Approved) {
- websocketHandler.sendLog(req, `Processing completed status for user ${termination.user}`, constants.LOG_TYPES.TRACE);
- const user = await User.findById(termination.user);
- if (!user) {
- websocketHandler.sendLog(req, `User ${termination.user} not found`, constants.LOG_TYPES.ERROR);
- return next(new AppError(req.t('separation.userNotFound'), 404)
-);
- }
- user.status = constants.User_Status.Terminated;
- await user.save();
- websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
- }
+  if (termination.termination_status === constants.Termination_status.Approved) {
+    websocketHandler.sendLog(req, `Processing completed status for user ${termination.user}`, constants.LOG_TYPES.TRACE);
+    user.status = constants.User_Status.Terminated;
+    await user.save();
+    websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
+  }
 
- res.status(200).json({
- status: constants.APIResponseStatus.Success,
- data: updatedTermination
- });
+  if (termination.termination_status === constants.Termination_status.Deleted) {
+    websocketHandler.sendLog(req, `Processing deleted status for user ${termination.user}`, constants.LOG_TYPES.TRACE);  
+    user.status = constants.User_Status.Active;
+    await user.save();
+    websocketHandler.sendLog(req, `Updated user ${user._id} status to Active`, constants.LOG_TYPES.INFO);
+    }
+  res.status(200).json({
+  status: constants.APIResponseStatus.Success,
+  data: updatedTermination
+  });
 });
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {

@@ -1191,4 +1191,41 @@ router.post('/onlineStatus', authController.protect, commonController.updateOnli
  */
 router.get('/getOnlineUsersByCompany', authController.protect, commonController.getOnlineUsersByCompany);
 
+/**
+ * @swagger
+ * /api/v1/common/get-termination-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Termination Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-termination-status-list', authController.protect, commonController.getTerminationStatusList);
+
+
+/**
+ * @swagger
+ * /api/v1/common/get-resignation-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Resignation Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-resignation-status-list', authController.protect, commonController.getResignationStatusList);
+
 module.exports = router;
