@@ -3594,7 +3594,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
           }
         },
         attendanceSummary: userAttendanceSummary,
-        totalOvertime: userOvertime[0].OvertimeAmount,
+        totalOvertime: userOvertime[0]?.OvertimeAmount,
         totalFixedAllowance: totalFixedAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
