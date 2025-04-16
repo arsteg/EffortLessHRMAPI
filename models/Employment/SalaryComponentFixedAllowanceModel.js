@@ -25,7 +25,7 @@ salaryComponentFixedAllowanceSchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'fixedAllowance',
-      select: 'id label'
+      select: 'id label isProvidentFundAffected isESICAffected isGratuityFundAffected isLWFAffected isProfessionalTaxAffected isTDSAffected'
     });
   } catch (error) {
     console.error("Error populating fixed allowance:", error);

@@ -1245,4 +1245,23 @@ router.get('/get-termination-appeal-status-list', authController.protect, common
  */
 router.get('/get-resignation-status-list', authController.protect, commonController.getResignationStatusList);
 
+/**
+ * @swagger
+ * /api/v1/common/get-payroll-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Resignation Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-payroll-status-list', authController.protect, commonController.getPayrollStatusList);
+
+
 module.exports = router;

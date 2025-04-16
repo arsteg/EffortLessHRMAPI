@@ -992,6 +992,26 @@ res.status(200).json({
 });
 
 exports.updateExpenseReport = catchAsync(async (req, res, next) => {
+  if(req.body.status === 'Approved' || req.body.status === 'Rejected' || req.body.status === 'Cancelled') {
+    const expenseTemplate = await EmployeeExpenseAssignment.findOne({user : req.body.employee});
+    const expenseReport = await ExpenseReport.findById(mongoose.Types.ObjectId(req.params.id));
+    if(expenseTemplate && expenseTemplate.primaryApprover  && expenseTemplate.secondaryApprover) {
+      if(expenseReport.status === constants.Leave_Application_Constant.Level_1_Approval_Pending && expenseTemplate.primaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      } else {
+        req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
+      }
+      if(expenseReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && expenseTemplate.secondaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      }
+    }
+  }
   const expenseReport = await ExpenseReport.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -1103,7 +1123,9 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
     const query = { employee: { $in: objectIdArray } };
-    if (req.body.status) {
+    if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+      query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+    } else {
       query.status = req.body.status;
     }
     const totalCount = await ExpenseReport.countDocuments(query);
@@ -1143,7 +1165,9 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
-  if (req.body.status) {
+  if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+    query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+  } else {
     query.status = req.body.status;
   }
   const totalCount = await ExpenseReport.countDocuments(query);
@@ -1430,6 +1454,26 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
 });
 
 exports.updateAdvance = catchAsync(async (req, res, next) => {
+  if(req.body.status === 'Approved' || req.body.status === 'Rejected' || req.body.status === 'Cancelled') {
+    const advanceTemplate = await EmployeeAdvanceAssignment.findOne({user : req.body.employee});
+    const advanceReport = await ExpenseAdvance.findById(mongoose.Types.ObjectId(req.params.id));
+    if(advanceTemplate && advanceTemplate.primaryApprover  && advanceTemplate.secondaryApprover) {
+      if(advanceReport.status === constants.Leave_Application_Constant.Level_1_Approval_Pending && advanceTemplate.primaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      } else {
+        req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
+      }
+      if(advanceReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && advanceTemplate.secondaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      }
+    }
+  }
     const advance = await Advance.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
@@ -1453,11 +1497,13 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
 
-  if (req.body.status) {
+  if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+    query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+  } else {
     query.status = req.body.status;
   }
   const totalCount = await Advance.countDocuments(query); 
-  const advances = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  const advances = await Advance.find(query).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
     res.status(200).json({
         status: constants.APIResponseStatus.Success,
