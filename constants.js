@@ -79,7 +79,13 @@ const Email_template_constant = {
     Pending: "Pending",
     Completed: "Completed",
     Appealed: "Appealed", 
-    Deleted: "Deleted"
+    Deleted: "Deleted",
+    Reinstated: "Reinstated"
+  };
+  const Termination_Appealed_status = {
+    Pending: "Pending",
+    Rejected: "Rejected",  
+    Approved: "Approved", 
   };
   const Payroll_FNF = {   
     InProgress: "InProgress",
@@ -156,7 +162,7 @@ const Email_template_constant = {
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,
     Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
     Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
-    Resignation_Status,Termination_status };
+    Resignation_Status,Termination_status ,Termination_Appealed_status};
   
 
 

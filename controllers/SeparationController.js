@@ -11,6 +11,8 @@ const User = require('../models/permissions/userModel');
 const Resignation = require("../models/Separation/Resignation");
 const constants = require('../constants');
 const Termination = require('../models/Separation/Termination');
+const TerminationAppeal = require('../models/Separation/TerminationAppeal');
+const mongoose = require('mongoose');
 const  websocketHandler  = require('../utils/websocketHandler');
 
 exports.addResignation = catchAsync(async (req, res, next) => {
@@ -329,7 +331,7 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('separation.userNotFound'), 404));
   }
 
-  if (termination.termination_status === constants.Termination_status.Approved) {
+  if (termination.termination_status === constants.Termination_status.Completed) {
     websocketHandler.sendLog(req, `Processing completed status for user ${termination.user}`, constants.LOG_TYPES.TRACE);
     user.status = constants.User_Status.Terminated;
     await user.save();
@@ -347,6 +349,128 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
   data: updatedTermination
   });
 });
+
+exports.submitTerminationAppeal = catchAsync(async (req, res, next) => {
+  const { termination, user, appeal_reason } = req.body;
+
+  websocketHandler.sendLog(req, `Attempting to submit termination appeal for termination ID ${termination}`, constants.LOG_TYPES.TRACE);
+
+  const existingAppeal = await TerminationAppeal.findOne({ termination });
+  if (existingAppeal) {
+    websocketHandler.sendLog(req, `Appeal already exists for termination ID ${termination}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.appealAlreadySubmitted'), 400));
+  }
+
+  const appeal = await TerminationAppeal.create({ termination, user, appeal_reason });
+  await Termination.findByIdAndUpdate(termination, { termination_status: constants.Termination_status.Appealed });
+
+  websocketHandler.sendLog(req, `Appeal submitted and termination status updated to Appealed`, constants.LOG_TYPES.INFO);
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: appeal
+  });
+});
+
+
+exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
+  const { appeal_status, decision_notes, decided_by, appeal_reason } = req.body;
+
+  websocketHandler.sendLog(req, `Starting appeal update for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
+  const appeal = await TerminationAppeal.findById(req.params.id);
+  if (!appeal) {
+    websocketHandler.sendLog(req, `Appeal with ID ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.appealNotFound'), 404));
+  }
+
+  if (appeal_reason) {
+    appeal.appeal_reason = appeal_reason;
+    websocketHandler.sendLog(req, `Appeal reason updated`, constants.LOG_TYPES.TRACE);
+  }
+
+  if (appeal_status) {
+    const validStatuses = [constants.Termination_Appealed_status.Approved, constants.Termination_Appealed_status.Rejected];
+    if (!validStatuses.includes(appeal_status)) {
+      websocketHandler.sendLog(req, `Invalid appeal status provided: ${appeal_status}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.invalidAppealStatus'), 400));
+    }
+
+    appeal.appeal_status = appeal_status;
+    appeal.decision_notes = decision_notes || '';
+    appeal.decided_by = decided_by;
+    appeal.decided_on = new Date();
+
+    websocketHandler.sendLog(req, `Appeal status set to ${appeal_status}`, constants.LOG_TYPES.INFO);
+
+    const terminationStatus =
+      appeal_status === constants.Termination_Appealed_status.Approved
+        ? constants.Termination_status.Reinstated
+        : constants.Termination_status.Completed;
+    const termination = await Termination.findById(appeal.termination);
+
+    if (termination) {
+      termination.termination_status = terminationStatus;
+      await termination.save();
+    }
+    const user = await User.findById(termination.user);
+    if (!user) {
+      websocketHandler.sendLog(req, `User ${termination.user} not found`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.userNotFound'), 404));
+    }
+  
+    if (terminationStatus === constants.Termination_status.Completed) {
+      websocketHandler.sendLog(req, `Processing completed status for user ${termination.user}`, constants.LOG_TYPES.TRACE);
+      user.status = constants.User_Status.Terminated;
+      await user.save();
+      websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
+    }
+  
+    websocketHandler.sendLog(req, `Termination status updated based on appeal outcome`, constants.LOG_TYPES.INFO);
+  }
+
+  await appeal.save();
+
+  websocketHandler.sendLog(req, `Appeal update completed for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: req.t('separation.appealReviewSuccess'),
+    data: appeal,
+  });
+});
+
+
+exports.getTerminationAppealByTerminationId = catchAsync(async (req, res, next) => {
+  const { terminationId } = req.params;
+
+  websocketHandler.sendLog(req, `Fetching appeal for termination ID ${terminationId}`, constants.LOG_TYPES.TRACE);
+
+  if (!mongoose.Types.ObjectId.isValid(terminationId)) {
+    websocketHandler.sendLog(req, `Invalid termination ID format: ${terminationId}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.invalidTerminationId'), 400));
+  }
+
+  const terminationExists = await Termination.findById(terminationId);
+  if (!terminationExists) {
+    websocketHandler.sendLog(req, `Termination ID ${terminationId} not found`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.terminationNotFound'), 404));
+  }
+
+  const appeal = await TerminationAppeal.findOne({ termination: terminationId });
+  if (!appeal) {
+    websocketHandler.sendLog(req, `No appeal found for termination ID ${terminationId}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.appealNotFound'), 404));
+  }
+
+  websocketHandler.sendLog(req, `Appeal retrieved successfully for termination ID ${terminationId}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: appeal
+  });
+});
+
 
 exports.createSeparationType = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createSeparationType execution', constants.LOG_TYPES.TRACE);

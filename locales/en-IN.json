@@ -564,6 +564,10 @@
   },
   "separation": {
     "resignationNotFound": "The resignation was not found.",
+    "invalidTerminationId": "Invalid termination ID.",
+    "terminationNotFound": "The termination record was not found.",
+    "appealNotFound": "The termination appeal was not found.",
+    "appealAlreadySubmitted": "A termination appeal has already been submitted.",
     "companyIdNotFound": "The company ID was not found in cookies. Please ensure you are logged in correctly.",  
     "resignationMustBePending": "The resignation status must be pending to allow updates.",
     "invalidResignationStatus": "The resignation status provided is invalid. Valid statuses are: Pending, Completed, Appealed, Deleted.",
@@ -572,8 +576,9 @@
     "terminationRecordNotFound": "The termination record was not found.",
     "terminationRecordNotInPendingStatus": "The termination record was not found or Not in Pending List",   
     "invalidTerminationStatus": "The termination status provided is invalid. Valid statuses are: Pending, Completed, Appealed.",
-    "separationTypeNotFound": "The separation type was not found.",
-  
+    "appealReviewSuccess": "The appeal has been reviewed and updated successfully.",
+    "invalidAppealStatus": "The provided appeal status is invalid. Allowed values are: Approved or Rejected.",
+    "separationTypeNotFound": "The separation type was not found.",  
     "existingResignation": "User already has an active resignation.",
     "exitInterviewQuestionNotFound": "The exit interview question was not found.",
     "exitInterviewOptionsNotFound": "The exit interview question options were not found.",
