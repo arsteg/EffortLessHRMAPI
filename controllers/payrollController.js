@@ -4572,7 +4572,7 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
 });
 
 // Add a Payroll FNF Loan Advance
-exports.addFNFLoanAdvance = catchAsync(async (req, res, next) => {
+exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   const { payrollFNFUser, loanAndAdvance, amount } = req.body;
 
   // Step 1: Validate FNF User
