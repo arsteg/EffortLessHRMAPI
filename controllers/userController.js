@@ -1460,6 +1460,8 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   }
   
   req.body.company = companyId;
+  req.body.remianingInstallment =  req.body.noOfInstallment;
+  req.body.status=constants.Employee_Loan_Advance_status.Requested;
   websocketHandler.sendLog(req, `Creating loan advance for company ${companyId}`, constants.LOG_TYPES.DEBUG);
   
   if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
@@ -1574,6 +1576,19 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Error checking category: ${error.message}`, constants.LOG_TYPES.ERROR);
     });
   
+  // ✅ Fetch the existing loan advance
+  const existingLoanAdvance = await EmployeeLoanAdvance.findById(req.params.id);
+  if (!existingLoanAdvance) {
+    websocketHandler.sendLog(req, `No loan advance found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.noLoanAdvanceFound'), 404));
+  }
+
+  // ✅ Check status before updating
+  if (existingLoanAdvance.status !== constants.Employee_Loan_Advance_status.Requested) {
+    websocketHandler.sendLog(req, `Loan advance ${req.params.id} not editable due to status: ${existingLoanAdvance.status}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.statusEditRestriction'), 400));
+  }
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.findByIdAndUpdate(
     req.params.id,
     req.body,

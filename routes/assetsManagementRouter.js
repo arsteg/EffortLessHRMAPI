@@ -953,7 +953,7 @@ assetsManagementRouter.post('/employeeAssets', assetsManagementController.create
  * @swagger
  * /api/v1/assetsManagement/employeeAssets/{id}:
  *   get:
- *     summary: Get a employeeAsset by ID
+ *     summary: Get a employeeAsset by Employee Id
  *     tags: [Assets Management]
  *     parameters:
  *       - in: path
@@ -961,7 +961,7 @@ assetsManagementRouter.post('/employeeAssets', assetsManagementController.create
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the employeeAsset
+ *         description: ID of the employee
  *     responses:
  *       200:
  *         description: Successful response with the employeeAsset

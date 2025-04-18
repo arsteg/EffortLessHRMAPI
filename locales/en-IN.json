@@ -485,7 +485,12 @@
     "LWFFixedDeductionMonthNotFound": "The LWF fixed deduction month was not found.",
     "RecordNotFound": "The record was not found.",
     "'RecordSuccessfullyDeleted'": "The record was successfully deleted.",
-    "OvertimeRecordSuccessfullyDeleted": "The payroll overtime record was successfully deleted."
+    "OvertimeRecordSuccessfullyDeleted": "The payroll overtime record was successfully deleted.",
+    "statusEditRestriction": "Loan advance can only be edited when the status is 'Requested'.",
+    "invalidLoanAdvanceId": "Invalid loan or advance selected.",
+    "noRemainingInstallments": "No remaining installments left for this loan or advance.",
+    "invalidFNFUser": "The FNF payroll user provided is invalid."  
+    
   },
   "pricing": {
     "employeeAssignmentNotFound": "The employee advance assignment was not found.",
@@ -564,6 +569,10 @@
   },
   "separation": {
     "resignationNotFound": "The resignation was not found.",
+    "invalidTerminationId": "Invalid termination ID.",
+    "terminationNotFound": "The termination record was not found.",
+    "appealNotFound": "The termination appeal was not found.",
+    "appealAlreadySubmitted": "A termination appeal has already been submitted.",
     "companyIdNotFound": "The company ID was not found in cookies. Please ensure you are logged in correctly.",  
     "resignationMustBePending": "The resignation status must be pending to allow updates.",
     "invalidResignationStatus": "The resignation status provided is invalid. Valid statuses are: Pending, Completed, Appealed, Deleted.",
@@ -572,8 +581,9 @@
     "terminationRecordNotFound": "The termination record was not found.",
     "terminationRecordNotInPendingStatus": "The termination record was not found or Not in Pending List",   
     "invalidTerminationStatus": "The termination status provided is invalid. Valid statuses are: Pending, Completed, Appealed.",
-    "separationTypeNotFound": "The separation type was not found.",
-  
+    "appealReviewSuccess": "The appeal has been reviewed and updated successfully.",
+    "invalidAppealStatus": "The provided appeal status is invalid. Allowed values are: Approved or Rejected.",
+    "separationTypeNotFound": "The separation type was not found.",  
     "existingResignation": "User already has an active resignation.",
     "exitInterviewQuestionNotFound": "The exit interview question was not found.",
     "exitInterviewOptionsNotFound": "The exit interview question options were not found.",

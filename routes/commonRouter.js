@@ -1208,6 +1208,23 @@ router.get('/getOnlineUsersByCompany', authController.protect, commonController.
  *         description: Server error
  */
 router.get('/get-termination-status-list', authController.protect, commonController.getTerminationStatusList);
+/**
+ * @swagger
+ * /api/v1/common/get-termination-appeal-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Termination Appeal Status
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-termination-appeal-status-list', authController.protect, commonController.getTerminationAppealStatusList);
 
 
 /**

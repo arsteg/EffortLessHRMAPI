@@ -3213,31 +3213,64 @@ exports.deletePayrollManualArrears = catchAsync(async (req, res, next) => {
   });
 });
 
-// Add a Payroll Loan/Advance
 exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
-  const { payrollUser } = req.body;
+  const { payrollUser, loanAndAdvance, type, amount } = req.body;
 
-  // Check if payrollUser exists in the PayrollUsers model
+  // Step 1: Check if payrollUser exists in the PayrollUsers model
   const isValidUser = await PayrollUsers.findById(payrollUser);
   if (!isValidUser) {
     return next(new AppError(req.t('payroll.invalidPayrollUser'), 400));
   }
-  // Extract companyId from req.cookies
+
+  // Step 2: Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
 
-  // Check if companyId exists in cookies
+  // Step 3: Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
-  // Add companyId to the request body
+  // Step 4: Add companyId to the request body
   req.body.company = companyId;
+
+  // Step 5: Create the PayrollLoanAdvance record
   const payrollLoanAdvance = await PayrollLoanAdvance.create(req.body);
+
+  // Step 6: Fetch EmployeeLoanAdvance using loanAndAdvance ID
+  const employeeLoan = await EmployeeLoanAdvance.findById(loanAndAdvance);
+  if (!employeeLoan) {
+    return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
+  }
+
+  // Step 7: Handle Disbursement or Repayment based on the loan type
+  if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Disbursement) {
+    // If it's a disbursement, mark the loan as disbursed
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Disbursed;
+  } else if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Repayment) {
+    // If it's a repayment, decrement the remaining installments
+    if (employeeLoan.remainingInstallment > 0) {
+      employeeLoan.remainingInstallment -= 1;
+
+      // Check if all installments are cleared
+      if (employeeLoan.remainingInstallment === 0) {
+        // All installments are paid, set the loan status to 'Cleared'
+        employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
+      }
+    } else {
+      return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
+    }
+  }
+
+  // Step 8: Save the updated EmployeeLoanAdvance record
+  await employeeLoan.save();
+
+  // Step 9: Send response back to the client
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollLoanAdvance
   });
 });
+
 
 // Get Payroll Loan/Advance by payrollUser
 exports.getPayrollLoanAdvanceByPayrollUser = catchAsync(async (req, res, next) => {
@@ -3262,27 +3295,40 @@ exports.getPayrollLoanAdvanceByPayroll = catchAsync(async (req, res, next) => {
   });
 });
 
-// Update Payroll Loan/Advance by ID
-exports.updatePayrollLoanAdvance = catchAsync(async (req, res, next) => {
-  const payrollLoanAdvance = await PayrollLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-  if (!payrollLoanAdvance) {
-    return next(new AppError(req.t('payroll.payrollLoanAdvanceNotFound'), 404));
-  }
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: payrollLoanAdvance
-  });
-});
-
-// Delete Payroll Loan/Advance by ID
 exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
-  const payrollLoanAdvance = await PayrollLoanAdvance.findByIdAndDelete(req.params.id);
+  // Step 1: Find the PayrollLoanAdvance by ID
+  const payrollLoanAdvance = await PayrollLoanAdvance.findById(req.params.id);
   if (!payrollLoanAdvance) {
     return next(new AppError(req.t('payroll.payrollLoanAdvanceNotFound'), 404));
   }
+
+  // Step 2: Fetch related EmployeeLoanAdvance
+  const employeeLoan = await EmployeeLoanAdvance.findById(payrollLoanAdvance.loanAndAdvance);
+  if (!employeeLoan) {
+    return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
+  }
+
+  // Step 3: Reverse the status and installment adjustments based on the type
+  if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Disbursement) {
+    // If it was a disbursement, set the status back to Pending (or any previous state)
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Pending;
+  } else if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Repayment) {
+    // If it was a repayment, increment remaining installments by 1
+    employeeLoan.remainingInstallment += 1;
+
+    // Check if the loan is fully cleared, if so, revert it back to Partially Cleared or Pending
+    if (employeeLoan.remainingInstallment > 0 && employeeLoan.status === constants.Employee_Loan_Advance_status.Cleared) {
+      employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared;
+    }
+  }
+
+  // Step 4: Save the reverted changes to EmployeeLoanAdvance
+  await employeeLoan.save();
+
+  // Step 5: Delete the PayrollLoanAdvance record
+  await payrollLoanAdvance.delete();
+
+  // Step 6: Send response back to the client
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
@@ -4527,10 +4573,61 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
 
 // Add a Payroll FNF Loan Advance
 exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
-  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.create(req.body);
+  const { payrollFNFUser, loanAndAdvance, amount } = req.body;
+
+  // Step 1: Validate FNF User
+  const fnfUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  if (!fnfUser) {
+    return next(new AppError(req.t('payroll.invalidFNFUser'), 400));
+  }
+
+  // Step 2: Fetch EmployeeLoanAdvance
+  const employeeLoan = await EmployeeLoanAdvance.findById(loanAndAdvance);
+  if (!employeeLoan) {
+    return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
+  }
+
+  // Step 3: Validate remaining installment
+  if (employeeLoan.remianingInstallment <= 0) {
+    return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
+  }
+
+  // Step 4: Create FNF Loan Advance record (you can save before or after status update)
+  const fnfLoanAdvance = await PayrollFNFLoanAdvance.create(req.body);
+
+  // Step 5: Calculate total paid so far
+  const totalPreviousRepayment = await PayrollLoanAdvance.aggregate([
+    {
+      $match: {
+        loanAndAdvance: employeeLoan._id,
+        type: constants.Payroll_Loan_Advance_status.Repayment
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPaid: { $sum: '$amount' }
+      }
+    }
+  ]);
+
+  const totalPaid = (totalPreviousRepayment[0]?.totalPaid || 0) + amount;
+
+  // Step 6: Compare and update loan status
+  if (totalPaid >= employeeLoan.amount) {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
+    employeeLoan.remianingInstallment = 0;
+  } else {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared; // or 'In Progress'
+    employeeLoan.remianingInstallment -= 1;
+  }
+
+  await employeeLoan.save();
+
+  // Step 7: Respond
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
-    data: payrollFNFLoanAdvance
+    data: fnfLoanAdvance
   });
 });
 
@@ -4566,36 +4663,135 @@ exports.getPayrollFNFLoanAdvanceByPayrollFNF = catchAsync(async (req, res, next)
     data: payrollFNFLoanAdvance
   });
 });
-// Update a Payroll FNF Loan Advance
 exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
-  const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const { payrollFNFUser, loanAndAdvance, amount } = req.body;
 
-  if (!payrollFNFLoanAdvance) {
+  // Step 1: Validate FNF User
+  const fnfUser = await PayrollFNFUsers.findById(payrollFNFUser);
+  if (!fnfUser) {
+    return next(new AppError(req.t('payroll.invalidFNFUser'), 400));
+  }
+
+  // Step 2: Validate Employee Loan Advance
+  const employeeLoan = await EmployeeLoanAdvance.findById(loanAndAdvance);
+  if (!employeeLoan) {
+    return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
+  }
+
+  // Step 3: Validate Remaining Installments
+  if (employeeLoan.remianingInstallment <= 0) {
+    return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
+  }
+
+  // Step 4: Fetch the old FNF record to adjust the total repayment correctly
+  const existingFNFLoan = await PayrollFNFLoanAdvance.findById(req.params.id);
+  if (!existingFNFLoan) {
     return next(new AppError(req.t('payroll.payrollFNFLoanAdvanceNotFound'), 404));
   }
 
+  // Step 5: Update the record
+  const updatedFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  // Step 6: Recalculate total repayments (adjusting for old amount)
+  const totalPreviousRepayment = await PayrollLoanAdvance.aggregate([
+    {
+      $match: {
+        loanAndAdvance: employeeLoan._id,
+        type: constants.Payroll_Loan_Advance_status.Repayment
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPaid: { $sum: '$amount' }
+      }
+    }
+  ]);
+
+  const previousFNFAmount = existingFNFLoan.amount || 0;
+  const adjustedTotalPaid =
+    (totalPreviousRepayment[0]?.totalPaid || 0) - previousFNFAmount + amount;
+
+  // Step 7: Update Employee Loan status
+  if (adjustedTotalPaid >= employeeLoan.amount) {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
+    employeeLoan.remianingInstallment = 0;
+  } else {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared;
+    employeeLoan.remianingInstallment = Math.max(employeeLoan.remianingInstallment - 1, 0);
+  }
+
+  await employeeLoan.save();
+
+  // Step 8: Respond
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: payrollFNFLoanAdvance
+    data: updatedFNFLoanAdvance
   });
 });
 
-// Delete a Payroll FNF Loan Advance
+
 exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
+  // Step 1: Find and delete the FNF Loan Advance
   const payrollFNFLoanAdvance = await PayrollFNFLoanAdvance.findByIdAndDelete(req.params.id);
 
   if (!payrollFNFLoanAdvance) {
     return next(new AppError(req.t('payroll.payrollFNFLoanAdvanceNotFound'), 404));
   }
 
+  const { loanAndAdvance, amount } = payrollFNFLoanAdvance;
+
+  // Step 2: Fetch the related EmployeeLoanAdvance
+  const employeeLoan = await EmployeeLoanAdvance.findById(loanAndAdvance);
+  if (!employeeLoan) {
+    return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
+  }
+
+  // Step 3: Recalculate total repayments (excluding deleted one)
+  const totalPreviousRepayment = await PayrollLoanAdvance.aggregate([
+    {
+      $match: {
+        loanAndAdvance: employeeLoan._id,
+        type: constants.Payroll_Loan_Advance_status.Repayment
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPaid: { $sum: '$amount' }
+      }
+    }
+  ]);
+
+  // Only include remaining repayments from PayrollLoanAdvance
+  const totalPaidAfterDelete =
+    (totalPreviousRepayment[0]?.totalPaid || 0); // Deleted amount is already removed
+
+  // Step 4: Update EmployeeLoanAdvance status accordingly
+  if (totalPaidAfterDelete >= employeeLoan.amount) {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
+    employeeLoan.remianingInstallment = 0;
+  } else if (totalPaidAfterDelete > 0) {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared;
+    employeeLoan.remianingInstallment = Math.max(employeeLoan.remianingInstallment + 1, 1);
+  } else {
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Disbursed;
+    employeeLoan.remianingInstallment = employeeLoan.noOfInstallment;
+  }
+
+  await employeeLoan.save();
+
+  // Step 5: Respond with no content
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
   });
 });
+
 
 // Add PayrollFNFStatutoryBenefits
 exports.createPayrollFNFStatutoryBenefits = catchAsync(async (req, res, next) => {

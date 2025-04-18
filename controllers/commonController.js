@@ -51,6 +51,23 @@ exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
       res.status(500).json({ error: req.t('common.serverError') });
     }
   });
+  exports.getTerminationAppealStatusList = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting getTerminationAppealStatusList', constants.LOG_TYPES.INFO);
+  
+    try {
+      const appealStatusList = constants.Termination_Appealed_status;
+      websocketHandler.sendLog(req, `Retrieved ${Object.keys(appealStatusList).length} appeal statuses`, constants.LOG_TYPES.INFO);
+      
+      res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: { appealStatusList }
+      });
+    } catch (error) {
+      websocketHandler.sendLog(req, `Error fetching appeal statuses: ${error.message}`, constants.LOG_TYPES.ERROR);
+      
+      res.status(500).json({ error: req.t('common.serverError') });
+    }
+  });
   
   exports.getPayrollStatusList = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Starting getPayrollStatusList', constants.LOG_TYPES.INFO);
