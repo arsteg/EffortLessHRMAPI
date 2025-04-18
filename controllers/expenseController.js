@@ -1201,7 +1201,51 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   });
 });
 
+async function expenseReportValidation(req, res, next) {
+  const {expenseReport, expenseCategory, incurredDate} = req.body;
+  const report = await ExpenseReport.findById(expenseReport);
+  const employee = report.employee;
+  const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({user: employee});   
+  const template = await ExpenseTemplateApplicableCategories.findOne({}).where('expenseCategory').equals(expenseCategory).where('expenseTemplate').equals(userExpenseAssignment.expenseTemplate._id.toString());
+  
+  if (template) {
+    if(template.timePeroid && template.maximumExpensesCanApply){
+      const timePeriod = template.timePeroid === 'Day' ? 1 : template.timePeroid === 'Week' ? 7 : template.timePeroid === 'Month' ? 30 : 1;
+      const timePeriodDate = new Date(incurredDate);
+      timePeriodDate.setDate(timePeriodDate.getDate() + timePeriod);
+  
+      const count = await ExpenseReportExpense.countDocuments({
+        employee: employee,
+        expenseCategory: expenseCategory,
+        incurredDate: { $gte: incurredDate, $lt: timePeriodDate },
+      });
+  
+      if (count >= template.maximumExpensesCanApply) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("You've reached the maximum allowed submissions for this period.")
+        });
+      }
+    }
+
+    if(template.expiryDay){
+      const expiryDate = new Date(incurredDate);
+      expiryDate.setDate(expiryDate.getDate() + template.expiryDay);
+  
+      if (new Date() > expiryDate) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("This expense report has expired.")
+        });
+      }
+    }
+  }
+};
+
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
+
+  await expenseReportValidation(req, res, next);
+  
   // Create ExpenseReportExpense
   const expenseAttachments = req.body.expenseAttachments;
   var documentLink;
@@ -1261,6 +1305,8 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
+  await expenseReportValidation(req, res, next);
+  
   const { id } = req.params;
   const expenseAttachments = req.body.expenseAttachments;
   
