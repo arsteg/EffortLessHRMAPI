@@ -158,11 +158,21 @@ const Email_template_constant = {
     ERROR: 'error',
     FATAL: 'fatal'
   };
-
+  const Employee_Loan_Advance_status = {
+    Disbursed: "Disbursed",
+    Requested: "Requested",
+    In_Progress: "In Progress", 
+    Partially_Cleared: "Partially Cleared",
+    Cleared: "Cleared",
+  };
+  const Payroll_Loan_Advance_status = {
+    Disbursement: "Disbursement",
+    Repayment: "Repayment",
+  };
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,
     Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
     Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
-    Resignation_Status,Termination_status ,Termination_Appealed_status};
+    Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status};
   
 
 

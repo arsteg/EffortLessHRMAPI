@@ -27,9 +27,6 @@ var payrollLoanAdvanceSchema = new Schema({
         'Repayment'
       ],
     },
-    remainingEMI: {
-      type: Number
-    },
     status: {
       type: String,
       enum: ['Pending', 'Approved'],

@@ -4422,48 +4422,6 @@ router.get('/payroll-loan-advance-by-payroll/:payroll', authController.protect, 
 /**
  * @swagger
  * /api/v1/payroll/payroll-loan-advance/{id}:
- *   put:
- *     summary: Update a Payroll Loan/Advance
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Payroll Loan/Advance
- *     requestBody:
- *       description: Updated Payroll Loan/Advance details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               amount:
- *                 type: number
- *                 required: true
- *               disbursementAmount:
- *                 type: number
- *               status:
- *                 type: string
- *                 enum: [Pending, Approved]
- *     responses:
- *       200:
- *         description: Successful response with the updated Payroll Loan/Advance
- *       404:
- *         description: Payroll Loan/Advance not found
- *       500:
- *         description: Internal server error
- */
-router.put('/payroll-loan-advance/:id', authController.protect, payrollController.updatePayrollLoanAdvance);
-
-/**
- * @swagger
- * /api/v1/payroll/payroll-loan-advance/{id}:
  *   delete:
  *     summary: Delete a Payroll Loan/Advance by ID
  *     tags: [Payroll Management]
@@ -6473,14 +6431,6 @@ router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', a
  *                 type: string
  *               LoanAdvanceAmount:
  *                 type: number
- *               status:
- *                 type: string
- *               finalSettlementAmount:
- *                 type: number
- *               fnfClearanceStatus:
- *                 type: string
- *               fnfDate:
- *                 type: string
  *     responses:
  *       201:
  *         description: Payroll FNF Loan Advance successfully added
@@ -6599,8 +6549,6 @@ router.get('/payroll-fnf-loan-advances-by-loan-advance/:loanAndAdvance', authCon
  *                 type: string
  *               LoanAdvanceAmount:
  *                 type: number
- *               status:
- *                 type: string
  *               finalSettlementAmount:
  *                 type: number
  *               fnfClearanceStatus:

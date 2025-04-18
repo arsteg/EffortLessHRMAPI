@@ -16,11 +16,6 @@ const payrollFNFLoanAdvanceSchema = new Schema({
     type: Number,
     required: true,
   },
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Cleared', 'Partially Cleared'],
-    required: true,
-  },
   finalSettlementAmount: {
     type: Number, // The final amount to be deducted or adjusted in the FNF process
     default: 0,
