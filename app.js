@@ -134,4 +134,17 @@ app.use('/api/v1/eventNotifications', eventNotificationRouter);
 app.use('/api/v1/feedback', feedbackRouter);
 app.use('/api/v1/location', locationRouter);
 
+app.use((err, req, res, next) => {
+  // If it's an instance of AppError, use custom method
+  if (err instanceof AppError) {
+    return err.sendErrorJson(res);
+  }
+
+  // For unhandled or unexpected errors
+  console.error('Unhandled error:', err);
+  return res.status(500).json({
+    status: 'error',
+    message: 'Something went wrong!'
+  });
+});
 module.exports = app;
