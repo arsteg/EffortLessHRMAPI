@@ -489,8 +489,8 @@
     "statusEditRestriction": "Loan advance can only be edited when the status is 'Requested'.",
     "invalidLoanAdvanceId": "Invalid loan or advance selected.",
     "noRemainingInstallments": "No remaining installments left for this loan or advance.",
-    "invalidFNFUser": "The FNF payroll user provided is invalid."  
-    
+    "invalidFNFUser": "The FNF payroll user provided is invalid.",
+    "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed."
   },
   "pricing": {
     "employeeAssignmentNotFound": "The employee advance assignment was not found.",

@@ -36,7 +36,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const PayrollUsers = require('../models/Payroll/PayrollUsers');
 const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
 const PayrollFNFTerminationCompensation = require('../models/Payroll/PayrollFNFTerminationCompensation');
-
+const EmployeeLoanAdvance = require("../models/Employment/EmployeeLoanAdvanceModel.js");
 const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollManualArrears = require("../models/Payroll/PayrollManualArrears");
 const PayrollLoanAdvance = require('../models/Payroll/PayrollLoanAdvance');
@@ -3233,6 +3233,18 @@ exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
   // Step 4: Add companyId to the request body
   req.body.company = companyId;
 
+   // 🚫 Step 5: Check for duplicate Disbursement
+   if (type === constants.Payroll_Loan_Advance_status.Disbursement) {
+    const duplicate = await PayrollLoanAdvance.findOne({
+      payrollUser,
+      loanAndAdvance,
+      type: constants.Payroll_Loan_Advance_status.Disbursement
+    });
+
+    if (duplicate) {
+      return next(new AppError(req.t('payroll.duplicateDisbursementEntry'), 400));
+    }
+  }
   // Step 5: Create the PayrollLoanAdvance record
   const payrollLoanAdvance = await PayrollLoanAdvance.create(req.body);
 
@@ -3248,11 +3260,11 @@ exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Disbursed;
   } else if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Repayment) {
     // If it's a repayment, decrement the remaining installments
-    if (employeeLoan.remainingInstallment > 0) {
-      employeeLoan.remainingInstallment -= 1;
+    if (employeeLoan.remianingInstallment > 0) {
+      employeeLoan.remianingInstallment -= 1;
 
       // Check if all installments are cleared
-      if (employeeLoan.remainingInstallment === 0) {
+      if (employeeLoan.remianingInstallment === 0) {
         // All installments are paid, set the loan status to 'Cleared'
         employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
       }
@@ -3307,11 +3319,10 @@ exports.deletePayrollLoanAdvance = catchAsync(async (req, res, next) => {
   if (!employeeLoan) {
     return next(new AppError(req.t('payroll.invalidLoanAdvanceId'), 400));
   }
-
   // Step 3: Reverse the status and installment adjustments based on the type
   if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Disbursement) {
     // If it was a disbursement, set the status back to Pending (or any previous state)
-    employeeLoan.status = constants.Employee_Loan_Advance_status.Pending;
+    employeeLoan.status = constants.Employee_Loan_Advance_status.Requested;
   } else if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Repayment) {
     // If it was a repayment, increment remaining installments by 1
     employeeLoan.remainingInstallment += 1;

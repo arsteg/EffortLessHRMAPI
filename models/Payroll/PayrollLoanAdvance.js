@@ -27,10 +27,6 @@ var payrollLoanAdvanceSchema = new Schema({
         'Repayment'
       ],
     },
-    status: {
-      type: String,
-      enum: ['Pending', 'Approved']
-    },
     company: {
       type: mongoose.Schema.ObjectId,
       ref: 'Company',
