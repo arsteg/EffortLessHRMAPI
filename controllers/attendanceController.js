@@ -2341,12 +2341,10 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
     for (let i = 0; i < attendanceData.length; i++) {
       const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
       websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
-
-      const user = await getUserByEmpCode(EmpCode);
-
+      const user = await getUserByEmpCode(EmpCode,req.cookies.companyId);
       if (!user) {
         websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
-        continue;
+        return next(new AppError(req.t('attendance.empCodeNotValid'), 400));       
       }
 
       const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
@@ -2361,6 +2359,10 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       await insertOvertimeRecords(attendanceRecords, req.cookies.companyId);
       websocketHandler.sendLog(req, `Inserted ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.INFO);
     }
+    else
+    {
+      return next(new AppError(req.t('attendance.uploadAttendanceJSONNoData'), 400));
+    }
 
     websocketHandler.sendLog(req, 'Successfully processed attendance records', constants.LOG_TYPES.INFO);
 
@@ -2370,20 +2372,16 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       data: attendanceRecords,
     });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.uploadAttendanceJSONFailure'),
-      error: error.message,
-    });
+    websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);   
+    return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
   }
 });
 
 // Helper function to fetch user by empCode
-async function getUserByEmpCode(empCode) {
+async function getUserByEmpCode(empCode,company) {
   try {
     // Fetch the appointment by empCode and populate the user data
-    const appointments = await Appointment.find({ empCode: empCode })
+    const appointments = await Appointment.find({ empCode: empCode,company: company })
       .populate('user')  // Populate the user field with user details
       .select('user empCode company joiningDate confirmationDate'); // Select relevant fields    
     if (appointments && appointments.length > 0) {
@@ -2455,8 +2453,10 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
       
     }
   }
-
-  return null; // Return null if no valid shift is found
+  else
+  {
+    return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
+  } 
 }
 
 // Function to get late coming remarks (if needed)

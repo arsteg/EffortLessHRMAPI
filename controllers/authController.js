@@ -26,6 +26,7 @@ const Appointment = require("../models/permissions/appointmentModel");
 const  websocketHandler  = require('../utils/websocketHandler');
 const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
+const AttendanceMode = require('../models/attendance/attendanceMode');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -147,7 +148,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
 
         //Copy Master Tables Data from Master Compnay to newly created Company
         const rolesToDuplicate = await Role.find({ company: companyId });
-        if (taskStatusToDuplicate.length > 0) {   
+        if (rolesToDuplicate.length > 0) {   
         // Step 3: Create new records by cloning and assigning a new id
         const duplicatedRoles= rolesToDuplicate.map((record) => {
           // Create a new object with the same properties as the original record
@@ -246,6 +247,24 @@ exports.webSignup = catchAsync(async(req, res, next) => {
           await IncomeTaxComponant.insertMany(duplicatedTaxComponantList);
         } else {
           console.log('No Tax Componants found to duplicate.');
+        }
+
+        const attendnaceModeToDuplicate = await AttendanceMode.find({ company: companyId });
+        if (attendnaceModeToDuplicate.length > 0) {
+        // Step 3: Create new records by cloning and assigning a new id
+          const duplicateAttendnaceModeList= attendnaceModeToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicateAttendnaceMode = Object.assign({}, record.toObject());
+            duplicateAttendnaceMode._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicateAttendnaceMode.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicateAttendnaceMode;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await AttendanceMode.insertMany(duplicateAttendnaceModeList);
+        } else {
+          console.log('No Attendance Mode found to duplicate.');
         }
   }
   var role =null;
