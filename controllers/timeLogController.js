@@ -295,13 +295,55 @@ exports.getLogInUser1 = catchAsync(async (req, res, next) => {
   });
 });
 
+
 exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getCurrentWeekTotalTime operation', constants.LOG_TYPES.TRACE);
 
-  websocketHandler.sendLog(req, `Fetching logs for user ${req.body.user} from ${req.body.startDate} to ${req.body.endDate}`, constants.LOG_TYPES.DEBUG);
-  const timeLogs = await TimeLog.find({})
-    .where('user').equals(req.body.user)
-    .find({ "date": { "$gte": req.body.startDate, "$lte": req.body.endDate } });
+  // Validate inputs
+  if (!req.body.user || !req.body.startDate || !req.body.endDate) {
+    websocketHandler.sendLog(req, 'Missing required fields: user, startDate, or endDate', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Error,
+      message: 'Missing required fields: user, startDate, endDate'
+    });
+  }
+
+  // Validate user ObjectId
+  if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
+    websocketHandler.sendLog(req, `Invalid user ObjectId: ${req.body.user}`, constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Error,
+      message: 'Invalid user ID'
+    });
+  }
+
+  // Parse dates
+  let startDate, endDate;
+  try {
+    startDate = new Date(req.body.startDate);
+    endDate = new Date(req.body.endDate);
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new Error('Invalid date format');
+    }
+
+    // Ensure dates are at start/end of day for inclusive range
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+  } catch (error) {
+    websocketHandler.sendLog(req, `Invalid date format: startDate=${req.body.startDate}, endDate=${req.body.endDate}`, constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Error,
+      message: 'Invalid date format for startDate or endDate'
+    });
+  }
+
+  websocketHandler.sendLog(req, `Fetching logs for user ${req.body.user} from ${startDate.toISOString()} to ${endDate.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  
+  const timeLogs = await TimeLog.find({
+    user: req.body.user,
+    date: { $gte: startDate, $lte: endDate }
+  });
 
   websocketHandler.sendLog(req, `Found ${timeLogs.length} time logs`, constants.LOG_TYPES.INFO);
   res.status(200).json({
@@ -310,6 +352,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
     data: timeLogs
   });
 });
+
 
 exports.getLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getLog operation', constants.LOG_TYPES.TRACE);
