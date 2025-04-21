@@ -1229,16 +1229,99 @@ router.delete('/signatories/:id', authController.protect, companyController.dele
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);
+/**
+ * @swagger
+ * /api/v1/company/{id}:
+ *   get:
+ *     summary: Get company details by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the company to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Company details fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 phone:
+ *                   type: string
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/id',authController.protect, companyController.getCompany);
 
-router
-  .route('/:id')
-  .get(authController.protect,companyController.getCompany)
-  .patch(   
-    companyController.updateCompany
-  )
-  .delete(
-    companyController.deleteCompany
-  );
+/**
+ * @swagger
+ * /api/v1/company/{id}:
+ *   put:
+ *     summary: Update company details by ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the company to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Fields to update in the company
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyName:
+ *                 type: string
+ *               contactPerson:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               state:
+ *                 type: string
+ *                 required: true
+ *               country:
+ *                 type: string
+ *               pincode:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Company updated successfully
+ *       400:
+ *         description: Invalid request or missing fields
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/:id',authController.protect, companyController.updateCompany);
 
  /**
  * @swagger

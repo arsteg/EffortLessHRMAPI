@@ -44,6 +44,11 @@ exports.deleteCompany = catchAsync(async (req, res, next) => {
 exports.updateCompany =  catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating company with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+    // ✅ Check if state is missing or empty
+ if (!req.body.state || req.body.state.trim() === '') {
+      websocketHandler.sendLog(req, 'State value missing in update request', constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('common.stateNotFound'), 404)); // You can add this key in i18n if not already there
+    }
   const document = await Company.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data

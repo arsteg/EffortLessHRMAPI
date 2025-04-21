@@ -20,7 +20,8 @@
     "invalidLogLevels": "Log levels must be an array of strings.",
     "testLogSuccess": "The test log was executed successfully.",
     "requiredFieldsMissing": "The fields userId, machineId, and isOnline are required.",
-    "recordNotFound": "No record was found with the specified ID."
+    "recordNotFound": "No record was found with the specified ID.",
+    "stateNotFound": "State is missing."
   },
   "appWebsite": {
     "addSuccess": "The app/website record was added successfully for user {userId}.",
@@ -438,7 +439,7 @@
     "pfTemplateNotFound": "The PF template was not found.",
     "fixedAllowancesNotFound": "Fixed allowances were not found.",
     "fixedContributionSlabNotFound": "The fixed contribution slab was not found.",
-    "lwfFixedDeductionMonthNotFound": "The LWF fixed deduction month was not found.",
+    "lwfFixedContributionMonthNotFound": "The LWF fixed contribution month was not found.",
     "ptConfigureStateNotFound": "The PT configure state was not found.",
     "ptSlabNotFound": "The PT slab was not found.",
     "ptDeductionMonthNotFound": "The PT deduction month was not found.",
@@ -484,8 +485,8 @@
     "payrollFNFFlexiBenefitsAndPFTaxNotFound": "The payroll FNF flexi benefits and PF tax record was not found.",
     "payrollFNFIncomeTaxNotFound": "The payroll FNF income tax record was not found.",
     "payrollFNFOvertimeNotFound": "The payroll FNF overtime record was not found.",
-    "LWFFixedDeductionMonthsUpdatedSuccessfully": "The LWF fixed deduction months were updated successfully.",
-    "LWFFixedDeductionMonthNotFound": "The LWF fixed deduction month was not found.",
+    "LWFFixedContributionMonthsUpdatedSuccessfully": "The LWF fixed contribution months were updated successfully.",
+    "LWFFixedContributionMonthNotFound": "The LWF fixed contribution month was not found.",
     "RecordNotFound": "The record was not found.",
     "'RecordSuccessfullyDeleted'": "The record was successfully deleted.",
     "OvertimeRecordSuccessfullyDeleted": "The payroll overtime record was successfully deleted.",
