@@ -1460,7 +1460,7 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   }
   
   req.body.company = companyId;
-  req.body.remianingInstallment =  req.body.noOfInstallment;
+  req.body.remainingInstallment =  req.body.noOfInstallment;
   req.body.status=constants.Employee_Loan_Advance_status.Requested;
   websocketHandler.sendLog(req, `Creating loan advance for company ${companyId}`, constants.LOG_TYPES.DEBUG);
   

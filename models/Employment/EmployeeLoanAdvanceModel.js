@@ -24,7 +24,7 @@ var employeeLoanAdvanceSchema = new Schema({
     type: Number,
     required: true
   },
-  remianingInstallment: {
+  remainingInstallment: {
     type: Number,
     required: true
   },
