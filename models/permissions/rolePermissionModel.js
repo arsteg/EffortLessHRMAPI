@@ -1,42 +1,50 @@
-var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-var rolePermissionSchema = new Schema({     
+const rolePermissionSchema = new mongoose.Schema(
+  {
     roleId: {
-        type: mongoose.Schema.ObjectId,
-        required: true,
-        ref: 'Role',
+      type: mongoose.Schema.ObjectId,
+      ref: 'Role',
+      required: true,
     },
     permissionId: {
       type: mongoose.Schema.ObjectId,
+      ref: 'Permission',
       required: true,
-      ref: 'Permission',  
     },
-    company:{
-        type: mongoose.Schema.ObjectId,
-        ref: 'Company',
-        required: [true, 'Company must belong to a Company']
-      },  
+    company: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Company',
+      required: [true, 'Company must belong to a Company'],
+    },
+    createdBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    createdOn: { type: Date, default: Date.now },
+    updatedOn: { type: Date, default: Date.now },
   },
   {
-    toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
-    toObject: { virtuals: true } // Use virtuals when outputing as Object
-  },
-  {collection: 'RolePermission'});
-  rolePermissionSchema.pre(/^find/,async function(next) {
-    this.populate({
-      path: 'company',
-      select: 'companyName'
-    }).populate({
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    collection: 'RolePermission',
+  }
+);
+
+rolePermissionSchema.index({ roleId: 1, permissionId: 1, company: 1 });
+
+rolePermissionSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'company',
+    select: 'companyName',
+  })
+    .populate({
       path: 'roleId',
-      select: 'Name'
-    }).populate({
+      select: 'Name description',
+    })
+    .populate({
       path: 'permissionId',
-      select: 'permissionName'
+      select: 'permissionName permissionDetails resource action uiElement',
     });
-    next();
-  });
-  module.exports = mongoose.model('RolePermission', rolePermissionSchema);
+  next();
+});
 
-
+module.exports = mongoose.model('RolePermission', rolePermissionSchema);

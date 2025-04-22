@@ -14,7 +14,7 @@ authRouter
  * /api/v1/auth/role:
  *  post:
  *      tags:
- *          - Role Management
+ *          - Role-Based Access Control
  *      summary: "Create Role"
  *      security: [{
  *         bearerAuth: []
@@ -27,8 +27,8 @@ authRouter
  *                      properties:
  *                          name:
  *                              type: string
- *                          
-
+ *                          description:
+ *                              type: string
  *      produces:
  *          - application/json
  *      responses:
@@ -46,7 +46,7 @@ authRouter
  * /api/v1/auth/role/{id}:
  *  delete:
  *      tags:
- *          - Role Management
+ *          - Role-Based Access Control
  *      summary: "Delete Role Based on Id"
  *      security: [{
  *         bearerAuth: []
@@ -77,34 +77,32 @@ authRouter
  * /api/v1/auth/role/update/{id}:
  *  post:
  *      tags:
- *          - Role Management
+ *          - Role-Based Access Control
  *      summary: "Update Role based on RoleId"
- *      security: [{
- *         bearerAuth: []
- *     }]
+ *      operationId: updateRole
+ *      security:
+ *        - bearerAuth: []
  *      parameters:
- *       - name: id
- *         in: path
- *         description: Role ID
- *         required: true
- *         schema:
- *           type: string
- *           format: int64
- *           
+ *        - name: id
+ *          in: path
+ *          description: Role ID
+ *          required: true
+ *          schema:
+ *            type: string
  *      requestBody:
+ *          required: true
  *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          Name:
- *                              type: string
- *                          
- *      produces:
- *          - application/json
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  name:
+ *                    type: string
+ *                  description:
+ *                    type: string
  *      responses:
  *          200:
- *              description: "Success"
+ *              description: "Role updated successfully"
  *              content:
  *                  application/json:
  *                      schema:
@@ -117,7 +115,7 @@ authRouter
  * /api/v1/auth/role/{id}:
  *  get:
  *      tags:
- *          - Role Management
+ *          - Role-Based Access Control
  *      summary: "Get Role Based On Id"
  *      security: [{
  *         bearerAuth: []
@@ -148,7 +146,7 @@ authRouter
  * /api/v1/auth/roles:
  *  get:
  *      tags:
- *          - Role Management
+ *          - Role-Based Access Control
  *      summary: "Get all Role"
  *      security: [{
  *         bearerAuth: []
@@ -170,7 +168,7 @@ authRouter
  * /api/v1/auth/roles/addSubordinate:
  *  post:
  *      tags:
- *          - Team Member Management
+ *          - Role-Based Access Control
  *      summary: "Create Team Member"
  *      security: [{
  *         bearerAuth: []
@@ -203,7 +201,7 @@ authRouter
  * /api/v1/auth/roles/getSubordinates/{id}:
  *  get:
  *      tags:
- *          - Team Member Management
+ *          - Role-Based Access Control
  *      summary: "Get team member Based On UserId"
  *      security: [{
  *         bearerAuth: []
@@ -234,7 +232,7 @@ authRouter
  * /api/v1/auth/roles/deleteSubordinate/{userId}/{subordinateUserId}:
  *  delete:
  *      tags:
- *          - Team Member Management
+ *          - Role-Based Access Control
  *      summary: "Delete Team Member"
  *      security: [{
  *         bearerAuth: []
@@ -283,7 +281,7 @@ authRouter.delete('/user/delete/:id',recruitmentController.deleteSkill);
  * /api/v1/auth/permission/{id}:
  *  get:
  *      tags:
- *          - Permission Management
+ *          - Role-Based Access Control
  *      summary: "Get Permission Based On Id"
  *      security: [{
  *         bearerAuth: []
@@ -314,7 +312,7 @@ authRouter.get('/permission/:id',authController.protect,commonController.getPerm
  * /api/v1/auth/permissions:
  *  get:
  *      tags:
- *          - Permission Management
+ *          - Role-Based Access Control
  *      summary: "Get all Permission"
  *      security: [{
  *         bearerAuth: []
@@ -336,7 +334,7 @@ authRouter.get('/permissions',authController.protect,commonController.getPermiss
  * /api/v1/auth/permission/create:
  *  post:
  *      tags:
- *          - Permission Management
+ *          - Role-Based Access Control
  *      summary: "Create Permission"
  *      security: [{
  *         bearerAuth: []
@@ -368,7 +366,7 @@ authRouter.post('/permission/create',authController.protect,commonController.sav
  * /api/v1/auth/permission/update/{id}:
  *  post:
  *      tags:
- *          - Permission Management
+ *          - Role-Based Access Control
  *      summary: "Update Permission based on PermissionId"
  *      security: [{
  *         bearerAuth: []
@@ -410,7 +408,7 @@ authRouter.post('/permission/update/:id',authController.protect,commonController
  * /api/v1/auth//permission/delete/{id}:
  *  delete:
  *      tags:
- *          - Permission Management
+ *          - Role-Based Access Control
  *      summary: "Delete Permission Based on Id"
  *      security: [{
  *         bearerAuth: []
@@ -454,7 +452,7 @@ authRouter.delete('/userRole/delete/:id',recruitmentController.deleteRole);
  * /api/v1/auth/rolePermission/{id}:
  *  get:
  *      tags:
- *          - Role Permission Management
+ *          - Role-Based Access Control
  *      summary: "Get Role Permission Based On Role Permission Id"
  *      security: [{
  *         bearerAuth: []
@@ -485,7 +483,7 @@ authRouter.get('/rolePermission/:id',authController.protect,authController.getRo
  * /api/v1/auth/rolePermissions:
  *  get:
  *      tags:
- *          - Role Permission Management
+ *          - Role-Based Access Control
  *      summary: "Get all Permission"
  *      security: [{
  *         bearerAuth: []
@@ -507,7 +505,7 @@ authRouter.get('/rolePermissions',authController.protect,authController.getAllRo
  * /api/v1/auth/rolePermission/create:
  *  post:
  *      tags:
- *          - Role Permission Management
+ *          - Role-Based Access Control
  *      summary: "Create Role Permission"
  *      security: [{
  *         bearerAuth: []
@@ -539,7 +537,7 @@ authRouter.post('/rolePermission/create',authController.protect,authController.c
  * /api/v1/auth/rolePermission/update/{id}:
  *  post:
  *      tags:
- *          - Role Permission Management
+ *          - Role-Based Access Control
  *      summary: "Update Role Permission based on RolePermissionId"
  *      security: [{
  *         bearerAuth: []
@@ -581,7 +579,7 @@ authRouter.post('/rolePermission/update/:id',authController.protect,authControll
  * /api/v1/auth/rolePermission/delete/{id}:
  *  delete:
  *      tags:
- *          - Role Permission Management
+ *          - Role-Based Access Control
  *      summary: "Delete Role Permission Based on Id"
  *      security: [{
  *         bearerAuth: []

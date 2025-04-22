@@ -748,7 +748,8 @@ exports.addRole = catchAsync(async (req, res, next) => {
   
   
   const newRole = await Role.create({    
-    Name:req.body.name,
+    name:req.body.name,
+    description:req.body.description,
     company:req.cookies.companyId,
     active:true,   
     createdOn: new Date(Date.now()),
@@ -781,7 +782,47 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateRole = factory.updateOne(Role);
+exports.updateRole = async (req, res) => {
+  console.log('[updateRole] Request received:', {
+    params: req.params,
+    body: req.body,
+    headers: req.headers,
+  });
+
+  const { id } = req.params;
+  const { name, description } = req.body;
+
+  console.log('[updateRole] Extracted data:', { id, name, description });
+
+  try {
+    console.log('[updateRole] Attempting to update role with ID:', id);
+
+    const role = await Role.findByIdAndUpdate(
+      id,
+      { name, description },
+      { new: true, runValidators: true }
+    );
+
+    console.log('[updateRole] Update result:', role);
+
+    if (!role) {
+      console.error('[updateRole] Error: Role not found with ID:', id);
+      return res.status(404).json({ message: req.t('common.recordNotFound') });
+    }
+
+    console.log('[updateRole] Successfully updated role:', role);
+    res.json(role);
+  } catch (error) {
+    console.error('[updateRole] Error:', {
+      errorMessage: error.message,
+      stack: error.stack,
+      fullError: error,
+    });
+
+    res.status(500).json({ message: req.t('common.serverError') });
+  }
+};
+
 
 exports.getRole = catchAsync(async (req, res, next) => {       
   const role = await Role.find({}).where('_id').equals(req.params.id);   

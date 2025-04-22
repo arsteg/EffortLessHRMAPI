@@ -1,26 +1,45 @@
-var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-var userRoleModelSchema = new Schema({  
-  userRoleId: {
-    type: Number,
-    required:true,
-    unique:true
-  },  
-  roleId: {
-      type: Number,
-      required:true
-    },
+const userRoleSchema = new mongoose.Schema(
+  {
     userId: {
-      type: Number,
-      required: true      
-    }  
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    roleId: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Role',
+      required: true,
+    },
+    company: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Company',
+      required: [true, 'Company must belong to a Company'],
+    },
+    createdBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    createdOn: { type: Date, default: Date.now },
+    updatedOn: { type: Date, default: Date.now },
   },
   {
-    toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
-    toObject: { virtuals: true } // Use virtuals when outputing as Object
-  },
-  {collection: 'UserRole' });
-  
-  module.exports = mongoose.model('UserRole', userRoleModelSchema);
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    collection: 'UserRole',
+  }
+);
+
+userRoleSchema.index({ userId: 1, roleId: 1, company: 1 });
+
+userRoleSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'userId',
+    select: 'firstName lastName email',
+  }).populate({
+    path: 'roleId',
+    select: 'Name description',
+  });
+  next();
+});
+
+module.exports = mongoose.model('UserRole', userRoleSchema);
