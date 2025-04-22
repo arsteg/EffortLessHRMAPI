@@ -486,7 +486,7 @@ exports.getFixedContributionSlab = async (req, res, next) => {
     if (!fixedContributionSlab) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:req.t('payroll.fixedContributionSlabNotFound'),
+        message: req.t('payroll.fixedContributionSlabNotFound'),
       });
     }
     res.status(200).json({
@@ -537,7 +537,7 @@ exports.deleteFixedContributionSlab = async (req, res, next) => {
     if (!fixedContributionSlab) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:req.t('payroll.fixedContributionSlabNotFound'),
+        message: req.t('payroll.fixedContributionSlabNotFound'),
       });
     }
     res.status(204).json({
@@ -1965,7 +1965,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     if (!result) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message:req.t('payroll.invalidFixedAllowances') ,
+        message: req.t('payroll.invalidFixedAllowances'),
       });
     }
   }
@@ -1982,7 +1982,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidFixedDeduction') 
+          message: req.t('payroll.invalidFixedDeduction')
         });
       }
     }
@@ -2002,7 +2002,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidVariableAllowance') ,
+          message: req.t('payroll.invalidVariableAllowance'),
         });
       }
     }
@@ -2022,7 +2022,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidVariableDeduction'),
+          message: req.t('payroll.invalidVariableDeduction'),
         });
       }
     }
@@ -2043,7 +2043,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidFixedContribution')  
+          message: req.t('payroll.invalidFixedContribution')
         });
       }
     }
@@ -2060,7 +2060,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidOtherBenefits') 
+          message: req.t('payroll.invalidOtherBenefits')
         });
       }
     }
@@ -2079,7 +2079,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidEmployeeDeduction')
+          message: req.t('payroll.invalidEmployeeDeduction')
         });
       }
     }
@@ -2683,7 +2683,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidFixedContribution')  ,
+          message: req.t('payroll.invalidFixedContribution'),
         });
       }
     }
@@ -2718,7 +2718,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidEmployeeDeduction') ,
+          message: req.t('payroll.invalidEmployeeDeduction'),
         });
       }
     }
@@ -2737,7 +2737,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:req.t('payroll.invalidVariableAllowance'),
+          message: req.t('payroll.invalidVariableAllowance'),
         });
       }
     }
@@ -3233,8 +3233,8 @@ exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
   // Step 4: Add companyId to the request body
   req.body.company = companyId;
 
-   // 🚫 Step 5: Check for duplicate Disbursement
-   if (type === constants.Payroll_Loan_Advance_status.Disbursement) {
+  // 🚫 Step 5: Check for duplicate Disbursement
+  if (type === constants.Payroll_Loan_Advance_status.Disbursement) {
     const duplicate = await PayrollLoanAdvance.findOne({
       payrollUser,
       loanAndAdvance,
@@ -3260,11 +3260,11 @@ exports.addPayrollLoanAdvance = catchAsync(async (req, res, next) => {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Disbursed;
   } else if (payrollLoanAdvance.type === constants.Payroll_Loan_Advance_status.Repayment) {
     // If it's a repayment, decrement the remaining installments
-    if (employeeLoan.remianingInstallment > 0) {
-      employeeLoan.remianingInstallment -= 1;
+    if (employeeLoan.remainingInstallment > 0) {
+      employeeLoan.remainingInstallment -= 1;
 
       // Check if all installments are cleared
-      if (employeeLoan.remianingInstallment === 0) {
+      if (employeeLoan.remainingInstallment === 0) {
         // All installments are paid, set the loan status to 'Cleared'
         employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
       }
@@ -3579,7 +3579,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       const allLoanAdvances = await PayrollLoanAdvance.find({
         payrollUser: { $in: payrollUser?._id },
-        type: 'Repayment'
+        // type: 'Repayment' || 'Disbursement'
       });
 
       const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
@@ -3624,9 +3624,28 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
 
       // Step 6: Get Loan Disbursement for this PayrollUser
+      // const userLoanAdvances = allLoanAdvances
+      //   .filter(loan => loan.payrollUser.equals(payrollUser._id)) // Match payrollUser
+      //   .reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0); // Sum disbursement amounts
+      // console.log(userLoanAdvances)
       const userLoanAdvances = allLoanAdvances
-        .filter(loan => loan.payrollUser.equals(payrollUser._id)) // Match payrollUser
-        .reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0); // Sum disbursement amounts
+      .filter(loan => loan.payrollUser.equals(payrollUser._id))
+      .map(loan => {
+        if (loan.type === 'Disbursement') {
+          return {
+            type: loan.type,
+            disbursementAmount: loan.disbursementAmount || 0
+          };
+        } else if (loan.type === 'Repayment') {
+          return {
+            type: loan.type,
+            amount: loan.amount || 0
+          };
+        }
+        return null;
+      })
+      .filter(Boolean); // Remove null entries
+    
 
       const flexiBenefitsTotal = flexiBenefits
         .filter(flexi => flexi.PayrollUser.equals(payrollUser._id))
@@ -3794,7 +3813,7 @@ exports.deleteFlexiBenefitsAndPFTax = async (req, res) => {
     if (!record) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Error,
-        message:req.t('payroll.RecordNotFound')
+        message: req.t('payroll.RecordNotFound')
       });
     }
 
@@ -3955,23 +3974,23 @@ exports.getAllPayrollOvertimeByPayroll = catchAsync(async (req, res, next) => {
 });
 
 exports.createPayrollStatutory = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
 
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
-   }
- 
-   // Add companyId to the request body
-   req.body.company = companyId;
-   // Check if payrollUser exists in the PayrollUsers model
-   const isValidUser = await PayrollUsers.findById(req.body.payrollUser);
-   if (!isValidUser) {
-     return next(new AppError(req.t('payroll.invalidPayrollUser'), 400));
-   }
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(req.body.payrollUser);
+  if (!isValidUser) {
+    return next(new AppError(req.t('payroll.invalidPayrollUser'), 400));
+  }
   const payrollStatutory = await PayrollStatutory.create(req.body);
-  
+
   res.status(201).json({
     status: 'success',
     data: payrollStatutory
@@ -4003,14 +4022,14 @@ exports.updatePayrollStatutory = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllPayrollStatutoryByCompany = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
 
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
-   }
- 
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+
   const payrollStatutories = await PayrollStatutory.find({
     company: mongoose.Types.ObjectId(companyId)
   })
@@ -4026,13 +4045,13 @@ exports.getAllPayrollStatutoryByCompany = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllPayrollStatutoryByPayrollUser = catchAsync(async (req, res, next) => {
-    // Check if payrollUser exists in the PayrollUsers model
-    const isValidUser = await PayrollUsers.findById(req.params.id);
-    if (!isValidUser) {
-      return next(new AppError(req.t('payroll.invalidPayrollUser'), 400));
-    }
-  const payrollStatutories = await PayrollStatutory.find({ 
-    payrollUser: mongoose.Types.ObjectId(req.params.id) 
+  // Check if payrollUser exists in the PayrollUsers model
+  const isValidUser = await PayrollUsers.findById(req.params.id);
+  if (!isValidUser) {
+    return next(new AppError(req.t('payroll.invalidPayrollUser'), 400));
+  }
+  const payrollStatutories = await PayrollStatutory.find({
+    payrollUser: mongoose.Types.ObjectId(req.params.id)
   })
     .populate('payrollUser')
     .populate('fixedContribution')
@@ -4064,11 +4083,11 @@ exports.getPayrollStatutoryById = catchAsync(async (req, res, next) => {
 
 exports.deletePayrollStatutory = catchAsync(async (req, res, next) => {
   const payrollStatutory = await PayrollStatutory.findByIdAndDelete(req.params.id);
-  
+
   if (!payrollStatutory) {
     return next(new AppError(req.t('payroll.payrollStatutoryNotFound'), 404));
   }
-  
+
   res.status(204).json({
     status: 'success',
     data: null
@@ -4599,7 +4618,7 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   // Step 3: Validate remaining installment
-  if (employeeLoan.remianingInstallment <= 0) {
+  if (employeeLoan.remainingInstallment <= 0) {
     return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
   }
 
@@ -4627,10 +4646,10 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   // Step 6: Compare and update loan status
   if (totalPaid >= employeeLoan.amount) {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
-    employeeLoan.remianingInstallment = 0;
+    employeeLoan.remainingInstallment = 0;
   } else {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared; // or 'In Progress'
-    employeeLoan.remianingInstallment -= 1;
+    employeeLoan.remainingInstallment -= 1;
   }
 
   await employeeLoan.save();
@@ -4690,7 +4709,7 @@ exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   // Step 3: Validate Remaining Installments
-  if (employeeLoan.remianingInstallment <= 0) {
+  if (employeeLoan.remainingInstallment <= 0) {
     return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
   }
 
@@ -4730,10 +4749,10 @@ exports.updatePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   // Step 7: Update Employee Loan status
   if (adjustedTotalPaid >= employeeLoan.amount) {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
-    employeeLoan.remianingInstallment = 0;
+    employeeLoan.remainingInstallment = 0;
   } else {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared;
-    employeeLoan.remianingInstallment = Math.max(employeeLoan.remianingInstallment - 1, 0);
+    employeeLoan.remainingInstallment = Math.max(employeeLoan.remainingInstallment - 1, 0);
   }
 
   await employeeLoan.save();
@@ -4785,13 +4804,13 @@ exports.deletePayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   // Step 4: Update EmployeeLoanAdvance status accordingly
   if (totalPaidAfterDelete >= employeeLoan.amount) {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Cleared;
-    employeeLoan.remianingInstallment = 0;
+    employeeLoan.remainingInstallment = 0;
   } else if (totalPaidAfterDelete > 0) {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Partially_Cleared;
-    employeeLoan.remianingInstallment = Math.max(employeeLoan.remianingInstallment + 1, 1);
+    employeeLoan.remainingInstallment = Math.max(employeeLoan.remainingInstallment + 1, 1);
   } else {
     employeeLoan.status = constants.Employee_Loan_Advance_status.Disbursed;
-    employeeLoan.remianingInstallment = employeeLoan.noOfInstallment;
+    employeeLoan.remainingInstallment = employeeLoan.noOfInstallment;
   }
 
   await employeeLoan.save();
@@ -5196,7 +5215,7 @@ exports.deletePayrollFNFOvertime = async (req, res) => {
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
-      message: req.t('payroll.OvertimeRecordSuccessfullyDeleted') 
+      message: req.t('payroll.OvertimeRecordSuccessfullyDeleted')
     });
   } catch (err) {
     res.status(500).json({
