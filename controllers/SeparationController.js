@@ -317,10 +317,12 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Termination ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('separation.terminationRecordNotFound'), 404));
     }
-  if (!termination.termination_status !== constants.Termination_status.Pending && termination_status==constants.Termination_status.Deleted) {
-    websocketHandler.sendLog(req, `Termination ${req.params.id} Status is not pending to Delete`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('separation.terminationRecordNotInPendingStatus'), 400));
+    if (termination.termination_status !== constants.Termination_status.Pending && termination_status === constants.Termination_status.Deleted) {
+      // If the status is not "Pending" and it is "Deleted", handle the error.
+      websocketHandler.sendLog(req, `Termination ${req.params.id} Status is not pending to Delete`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.terminationRecordNotInPendingStatus'), 400));
   }
+  
   termination.termination_status = termination_status;
   const updatedTermination = await termination.save();
   websocketHandler.sendLog(req, `Changed termination status to ${termination_status}`, constants.LOG_TYPES.INFO);
