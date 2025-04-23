@@ -770,19 +770,10 @@ router.post('/fixed-contribution-list', authController.protect, payrollControlle
  *               fixedContribution:
  *                 type: string
  *                 required: true
- *               fromAmount:
- *                 type: number
- *                 required: true
  *               toAmount:
  *                 type: number
  *                 required: true
- *               employeePercent:
- *                 type: number
- *                 required: true
  *               employeeAmount:
- *                 type: number
- *                 required: true
- *               employerPercentage:
  *                 type: number
  *                 required: true
  *               employerAmount:
@@ -850,15 +841,7 @@ router.get('/lwf-fixed-contribution-slabs/:id', authController.protect, payrollC
  *             properties:
  *               fixedContribution:
  *                 type: string
- *               fromAmount:
- *                 type: number
- *               toAmount:
- *                 type: number
- *               employeePercent:
- *                 type: number
  *               employeeAmount:
- *                 type: number
- *               employerPercentage:
  *                 type: number
  *               employerAmount:
  *                 type: number
@@ -1028,7 +1011,7 @@ router.post('/lwf-fixed-deduction-months', authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.put('/lwf-fixed-deduction-months-update/', authController.protect, payrollController.updateLWFFixedDeductionMonth);
+router.put('/lwf-fixed-deduction-months-update/', authController.protect, payrollController.saveLWFFixedDeductionMonth);
 
 /**
  * @swagger
@@ -1592,14 +1575,11 @@ router.delete('/pt-deduction-months/:id', authController.protect, payrollControl
  *           schema:
  *             type: object
  *             properties:
- *               defaultValue:
+ *               employeeCount:
  *                 type: number
  *                 required: true
- *               maxAmount:
+ *               maxGrossAmount:
  *                 type: number
- *                 required: true
- *               company:
- *                 type: string
  *                 required: true
  *     responses:
  *       201:
@@ -1664,12 +1644,10 @@ router.post('/esic-ceilingAmounts-by-company', authController.protect, payrollCo
  *           schema:
  *             type: object
  *             properties:
- *               defaultValue:
+ *               employeeCount:
  *                 type: number
- *               maxAmount:
+ *               maxGrossAmount:
  *                 type: number
- *               company:
- *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with the updated CeilingAmount
@@ -4730,11 +4708,11 @@ router.get('/overtime/:id', authController.protect, payrollController.getPayroll
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', authController.protect, payrollController.updatePayrollOvertime);
+router.put('/overtime/:id', authController.protect, payrollController.updatePayrollOvertime);
 
 /**
  * @swagger
- * /api/v1/payrollOvertime/{id}:
+ * /api/v1/payroll/overtime/{id}:
  *   delete:
  *     summary: Delete Payroll Overtime by ID
  *     tags: [Payroll Management]

@@ -43,18 +43,18 @@ exports.deleteCompany = catchAsync(async (req, res, next) => {
 
 exports.updateCompany =  catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateCompany', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Updating company with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  websocketHandler.sendLog(req, `Updating company with ID: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
     // ✅ Check if state is missing or empty
  if (!req.body.state || req.body.state.trim() === '') {
       websocketHandler.sendLog(req, 'State value missing in update request', constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('common.stateNotFound'), 404)); // You can add this key in i18n if not already there
     }
-  const document = await Company.findByIdAndUpdate(req.params.id, req.body, {
+  const document = await Company.findByIdAndUpdate(req.cookies.companyId, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data
   });
   if (!document) {
-    websocketHandler.sendLog(req, `Company not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, `Company not found: ${req.cookies.companyId}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.notFound'), 404));
   }
   websocketHandler.sendLog(req, `Company updated: ${document._id}`, constants.LOG_TYPES.INFO);
@@ -68,8 +68,8 @@ exports.updateCompany =  catchAsync(async (req, res, next) => {
 
 exports.getCompany  = catchAsync(async (req, res, next) => {    
   websocketHandler.sendLog(req, 'Starting getCompany', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching company with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-const company = await Company.findById(req.params.id);  
+  websocketHandler.sendLog(req, `Fetching company with ID: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+const company = await Company.findById(req.cookies.companyId);  
 websocketHandler.sendLog(req, `Company retrieved: ${company?._id || 'none'}`, constants.LOG_TYPES.INFO);
 res.status(200).json({
   status: constants.APIResponseStatus.Success,

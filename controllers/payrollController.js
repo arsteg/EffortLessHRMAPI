@@ -4,7 +4,7 @@ const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const FixedContribution = require("../models/Payroll/fixedContributionModel");
 const catchAsync = require("../utils/catchAsync");
 const LWFFixedContributionSlab = require("../models/Payroll/lwfFixedContributionSlabModel");
-const LWFFixedContributionMonth = require("../models/Payroll/lwfFixedContributionMonthModel");
+const LWFFixedDeductionMonth = require("../models/Payroll/lwfFixedDeductionMonthModel");
 const PTEligibleStates = require("../models/Payroll/ptEligibleStatesModel");
 const PTSlab = require("../models/Payroll/ptSlabModel");
 const PTDeductionMonth = require("../models/Payroll/ptDeductionMonthModel");
@@ -597,10 +597,7 @@ exports.getAllFixedContributionSlabsByState = async (req, res, next) => {
       total: totalCount,
     });
   } catch (err) {
-    res.status(500).json({
-      status: constants.APIResponseStatus.Failure,
-      message: err.message,
-    });
+    return next(new AppError(err.message, 400));
   }
 };
 // controllers/payrollController.js
@@ -655,35 +652,44 @@ exports.getLWFFixedDeductionMonth = async (req, res, next) => {
   }
 };
 
-exports.updateLWFFixedDeductionMonth = async (req, res, next) => {
+exports.saveLWFFixedDeductionMonth = async (req, res, next) => {
   try {
     const { months } = req.body;
     const companyId = req.cookies.companyId;
 
-    // Check if companyId exists in cookies
     if (!companyId) {
       return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
     }
+    const updateOrInsertPromises = months.map(async (month) => {
+      const existingRecord = await LWFFixedDeductionMonth.findOne({
+        company: companyId,
+        paymentMonth: month.paymentMonth
+      });
 
-    // Update records based on companyId and paymentMonth
-    const updatePromises = months.map(async (month) => {
-      await LWFFixedDeductionMonth.updateMany(
-        { company: companyId, paymentMonth: month.paymentMonth },
-        { $set: { processMonth: month.processMonth } }
-      );
+      if (existingRecord) {
+        // Update existing record
+        await LWFFixedDeductionMonth.updateOne(
+          { _id: existingRecord._id },
+          { $set: { processMonth: month.processMonth } }
+        );
+      } else {
+        // Create new record
+        await LWFFixedDeductionMonth.create({
+          company: companyId,
+          paymentMonth: month.paymentMonth,
+          processMonth: month.processMonth
+        });
+      }
     });
 
-    await Promise.all(updatePromises);
+    await Promise.all(updateOrInsertPromises);
 
-    res
-      .status(200)
-      .json({
-        status: constants.APIResponseStatus.Success,
-        message: req.t('payroll.LWFFixedDeductionMonthsUpdatedSuccessfully'),
-      });
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('payroll.LWFFixedDeductionMonthsUpdatedSuccessfully'),
+    });
   } catch (error) {
-    console.error("Error updating LWFFixedDeductionMonths:", error);
-    res.status(500).json({ status: "error", message: "Internal server error" });
+    return next(new AppError(err.message, 400));
   }
 };
 

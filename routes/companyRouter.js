@@ -1229,21 +1229,15 @@ router.delete('/signatories/:id', authController.protect, companyController.dele
 // Country Router
 router.get('/companylist',authController.protect,companyController.getCompanyList);
 //router.patch('/updateCompany',companyController.saveCoutry);
+
 /**
  * @swagger
- * /api/v1/company/{id}:
+ * /api/v1/company:
  *   get:
  *     summary: Get company details by ID
  *     tags: [Company Management]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the company to retrieve
- *         schema:
- *           type: string
  *     responses:
  *       200:
  *         description: Company details fetched successfully
@@ -1267,24 +1261,17 @@ router.get('/companylist',authController.protect,companyController.getCompanyLis
  *       500:
  *         description: Internal server error
  */
-router.get('/id',authController.protect, companyController.getCompany);
+router.get('/',authController.protect, companyController.getCompany);
 
 /**
  * @swagger
- * /api/v1/company/{id}:
+ * /api/v1/company:
  *   put:
  *     summary: Update company details by ID
  *     tags: [Company Management]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the company to update
- *         schema:
- *           type: string
- *     requestBody:
+  *     requestBody:
  *       description: Fields to update in the company
  *       required: true
  *       content:
@@ -1321,7 +1308,7 @@ router.get('/id',authController.protect, companyController.getCompany);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id',authController.protect, companyController.updateCompany);
+router.put('/',authController.protect, companyController.updateCompany);
 
  /**
  * @swagger

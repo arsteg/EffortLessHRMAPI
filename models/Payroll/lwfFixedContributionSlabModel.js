@@ -10,23 +10,7 @@ var fixedContributionSlabSchema = new Schema({
     type: String,
     required: true
   },
-  fromAmount: {
-    type: Number,
-    required: true
-  },
-  toAmount: {
-    type: Number,
-    required: true
-  },
-  employeePercent: {
-    type: Number,
-    required: true
-  },
   employeeAmount: {
-    type: Number,
-    required: true
-  },
-  employerPercentage: {
     type: Number,
     required: true
   },
@@ -38,7 +22,29 @@ var fixedContributionSlabSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Company',
     required: true,
+  },
+  isActive: {
+    type: Boolean,
+    required: true,
+    default : true
   }
 }, { collection: 'LWFFixedContributionSlab' });
-
+// 🔄 Middleware to deactivate old active slabs with same state + contribution + company
+fixedContributionSlabSchema.pre('save', async function (next) {
+  if (this.isNew || this.isModified('isActive')) {
+    await this.constructor.updateMany(
+      {
+        state: this.state,
+        fixedContribution: this.fixedContribution,
+        company: this.company,
+        isActive: true,
+        _id: { $ne: this._id } // Avoid deactivating the current one
+      },
+      {
+        $set: { isActive: false }
+      }
+    );
+  }
+  next();
+});
 module.exports = mongoose.model('LWFFixedContributionSlab', fixedContributionSlabSchema);

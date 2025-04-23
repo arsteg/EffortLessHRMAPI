@@ -25,8 +25,7 @@ var ptSlabSchema = new Schema({
     required: true
   },
   state: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'PTConfigureStates', // Assuming there's a State schema for reference
+    type: String,
     required: true
   },
   company: {
