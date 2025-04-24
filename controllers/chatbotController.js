@@ -36,7 +36,7 @@ exports.createChatbot = catchAsync(async (req, res, next) => {
       let embedding = null;
       try {
         const embeddingRes = await openai.embeddings.create({
-          model: 'text-embedding-ada-002',
+          model: 'text-embedding-3-small', //'text-embedding-ada-002',
           input: questionText,
         });
         embedding = embeddingRes.data[0].embedding;
@@ -79,61 +79,101 @@ exports.createChatbot = catchAsync(async (req, res, next) => {
   exports.searchChatbot = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Searching chatbot data', constants.LOG_TYPES.TRACE);
 
-    const text = req.body.userMessage.toLowerCase();
-    console.log('User question:', text);
+    const text = req.body.userMessage?.toLowerCase();
     if (!text) {
-      return next(new AppError('Text is required in request body', 400));
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: [{
+        type: "text",
+        content: "Enter correct message."
+        }]
+      });
     }
 
-    // Generate embedding for the input text
-    let searchEmbedding;
     try {
+      // Generate embedding for input text
       const embeddingRes = await openai.embeddings.create({
-      model: 'text-embedding-ada-002',
+      model: 'text-embedding-3-small', //'text-embedding-ada-002'
       input: text,
       });
-      searchEmbedding = embeddingRes.data[0].embedding;
-    } catch (err) {
-      websocketHandler.sendLog(req, `Embedding failed: ${err.message}`, constants.LOG_TYPES.ERROR);
-      return next(new AppError('Failed to generate embedding', 500));
-    }
+      const searchEmbedding = embeddingRes.data[0].embedding;
 
-    // Find all chatbot entries and calculate similarity
-    const chatbotEntries = await ChatbotData.find();
-    const results = chatbotEntries.map(entry => {
-      const similarity = cosineSimilarity(searchEmbedding, entry.embedding);
-      return {
-      answer: entry.answer,
-      similarity
-      };
+      // Find best matching entry from chatbot data
+      const chatbotEntries = await ChatbotData.find();
+      let bestMatch = null;
+      let highestSimilarity = 0;
+
+      for (const entry of chatbotEntries) {
+        const similarity = cosineSimilarity(searchEmbedding, entry.embedding);
+        if (similarity > highestSimilarity) {
+          highestSimilarity = similarity;
+          bestMatch = entry;
+        }
+      }
+      console.log('Best match:', bestMatch.question);
+      console.log('Highest similarity:', highestSimilarity);
+      // Return best match if similarity > 0.8
+      if (bestMatch && highestSimilarity > 0.8) {
+        return res.status(200).json({
+          status: constants.APIResponseStatus.Success,
+          data: bestMatch.answer
+        });
+      }
+
+      console.log('No good match found, falling back to OpenAI Assistant.');
+      // Fallback to OpenAI Assistant
+      const thread = await openai.beta.threads.create();
+      await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: text
+      });
+      console.log('thread and message created');
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: process.env.CHATBOTASSISTANT_ID
+      });
+
+      // Poll for completion
+      let runStatus;
+      do {
+        await new Promise(r => setTimeout(r, 1000));
+          runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      } while (runStatus.status !== "completed");
+
+      const messages = await openai.beta.threads.messages.list(thread.id);
+      if (!messages.data || messages.data.length === 0) {
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: [{
+        type: "text",
+        content: "I'm sorry, I couldn't find a good match for your question."
+        }]
+      });
+      }
+
+      const assistantResponse = messages.data[0].content[0].text.value;
+      return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+        data: [{
+          type: "text",
+          content: assistantResponse
+        }]
+      });
+
+    } catch (error) {
+        websocketHandler.sendLog(req, `Error: ${error.message}`, constants.LOG_TYPES.ERROR);
+        return res.status(200).json({
+          status: constants.APIResponseStatus.Success,
+          data: [{
+          type: "text",
+          content: "I'm sorry, I couldn't find a good match for your question."
+          }]
+        });
+      }
     });
 
-    // Sort by similarity and get top match
-    const topMatch = results.sort((a, b) => b.similarity - a.similarity)[0];
-    //console.log('Top match:', topMatch);
-    // Only return if similarity is above threshold
-    if (topMatch && topMatch.similarity > 0.8) {
-      res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: topMatch.answer
-      });
-    } else {
-      res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: [
-          {
-            type: "text",
-            content: "I'm sorry, I couldn't find a good match for your question."
-          }
-        ]
-      });
-    }
-  });
-
-  // Helper function to calculate cosine similarity
-  function cosineSimilarity(vector1, vector2) {
+    function cosineSimilarity(vector1, vector2) {
     const dotProduct = vector1.reduce((acc, val, i) => acc + val * vector2[i], 0);
     const magnitude1 = Math.sqrt(vector1.reduce((acc, val) => acc + val * val, 0));
     const magnitude2 = Math.sqrt(vector2.reduce((acc, val) => acc + val * val, 0));
     return dotProduct / (magnitude1 * magnitude2);
-  }
+    }
