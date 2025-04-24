@@ -1374,7 +1374,7 @@ exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
 exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salutatory details for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
   
-  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.find({ user: req.params.userId });
+  const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findOne({ user: req.params.userId });
   
   websocketHandler.sendLog(req, `Found ${employeeSalutatoryDetails.length} salutatory details`, constants.LOG_TYPES.INFO);
   
