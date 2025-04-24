@@ -61,7 +61,7 @@ const SalaryComponentOtherBenefits = require("../models/Employment/SalaryCompone
 const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
-
+const payrollCalculationController = require('../controllers/payrollCalculationController');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2910,6 +2910,12 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   const payrollUser = await PayrollUsers.create(req.body);
+
+   // Attach created payroll user to req for use in LWF
+   req.user = payrollUser.user; // or payrollUser.user if nested  
+   req.payrollUser = payrollUser._id;
+   // ✅ Call calculateLWF immediately after user creation
+   await payrollCalculationController.calculateLWF(req, res); // You can also handle separately if you don't want to return early
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser

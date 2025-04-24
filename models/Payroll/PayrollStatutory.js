@@ -42,7 +42,7 @@ var payrollStatutorySchema = new Schema({
     }
     
   }, { 
-    collection: 'PayrollVariablePay',
+    collection: 'PayrollStatutory',
    });
      
 module.exports = mongoose.model('PayrollStatutory', payrollStatutorySchema);

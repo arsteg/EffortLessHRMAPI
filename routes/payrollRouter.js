@@ -770,15 +770,22 @@ router.post('/fixed-contribution-list', authController.protect, payrollControlle
  *               fixedContribution:
  *                 type: string
  *                 required: true
- *               toAmount:
- *                 type: number
- *                 required: true
  *               employeeAmount:
  *                 type: number
  *                 required: true
  *               employerAmount:
  *                 type: number
  *                 required: true
+ *               employeePercentage:
+ *                 type: number
+ *               employerPercentage:
+ *                 type: number
+ *               maxContribution:
+ *                 type: number
+ *               minAmount:
+ *                 type: number
+ *               maxAmount:
+ *                 type: number
  *     responses:
  *       201:
  *         description: Fixed Contribution Slab successfully added
@@ -844,6 +851,16 @@ router.get('/lwf-fixed-contribution-slabs/:id', authController.protect, payrollC
  *               employeeAmount:
  *                 type: number
  *               employerAmount:
+ *                 type: number
+ *               employeePercentage:
+ *                 type: number
+ *               employerPercentage:
+ *                 type: number
+ *               maxContribution:
+ *                 type: number
+ *               minAmount:
+ *                 type: number
+ *               maxAmount:
  *                 type: number
  *     responses:
  *       200:
