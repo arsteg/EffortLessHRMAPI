@@ -3634,7 +3634,20 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
       const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
       const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
-
+      
+      const payrollStatutory = await PayrollStatutory.find({
+        payrollUser: { $in: payrollUser?._id },
+      });
+      
+      // 💰 Sum amounts where ContributorType is 'Employer' (i.e., company contribution)
+      const totalEmployeeStatutoryContribution = payrollStatutory
+        .filter(item => item.ContributorType === 'Employer')
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+      
+      // 💸 Sum amounts where ContributorType is 'Employee' (i.e., deducted from salary)
+      const totalEmployeeStatutoryDeduction = payrollStatutory
+        .filter(item => item.ContributorType === 'Employee')
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
       // Step 6: Get Loan Disbursement for this PayrollUser
       // const userLoanAdvances = allLoanAdvances
       //   .filter(loan => loan.payrollUser.equals(payrollUser._id)) // Match payrollUser
@@ -3686,6 +3699,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalFixedAllowance: totalFixedAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
+        totalEmployeeStatutoryContribution:totalEmployeeStatutoryContribution,
+        totalEmployeeStatutoryDeduction:totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
         totalPfTax: pfTaxes,
