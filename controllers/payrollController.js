@@ -3491,7 +3491,10 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollUser: payrollUser._id,
         company: companyId
       });
-
+      const statutoryDetails = await PayrollStatutory.find({
+        payrollUser: payrollUser._id,
+        company: companyId
+      });
       const attendanceSummary = await PayrollAttendanceSummary.find({
         payrollUser: payrollUser._id,
         company: companyId
@@ -3551,7 +3554,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         totalIncomeTax,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
-        payroll: payrolls.find(p => p._id.equals(payrollUser.payroll))
+        payroll: payrolls.find(p => p._id.equals(payrollUser.payroll)),
+        statutoryDetails: statutoryDetails
       };
     })
   );
@@ -3605,7 +3609,10 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const incomeTax = await PayrollIncomeTax.find({
         PayrollUser: { $in: payrollUser?._id }
       });
-
+      const statutoryDetails = await PayrollStatutory.find({
+        payrollUser: payrollUser._id,
+        company: companyId
+      });
       const attendanceSummary = await PayrollAttendanceSummary.find({
         payrollUser: { $in: payrollUser?._id }
       });
@@ -3634,7 +3641,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
       const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
       const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
-      
+
       const payrollStatutory = await PayrollStatutory.find({
         payrollUser: { $in: payrollUser?._id },
       });
@@ -3706,7 +3713,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalPfTax: pfTaxes,
         totalIncomeTax: taxes[0]?.TDSCalculated || 0,
         yearlySalary: yearlySalary || 0,
-        monthlySalary: monthlySalary || 0
+        monthlySalary: monthlySalary || 0,
+        statutoryDetails: statutoryDetails
       };
     })
   );
