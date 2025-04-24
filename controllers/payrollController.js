@@ -3610,7 +3610,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         PayrollUser: { $in: payrollUser?._id }
       });
       const statutoryDetails = await PayrollStatutory.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser._id
       });
       const attendanceSummary = await PayrollAttendanceSummary.find({
         payrollUser: { $in: payrollUser?._id }
