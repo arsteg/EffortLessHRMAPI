@@ -16,7 +16,7 @@ var holidayCalendarSchema = new Schema({
   },
   isMandatoryForFlexiHoliday: {
     type: Boolean,
-    default: false  // Assuming default is false
+    default: true  // Assuming default is false
   },
   holidaysAppliesFor: {
     type: String,

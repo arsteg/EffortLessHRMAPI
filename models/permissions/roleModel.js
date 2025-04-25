@@ -1,54 +1,48 @@
-var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-var roleModelSchema = new Schema({    
-    Name: {
-      type: String,
-      required: true
-    },
+const roleSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    description: { type: String }, // New field
     company: {
       type: mongoose.Schema.ObjectId,
       ref: 'Company',
-      required: [true, 'Company must belong to a Company']
+      required: [true, 'Company must belong to a Company'],
     },
-    active: {
-      type: Boolean,
-      default: true,
-      select: false
-    },
-    createdBy: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'User'//,
-    //  required: [true, 'User must belong to a User']
-    },
-    updatedBy: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'User'//,
-      //required: [true, 'User must belong to a User']
-    },
-    createdOn: {
-      type: Date,
-     // required: true    
-    },
-    updatedOn: {
-      type: Date,
-    //  required: true    
-    }    
+    active: { type: Boolean, default: true, select: false },
+    createdBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.ObjectId, ref: 'User' },
+    createdOn: { type: Date, default: Date.now, required: true },
+    updatedOn: { type: Date, default: Date.now, required: true },
   },
   {
-    toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
-    toObject: { virtuals: true } // Use virtuals when outputing as Object
-  },
-  {collection: 'Role' });      
-  roleModelSchema.virtual('rolePermission', {
-    ref: 'RolePermission',
-    foreignField: 'role', // tour field in review model pointing to this model
-    localField: '_id' // id of current model
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    collection: 'Role',
+  }
+);
+
+roleSchema.index({ company: 1, Name: 1 });
+
+roleSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'company',
+    select: 'companyName',
   });
-  roleModelSchema.virtual('user', {
-    ref: 'User',
-    foreignField: 'role', // tour field in review model pointing to this model
-    localField: '_id' // id of current model
-  });
-  module.exports = mongoose.model('Role', roleModelSchema);
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+roleSchema.virtual('rolePermission', {
+  ref: 'RolePermission',
+  foreignField: 'roleId',
+  localField: '_id',
+});
+
+roleSchema.virtual('user', {
+  ref: 'User',
+  foreignField: 'role',
+  localField: '_id',
+});
+
+module.exports = mongoose.model('Role', roleSchema);

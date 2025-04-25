@@ -250,7 +250,6 @@ userSchema.methods.correctPassword = async function(
 ) {
   // Because passwords select is set to false, we can't access it directly with 'this' keyword
   // Compare non hashed password with hashed one
-  console.log("correctPassword called");
   return await bcrpyt.compare(candidatePassword, userPassword);
 };
 
@@ -285,7 +284,7 @@ userSchema.methods.createPasswordResetToken = function() {
 userSchema.pre(/^find/,async function(next) {
   this.populate({
     path: 'role',
-    select: 'id Name'
+    select: 'id RoleName'
   })
   next();
 });

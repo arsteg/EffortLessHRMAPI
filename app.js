@@ -40,11 +40,14 @@ var payrollRouter = require(`./routes/payrollRouter`);
 var eventNotificationRouter = require(`./routes/eventNotificationRoutes`);
 var feedbackRouter = require(`./routes/feedbackRouter`);
 var locationRouter = require('./routes/locationRouter');
+const i18n = require('./config/i18n'); // Import i18n config
 app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
+var chatbotRouter = require(`./routes/chatbotRouter`);
 
-
+// Initialize i18n middleware
+app.use(i18n.init);
 //app.use(loggingMiddleware);
 
 // var allowedOrigin ="http://localhost:4200";
@@ -84,6 +87,9 @@ app.use((req, res, next) => {
   // } else {
   //   console.log('Unknown environment');
   // }  
+  const locale = req.headers['accept-language'] || req.query.locale || 'en-IN';
+  req.setLocale(locale);
+  
   res.header("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN)
   
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -128,5 +134,19 @@ app.use('/api/v1/payroll', payrollRouter);
 app.use('/api/v1/eventNotifications', eventNotificationRouter);
 app.use('/api/v1/feedback', feedbackRouter);
 app.use('/api/v1/location', locationRouter);
+app.use('/api/v1/chatbot', chatbotRouter);
 
+app.use((err, req, res, next) => {
+  // If it's an instance of AppError, use custom method
+  if (err instanceof AppError) {
+    return err.sendErrorJson(res);
+  }
+
+  // For unhandled or unexpected errors
+  console.error('Unhandled error:', err);
+  return res.status(500).json({
+    status: 'error',
+    message: 'Something went wrong!'
+  });
+});
 module.exports = app;

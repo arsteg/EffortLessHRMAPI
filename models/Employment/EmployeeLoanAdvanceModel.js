@@ -24,6 +24,14 @@ var employeeLoanAdvanceSchema = new Schema({
     type: Number,
     required: true
   },
+  remainingInstallment: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    required: true
+  },
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company', // Reference to the Company schema assuming it exists

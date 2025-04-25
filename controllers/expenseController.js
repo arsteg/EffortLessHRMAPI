@@ -35,7 +35,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     if (!company) {
       return res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Company information missing in cookies',
+        message: req.t('expense.companyInfoMissing'),
       });
     }
     else
@@ -45,7 +45,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
       {
         res.status(500).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'Label already in use for another category',
+          message: req.t('expense.labelInUse'),
         });
       }
       else{
@@ -100,7 +100,7 @@ exports.getExpenseCategoryByEmployee = catchAsync(async (req, res, next) => {
   } catch (error) {
       res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      message: req.t('expense.internalServerError')
     });
   }
 });
@@ -111,7 +111,7 @@ exports.updateExpenseCategory = catchAsync(async (req, res, next) => {
   {
       res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Label already in use for another category',
+      message: req.t('expense.labelInUse'),
     });
   }
   else
@@ -136,13 +136,13 @@ exports.deleteExpenseCategory = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Expense Category is already in use. Please delete related records before deleting the Expense Category.',
+      message: req.t('expense.categoryInUse'),
     });
   }
 const expenseCategoryInstance = await ExpenseCategory.findById(req.params.id);
 await expenseCategoryInstance.remove();
   if (!expenseCategoryInstance) {
-    return next(new AppError('Expense category not found', 404));
+    return next(new AppError(req.t('expense.categoryNotFound'), 404) );
   }
 
   return res.status(204).json({
@@ -158,7 +158,8 @@ exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('expense.companyIdNotFound'), 400)
+  );
   }
   const query = { company: company };
    // Get the total count of documents matching the query
@@ -179,7 +180,7 @@ exports.addExpenseApplicationField = catchAsync(async (req, res, next) => {
     if (!expenseCategory || !Array.isArray(fields) || fields.length === 0) {
         return res.status(400).json({
             status: constants.APIResponseStatus.Failure,
-            error: 'Invalid request data',
+            eerror: req.t('expense.invalidRequestData'),
         });
     }
     // Prepare an array to store the created fields
@@ -227,7 +228,8 @@ exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
 
   // Validate incoming data
   if (!fields || !Array.isArray(fields) || fields.length === 0) {
-    return next(new AppError('Invalid request data', 400));
+    return next(new AppError(req.t('expense.invalidRequestData'), 400)
+  );
   }
 
   try {
@@ -245,7 +247,7 @@ exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
           );
 
           if (!updatedField) {
-            throw new AppError(`Expense application field with ID ${id} not found`, 404);
+            throw new AppError(req.t('expense.applicationFieldNotFound', { id }), 404)
           }
 
           // Update or create ExpenseApplicationFieldValue records
@@ -274,13 +276,13 @@ exports.updateExpenseApplicationField = catchAsync(async (req, res, next) => {
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: updatedFields,
-      message: 'Expense application field(s) successfully updated or created',
+      message: req.t('expense.applicationFieldUpdated')    ,
     });
   } catch (err) {
     if (err instanceof AppError) {
       return next(err);
     } else {
-      return next(new AppError('Internal server error', 500));
+      return next(new AppError(req.t('expense.internalServerError'), 500));
     }
   }
 });
@@ -336,7 +338,9 @@ exports.deleteExpenseApplicationField = catchAsync(async (req, res, next) => {
     const expenseApplicationField = await ExpenseApplicationField.findById(req.params.id);
     await expenseApplicationField.remove();
     if (!expenseApplicationField) {
-      return next(new AppError('Expense application field not found', 404));
+      return next(new AppError(req.t('expense.applicationFieldNotFound', { id: req.params.id }), 404)
+
+    );
     }  
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
@@ -372,7 +376,7 @@ exports.createExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
   if (!expenseApplicationField || !Array.isArray(expenseApplicationFieldValues) || expenseApplicationFieldValues.length === 0) {
       return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          error: 'Invalid request data',
+          error: req.t('expense.invalidRequestData'),
       });
   }
   // Prepare an array to store the created fields
@@ -418,7 +422,7 @@ exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
 
     if (!updatedField) {
       // Handle the case where the ExpenseApplicationFieldValue with a specific ID is not found
-      return next(new AppError(`ExpenseApplicationFieldValue with ID ${id} not found`, 404));
+      return next(new AppError(req.t('expense.fieldValueNotFound', { id }), 404));
     }
 
     updatedFields.push(updatedField);
@@ -433,7 +437,7 @@ exports.updateExpenseApplicationFieldValue = catchAsync(async (req, res, next) =
 exports.deleteExpenseApplicationFieldValue = catchAsync(async (req, res, next) => {
   const expenseApplicationFieldValue = await ExpenseApplicationFieldValue.findByIdAndDelete(req.params.id);
   if (!expenseApplicationFieldValue) {
-    return next(new AppError('ExpenseApplicationFieldValue not found', 404));
+    return next(new AppError(req.t('expense.fieldValueNotFound', { id: req.params.id }), 404)  );
   }
 
   res.status(204).json({
@@ -457,7 +461,7 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
 
   // Check if policyLabel is provided
   if (!expenseTemplateData.policyLabel) {
-    return next(new AppError('Policy Label is required', 400));
+    return next(new AppError(req.t('expense.policyLabelRequired'), 400) );
   }
 
   // Check if policyLabel already exists
@@ -466,24 +470,26 @@ exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   if (existingTemplate) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Policy Label already exists',
+      message: req.t('expense.policyLabelExists'),
     });
   }
   if (!Array.isArray(expenseCategories) || expenseCategories.length === 0) {
-    return next(new AppError('Expense Category Not Exists in Request', 400));
+    return next(new AppError(req.t('expense.categoryNotInRequest'), 400)
+  );
   }
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('expense.companyIdNotFound'), 400)
+  );
   }
   for (const category of expenseCategories) {
     const result = await ExpenseCategory.findById(category.expenseCategory);
     if (!result) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Invalid Category',
+        message: req.t('expense.invalidCategory'),
       });
     }
   }
@@ -543,32 +549,9 @@ async function createExpenseTemplateCategories(expenseTemplateId, expenseCategor
     return updatedCategories;
   } catch (err) {
     console.log(err)
-    throw new AppError('Internal server error', 500);
+    throw new AppError(req.t('expense.internalServerError'), 500)    ;
   }
 }
-
-async function insertFields(category, expenseTemplateCategoryFieldValues) {
-   await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
-
-  if (expenseTemplateCategoryFieldValues.length === 0) {
-    return []; // Return an empty array if there are no fields to insert
-  } else {
-    // Insert new fields into ExpenseTemplateCategoryFieldValues collection
-    return ExpenseTemplateCategoryFieldValues.insertMany(expenseTemplateCategoryFieldValues.map(field => ({ expenseTemplateCategory: category._id, ...field })));
-  }
-}
-
-// Example usage in Express.js route
-app.post('/createExpenseTemplateCategories', async (req, res) => {
-  const { expenseTemplateId, expenseCategories } = req.body;
-  try {
-    const updatedCategories = await createExpenseTemplateCategories(expenseTemplateId, expenseCategories);
-    res.json(updatedCategories);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 
 exports.getExpenseTemplate = catchAsync(async (req, res, next) => {
   const expenseTemplate = await ExpenseTemplate.findById(req.params.id);
@@ -585,7 +568,8 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
 
   // Check if policyLabel is provided
   if (!expenseTemplateData.policyLabel) {
-    return next(new AppError('Policy Label is required', 400));
+    return next(new AppError(req.t('expense.policyLabelRequired'), 400)
+  );
   }
 
   // Check if policyLabel already exists
@@ -594,11 +578,12 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
   if (existingTemplate) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Policy Label already exists',
+      message: req.t('expense.policyLabelExists') ,
     });
   }
   if (!Array.isArray(expenseCategories) || expenseCategories.length === 0) {
-    return next(new AppError('Expense Category Not Exists in Request', 400));
+    return next(new AppError(req.t('expense.categoryNotInRequest'), 400)
+  );
   }
   const expenseTemplate = await ExpenseTemplate.findByIdAndUpdate(req.params.id, expenseTemplateData, {
     new: true,
@@ -606,7 +591,8 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
   });
 
   if (!expenseTemplate) {
-    return next(new AppError('Expense Template not found', 404));
+    return next(new AppError(req.t('expense.templateNotFound'), 404)
+  );
   }
 
   const updatedCategories = await updateOrCreateExpenseTemplateCategories(req.params.id, req.body.expenseCategories);
@@ -617,55 +603,21 @@ exports.updateExpenseTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
-async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, updatedCategories) {
-  const existingCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
-
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-   
-    const existingCategory = existingCategories.find(
-      (existing) => existing.expenseCategory.equals(category.expenseCategory)
-    );
-    if (!existingCategory) {
-     // Create new category
-      const newCategory = new ExpenseTemplateApplicableCategories({
-        expenseTemplate: expenseTemplateId,
-        ...category,
-      });
-      return newCategory.save();
-    }
-  });
-    // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory._id.toString())
-  );
-  
-
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return ExpenseTemplateApplicableCategories.findByIdAndRemove(category._id);
-  });
-
-  await Promise.all(removalPromises);
-  const finalCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
-
-  return finalCategories;
-}
 
 exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.find({}).where('expenseTemplate').equals(req.params.id);
-  console.log(employeeExpenseAssignment);
   if (employeeExpenseAssignment.length > 0) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Expense Template is already in use. Please delete related records before deleting the Expense Template.',
+      message: req.t('expense.templateInUse')
     });
   }
   
   const expenseTemplate = await ExpenseTemplate.findByIdAndDelete(req.params.id);
   
   if (!expenseTemplate) {
-    return next(new AppError('Expense Template not found', 404));
+    return next(new AppError(req.t('expense.templateNotFound'), 404)  );
   }
   
   res.status(204).json({
@@ -709,14 +661,14 @@ exports.createExpenseTemplateCategories = catchAsync(async (req, res, next) => {
    const { expenseTemplate, expenseCategories } = req.body;
   // Validate incoming data
   if (!expenseTemplate || !expenseCategories || !Array.isArray(expenseCategories) || expenseCategories.length === 0) {
-    return next(new AppError('Invalid request data', 400));
+    return next(new AppError(req.t('expense.invalidRequestData'), 400) );
   }
   for (const category of expenseCategories) {    
       const result = await ExpenseCategory.findById(category.expenseCategory);
       if (!result) {
         return res.status(400).json({
           status:constants.APIResponseStatus.Failure,
-          message: 'Invalid Category',
+          message: req.t('expense.invalidCategory'),
         });      
     }
   }
@@ -782,7 +734,6 @@ exports.getApplicableCategoryByTemplateAndCategoryId = catchAsync(async (req, re
  
   if(applicableCategories) 
   {
-    console.log(applicableCategories._id);
       const expenseTemplateCategoryFieldValues = await ExpenseTemplateCategoryFieldValues.find({}).where('expenseTemplateCategory').equals(applicableCategories._id);  
         if(expenseTemplateCategoryFieldValues) 
         {
@@ -802,7 +753,8 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
    const companyId = req.cookies.companyId;
    // Check if companyId exists in cookies
    if (!companyId) {
-     return next(new AppError('Company ID not found in cookies', 400));
+     return next(new AppError(req.t('expense.companyIdNotFound'), 400)
+    );
    }
    // Add companyId to the request body
    req.body.company = companyId;
@@ -838,7 +790,8 @@ exports.createEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 exports.getEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
   const employeeExpenseAssignment = await EmployeeExpenseAssignment.findById(req.params.id);
   if (!employeeExpenseAssignment) {
-    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+    return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+  );
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -873,7 +826,7 @@ exports.updateEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 const expenseReport = await ExpenseReport.find({}).where('employee').equals( req.body.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
   ;
   if (expenseReport.length>0) {
-    return next(new AppError('Expenses Need to close first before delete assignment', 404));
+    return next(new AppError(req.t('expense.expensesNeedClosure'), 404)  );
   }
   const expenseTemplate=await ExpenseTemplate.findById(req.body.expenseTemplate);   
   if (expenseTemplate && expenseTemplate.approvalType == "template-wise")
@@ -891,7 +844,7 @@ const expenseReport = await ExpenseReport.find({}).where('employee').equals( req
   );
 
   if (!employeeExpenseAssignment) {
-    return next(new AppError('EmployeeExpenseAssignment not found', 404));
+    return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)  );
   }
 
   res.status(200).json({
@@ -905,12 +858,16 @@ exports.deleteEmployeeExpenseAssignment = catchAsync(async (req, res, next) => {
 //validation
 const userExpenseAssignment = await EmployeeExpenseAssignment.findById(req.params.id);   
 if (!userExpenseAssignment) {
-  return next(new AppError('EmployeeExpenseAssignment not found', 404));
+  return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+
+);
 }
 const expenseReport = await ExpenseReport.find({}).where('employee').equals(userExpenseAssignment.user).where('status').nin(['Approved', 'Rejected','Cancelled']); // Filter by status
 ;
 if (expenseReport.length>0) {
-  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+  return next(new AppError(req.t('expense.expensesNeedClosure'), 404)
+
+);
 }
  await EmployeeExpenseAssignment.findByIdAndDelete(req.params.id);  
   res.status(204).json({
@@ -938,9 +895,7 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
-  const { employee, title, status,amount, expenseReportExpenses } = req.body;
-  var documentLink;
-  console.log(status);
+  const { employee, title, status,amount, expenseReportExpenses } = req.body;  
   try {
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({
@@ -960,7 +915,7 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
         for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
-            return res.status(400).json({ error: 'All attachment properties must be provided' });
+            return res.status(400).json({ error: req.t('expense.attachmentPropertiesMissing') });
           }
           const id = Date.now().toString(36);
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
@@ -1003,11 +958,13 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
       data: {
         expenseReport
       },
-      message: 'ExpenseReport successfully created',
+      message: req.t('expense.reportCreated'),
+
     });
   } catch (error) {
     console.error(error);
-    next(new AppError('Internal server error', 500));
+    next(new AppError(req.t('expense.internalServerError'), 500)
+  );
   }
 });
 
@@ -1035,13 +992,34 @@ res.status(200).json({
 });
 
 exports.updateExpenseReport = catchAsync(async (req, res, next) => {
+  if(req.body.status === 'Approved' || req.body.status === 'Rejected' || req.body.status === 'Cancelled') {
+    const expenseTemplate = await EmployeeExpenseAssignment.findOne({user : req.body.employee});
+    const expenseReport = await ExpenseReport.findById(mongoose.Types.ObjectId(req.params.id));
+    if(expenseTemplate && expenseTemplate.primaryApprover  && expenseTemplate.secondaryApprover) {
+      if(expenseReport.status === constants.Leave_Application_Constant.Level_1_Approval_Pending && expenseTemplate.primaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      } else {
+        req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
+      }
+      if(expenseReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && expenseTemplate.secondaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      }
+    }
+  }
   const expenseReport = await ExpenseReport.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
 
   if (!expenseReport) {
-    return next(new AppError('ExpenseReport not found', 404));
+    return next(new AppError(req.t('expense.reportNotFound'), 404)
+  );
   }
   const expenseReportExpenses = await ExpenseReportExpense.find({}).where('expenseReport').equals(req.params.id);
   if(expenseReportExpenses) 
@@ -1070,13 +1048,15 @@ exports.deleteExpenseReport = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Expense Report is already in use. Please delete related records before deleting the Expense Report.',
+      message: req.t('expense.reportInUse')
     });
   }
   const expenseReport = await ExpenseReport.findByIdAndDelete(req.params.id);
 
   if (!expenseReport) {
-    return next(new AppError('ExpenseReport not found', 404));
+    return next(new AppError(req.t('expense.reportNotFound'), 404)
+
+  );
   }
 
   res.status(204).json({
@@ -1143,7 +1123,9 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
     const query = { employee: { $in: objectIdArray } };
-    if (req.body.status) {
+    if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+      query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+    } else {
       query.status = req.body.status;
     }
     const totalCount = await ExpenseReport.countDocuments(query);
@@ -1183,7 +1165,9 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
-  if (req.body.status) {
+  if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+    query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+  } else {
     query.status = req.body.status;
   }
   const totalCount = await ExpenseReport.countDocuments(query);
@@ -1217,14 +1201,59 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
   });
 });
 
+async function expenseReportValidation(req, res, next) {
+  const {expenseReport, expenseCategory, incurredDate} = req.body;
+  const report = await ExpenseReport.findById(expenseReport);
+  const employee = report.employee;
+  const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({user: employee});   
+  const template = await ExpenseTemplateApplicableCategories.findOne({}).where('expenseCategory').equals(expenseCategory).where('expenseTemplate').equals(userExpenseAssignment.expenseTemplate._id.toString());
+  
+  if (template) {
+    if(template.timePeroid && template.maximumExpensesCanApply){
+      const timePeriod = template.timePeroid === 'Day' ? 1 : template.timePeroid === 'Week' ? 7 : template.timePeroid === 'Month' ? 30 : 1;
+      const timePeriodDate = new Date(incurredDate);
+      timePeriodDate.setDate(timePeriodDate.getDate() + timePeriod);
+  
+      const count = await ExpenseReportExpense.countDocuments({
+        employee: employee,
+        expenseCategory: expenseCategory,
+        incurredDate: { $gte: incurredDate, $lt: timePeriodDate },
+      });
+  
+      if (count >= template.maximumExpensesCanApply) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("You've reached the maximum allowed submissions for this period.")
+        });
+      }
+    }
+
+    if(template.expiryDay){
+      const expiryDate = new Date(incurredDate);
+      expiryDate.setDate(expiryDate.getDate() + template.expiryDay);
+  
+      if (new Date() > expiryDate) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("This expense report has expired.")
+        });
+      }
+    }
+  }
+};
+
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
+
+  await expenseReportValidation(req, res, next);
+  
   // Create ExpenseReportExpense
   const expenseAttachments = req.body.expenseAttachments;
   var documentLink;
   for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
-            return res.status(400).json({ error: 'All attachment properties must be provided' });
+              return res.status(400).json({ error: req.t('expense.attachmentPropertiesMissing') });
+
           }
           const id = Date.now().toString(36);
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
@@ -1276,6 +1305,8 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 });
 
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
+  await expenseReportValidation(req, res, next);
+  
   const { id } = req.params;
   const expenseAttachments = req.body.expenseAttachments;
   
@@ -1283,7 +1314,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   for(var i = 0; i < expenseAttachments.length; i++) {
           if (!expenseAttachments[i].attachmentType || !expenseAttachments[i].attachmentName || !expenseAttachments[i].attachmentSize || !expenseAttachments[i].extention || !expenseAttachments[i].file
             ||expenseAttachments[i].attachmentType===null || expenseAttachments[i].attachmentName===null || expenseAttachments[i].attachmentSize===null || expenseAttachments[i].extention === null || expenseAttachments[i].file===null) {
-            return res.status(400).json({ error: 'All attachment properties must be provided' });
+              return res.status(400).json({ error: req.t('expense.attachmentPropertiesMissing') });
           }
           const id = Date.now().toString(36);
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
@@ -1300,7 +1331,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   if (!updatedExpenseReportExpense) {
     return res.status(404).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Expense Report Expense not found',
+      message: req.t('expense.reportExpenseNotFound'),
+
     });
   }
 
@@ -1353,7 +1385,7 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
 exports.deleteExpenseReportExpense = catchAsync(async (req, res, next) => {
   const expenseReportExpense = await ExpenseReportExpense.findByIdAndDelete(req.params.id);
   if (!expenseReportExpense) {
-    return next(new AppError('Expense Report Expense not found', 404));
+    new AppError(req.t('expense.reportExpenseNotFound'), 404);
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1414,7 +1446,8 @@ exports.createAdvance = catchAsync(async (req, res, next) => {
     const companyId = req.cookies.companyId;
     // Check if companyId exists in cookies
     if (!companyId) {
-      return next(new AppError('Company ID not found in cookies', 400));
+      return next(new AppError(req.t('expense.companyIdNotFound'), 400)
+    );
     }
     // Add companyId to the request body
     req.body.company = companyId;
@@ -1461,12 +1494,32 @@ exports.getAdvanceCategoryByEmployee = catchAsync(async (req, res, next) => {
     console.error(error); // Log the error for debugging
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      message: req.t('expense.internalServerError')
     });
   }
 });
 
 exports.updateAdvance = catchAsync(async (req, res, next) => {
+  if(req.body.status === 'Approved' || req.body.status === 'Rejected' || req.body.status === 'Cancelled') {
+    const advanceTemplate = await EmployeeAdvanceAssignment.findOne({user : req.body.employee});
+    const advanceReport = await ExpenseAdvance.findById(mongoose.Types.ObjectId(req.params.id));
+    if(advanceTemplate && advanceTemplate.primaryApprover  && advanceTemplate.secondaryApprover) {
+      if(advanceReport.status === constants.Leave_Application_Constant.Level_1_Approval_Pending && advanceTemplate.primaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      } else {
+        req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
+      }
+      if(advanceReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && advanceTemplate.secondaryApprover.toString() !== req.cookies.userId) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('Only the designated approver can approve or reject this expense.')
+        });
+      }
+    }
+  }
     const advance = await Advance.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
@@ -1490,11 +1543,13 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
   const limit = parseInt(req.body.next) || 10;
   const query = { company: req.cookies.companyId };
 
-  if (req.body.status) {
+  if (req.body.status === constants.Leave_Application_Constant.Level_1_Approval_Pending || req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+    query.status = { $in: [constants.Leave_Application_Constant.Level_1_Approval_Pending, constants.Leave_Application_Constant.Level_2_Approval_Pending] };
+  } else {
     query.status = req.body.status;
   }
   const totalCount = await Advance.countDocuments(query); 
-  const advances = await Advance.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
+  const advances = await Advance.find(query).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
     res.status(200).json({
         status: constants.APIResponseStatus.Success,
@@ -1510,7 +1565,7 @@ exports.getAdvanceSummaryByEmployee = catchAsync(async (req, res, next) => {
     if (!expenseAdvancelist) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Expense Advance not found for the given user.'
+        message: req.t('expense.advanceNotFound')
       });
     }
     res.status(200).json({
@@ -1521,7 +1576,7 @@ exports.getAdvanceSummaryByEmployee = catchAsync(async (req, res, next) => {
     console.error(error); // Log the error for debugging
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
-      message: 'Internal server error'
+      message: req.t('expense.internalServerError')
     });
   }
 });
@@ -1533,7 +1588,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
   if (!company) {
     return res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Company information missing in cookies',
+      message: req.t('expense.companyInfoMissing'),
     });
   }
   else
@@ -1543,7 +1598,7 @@ exports.createAdvanceCategory = catchAsync(async (req, res, next) => {
     {
       res.status(500).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Label already in use for another category',
+        message: req.t('expense.labelInUse'),
       });
     }
     else{
@@ -1571,7 +1626,7 @@ if(advanceCategoryExists)
 {
     res.status(500).json({
     status: constants.APIResponseStatus.Failure,
-    message: 'Label already in use for another category',
+    message: req.t('expense.labelInUse')
   });
 }
 else
@@ -1593,7 +1648,7 @@ exports.deleteAdvanceCategory = catchAsync(async (req, res, next) => {
 const advanceCategoryInstance = await AdvanceCategory.findById(req.params.id);
 await advanceCategoryInstance.remove();
 if (!advanceCategoryInstance) {
-  return next(new AppError('Expense category not found', 404));
+  return next(new AppError(req.t('expense.categoryNotFound'), 404));
 }
 
 return res.status(204).json({
@@ -1636,11 +1691,13 @@ exports.createAdvanceTemplate = async (req, res, next) => {
   if (!company) {
     return res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Company information missing in cookies',
+      message: req.t('expense.companyInfoMissing'),
     });
   }
     if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
-      return next(new AppError('Advance Category Not Exists in Request', 400));
+      return next(new AppError(req.t('expense.advanceCategoryNotInRequest'), 400)
+
+    );
     }
     else
     {
@@ -1649,7 +1706,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
         {
           res.status(500).json({
             status:constants.APIResponseStatus.Failure,
-            message: 'Label already in use for another category',
+            message: req.t('expense.labelInUse')
           });
         }
         else
@@ -1668,7 +1725,7 @@ exports.createAdvanceTemplate = async (req, res, next) => {
               if (!result) {
                 return res.status(400).json({
                   status: constants.APIResponseStatus.Failure,
-                  message: 'Invalid Category',
+                  message: req.t('expense.invalidCategory')
                 });
               }
             }
@@ -1721,7 +1778,7 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
     if (!advanceTemplate) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Advance Template not found',
+        message: req.t('expense.advanceTemplateNotFound')
       });
     }
 
@@ -1747,14 +1804,15 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
     // Save the updated AdvanceTemplate
     await advanceTemplate.save();
     if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
-      return next(new AppError('Advance Category Not Exists in Request', 400));
+      return next(new AppError(req.t('expense.advanceCategoryNotInRequest'), 400)
+    );
     }
     for (const category of advanceCategories) {
       const result = await AdvanceCategory.findById(category.advanceCategory);
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'Invalid Category',
+          message: req.t('expense.invalidCategory'),
         });
       }
     }
@@ -1783,7 +1841,7 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
         console.error(error);
         res.status(500).json({
           status: constants.APIResponseStatus.Error,
-          message: 'Internal server error',
+          message: req.t('expense.internalServerError')
         });
       };
     };
@@ -1793,7 +1851,8 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
   const advanceTemplate = await AdvanceTemplate.findByIdAndDelete(req.params.id);
   
   if (!advanceTemplate) {
-    return next(new AppError('Expense Template not found', 404));
+    return next(new AppError(req.t('expense.advanceTemplateNotFound'), 404)
+  );
   }
   
   res.status(204).json({
@@ -1834,20 +1893,23 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('expense.companyIdNotFound'), 400)  );
   }
   // Add companyId to the request body
   req.body.company = companyId;
    // Check if the user exists
    const userExists = await User.findById(req.body.user);
    if (!userExists) {
-     return next(new AppError('User not found', 404));
+     return next(new AppError(req.t('expense.userNotFound'), 404)
+    );
    }
  
    // Check if the advance template exists
    const advanceTemplateExists = await AdvanceTemplate.findById(req.body.advanceTemplate);
    if (!advanceTemplateExists) {
-     return next(new AppError('Advance template not found', 404));
+     return next(new AppError(req.t('expense.advanceTemplateNotFound'), 404)
+
+    );
    }
   const employeeAdvanceAssignmentExists = await EmployeeAdvanceAssignment.find({}).where('user').equals(req.body.user);
   var employeeAdvanceAssignment;
@@ -1874,7 +1936,9 @@ exports.createEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 exports.getEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findById(req.params.id);
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeAdavanceAssignment not found', 404));
+   return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+
+  );
  }
  res.status(200).json({
    status: constants.APIResponseStatus.Success,
@@ -1891,7 +1955,9 @@ exports.getEmployeeAdvanceAssignmentByUser = catchAsync(async (req, res, next) =
     .limit(parseInt(limit));
 
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+   return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+
+  );
  }
  res.status(200).json({
    status: constants.APIResponseStatus.Success,
@@ -1904,13 +1970,16 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
    // Check if the user exists
    const userExists = await User.findById(req.body.user);
    if (!userExists) {
-     return next(new AppError('User not found', 404));
+     return next(new AppError(req.t('expense.userNotFound'), 404)
+    );
    }
  
    // Check if the advance template exists
    const advanceTemplateExists = await AdvanceTemplate.findById(req.body.advanceTemplate);
    if (!advanceTemplateExists) {
-     return next(new AppError('Advance template not found', 404));
+     return next(new AppError(req.t('expense.advanceTemplateNotFound'), 404)
+
+    );
    }
 
  const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findByIdAndUpdate(
@@ -1923,7 +1992,9 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
  );
 
  if (!employeeAdvanceAssignment) {
-   return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+   return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+
+  );
  }
 
  res.status(200).json({
@@ -1935,12 +2006,16 @@ exports.updateEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
 exports.deleteEmployeeAdvanceAssignment = catchAsync(async (req, res, next) => {
   const employeeAdvanceAssignment = await EmployeeAdvanceAssignment.findById(req.params.id);   
 if (!employeeAdvanceAssignment) {
-  return next(new AppError('EmployeeAdvanceAssignment not found', 404));
+  return next(new AppError(req.t('expense.employeeAssignmentNotFound'), 404)
+
+);
 }
 const advanceReport = await ExpenseAdvance.find({}).where('employee').equals(employeeAdvanceAssignment.user).where('status').in(['Approved', 'Rejected','Cancelled']); // Filter by status
 ;
 if (advanceReport.length>0) {
-  return next(new AppError('Expenses Need to close first before delete assignment', 404));
+  return next(new AppError(req.t('expense.expensesNeedClosure'), 404)
+
+);
 }
 await EmployeeAdvanceAssignment.findByIdAndDelete(req.params.id);
  res.status(204).json({
@@ -1963,3 +2038,48 @@ exports.getAllEmployeeAdvanceAssignments = catchAsync(async (req, res, next) => 
    total: totalCount
  });
 });
+
+async function insertFields(category, expenseTemplateCategoryFieldValues) {
+  await ExpenseTemplateCategoryFieldValues.deleteMany({ expenseTemplateCategory: category._id });
+
+ if (expenseTemplateCategoryFieldValues.length === 0) {
+   return []; // Return an empty array if there are no fields to insert
+ } else {
+   // Insert new fields into ExpenseTemplateCategoryFieldValues collection
+   return ExpenseTemplateCategoryFieldValues.insertMany(expenseTemplateCategoryFieldValues.map(field => ({ expenseTemplateCategory: category._id, ...field })));
+ }
+}
+
+async function updateOrCreateExpenseTemplateCategories(expenseTemplateId, updatedCategories) {
+  const existingCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+   
+    const existingCategory = existingCategories.find(
+      (existing) => existing.expenseCategory.equals(category.expenseCategory)
+    );
+    if (!existingCategory) {
+     // Create new category
+      const newCategory = new ExpenseTemplateApplicableCategories({
+        expenseTemplate: expenseTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+    // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.expenseCategory === existing.expenseCategory._id.toString())
+  );
+  
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return ExpenseTemplateApplicableCategories.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await ExpenseTemplateApplicableCategories.find({ expenseTemplate: expenseTemplateId });
+
+  return finalCategories;
+}

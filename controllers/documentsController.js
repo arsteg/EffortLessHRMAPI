@@ -27,7 +27,7 @@ exports.createCompanyPolicyDocument = catchAsync(async (req, res, next) => {
 exports.getCompanyPolicyDocument = catchAsync(async (req, res, next) => {
     const companyPolicyDocument = await CompanyPolicyDocument.findById(req.params.id);
     if (!companyPolicyDocument) {
-      return next(new AppError('Company Policy Document not found', 404));
+      return next(new AppError(req.t('documents.companyPolicyDocumentNotFound'), 404));
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -42,7 +42,7 @@ exports.updateCompanyPolicyDocument = catchAsync(async (req, res, next) => {
     });
 
     if (!companyPolicyDocument) {
-      return next(new AppError('Company Policy Document not found', 404));
+      return next(new AppError(req.t('documents.companyPolicyDocumentNotFound'), 404));
     }
 
     res.status(200).json({
@@ -58,13 +58,13 @@ exports.deleteCompanyPolicyDocument = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Company Policy Document is already in use. Please delete related records before deleting the Company Policy Document.',
+      message: req.t('documents.companyPolicyDocumentInUse')
     });
   }
     const companyPolicyDocument = await CompanyPolicyDocument.findByIdAndDelete(req.params.id);
     
     if (!companyPolicyDocument) {
-      return next(new AppError('Company Policy Document not found', 404));
+      return next(new AppError(req.t('documents.companyPolicyDocumentNotFound'), 404));
     }
     
     res.status(204).json({
@@ -93,7 +93,7 @@ exports.createCompanyPolicyDocumentAppliesTo = catchAsync(async (req, res, next)
 exports.getCompanyPolicyDocumentAppliesTo = catchAsync(async (req, res, next) => {
   const entry = await CompanyPolicyDocumentAppliesTo.findById(req.params.id);
   if (!entry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -107,7 +107,7 @@ exports.updateCompanyPolicyDocumentAppliesTo = catchAsync(async (req, res, next)
     runValidators: true
   });
   if (!updatedEntry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -118,7 +118,7 @@ exports.updateCompanyPolicyDocumentAppliesTo = catchAsync(async (req, res, next)
 exports.deleteCompanyPolicyDocumentAppliesTo = catchAsync(async (req, res, next) => {
   const entry = await CompanyPolicyDocumentAppliesTo.findByIdAndDelete(req.params.id);
   if (!entry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -145,7 +145,7 @@ exports.createCompanyPolicyDocumentUser = catchAsync(async (req, res, next) => {
 exports.getCompanyPolicyDocumentUser = catchAsync(async (req, res, next) => {
   const entry = await CompanyPolicyDocumentUser.findById(req.params.id).populate('user').populate('companyPolicyDocument');
   if (!entry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -159,7 +159,7 @@ exports.updateCompanyPolicyDocumentUser = catchAsync(async (req, res, next) => {
     runValidators: true
   });
   if (!updatedEntry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -170,7 +170,7 @@ exports.updateCompanyPolicyDocumentUser = catchAsync(async (req, res, next) => {
 exports.deleteCompanyPolicyDocumentUser = catchAsync(async (req, res, next) => {
   const entry = await CompanyPolicyDocumentUser.findByIdAndDelete(req.params.id);
   if (!entry) {
-    return next(new AppError('No entry found with that ID', 404));
+    return next(new AppError(req.t('documents.entryNotFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -197,7 +197,7 @@ exports.createDocument = catchAsync(async (req, res, next) => {
 exports.getDocument = catchAsync(async (req, res, next) => {
   const document = await Document.findById(req.params.id);
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('documents.documentNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -211,7 +211,7 @@ exports.updateDocument = catchAsync(async (req, res, next) => {
     runValidators: true
   });
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('documents.documentNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -227,12 +227,12 @@ exports.deleteDocument = catchAsync(async (req, res, next) => {
   if (documentUsers.length > 0 || documentAppliedTo.length > 0 ) {
     return res.status(400).json({
       status:constants.APIResponseStatus.Failure,
-      message: 'Document cannot be deleted as it is in use',
+      message: req.t('documents.documentInUse')
     });
   }
   const document = await Document.findByIdAndDelete(req.params.id);
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('documents.documentNotFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -259,7 +259,7 @@ exports.createDocumentAppliedTo = catchAsync(async (req, res, next) => {
 exports.getDocumentAppliedTo = catchAsync(async (req, res, next) => {
   const docApplied = await DocumentAppliedTo.findById(req.params.id);
   if (!docApplied) {
-      return next(new AppError('No DocumentAppliedTo found with that ID', 404));
+      return next(new AppError(req.t('documents.documentAppliedToNotFound'), 404));
   }
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -274,7 +274,7 @@ exports.updateDocumentAppliedTo = catchAsync(async (req, res, next) => {
   });
 
   if (!updatedDocApplied) {
-      return next(new AppError('No DocumentAppliedTo found with that ID', 404));
+      return next(new AppError(req.t('documents.documentAppliedToNotFound'), 404));
   }
 
   res.status(200).json({
@@ -286,7 +286,7 @@ exports.updateDocumentAppliedTo = catchAsync(async (req, res, next) => {
 exports.deleteDocumentAppliedTo = catchAsync(async (req, res, next) => {
   const docApplied = await DocumentAppliedTo.findByIdAndDelete(req.params.id);
   if (!docApplied) {
-      return next(new AppError('No DocumentAppliedTo found with that ID', 404));
+      return next(new AppError(req.t('documents.documentAppliedToNotFound'), 404));
   }
 
   res.status(204).json({
@@ -314,7 +314,7 @@ exports.addDocumentCategory = catchAsync(async (req, res, next) => {
 exports.getDocumentCategory = catchAsync(async (req, res, next) => {
   const documentCategory = await DocumentCategory.findById(req.params.id);
   if (!documentCategory) {
-      return next(new AppError('Document category not found', 404));
+      return next(new AppError(req.t('documents.documentCategoryNotFound'), 404));
   }
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -329,7 +329,7 @@ exports.updateDocumentCategory = catchAsync(async (req, res, next) => {
   });
 
   if (!documentCategory) {
-      return next(new AppError('Document category not found', 404));
+      return next(new AppError(req.t('documents.documentCategoryNotFound'), 404));
   }
 
   res.status(200).json({
@@ -343,14 +343,14 @@ exports.deleteDocumentCategory = catchAsync(async (req, res, next) => {
   if (category.length > 0 ) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Document Category cannot be deleted as it is in use',
+      message: req.t('documents.documentCategoryInUse')
     });
   }
 
   const documentCategory = await DocumentCategory.findByIdAndDelete(req.params.id);
   
   if (!documentCategory) {
-      return next(new AppError('Document category not found', 404));
+      return next(new AppError(req.t('documents.documentCategoryNotFound'), 404));
   }
 
   res.status(204).json({
@@ -378,7 +378,7 @@ exports.createDocumentUser = catchAsync(async (req, res, next) => {
 exports.getDocumentUser = catchAsync(async (req, res, next) => {
   const documentUser = await DocumentUsers.findById(req.params.id);
   if (!documentUser) {
-    return next(new AppError('DocumentUsers not found', 404));
+    return next(new AppError(req.t('documents.documentUsersNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -392,7 +392,7 @@ exports.updateDocumentUser = catchAsync(async (req, res, next) => {
     runValidators: true
   });
   if (!documentUser) {
-    return next(new AppError('DocumentUsers not found', 404));
+    return next(new AppError(req.t('documents.documentUsersNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -403,7 +403,7 @@ exports.updateDocumentUser = catchAsync(async (req, res, next) => {
 exports.deleteDocumentUser = catchAsync(async (req, res, next) => {
   const documentUser = await DocumentUsers.findByIdAndDelete(req.params.id);
   if (!documentUser) {
-    return next(new AppError('DocumentUsers not found', 404));
+    return next(new AppError(req.t('documents.documentUsersNotFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -431,7 +431,7 @@ exports.addTemplate = catchAsync(async (req, res, next) => {
 exports.getTemplate = catchAsync(async (req, res, next) => {
   const template = await Template.findById(req.params.id);
   if (!template) {
-      return next(new AppError('No Template found with that ID', 404));
+      return next(new AppError(req.t('documents.templateNotFound'), 404));
   }
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -445,7 +445,7 @@ exports.updateTemplate = catchAsync(async (req, res, next) => {
       runValidators: true
   });
   if (!template) {
-      return next(new AppError('No Template found with that ID', 404));
+      return next(new AppError(req.t('documents.templateNotFound'), 404));
   }
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -456,7 +456,7 @@ exports.updateTemplate = catchAsync(async (req, res, next) => {
 exports.deleteTemplate = catchAsync(async (req, res, next) => {
   const template = await Template.findByIdAndDelete(req.params.id);
   if (!template) {
-      return next(new AppError('No Template found with that ID', 404));
+      return next(new AppError(req.t('documents.templateNotFound'), 404));
   }
   res.status(204).json({
       status: constants.APIResponseStatus.Success,
@@ -483,7 +483,7 @@ exports.addUserDocument = catchAsync(async (req, res, next) => {
 exports.getUserDocument = catchAsync(async (req, res, next) => {
   const userDocument = await UserDocuments.findById(req.params.id);
   if (!userDocument) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('documents.userDocumentNotFound'), 404));
   }
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -498,7 +498,7 @@ exports.updateUserDocument = catchAsync(async (req, res, next) => {
   });
 
   if (!userDocument) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('documents.userDocumentNotFound'), 404));
   }
 
   res.status(200).json({
@@ -511,7 +511,7 @@ exports.deleteUserDocument = catchAsync(async (req, res, next) => {
   const userDocument = await UserDocuments.findByIdAndDelete(req.params.id);
 
   if (!userDocument) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('documents.userDocumentNotFound'), 404));
   }
 
   res.status(204).json({

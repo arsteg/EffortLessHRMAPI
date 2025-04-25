@@ -18,7 +18,7 @@ exports.createApplicationStatus = catchAsync(async (req, res, next) => {
   
   const existingStatus = await ApplicationStatus.findOne({ name:req.body.name, company:req.cookies.companyId });
   if (existingStatus) {
-    return next(new AppError('Application status already exists for this company', 400));
+    return next(new AppError(req.t('interviewProcess.applicationStatusExists'), 400));
   }
   
   const newStatus = await ApplicationStatus.create({ 
@@ -43,7 +43,7 @@ exports.getApplicationStatus = catchAsync(async (req, res, next) => {
   const status = await ApplicationStatus.findById(req.params.id);
   
   if (!status) {
-    return next(new AppError('Application status not found', 404));
+    return next(new AppError(req.t('interviewProcess.applicationStatusNotFound'), 404));
   }
 
   res.status(200).json({
@@ -62,7 +62,7 @@ exports.updateApplicationStatus = catchAsync(async (req, res, next) => {
   });
 
   if (!status) {
-    return next(new AppError('Application status not found', 404));
+    return next(new AppError(req.t('interviewProcess.applicationStatusNotFound'), 404));
   }
 
   res.status(200).json({
@@ -78,7 +78,7 @@ exports.deleteApplicationStatus = catchAsync(async (req, res, next) => {
   const status = await ApplicationStatus.findByIdAndDelete(req.params.id);
 
   if (!status) {
-    return next(new AppError('Application status not found', 404));
+    return next(new AppError(req.t('interviewProcess.applicationStatusNotFound'), 404));
   }
 
   res.status(204).json({
@@ -130,7 +130,7 @@ exports.getCandidate = catchAsync(async (req, res, next) => {
   const candidate = await Candidate.findById(req.params.id);
 
   if (!candidate) {
-    return next(new AppError('Candidate not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateNotFound'), 404));
   }
 
   res.status(200).json({
@@ -149,7 +149,7 @@ exports.updateCandidate = catchAsync(async (req, res, next) => {
   });
 
   if (!candidate) {
-    return next(new AppError('Candidate not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateNotFound'), 404));
   }
 
   res.status(200).json({
@@ -165,7 +165,7 @@ exports.deleteCandidate = catchAsync(async (req, res, next) => {
   const candidate = await Candidate.findByIdAndDelete(req.params.id);
 
   if (!candidate) {
-    return next(new AppError('Candidate not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateNotFound'), 404));
   }
 
   res.status(204).json({
@@ -232,7 +232,7 @@ exports.getAllCandidatesWithData = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: req.t('common.serverError') });
   }
 };
 
@@ -258,7 +258,7 @@ exports.createCandidateApplicationStatus = catchAsync(async (req, res, next) => 
 exports.getCandidateApplicationStatus = catchAsync(async (req, res, next) => {
   const candidateApplicationStatus = await CandidateApplicationStatus.findById(req.params.id);
   if (!candidateApplicationStatus) {
-    return next(new AppError('Candidate Application Status not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateApplicationStatusNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -273,7 +273,7 @@ exports.updateCandidateApplicationStatus = catchAsync(async (req, res, next) => 
   });
 
   if (!candidateApplicationStatus) {
-    return next(new AppError('Candidate Application Status not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateApplicationStatusNotFound'), 404));
   }
 
   res.status(200).json({
@@ -286,7 +286,7 @@ exports.deleteCandidateApplicationStatus = catchAsync(async (req, res, next) => 
   const candidateApplicationStatus = await CandidateApplicationStatus.findByIdAndDelete(req.params.id);
   
   if (!candidateApplicationStatus) {
-    return next(new AppError('Candidate Application Status not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateApplicationStatusNotFound'), 404));
   }
   
   res.status(204).json({
@@ -328,7 +328,7 @@ exports.addCandidateDataField = catchAsync(async (req, res, next) => {
 exports.getCandidateDataField = catchAsync(async (req, res, next) => {
   const candidateDataField = await CandidateDataField.findById(req.params.id);
   if (!candidateDataField) {
-    return next(new AppError('CandidateDataField not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -343,7 +343,7 @@ exports.updateCandidateDataField = catchAsync(async (req, res, next) => {
   });
 
   if (!candidateDataField) {
-    return next(new AppError('CandidateDataField not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldNotFound'), 404));
   }
 
   res.status(200).json({
@@ -356,7 +356,7 @@ exports.deleteCandidateDataField = catchAsync(async (req, res, next) => {
   const candidateDataField = await CandidateDataField.findByIdAndDelete(req.params.id);
 
   if (!candidateDataField) {
-    return next(new AppError('CandidateDataField not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldNotFound'), 404));
   }
 
   res.status(204).json({
@@ -369,7 +369,7 @@ exports.getAllCandidateDataFieldsByCompany = catchAsync(async (req, res, next) =
   const candidateDataFields = await CandidateDataField.find({ company: req.cookies.companyId });
 
   if (candidateDataFields.length === 0) {
-    return next(new AppError('No CandidateDataFields found for the company', 404));
+    return next(new AppError(req.t('interviewProcess.noCandidateDataFieldsForCompany'), 404));
   }
 
   res.status(200).json({
@@ -416,7 +416,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     await existingRecord.save();
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record updated successfully',
+      message: req.t('interviewProcess.recordUpdatedSuccessfully'),
       data: existingRecord,
     });
   } else {
@@ -434,7 +434,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
     });
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record created successfully',
+      message: req.t('interviewProcess.recordCreatedSuccessfully'),
       data: newRecord,
     });
   }
@@ -443,7 +443,7 @@ exports.addCandidateDataFieldValue = catchAsync(async (req, res, next) => {
 exports.getCandidateDataFieldValue = catchAsync(async (req, res, next) => {
   const candidateDataFieldValue = await CandidateDataFieldValue.findById(req.params.id);
   if (!candidateDataFieldValue) {
-    return next(new AppError('CandidateDataFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldValueNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -458,7 +458,7 @@ exports.updateCandidateDataFieldValue = catchAsync(async (req, res, next) => {
   });
 
   if (!candidateDataFieldValue) {
-    return next(new AppError('CandidateDataFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldValueNotFound'), 404));
   }
 
   res.status(200).json({
@@ -471,7 +471,7 @@ exports.deleteCandidateDataFieldValue = catchAsync(async (req, res, next) => {
   const candidateDataFieldValue = await CandidateDataFieldValue.findByIdAndDelete(req.params.id);
 
   if (!candidateDataFieldValue) {
-    return next(new AppError('CandidateDataFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateDataFieldValueNotFound'), 404));
   }
 
   res.status(204).json({
@@ -484,7 +484,7 @@ exports.getAllCandidateDataFieldValuesByCompany = catchAsync(async (req, res, ne
   const candidateDataFieldValues = await CandidateDataFieldValue.find({ company: req.cookies.companyId });
 
   if (candidateDataFieldValues.length === 0) {
-    return next(new AppError('No CandidateDataFieldValues found for the company', 404));
+    return next(new AppError(req.t('interviewProcess.noCandidateDataFieldValuesForCompany'), 404));
   }
 
   res.status(200).json({
@@ -515,7 +515,7 @@ exports.addCandidateInterviewDetails = catchAsync(async (req, res, next) => {
 exports.getCandidateInterviewDetails = catchAsync(async (req, res, next) => {
   const candidateInterviewDetails = await CandidateInterviewDetails.findById(req.params.id);
   if (!candidateInterviewDetails) {
-    return next(new AppError('CandidateInterviewDetails not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateInterviewDetailsNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -534,7 +534,7 @@ exports.updateCandidateInterviewDetails = catchAsync(async (req, res, next) => {
   );
 
   if (!candidateInterviewDetails) {
-    return next(new AppError('CandidateInterviewDetails not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateInterviewDetailsNotFound'), 404));
   }
 
   res.status(200).json({
@@ -549,7 +549,7 @@ exports.deleteCandidateInterviewDetails = catchAsync(async (req, res, next) => {
   );
 
   if (!candidateInterviewDetails) {
-    return next(new AppError('CandidateInterviewDetails not found', 404));
+    return next(new AppError(req.t('interviewProcess.candidateInterviewDetailsNotFound'), 404));
   }
 
   res.status(204).json({
@@ -592,7 +592,7 @@ exports.getAllCandidateInterviewDetailsByCompany = catchAsync(async (req, res, n
   });
 
   if (candidateInterviewDetails.length === 0) {
-    return next(new AppError('No CandidateInterviewDetails found for the company', 404));
+    return next(new AppError(req.t('interviewProcess.noCandidateInterviewDetailsForCompany'), 404));
   }
 
   res.status(200).json({
@@ -622,7 +622,7 @@ exports.addFeedbackField = catchAsync(async (req, res, next) => {
 exports.getFeedbackField = catchAsync(async (req, res, next) => {
   const feedbackField = await FeedbackField.findById(req.params.id);
   if (!feedbackField) {
-    return next(new AppError('FeedbackField not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -637,7 +637,7 @@ exports.updateFeedbackField = catchAsync(async (req, res, next) => {
   });
 
   if (!feedbackField) {
-    return next(new AppError('FeedbackField not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldNotFound'), 404));
   }
 
   res.status(200).json({
@@ -650,7 +650,7 @@ exports.deleteFeedbackField = catchAsync(async (req, res, next) => {
   const feedbackField = await FeedbackField.findByIdAndDelete(req.params.id);
 
   if (!feedbackField) {
-    return next(new AppError('FeedbackField not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldNotFound'), 404));
   }
 
   res.status(204).json({
@@ -665,7 +665,7 @@ exports.getAllFeedbackFieldsByCompany = catchAsync(async (req, res, next) => {
   });
 
   if (feedbackFields.length === 0) {
-    return next(new AppError('No FeedbackFields found for the company', 404));
+    return next(new AppError(req.t('interviewProcess.noFeedbackFieldsForCompany'), 404));
   }
 
   res.status(200).json({
@@ -742,7 +742,7 @@ exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
     await existingRecord.save();
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record updated successfully',
+      message: req.t('interviewProcess.RecordUpdatedSuccessfully'), 
       data: existingRecord,
     });
   } else {
@@ -761,7 +761,7 @@ exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
 
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      message: 'Record created successfully',
+      message: req.t('interviewProcess.RecordAddedSuccessfully'),
       data: newRecord,
     });
   }
@@ -770,7 +770,7 @@ exports.addFeedbackFieldValue = catchAsync(async (req, res, next) => {
 exports.getFeedbackFieldValue = catchAsync(async (req, res, next) => {
   const feedbackFieldValue = await FeedbackFieldValue.findById(req.params.id);
   if (!feedbackFieldValue) {
-    return next(new AppError('FeedbackFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldValueNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -785,7 +785,7 @@ exports.updateFeedbackFieldValue = catchAsync(async (req, res, next) => {
   });
 
   if (!feedbackFieldValue) {
-    return next(new AppError('FeedbackFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldValueNotFound'), 404));
   }
 
   res.status(200).json({
@@ -798,7 +798,7 @@ exports.deleteFeedbackFieldValue = catchAsync(async (req, res, next) => {
   const feedbackFieldValue = await FeedbackFieldValue.findByIdAndDelete(req.params.id);
 
   if (!feedbackFieldValue) {
-    return next(new AppError('FeedbackFieldValue not found', 404));
+    return next(new AppError(req.t('interviewProcess.feedbackFieldValueNotFound'), 404));
   }
 
   res.status(204).json({
@@ -813,7 +813,7 @@ exports.getAllFeedbackFieldValuesByCompany = catchAsync(async (req, res, next) =
   });
 
   if (feedbackFieldValues.length === 0) {
-    return next(new AppError('No FeedbackFieldValues found for the company', 404));
+    return next(new AppError(req.t('interviewProcess.noFeedbackFieldValuesForCompany'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -856,7 +856,7 @@ exports.updateInterviewer = catchAsync(async (req, res, next) => {
   });
 
   if (!interviewer) {
-    return next(new AppError('Interviewer not found', 404));
+    return next(new AppError(req.t('interviewProcess.interviewerNotFound'), 404));
   }
 
   res.status(200).json({
@@ -869,11 +869,7 @@ exports.deleteInterviewer = catchAsync(async (req, res, next) => {
   const interviewer  = req.params.id; // Extract the interviewer value from request params  
   const deletedCount = await Interviewer.deleteOne({ interviewer }); // Use deleteOne with a query for deletion 
   if (deletedCount.deletedCount === 0) {
-    return next(new AppError('Interviewer not found', 404));
-    res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      data: 'Interviewer not found'
-    });
+    return next(new AppError(req.t('interviewProcess.interviewerNotFound'), 404));    
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,

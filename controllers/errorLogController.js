@@ -59,7 +59,7 @@ const  websocketHandler  = require('../utils/websocketHandler');
   exports.deleteErrorLog = catchAsync(async (req, res, next) => {  
     const document = await ErrorLog.findByIdAndDelete(req.params.id);
     if (!document) {
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('error.noDocumentFound'), 404));
     }
     res.status(204).json({
       status: constants.APIResponseStatus.Success,

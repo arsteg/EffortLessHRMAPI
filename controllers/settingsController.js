@@ -30,7 +30,8 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
     runValidators: true, // Validate data
   });
   if (!result) {
-    return next(new AppError("No productivity found with that ID", 404));
+    return next(new AppError(req.t('settings.productivityNotFound'), 404)
+  );
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -72,7 +73,8 @@ exports.saveUserLocation = async (req, res) => {
       const {user,coordinates, address } = req.body;
       const companyId = req.cookies.companyId;
       if (!coordinates || coordinates.length !== 2) {
-          return res.status(400).json({ message: "Invalid input data" });
+          return res.status(400).json({ message: req.t('settings.invalidInputData')
+          });
       }
 
       const result = await UserLocation.updateOne(
@@ -90,21 +92,22 @@ exports.saveUserLocation = async (req, res) => {
         return res.status(200).json( {  
           status: constants.APIResponseStatus.Success,
           data: "", 
-          message: "Location updated successfully" });
+          message: req.t('settings.locationUpdatedSuccessfully') });
     } else if (result.upsertedCount > 0) {
         return res.status(201).json({ 
           status: constants.APIResponseStatus.Success,
           data: "", 
-          message: "Location added successfully" });
+          message: req.t('settings.locationAddedSuccessfully') });
     } else {
         return res.status(200).json({ 
           status: constants.APIResponseStatus.Failure,
           data: "",
-           message: "No changes made" });
+           message: req.t('settings.noChangesMade') });
     }
    
   } catch (error) {
-      res.status(500).json({ status:constants.APIResponseStatus.Failure, message: "Internal Server Error", error: error.message });
+      res.status(500).json({ status:constants.APIResponseStatus.Failure, message: req.t('settings.internalServerError')
+        , error: error.message });
   }  
 };
 
@@ -125,7 +128,9 @@ exports.getUserLocations = async (req, res) => {
         data: locations,
       });
   } catch (error) {
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
+      res.status(500).json({ message: req.t('settings.internalServerError')
+
+        , error: error.message });
   }
 };
 
@@ -135,7 +140,9 @@ exports.getAllUserLocations = async (req, res) => {
     const companyId = req.cookies.companyId; // Get company ID from cookies
     
     if (!companyId) {
-      return res.status(400).json({ message: "Company ID is required." });
+      return res.status(400).json({ message: req.t('settings.companyIdRequired')
+
+      });
     }
 
     // Filter by company
@@ -150,7 +157,9 @@ exports.getAllUserLocations = async (req, res) => {
       data: locations,
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ message: req.t('settings.internalServerError')
+
+      , error: error.message });
   }
 };
 
@@ -165,20 +174,22 @@ exports.deleteUserLocation = async (req, res) => {
     if (!deletedLocation) {
       return res.status(404).json({
         status: constants.APIResponseStatus.Error,
-        message: "User location not found.",
+        message:req.t('settings.userLocationNotFound')
+
+        ,
       });
     }
 
     // Return success response
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: "User location deleted successfully.",
+      message: req.t('settings.LocationDeletedSuccessfully'),
     });
   } catch (error) {
     // Handle any errors
     res.status(500).json({
       status:constants.APIResponseStatus.Error,
-      message: "Internal Server Error",
+      message: req.t('settings.internalServerError') ,
       error: error.message,
     });
   }
@@ -190,7 +201,9 @@ exports.updateUserLocation = async (req, res) => {
       const companyId = req.cookies.companyId;
 
       if (!coordinates || coordinates.length !== 2) {
-          return res.status(400).json({ message: "Invalid input data" });
+          return res.status(400).json({ message: req.t('settings.invalidInputData')
+
+          });
       }
 
       const result = await UserLocation.updateOne(
@@ -208,19 +221,21 @@ exports.updateUserLocation = async (req, res) => {
           return res.status(200).json( {  
             status: constants.APIResponseStatus.Success,
             data: "", 
-            message: "Location updated successfully" });
+            message: req.t('settings.locationUpdatedSuccessfully') });
       } else if (result.upsertedCount > 0) {
           return res.status(201).json({ 
             status: constants.APIResponseStatus.Success,
             data: "", 
-            message: "Location added successfully" });
+            message: req.t('settings.locationAddedSuccessfully') });
       } else {
           return res.status(200).json({ 
             status: constants.APIResponseStatus.Failure,
             data: "",
-             message: "No changes made" });
+             message: req.t('settings.noChangesMade') });
       }
   } catch (error) {
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
+      res.status(500).json({ message:req.t('settings.internalServerError')
+
+        , error: error.message });
   }
 };

@@ -38,7 +38,8 @@ var payrollUsersSchema = new Schema({
     },
     totalFlexiBenefits: {
       type: Number,
-      required: true
+      required: true,
+      default: 0
     },
     totalCTC: {
       type: Number,
@@ -50,7 +51,8 @@ var payrollUsersSchema = new Schema({
     },
     totalTakeHome: {
       type: Number,
-      required: true
+      required: true,
+      default: 0
     },
     status: {
       type: String,

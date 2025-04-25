@@ -54,6 +54,9 @@ expenseTemplateCategoriesSchema.pre(/^find/,async function(next) {
     this.populate({
       path: 'expenseCategory',
       select: 'id label'
+    }).populate({
+      path: 'expenseTemplate',
+      select: ''
     });
   } catch (error) {
     console.error("Error populating expense category:", error);

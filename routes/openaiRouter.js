@@ -65,6 +65,40 @@ router.post('/testResponse', openaiController.testResponse);
  */
 router.post('/generateQueryFromText', openaiController.generateQueryFromText);
 
-
+/**
+ * @swagger
+ * /api/v1/openai/chatBot:
+ *   post:
+ *     summary: reply user message
+ *     tags: [OpenAI Integration]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userMessage:
+ *                 type: string
+ *             required:
+ *               - userMessage
+ *     responses:
+ *       200:
+ *         description: Successfully replied to the user message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 chatBotResponse:
+ *                   message: string
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
+router.post("/chatbot", openaiController.chatbot)
 
 module.exports = router;

@@ -37,7 +37,7 @@ exports.createZoomMeeting = async (req, res, next) => {
                 access_token = response.data.access_token;
                 websocketHandler.sendLog(req, 'Successfully obtained access token', constants.LOG_TYPES.INFO);
             } else {
-                throw new Error('Failed to get access token');
+                throw new Error(req.t('zoom.accessTokenFailed'));
             }
         } catch (error) {
             websocketHandler.sendLog(req, `Error fetching access token: ${error.message}`, constants.LOG_TYPES.ERROR);
@@ -71,7 +71,9 @@ exports.createZoomMeeting = async (req, res, next) => {
             websocketHandler.sendLog(req, `Meeting creation failed with status: ${meetingResponse.status}`, constants.LOG_TYPES.WARN);
             return res.status(400).json({
                 status: constants.APIResponseStatus.Error,
-                message: 'Unable to generate meeting link'
+                message: req.t('zoom.meetingCreationFailed')
+
+
             });
         }
 
@@ -90,7 +92,9 @@ exports.createZoomMeeting = async (req, res, next) => {
         websocketHandler.sendLog(req, `Fatal error in createZoomMeeting: ${e.message}`, constants.LOG_TYPES.FATAL);
         res.status(500).json({
             status: constants.APIResponseStatus.Error,
-            message: 'Internal server error'
+            message: req.t('zoom.internalServerError')
+
+
         });
     }
 };
@@ -136,9 +140,6 @@ exports.createMeetingSingture = async (req, res, next) => {
 
     } catch (e) {
         websocketHandler.sendLog(req, `Fatal error in createMeetingSingture: ${e.message}`, constants.LOG_TYPES.FATAL);
-        res.status(500).json({
-            status: constants.APIResponseStatus.Error,
-            message: 'Internal server error'
-        });
+        return next(new AppError(req.t('zoom.internalServerError'), 500));
     }
 };

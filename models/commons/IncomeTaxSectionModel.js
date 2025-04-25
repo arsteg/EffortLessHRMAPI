@@ -10,6 +10,10 @@ var incomeTaxSectionSchema = new Schema({
     type: Boolean,
     required: true
   },
+  maximumAmount: {
+    type: Number,
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

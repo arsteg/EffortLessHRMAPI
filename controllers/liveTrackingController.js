@@ -125,7 +125,7 @@ exports.addNew = catchAsync(async (req, res, next) => {
       else{
         res.status(200).json({
           success: false,
-          data: 'User already added'
+          data: req.t('liveTracking.userAlreadyAdded')
         });
       }
   });
@@ -198,14 +198,14 @@ exports.getUsersLiveScreen = catchAsync(async (req, res, next) => {
     else{
       res.status(200).json({
         status: false,
-        data: "no data found"
+        data: req.t('liveTracking.noLiveTrackingDataFound')
       });
     }
   }
   else{
     res.status(200).json({
       status: false,
-      data: "no data found"
+      data: req.t('liveTracking.noLiveTrackingDataFound')
     });
   }
 });

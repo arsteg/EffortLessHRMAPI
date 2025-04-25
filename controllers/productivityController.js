@@ -19,7 +19,7 @@ exports.create_productivityModel = (req, res) => {
         .then(result => {
             websocketHandler.sendLog(req, `Successfully created productivity model with ID: ${result._id}`, constants.LOG_TYPES.INFO);
             res.status(201).json({
-                message: 'Productivity Model created successfully',
+                message: req.t('productivityModel.created'),
                 createdProductivityModel: {
                     AppWebsite: result.AppWebsite,
                     nonProductive: result.nonProductive, // Fixed typo from original 'Non - productive'
@@ -82,7 +82,7 @@ exports.delete_productivityModel = (req, res) => {
         .then(result => {
             websocketHandler.sendLog(req, `Successfully deleted productivity model ID: ${id}`, constants.LOG_TYPES.INFO);
             res.status(200).json({
-                message: 'Productivity Model deleted',
+                message: req.t('productivity.modelDeleted'),
                 request: {
                     type: 'POST',
                     url: 'http://your-domain/productivityModel',

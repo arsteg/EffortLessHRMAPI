@@ -1,26 +1,27 @@
-var mongoose = require('mongoose');
-var AutoIncrement = require('mongoose-sequence')(mongoose);
-var Schema = mongoose.Schema;
-var permissionModelSchema = new Schema({  
-    permissionName: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    permissionDetails: {
-      type: String
-    },
-    parentPermission:{
-      type: Number
-    }
-  },{
-    toJSON: { virtuals: true }, // Use virtuals when outputing as JSON
-    toObject: { virtuals: true } // Use virtuals when outputing as Object
+const mongoose = require('mongoose');
+
+const permissionSchema = new mongoose.Schema(
+  {
+    permissionName: { type: String, required: true, unique: true },
+    permissionDetails: { type: String },
+    resource: { type: String, required: true }, // e.g., employees, time-tracker
+    action: { type: String, required: true }, // e.g., read, write, delete
+    uiElement: { type: String }, // e.g., button:edit-employee
+    parentPermission: { type: mongoose.Schema.ObjectId, ref: 'Permission' },
   },
-   { collection: 'Permission' }); 
-  permissionModelSchema.virtual('rolePermission', {
-    ref: 'RolePermission',
-    foreignField: 'permissionId', // tour field in review model pointing to this model
-    localField: '_id' // id of current model
-  });
-  module.exports = mongoose.model('Permission', permissionModelSchema);
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    collection: 'Permission',
+  }
+);
+
+permissionSchema.index({ permissionName: 1, resource: 1, action: 1 });
+
+permissionSchema.virtual('rolePermission', {
+  ref: 'RolePermission',
+  foreignField: 'permissionId',
+  localField: '_id',
+});
+
+module.exports = mongoose.model('Permission', permissionSchema);

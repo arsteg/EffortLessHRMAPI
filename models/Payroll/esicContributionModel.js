@@ -2,14 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const esicContributionSchema = new Schema({
-  fromAmount: {
-    type: Number,
-    required: true
-  },
-  toAmount: {
-    type: Number,
-    required: true
-  },
   employeePercentage: {
     type: Number,
     required: true

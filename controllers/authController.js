@@ -24,6 +24,9 @@ const Subscription = require('../models/pricing/subscriptionModel');
 const Razorpay = require('razorpay');
 const Appointment = require("../models/permissions/appointmentModel");
 const  websocketHandler  = require('../utils/websocketHandler');
+const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
+const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
+const AttendanceMode = require('../models/attendance/attendanceMode');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -132,87 +135,154 @@ exports.webSignup = catchAsync(async(req, res, next) => {
     newCompany=true;
   }
   var companyId = process.env.DEFAULT_COMPANY_Id;
-  if(company === null){
-    company = await Company.create({
-    companyName: req.body.companyName,
-    contactPerson: req.body.firstName + " "+ req.body.lastName,
-    email: req.body.email,      
-    active:true,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())    
-  }); 
+  if(company === null)
+  {
+          company = await Company.create({
+          companyName: req.body.companyName,
+          contactPerson: req.body.firstName + " "+ req.body.lastName,
+          email: req.body.email,      
+          active:true,
+          createdOn: new Date(Date.now()),
+          updatedOn: new Date(Date.now())    
+        }); 
 
-  const rolesToDuplicate = await Role.find({ company: companyId });
-    // Step 3: Create new records by cloning and assigning a new id
-    const duplicatedRoles= rolesToDuplicate.map((record) => {
-      // Create a new object with the same properties as the original record
-      const duplicatedRole = Object.assign({}, record.toObject());
-      duplicatedRole._id = new mongoose.Types.ObjectId();
-      // Assign a new id to the duplicated record (you can generate new id as you like)
-      duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-      return duplicatedRole;
-  
-    });
-     // Step 4: Save the duplicated records back to the database
-        await Role.insertMany(duplicatedRoles);
-
-    const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
-    // Step 3: Create new records by cloning and assigning a new id
-    const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
-      // Create a new object with the same properties as the original record
-      const duplicatedTaskStatus= Object.assign({}, record.toObject());
-      duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
-   
-      // Assign a new id to the duplicated record (you can generate new id as you like)
-      duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-      return duplicatedTaskStatus;
-    });
-    // Step 4: Save the duplicated records back to the database
-        await TaskStatus.insertMany(duplicatedTaskStatusList);
+        //Copy Master Tables Data from Master Compnay to newly created Company
+        const rolesToDuplicate = await Role.find({ company: companyId });
+        if (rolesToDuplicate.length > 0) {   
+        // Step 3: Create new records by cloning and assigning a new id
+        const duplicatedRoles= rolesToDuplicate.map((record) => {
+          // Create a new object with the same properties as the original record
+          const duplicatedRole = Object.assign({}, record.toObject());
+          duplicatedRole._id = new mongoose.Types.ObjectId();
+          // Assign a new id to the duplicated record (you can generate new id as you like)
+          duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+          return duplicatedRole;
       
+        });
+        // Step 4: Save the duplicated records back to the database
+        await Role.insertMany(duplicatedRoles);
+        } else {
+          console.log('No Roles found to duplicate.');
+        }
+        const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
+        if (taskStatusToDuplicate.length > 0) {            
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaskStatus= Object.assign({}, record.toObject());
+            duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
+        
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaskStatus;
+          });
+          // Step 4: Save the duplicated records back to the database
+          await TaskStatus.insertMany(duplicatedTaskStatusList);
+        } else {
+          console.log('No Task Status Templates found to duplicate.');
+        }
         const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
-        // Step 3: Create new records by cloning and assigning a new id
-        const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
-          // Create a new object with the same properties as the original record
-          const duplicatedTaskPriority  = Object.assign({}, record.toObject());
-          // Assign a new id to the duplicated record (you can generate new id as you like)
-          duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-          duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
-          return duplicatedTaskPriority;
-        });
-        await TaskPriority.insertMany(duplicatedTaskPriorityList);
-
+        if (taskPriorityToDuplicate.length > 0) {     
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaskPriority  = Object.assign({}, record.toObject());
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
+            return duplicatedTaskPriority;
+          });
+          await TaskPriority.insertMany(duplicatedTaskPriorityList);
+        } else {
+          console.log('No Task Priority Templates found to duplicate.');
+        }
         const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
+        if (emailTemplateToDuplicate.length > 0) {     
+            // Step 3: Create new records by cloning and assigning a new id
+            const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
+              // Create a new object with the same properties as the original record
+              const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
+              // Assign a new id to the duplicated record (you can generate new id as you like)
+              duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+              duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
+              duplicatedEmailTemplate.isDelete=false;
+              return duplicatedEmailTemplate;
+            });
+            await EmailTemplate.insertMany(duplicatedEmailTemplateList);
+        } else {
+          console.log('No Email Templates found to duplicate.');
+        }
+
+        const taxSectonsToDuplicate = await IncomeTaxSection.find({ company: companyId });
+        if (taxSectonsToDuplicate.length > 0) {
+          // Step 3: Create new records by cloning and assigning a new id
+          const duplicatedTaxSectionList= taxSectonsToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaxSection = Object.assign({}, record.toObject());
+            duplicatedTaxSection._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaxSection.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaxSection;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await IncomeTaxSection.insertMany(duplicatedTaxSectionList);
+        } else {
+          console.log('No Tax Sections found to duplicate.');
+        }
+
+        const taxComponanatsToDuplicate = await IncomeTaxComponant.find({ company: companyId });
+        if (taxComponanatsToDuplicate.length > 0) {
         // Step 3: Create new records by cloning and assigning a new id
-        const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
-          // Create a new object with the same properties as the original record
-          const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
-          // Assign a new id to the duplicated record (you can generate new id as you like)
-          duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-          duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
-          duplicatedEmailTemplate.isDelete=false;
-          return duplicatedEmailTemplate;
-        });
-        await EmailTemplate.insertMany(duplicatedEmailTemplateList);
+          const duplicatedTaxComponantList= taxComponanatsToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicatedTaxComponant = Object.assign({}, record.toObject());
+            duplicatedTaxComponant._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicatedTaxComponant.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicatedTaxComponant;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await IncomeTaxComponant.insertMany(duplicatedTaxComponantList);
+        } else {
+          console.log('No Tax Componants found to duplicate.');
+        }
+
+        const attendnaceModeToDuplicate = await AttendanceMode.find({ company: companyId });
+        if (attendnaceModeToDuplicate.length > 0) {
+        // Step 3: Create new records by cloning and assigning a new id
+          const duplicateAttendnaceModeList= attendnaceModeToDuplicate.map((record) => {
+            // Create a new object with the same properties as the original record
+            const duplicateAttendnaceMode = Object.assign({}, record.toObject());
+            duplicateAttendnaceMode._id = new mongoose.Types.ObjectId();
+            // Assign a new id to the duplicated record (you can generate new id as you like)
+            duplicateAttendnaceMode.company = company._id; // For example, assigning a new id of 2 to the duplicated records
+            return duplicateAttendnaceMode;
+        
+          });
+          // Step 4: Save the duplicated records back to the database
+          await AttendanceMode.insertMany(duplicateAttendnaceModeList);
+        } else {
+          console.log('No Attendance Mode found to duplicate.');
+        }
+  }
+  var role =null;
+  if(newCompany==true)
+  {
+    role = await Role.findOne({
+      company: company._id,
+      Name: "Admin"
+    });
+  }
+  else
+  {
+      role = await Role.findOne({
+      company: company._id,
+      Name: "User"
+    });
   
   }
-  const roles = await Role.find({ company: company._id });
-  var role =null;
-if(newCompany==true)
-{
-   role = await Role.findOne({
-    company: company._id,
-    Name: "Admin"
-  });
-}
-else
-{
-    role = await Role.findOne({
-     company: company._id,
-     Name: "User"
-   });
- 
-}
   const newUser = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -240,32 +310,29 @@ else
     await newAppointment.save();
   const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
- if(emailTemplate)
- {
-  const template = emailTemplate.contentData;
-  const message = template
-  .replace("{firstName}", newUser.firstName)
-  .replace("{url}", resetURL)
-  .replace("{company}",  req.cookies.companyName)
-  .replace("{company}", req.cookies.companyName)
-  .replace("{lastName}", newUser.lastName); 
+  if(emailTemplate)
+  {
+    const template = emailTemplate.contentData;
+    const message = template
+    .replace("{firstName}", newUser.firstName)
+    .replace("{url}", resetURL)
+    .replace("{company}",  req.cookies.companyName)
+    .replace("{company}", req.cookies.companyName)
+    .replace("{lastName}", newUser.lastName); 
 
-     try {
-      await sendEmail({
-        email: newUser.email,
-        subject: emailTemplate.subject,
-        message
-      });
-     
-    } catch (err) {   
-      return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
-    );
-   }
-  }
+      try {
+        await sendEmail({
+          email: newUser.email,
+          subject: emailTemplate.subject,
+          message
+        });
+      
+      } catch (err) {   
+        return next(
+          new AppError(req.t('auth.emailSendError'), 500)
+      );
+    }
+    }
   createAndSendToken(newUser, 201, res);
   }
 
@@ -285,7 +352,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   if(subscription?.currentPlanId?.users <= activeUsers){
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      error: `You have reached the user limit for your subscription plan. You cannot add more than ${subscription?.currentPlanId?.users} users. Please upgrade your plan to add more users.`
+      error: req.t('auth.userLimitReached').replace('{userLimit}', subscription?.currentPlanId?.users)
     })
   }
   const newUser = await User.create({
@@ -335,10 +402,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
       });   
     } catch (err) {   
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       );
     }
   }
@@ -373,7 +437,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 1) Validate email and password input
   if (!email || !password) {
-    return next(new AppError('Email or password not specified.', 400));
+    return next(new AppError(req.t('auth.emailOrPasswordNotSpecified'), 400));
   }
   // 2) Check if user exists and is not deleted, then retrieve password
   const user = await User.findOne({
@@ -382,9 +446,8 @@ exports.login = catchAsync(async (req, res, next) => {
   }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError('Incorrect email or password.', 401));
+    return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
   }
-
   // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
@@ -406,7 +469,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // If token wasn't specified throw an error
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new AppError(req.t('auth.notLoggedIn'), 401)
     );
   }
 
@@ -419,17 +482,14 @@ exports.protect = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser)
     return next(
-      new AppError(
-        'The user belonging to this token does no longer exist.',
-        401
-      )
+      new AppError(req.t('auth.userNotExist'), 401)
     );
 
   // 4) Check if user changed password after the token was issued
   // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password. Please log in again.', 401)
+      new AppError(req.t('auth.passwordChanged'), 401)
     );
   }
   // Grant access to protected route
@@ -445,10 +505,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     const companyDetails = await Company.findById(currentUser.company._id);
     if(!companyDetails.freeCompany){
       return next(
-        new AppError(
-          'Your subscription is not active. Please contact your administrator.',
-          401
-        ).sendErrorJson(res)
+        new AppError(req.t('auth.subscriptionInactive'), 401).sendErrorJson(res)
       );
     }
   }
@@ -473,7 +530,7 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   // If token wasn't specified throw an error
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new AppError(req.t('auth.notLoggedIn'), 401)
     );
   }
 
@@ -486,17 +543,14 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser)
     return next(
-      new AppError(
-        'The user belonging to this token does no longer exist.',
-        401
-      )
+      new AppError(req.t('auth.userNotExist'), 401)
     );
 
   // 4) Check if user changed password after the token was issued
   // iat stands for issued at
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password. Please log in again.', 401)
+      new AppError(req.t('auth.passwordChanged'), 401)
     );
   }
 
@@ -504,30 +558,13 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   next();
 });
 
-// Authorization
-// IMPORTANT: We can use closure if we want to pass parameter to a function but
-// do not run it.
-// exports.restrictTo = (...roles) => {
-//   console.log('calling restrictTo');
-//   return (req, res, next) => {
-//     // roles ['admin', 'lead-guide'] role='user'
-//     if (!roles.includes(req.user.role)) {
-//       return next(
-//         new AppError('You do not have permission to perform this action', 403)
-//       );
-//     }
-
-//     next();
-//   };
-// };
-
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {    
     res.status(200).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'No account found with this email address.',
+      message: req.t('auth.noAccountFound'),
       data: {
         user: null
       }
@@ -565,10 +602,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       );
     }
   }
@@ -590,7 +624,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   });
  
   // 2) If token has not expired, and there is user, set the new password
-  if (!user) return next(new AppError('Token is invalid or has expired', 400));
+  if (!user) return next(new AppError(req.t('auth.tokenInvalidOrExpired'), 400));
   
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -664,10 +698,7 @@ exports.sendLog = catchAsync(async (req, res, next) => {
         })  
     } catch (err) {   
       return next(
-        new AppError(
-          'There was an error sending the email. Try again later.',
-          500
-        )
+        new AppError(req.t('auth.emailSendError'), 500)
       )
     }
      
@@ -683,7 +714,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.body.id).select('+password');
   // 2) Check if POSTed current password is correct 
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    return next(new AppError('Your current password is wrong.', 401));
+    new AppError(req.t('auth.currentPasswordWrong'), 401)
   }
   // 3) If so, update password
   user.password = req.body.password;
@@ -717,7 +748,8 @@ exports.addRole = catchAsync(async (req, res, next) => {
   
   
   const newRole = await Role.create({    
-    Name:req.body.name,
+    name:req.body.name,
+    description:req.body.description,
     company:req.cookies.companyId,
     active:true,   
     createdOn: new Date(Date.now()),
@@ -737,12 +769,12 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: 'Role is already in use. Please delete related records before deleting the Role.',
+      message: req.t('auth.roleInUse'),
     });
   }
   const document = await Role.findByIdAndDelete(req.params.id);
   if (!document) {
-    return next(new AppError('No document found with that ID', 404));
+    return next(new AppError(req.t('auth.noDocumentFound'), 404));
   }
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -750,12 +782,52 @@ exports.deleteRole = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateRole = factory.updateOne(Role);
+exports.updateRole = async (req, res) => {
+  console.log('[updateRole] Request received:', {
+    params: req.params,
+    body: req.body,
+    headers: req.headers,
+  });
+
+  const { id } = req.params;
+  const { name, description } = req.body;
+
+  console.log('[updateRole] Extracted data:', { id, name, description });
+
+  try {
+    console.log('[updateRole] Attempting to update role with ID:', id);
+
+    const role = await Role.findByIdAndUpdate(
+      id,
+      { name, description },
+      { new: true, runValidators: true }
+    );
+
+    console.log('[updateRole] Update result:', role);
+
+    if (!role) {
+      console.error('[updateRole] Error: Role not found with ID:', id);
+      return res.status(404).json({ message: req.t('common.recordNotFound') });
+    }
+
+    console.log('[updateRole] Successfully updated role:', role);
+    res.json(role);
+  } catch (error) {
+    console.error('[updateRole] Error:', {
+      errorMessage: error.message,
+      stack: error.stack,
+      fullError: error,
+    });
+
+    res.status(500).json({ message: req.t('common.serverError') });
+  }
+};
+
 
 exports.getRole = catchAsync(async (req, res, next) => {       
   const role = await Role.find({}).where('_id').equals(req.params.id);   
   if (!role) {
-    return next(new AppError('No role found', 403));
+    return next(new AppError(req.t('auth.roleNotFound'), 403));
   }  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -766,7 +838,7 @@ exports.getRole = catchAsync(async (req, res, next) => {
 exports.getRoles = catchAsync(async (req, res, next) => {    
   const roles = await Role.find({}).where('company').equals(req.cookies.companyId);  
   if (!roles) {
-    return next(new AppError('No role found', 403));
+    return next(new AppError(req.t('auth.noRoleFound'), 403));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -779,7 +851,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const userSubordinates = await userSubordinate.find({}).where('userId').equals(req.body.userId).where('subordinateUserId').equals(req.body.subordinateUserId);  
   
   if (userSubordinates.length>0) {
-    return next(new AppError('User subordinate already exists.', 403));
+    return next(new AppError(req.t('auth.userSubordinateExists'), 403));
   }
   else{    
     const subordinate = await userSubordinate.create({
@@ -828,7 +900,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   const rolePermission = await RolePermission.find({}).where('_id').equals(req.params.id);  
   
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found', 403));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 403));
   }  
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -848,7 +920,7 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
   const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError('Role Permission already exists.', 403));
+    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
   }
   else{    
     const rolePermission = await RolePermission.create({
@@ -868,7 +940,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
   const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError('Role Permission already exists.', 403));
+    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
   }
   else{ 
   const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
@@ -876,7 +948,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
     runValidators: true // Validate data
   });
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found with that ID', 404));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -888,7 +960,7 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
 exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
   const rolePermission = await RolePermission.findByIdAndDelete(req.params.id);
   if (!rolePermission) {
-    return next(new AppError('No Role Permission found with that ID', 404));
+    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,

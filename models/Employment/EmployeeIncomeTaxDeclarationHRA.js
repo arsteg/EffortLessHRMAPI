@@ -41,9 +41,25 @@ var employeeIncomeTaxDeclarationHRASchema = new Schema({
   documentLink: {
     type: String
   },
+  section: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'IncomeTaxSection'
+  },
   employeeIncomeTaxDeclarationAttachments:{
     type: Array
   }
 }, { collection: 'EmployeeIncomeTaxDeclarationHRA' });
+
+employeeIncomeTaxDeclarationHRASchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'section',
+      select: 'id section isHRA'
+    });
+  } catch (error) {
+    console.error("Error populating section:", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('EmployeeIncomeTaxDeclarationHRA', employeeIncomeTaxDeclarationHRASchema);

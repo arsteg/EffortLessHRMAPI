@@ -23,7 +23,8 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
       return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
           data: null,
-          message: 'Project is already in use. Please delete related records before deleting the Project.'
+          message: req.t('projectController.projectInUse')
+
       });
   }
   
@@ -33,7 +34,8 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
 
   if (!document) {
       websocketHandler.sendLog(req, `No project found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('projectController.projectNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully deleted project ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -54,7 +56,8 @@ exports.updateProject = catchAsync(async (req, res, next) => {
   
   if (!document) {
       websocketHandler.sendLog(req, `No project found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('projectController.projectNotFound'), 404)
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully updated project ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -185,7 +188,8 @@ exports.addProjectUser = catchAsync(async (req, res, next) => {
       
       if (projectUsersexists.length > 0) {
           websocketHandler.sendLog(req, `User ${req.body.projectUsers[i].user} already exists in project ${req.body.projectId}`, constants.LOG_TYPES.WARN);
-          return next(new AppError('Project User already exists.', 403));
+          return next(new AppError(req.t('projectController.projectUserExists'), 403)
+        );
       } else { 
           const newProjectUsersrItem = await ProjectUser.create({
               project: req.body.projectId,
@@ -222,7 +226,8 @@ exports.updateProjectUser = catchAsync(async (req, res, next) => {
       const projectUsersexists = await ProjectUser.find({}).where('project').equals(projectUser.project).where('user').equals(req.body.user);  
       if (projectUsersexists.length > 0) {
           websocketHandler.sendLog(req, `User ${req.body.user} already exists in project ${projectUser.project}`, constants.LOG_TYPES.WARN);
-          return next(new AppError('Project User already exists.', 403));
+          return next(new AppError(req.t('projectController.projectUserExists'), 403)
+        );
       } else {
           websocketHandler.sendLog(req, `Updating project user ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
           const document = await ProjectUser.findByIdAndUpdate(req.params.id, req.body, {
@@ -231,7 +236,7 @@ exports.updateProjectUser = catchAsync(async (req, res, next) => {
           });
           if (!document) {
               websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-              return next(new AppError('No document found with that ID', 404));
+              return next(new AppError(req.t('projectController.noDocumentFound'), 404));
           }
           websocketHandler.sendLog(req, `Successfully updated project user ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
           res.status(201).json({
@@ -243,7 +248,9 @@ exports.updateProjectUser = catchAsync(async (req, res, next) => {
       }
   } else {
       websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('projectController.projectUserNotFound'), 404)
+
+    );
   }
 });
 
@@ -254,7 +261,9 @@ exports.deleteProjectUser = catchAsync(async (req, res, next) => {
   const document = await ProjectUser.findByIdAndDelete(req.params.id);
   if (!document) {
       websocketHandler.sendLog(req, `No project user found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('No document found with that ID', 404));
+      return next(new AppError(req.t('projectController.projectUserNotFound'), 404)
+
+    );
   }
   
   websocketHandler.sendLog(req, `Successfully deleted project user ID: ${req.params.id}`, constants.LOG_TYPES.INFO);

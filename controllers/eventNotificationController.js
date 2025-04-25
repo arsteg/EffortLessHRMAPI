@@ -34,7 +34,7 @@ exports.getEventNotification = catchAsync(async (req, res, next) => {
   const eventNotification = await EventNotification.findById(req.params.id);
   if (!eventNotification) {
       websocketHandler.sendLog(req, `Event notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Found event notification ID: ${eventNotification._id}`, constants.LOG_TYPES.DEBUG);
 
@@ -55,7 +55,7 @@ exports.updateEventNotification = catchAsync(async (req, res, next) => {
   });
   if (!eventNotification) {
       websocketHandler.sendLog(req, `Event notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully updated event notification ID: ${eventNotification._id}`, constants.LOG_TYPES.INFO);
 
@@ -72,7 +72,7 @@ exports.deleteEventNotification = catchAsync(async (req, res, next) => {
   const eventNotification = await EventNotification.findByIdAndDelete(req.params.id);
   if (!eventNotification) {
       websocketHandler.sendLog(req, `Event notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully deleted event notification ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -115,7 +115,7 @@ exports.getEventNotificationType = catchAsync(async (req, res, next) => {
   const eventNotificationType = await EventNotificationType.findById(req.params.id);
   if (!eventNotificationType) {
       websocketHandler.sendLog(req, `Event notification type not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification type not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationTypeNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Found event notification type ID: ${eventNotificationType._id}`, constants.LOG_TYPES.DEBUG);
 
@@ -136,7 +136,7 @@ exports.updateEventNotificationType = catchAsync(async (req, res, next) => {
   });
   if (!eventNotificationType) {
       websocketHandler.sendLog(req, `Event notification type not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification type not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationTypeNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully updated event notification type ID: ${eventNotificationType._id}`, constants.LOG_TYPES.INFO);
 
@@ -153,7 +153,7 @@ exports.deleteEventNotificationType = catchAsync(async (req, res, next) => {
   const eventNotificationType = await EventNotificationType.findByIdAndDelete(req.params.id);
   if (!eventNotificationType) {
       websocketHandler.sendLog(req, `Event notification type not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification type not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationTypeNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully deleted event notification type ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -171,7 +171,7 @@ exports.getAllEventNotificationTypes = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, 'No companyId found in cookies', constants.LOG_TYPES.WARN);
       return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'No companyId found in cookies'
+          message: req.t('eventNotification.noCompanyId')
       });
   }
 
@@ -183,7 +183,7 @@ exports.getAllEventNotificationTypes = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Invalid companyId format: ${companyId}`, constants.LOG_TYPES.ERROR);
       return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'Invalid companyId format'
+          message: req.t('eventNotification.invalidCompanyId')
       });
   }
 
@@ -223,7 +223,7 @@ exports.getUserNotification = catchAsync(async (req, res, next) => {
   const userNotification = await UserNotification.findById(req.params.id);
   if (!userNotification) {
       websocketHandler.sendLog(req, `User notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('User notification not found', 404));
+      return next(new AppError(req.t('eventNotification.userNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Found user notification ID: ${userNotification._id}`, constants.LOG_TYPES.DEBUG);
 
@@ -244,7 +244,7 @@ exports.updateUserNotification = catchAsync(async (req, res, next) => {
   });
   if (!userNotification) {
       websocketHandler.sendLog(req, `User notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('User notification not found', 404));
+      return next(new AppError(req.t('eventNotification.userNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully updated user notification ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
 
@@ -261,7 +261,7 @@ exports.deleteUserNotification = catchAsync(async (req, res, next) => {
   const userNotification = await UserNotification.findByIdAndDelete(req.params.id);
   if (!userNotification) {
       websocketHandler.sendLog(req, `User notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('User notification not found', 404));
+      return next(new AppError(req.t('eventNotification.userNotificationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Successfully deleted user notification ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -317,7 +317,7 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
       websocketHandler.sendLog(req, 'Missing required fields in request', constants.LOG_TYPES.WARN);
       return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'User, notification, and action are required'
+          message: req.t('eventNotification.requiredFieldsMissing')
       });
   }
 
@@ -327,8 +327,8 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
           websocketHandler.sendLog(req, `Notification ${notification} already assigned to user ${user}`, constants.LOG_TYPES.WARN);
           return res.status(400).json({
               status: constants.APIResponseStatus.Failure,
-              message: 'Notification already assigned to this user'
-          });
+              message: req.t('eventNotification.notificationAlreadyAssigned')
+      });
       }
 
       const userNotification = await UserNotification.create({ user, notification, status: 'unread' });
@@ -344,20 +344,20 @@ exports.assignOrUnAssignUserNotification = catchAsync(async (req, res, next) => 
           websocketHandler.sendLog(req, `No notification found for user ${user} and notification ${notification}`, constants.LOG_TYPES.WARN);
           return res.status(400).json({
               status: constants.APIResponseStatus.Failure,
-              message: 'Notification not found for this user'
+              message: req.t('eventNotification.notificationNotFoundForUser')
           });
       }
       websocketHandler.sendLog(req, `Unassigned notification ${notification} from user ${user}`, constants.LOG_TYPES.INFO);
 
       res.status(201).json({
           status: constants.APIResponseStatus.Success,
-          message: 'Notification successfully unassigned'
+          message: req.t('eventNotification.notificationUnassigned')
       });
   } else {
       websocketHandler.sendLog(req, `Invalid action: ${action}`, constants.LOG_TYPES.WARN);
       res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'Invalid action'
+          message: req.t('eventNotification.invalidAction')
       });
   }
 });
@@ -524,7 +524,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
   
     if (!userId || !companyId) {
       websocketHandler.sendLog(req, 'Missing userId or companyId in request', constants.LOG_TYPES.WARN);
-      return next(new AppError('User ID and Company ID are required', 400));
+      return next(new AppError(req.t('eventNotification.userAndCompanyIdRequired'), 400));
     }
   
     websocketHandler.sendLog(req, `Creating event notification with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
@@ -568,7 +568,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
   
     if (!userId) {
       websocketHandler.sendLog(req, 'Missing userId in request', constants.LOG_TYPES.WARN);
-      return next(new AppError('User ID is required', 400));
+      return next(new AppError(req.t('eventNotification.userIdRequired'), 400));
     }
   
     websocketHandler.sendLog(req, `Fetching all notifications for user ${userId}`, constants.LOG_TYPES.TRACE);
@@ -604,7 +604,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
   
     if (!userId || !notificationId) {
       websocketHandler.sendLog(req, 'Missing userId or notificationId in request', constants.LOG_TYPES.WARN);
-      return next(new AppError('User ID and Notification ID are required', 400));
+      return next(new AppError(req.t('eventNotification.userAndNotificationIdRequired'), 400));
     }
   
     websocketHandler.sendLog(req, `Deleting notification ${notificationId} for user ${userId}`, constants.LOG_TYPES.TRACE);
@@ -616,7 +616,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     });
     if (!userNotification) {
       websocketHandler.sendLog(req, `UserNotification not found for user ${userId} and notification ${notificationId}`, constants.LOG_TYPES.WARN);
-      return next(new AppError('User notification link not found', 404));
+      return next(new AppError(req.t('eventNotification.userNotificationLinkNotFound'), 404));
     }
     websocketHandler.sendLog(req, `Deleted UserNotification for user ${userId} and notification ${notificationId}`, constants.LOG_TYPES.INFO);
   
@@ -624,7 +624,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     const eventNotification = await EventNotification.findByIdAndDelete(notificationId);
     if (!eventNotification) {
       websocketHandler.sendLog(req, `EventNotification ${notificationId} not found`, constants.LOG_TYPES.WARN);
-      return next(new AppError('Event notification not found', 404));
+      return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
     }
     websocketHandler.sendLog(req, `Deleted EventNotification ${notificationId}`, constants.LOG_TYPES.INFO);
   

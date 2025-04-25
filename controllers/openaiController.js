@@ -99,13 +99,13 @@ exports.generateQueryFromText = catchAsync(async (req, res, next) => {
     // 1. Validate input
     const { model, prompt } = req.body;
     if (!model || !prompt) {
-      return next(new AppError('Model and prompt parameters are required', 400));
+      return next(new AppError(req.t('openAI.ParametersAreRequired'), 400));
     }
 
     // 2. Validate model selection
     const Model = allowedModels[model];
     if (!Model) {
-      return next(new AppError('Invalid model specified', 400));
+      return next(new AppError(req.t('openAI.invalidModel'), 400));
     }
 
     // 3. Create a thread for the assistant
@@ -174,6 +174,100 @@ exports.generateQueryFromText = catchAsync(async (req, res, next) => {
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
       message: error.message,
+    });
+  }
+});
+
+
+exports.chatbot = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting chatbot', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Processing question: ${req.body.userMessage}`, constants.LOG_TYPES.TRACE);
+
+  try {
+    // Get the user question
+    const userQuestion = req.body.userMessage.toLowerCase();
+
+    const qaDataString = `
+    Q: How to create user?
+    A: Open effortlesshrm.com. Click signup button. Enter valid details and create.
+    Path: /assets/aibot/signup.png
+    Q: How to forgot password?
+    A: Open effortlesshrm.com. Click forgot password link. Enter your registered email and follow the instructions.
+    Path: /assets/aibot/forgot-password.png
+    Q: How to update profile details?
+    A: Navigate to My Profile, click Edit, update the details, and click Save.
+    Path: /assets/aibot/update-profile.png
+    Q: How to change email address?
+    A: Go to Account Settings > Email. Enter your new email and confirm with password.
+    Path: /assets/aibot/change-email.png
+    Q: How to apply leave?
+    A: Go to Leave section. Click Apply Leave, select leave type, date, and submit.
+    Path: /assets/aibot/apply.png
+    Q: How to check leave balance?
+    A: Visit Leave Dashboard to view available leave balances for each type.
+    Q: How to cancel approved leave?
+    A: Go to Leave History, select the leave entry, and click Cancel Request.
+    Q: Who approves the leave request?
+    A: Leave requests are approved by the reporting manager assigned to the employee.
+    Q: How to mark attendance?
+    A: Log in to the system. Go to Attendance > Mark Attendance. Click Check-in.
+    Q: How to view attendance report?
+    A: Navigate to Attendance > Reports. Select the date range and click Generate.
+    Q: Can I edit my attendance entry?
+    A: No, only the HR/Admin has permission to modify attendance entries.
+    Q: What is considered a half-day?
+    A: Working less than 4 hours in a day is considered a half-day.
+    Q: How to generate payslip?
+    A: Go to Payroll > Payslips. Select employee and month, then click Generate.
+    Q: How to download my payslip?
+    A: Go to Payroll > My Payslips, select the month, and click Download PDF.
+    Q: When is salary processed?
+    A: Salary is processed on the last working day of every month.
+    Q: How are deductions calculated?
+    A: Deductions are based on leave balance, tax policy, and statutory compliance rules.
+    Q: How to post a new job opening?
+    A: Go to Recruitment > Job Openings. Click New Job, fill in the details, and publish.
+    Q: How to track candidate applications?
+    A: Go to Recruitment > Applications to view and filter candidate status.
+    Q: How to generate performance report?
+    A: Navigate to Reports > Performance. Select employee and date range, then click Generate.
+    Q: Can I export reports to Excel?
+    A: Yes, reports can be exported to Excel or PDF using the Export button.
+    `.trim();
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: userQuestion
+        },
+        {
+          role: "system",
+          content: `Provide the answer to: "${userQuestion}" based on the following data:\n${qaDataString}\n. Return only a direct and concise answer. If a path exists for the selected answer, include it on a **new line** in the format: Path: /your/path/here. Do not include the path if it doesn't exist.`
+        }
+      ]
+    });
+
+    const foundAnswer = response.choices[0].message.content;
+    const answer = foundAnswer && foundAnswer.trim() !== ''
+      ? foundAnswer
+      : "Sorry, I couldn't find an answer to that question.";
+
+    websocketHandler.sendLog(req, `Found answer: ${answer}`, constants.LOG_TYPES.INFO);
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+        answer: answer
+      }
+    });
+
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error in chatbot: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      data: "Sorry, I'm having trouble processing your question right now."
     });
   }
 });

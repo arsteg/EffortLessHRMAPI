@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var lwfFixedContributionMonthSchema = new Schema({  
+var lwfFixedDeductionMonthSchema = new Schema({  
   paymentMonth: {
     type: String,
     required: true
@@ -15,6 +15,6 @@ var lwfFixedContributionMonthSchema = new Schema({
     ref: 'Company',
     required: true
   }
-}, { collection: 'LWFFixedContributionMonth' });
+}, { collection: 'LWFFixedDeductionMonth' });
 
-module.exports = mongoose.model('LWFFixedContributionMonth', lwfFixedContributionMonthSchema);
+module.exports = mongoose.model('LWFFixedDeductionMonth', lwfFixedDeductionMonthSchema);

@@ -770,24 +770,22 @@ router.post('/fixed-contribution-list', authController.protect, payrollControlle
  *               fixedContribution:
  *                 type: string
  *                 required: true
- *               fromAmount:
- *                 type: number
- *                 required: true
- *               toAmount:
- *                 type: number
- *                 required: true
- *               employeePercent:
- *                 type: number
- *                 required: true
  *               employeeAmount:
- *                 type: number
- *                 required: true
- *               employerPercentage:
  *                 type: number
  *                 required: true
  *               employerAmount:
  *                 type: number
  *                 required: true
+ *               employeePercentage:
+ *                 type: number
+ *               employerPercentage:
+ *                 type: number
+ *               maxContribution:
+ *                 type: number
+ *               minAmount:
+ *                 type: number
+ *               maxAmount:
+ *                 type: number
  *     responses:
  *       201:
  *         description: Fixed Contribution Slab successfully added
@@ -850,17 +848,19 @@ router.get('/lwf-fixed-contribution-slabs/:id', authController.protect, payrollC
  *             properties:
  *               fixedContribution:
  *                 type: string
- *               fromAmount:
- *                 type: number
- *               toAmount:
- *                 type: number
- *               employeePercent:
- *                 type: number
  *               employeeAmount:
+ *                 type: number
+ *               employerAmount:
+ *                 type: number
+ *               employeePercentage:
  *                 type: number
  *               employerPercentage:
  *                 type: number
- *               employerAmount:
+ *               maxContribution:
+ *                 type: number
+ *               minAmount:
+ *                 type: number
+ *               maxAmount:
  *                 type: number
  *     responses:
  *       200:
@@ -1028,7 +1028,7 @@ router.post('/lwf-fixed-deduction-months', authController.protect, payrollContro
  *       500:
  *         description: Internal server error
  */
-router.put('/lwf-fixed-deduction-months-update/', authController.protect, payrollController.updateLWFFixedDeductionMonth);
+router.put('/lwf-fixed-deduction-months-update/', authController.protect, payrollController.saveLWFFixedDeductionMonth);
 
 /**
  * @swagger
@@ -1592,14 +1592,11 @@ router.delete('/pt-deduction-months/:id', authController.protect, payrollControl
  *           schema:
  *             type: object
  *             properties:
- *               defaultValue:
+ *               employeeCount:
  *                 type: number
  *                 required: true
- *               maxAmount:
+ *               maxGrossAmount:
  *                 type: number
- *                 required: true
- *               company:
- *                 type: string
  *                 required: true
  *     responses:
  *       201:
@@ -1664,12 +1661,10 @@ router.post('/esic-ceilingAmounts-by-company', authController.protect, payrollCo
  *           schema:
  *             type: object
  *             properties:
- *               defaultValue:
+ *               employeeCount:
  *                 type: number
- *               maxAmount:
+ *               maxGrossAmount:
  *                 type: number
- *               company:
- *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with the updated CeilingAmount
@@ -1749,12 +1744,6 @@ router.delete('/esic-ceilingAmounts/:id', authController.protect, payrollControl
  *           schema:
  *             type: object
  *             properties:
- *               fromAmount:
- *                 type: number
- *                 required: true
- *               toAmount:
- *                 type: number
- *                 required: true
  *               employeePercentage:
  *                 type: number
  *                 required: true
@@ -1824,10 +1813,6 @@ router.post('/esicContributions-by-company', authController.protect, payrollCont
  *           schema:
  *             type: object
  *             properties:
- *               fromAmount:
- *                 type: number
- *               toAmount:
- *                 type: number
  *               employeePercentage:
  *                 type: number
  *               employerPercentage:
@@ -4422,48 +4407,6 @@ router.get('/payroll-loan-advance-by-payroll/:payroll', authController.protect, 
 /**
  * @swagger
  * /api/v1/payroll/payroll-loan-advance/{id}:
- *   put:
- *     summary: Update a Payroll Loan/Advance
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Payroll Loan/Advance
- *     requestBody:
- *       description: Updated Payroll Loan/Advance details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               amount:
- *                 type: number
- *                 required: true
- *               disbursementAmount:
- *                 type: number
- *               status:
- *                 type: string
- *                 enum: [Pending, Approved]
- *     responses:
- *       200:
- *         description: Successful response with the updated Payroll Loan/Advance
- *       404:
- *         description: Payroll Loan/Advance not found
- *       500:
- *         description: Internal server error
- */
-router.put('/payroll-loan-advance/:id', authController.protect, payrollController.updatePayrollLoanAdvance);
-
-/**
- * @swagger
- * /api/v1/payroll/payroll-loan-advance/{id}:
  *   delete:
  *     summary: Delete a Payroll Loan/Advance by ID
  *     tags: [Payroll Management]
@@ -4772,11 +4715,11 @@ router.get('/overtime/:id', authController.protect, payrollController.getPayroll
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', authController.protect, payrollController.updatePayrollOvertime);
+router.put('/overtime/:id', authController.protect, payrollController.updatePayrollOvertime);
 
 /**
  * @swagger
- * /api/v1/payrollOvertime/{id}:
+ * /api/v1/payroll/overtime/{id}:
  *   delete:
  *     summary: Delete Payroll Overtime by ID
  *     tags: [Payroll Management]
@@ -4988,7 +4931,7 @@ router.get('/incomeTax-by-payroll/:payroll', authController.protect, payrollCont
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser4:
+ *               PayrollUser:
  *                 type: string
  *               TaxCalculatedMethod:
  *                 type: string
@@ -5074,6 +5017,195 @@ router.post('/generatedPayroll-by-company', authController.protect, payrollContr
  *         description: Internal server error
  */
 router.get('/generatedPayroll-by-payroll/:payroll', authController.protect, payrollController.getAllGeneratedPayrollByPayrollId);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory:
+ *   post:
+ *     summary: Add a new payroll statutory entry
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: Payroll statutory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollUser:
+ *                 type: string
+ *                 required: true
+ *               fixedContribution:
+ *                 type: string
+ *               fixedDeduction:
+ *                 type: string
+ *               ContributorType:
+ *                 type: string
+ *               StautoryName:
+ *                 type: string
+ *                 required: true
+ *               amount:
+ *                 type: number
+ *                 required: true
+ *               month:
+ *                 type: string
+ *                 required: true
+ *               year:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: Payroll statutory successfully added
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-statutory', authController.protect, payrollController.createPayrollStatutory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   put:
+ *     summary: Update a payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     requestBody:
+ *       description: Updated payroll statutory details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fixedContribution:
+ *                 type: string
+ *               fixedDeduction:
+ *                 type: string
+ *               ContributorType:
+ *                 type: string
+ *               StautoryName:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               month:
+ *                 type: string
+ *               year:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated payroll statutory
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/payroll-statutory/:id', authController.protect, payrollController.updatePayrollStatutory);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory-by-company:
+ *   get:
+ *     summary: Get all payroll statutory entries by company
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with payroll statutory entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory-by-company', authController.protect, payrollController.getAllPayrollStatutoryByCompany);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory-by-payrollUser/{payrollUser}:
+ *   get:
+ *     summary: Get all payroll statutory entries by payroll user
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll user
+ *     responses:
+ *       200:
+ *         description: Successful response with payroll statutory entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory-by-payrollUser/:payrollUser', authController.protect, payrollController.getAllPayrollStatutoryByPayrollUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   get:
+ *     summary: Get payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     responses:
+ *       200:
+ *         description: Successful response with the payroll statutory
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/payroll-statutory/:id', authController.protect, payrollController.getPayrollStatutoryById);
+
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-statutory/{id}:
+ *   delete:
+ *     summary: Delete a payroll statutory by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payroll statutory
+ *     responses:
+ *       204:
+ *         description: Payroll statutory successfully deleted
+ *       404:
+ *         description: Payroll statutory not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/payroll-statutory/:id', authController.protect, payrollController.deletePayrollStatutory);
 
 /**
  * @swagger
@@ -6284,14 +6416,6 @@ router.get('/payroll-fnf-termination-compensation-by-payroll-fnf/:payrollFNF', a
  *                 type: string
  *               LoanAdvanceAmount:
  *                 type: number
- *               status:
- *                 type: string
- *               finalSettlementAmount:
- *                 type: number
- *               fnfClearanceStatus:
- *                 type: string
- *               fnfDate:
- *                 type: string
  *     responses:
  *       201:
  *         description: Payroll FNF Loan Advance successfully added
@@ -6410,8 +6534,6 @@ router.get('/payroll-fnf-loan-advances-by-loan-advance/:loanAndAdvance', authCon
  *                 type: string
  *               LoanAdvanceAmount:
  *                 type: number
- *               status:
- *                 type: string
  *               finalSettlementAmount:
  *                 type: number
  *               fnfClearanceStatus:

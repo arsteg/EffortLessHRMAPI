@@ -555,6 +555,13 @@ router.get('/UserUIState/:key', commonController.getUserUiState);
  *               section:
  *                 type: string
  *                 required: true
+ *               isHRA:
+ *                 type: boolean
+ *                 required: true
+ *                 default: false
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       201:
  *         description: IncomeTaxSection successfully added
@@ -610,6 +617,13 @@ router.get('/income-tax-sections-by-company', authController.protect, commonCont
  *             properties:
  *               section:
  *                 type: string
+ *               isHRA:
+ *                 type: boolean
+ *                 required: true
+ *                 default: false
+ *               maximumAmount:
+ *                 type: number
+ *                 required: true
  *     responses:
  *       200:
  *         description: Successful response with the updated IncomeTaxSection
@@ -1071,7 +1085,7 @@ router.get("/getSelectedUser", authController.protect, commonController.getSelec
  *       500:
  *         description: Server error
  */
-router.get("/testLog", authController.protect, commonController.testLog);
+router.get("/testLog",  commonController.testLog);
 
 /**
  * @swagger
@@ -1176,5 +1190,78 @@ router.post('/onlineStatus', authController.protect, commonController.updateOnli
  *                             type: string
  */
 router.get('/getOnlineUsersByCompany', authController.protect, commonController.getOnlineUsersByCompany);
+
+/**
+ * @swagger
+ * /api/v1/common/get-termination-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Termination Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-termination-status-list', authController.protect, commonController.getTerminationStatusList);
+/**
+ * @swagger
+ * /api/v1/common/get-termination-appeal-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Termination Appeal Status
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-termination-appeal-status-list', authController.protect, commonController.getTerminationAppealStatusList);
+
+
+/**
+ * @swagger
+ * /api/v1/common/get-resignation-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Resignation Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-resignation-status-list', authController.protect, commonController.getResignationStatusList);
+
+/**
+ * @swagger
+ * /api/v1/common/get-payroll-status-list:
+ *   get:
+ *     summary: Test Log
+ *     tags: [Common Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the selected Resignation Status
+ *       404:
+ *         description: No selected user found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-payroll-status-list', authController.protect, commonController.getPayrollStatusList);
+
 
 module.exports = router;

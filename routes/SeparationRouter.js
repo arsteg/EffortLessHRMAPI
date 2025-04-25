@@ -55,10 +55,6 @@ const router = express.Router();
  *                 type: boolean
  *               exit_feedback:
  *                 type: string
- *               resignation_status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
- *                 required: true
  *     responses:
  *       201:
  *         description: Resignation record created successfully
@@ -109,7 +105,7 @@ router.get('/resignations-by-user/:userId', authController.protect, separationCo
  *         required: true
  *         schema:
  *           type: string
- *           enum: ['pending', 'completed', 'in-progress', 'approved']
+ *           enum: ['Pending', 'Completed', 'In-Progress', 'Approved']
  *     responses:
  *       200:
  *         description: Successful response with resignation details
@@ -160,9 +156,19 @@ router.get('/resignations-by-company', authController.protect, separationControl
  *           schema:
  *             type: object
  *             properties:
- *               resignation_status:
+ *               resignation_reason:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *               exit_interview_date:
+ *                 type: string
+ *                 format: date
+ *               handover_complete:
+ *                 type: boolean
+ *               company_property_returned:
+ *                 type: boolean
+ *               final_pay_processed:
+ *                 type: boolean
+ *               exit_feedback:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Successful response with updated resignation
@@ -198,7 +204,7 @@ router.put('/resignations/:id', authController.protect, separationController.upd
  *             properties:
  *               resignation_status:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *                 enum: ['Pending', 'Completed', 'In-Progress', 'Approved']
  *     responses:
  *       200:
  *         description: Successful response with status change
@@ -208,33 +214,6 @@ router.put('/resignations/:id', authController.protect, separationController.upd
  *         description: Internal server error
  */
 router.patch('/resignations-by-status/:id', authController.protect, separationController.changeResignationStatus);
-
-/**
- * @swagger
- * /api/v1/separation/resignations/{id}:
- *   delete:
- *     summary: Delete a resignation record
- *     tags: [Separation Management]
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Resignation record deleted successfully
- *       404:
- *         description: Resignation not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/resignations/:id', authController.protect, separationController.deleteResignation);
-
-
 
 /**
  * @swagger
@@ -1308,6 +1287,9 @@ router.get('/separation-requests', authController.protect, separationController.
  *   post:
  *     summary: Add a new termination record
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     requestBody:
  *       description: Termination record details
  *       required: true
@@ -1321,6 +1303,7 @@ router.get('/separation-requests', authController.protect, separationController.
  *                 required: true
  *               termination_date:
  *                 type: string
+ *                 format: date
  *                 required: true
  *               termination_reason:
  *                 type: string
@@ -1337,12 +1320,9 @@ router.get('/separation-requests', authController.protect, separationController.
  *                 type: boolean
  *               exit_interview_date:
  *                 type: string
+ *                 format: date
  *               legal_compliance:
  *                 type: boolean
- *               termination_status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'appealed']
- *                 required: true
  *               unemployment_claim:
  *                 type: boolean
   *     responses:
@@ -1353,7 +1333,7 @@ router.get('/separation-requests', authController.protect, separationController.
  *       500:
  *         description: Internal server error
  */
-router.post('/termination', separationController.addTermination);
+router.post('/termination',authController.protect, separationController.addTermination);
 
 /**
  * @swagger
@@ -1361,6 +1341,9 @@ router.post('/termination', separationController.addTermination);
  *   get:
  *     summary: Get a termination record by user
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     parameters:
  *       - in: path
  *         name: userId
@@ -1376,7 +1359,7 @@ router.post('/termination', separationController.addTermination);
  *       500:
  *         description: Internal server error
  */
-router.get('/termination-by-user/:userId', separationController.getTerminationByUser);
+router.get('/termination-by-user/:userId',authController.protect, separationController.getTerminationByUser);
 
 /**
  * @swagger
@@ -1384,6 +1367,9 @@ router.get('/termination-by-user/:userId', separationController.getTerminationBy
  *   get:
  *     summary: Get a termination record by termination status
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     parameters:
  *       - in: path
  *         name: terminationStatus
@@ -1399,7 +1385,7 @@ router.get('/termination-by-user/:userId', separationController.getTerminationBy
  *       500:
  *         description: Internal server error
  */
-router.get('/termination-by-status/:terminationStatus', separationController.getTerminationByStatus);
+router.get('/termination-by-status/:terminationStatus',authController.protect, separationController.getTerminationByStatus);
 
 /**
  * @swagger
@@ -1407,13 +1393,16 @@ router.get('/termination-by-status/:terminationStatus', separationController.get
  *   get:
  *     summary: Get a termination record by company
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     responses:
  *       200:
  *         description: Successful response with the termination records for the company
  *       500:
  *         description: Internal server error
  */
-router.get('/termination-by-company', separationController.getTerminationByCompany);
+router.get('/termination-by-company',authController.protect, separationController.getTerminationByCompany);
 
 /**
  * @swagger
@@ -1421,6 +1410,9 @@ router.get('/termination-by-company', separationController.getTerminationByCompa
  *   put:
  *     summary: Update a termination record by ID (only if status is 'pending')
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     parameters:
  *       - in: path
  *         name: id
@@ -1438,10 +1430,28 @@ router.get('/termination-by-company', separationController.getTerminationByCompa
  *             properties:
  *               termination_date:
  *                 type: string
+ *                 format: date
+ *                 required: true
  *               termination_reason:
  *                 type: string
- *               termination_status:
+ *                 required: true
+ *               notice_given:
+ *                 type: boolean
+ *               performance_warnings:
+ *                 type: integer
+ *               severance_paid:
+ *                 type: boolean
+ *               final_pay_processed:
+ *                 type: boolean
+ *               company_property_returned:
+ *                 type: boolean
+ *               exit_interview_date:
  *                 type: string
+ *                 format: date
+ *               legal_compliance:
+ *                 type: boolean
+ *               unemployment_claim:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Termination successfully updated
@@ -1452,7 +1462,7 @@ router.get('/termination-by-company', separationController.getTerminationByCompa
  *       500:
  *         description: Internal server error
  */
-router.put('/termination/:id', separationController.updateTermination);
+router.put('/termination/:id',authController.protect, separationController.updateTermination);
 
 /**
  * @swagger
@@ -1460,6 +1470,9 @@ router.put('/termination/:id', separationController.updateTermination);
  *   put:
  *     summary: Change the termination status, If status is completed then user goes in termination status
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     parameters:
  *       - in: path
  *         name: id
@@ -1477,7 +1490,7 @@ router.put('/termination/:id', separationController.updateTermination);
  *             properties:
  *               termination_status:
  *                 type: string
- *                 enum: ['pending', 'completed', 'in-progress', 'approved']
+ *                 enum: ['Completed', 'Appealed']
  *     responses:
  *       200:
  *         description: Termination status successfully changed
@@ -1488,29 +1501,112 @@ router.put('/termination/:id', separationController.updateTermination);
  *       500:
  *         description: Internal server error
  */
-router.put('/termination-by-status/:id', separationController.changeTerminationStatus);
+router.put('/termination-by-status/:id',authController.protect, separationController.changeTerminationStatus);
 
 /**
  * @swagger
- * /api/v1/separation/termination/{id}:
- *   delete:
- *     summary: Delete a termination record by ID
+ * /api/v1/separation/termination-appeal:
+ *   post:
+ *     summary: Submit a new termination appeal
  *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
+ *     requestBody:
+ *       description: Appeal submission data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               termination:
+ *                 type: string
+ *               user:
+ *                 type: string
+ *               appeal_reason:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Appeal submitted successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/termination-appeal',authController.protect, separationController.submitTerminationAppeal);
+
+/**
+ * @swagger
+ * /api/v1/separation/termination-appeal/{id}:
+ *   put:
+ *     summary: Approve or reject a termination appeal
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]  
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Termination ID
+ *         description: Appeal ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               appeal_reason:
+ *                 type: string
+ *               appeal_status:
+ *                 type: string
+ *                 enum: ['Approved', 'Rejected']
+ *               decision_notes:
+ *                 type: string
+ *               decided_by:
+ *                 type: string
  *     responses:
- *       204:
- *         description: Termination successfully deleted
+ *       200:
+ *         description: Appeal decision processed
+ *       400:
+ *         description: Invalid input
  *       404:
- *         description: Termination not found
+ *         description: Appeal not found
  *       500:
  *         description: Internal server error
  */
-router.delete('/termination/:id', separationController.deleteTermination);
-
+router.put('/termination-appeal/:id',authController.protect, separationController.updateTerminationAppeal);
+/**
+ * @swagger
+ * /api/v1/separation/termination-appeal-by-termination/{terminationId}:
+ *   get:
+ *     summary: Get termination appeal by termination ID
+ *     tags: [Separation Management]
+ *     security: [ { bearerAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: terminationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the termination record
+ *     responses:
+ *       200:
+ *         description: Appeal retrieved successfully
+ *       400:
+ *         description: Invalid termination ID
+ *       404:
+ *         description: Appeal not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    '/termination-appeal-by-termination/:terminationId',
+    authController.protect,
+    separationController.getTerminationAppealByTerminationId
+  );
+  
 module.exports = router;

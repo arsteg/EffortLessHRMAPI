@@ -32,7 +32,7 @@ exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   if (!company) {
     return res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Company information missing in cookies',
+      message: req.t('leave.companyInfoMissing'),
     });
   }
 
@@ -52,7 +52,7 @@ exports.getGeneralSettingByCompany = catchAsync(async (req, res, next) => {
   });
   ;
   if (!generalSetting) {
-    return next(new AppError('GeneralSetting not found', 404));
+    return new AppError(req.t('leave.generalSettingNotFound'), 404);
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -63,7 +63,7 @@ exports.getGeneralSettingByCompany = catchAsync(async (req, res, next) => {
 exports.getGeneralSetting = catchAsync(async (req, res, next) => {
   const generalSetting = await GeneralSetting.findById(req.params.id);
   if (!generalSetting) {
-    return next(new AppError('GeneralSetting not found', 404));
+    return new AppError(req.t('leave.generalSettingNotFound'), 404)
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -78,7 +78,7 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
   });
 
   if (!generalSetting) {
-    return next(new AppError('GeneralSetting not found', 404));
+    return new AppError(req.t('leave.generalSettingNotFound'), 404);
   }
 
   res.status(200).json({
@@ -95,7 +95,7 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   if (!company) {
     return res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Company information missing in cookies',
+      message: req.t('leave.companyInfoMissing'),
     });
   }
 
@@ -111,7 +111,7 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
 exports.getLeaveCategory = catchAsync(async (req, res, next) => {
   const leaveCategory = await LeaveCategory.findById(req.params.id);
   if (!leaveCategory) {
-    return next(new AppError('Leave category not found', 404));
+    return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -122,7 +122,7 @@ exports.getLeaveCategory = catchAsync(async (req, res, next) => {
 exports.getLeaveCategoryByTemplate = catchAsync(async (req, res, next) => {
   const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.templateId);
   if (!leaveTemplateCategory) {
-    return next(new AppError('Leave category not found', 404));
+    return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -137,7 +137,7 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
   });
 
   if (!leaveCategory) {
-    return next(new AppError('Leave category not found', 404));
+    return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
 
   res.status(200).json({
@@ -153,7 +153,8 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   const leaveCategory = await LeaveCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
   if (!leaveCategory) {
-    return next(new AppError('Leave category not found', 404));
+    return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404)
+  );
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -187,17 +188,17 @@ exports.getAllLeaveCategoryByUserV1 = catchAsync(async (req, res, next) => {
 exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
   const leaveCategory = await LeaveCategory.findById(req.params.id);
   if (!leaveCategory) {
-    return next(new AppError('Leave Category not found', 404));
+    return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
   //add validation for use categroy
   if (leaveCategory.isSystemGenerated) {
-    return next(new AppError('Leave Category Sytem Generated, you can not delete found', 404));
+    return next(new AppError(req.t('leave.systemGeneratedLeaveCategory'), 404));
   }
   else {
 
     const leaveTemplateCategory = await LeaveTemplateCategory.find({}).where('leaveCategory').equals(req.params.id);
     if (leaveTemplateCategory !== null && leaveTemplateCategory.length > 0) {
-      return next(new AppError('Leave Category Added against Leave tempalte, you can not delete found', 404));
+      return next(new AppError(req.t('leave.leaveCategoryInTemplate'), 404));
     }
     else {
       await LeaveCategory.findByIdAndDelete(req.params.id);
@@ -212,11 +213,11 @@ exports.deleteLeaveCategory = catchAsync(async (req, res, next) => {
 exports.deleteLeaveTemplate = catchAsync(async (req, res, next) => {
   const leaveTemplateExists = await LeaveTemplate.findById(req.params.id);
   if (!leaveTemplateExists) {
-    return next(new AppError('EmployeeLeaveAssignment not found', 404));
+    return next(new AppError(req.t('leave.employeeLeaveAssignmentNotFound'), 404));
   }
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.find({}).where('user').equals(leaveTemplateExists.user).where('status').in(['Approved', 'Rejected', 'Cancelled']); // Filter by status
   if (employeeLeaveAssignment.length > 0) {
-    return next(new AppError('Leave Need to close first before delete assignment', 404));
+    return next(new AppError(req.t('leave.leaveNeedClosure'), 404));
   }
   await LeaveTemplate.findByIdAndDelete(req.params.id);
   res.status(204).json({
@@ -239,7 +240,7 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
 
     return createdCategories;
   } catch (error) {
-    throw new AppError('Error creating LeaveTemplateCategory', 500);
+    throw new AppError(req.t('leave.ErrorCreatingLeaveTemplateCategory'), 500);
   }
 }
 
@@ -252,13 +253,13 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
 
   // Check if label is provided
   if (!leaveTemplateData.label) {
-    return next(new AppError('Label is required', 400));
+    return next(new AppError(req.t('leave.labelRequired'), 400));
   }
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
   // Check if label already exists
   const existingTemplate = await LeaveTemplate.findOne({ 'label': leaveTemplateData.label });
@@ -266,13 +267,13 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
   if (existingTemplate) {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: 'Label already exists',
+      message: req.t('leave.labelExists'),
     });
   }
 
   // Check if leaveCategories is provided and valid
   if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
-    return next(new AppError('Leave Categories are required', 400));
+    return next(new AppError(req.t('leave.leaveCategoriesRequired'), 400));
   }
 
   // Add company to the request body
@@ -309,7 +310,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
     if (!leaveTemplate) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'LeaveTemplate not found'
+        message:  req.t('leave.leaveTemplateNotFound')
       });
       return;
     }
@@ -348,7 +349,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
 
     // Check if policyLabel is provided
     if (!leaveTemplateData.label) {
-      return next(new AppError('Label is required', 400));
+      return next(new AppError(req.t('leave.labelRequired'), 400));
     }
 
     // Check if policyLabel already exists
@@ -357,11 +358,11 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     if (existingTemplate) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'Leave Template Label already exists',
+        message:req.t('leave.leaveTemplateLabelExists'),
       });
     }
     if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
-      return next(new AppError('Leave Category Not Exists in Request', 400));
+      return next(new AppError(req.t('leave.leaveCategoryNotInRequest'), 400));
     }
     // Extract companyId from req.cookies
 
@@ -370,7 +371,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message: 'Invalid Category',
+          message:  req.t('leave.invalidCategory'),
         });
       }
     }
@@ -380,7 +381,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     if (!leaveTemplate) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'LeaveTemplate not found'
+        message: req.t('leave.leaveTemplateNotFound')
       });
       return;
     }
@@ -408,40 +409,6 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     });
   }
 };
-
-async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCategories) {
-  const existingCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
-
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-
-    const existingCategory = existingCategories.find(
-      (existing) => existing.leaveCategory.equals(category.leaveCategory)
-    );
-    if (!existingCategory) {
-      // Create new category
-      const newCategory = new LeaveTemplateCategory({
-        leaveTemplate: leaveTemplateId,
-        ...category,
-      });
-      return newCategory.save();
-    }
-  });
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.leaveCategory === existing.leaveCategory.toString())
-  );
-
-
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return LeaveTemplateCategory.findByIdAndRemove(category._id);
-  });
-
-  await Promise.all(removalPromises);
-  const finalCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
-  return finalCategories;
-
-}
 
 exports.getAllLeaveTemplates = async (req, res, next) => {
   try {
@@ -498,14 +465,14 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
   const { leaveTemplate, leaveCategories } = req.body;
   // Validate incoming data
   if (!leaveTemplate || !leaveCategories || !Array.isArray(leaveCategories) || leaveCategories.length === 0) {
-    return next(new AppError('Invalid request data', 400));
+    return next(new AppError(req.t('leave.invalidRequestData'), 400));
   }
   for (const category of leaveCategories) {
     const result = await LeaveCategory.findById(category.leaveCategory);
     if (!result) {
       return res.status(400).json({
         status:constants.APIResponseStatus.Failure,
-        message: 'Invalid Category',
+        message:  req.t('leave.invalidCategory'),
       });
     }
   }
@@ -579,7 +546,7 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
     return updatedCategories;
   } catch (err) {
     console.log(err);
-    throw new AppError('Internal server error', 500);
+    throw new AppError(req.t('leave.internalServerError'), 500);
   }
 }
 
@@ -587,7 +554,7 @@ async function createLeaveTemplateCategories(leaveTemplateId, leaveCategories) {
 exports.getLeaveTemplateCategoryByTemplate = catchAsync(async (req, res, next) => {
   const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(req.params.leaveTemplateId);;
   if (!leaveTemplateCategories) {
-    return next(new AppError('LeaveTemplateCategory not found', 404));
+    return next(new AppError(req.t('leave.leaveTemplateNotFound'), 404));
   }
   for (var i = 0; i < leaveTemplateCategories.length; i++) {
     const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[i]._id);
@@ -625,7 +592,7 @@ exports.getAllLeaveTemplateCategories = catchAsync(async (req, res, next) => {
 exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
   const assignments = Array.isArray(req.body) ? req.body : [req.body];
 
@@ -668,7 +635,7 @@ exports.createEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
 exports.getEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   const employeeLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);
   if (!employeeLeaveAssignment) {
-    return next(new AppError('EmployeeLeaveAssignment not found', 404));
+    return next(new AppError(req.t('leave.employeeLeaveAssignmentNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -704,7 +671,7 @@ exports.deleteEmployeeLeaveAssignment = catchAsync(async (req, res, next) => {
   //validation
   const userLeaveAssignment = await EmployeeLeaveAssignment.findById(req.params.id);
   if (!userLeaveAssignment) {
-    return next(new AppError('EmployeeLeaveAssignment not found', 404));
+    return next(new AppError(req.t('leave.employeeLeaveAssignmentNotFound'), 404));
   }
 
   await EmployeeLeaveAssignment.findByIdAndDelete(req.params.id);
@@ -732,14 +699,14 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
   const {
     users,
     ...grantData
   } = req.body;
   if (!Array.isArray(users) || users.length === 0) {
-    return next(new AppError('users are required', 400));
+    return next(new AppError(req.t('leave.usersRequired'), 400));
   }
   var leavsGrants = [];
   for (var i = 0; i < users.length; i++) {
@@ -749,7 +716,7 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
     });
    
     if (leavegrantExits !== null) {
-      return next(new AppError('Leave alredy Granted for Same user on same date', 404));
+      return next(new AppError(req.t('leave.leaveAlreadyGranted'), 404));
     }
     // Add company to the request body
     grantData.company = companyId;
@@ -808,19 +775,19 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     // Check if the leave grant exists
     const leaveGrant = await LeaveGrant.findById(id);
     if (!leaveGrant) {
-      return next(new AppError('Employee Leave Grant not found', 404));
+      return next(new AppError(req.t('leave.employeeLeaveGrantNotFound'), 404));
     }
 
     // Check if the user is valid
     const existingUser = await User.findById(user);
     if (!existingUser) {
-      return next(new AppError('Invalid user', 400));
+      return next(new AppError(req.t('leave.invalidUser'), 400));
     }
 
     // Check if a LeaveGrant with the same date for the same user already exists
     const existingLeaveGrant = await LeaveGrant.findOne({ user, date });
     if (existingLeaveGrant && existingLeaveGrant._id.toString() !== id) {
-      return next(new AppError('Leave Grant for the same user and date already exists', 400));
+      return next( new AppError(req.t('leave.leaveGrantDateExists'), 400));
     }
 
     // Update the leave grant fields
@@ -860,7 +827,7 @@ exports.getAllEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!company) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
   const query = { company: company };
   if (req.body.status) {
@@ -893,7 +860,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
-    return next(new AppError('Company ID not found in cookies', 400));
+    return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
     const cycle = await scheduleController.createFiscalCycle();
@@ -903,7 +870,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       res.status(201).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
-        message: "Leave assignment does not exist. Cannot apply for leave."
+        message:  req.t('leave.leaveAssignmentNotExist')
       });
     }
     // Get the current leave assigned record
@@ -915,7 +882,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       res.status(201).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
-        message: "Not enough leave balance to apply for this leave."
+        message: req.t('leave.insufficientLeaveBalance')
       });
     }
 
@@ -925,7 +892,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       for (var i = 0; i < leaveApplicationAttachments.length; i++) {
         if (!leaveApplicationAttachments[i].attachmentType || !leaveApplicationAttachments[i].attachmentName || !leaveApplicationAttachments[i].attachmentSize || !leaveApplicationAttachments[i].extention || !leaveApplicationAttachments[i].file
           || leaveApplicationAttachments[i].attachmentType === null || leaveApplicationAttachments[i].attachmentName === null || leaveApplicationAttachments[i].attachmentSize === null || leaveApplicationAttachments[i].extention === null || leaveApplicationAttachments[i].file === null) {
-          return res.status(400).json({ error: 'All attachment properties must be provided' });
+          return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
         }
          leaveApplicationAttachments[i].filePath = leaveApplicationAttachments[i].attachmentName +"_" + uuidv1() + leaveApplicationAttachments[i].extention; 
                  //req.body.attachment.file = req.body.taskAttachments[i].file;
@@ -974,7 +941,6 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);      
       if(managerTeamsIds)
       {
-        console.log(managerTeamsIds);
         for(var j = 0; j < managerTeamsIds.length; j++)
           {       
             const user = await User.findById(req.body.employee);
@@ -1003,39 +969,35 @@ const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplic
    
       if(emailTemplate)
       {
-        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)
-        console.log("hii");
-       const template = emailTemplate.contentData;
-       console.log("hii1");
-       const totalDays=leaveApplication.endDate-leaveApplication.startDate;
-       const message = template
-       .replace("{firstName}", manager.firstName)       
-       .replace("{employeeName}", user.firstName + " "+user.lastName)
-       .replace("{employeeName}", user.firstName + " "+user.lastName)
-      
-       .replace("{leaveType}", leaveApplication.leaveCategory)       
-       .replace("{startDate}", leaveApplication.startDate)       
-       .replace("{endDate}", leaveApplication.endDate)       
-       .replace("{totalDays}", totalDays)       
-       .replace("{reason}", leaveApplication.comment)       
-     
-       .replace("{company}",  company.companyName)
-       .replace("{company}", company.companyName)
-       .replace("{lastName}", manager.lastName); 
-      
-       console.log(message);
-       if(attendanceUser.email=="hrmeffortless@gmail.com")
-       {
-          try {
-           await sendEmail({
-             email: attendanceUser.email,
-             subject: emailTemplate.subject,
-             message
-           });
-          
-         } catch (err) {   
-          console.error(`Error sending email to user ${user}:`, err); 
-       }
+        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)     
+          {  
+          const template = emailTemplate.contentData;
+          const totalDays=leaveApplication.endDate-leaveApplication.startDate;
+          const message = template
+          .replace("{firstName}", manager.firstName)       
+          .replace("{employeeName}", user.firstName + " "+user.lastName)
+          .replace("{employeeName}", user.firstName + " "+user.lastName)      
+          .replace("{leaveType}", leaveApplication.leaveCategory)       
+          .replace("{startDate}", leaveApplication.startDate)       
+          .replace("{endDate}", leaveApplication.endDate)       
+          .replace("{totalDays}", totalDays)       
+          .replace("{reason}", leaveApplication.comment)            
+          .replace("{company}",  company.companyName)
+          .replace("{company}", company.companyName)
+          .replace("{lastName}", manager.lastName); 
+          if(attendanceUser.email=="hrmeffortless@gmail.com")
+          {
+              try {
+              await sendEmail({
+                email: attendanceUser.email,
+                subject: emailTemplate.subject,
+                message
+              });
+              
+            } catch (err) {   
+              console.error(`Error sending email to user ${user}:`, err); 
+          }
+          }
       }
   }
 };
@@ -1046,12 +1008,12 @@ const calculateLeaveDays = (startDate, endDate) => {
 
   // Check if the dates are valid
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    throw new Error("Invalid date format. Please provide valid dates.");
+    throw new Error(req.t('leave.InvaliddateFormat'));
   }
 
   // Ensure start is before end
   if (end < start) {
-    throw new Error("End date must be after start date.");
+    throw new Error(req.t('leave.InvalidEndDate'));
   }
 
   // Calculate the difference in time
@@ -1087,7 +1049,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     }
     updatedLeaveApplication.halfDays = createdHalfDays;
     if (!updatedLeaveApplication) {
-      return next(new AppError('Employee Leave Application not found', 404));
+      return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
     }
     else {
       try {
@@ -1112,7 +1074,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
       }
       catch (error) {
         console.error("Error updating leave balance:", error);
-        return res.status(500).send("Internal Server Error.");
+        return res.status(500).send(req.t('common.InternalServerError'));
       }
     }
 
@@ -1143,10 +1105,7 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
         total: 0,
       });
     }
-
-    // if (leaveApplications.length === 0) {
-    //   return next(new AppError('Employee Leave Applications not found', 404));
-    // }
+    
     for (var i = 0; i < leaveApplications.length; i++) {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
       if (halfDays) {
@@ -1213,18 +1172,12 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     if (leaveApplication) {
     
         const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);   
-        const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
-      
+        const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);      
         const cycle = await scheduleController.createFiscalCycle();
-        console.log(leaveApplication.employee);
-        console.log(cycle);
-        console.log(leaveApplication.leaveCategory);
         const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
-        console.log(leaveAssigned);
         // Deduct the applied leave days from the leave remaining
         leaveAssigned.leaveRemaining += leaveDays;
         leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
-
         // Save the updated leave assigned record
         await leaveAssigned.save();
       }
@@ -1287,7 +1240,7 @@ exports.getEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     if (!leaveApplication) {
-      return next(new AppError('Leave Application not found', 404));
+      return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
     }
 
     res.status(200).json({
@@ -1322,7 +1275,7 @@ exports.getShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'ShortLeave not found'
+        message:  req.t('leave.shortLeaveNotFound')
       });
     } else {
       res.status(200).json({
@@ -1344,7 +1297,7 @@ exports.updateShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'ShortLeave not found'
+        message:  req.t('leave.shortLeaveNotFound')
       });
     } else {
       res.status(200).json({
@@ -1366,7 +1319,7 @@ exports.deleteShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message: 'ShortLeave not found'
+        message:  req.t('leave.shortLeaveNotFound')
       });
     } else {
       res.status(204).json({
@@ -1521,3 +1474,37 @@ exports.getLeaveBalanceByCompany = catchAsync(async (req, res, next) => {
     total: totalCount
   });
 });
+
+async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCategories) {
+  const existingCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
+
+  // Update existing and create new categories
+  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
+
+    const existingCategory = existingCategories.find(
+      (existing) => existing.leaveCategory.equals(category.leaveCategory)
+    );
+    if (!existingCategory) {
+      // Create new category
+      const newCategory = new LeaveTemplateCategory({
+        leaveTemplate: leaveTemplateId,
+        ...category,
+      });
+      return newCategory.save();
+    }
+  });
+  // Remove categories not present in the updated list
+  const categoriesToRemove = existingCategories.filter(
+    (existing) => !updatedCategories.find((updated) => updated.leaveCategory === existing.leaveCategory.toString())
+  );
+
+
+  const removalPromises = categoriesToRemove.map(async (category) => {
+    return LeaveTemplateCategory.findByIdAndRemove(category._id);
+  });
+
+  await Promise.all(removalPromises);
+  const finalCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
+  return finalCategories;
+
+}

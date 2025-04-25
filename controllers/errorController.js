@@ -2,30 +2,30 @@ const constants = require('../constants');
 const AppError = require('../utils/appError');
 const  websocketHandler  = require('../utils/websocketHandler');
 
-const handleCastErrorDB = err => {
-  const message = `Invalid ${err.path}: ${err.value}.`;
+const handleCastErrorDB = (err, req) => {
+  const message = req.t('error.invalidField', { path: err.path, value: err.value });
   return new AppError(message, 400);
 };
 
-const handleDuplicateFieldsDB = err => {
+const handleDuplicateFieldsDB = (err, req) => {
   // Get value from error message that is between quotes (it means that it is field name)
   // This will return an array which from we need first element
   const value = err.errmsg.match(/(["'])(?:(?=(\\?))\2.)*?\1/)[0];
-  const message = `Duplicate field value: ${value}, please use another value!`;
+  const message = req.t('error.duplicateField', { value });
   return new AppError(message, 400);
 };
 
-const handleValidationErrorDB = err => {
+const handleValidationErrorDB = (err, req) => {
   const errors = Object.values(err.errors).map(el => el.message);
-  const message = `Invalid input data. ${errors.join('. ')}.`;
+  const message = req.t('error.invalidInputData', { errors: errors.join('. ') });
   return new AppError(message, 400);
 };
 
-const handleJWTError = () =>
-  new AppError('Invalid token. Please log in again.', 401);
+const handleJWTError = (req) =>
+  new AppError(req.t('error.invalidToken'), 401);
 
-const handleJWTExpiredError = () =>
-  new AppError('Your token has expired. Please log in again.', 401);
+const handleJWTExpiredError = (req) =>
+  new AppError(req.t('error.tokenExpired'), 401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -51,7 +51,7 @@ const sendErrorProd = (err, res) => {
     res.status(500).json({
       status: constants.APIResponseStatus.Error,
       // Don't leak details to a client
-      message: 'Something went very wrong.'
+      message: req.t('error.genericError')
     });
   }
 };
