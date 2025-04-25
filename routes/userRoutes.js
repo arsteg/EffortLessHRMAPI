@@ -1537,7 +1537,7 @@ router.delete('/employee-salary-tax-salutaory-settings/:id', authController.prot
  *             properties:
  *               user:
  *                 type: string
- *               isEmployeeEligibleForProvidentFundDeduction:
+ *               isEmployeeEligibleForPFDeduction:
  *                 type: boolean
  *               isEmployeePFCeilingApplied:
  *                 type: boolean
@@ -1664,7 +1664,7 @@ router.get('/employee-salutatory-details-by-user/:userId', authController.protec
  *           schema:
  *             type: object
  *             properties:
-*               isEmployeeEligibleForProvidentFundDeduction:
+*               isEmployeeEligibleForPFDeduction:
  *                 type: boolean
  *               isEmployeePFCeilingApplied:
  *                 type: boolean

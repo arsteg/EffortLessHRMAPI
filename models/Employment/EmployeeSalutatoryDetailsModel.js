@@ -7,7 +7,7 @@ const employeeSalutatoryDetailsSchema = new Schema({
       ref: 'User', // Reference to the User schema assuming it exists
       required: true
     },
-  isEmployeeEligibleForProvidentFundDeduction: {
+  isEmployeeEligibleForPFDeduction: {
     type: Boolean,
     default: false
   },
