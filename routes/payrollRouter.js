@@ -1744,12 +1744,6 @@ router.delete('/esic-ceilingAmounts/:id', authController.protect, payrollControl
  *           schema:
  *             type: object
  *             properties:
- *               fromAmount:
- *                 type: number
- *                 required: true
- *               toAmount:
- *                 type: number
- *                 required: true
  *               employeePercentage:
  *                 type: number
  *                 required: true
@@ -1819,10 +1813,6 @@ router.post('/esicContributions-by-company', authController.protect, payrollCont
  *           schema:
  *             type: object
  *             properties:
- *               fromAmount:
- *                 type: number
- *               toAmount:
- *                 type: number
  *               employeePercentage:
  *                 type: number
  *               employerPercentage:

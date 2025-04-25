@@ -1,4 +1,3 @@
-const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 const LWFFixedContributionSlab = require('../models/Payroll/lwfFixedContributionSlabModel');
 const LWFFixedDeductionMonth = require('../models/Payroll/lwfFixedDeductionMonthModel');
 const SalaryComponentFixedAllowance = require('../models/Employment/SalaryComponentFixedAllowanceModel');
@@ -68,7 +67,7 @@ const isLwfApplicableThisMonth = async (req, companyId) => {
 
   const msg = `📅 LWF applicable for this month: ${monthName}`;
   websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
-  return { status: true, month: monthName, year: currentYear };
+  return { status: true, month: currentMonth, year: currentYear };
 };
 
 /**
@@ -139,82 +138,9 @@ const calculateLwfFromSlab = async (req, companyId, totalEligibleAmount) => {
   return { employeeLWF, employerLWF, slab: matchedSlab };
 };
 
-/**
- * Inserts LWF contribution data into PayrollStatutory collection.
- * Prevents duplicate entries for the same user, month, year, and contributor type.
- */
-const storeLwfInPayrollStatutory = async ({
-  req,
-  payrollUser,
-  companyId,
-  employeeLWF,
-  employerLWF,
-  slabId,
-  month,
-  year,
-  StautoryName
-}) => {
-  console.log(`🧾 Checking for existing LWF entries for user: ${payrollUser}, month: ${month}, year: ${year}`);
-
-  // Prevent duplicate entries by checking both contributor types
-  const existingEmployee = await PayrollStatutory.findOne({
-    payrollUser,
-    fixedContribution: slabId,
-    ContributorType: 'Employee',
-    month,
-    year
-  });
-
-  const existingEmployer = await PayrollStatutory.findOne({
-    payrollUser,
-    fixedContribution: slabId,
-    ContributorType: 'Employer',
-    month,
-    year
-  });
-
-  const data = [];
-
-  if (!existingEmployee) {
-    data.push({
-      payrollUser,
-      fixedContribution: slabId,
-      ContributorType: 'Employee',
-      StautoryName,
-      amount: employeeLWF,
-      month,
-      year,
-      company: companyId
-    });
-  } else {
-    websocketHandler.sendLog(req, `⚠️ Skipped inserting Employee LWF - already exists`, constants.LOG_TYPES.WARN);
-  }
-
-  if (!existingEmployer) {
-    data.push({
-      payrollUser,
-      fixedContribution: slabId,
-      ContributorType: 'Employer',
-      StautoryName,
-      amount: employerLWF,
-      month,
-      year,
-      company: companyId
-    });
-  } else {
-    websocketHandler.sendLog(req, `⚠️ Skipped inserting Employer LWF - already exists`, constants.LOG_TYPES.WARN);
-  }
-
-  // Insert new records if any
-  if (data.length > 0) {
-    await PayrollStatutory.insertMany(data);
-    websocketHandler.sendLog(req, `📌 Stored ${data.length} LWF record(s) in PayrollStatutory`, constants.LOG_TYPES.SUCCESS);
-  }
-};
 
 module.exports = {
   getTotalLwfEligibleAmount,
   isLwfApplicableThisMonth,
-  calculateLwfFromSlab,
-  storeLwfInPayrollStatutory
+  calculateLwfFromSlab
 };

@@ -2916,7 +2916,12 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
    req.payrollUser = payrollUser._id;
    // ✅ Call calculateLWF immediately after user creation
    await payrollCalculationController.calculateLWF(req, res); // You can also handle separately if you don't want to return early
-  res.status(201).json({
+  
+   // ✅ Call calculateESIC immediately after user creation
+   await payrollCalculationController.calculateESIC(req, res); // You can also handle separately if you don't want to return early
+
+
+   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
