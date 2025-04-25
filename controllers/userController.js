@@ -1376,7 +1376,7 @@ exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) =
   
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findOne({ user: req.params.userId });
   
-  websocketHandler.sendLog(req, `Found ${employeeSalutatoryDetails.length} salutatory details`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Found salutatory details`, constants.LOG_TYPES.INFO);
   
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
