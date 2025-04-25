@@ -60,11 +60,11 @@ const isESICApplicable = async (req, companyId, totalEligibleAmount) => {
 
   const activeUserCount = await User.countDocuments({ company: companyId, status: 'Active' });
 
- // if (activeUserCount <= 10) {
-   // const msg = `👥 Only ${activeUserCount} active users found. Minimum 10 required for ESIC.`;
-    //websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
-    //return { status: false, flag: false, message: msg };
-  //}
+  if (activeUserCount <= 10) {
+    const msg = `👥 Only ${activeUserCount} active users found. Minimum 1 required for ESIC.`;
+    websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
+    return { status: false, flag: false, message: msg };
+  }
 
   return { status: true, flag: true, message: '✅ ESIC is applicable' };
 };
