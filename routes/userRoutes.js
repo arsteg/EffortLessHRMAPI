@@ -925,9 +925,9 @@ router.get('/user-employment-by-userId/:userId',authController.protect, userCont
  *                       type: boolean
  *                     isProvidentPensionDeduction:
  *                       type: boolean
- *                     isEmployeeProvidentFundCappedAtPFCeiling:
+ *                     isEmployeePFCappedAtPFCeiling:
  *                       type: boolean
- *                     isEmployerProvidentFundCappedAtPFCeiling:
+ *                     isEmployerPFCappedAtPFCeiling:
  *                       type: boolean 
  *                     fixedAmountForProvidentFundWage:
  *                       type: number 
@@ -1157,9 +1157,9 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *                       type: boolean
  *                     isProvidentPensionDeduction:
  *                       type: boolean
- *                     isEmployeeProvidentFundCappedAtPFCeiling:
+ *                     isEmployeePFCappedAtPFCeiling:
  *                       type: boolean
- *                     isEmployerProvidentFundCappedAtPFCeiling:
+ *                     isEmployerPFCappedAtPFCeiling:
  *                       type: boolean 
  *                     fixedAmountForProvidentFundWage:
  *                       type: number 
@@ -1374,9 +1374,9 @@ router.get('/salary-details-by-userId/:userId', authController.protect, userCont
  *                 type: boolean
  *               isProvidentPensionDeduction:
  *                 type: boolean
- *               isEmployeeProvidentFundCappedAtPFCeiling:
+ *               isEmployeePFCappedAtPFCeiling:
  *                 type: boolean
- *               isEmployerProvidentFundCappedAtPFCeiling:
+ *               isEmployerPFCappedAtPFCeiling:
  *                 type: boolean
  *               fixedAmountForProvidentFundWage:
  *                 type: number
@@ -1460,9 +1460,9 @@ router.get('/employee-salary-tax-salutaory-settings/:id', authController.protect
  *                 type: boolean
  *               isProvidentPensionDeduction:
  *                 type: boolean
- *               isEmployeeProvidentFundCappedAtPFCeiling:
+ *               isEmployeePFCappedAtPFCeiling:
  *                 type: boolean
- *               isEmployerProvidentFundCappedAtPFCeiling:
+ *               isEmployerPFCappedAtPFCeiling:
  *                 type: boolean
  *               fixedAmountForProvidentFundWage:
  *                 type: number
@@ -1539,7 +1539,7 @@ router.delete('/employee-salary-tax-salutaory-settings/:id', authController.prot
  *                 type: string
  *               isEmployeeEligibleForProvidentFundDeduction:
  *                 type: boolean
- *               willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling:
+ *               isEmployeePFCeilingApplied:
  *                 type: boolean
  *               willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling:
  *                 type: boolean
@@ -1666,7 +1666,7 @@ router.get('/employee-salutatory-details-by-user/:userId', authController.protec
  *             properties:
 *               isEmployeeEligibleForProvidentFundDeduction:
  *                 type: boolean
- *               willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling:
+ *               isEmployeePFCeilingApplied:
  *                 type: boolean
  *               willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling:
  *                 type: boolean

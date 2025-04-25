@@ -11,11 +11,11 @@ const employeeSalutatoryDetailsSchema = new Schema({
     type: Boolean,
     default: false
   },
-  willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling: {
+  isEmployerPFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },
-  willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling: {
+  isEmployeePFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },
