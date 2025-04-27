@@ -448,6 +448,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
   }
+      
+  const appointments = await Appointment.find({ user: user._id });
+  user.appointment = appointments;
   // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
