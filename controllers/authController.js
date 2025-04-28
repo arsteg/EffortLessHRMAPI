@@ -971,4 +971,108 @@ exports.deleteRolePermission = catchAsync(async (req, res, next) => {
   });    
 });
 
+
+// Create UserRole
+exports.createUserRole = catchAsync(async (req, res, next) => {
+  const userRoleExists = await UserRole.find({
+    userId: req.body.userId,
+    roleId: req.body.roleId,
+    company: req.cookies.companyId,
+  });
+
+  if (userRoleExists.length > 0) {
+    return next(new AppError(req.t('auth.userRoleExists'), 403));
+  }
+
+  const userRole = await UserRole.create({
+    userId: req.body.userId,
+    roleId: req.body.roleId,
+    company: req.cookies.companyId,
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+  });
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Get UserRole by ID
+exports.getUserRole = catchAsync(async (req, res, next) => {
+  const userRole = await UserRole.findById(req.params.id);
+
+  if (!userRole) {
+    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+  }
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Get All UserRoles
+exports.getAllUserRoles = catchAsync(async (req, res, next) => {
+  const userRoles = await UserRole.find({ company: req.cookies.companyId });
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRoles,
+  });
+});
+
+// Update UserRole
+exports.updateUserRole = catchAsync(async (req, res, next) => {
+  const userRoleExists = await UserRole.find({
+    userId: req.body.userId,
+    roleId: req.body.roleId,
+    company: req.cookies.companyId,
+    _id: { $ne: req.params.id },
+  });
+
+  if (userRoleExists.length > 0) {
+    return next(new AppError(req.t('auth.userRoleExists'), 403));
+  }
+
+  const userRole = await UserRole.findByIdAndUpdate(
+    req.params.id,
+    {
+      userId: req.body.userId,
+      roleId: req.body.roleId,
+      updatedBy: req.cookies.userId,
+      updatedOn: new Date(),
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!userRole) {
+    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+  }
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Delete UserRole
+exports.deleteUserRole = catchAsync(async (req, res, next) => {
+  const userRole = await UserRole.findByIdAndDelete(req.params.id);
+
+  if (!userRole) {
+    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+  }
+
+  res.status(204).json({
+    status: constants.APIResponseStatus.Success,
+    data: null,
+  });
+});
+
  //#endregion

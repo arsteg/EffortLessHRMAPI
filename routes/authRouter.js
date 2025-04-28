@@ -339,18 +339,25 @@ authRouter.get('/permissions',authController.protect,commonController.getPermiss
  *      security: [{
  *         bearerAuth: []
  *     }]
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          permissionName:
- *                              type: string
- *                          permissionDetails:
- *                              type: string
- *      produces:
- *          - application/json
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               permissionName:
+ *                 type: string
+ *               permissionDetails:
+ *                 type: string
+ *               resource:
+ *                 type: string
+ *               action:
+ *                 type: string
+ *               uiElement:
+ *                 type: string
+ *               parentPermission:
+ *                 type: string
  *      responses:
  *          200:
  *              description: "Permission added successfully"
@@ -380,19 +387,25 @@ authRouter.post('/permission/create',authController.protect,commonController.sav
  *           type: string
  *           format: int64
  *           
- *      requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          permissionName:
- *                              type: string
- *                          permissionDetails:
- *                              type: string
- *                          
- *      produces:
- *          - application/json
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               permissionName:
+ *                 type: string
+ *               permissionDetails:
+ *                 type: string
+ *               resource:
+ *                 type: string
+ *               action:
+ *                 type: string
+ *               uiElement:
+ *                 type: string
+ *               parentPermission:
+ *                 type: string
  *      responses:
  *          200:
  *              description: "Success"
@@ -605,6 +618,164 @@ authRouter.post('/rolePermission/update/:id',authController.protect,authControll
  *
  */
 authRouter.delete('/rolePermission/delete/:id',authController.protect,authController.deleteRolePermission);
+
+//#endregion
+
+
+//#region UserRole
+/**
+ * @swagger
+ * /api/v1/auth/userRole/{id}:
+ *  get:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Get UserRole Based On UserRole Id"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: UserRole ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: int64
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+authRouter.get('/userRole/:id', authController.protect, authController.getUserRole);
+
+/**
+ * @swagger
+ * /api/v1/auth/userRoles:
+ *  get:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Get all UserRoles"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+authRouter.get('/userRoles', authController.protect, authController.getAllUserRoles);
+
+/**
+ * @swagger
+ * /api/v1/auth/userRole/create:
+ *  post:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Create UserRole"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          userId:
+ *                              type: string
+ *                          roleId:
+ *                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          201:
+ *              description: "UserRole added successfully"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+authRouter.post('/userRole/create', authController.protect, authController.createUserRole);
+
+/**
+ * @swagger
+ * /api/v1/auth/userRole/update/{id}:
+ *  post:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Update UserRole based on UserRoleId"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: UserRole ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: int64
+ *      requestBody:
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          userId:
+ *                              type: string
+ *                          roleId:
+ *                              type: string
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+authRouter.post('/userRole/update/:id', authController.protect, authController.updateUserRole);
+
+/**
+ * @swagger
+ * /api/v1/auth/userRole/delete/{id}:
+ *  delete:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Delete UserRole Based on Id"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: id
+ *         in: path
+ *         description: UserRole ID
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: int64
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          204:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+authRouter.delete('/userRole/delete/:id', authController.protect, authController.deleteUserRole);
 
 //#endregion
 

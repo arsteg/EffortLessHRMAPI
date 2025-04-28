@@ -296,16 +296,23 @@ exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
   exports.savePermission = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Starting savePermission', constants.LOG_TYPES.INFO);
     websocketHandler.sendLog(req, `Saving permission: ${req.body.permissionName}`, constants.LOG_TYPES.TRACE);
-    const newPermission = await Permission.create({      
-      permissionName:req.body.permissionName,
-      permissionDetails:req.body.permissionDetails
+    const { permissionName, permissionDetails, resource, action, uiElement, parentPermission } = req.body;
 
-    });  
-    websocketHandler.sendLog(req, `Permission saved: ${newPermission._id}`, constants.LOG_TYPES.INFO);
+    const permission = new Permission({
+      permissionName,
+      permissionDetails,
+      resource,
+      action,
+      uiElement,
+      parentPermission,
+    });
+    await permission.save();
+
+    websocketHandler.sendLog(req, `Permission saved: ${permission._id}`, constants.LOG_TYPES.INFO);
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: {
-        Permission:newPermission
+        Permission:permission
       }
     }); 
   });
@@ -324,7 +331,39 @@ exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
     });
   });
   
-  exports.updatePermission = factory.updateOne(Permission);
+
+  exports.updatePermission = catchAsync(async (req, res, next) => {
+    websocketHandler.sendLog(req, 'Starting updatePermission', constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, `Updating permission: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+    const { permissionName, permissionDetails, resource, action, uiElement, parentPermission } = req.body;
+  
+    const permission = await Permission.findById(req.params.id);
+    if (!permission) {
+      websocketHandler.sendLog(req, `Permission not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Fail,
+        message: 'Permission not found',
+      });
+    }
+  
+    permission.permissionName = permissionName ?? permission.permissionName;
+    permission.permissionDetails = permissionDetails ?? permission.permissionDetails;
+    permission.resource = resource ?? permission.resource;
+    permission.action = action ?? permission.action;
+    permission.uiElement = uiElement ?? permission.uiElement;
+    permission.parentPermission = parentPermission ?? permission.parentPermission;
+  
+    await permission.save();
+  
+    websocketHandler.sendLog(req, `Permission updated: ${permission._id}`, constants.LOG_TYPES.INFO);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+        Permission: permission
+      }
+    });
+  });
   
   exports.getPermission = catchAsync(async (req, res, next) => {       
     websocketHandler.sendLog(req, 'Starting getPermission', constants.LOG_TYPES.INFO);
