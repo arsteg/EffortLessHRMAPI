@@ -339,25 +339,25 @@ authRouter.get('/permissions',authController.protect,commonController.getPermiss
  *      security: [{
  *         bearerAuth: []
  *     }]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               permissionName:
- *                 type: string
- *               permissionDetails:
- *                 type: string
- *               resource:
- *                 type: string
- *               action:
- *                 type: string
- *               uiElement:
- *                 type: string
- *               parentPermission:
- *                 type: string
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          permissionName:
+ *                              type: string
+ *                          permissionDetails:
+ *                              type: string
+ *                          resource:
+ *                              type: string
+ *                          action:
+ *                              type: string
+ *                          uiElement:
+ *                              type: string
+ *                          parentPermission:
+ *                              type: string
  *      responses:
  *          200:
  *              description: "Permission added successfully"
@@ -367,7 +367,7 @@ authRouter.get('/permissions',authController.protect,commonController.getPermiss
  *                          type: object
  *
  */
-authRouter.post('/permission/create',authController.protect,commonController.savePermission);
+authRouter.post('/permission/create', authController.protect, commonController.savePermission);
 /**
  * @swagger
  * /api/v1/auth/permission/update/{id}:
@@ -386,26 +386,25 @@ authRouter.post('/permission/create',authController.protect,commonController.sav
  *         schema:
  *           type: string
  *           format: int64
- *           
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               permissionName:
- *                 type: string
- *               permissionDetails:
- *                 type: string
- *               resource:
- *                 type: string
- *               action:
- *                 type: string
- *               uiElement:
- *                 type: string
- *               parentPermission:
- *                 type: string
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          permissionName:
+ *                              type: string
+ *                          permissionDetails:
+ *                              type: string
+ *                          resource:
+ *                              type: string
+ *                          action:
+ *                              type: string
+ *                          uiElement:
+ *                              type: string
+ *                          parentPermission:
+ *                              type: string
  *      responses:
  *          200:
  *              description: "Success"
@@ -415,7 +414,7 @@ authRouter.post('/permission/create',authController.protect,commonController.sav
  *                          type: object
  *
  */
-authRouter.post('/permission/update/:id',authController.protect,commonController.updatePermission);
+authRouter.post('/permission/update/:id', authController.protect, commonController.updatePermission);
 /**
  * @swagger
  * /api/v1/auth//permission/delete/{id}:
