@@ -2914,13 +2914,16 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
    // Attach created payroll user to req for use in LWF
    req.user = payrollUser.user; // or payrollUser.user if nested  
    req.payrollUser = payrollUser._id;
+
    // ✅ Call calculateLWF immediately after user creation
-   await payrollCalculationController.calculateLWF(req, res); // You can also handle separately if you don't want to return early
+   await payrollCalculationController.calculateLWF(req, res); 
+
+   // ✅ Call calculatePF immediately after user creation
+   await payrollCalculationController.calculatePF(req, res); 
   
    // ✅ Call calculateESIC immediately after user creation
-   await payrollCalculationController.calculateESIC(req, res); // You can also handle separately if you don't want to return early
-
-
+   await payrollCalculationController.calculateESIC(req, res); 
+   
    res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser

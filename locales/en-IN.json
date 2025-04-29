@@ -494,7 +494,8 @@
     "invalidLoanAdvanceId": "Invalid loan or advance selected.",
     "noRemainingInstallments": "No remaining installments left for this loan or advance.",
     "invalidFNFUser": "The FNF payroll user provided is invalid.",
-    "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed."
+    "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed.",
+    "statutoryNameMissing": "The statutory name is missing."    
   },
   "pricing": {
     "employeeAssignmentNotFound": "The employee advance assignment was not found.",

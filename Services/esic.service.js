@@ -14,10 +14,11 @@ const User = require("../models/permissions/userModel");
  */
 const getTotalESICEligibleAmount = async (req, salaryDetails) => {
   let total = salaryDetails?.BasicSalary / 12 || 0;
+  
   websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
 
-  // Fetch and add fixed allowances that affect ESIC
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+  
   for (const item of fixedAllowances) {
     const detail = await FixedAllowance.findById(item.fixedAllowance);
     if (detail?.isESICAffected) {
@@ -26,8 +27,8 @@ const getTotalESICEligibleAmount = async (req, salaryDetails) => {
     }
   }
 
-  // Fetch and add variable allowances that affect ESIC
   const variableAllowances = await SalaryComponentVariableAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+ 
   for (const item of variableAllowances) {
     const detail = await VariableAllowance.findById(item.variableAllowance);
     if (detail?.isESICAffected) {
@@ -53,15 +54,14 @@ const isESICApplicable = async (req, companyId, totalEligibleAmount) => {
   }
 
   if (totalEligibleAmount < ceilingAmount.maxGrossAmount) {
-    const msg = `❌ Total eligible amount (${totalEligibleAmount}) Not Upto the ESIC ceiling amount (${ceilingAmount.maxGrossAmount})`;
+    const msg = `❌ Total eligible amount (${totalEligibleAmount}) is below ESIC ceiling (${ceilingAmount.maxGrossAmount})`;
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
     return { status: false, flag: false, message: msg };
   }
-
-  const activeUserCount = await User.countDocuments({ company: companyId, status: 'Active' });
-
-  if (activeUserCount <= 10) {
-    const msg = `👥 Only ${activeUserCount} active users found. Minimum 1 required for ESIC.`;
+  const activeUserCount = await User.countDocuments({ company:  companyId, status: 'Active' });
+ 
+  if (activeUserCount <= ceilingAmount.employeeCount) {
+    const msg = `👥 Only ${activeUserCount} active users found. Minimum ${ceilingAmount.employeeCount + 1} required for ESIC.`;
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
     return { status: false, flag: false, message: msg };
   }
@@ -73,7 +73,7 @@ const isESICApplicable = async (req, companyId, totalEligibleAmount) => {
  * Calculates ESIC contribution amounts based on the eligible salary.
  */
 const calculateESICContribution = async (req, companyId, totalEligibleAmount) => {
-  const esicConfig = await ESICContribution.findOne({ company: companyId });
+   const esicConfig = await ESICContribution.findOne({ company: companyId });
 
   if (!esicConfig) {
     const msg = '❌ ESIC contribution rates not configured for this company';
@@ -82,7 +82,7 @@ const calculateESICContribution = async (req, companyId, totalEligibleAmount) =>
   }
 
   const { employeePercentage, employerPercentage } = esicConfig;
-
+ 
   const employeeESIC = (employeePercentage / 100) * totalEligibleAmount;
   const employerESIC = (employerPercentage / 100) * totalEligibleAmount;
 
