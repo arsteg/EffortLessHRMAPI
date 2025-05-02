@@ -5584,6 +5584,40 @@ router.delete('/fnf/users/:id', authController.protect, payrollController.delete
  */
 router.post('/users-by-payroll-fnf', authController.protect, payrollController.getAllPayrollFNFUsersByPayrollFNF);
 
+// Payroll FNF Attendance Summary routes
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-attendance-records:
+ *   post:
+ *     summary: Add a PayrollFNFAttendanceSummary
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PayrollFNFAttendanceSummary details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               payrollFNF:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PayrollFNFAttendanceSummary fetched successfully
+ *       400:
+ *         description: Invalid data
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-attendance-records', authController.protect, payrollController.getPayrollFNFUserAttendanceSummaryRecords);
+
 /**
  * @swagger
  * /api/v1/payroll/payroll-fnf-attendance-summary:

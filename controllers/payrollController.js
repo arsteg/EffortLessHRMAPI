@@ -62,6 +62,9 @@ const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 const payrollCalculationController = require('../controllers/payrollCalculationController');
+const OvertimeInformation = require('../models/attendance/overtimeInformation');
+const Termination = require('../models/Separation/Termination.js');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -4314,6 +4317,84 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers,
     total: totalCount,
+  });
+});
+
+// Fetch related records of user for attendance summary
+exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser, payrollFNF: payrollFNFId } = req.body;
+
+  // Fetch PayrollFNFUser and populate user details
+  const payrollFNFUsers = await PayrollFNFUsers.findById(payrollFNFUser).populate('user');
+  if (!payrollFNFUsers || !payrollFNFUsers.user) {
+    return next(new AppError('PayrollFNFUser or associated user not found', 404));
+  }
+  // Get PayrollFNF details
+  const payrollFNF = await PayrollFNF.findById(payrollFNFId);
+  if (!payrollFNF) {
+    return next(new AppError('PayrollFNF not found', 404));
+  }
+
+  const payrollUser = await PayrollUsers.find({ user: payrollFNFUsers.user._id })
+    .sort({ createdAt: -1 })
+    .limit(1)
+    .populate('payroll');
+
+  if (!payrollUser.length || !payrollUser[0].payroll) {
+    return next(new AppError('No payroll record found for this user', 404));
+  }
+
+  const payrollById = payrollUser[0].payroll;
+  const payrollDate = new Date(payrollById.date);
+
+  // Check user status
+  const validStatuses = ['Terminated', 'Settled'];
+  if (!validStatuses.includes(payrollFNFUsers.user.status)) {
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'User status is not valid for overtime records',
+      data: [],
+      OverTimeHours: 0,
+    });
+  }
+
+  const terminationRecord = await Termination.findOne({ user: payrollFNFUsers.user._id });
+  if (!terminationRecord || !terminationRecord.termination_date) {
+    return next(new AppError('Termination date not found for user', 404));
+  }
+
+  const terminationDate = new Date(terminationRecord.termination_date);
+  const diffTime = Math.abs(terminationDate - payrollDate);
+  const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Fetch overtime records between last payroll and termination
+  const overtimeRecords = await OvertimeInformation.find({
+    User: payrollFNFUsers.user._id,
+    CheckInDate: {
+      $gte: payrollDate,
+      $lte: terminationDate
+    }
+  });
+
+  // Calculate total overtime hours
+  const totalOvertimeHours = overtimeRecords.reduce((sum, record) => {
+    const overtimeStr = record.OverTime || '0';
+    const hours = parseInt(overtimeStr, 10);
+    return sum + (isNaN(hours) ? 0 : hours);
+  }, 0);
+
+  // Add login for LOP days calculations
+  
+
+  // Return result
+  const result = {
+    OvertimeHours: totalOvertimeHours / 60,
+    TotalDays: totalDays
+  };
+
+  return res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: result,
   });
 });
 
