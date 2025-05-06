@@ -654,7 +654,7 @@ authRouter.get('/userRole/:id', authController.protect, authController.getUserRo
 
 /**
  * @swagger
- * /api/v1/auth/userRoles:
+ * /api/v1/auth/userRolesv1:
  *  get:
  *      tags:
  *          - Role-Based Access Control
@@ -672,11 +672,11 @@ authRouter.get('/userRole/:id', authController.protect, authController.getUserRo
  *                      schema:
  *                          type: object
  */
-authRouter.get('/userRoles', authController.protect, authController.getAllUserRoles);
+authRouter.get('/userRolesv1', authController.protect, authController.getAllUserRoles);
 
 /**
  * @swagger
- * /api/v1/auth/userRole/create:
+ * /api/v1/auth/userRole/createuserrolev1:
  *  post:
  *      tags:
  *          - Role-Based Access Control
@@ -704,11 +704,11 @@ authRouter.get('/userRoles', authController.protect, authController.getAllUserRo
  *                      schema:
  *                          type: object
  */
-authRouter.post('/userRole/create', authController.protect, authController.createUserRole);
+authRouter.post('/userRole/createuserrolev1', authController.protect, authController.createUserRole);
 
 /**
  * @swagger
- * /api/v1/auth/userRole/update/{id}:
+ * /api/v1/auth/userRole/updateuserrole/{id}:
  *  post:
  *      tags:
  *          - Role-Based Access Control
@@ -744,11 +744,11 @@ authRouter.post('/userRole/create', authController.protect, authController.creat
  *                      schema:
  *                          type: object
  */
-authRouter.post('/userRole/update/:id', authController.protect, authController.updateUserRole);
+authRouter.post('/userRole/updateuserrole/:id', authController.protect, authController.updateUserRole);
 
 /**
  * @swagger
- * /api/v1/auth/userRole/delete/{id}:
+ * /api/v1/auth/userRole/deleteuserrole/{id}:
  *  delete:
  *      tags:
  *          - Role-Based Access Control
@@ -774,7 +774,7 @@ authRouter.post('/userRole/update/:id', authController.protect, authController.u
  *                      schema:
  *                          type: object
  */
-authRouter.delete('/userRole/delete/:id', authController.protect, authController.deleteUserRole);
+authRouter.delete('/userRole/deleteuserrole/:id', authController.protect, authController.deleteUserRole);
 
 //#endregion
 

@@ -304,7 +304,7 @@ exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
       resource,
       action,
       uiElement,
-      parentPermission,
+      parentPermission: parentPermission === '' ? null : parentPermission,
     });
     await permission.save();
 
@@ -352,7 +352,7 @@ exports.getTerminationStatusList = catchAsync(async (req, res, next) => {
     permission.resource = resource ?? permission.resource;
     permission.action = action ?? permission.action;
     permission.uiElement = uiElement ?? permission.uiElement;
-    permission.parentPermission = parentPermission ?? permission.parentPermission;
+    permission.parentPermission = parentPermission === '' ? null : parentPermission; //parentPermission ?? permission.parentPermission;
   
     await permission.save();
   
