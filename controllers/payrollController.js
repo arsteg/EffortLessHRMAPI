@@ -64,6 +64,7 @@ const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 const payrollCalculationController = require('../controllers/payrollCalculationController');
 const OvertimeInformation = require('../models/attendance/overtimeInformation');
 const Termination = require('../models/Separation/Termination.js');
+const AttendanceRecords = require('../models/attendance/attendanceRecords.js')
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -2914,20 +2915,20 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   const payrollUser = await PayrollUsers.create(req.body);
 
-   // Attach created payroll user to req for use in LWF
-   req.user = payrollUser.user; // or payrollUser.user if nested  
-   req.payrollUser = payrollUser._id;
+  // Attach created payroll user to req for use in LWF
+  req.user = payrollUser.user; // or payrollUser.user if nested  
+  req.payrollUser = payrollUser._id;
 
-   // ✅ Call calculateLWF immediately after user creation
-   await payrollCalculationController.calculateLWF(req, res); 
+  // ✅ Call calculateLWF immediately after user creation
+  await payrollCalculationController.calculateLWF(req, res);
 
-   // ✅ Call calculatePF immediately after user creation
-   await payrollCalculationController.calculatePF(req, res); 
-  
-   // ✅ Call calculateESIC immediately after user creation
-   await payrollCalculationController.calculateESIC(req, res); 
-   
-   res.status(201).json({
+  // ✅ Call calculatePF immediately after user creation
+  await payrollCalculationController.calculatePF(req, res);
+
+  // ✅ Call calculateESIC immediately after user creation
+  await payrollCalculationController.calculateESIC(req, res);
+
+  res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
@@ -3655,12 +3656,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const payrollStatutory = await PayrollStatutory.find({
         payrollUser: { $in: payrollUser?._id },
       });
-      
+
       // 💰 Sum amounts where ContributorType is 'Employer' (i.e., company contribution)
       const totalEmployeeStatutoryContribution = payrollStatutory
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (item.amount || 0), 0);
-      
+
       // 💸 Sum amounts where ContributorType is 'Employee' (i.e., deducted from salary)
       const totalEmployeeStatutoryDeduction = payrollStatutory
         .filter(item => item.ContributorType === 'Employee')
@@ -3671,23 +3672,23 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       //   .reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0); // Sum disbursement amounts
       // console.log(userLoanAdvances)
       const userLoanAdvances = allLoanAdvances
-      .filter(loan => loan.payrollUser.equals(payrollUser._id))
-      .map(loan => {
-        if (loan.type === 'Disbursement') {
-          return {
-            type: loan.type,
-            disbursementAmount: loan.disbursementAmount || 0
-          };
-        } else if (loan.type === 'Repayment') {
-          return {
-            type: loan.type,
-            amount: loan.amount || 0
-          };
-        }
-        return null;
-      })
-      .filter(Boolean); // Remove null entries
-    
+        .filter(loan => loan.payrollUser.equals(payrollUser._id))
+        .map(loan => {
+          if (loan.type === 'Disbursement') {
+            return {
+              type: loan.type,
+              disbursementAmount: loan.disbursementAmount || 0
+            };
+          } else if (loan.type === 'Repayment') {
+            return {
+              type: loan.type,
+              amount: loan.amount || 0
+            };
+          }
+          return null;
+        })
+        .filter(Boolean); // Remove null entries
+
 
       const flexiBenefitsTotal = flexiBenefits
         .filter(flexi => flexi.PayrollUser.equals(payrollUser._id))
@@ -3716,8 +3717,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalFixedAllowance: totalFixedAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
-        totalEmployeeStatutoryContribution:totalEmployeeStatutoryContribution,
-        totalEmployeeStatutoryDeduction:totalEmployeeStatutoryDeduction,
+        totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
+        totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
         totalPfTax: pfTaxes,
@@ -4383,13 +4384,21 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
     return sum + (isNaN(hours) ? 0 : hours);
   }, 0);
 
-  // Add login for LOP days calculations
-  
+  // Add logic for LOP days calculations
+  const attendanceRecords = await AttendanceRecords.find({
+    month: payrollById.month,
+    year: payrollById.year,
+    user: payrollFNFUsers.user._id,
+    createdAt: { $gt: payrollDate }  // filter records created after payrollDate
+  });
+
+  console.log('Filtered attendanceRecords: ', attendanceRecords.length);
 
   // Return result
   const result = {
     OvertimeHours: totalOvertimeHours / 60,
-    TotalDays: totalDays
+    TotalDays: totalDays,
+    PayableDays: attendanceRecords.length
   };
 
   return res.status(200).json({
