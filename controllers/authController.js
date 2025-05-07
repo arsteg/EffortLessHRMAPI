@@ -913,7 +913,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
-  const rolePermissions = await RolePermission.find({});   
+  const rolePermissions = await RolePermission.find({}).where('company').equals(req.cookies.companyId); 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermissions
@@ -921,10 +921,13 @@ exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
 });
 
 exports.createRolePermission = catchAsync(async (req, res, next) => { 
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
+  const rolePermissionexists = await RolePermission.find({}).where('company').equals(req.cookies.companyId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This role already has a permission assigned.",
+    });
   }
   else{    
     const rolePermission = await RolePermission.create({
@@ -941,24 +944,33 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
 });
 
 exports.updateRolePermission = catchAsync(async (req, res, next) => {
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
-  
-  if (rolePermissionexists.length>0) {
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
+  const rolePermissionExists = await RolePermission.find({
+    _id: { $ne: req.params.id }, // Exclude the record being updated
+    company: req.cookies.companyId,
+    roleId: req.body.roleId
+  });
+
+  if (rolePermissionExists.length > 0) {
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This role already has a permission assigned."
+    });
   }
-  else{ 
+
   const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
+    new: true,
+    runValidators: true
   });
   if (!rolePermission) {
-    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "No role permission found with this ID."
+    });
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermission
   }); 
-}   
 });
 
 exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
@@ -977,12 +989,14 @@ exports.deleteRolePermission = catchAsync(async (req, res, next) => {
 exports.createUserRole = catchAsync(async (req, res, next) => {
   const userRoleExists = await UserRole.find({
     userId: req.body.userId,
-    roleId: req.body.roleId,
     company: req.cookies.companyId,
   });
 
   if (userRoleExists.length > 0) {
-    return next(new AppError(req.t('auth.userRoleExists'), 403));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This user already has a role assigned."
+    });
   }
 
   const userRole = await UserRole.create({
@@ -1029,13 +1043,15 @@ exports.getAllUserRoles = catchAsync(async (req, res, next) => {
 exports.updateUserRole = catchAsync(async (req, res, next) => {
   const userRoleExists = await UserRole.find({
     userId: req.body.userId,
-    roleId: req.body.roleId,
     company: req.cookies.companyId,
     _id: { $ne: req.params.id },
   });
 
   if (userRoleExists.length > 0) {
-    return next(new AppError(req.t('auth.userRoleExists'), 403));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This user already has a role assigned."
+    });
   }
 
   const userRole = await UserRole.findByIdAndUpdate(
@@ -1053,7 +1069,10 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
   );
 
   if (!userRole) {
-    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "User role not found with this ID."
+    });
   }
 
   res.status(200).json({
