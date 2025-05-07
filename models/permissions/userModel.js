@@ -284,7 +284,7 @@ userSchema.methods.createPasswordResetToken = function() {
 userSchema.pre(/^find/,async function(next) {
   this.populate({
     path: 'role',
-    select: 'id RoleName'
+    select: 'id name'
   })
   next();
 });
