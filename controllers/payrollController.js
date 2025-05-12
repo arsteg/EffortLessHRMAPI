@@ -69,6 +69,7 @@ const scheduleController = require('../controllers/ScheduleController');
 const {  getFNFDateRange} = require('../Services/userDates.service');
 const {  getTotalPFAmount} = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
+const AttendanceRecords = require('../models/attendance/attendanceRecords.js')
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -3674,12 +3675,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const payrollStatutory = await PayrollStatutory.find({
         payrollUser: { $in: payrollUser?._id },
       });
-      
+
       // 💰 Sum amounts where ContributorType is 'Employer' (i.e., company contribution)
       const totalEmployeeStatutoryContribution = payrollStatutory
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (item.amount || 0), 0);
-      
+
       // 💸 Sum amounts where ContributorType is 'Employee' (i.e., deducted from salary)
       const totalEmployeeStatutoryDeduction = payrollStatutory
         .filter(item => item.ContributorType === 'Employee')
@@ -3690,23 +3691,23 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       //   .reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0); // Sum disbursement amounts
       // console.log(userLoanAdvances)
       const userLoanAdvances = allLoanAdvances
-      .filter(loan => loan.payrollUser.equals(payrollUser._id))
-      .map(loan => {
-        if (loan.type === 'Disbursement') {
-          return {
-            type: loan.type,
-            disbursementAmount: loan.disbursementAmount || 0
-          };
-        } else if (loan.type === 'Repayment') {
-          return {
-            type: loan.type,
-            amount: loan.amount || 0
-          };
-        }
-        return null;
-      })
-      .filter(Boolean); // Remove null entries
-    
+        .filter(loan => loan.payrollUser.equals(payrollUser._id))
+        .map(loan => {
+          if (loan.type === 'Disbursement') {
+            return {
+              type: loan.type,
+              disbursementAmount: loan.disbursementAmount || 0
+            };
+          } else if (loan.type === 'Repayment') {
+            return {
+              type: loan.type,
+              amount: loan.amount || 0
+            };
+          }
+          return null;
+        })
+        .filter(Boolean); // Remove null entries
+
 
       const flexiBenefitsTotal = flexiBenefits
         .filter(flexi => flexi.PayrollUser.equals(payrollUser._id))
@@ -3735,8 +3736,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalFixedAllowance: totalFixedAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
-        totalEmployeeStatutoryContribution:totalEmployeeStatutoryContribution,
-        totalEmployeeStatutoryDeduction:totalEmployeeStatutoryDeduction,
+        totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
+        totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
         totalPfTax: pfTaxes,
