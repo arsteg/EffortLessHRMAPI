@@ -4379,7 +4379,6 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
       OverTimeHours: 0,
     });
   }
-  
   const { startDate, endDate } = await getFNFDateRange(req,userId);
   const diffTime = Math.abs(endDate - startDate);
   const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -5450,7 +5449,7 @@ exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next)
 // Update Resignation only if status is "pending"
 // ✅ Get total PF amount for a user
 exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.params.userId;
   
   if (!userId) {
     websocketHandler.sendLog(req, '❌ PF: User ID missing in request', constants.LOG_TYPES.ERROR);
@@ -5459,7 +5458,7 @@ exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, `🔄 Fetching total PF amount for user: ${userId}`, constants.LOG_TYPES.INFO);
 
-  const total = await getTotalPFAmount(userId);
+  const total = await getTotalPFAmount(req,userId);
 
   websocketHandler.sendLog(req, `✅ PF total amount retrieved: ₹${total}`, constants.LOG_TYPES.INFO);
 
@@ -5471,7 +5470,7 @@ exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
 
 // ✅ Get total Gratuity amount for a user
 exports.getTotalGratuityAmountByUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.params.userId;
 
   if (!userId) {
     websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
