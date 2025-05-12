@@ -3,6 +3,8 @@ const Resignation = require("../models/Separation/Resignation");
 const Termination = require('../models/Separation/Termination.js');
 const User = require('../models/permissions/userModel');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
+const constants = require('../constants');
+const  websocketHandler  = require('../utils/websocketHandler');
 const getLastPayrollDate = async (req, userId, next) => {
   let startDate = null;
   websocketHandler.sendLog(req, `🔍 Fetching last payroll date for user: ${userId}`, constants.LOG_TYPES.DEBUG);
@@ -14,12 +16,11 @@ const getLastPayrollDate = async (req, userId, next) => {
 
   if (!payrollUser.length || !payrollUser[0].payroll || !payrollUser[0].payroll.date) {
     websocketHandler.sendLog(req, `⚠️ No payroll record found. Falling back to first attendance date.`, constants.LOG_TYPES.WARN);
-    const firstAttendance = await AttendanceRecords.find({ user: userId })
+   const firstAttendance = await AttendanceRecords.find({ user: userId })
       .sort({ date: 1 })
       .limit(1)
       .select('date')
-      .lean();
-
+      .lean();      
     if (!firstAttendance || !firstAttendance[0].date) {
       websocketHandler.sendLog(req, `❌ No attendance record found for user: ${userId}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('user.NoPayrollOrAttendanceRecord'), 404));

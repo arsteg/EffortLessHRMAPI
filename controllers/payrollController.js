@@ -4380,7 +4380,7 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
     });
   }
   
-  const { startDate, endDate } = await getFNFDateRange(userId);
+  const { startDate, endDate } = await getFNFDateRange(req,userId);
   const diffTime = Math.abs(endDate - startDate);
   const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
    // Fetch overtime records between last payroll and termination

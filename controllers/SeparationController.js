@@ -186,8 +186,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
  });
 
  exports.getFNFDateRangeByUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.params;
-
+  const userId  = req.params.userId;
   // 🔍 Check if userId is provided
   if (!userId) {
     websocketHandler.sendLog(req, '❌ FNF Date Range: User ID missing in request', constants.LOG_TYPES.ERROR);
@@ -197,7 +196,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `🔄 Fetching FNF date range for user: ${userId}`, constants.LOG_TYPES.INFO);
 
   // 🗓️ Get FNF date range
-  const { startDate, endDate } = await getFNFDateRange(userId);
+  const { startDate, endDate } = await getFNFDateRange(req,userId);
 
   websocketHandler.sendLog(
     req,
