@@ -132,10 +132,57 @@ const getTotalPFAmount = async (req, user) => {
       }
     ]);
 
-    const total = result[0]?.totalAmount || 0;
-    websocketHandler.sendLog(req, `✅ Total PF amount for user ${user}: ₹${total}`, constants.LOG_TYPES.INFO);
+    const result1 = await PayrollStatutory.aggregate([
+      {
+        $lookup: {
+          from: 'PayrollUsers',
+          localField: 'payrollUser',
+          foreignField: '_id',
+          as: 'payrollUserDetails'
+        }
+      },
+      { $unwind: '$payrollUserDetails' },
+      {
+        $match: {
+          'payrollUserDetails.user': userId,
+          StautoryName: 'Provident Fund'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$amount' }
+        }
+      }
+    ]);
+    const result2 = await PayrollFNFStatutory.aggregate([
+      {
+        $lookup: {
+          from: 'PayrollFNFUsers',
+          localField: 'payrollFNFUser',
+          foreignField: '_id',
+          as: 'payrollUserDetails'
+        }
+      },
+      { $unwind: '$payrollUserDetails' },
+      {
+        $match: {
+          'payrollUserDetails.user': userId,
+          StautoryName: 'Provident Fund'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$amount' }
+        }
+      }
+    ]);
+    const total1 = result1[0]?.totalAmount || 0;
+    const total2 = result2[0]?.totalAmount || 0;
+    websocketHandler.sendLog(req, `✅ Total PF amount for user ${user}: ₹${total1}`, constants.LOG_TYPES.INFO);
 
-    return total;
+    return total1+total2;
   } catch (err) {
     websocketHandler.sendLog(req, `❌ Error calculating total PF amount for user ${user}: ${err.message}`, constants.LOG_TYPES.ERROR);
     return 0;
