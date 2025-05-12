@@ -56,6 +56,7 @@ const storeInPayrollStatutory = async ({
     websocketHandler.sendLog(req, `📌 Inserting Employee VPF Statutory record: ₹${employeeVPF}`, constants.LOG_TYPES.INFO);
 
     if (!existingEmployee) {
+      if (employeeLWF && employeeLWF > 0) { 
         data.push({
         payrollUser,
         fixedContribution: slabId,
@@ -66,11 +67,13 @@ const storeInPayrollStatutory = async ({
         year,
         company: companyId
       });
+    }
     } else {
       websocketHandler.sendLog(req, `⚠️ Skipped inserting Employee Statutory (LWF) - already exists`, constants.LOG_TYPES.WARN);
     }
 
   } else if (!existingEmployee) {
+    if (employeeLWF && employeeLWF > 0) { 
      data.push({
       payrollUser,
       fixedContribution: slabId,
@@ -81,11 +84,13 @@ const storeInPayrollStatutory = async ({
       year,
       company: companyId
     });
+  }
   } else {
       websocketHandler.sendLog(req, `⚠️ Skipped inserting Employee Statutory (LWF) - already exists`, constants.LOG_TYPES.WARN);
   }
 
   if (!existingEmployer) {
+    if (employerLWF && employerLWF > 0) { 
      data.push({
       payrollUser,
       fixedContribution: slabId,
@@ -96,6 +101,7 @@ const storeInPayrollStatutory = async ({
       year,
       company: companyId
     });
+  }
   } else {
      websocketHandler.sendLog(req, `⚠️ Skipped inserting Employer Statutory - already exists`, constants.LOG_TYPES.WARN);
   }
@@ -154,6 +160,7 @@ const storeInPayrollFNFStatutory = async ({
     });
     websocketHandler.sendLog(req, `📌 Inserting Employee VPF Statutory record: ₹${employeeVPF}`, constants.LOG_TYPES.INFO);
     if (!existingEmployee) {
+      if (employeeLWF && employeeLWF > 0) { 
         data.push({
         payrollFNFUser,
         fixedContribution: slabId,
@@ -164,11 +171,13 @@ const storeInPayrollFNFStatutory = async ({
         year,
         company: companyId
       });
+    }
     } else {
       websocketHandler.sendLog(req, `⚠️ Skipped inserting Employee Statutory (LWF) - already exists`, constants.LOG_TYPES.WARN);
     }
 
   } else if (!existingEmployee) {
+    if (employeeLWF && employeeLWF > 0) {
      data.push({
       payrollFNFUser,
       fixedContribution: slabId,
@@ -179,10 +188,12 @@ const storeInPayrollFNFStatutory = async ({
       year,
       company: companyId
     });
+  }
   } else {
       websocketHandler.sendLog(req, `⚠️ Skipped inserting Employee Statutory (LWF) - already exists`, constants.LOG_TYPES.WARN);
   }
   if (!existingEmployer) {
+    if (employerLWF && employerLWF > 0) {
      data.push({
       payrollFNFUser,
       fixedContribution: slabId,
@@ -193,6 +204,7 @@ const storeInPayrollFNFStatutory = async ({
       year,
       company: companyId
     });
+  }
   } else {
      websocketHandler.sendLog(req, `⚠️ Skipped inserting Employer Statutory - already exists`, constants.LOG_TYPES.WARN);
   }

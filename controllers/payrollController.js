@@ -2935,6 +2935,8 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
    req.user = payrollUser.user; // or payrollUser.user if nested  
    req.payrollUser = payrollUser._id;
    req.isFNF = false;
+
+   await payrollCalculationController.calculateProfessionalTax(req, res);
    // ✅ Call calculateLWF immediately after user creation
   await payrollCalculationController.calculateLWF(req, res);
 
@@ -4259,6 +4261,8 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   req.user = payrollFNFUsers.user; // or payrollUser.user if nested  
   req.payrollFNFUser = payrollFNFUsers._id;
   req.isFNF = true;
+  
+  await payrollCalculationController.calculateProfessionalTax(req, res);
    // ✅ Call calculateLWF immediately after user creation
   await payrollCalculationController.calculateLWF(req, res); 
 

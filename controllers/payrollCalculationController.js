@@ -4,6 +4,7 @@ const {
   isLwfApplicableThisMonth,       // Checks if LWF is applicable for the current month
   calculateLwfFromSlab          // Finds the correct LWF slab and calculates employee/employer contributions
 } = require('../Services/lwf.service');
+
 const {
   getTotalESICEligibleAmount,      // Calculates monthly LWF-eligible earnings (basic + allowances)
   isESICApplicable,       // Checks if LWF is applicable for the current month
@@ -24,6 +25,12 @@ const { storeInPayrollVariableAllowances,storeInPayrollVariableDeductions } = re
 
 const { getFNFDateRange  } = require('../Services/userDates.service');
 const { getTotalGratuityEligibleAmount , calculateGratuityFund  } = require('../Services/gratuity.service');
+// 👉 Import reusable service methods from the LWF service module
+const {
+  getTotalProfessionalTaxEligibleAmount,      // Calculates monthly LWF-eligible earnings (basic + allowances)
+  isProfessionalTaxApplicableThisMonth,       // Checks if LWF is applicable for the current month
+  calculateProfessionalTaxFromSlab          // Finds the correct LWF slab and calculates employee/employer contributions
+} = require('../Services/professional_tax.service');
 
 // 👉 Required models for fetching employee and salary-related data
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
@@ -111,7 +118,7 @@ const calculateLWF = async (req, res, next) => {
     if (isFNF) {
       websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
 
-      const { startDate, endDate } = await getFNFDateRange(userId);
+      const { startDate, endDate } = await getFNFDateRange(req,userId);
       const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
       const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
 
@@ -234,7 +241,7 @@ const calculateESIC = async (req, res, next) => {
     if (isFNF) {
       websocketHandler.sendLog(req, `📆 Calculating ESIC for FNF months`, constants.LOG_TYPES.INFO);
 
-      const { startDate, endDate } = await getFNFDateRange(userId);
+      const { startDate, endDate } = await getFNFDateRange(req,userId);
       const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
       const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
 
@@ -351,7 +358,7 @@ const processFNFProvidentFund = async (req, userId, companyId, contributionData,
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
-  const { startDate, endDate } = await getFNFDateRange(userId);
+  const { startDate, endDate } = await getFNFDateRange(req,userId);
   const workingDays = calculateDaysBetween(startDate, endDate);
   const totalDaysInMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
   const proportion = workingDays / totalDaysInMonth;
@@ -437,7 +444,7 @@ const StoreInPayrollVariableAllowances = async (req, res) => {
 
     if (isFNF) {
       const payrollFNFUserId = req.payrollFNFUser;
-      const { startDate, endDate } = await getFNFDateRange(userId);
+      const { startDate, endDate } = await getFNFDateRange(req,userId);
       websocketHandler.sendLog(req, `📆 FNF mode: Processing allowances for range ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
 
       await storeInPayrollVariableAllowances({
@@ -482,7 +489,7 @@ const StoreInPayrollVariableDeductions = async (req, res) => {
 
     if (isFNF) {
       const payrollFNFUserId = req.payrollFNFUser;
-      const { startDate, endDate } = await getFNFDateRange(userId);
+      const { startDate, endDate } = await getFNFDateRange(req,userId);
       websocketHandler.sendLog(req, `📆 FNF mode: Processing deductions for range ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
 
       await storeInPayrollVariableDeductions({
@@ -558,6 +565,125 @@ const calculateGratuity = async (req, res, next) => {
   }
 };
 
+const isProfessionalTaxEnabledForUser = async (userId, req) => {
+ 
+  const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
+   if (!statutoryDetails?.isEmployeeEligibleForPFDeduction) {
+    websocketHandler.sendLog(req, `ℹ️ PT is not enabled in statutory settings for user`, constants.LOG_TYPES.INFO);
+    return false;
+  }
+
+  const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+   if (!salaryDetails) {
+    websocketHandler.sendLog(req, `❌ Employee salary details not found`, constants.LOG_TYPES.ERROR);
+    return false;
+  }
+
+  const taxSettings = await EmployeeSalaryTaxAndStatutorySetting.findOne({ employeeSalaryDetails: salaryDetails._id });
+  if (!taxSettings?.isPTDeduction) {
+    websocketHandler.sendLog(req, `ℹ️ PT deduction is disabled in tax settings`, constants.LOG_TYPES.INFO);
+    return false;
+  }
+
+  websocketHandler.sendLog(req, `✅ PT deduction is enabled for user`, constants.LOG_TYPES.INFO);
+  return true;
+};
+
+const processProfessionalTaxForMonth = async ({ req, userId,companyId, salaryDetails, model, modelData,month,year }) => {
+  
+  const totalEligibleAmount = await getTotalProfessionalTaxEligibleAmount(req, salaryDetails);
+ 
+  const applicable = await isProfessionalTaxApplicableThisMonth(req, companyId, totalEligibleAmount, month, year);
+ 
+  if (!applicable.status) {
+    websocketHandler.sendLog(req, `⚠️ PT not applicable for ${month + 1}/${year}`, constants.LOG_TYPES.INFO);
+    return;
+  }
+  try {
+      await model({
+      req,
+      ...modelData,
+      companyId,
+      employeeLWF: applicable.slab.employeeAmount,
+      employerLWF: 0,
+      slabId: applicable.slab._id,
+      month,
+      year,
+      StautoryName: "Professional Tax"
+    });
+   } catch (error) {
+    websocketHandler.sendLog(req, `❌ Failed to save Professional Tax: ${error.message}`, constants.LOG_TYPES.ERROR);
+  }
+  
+  websocketHandler.sendLog(req, `✅ PT processed for ${month + 1}/${year}`, constants.LOG_TYPES.INFO);
+};
+
+const calculateProfessionalTax = async (req, res, next) => {
+  try {
+    const userId = req.user;
+    const companyId = req.cookies.companyId;
+    const isFNF = req.isFNF;
+
+    websocketHandler.sendLog(req, '🔄 Starting Professional Tax calculation...', constants.LOG_TYPES.INFO);
+
+    const enabled = await isProfessionalTaxEnabledForUser(userId, req);
+    if (!enabled) {
+      websocketHandler.sendLog(req, '🚫 PT not applicable for this user', constants.LOG_TYPES.WARN);
+      return;
+    }
+
+    const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+     if (!salaryDetails) {
+      websocketHandler.sendLog(req, '❌ Salary details not found', constants.LOG_TYPES.ERROR);
+      return;
+    }
+
+    if (isFNF) {
+      websocketHandler.sendLog(req, `📆 Calculating PT for FNF months`, constants.LOG_TYPES.INFO);
+      const { startDate, endDate } = await getFNFDateRange(req,userId);
+      const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
+      const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
+
+      for (let year = startYear; year <= endYear; year++) {
+        const fromMonth = year === startYear ? startMonth : 0;
+        const toMonth = year === endYear ? endMonth : 11;
+
+        for (let m = fromMonth; m <= toMonth; m++) {
+          await processProfessionalTaxForMonth({
+            req,
+            userId,
+            companyId,
+            salaryDetails,
+            model: storeInPayrollFNFStatutory,
+            modelData: { payrollFNFUser: req.payrollFNFUser },
+            month: m,
+            year
+          });
+        }
+      }
+    } else {
+      const now = new Date();
+      websocketHandler.sendLog(req, `📆 Calculating PT for current month`, constants.LOG_TYPES.INFO);
+ 
+      await processProfessionalTaxForMonth({
+        req,
+        userId,
+        companyId,
+        salaryDetails,
+        model: storeInPayrollStatutory,
+        modelData: { payrollUser: req.payrollUser },
+        month: now.getMonth(),
+        year: now.getFullYear()
+      });
+    }
+
+    websocketHandler.sendLog(req, `✅ PT calculation complete`, constants.LOG_TYPES.SUCCESS);
+  } catch (err) {
+    const errorMsg = `❌ PT calculation failed: ${err.message}`;
+    websocketHandler.sendLog(req, errorMsg, constants.LOG_TYPES.ERROR);
+   }
+};
+
 
 module.exports = {
   calculateLWF,
@@ -565,6 +691,7 @@ module.exports = {
   calculatePF,
   calculateGratuity,
   StoreInPayrollVariableAllowances,
-  StoreInPayrollVariableDeductions
+  StoreInPayrollVariableDeductions,
+  calculateProfessionalTax
   // Add more exports here if you build additional payroll stat functions
 };
