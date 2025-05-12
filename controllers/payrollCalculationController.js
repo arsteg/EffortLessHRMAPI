@@ -102,7 +102,7 @@ const calculateLWF = async (req, res, next) => {
     const isFNF = req.isFNF;
 
     websocketHandler.sendLog(req, '🔄 Starting LWF calculation...', constants.LOG_TYPES.INFO);
-
+  
     // Step 1: Check if LWF is enabled for user
     const enabled = await isLwfEnabledForUser(userId, req);
     if (!enabled) {
@@ -112,13 +112,15 @@ const calculateLWF = async (req, res, next) => {
 
     // Step 2: Fetch salary details
     const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+   
     const totalLwfEligibleAmount = await getTotalLwfEligibleAmount(req, salaryDetails);
-
+ 
     // Step 3: Handle FNF case (multiple months)
     if (isFNF) {
       websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
-
-      const { startDate, endDate } = await getFNFDateRange(req,userId);
+   
+      const { startDate, endDate } = await getFNFDateRange(req, userId);
+   
       const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
       const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
 
@@ -127,30 +129,39 @@ const calculateLWF = async (req, res, next) => {
         const toMonth = year === endYear ? endMonth : 11;
 
         for (let m = fromMonth; m <= toMonth; m++) {
-          await processLwfForMonth({
-            req,
-            companyId,
-            userId,
-            amount: totalLwfEligibleAmount,
-            month: m,
-            year,
-            model: storeInPayrollFNFStatutory,
-            modelData: { payrollFNFUser: req.payrollFNFUser }
-          });
+          try {
+            await processLwfForMonth({
+              req,
+              companyId,
+              userId,
+              amount: totalLwfEligibleAmount,
+              month: m,
+              year,
+              model: storeInPayrollFNFStatutory,
+              modelData: { payrollFNFUser: req.payrollFNFUser }
+            });
+          } catch (err) {
+            const errorMsg = `❌ Failed to process LWF for month ${m + 1}/${year}: ${err.message}`;
+            websocketHandler.sendLog(req, errorMsg, constants.LOG_TYPES.ERROR);
+          }
+          
         }
       }
     } else {
       // Step 4: Handle regular payroll LWF
       const now = new Date();
-      websocketHandler.sendLog(req, `📆 Processing LWF for current month`, constants.LOG_TYPES.INFO);
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
 
+      websocketHandler.sendLog(req, `📆 Processing LWF for current month`, constants.LOG_TYPES.INFO);
+ 
       await processLwfForMonth({
         req,
         companyId,
         userId,
         amount: totalLwfEligibleAmount,
-        month: now.getMonth(),
-        year: now.getFullYear(),
+        month: currentMonth,
+        year: currentYear,
         model: storeInPayrollStatutory,
         modelData: { payrollUser: req.payrollUser }
       });
@@ -159,8 +170,9 @@ const calculateLWF = async (req, res, next) => {
     websocketHandler.sendLog(req, `✅ LWF calculation completed successfully`, constants.LOG_TYPES.SUCCESS);
 
   } catch (err) {
-    websocketHandler.sendLog(req, `❌ LWF calculation failed: ${err.message}`, constants.LOG_TYPES.ERROR);
-  }
+    const errorMessage = `❌ LWF calculation failed: ${err.message}`;
+    websocketHandler.sendLog(req, errorMessage, constants.LOG_TYPES.ERROR);
+   }
 };
 
 

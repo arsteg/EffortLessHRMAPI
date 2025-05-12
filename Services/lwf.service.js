@@ -37,7 +37,6 @@ const getTotalLwfEligibleAmount = async (req, salaryDetails) => {
   }
 
   websocketHandler.sendLog(req, `✅ Total LWF Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
-  console.log(`✅ Total LWF Eligible Amount: ${total}`);
   return total;
 };
 
@@ -45,21 +44,27 @@ const getTotalLwfEligibleAmount = async (req, salaryDetails) => {
  * Checks whether LWF is applicable for the current month for a company.
  */
 const isLwfApplicableThisMonth = async (req, companyId, month = null, year = null) => {
-  const deductionMonth = await LWFFixedDeductionMonth.findOne({ company: companyId });
+  const deductionMonths = await LWFFixedDeductionMonth.find({ company: companyId, processMonth: true });
 
-  if (!deductionMonth) {
-    const msg = '⚠️ LWF deduction month not configured';
+  if (!deductionMonths || deductionMonths.length === 0) {
+    const msg = '⚠️ No LWF deduction months configured with processMonth = true';
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.WARN);
     return { status: false, message: msg };
   }
 
   const now = new Date();
-  const currentMonth = month !== null ? month : now.getMonth(); // Allow override
-  const currentYear = year !== null ? year : now.getFullYear(); // Allow override
-  const applicableMonth = deductionMonth.processMonth ? deductionMonth.month : now.getMonth();
+  const currentMonth = month !== null ? month : now.getMonth(); // 0 = Jan
+  const currentYear = year !== null ? year : now.getFullYear();
   const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
 
-  if (applicableMonth !== currentMonth) {
+ 
+  // Convert string month names to month index
+  const matchingMonth = deductionMonths.find(entry => {
+    const monthIndex = new Date(`${entry.paymentMonth} 1, 2000`).getMonth(); // static year
+    return monthIndex === currentMonth;
+  });
+
+  if (!matchingMonth) {
     const msg = `📅 LWF not applicable this month (${monthName})`;
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.DEBUG);
     return { status: false, message: msg };
@@ -69,6 +74,8 @@ const isLwfApplicableThisMonth = async (req, companyId, month = null, year = nul
   websocketHandler.sendLog(req, msg, constants.LOG_TYPES.INFO);
   return { status: true, month: currentMonth, year: currentYear };
 };
+
+
 
 /**
  * Finds a matching LWF slab and calculates employee/employer contributions based on eligible amount.
