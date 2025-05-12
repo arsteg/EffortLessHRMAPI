@@ -69,7 +69,6 @@ const scheduleController = require('../controllers/ScheduleController');
 const {  getFNFDateRange} = require('../Services/userDates.service');
 const {  getTotalPFAmount} = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
-const AttendanceRecords = require('../models/attendance/attendanceRecords.js')
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
