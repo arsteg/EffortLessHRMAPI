@@ -44,7 +44,7 @@ const getTotalLwfEligibleAmount = async (req, salaryDetails) => {
 /**
  * Checks whether LWF is applicable for the current month for a company.
  */
-const isLwfApplicableThisMonth = async (req, companyId) => {
+const isLwfApplicableThisMonth = async (req, companyId, month = null, year = null) => {
   const deductionMonth = await LWFFixedDeductionMonth.findOne({ company: companyId });
 
   if (!deductionMonth) {
@@ -54,10 +54,10 @@ const isLwfApplicableThisMonth = async (req, companyId) => {
   }
 
   const now = new Date();
-  const currentMonth = now.getMonth(); // 0 = January
-  const currentYear = now.getFullYear();
-  const applicableMonth = deductionMonth.processMonth ? deductionMonth.month : currentMonth;
-  const monthName = now.toLocaleString('default', { month: 'long' });
+  const currentMonth = month !== null ? month : now.getMonth(); // Allow override
+  const currentYear = year !== null ? year : now.getFullYear(); // Allow override
+  const applicableMonth = deductionMonth.processMonth ? deductionMonth.month : now.getMonth();
+  const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
 
   if (applicableMonth !== currentMonth) {
     const msg = `📅 LWF not applicable this month (${monthName})`;
@@ -81,7 +81,7 @@ const calculateLwfFromSlab = async (req, companyId, totalEligibleAmount) => {
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.ERROR);
     throw new Error(msg);
   }
-
+ 
   websocketHandler.sendLog(req, `📥 Loaded ${slabs.length} LWF slab(s)`, constants.LOG_TYPES.DEBUG);
 
   // Match slab based on totalEligibleAmount falling within min/max range
@@ -93,7 +93,7 @@ const calculateLwfFromSlab = async (req, companyId, totalEligibleAmount) => {
     if (minAmount === 0 && maxAmount > 0) return totalEligibleAmount <= maxAmount;
     return totalEligibleAmount >= minAmount && totalEligibleAmount <= maxAmount;
   });
-
+ 
   if (!matchedSlab) {
     const msg = `❌ No LWF slab matched for eligible amount: ${totalEligibleAmount}`;
     websocketHandler.sendLog(req, msg, constants.LOG_TYPES.WARN);
@@ -114,8 +114,8 @@ const calculateLwfFromSlab = async (req, companyId, totalEligibleAmount) => {
 
   let employeeLWF = 0;
   let employerLWF = 0;
-
-  // Use fixed amounts if available
+  
+   // Use fixed amounts if available
   if (employeeAmount > 0 && employerAmount > 0) {
     employeeLWF = employeeAmount;
     employerLWF = employerAmount;

@@ -22,12 +22,19 @@ const payrollFNFLoanAdvanceSchema = new Schema({
   },
   fnfClearanceStatus: {
     type: String,
-    enum: ['Pending', 'Cleared', 'Partially Cleared'],
-    default: 'Pending',  // FNF clearance status: pending, cleared, partially cleared
-  },
-  fnfDate: {
-    type: Date,  // Date when FNF settlement occurred
-  },
+    enum: ['Cleared', 'Partially Cleared'],
+    default: 'Cleared',  // FNF clearance status: pending, cleared, partially cleared
+  }
 }, { collection: 'PayrollFNFLoanAdvance' });
-
+payrollFNFLoanAdvanceSchema.pre(/^find/, async function(next) {
+  try {
+    this.populate({
+      path: 'loanAndAdvance',
+      select: '_id'
+    });
+  } catch (error) {
+    console.error("Error populating loan and advance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('PayrollFNFLoanAdvance', payrollFNFLoanAdvanceSchema);

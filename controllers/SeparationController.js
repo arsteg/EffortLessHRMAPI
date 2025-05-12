@@ -14,7 +14,7 @@ const Termination = require('../models/Separation/Termination');
 const TerminationAppeal = require('../models/Separation/TerminationAppeal');
 const mongoose = require('mongoose');
 const  websocketHandler  = require('../utils/websocketHandler');
-
+const { getFNFDateRange  } = require('../Services/userDates.service');
 exports.addResignation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addResignation execution', constants.LOG_TYPES.TRACE);
 
@@ -185,6 +185,31 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   });
  });
 
+ exports.getFNFDateRangeByUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
+
+  // 🔍 Check if userId is provided
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ FNF Date Range: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError('User ID missing', 400));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Fetching FNF date range for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  // 🗓️ Get FNF date range
+  const { startDate, endDate } = await getFNFDateRange(userId);
+
+  websocketHandler.sendLog(
+    req,
+    `✅ FNF Date Range fetched for user ${userId}: Start - ${startDate.toDateString()}, End - ${endDate.toDateString()}`,
+    constants.LOG_TYPES.INFO
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: { startDate, endDate }
+  });
+});
 
 // Add a new termination record
 exports.addTermination = catchAsync(async (req, res, next) => {

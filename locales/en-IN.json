@@ -663,7 +663,14 @@
     "ErrorCancellingOTP": "An error occurred while cancelling the OTP.",
     "OTPCancelledSuccessfully.": "The OTP was cancelled successfully.",
     "ErrorVerifyingOTP": "An error occurred while verifying the OTP.",
-    "otpVerifiedSuccessfully": "The OTP was verified successfully."
+    "otpVerifiedSuccessfully": "The OTP was verified successfully.",
+    "userNotFound": "User not found in the system.",
+    "noPayrollOrAttendanceRecord": "No payroll or attendance record found for this user.",
+    "terminationDateNotFound": "Termination date not found for user.",
+    "lastWorkingDateNotFound": "Last working date not found for user.",
+    "fnfDateRangeCalculated": "FNF date range calculated successfully.",
+    "errorRetrievingData": "Error retrieving data, please try again later.",
+    "missingUserId": "User ID missing in the request."
   },
   "userPreferences": {
     "categoryNotFound": "The preference category was not found.",

@@ -63,7 +63,12 @@ const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 const payrollCalculationController = require('../controllers/payrollCalculationController');
 const OvertimeInformation = require('../models/attendance/overtimeInformation');
-const Termination = require('../models/Separation/Termination.js');
+const AttendanceRecords = require('../models/attendance/attendanceRecords');
+const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+const scheduleController = require('../controllers/ScheduleController');
+const {  getFNFDateRange} = require('../Services/userDates.service');
+const {  getTotalPFAmount} = require('../Services/provident_fund.service');
+const LOP = require('../models/attendance/lop.js');
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -2296,7 +2301,10 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
 }
 
 async function deleteCTCFixedDeduction(ctcTemplateId) {
-  await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);
+  await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
+}
+async function deleteCTCEmployeeDeduction(ctcTemplateId) {
+  await CTCTemplateEmployeeDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
 }
 
 async function updateOrCreateEmployerContribution(
@@ -2348,6 +2356,9 @@ async function updateOrCreateEmployerContribution(
   return finalCategories;
 }
 
+async function deleteCTCEmployerContribution(ctcTemplateId) {
+  await CTCTemplateEmployerContribution.deleteMany({ ctcTemplate: ctcTemplateId });
+}
 async function updateOrOtherBenefitsAllowance(
   ctcTemplateId,
   updatedCategories
@@ -2680,7 +2691,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       req.body.ctcTemplateFixedDeduction
     );
   } else {
-    const ctcTemplateObjectId = new ObjectId(req.params.id);
+   
     await deleteCTCFixedDeduction(req.params.id);
   }
   if (ctcTemplateEmployerContribution.length > 0) {
@@ -2702,6 +2713,9 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         req.body.ctcTemplateEmployerContribution
       );
   }
+ else {
+  await deleteCTCEmployerContribution(req.params.id);
+}
   if (ctcTemplateOtherBenefitAllowance.length > 0) {
     for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {
       const result = await OtherBenefits.findById(otherBenefit.otherBenefit);
@@ -2737,6 +2751,9 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         req.body.ctcTemplateEmployeeDeduction
       );
   }
+  else {
+    await deleteCTCEmployeeDeduction(req.params.id);
+  }
   if (ctcTemplateVariableAllowance.length > 0) {
     for (const allowance of ctcTemplateVariableAllowance) {
       const result = await VariableAllowance.findById(
@@ -2770,7 +2787,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
-    ctcTemplate.ctcTemplateVariableDeductions =
+      ctcTemplate.ctcTemplateVariableDeductions =
       await updateOrCreateVariableDeduction(
         req.params.id,
         ctcTemplateVariableDeduction
@@ -2917,16 +2934,18 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
    // Attach created payroll user to req for use in LWF
    req.user = payrollUser.user; // or payrollUser.user if nested  
    req.payrollUser = payrollUser._id;
-
+   req.isFNF = false;
    // ✅ Call calculateLWF immediately after user creation
-   await payrollCalculationController.calculateLWF(req, res); 
+  await payrollCalculationController.calculateLWF(req, res);
 
    // ✅ Call calculatePF immediately after user creation
-   await payrollCalculationController.calculatePF(req, res); 
+   await payrollCalculationController.calculatePF(req, res);
   
    // ✅ Call calculateESIC immediately after user creation
-   await payrollCalculationController.calculateESIC(req, res); 
-   
+   await payrollCalculationController.calculateESIC(req, res);
+      // ✅ Call calculateESIC immediately after user creation
+   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
    res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
@@ -4235,7 +4254,21 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   req.body.status = constants.Payroll_User_FNF.Pending;
+
   const payrollFNFUsers = await PayrollFNFUsers.create(req.body);
+  req.user = payrollFNFUsers.user; // or payrollUser.user if nested  
+  req.payrollFNFUser = payrollFNFUsers._id;
+  req.isFNF = true;
+   // ✅ Call calculateLWF immediately after user creation
+  await payrollCalculationController.calculateLWF(req, res); 
+
+   // ✅ Call calculatePF immediately after user creation
+  await payrollCalculationController.calculatePF(req, res); 
+  
+   // ✅ Call calculateESIC immediately after user creation
+   await payrollCalculationController.calculateESIC(req, res);  
+   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
@@ -4329,23 +4362,12 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
   if (!payrollFNFUsers || !payrollFNFUsers.user) {
     return next(new AppError('PayrollFNFUser or associated user not found', 404));
   }
+  const userId = payrollFNFUsers.user._id;
   // Get PayrollFNF details
   const payrollFNF = await PayrollFNF.findById(payrollFNFId);
   if (!payrollFNF) {
     return next(new AppError('PayrollFNF not found', 404));
   }
-
-  const payrollUser = await PayrollUsers.find({ user: payrollFNFUsers.user._id })
-    .sort({ createdAt: -1 })
-    .limit(1)
-    .populate('payroll');
-
-  if (!payrollUser.length || !payrollUser[0].payroll) {
-    return next(new AppError('No payroll record found for this user', 404));
-  }
-
-  const payrollById = payrollUser[0].payroll;
-  const payrollDate = new Date(payrollById.date);
 
   // Check user status
   const validStatuses = ['Terminated', 'Settled'];
@@ -4357,22 +4379,16 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
       OverTimeHours: 0,
     });
   }
-
-  const terminationRecord = await Termination.findOne({ user: payrollFNFUsers.user._id });
-  if (!terminationRecord || !terminationRecord.termination_date) {
-    return next(new AppError('Termination date not found for user', 404));
-  }
-
-  const terminationDate = new Date(terminationRecord.termination_date);
-  const diffTime = Math.abs(terminationDate - payrollDate);
+  
+  const { startDate, endDate } = await getFNFDateRange(userId);
+  const diffTime = Math.abs(endDate - startDate);
   const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  // Fetch overtime records between last payroll and termination
+   // Fetch overtime records between last payroll and termination
   const overtimeRecords = await OvertimeInformation.find({
-    User: payrollFNFUsers.user._id,
+    User: userId,
     CheckInDate: {
-      $gte: payrollDate,
-      $lte: terminationDate
+      $gte: startDate,
+      $lte: endDate
     }
   });
 
@@ -4383,15 +4399,47 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
     return sum + (isNaN(hours) ? 0 : hours);
   }, 0);
 
-  // Add login for LOP days calculations
-  
+  // Add logic for LOP days calculations
+  const lopRecords = await LOP.find({
+    user: userId,
+    date: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  });
 
+  const lopDaysCount = lopRecords.length;
+ 
+  const attendanceRecords = await AttendanceRecords.find({
+    user: userId,
+    date: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  });
+
+  const payableDays = attendanceRecords.length;
+    const cycle = await scheduleController.createFiscalCycle();
+    const leaveBalances = await LeaveAssigned.find({
+      cycle: cycle,
+      employee: userId
+    });
+  
+    let leaveRemaining = 0;
+    
+    if (leaveBalances.length > 0) {
+      // Assuming you want the `leaveRemaining` from the first record
+      leaveRemaining = leaveBalances[0].leaveRemaining || 0;
+    }   
+    
   // Return result
   const result = {
     OvertimeHours: totalOvertimeHours / 60,
-    TotalDays: totalDays
+    TotalDays: totalDays,
+    lopDays:lopDaysCount,
+    payableDays:payableDays,
+    leaveBalance:leaveRemaining
   };
-
   return res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: result,
@@ -4726,7 +4774,7 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
 
 // Add a Payroll FNF Loan Advance
 exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
-  const { payrollFNFUser, loanAndAdvance, amount } = req.body;
+  const { payrollFNFUser, loanAndAdvance, LoanAdvanceAmount } = req.body;
 
   // Step 1: Validate FNF User
   const fnfUser = await PayrollFNFUsers.findById(payrollFNFUser);
@@ -4741,6 +4789,9 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   // Step 3: Validate remaining installment
+  if (employeeLoan.remainingInstallment <= 0 || employeeLoan.status===constants.Employee_Loan_Advance_status.Cleared) {
+    return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
+  }
   if (employeeLoan.remainingInstallment <= 0) {
     return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
   }
@@ -4764,7 +4815,23 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
     }
   ]);
 
-  const totalPaid = (totalPreviousRepayment[0]?.totalPaid || 0) + amount;
+  // Step 5: Calculate total paid so far
+  const totalFNFPreviousRepayment = await PayrollFNFLoanAdvance.aggregate([
+    {
+      $match: {
+        loanAndAdvance: employeeLoan._id,
+        type: constants.Payroll_FNF_Loan_Advance_status.Partially_Cleared
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPaid: { $sum: '$amount' }
+      }
+    }
+  ]);
+ 
+  const totalPaid = (totalPreviousRepayment[0]?.totalPaid || 0 ) + (totalFNFPreviousRepayment[0]?.totalPaid || 0) + LoanAdvanceAmount;
 
   // Step 6: Compare and update loan status
   if (totalPaid >= employeeLoan.amount) {
@@ -5379,3 +5446,47 @@ exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next)
   });
 });
 
+
+// Update Resignation only if status is "pending"
+// ✅ Get total PF amount for a user
+exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
+  
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ PF: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError('User ID missing', 400));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Fetching total PF amount for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const total = await getTotalPFAmount(userId);
+
+  websocketHandler.sendLog(req, `✅ PF total amount retrieved: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});
+
+// ✅ Get total Gratuity amount for a user
+exports.getTotalGratuityAmountByUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError('User ID missing', 400));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting Gratuity calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object for downstream logic
+  const total = await payrollCalculationController.calculateGratuity(req);
+
+  websocketHandler.sendLog(req, `✅ Gratuity calculated for user: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});

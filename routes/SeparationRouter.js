@@ -214,6 +214,30 @@ router.put('/resignations/:id', authController.protect, separationController.upd
  *         description: Internal server error
  */
 router.patch('/resignations-by-status/:id', authController.protect, separationController.changeResignationStatus);
+/**
+ * @swagger
+ * /api/v1/separation/fnf-date-range-by-user/{userId}:
+ *   get:
+ *     summary: Get FNF Date Range  by user ID
+ *     tags: [Separation Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with FNF Date Range details
+ *       404:
+ *         description: FNF Date Range not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/fnf-date-range-by-user/:userId', authController.protect, separationController.getFNFDateRangeByUser);
 
 /**
  * @swagger

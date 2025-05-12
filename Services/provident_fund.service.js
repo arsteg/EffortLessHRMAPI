@@ -5,6 +5,9 @@ const VariableAllowance = require('../models/Payroll/variableAllowanceModel');
 const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
 
+var mongoose = require('mongoose');
+const PayrollFNFStatutory = require('../models/Payroll/PayrollFNFStatutory');
+const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 /**
  * Calculates the total Provident Fund (PF) eligible salary amount.
  * Includes basic salary and all PF-affected fixed and variable allowances.
@@ -96,8 +99,51 @@ const calculatePFFromCeilingLmit = async (
   };
 };
 
+/**
+ * Calculates the total Provident Fund (PF) eligible salary amount.
+ * Includes basic salary and all PF-affected fixed and variable allowances.
+ */
+const getTotalPFAmount = async (req, user) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(user); // ensure it's ObjectId
+    websocketHandler.sendLog(req, `🔍 Starting PF total aggregation for user: ${user}`, constants.LOG_TYPES.INFO);
+
+    const result = await PayrollStatutory.aggregate([
+      {
+        $lookup: {
+          from: 'PayrollUsers',
+          localField: 'payrollUser',
+          foreignField: '_id',
+          as: 'payrollUserDetails'
+        }
+      },
+      { $unwind: '$payrollUserDetails' },
+      {
+        $match: {
+          'payrollUserDetails.user': userId,
+          StautoryName: 'Provident Fund'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$amount' }
+        }
+      }
+    ]);
+
+    const total = result[0]?.totalAmount || 0;
+    websocketHandler.sendLog(req, `✅ Total PF amount for user ${user}: ₹${total}`, constants.LOG_TYPES.INFO);
+
+    return total;
+  } catch (err) {
+    websocketHandler.sendLog(req, `❌ Error calculating total PF amount for user ${user}: ${err.message}`, constants.LOG_TYPES.ERROR);
+    return 0;
+  }
+};
 
 module.exports = {
   getTotalPFEligibleAmount,
-  calculatePFFromCeilingLmit
+  calculatePFFromCeilingLmit,
+  getTotalPFAmount
 };

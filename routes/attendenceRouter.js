@@ -1395,7 +1395,7 @@ attendanceRouter.delete('/attendanceRegularizationRestrictedLocations/:id',authC
  *               employee:
  *                 type: string
  *                 required: true
- *               attandanceTemplate:
+ *               attendanceTemplate:
  *                 type: string
  *                 required: true
  *               effectiveFrom:

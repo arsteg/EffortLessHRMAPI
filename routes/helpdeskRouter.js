@@ -93,8 +93,6 @@ helpdeskRouter.get('/company', authController.protect, helpdeskController.getAll
  *         description: Successful response with expense categories
  *       400:
  *         description: Missing company ID
- *       400:
- *         description: Missing user ID
  *       500:
  *         description: Internal server error
  */

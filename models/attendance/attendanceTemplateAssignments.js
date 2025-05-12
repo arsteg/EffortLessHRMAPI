@@ -6,7 +6,7 @@ const attendanceTemplateAssignmentsSchema = new Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
   },
-  attandanceTemplate: {
+  attendanceTemplate: {
     type: mongoose.Schema.ObjectId,
     ref: 'AttendanceTemplate',
   },

@@ -9,7 +9,7 @@ const websocketHandler = require('../utils/websocketHandler');
 
 assignLeavesByJobs = async (req, res, next) => { 
     websocketHandler.sendLog(req, 'Starting leave assignment process', constants.LOG_TYPES.INFO);
-    
+   
     const users = await User.find({}); 
     websocketHandler.sendLog(req, `Found ${users.length} users to process`, constants.LOG_TYPES.DEBUG);
     
@@ -241,7 +241,6 @@ const createFiscalCycle = async () => {
     const startMonth = "JANUARY";
     const endMonth = "DECEMBER";
     const cycle = `${startMonth}_${startYear}-${endMonth}_${startYear}`;
-    websocketHandler.sendLog(null, `Created fiscal cycle: ${cycle}`, constants.LOG_TYPES.DEBUG);
     return cycle;
 };
 

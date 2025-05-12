@@ -62,7 +62,10 @@ exports.logUserAction = catchAsync(async (req, action, next) => {
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Fetching all users', constants.LOG_TYPES.TRACE);
-  let filter = { status: "Active", company: req.cookies.companyId };
+  let filter = { 
+    status: { $ne: 'Deleted' }, 
+    company: req.cookies.companyId 
+  };
   websocketHandler.sendLog(req, `Applying filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
   const features = new APIFeatures(User.find(filter), req.query)

@@ -7,8 +7,8 @@ const lopSchema = new mongoose.Schema({
         required: true,
     },
     date: {
-        type: String,
-        required: true,
+        type: Date,
+        required: true
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,

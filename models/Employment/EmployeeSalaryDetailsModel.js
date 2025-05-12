@@ -24,6 +24,7 @@ const employeeSalaryDetailsSchema = new Schema({
   },
   isEmployerPartInclusiveInSalaryStructure: {
     type: Boolean,
+    default: true,
     required: true
   },
   enteringAmount: {

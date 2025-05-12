@@ -54,7 +54,7 @@ const employeeSalutatoryDetailsSchema = new Schema({
   isIncomeTaxDeducted: {
     type: Boolean,
     default: false
-  },
+  },  
   isGratuityEligible: {
     type: Boolean,
     default: false

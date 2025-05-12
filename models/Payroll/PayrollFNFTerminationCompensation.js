@@ -19,18 +19,10 @@ var payrollFNFTerminationCompensationSchema = new Schema({
       type: Number,
       required: true
     },
-    gratuityEligible: {
-      type: Number,
-      required: false
-    },
     yearsOfService: {
       type: Number,
       required: false
     },
-    gratuityAmount: {
-      type: Number,
-      required: false
-    },  
     severancePay: {
         type: Number,
         required: false
