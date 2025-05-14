@@ -20,6 +20,11 @@ const {
   storeInPayrollFNFStatutory
          // Stores the calculated LWF in the database, skipping duplicates
 } = require('../Services/statutory.service');
+const {        
+  calculateIncomeTax,       // Checks if LWF is applicable for the current month
+  getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
+  GetTDSAppicableAmountAfterDeclartion
+} = require('../Services/tds.service');
 
 const { storeInPayrollVariableAllowances,storeInPayrollVariableDeductions } = require('../Services/variable_pay.service');
 
@@ -28,8 +33,7 @@ const { getTotalGratuityEligibleAmount , calculateGratuityFund  } = require('../
 // 👉 Import reusable service methods from the LWF service module
 const {
   getTotalProfessionalTaxEligibleAmount,      // Calculates monthly LWF-eligible earnings (basic + allowances)
-  isProfessionalTaxApplicableThisMonth,       // Checks if LWF is applicable for the current month
-  calculateProfessionalTaxFromSlab          // Finds the correct LWF slab and calculates employee/employer contributions
+  isProfessionalTaxApplicableThisMonth       // Checks if LWF is applicable for the current month
 } = require('../Services/professional_tax.service');
 
 // 👉 Required models for fetching employee and salary-related data
@@ -37,10 +41,12 @@ const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutato
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const EmployeeSalaryTaxAndStatutorySetting = require("../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js");
 
+const UserEmployment = require("../models/Employment/UserEmploymentModel");
 const User = require('../models/permissions/userModel');
 // 👉 Utilities and constants
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
+
 const isLwfEnabledForUser = async (userId, req) => {
   // Check if statutory settings allow LWF deduction from payslip
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
@@ -174,7 +180,6 @@ const calculateLWF = async (req, res, next) => {
     websocketHandler.sendLog(req, errorMessage, constants.LOG_TYPES.ERROR);
    }
 };
-
 
 const isESICEnabledForUser = async (userId, req) => {
   // Step 1: Check if ESIC deduction is enabled in statutory settings
@@ -697,6 +702,142 @@ const calculateProfessionalTax = async (req, res, next) => {
 };
 
 
+// 🔄 Entry point for full PF calculation
+const calculateTDS = async (req, res) => {
+  try {
+    const userId = req.user;
+    const companyId = req.cookies.companyId;
+    websocketHandler.sendLog(req, '🔄 Starting Provident Fund calculation...', constants.LOG_TYPES.INFO);
+
+    // 1️⃣ Check statutory eligibility
+    const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
+
+    if (!statutoryDetails?.isIncomeTaxDeducted) {
+      websocketHandler.sendLog(req, `ℹ️ LWF is not enabled in statutory settings for user`, constants.LOG_TYPES.INFO);
+      return;
+    }
+
+    // 2️⃣ Check salary details
+    const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+
+    if (!salaryDetails) {
+      websocketHandler.sendLog(req, `❌ Employee salary details not found`, constants.LOG_TYPES.ERROR);
+      return;
+    }
+
+    // 3️⃣ Check tax settings
+    const taxSettings = await EmployeeSalaryTaxAndStatutorySetting.findOne({ employeeSalaryDetails: salaryDetails._id });
+
+    if (!taxSettings?.isIncomeTaxDeduction) {
+      websocketHandler.sendLog(req, `ℹ️ LWF deduction is disabled in tax settings`, constants.LOG_TYPES.INFO);
+      return;
+    }
+
+    // 4️⃣ Calculate eligible salary amount
+    let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
+    const userEmployment = await UserEmployment.findOne({ user: userId });
+      if (!userEmployment) {
+        websocketHandler.sendLog(req, `No employment record found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
+        return next(new AppError(req.t('user.noEmploymentFound')
+    
+        , 404));
+      }
+
+     let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
+    websocketHandler.sendLog(req, `✅ PF eligible amount: ₹${totalTDSAppicableAmount}`, constants.LOG_TYPES.DEBUG);
+
+    // 5️⃣ Calculate applicable amount after declaration if old regime
+    //let totalTDSAppicableAmount = totalPfEligibleAmount;
+
+    if (statutoryDetails?.taxRegime === "Old Regime") {
+      const financialYear = generateFinancialYearString();;
+      const hraReceived = 120000; // Replace with dynamic value if needed
+
+      totalDecalaredAmount = await GetTDSAppicableAmountAfterDeclartion(
+        req,
+        userId,
+        companyId,
+        financialYear,
+        totalTDSAppicableAmount,
+        hraReceived
+      );
+
+
+      totalTDSAppicableAmount = totalTDSAppicableAmount-totalDecalaredAmount.totalDeduction;
+  
+    }
+      // 6️⃣ Calculate final TDS using slab
+    const contributionData = await calculateIncomeTax(
+      req,
+      companyId,
+      totalTDSAppicableAmount,
+      statutoryDetails?.taxRegime
+    );
+
+     websocketHandler.sendLog(req, '✅ Provident Fund contributions saved successfully', constants.LOG_TYPES.SUCCESS);
+     let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
+   
+    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime,days:daysinPayrollCycle };
+
+
+  } catch (err) {
+    console.error("❌ Error in calculateTDS:", err);
+    websocketHandler.sendLog(req, `❌ PF calculation failed: ${err.message}`, constants.LOG_TYPES.ERROR);
+  }
+};
+function getCurrentFinancialYearStart() {
+  const now = new Date();
+  const year = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  return new Date(year, 3, 1); // April 1st
+}
+
+function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmount) {
+  const effectiveFrom = new Date(userEmployment.effectiveFrom);
+  const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
+  const financialYearStart = getCurrentFinancialYearStart();
+
+  // Case 1: Full year TDS if FY start falls between effective and payroll dates
+  if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {
+    const annualTDS = totalTDSApplicableAmount * 12;
+    return annualTDS;
+  }
+
+  // Case 2: Prorated TDS calculation
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const days = Math.floor((payrollEffectiveFrom - effectiveFrom) / msPerDay) + 1;
+
+  const dailyTDS = totalTDSApplicableAmount / 30; // Assuming average 30-day month
+  const proratedTDS = dailyTDS * days;
+  return proratedTDS;
+}
+
+function calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSApplicableAmount) {
+  const effectiveFrom = new Date(userEmployment.effectiveFrom);
+  const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
+  const financialYearStart = getCurrentFinancialYearStart();
+
+  // Case 1: Full year TDS if FY start falls between effective and payroll dates
+  if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {   
+    return 365;
+  }
+  // Case 2: Prorated TDS calculation 
+  const days = Math.floor((payrollEffectiveFrom - effectiveFrom) / msPerDay) + 1;
+  return days;
+}
+function generateFinancialYearString(date = new Date()) {
+  const d = new Date(date); // Ensures 'date' is a Date object
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0 = Jan, 3 = April
+
+  if (month >= 3) {
+    // From April to December — Financial year starts this year
+    return `${year}-${year + 1}`;
+  } else {
+    // From January to March — Financial year started last year
+    return `${year - 1}-${year}`;
+  }
+}
+
 module.exports = {
   calculateLWF,
   calculateESIC,
@@ -704,6 +845,7 @@ module.exports = {
   calculateGratuity,
   StoreInPayrollVariableAllowances,
   StoreInPayrollVariableDeductions,
-  calculateProfessionalTax
+  calculateProfessionalTax,
+  calculateTDS
   // Add more exports here if you build additional payroll stat functions
 };

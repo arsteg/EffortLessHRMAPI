@@ -190,7 +190,7 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   // 🔍 Check if userId is provided
   if (!userId) {
     websocketHandler.sendLog(req, '❌ FNF Date Range: User ID missing in request', constants.LOG_TYPES.ERROR);
-    return next(new AppError('User ID missing', 400));
+    return next(new AppError(req.t('user.missingUserId'), 404));
   }
 
   websocketHandler.sendLog(req, `🔄 Fetching FNF date range for user: ${userId}`, constants.LOG_TYPES.INFO);

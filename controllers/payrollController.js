@@ -4282,8 +4282,9 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
 // Get a PayrollUser by ID
 exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.find({ user: req.params.userId });
-  if (!payrollFNFUsers) {
-    return next(new AppError(req.t('payroll.payrollUserNotFound', 404)));
+  if (!payrollFNFUsers) 
+  {
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4294,7 +4295,7 @@ exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
 exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.findById(req.params.id);
   if (!payrollFNFUsers) {
-    return next(new AppErrorreq.t('payroll.payrollUserNotFound', 404));
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -5457,7 +5458,7 @@ exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
   
   if (!userId) {
     websocketHandler.sendLog(req, '❌ PF: User ID missing in request', constants.LOG_TYPES.ERROR);
-    return next(new AppError('User ID missing', 400));
+    return next(new AppError(req.t('user.missingUserId'), 404));
   }
 
   websocketHandler.sendLog(req, `🔄 Fetching total PF amount for user: ${userId}`, constants.LOG_TYPES.INFO);
@@ -5478,9 +5479,8 @@ exports.getTotalGratuityAmountByUser = catchAsync(async (req, res, next) => {
 
   if (!userId) {
     websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
-    return next(new AppError('User ID missing', 400));
+    return next(new AppError(req.t('user.missingUserId'), 404));
   }
-
   websocketHandler.sendLog(req, `🔄 Starting Gratuity calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
 
   req.user = userId; // Attach user ID to request object for downstream logic
@@ -5491,5 +5491,66 @@ exports.getTotalGratuityAmountByUser = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: total
+  });
+});
+// ✅ Get total Gratuity amount for a user
+exports.getTDSAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting Gratuity calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object for downstream logic
+  const total = await payrollCalculationController.calculateTDS(req);
+
+  websocketHandler.sendLog(req, `✅ Gratuity calculated for user: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});
+
+// ✅ Get total TDS amount for a user including FNF days tax
+exports.getFNFTDSAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ TDS: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object
+
+  // 1. Get full year TDS (existing logic)
+  const data = await payrollCalculationController.calculateTDS(req);
+  websocketHandler.sendLog(req, `📊 Yearly TDS calculated: ₹${data}`, constants.LOG_TYPES.INFO);
+
+  // 2. Get FNF date range
+  const { startDate, endDate } = await getFNFDateRange(req, userId);
+  websocketHandler.sendLog(req, `📅 FNF Date Range: ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
+  // 3. Calculate number of FNF days
+  const fnfDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))); // +1 day to include the end date
+  websocketHandler.sendLog(req, `📆 Total FNF days: ${fnfDays}`, constants.LOG_TYPES.DEBUG);
+
+  // 4. Calculate FNF days TDS (basic formula, can be adjusted as per logic)
+  const dailyTDS = data.contributionData / data.days;
+  const fnfDaysTDS = parseFloat((dailyTDS * fnfDays).toFixed(2));
+  websocketHandler.sendLog(req, `💸 FNF Days TDS calculated: ₹${fnfDaysTDS}`, constants.LOG_TYPES.INFO);
+
+  // 5. Final response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      yearlyTDS: data.contributionData,
+      fnfDaysTDS,
+      regime: data.regime
+    }
   });
 });
