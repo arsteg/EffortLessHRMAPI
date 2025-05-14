@@ -7347,4 +7347,53 @@ router.get('/get-total-pf-amount/:userId', authController.protect, payrollContro
  */
 router.get('/get-total-gratuity-amount/:userId', authController.protect, payrollController.getTotalGratuityAmountByUser);
 
+/**
+ * @swagger
+ * /api/v1/payroll/calculate-total-tds-amount/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/calculate-total-tds-amount/:userId', authController.protect, payrollController.getTDSAmountByUser);
+/**
+ * @swagger
+ * /api/v1/payroll/calculate-total-fnf-tds-amount/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/calculate-total-fnf-tds-amount/:userId', authController.protect, payrollController.getFNFTDSAmountByUser);
+
 module.exports = router;
