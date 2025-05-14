@@ -56,6 +56,7 @@ const PayrollFNFIncomeTax = require('../models/Payroll/PayrollFNFIncomeTax');
 const PayrollFNFOvertime = require('../models/Payroll/PayrollFNFOvertime');
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel.js");
+const SalaryComponentVariableAllowance = require("../models/Employment/SalaryComponentVariableAllowance.js");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
 const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
 const websocketHandler = require('../utils/websocketHandler');
@@ -3502,7 +3503,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       data: []
     });
   }
-  const userIds = payrollUsers.map(user => user.user._id);
+  const userIds = payrollUsers.map(user => user?.user?._id);
 
   const salaryDetailsList = await EmployeeSalaryDetails.find({
     user: { $in: userIds },
@@ -3513,34 +3514,34 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
-      const userSalary = salaryDetailsList.find(salary => salary.user._id.equals(payrollUser.user._id));
+      const userSalary = salaryDetailsList.find(salary => salary?.user?._id.equals(payrollUser?.user?._id));
 
       const allLoanAdvances = await PayrollLoanAdvance.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         type: 'Repayment',
         company: companyId
       });
 
       const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
 
       const overtime = await PayrollOvertime.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
 
       const incomeTax = await PayrollIncomeTax.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
       const statutoryDetails = await PayrollStatutory.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         company: companyId
       });
       const attendanceSummary = await PayrollAttendanceSummary.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         company: companyId
       });
 
@@ -3559,37 +3560,40 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, otherBenefits] = await Promise.all([
-        SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
-        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary._id, company: companyId })
+      const [fixedAllowances, fixedDeductions, variableAllowances, otherBenefits] = await Promise.all([
+        SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary?._id, company: companyId })
       ]);
 
-      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
-      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
+      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
+      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd?.monthlyAmount || 0), 0);
+      const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
+      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob?.monthlyAmount || 0), 0);
 
-      const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0);
+      const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
 
-      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
+      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
 
-      const pfTaxes = flexiBenefits.reduce((sum, pf) => sum + (pf.TotalProfessionalTaxAmount || 0), 0);
+      const pfTaxes = flexiBenefits?.reduce((sum, pf) => sum + (pf?.TotalProfessionalTaxAmount || 0), 0);
 
-      const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
+      const totalOvertime = overtime?.reduce((sum, ot) => sum + (ot?.OvertimeAmount || 0), 0);
 
-      const totalIncomeTax = incomeTax.length ? incomeTax[0].TDSCalculated : 0;
+      const totalIncomeTax = incomeTax?.length ? incomeTax[0]?.TDSCalculated : 0;
 
       return {
         PayrollUser: {
           id: payrollUser._id,
           user: {
-            name: `${payrollUser.user.firstName} ${payrollUser.user.lastName}`,
-            id: payrollUser.user._id
+            name: `${payrollUser?.user?.firstName} ${payrollUser?.user?.lastName}`,
+            id: payrollUser?.user?._id
           }
         },
         attendanceSummary,
         totalOvertime,
         totalFixedAllowance,
+        totalVariableAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
         totalLoanAdvance: userLoanAdvances,
