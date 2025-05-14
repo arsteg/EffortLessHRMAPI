@@ -16,7 +16,7 @@ const TaxSlab = require('../models/Company/TaxSlab');
  * Includes basic salary and all ESIC-affected fixed and variable allowances.
  */
 const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
-  let total = salaryDetails?.BasicSalary / 12 || 0;
+  let total = salaryDetails?.BasicSalary || 0;
   
   websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
 
@@ -44,6 +44,29 @@ const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
   return total;
 };
 
+/**
+ * Calculates the total ESIC-eligible salary amount.
+ * Includes basic salary and all ESIC-affected fixed and variable allowances.
+ */
+const getTotalHRAAmount = async (req, salaryDetails) => {
+  let total = 0;
+
+  websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
+
+  // Fetch fixed allowances
+  const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+
+  for (const item of fixedAllowances) {
+    const detail = await FixedAllowance.findById(item.fixedAllowance);
+    if (detail?.label === 'HRA') {
+      total = item.monthlyAmount * 12 || 0; // Annualize the monthly HRA amount
+      websocketHandler.sendLog(req, `➕ HRA Fixed Allowance: ₹${item.monthlyAmount} per month`, constants.LOG_TYPES.TRACE);
+    }
+  }
+
+  websocketHandler.sendLog(req, `✅ Total HRA Amount: ₹${total}`, constants.LOG_TYPES.INFO);
+  return total;
+};
 
 /**
  * Calculates total taxable deduction (including approved HRA and other tax components)
@@ -116,9 +139,9 @@ const GetTDSAppicableAmountAfterDeclartion = async ({ req,userId, companyId, fin
  * Checks whether ESIC is applicable for the current month for a company.
  */
 
-const calculateIncomeTax = async (req, companyId,taxableAmount, regime) => {
+const calculateIncomeTax = async (req, companyId, taxableAmount, regime) => {
   try {
-    // Step 1: Fetch all slabs for the given company and regime
+      // Fetch all slabs for the given company and regime
     const slabs = await TaxSlab.find({
       company: companyId,
       regime: regime
@@ -129,7 +152,7 @@ const calculateIncomeTax = async (req, companyId,taxableAmount, regime) => {
     }
 
     let tax = 0;
-    // Step 2: Apply slab-wise calculation
+    // Apply slab-wise calculation
     for (const slab of slabs) {
       const { minAmount, maxAmount, taxPercentage } = slab;
 
@@ -139,7 +162,7 @@ const calculateIncomeTax = async (req, companyId,taxableAmount, regime) => {
 
         const slabTax = (taxableInSlab * taxPercentage) / 100;
         tax += slabTax;
-      }
+     }
     }
 
     return tax;
@@ -150,8 +173,10 @@ const calculateIncomeTax = async (req, companyId,taxableAmount, regime) => {
   }
 };
 
+
 module.exports = {
   getTotalTDSEligibleAmount,
   calculateIncomeTax,
-  GetTDSAppicableAmountAfterDeclartion
+  GetTDSAppicableAmountAfterDeclartion,
+  getTotalHRAAmount
 };

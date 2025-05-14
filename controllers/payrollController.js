@@ -400,17 +400,29 @@ exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
-  const fixedAllowances = await FixedAllowances.findByIdAndDelete(
-    req.params.id
-  );
-  if (!fixedAllowances) {
+  // Step 1: Find the document first
+  const fixedAllowance = await FixedAllowances.findById(req.params.id);
+
+  // Step 2: If not found, return 404
+  if (!fixedAllowance) {
     return next(new AppError(req.t('payroll.fixedAllowancesNotFound'), 404));
   }
+
+  // Step 3: Check if deletion is allowed
+  if (!fixedAllowance.isDelete) {
+    return next(new AppError(req.t('payroll.deletionNotAllowed'), 400));
+  }
+
+  // Step 4: Proceed to delete
+  await FixedAllowances.findByIdAndDelete(req.params.id);
+
+  // Step 5: Return success response
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
+
 
 exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
@@ -5536,11 +5548,16 @@ exports.getFNFTDSAmountByUser = catchAsync(async (req, res, next) => {
   const { startDate, endDate } = await getFNFDateRange(req, userId);
   websocketHandler.sendLog(req, `📅 FNF Date Range: ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
   // 3. Calculate number of FNF days
+  console.log(startDate);
+  console.log(endDate);
   const fnfDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))); // +1 day to include the end date
   websocketHandler.sendLog(req, `📆 Total FNF days: ${fnfDays}`, constants.LOG_TYPES.DEBUG);
-
+  console.log(fnfDays);
+  console.log(data.contributionData);
+  console.log(data.days);
   // 4. Calculate FNF days TDS (basic formula, can be adjusted as per logic)
   const dailyTDS = data.contributionData / data.days;
+  console.log(dailyTDS);
   const fnfDaysTDS = parseFloat((dailyTDS * fnfDays).toFixed(2));
   websocketHandler.sendLog(req, `💸 FNF Days TDS calculated: ₹${fnfDaysTDS}`, constants.LOG_TYPES.INFO);
 

@@ -46,6 +46,10 @@ const fixedAllowancesSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isDelete: {
+    type: Boolean,
+    default: true
+  },
   // isAttendanceToEffectTheEligibility: {
   //   type: Boolean,
   //   default: false

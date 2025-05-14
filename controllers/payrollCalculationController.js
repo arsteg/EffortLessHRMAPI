@@ -23,7 +23,8 @@ const {
 const {        
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
-  GetTDSAppicableAmountAfterDeclartion
+  GetTDSAppicableAmountAfterDeclartion,
+  getTotalHRAAmount
 } = require('../Services/tds.service');
 
 const { storeInPayrollVariableAllowances,storeInPayrollVariableDeductions } = require('../Services/variable_pay.service');
@@ -707,53 +708,44 @@ const calculateTDS = async (req, res) => {
   try {
     const userId = req.user;
     const companyId = req.cookies.companyId;
-    websocketHandler.sendLog(req, '🔄 Starting Provident Fund calculation...', constants.LOG_TYPES.INFO);
 
     // 1️⃣ Check statutory eligibility
     const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
-
+   
     if (!statutoryDetails?.isIncomeTaxDeducted) {
-      websocketHandler.sendLog(req, `ℹ️ LWF is not enabled in statutory settings for user`, constants.LOG_TYPES.INFO);
       return;
     }
 
     // 2️⃣ Check salary details
     const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
-
+ 
     if (!salaryDetails) {
-      websocketHandler.sendLog(req, `❌ Employee salary details not found`, constants.LOG_TYPES.ERROR);
       return;
     }
 
     // 3️⃣ Check tax settings
     const taxSettings = await EmployeeSalaryTaxAndStatutorySetting.findOne({ employeeSalaryDetails: salaryDetails._id });
-
-    if (!taxSettings?.isIncomeTaxDeduction) {
-      websocketHandler.sendLog(req, `ℹ️ LWF deduction is disabled in tax settings`, constants.LOG_TYPES.INFO);
+     if (!taxSettings?.isIncomeTaxDeduction) {
       return;
     }
 
     // 4️⃣ Calculate eligible salary amount
     let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
-    const userEmployment = await UserEmployment.findOne({ user: userId });
-      if (!userEmployment) {
-        websocketHandler.sendLog(req, `No employment record found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('user.noEmploymentFound')
-    
-        , 404));
-      }
+     const userEmployment = await UserEmployment.findOne({ user: userId });
+ 
+    if (!userEmployment) {
+       return;
+    }
 
-     let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
-    websocketHandler.sendLog(req, `✅ PF eligible amount: ₹${totalTDSAppicableAmount}`, constants.LOG_TYPES.DEBUG);
-
+   let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
+ 
     // 5️⃣ Calculate applicable amount after declaration if old regime
-    //let totalTDSAppicableAmount = totalPfEligibleAmount;
-
-    if (statutoryDetails?.taxRegime === "Old Regime") {
-      const financialYear = generateFinancialYearString();;
-      const hraReceived = 120000; // Replace with dynamic value if needed
-
-      totalDecalaredAmount = await GetTDSAppicableAmountAfterDeclartion(
+    if (statutoryDetails?.taxRegime === 'Old Regime') {
+      const financialYear = generateFinancialYearString();
+  
+      const hraReceived = await getTotalHRAAmount(req, salaryDetails);
+  
+      const totalDeclaredAmount = await GetTDSAppicableAmountAfterDeclartion(
         req,
         userId,
         companyId,
@@ -761,30 +753,26 @@ const calculateTDS = async (req, res) => {
         totalTDSAppicableAmount,
         hraReceived
       );
-
-
-      totalTDSAppicableAmount = totalTDSAppicableAmount-totalDecalaredAmount.totalDeduction;
-  
+ 
+      totalTDSAppicableAmount -= totalDeclaredAmount.totalDeduction;
     }
-      // 6️⃣ Calculate final TDS using slab
+
+    // 6️⃣ Calculate final TDS using slab
     const contributionData = await calculateIncomeTax(
       req,
       companyId,
       totalTDSAppicableAmount,
       statutoryDetails?.taxRegime
     );
-
-     websocketHandler.sendLog(req, '✅ Provident Fund contributions saved successfully', constants.LOG_TYPES.SUCCESS);
-     let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
+   let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
    
-    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime,days:daysinPayrollCycle };
-
+    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime,days:daysinPayrollCycle  };
 
   } catch (err) {
-    console.error("❌ Error in calculateTDS:", err);
-    websocketHandler.sendLog(req, `❌ PF calculation failed: ${err.message}`, constants.LOG_TYPES.ERROR);
+    console.error('❌ Error in calculateTDS:', err);
   }
 };
+
 function getCurrentFinancialYearStart() {
   const now = new Date();
   const year = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
@@ -820,6 +808,7 @@ function calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSApplicabl
   if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {   
     return 365;
   }
+  const msPerDay = 1000 * 60 * 60 * 24;
   // Case 2: Prorated TDS calculation 
   const days = Math.floor((payrollEffectiveFrom - effectiveFrom) / msPerDay) + 1;
   return days;

@@ -438,6 +438,7 @@
     "roundingRuleNotFound": "The rounding rule was not found.",
     "pfTemplateNotFound": "The PF template was not found.",
     "fixedAllowancesNotFound": "Fixed allowances were not found.",
+    "deletionNotAllowed":"Deletion Not Allow",
     "fixedContributionSlabNotFound": "The fixed contribution slab was not found.",
     "lwfFixedContributionMonthNotFound": "The LWF fixed contribution month was not found.",
     "ptConfigureStateNotFound": "The PT configure state was not found.",
