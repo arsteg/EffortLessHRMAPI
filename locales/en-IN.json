@@ -674,10 +674,17 @@
     "missingUserId": "User ID missing in the request."
   },
   "userPreferences": {
+    "getAllSuccess": "Data fetched successfully.",
     "categoryNotFound": "The preference category was not found.",
     "optionNotFound": "The preference option was not found.",
     "preferenceExists": "The specified preference already exists.",
-    "preferenceNotFound": "The user preference was not found."
+    "preferenceNotFound": "The user preference was not found.",
+    "isscreenshotsoundenabled": "Screenshot Sound Enabled",
+    "isscreenshotnotificationenabled": "Screenshot Notification Enabled",
+    "isscreenshotblur": "Screenshot Blur",
+    "helpdeskaccessibale": "Helpdesk Accessible",
+    "livescreenview": "Live Screen View",
+    "ischatbotvisiable": "Enable Chatbot"
   },
   "zoom": {
     "meetingCreationFailed": "Unable to generate the meeting link.",

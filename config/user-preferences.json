@@ -1,0 +1,65 @@
+[
+    {
+        "key": "AppMode"
+    },
+    {
+        "key": "Language"
+    },
+    {
+        "key": "SelectedScreenshotUser"
+    },
+    {
+        "key": "IsScreenshotSoundEnabled_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "isscreenshotsoundenabled",
+            "name": "isscreenshotsoundenabled",
+            "setbyadmin": false
+        }
+    },
+    {
+        "key": "IsChatbotVisiable_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "ischatbotvisiable",
+            "name": "ischatbotvisiable",
+            "setbyadmin": false
+        }
+    },
+    {
+        "key": "IsScreenshotNotificationEnabled_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "isscreenshotnotificationenabled",
+            "name": "isscreenshotnotificationenabled",
+            "setbyadmin": false
+        }
+    },
+    {
+        "key": "IsScreenshotBlur_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "isscreenshotblur",
+            "name": "isscreenshotblur",
+            "setbyadmin": true
+        }
+    },
+    {
+        "key": "IsLiveScreenView_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "livescreenview",
+            "name": "livescreenview",
+            "setbyadmin": true
+        }
+    },
+    {
+        "key": "IsHelpdeskAccessibale_explicit",
+        "metadata": {
+            "inputType": "checkbox",
+            "id": "helpdeskaccessibale",
+            "name": "helpdeskaccessibale",
+            "setbyadmin": true
+        }
+    }
+]

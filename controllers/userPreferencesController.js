@@ -4,6 +4,41 @@ const UserPreference = require('../models/userPreferences/userPreferenceModel.js
 const PreferenceOption = require('../models/userPreferences/userPreferenceOptionModel.js');
 const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
+const path = require('path');
+const fs = require('fs').promises;
+
+exports.GetAllUserPreferences = catchAsync(async (req, res, next) => {
+  const prefFilePath = path.join(__dirname, '../config/user-preferences.json');
+
+  try {
+    const prefData = await fs.readFile(prefFilePath, 'utf8');
+    const preferenceStructure = JSON.parse(prefData);
+
+    const updatedStructure = preferenceStructure.map(pref => {
+      if (pref.key && pref.key.endsWith('_explicit') && pref.metadata && pref.metadata.id) {
+        const translationKey = `userPreferences.${pref.metadata.id}`;
+        return {
+          ...pref,
+          metadata: {
+            ...pref.metadata,
+            label: req.t(`${translationKey}`) || pref.metadata.id,
+            placeholder: req.t(`${translationKey}`) || pref.metadata.id
+          }
+        };
+      }
+      return pref;
+    });
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('userPreferences.getAllSuccess') || 'User preferences retrieved successfully',
+      data: updatedStructure
+    });
+  } catch (err) {
+    // Pass error to global error handler
+    next(err);
+  }
+});
 
 exports.createOrUpdatePreference = catchAsync(async (req, res, next) => {
     console.log('create Or Update Preference');
