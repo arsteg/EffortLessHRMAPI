@@ -438,6 +438,7 @@
     "roundingRuleNotFound": "The rounding rule was not found.",
     "pfTemplateNotFound": "The PF template was not found.",
     "fixedAllowancesNotFound": "Fixed allowances were not found.",
+    "deletionNotAllowed":"Deletion Not Allow",
     "fixedContributionSlabNotFound": "The fixed contribution slab was not found.",
     "lwfFixedContributionMonthNotFound": "The LWF fixed contribution month was not found.",
     "ptConfigureStateNotFound": "The PT configure state was not found.",
@@ -494,7 +495,8 @@
     "invalidLoanAdvanceId": "Invalid loan or advance selected.",
     "noRemainingInstallments": "No remaining installments left for this loan or advance.",
     "invalidFNFUser": "The FNF payroll user provided is invalid.",
-    "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed."
+    "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed.",
+    "statutoryNameMissing": "The statutory name is missing."    
   },
   "pricing": {
     "employeeAssignmentNotFound": "The employee advance assignment was not found.",
@@ -662,7 +664,14 @@
     "ErrorCancellingOTP": "An error occurred while cancelling the OTP.",
     "OTPCancelledSuccessfully.": "The OTP was cancelled successfully.",
     "ErrorVerifyingOTP": "An error occurred while verifying the OTP.",
-    "otpVerifiedSuccessfully": "The OTP was verified successfully."
+    "otpVerifiedSuccessfully": "The OTP was verified successfully.",
+    "userNotFound": "User not found in the system.",
+    "noPayrollOrAttendanceRecord": "No payroll or attendance record found for this user.",
+    "terminationDateNotFound": "Termination date not found for user.",
+    "lastWorkingDateNotFound": "Last working date not found for user.",
+    "fnfDateRangeCalculated": "FNF date range calculated successfully.",
+    "errorRetrievingData": "Error retrieving data, please try again later.",
+    "missingUserId": "User ID missing in the request."
   },
   "userPreferences": {
     "categoryNotFound": "The preference category was not found.",

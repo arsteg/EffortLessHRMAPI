@@ -7,16 +7,8 @@ const payrollFNFStatutoryBenefitsSchema = new Schema({
     ref: 'PayrollFNFUsers',
     required: true,
   },
-  IsGratuityApplicable: {
-    type: Boolean,
-    required: true,
-  },
   GratuityAmount: {
     type: Number
-  },
-  IsProvidentFundApplicable: {
-    type: Boolean,
-    required: true,
   },
   ProvidentFundAmount: {
     type: Number

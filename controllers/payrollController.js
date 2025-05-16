@@ -56,12 +56,21 @@ const PayrollFNFIncomeTax = require('../models/Payroll/PayrollFNFIncomeTax');
 const PayrollFNFOvertime = require('../models/Payroll/PayrollFNFOvertime');
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel.js");
+const SalaryComponentVariableAllowance = require("../models/Employment/SalaryComponentVariableAllowance.js");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
 const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
 const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
 const payrollCalculationController = require('../controllers/payrollCalculationController');
+const OvertimeInformation = require('../models/attendance/overtimeInformation');
+const AttendanceRecords = require('../models/attendance/attendanceRecords');
+const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+const scheduleController = require('../controllers/ScheduleController');
+const {  getFNFDateRange} = require('../Services/userDates.service');
+const {  getTotalPFAmount} = require('../Services/provident_fund.service');
+const LOP = require('../models/attendance/lop.js');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -392,17 +401,29 @@ exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
-  const fixedAllowances = await FixedAllowances.findByIdAndDelete(
-    req.params.id
-  );
-  if (!fixedAllowances) {
+  // Step 1: Find the document first
+  const fixedAllowance = await FixedAllowances.findById(req.params.id);
+
+  // Step 2: If not found, return 404
+  if (!fixedAllowance) {
     return next(new AppError(req.t('payroll.fixedAllowancesNotFound'), 404));
   }
+
+  // Step 3: Check if deletion is allowed
+  if (!fixedAllowance.isDelete) {
+    return next(new AppError(req.t('payroll.deletionNotAllowed'), 400));
+  }
+
+  // Step 4: Proceed to delete
+  await FixedAllowances.findByIdAndDelete(req.params.id);
+
+  // Step 5: Return success response
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
   });
 });
+
 
 exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
@@ -2293,7 +2314,10 @@ async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
 }
 
 async function deleteCTCFixedDeduction(ctcTemplateId) {
-  await CTCTemplateFixedDeduction.findByIdAndDelete(ctcTemplateId);
+  await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
+}
+async function deleteCTCEmployeeDeduction(ctcTemplateId) {
+  await CTCTemplateEmployeeDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
 }
 
 async function updateOrCreateEmployerContribution(
@@ -2345,6 +2369,9 @@ async function updateOrCreateEmployerContribution(
   return finalCategories;
 }
 
+async function deleteCTCEmployerContribution(ctcTemplateId) {
+  await CTCTemplateEmployerContribution.deleteMany({ ctcTemplate: ctcTemplateId });
+}
 async function updateOrOtherBenefitsAllowance(
   ctcTemplateId,
   updatedCategories
@@ -2677,7 +2704,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       req.body.ctcTemplateFixedDeduction
     );
   } else {
-    const ctcTemplateObjectId = new ObjectId(req.params.id);
+   
     await deleteCTCFixedDeduction(req.params.id);
   }
   if (ctcTemplateEmployerContribution.length > 0) {
@@ -2699,6 +2726,9 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         req.body.ctcTemplateEmployerContribution
       );
   }
+ else {
+  await deleteCTCEmployerContribution(req.params.id);
+}
   if (ctcTemplateOtherBenefitAllowance.length > 0) {
     for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {
       const result = await OtherBenefits.findById(otherBenefit.otherBenefit);
@@ -2734,6 +2764,9 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         req.body.ctcTemplateEmployeeDeduction
       );
   }
+  else {
+    await deleteCTCEmployeeDeduction(req.params.id);
+  }
   if (ctcTemplateVariableAllowance.length > 0) {
     for (const allowance of ctcTemplateVariableAllowance) {
       const result = await VariableAllowance.findById(
@@ -2767,7 +2800,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
-    ctcTemplate.ctcTemplateVariableDeductions =
+      ctcTemplate.ctcTemplateVariableDeductions =
       await updateOrCreateVariableDeduction(
         req.params.id,
         ctcTemplateVariableDeduction
@@ -2914,13 +2947,20 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
    // Attach created payroll user to req for use in LWF
    req.user = payrollUser.user; // or payrollUser.user if nested  
    req.payrollUser = payrollUser._id;
+   req.isFNF = false;
+
+   await payrollCalculationController.calculateProfessionalTax(req, res);
    // ✅ Call calculateLWF immediately after user creation
-   await payrollCalculationController.calculateLWF(req, res); // You can also handle separately if you don't want to return early
+  await payrollCalculationController.calculateLWF(req, res);
+
+   // ✅ Call calculatePF immediately after user creation
+   await payrollCalculationController.calculatePF(req, res);
   
    // ✅ Call calculateESIC immediately after user creation
-   await payrollCalculationController.calculateESIC(req, res); // You can also handle separately if you don't want to return early
-
-
+   await payrollCalculationController.calculateESIC(req, res);
+      // ✅ Call calculateESIC immediately after user creation
+   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
    res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
@@ -3463,7 +3503,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       data: []
     });
   }
-  const userIds = payrollUsers.map(user => user.user._id);
+  const userIds = payrollUsers.map(user => user?.user?._id);
 
   const salaryDetailsList = await EmployeeSalaryDetails.find({
     user: { $in: userIds },
@@ -3474,34 +3514,34 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
-      const userSalary = salaryDetailsList.find(salary => salary.user._id.equals(payrollUser.user._id));
+      const userSalary = salaryDetailsList.find(salary => salary?.user?._id.equals(payrollUser?.user?._id));
 
       const allLoanAdvances = await PayrollLoanAdvance.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         type: 'Repayment',
         company: companyId
       });
 
       const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
 
       const overtime = await PayrollOvertime.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
 
       const incomeTax = await PayrollIncomeTax.find({
-        PayrollUser: payrollUser._id,
+        PayrollUser: payrollUser?._id,
         company: companyId
       });
       const statutoryDetails = await PayrollStatutory.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         company: companyId
       });
       const attendanceSummary = await PayrollAttendanceSummary.find({
-        payrollUser: payrollUser._id,
+        payrollUser: payrollUser?._id,
         company: companyId
       });
 
@@ -3520,37 +3560,40 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, otherBenefits] = await Promise.all([
-        SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
-        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id, company: companyId }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary._id, company: companyId })
+      const [fixedAllowances, fixedDeductions, variableAllowances, otherBenefits] = await Promise.all([
+        SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary?._id, company: companyId })
       ]);
 
-      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
-      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
+      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
+      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd?.monthlyAmount || 0), 0);
+      const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
+      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob?.monthlyAmount || 0), 0);
 
-      const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0);
+      const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
 
-      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
+      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
 
-      const pfTaxes = flexiBenefits.reduce((sum, pf) => sum + (pf.TotalProfessionalTaxAmount || 0), 0);
+      const pfTaxes = flexiBenefits?.reduce((sum, pf) => sum + (pf?.TotalProfessionalTaxAmount || 0), 0);
 
-      const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
+      const totalOvertime = overtime?.reduce((sum, ot) => sum + (ot?.OvertimeAmount || 0), 0);
 
-      const totalIncomeTax = incomeTax.length ? incomeTax[0].TDSCalculated : 0;
+      const totalIncomeTax = incomeTax?.length ? incomeTax[0]?.TDSCalculated : 0;
 
       return {
         PayrollUser: {
           id: payrollUser._id,
           user: {
-            name: `${payrollUser.user.firstName} ${payrollUser.user.lastName}`,
-            id: payrollUser.user._id
+            name: `${payrollUser?.user?.firstName} ${payrollUser?.user?.lastName}`,
+            id: payrollUser?.user?._id
           }
         },
         attendanceSummary,
         totalOvertime,
         totalFixedAllowance,
+        totalVariableAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
         totalLoanAdvance: userLoanAdvances,
@@ -3649,12 +3692,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const payrollStatutory = await PayrollStatutory.find({
         payrollUser: { $in: payrollUser?._id },
       });
-      
+
       // 💰 Sum amounts where ContributorType is 'Employer' (i.e., company contribution)
       const totalEmployeeStatutoryContribution = payrollStatutory
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (item.amount || 0), 0);
-      
+
       // 💸 Sum amounts where ContributorType is 'Employee' (i.e., deducted from salary)
       const totalEmployeeStatutoryDeduction = payrollStatutory
         .filter(item => item.ContributorType === 'Employee')
@@ -3665,23 +3708,23 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       //   .reduce((sum, loan) => sum + (loan.disbursementAmount || 0), 0); // Sum disbursement amounts
       // console.log(userLoanAdvances)
       const userLoanAdvances = allLoanAdvances
-      .filter(loan => loan.payrollUser.equals(payrollUser._id))
-      .map(loan => {
-        if (loan.type === 'Disbursement') {
-          return {
-            type: loan.type,
-            disbursementAmount: loan.disbursementAmount || 0
-          };
-        } else if (loan.type === 'Repayment') {
-          return {
-            type: loan.type,
-            amount: loan.amount || 0
-          };
-        }
-        return null;
-      })
-      .filter(Boolean); // Remove null entries
-    
+        .filter(loan => loan.payrollUser.equals(payrollUser._id))
+        .map(loan => {
+          if (loan.type === 'Disbursement') {
+            return {
+              type: loan.type,
+              disbursementAmount: loan.disbursementAmount || 0
+            };
+          } else if (loan.type === 'Repayment') {
+            return {
+              type: loan.type,
+              amount: loan.amount || 0
+            };
+          }
+          return null;
+        })
+        .filter(Boolean); // Remove null entries
+
 
       const flexiBenefitsTotal = flexiBenefits
         .filter(flexi => flexi.PayrollUser.equals(payrollUser._id))
@@ -3710,8 +3753,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalFixedAllowance: totalFixedAllowance,
         totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
-        totalEmployeeStatutoryContribution:totalEmployeeStatutoryContribution,
-        totalEmployeeStatutoryDeduction:totalEmployeeStatutoryDeduction,
+        totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
+        totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
         totalPfTax: pfTaxes,
@@ -4229,7 +4272,23 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   req.body.status = constants.Payroll_User_FNF.Pending;
+
   const payrollFNFUsers = await PayrollFNFUsers.create(req.body);
+  req.user = payrollFNFUsers.user; // or payrollUser.user if nested  
+  req.payrollFNFUser = payrollFNFUsers._id;
+  req.isFNF = true;
+  
+  await payrollCalculationController.calculateProfessionalTax(req, res);
+   // ✅ Call calculateLWF immediately after user creation
+  await payrollCalculationController.calculateLWF(req, res); 
+
+   // ✅ Call calculatePF immediately after user creation
+  await payrollCalculationController.calculatePF(req, res); 
+  
+   // ✅ Call calculateESIC immediately after user creation
+   await payrollCalculationController.calculateESIC(req, res);  
+   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
@@ -4239,8 +4298,9 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
 // Get a PayrollUser by ID
 exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.find({ user: req.params.userId });
-  if (!payrollFNFUsers) {
-    return next(new AppError(req.t('payroll.payrollUserNotFound', 404)));
+  if (!payrollFNFUsers) 
+  {
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4251,7 +4311,7 @@ exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
 exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
   const payrollFNFUsers = await PayrollFNFUsers.findById(req.params.id);
   if (!payrollFNFUsers) {
-    return next(new AppErrorreq.t('payroll.payrollUserNotFound', 404));
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4311,6 +4371,98 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers,
     total: totalCount,
+  });
+});
+
+// Fetch related records of user for attendance summary
+exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, next) => {
+  const { payrollFNFUser, payrollFNF: payrollFNFId } = req.body;
+
+  // Fetch PayrollFNFUser and populate user details
+  const payrollFNFUsers = await PayrollFNFUsers.findById(payrollFNFUser).populate('user');
+  if (!payrollFNFUsers || !payrollFNFUsers.user) {
+    return next(new AppError('PayrollFNFUser or associated user not found', 404));
+  }
+  const userId = payrollFNFUsers.user._id;
+  // Get PayrollFNF details
+  const payrollFNF = await PayrollFNF.findById(payrollFNFId);
+  if (!payrollFNF) {
+    return next(new AppError('PayrollFNF not found', 404));
+  }
+
+  // Check user status
+  const validStatuses = ['Terminated', 'Settled'];
+  if (!validStatuses.includes(payrollFNFUsers.user.status)) {
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'User status is not valid for overtime records',
+      data: [],
+      OverTimeHours: 0,
+    });
+  }
+  const { startDate, endDate } = await getFNFDateRange(req,userId);
+  const diffTime = Math.abs(endDate - startDate);
+  const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+   // Fetch overtime records between last payroll and termination
+  const overtimeRecords = await OvertimeInformation.find({
+    User: userId,
+    CheckInDate: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  });
+
+  // Calculate total overtime hours
+  const totalOvertimeHours = overtimeRecords.reduce((sum, record) => {
+    const overtimeStr = record.OverTime || '0';
+    const hours = parseInt(overtimeStr, 10);
+    return sum + (isNaN(hours) ? 0 : hours);
+  }, 0);
+
+  // Add logic for LOP days calculations
+  const lopRecords = await LOP.find({
+    user: userId,
+    date: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  });
+
+  const lopDaysCount = lopRecords.length;
+ 
+  const attendanceRecords = await AttendanceRecords.find({
+    user: userId,
+    date: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  });
+
+  const payableDays = attendanceRecords.length;
+    const cycle = await scheduleController.createFiscalCycle();
+    const leaveBalances = await LeaveAssigned.find({
+      cycle: cycle,
+      employee: userId
+    });
+  
+    let leaveRemaining = 0;
+    
+    if (leaveBalances.length > 0) {
+      // Assuming you want the `leaveRemaining` from the first record
+      leaveRemaining = leaveBalances[0].leaveRemaining || 0;
+    }   
+    
+  // Return result
+  const result = {
+    OvertimeHours: totalOvertimeHours / 60,
+    TotalDays: totalDays,
+    lopDays:lopDaysCount,
+    payableDays:payableDays,
+    leaveBalance:leaveRemaining
+  };
+  return res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: result,
   });
 });
 
@@ -4642,7 +4794,7 @@ exports.getAllPayrollFNFTerminationCompensationByPayrollFNF = catchAsync(async (
 
 // Add a Payroll FNF Loan Advance
 exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
-  const { payrollFNFUser, loanAndAdvance, amount } = req.body;
+  const { payrollFNFUser, loanAndAdvance, LoanAdvanceAmount } = req.body;
 
   // Step 1: Validate FNF User
   const fnfUser = await PayrollFNFUsers.findById(payrollFNFUser);
@@ -4657,6 +4809,9 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
   }
 
   // Step 3: Validate remaining installment
+  if (employeeLoan.remainingInstallment <= 0 || employeeLoan.status===constants.Employee_Loan_Advance_status.Cleared) {
+    return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
+  }
   if (employeeLoan.remainingInstallment <= 0) {
     return next(new AppError(req.t('payroll.noRemainingInstallments'), 400));
   }
@@ -4680,7 +4835,23 @@ exports.addPayrollFNFLoanAdvance = catchAsync(async (req, res, next) => {
     }
   ]);
 
-  const totalPaid = (totalPreviousRepayment[0]?.totalPaid || 0) + amount;
+  // Step 5: Calculate total paid so far
+  const totalFNFPreviousRepayment = await PayrollFNFLoanAdvance.aggregate([
+    {
+      $match: {
+        loanAndAdvance: employeeLoan._id,
+        type: constants.Payroll_FNF_Loan_Advance_status.Partially_Cleared
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPaid: { $sum: '$amount' }
+      }
+    }
+  ]);
+ 
+  const totalPaid = (totalPreviousRepayment[0]?.totalPaid || 0 ) + (totalFNFPreviousRepayment[0]?.totalPaid || 0) + LoanAdvanceAmount;
 
   // Step 6: Compare and update loan status
   if (totalPaid >= employeeLoan.amount) {
@@ -5295,3 +5466,112 @@ exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next)
   });
 });
 
+
+// Update Resignation only if status is "pending"
+// ✅ Get total PF amount for a user
+exports.getTotalPFAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+  
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ PF: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Fetching total PF amount for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const total = await getTotalPFAmount(req,userId);
+
+  websocketHandler.sendLog(req, `✅ PF total amount retrieved: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});
+
+// ✅ Get total Gratuity amount for a user
+exports.getTotalGratuityAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+  websocketHandler.sendLog(req, `🔄 Starting Gratuity calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object for downstream logic
+  const total = await payrollCalculationController.calculateGratuity(req);
+
+  websocketHandler.sendLog(req, `✅ Gratuity calculated for user: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});
+// ✅ Get total Gratuity amount for a user
+exports.getTDSAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ Gratuity: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting Gratuity calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object for downstream logic
+  const total = await payrollCalculationController.calculateTDS(req);
+
+  websocketHandler.sendLog(req, `✅ Gratuity calculated for user: ₹${total}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    data: total
+  });
+});
+
+// ✅ Get total TDS amount for a user including FNF days tax
+exports.getFNFTDSAmountByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ TDS: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  req.user = userId; // Attach user ID to request object
+
+  // 1. Get full year TDS (existing logic)
+  const data = await payrollCalculationController.calculateTDS(req);
+  websocketHandler.sendLog(req, `📊 Yearly TDS calculated: ₹${data}`, constants.LOG_TYPES.INFO);
+
+  // 2. Get FNF date range
+  const { startDate, endDate } = await getFNFDateRange(req, userId);
+  websocketHandler.sendLog(req, `📅 FNF Date Range: ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
+  // 3. Calculate number of FNF days
+  console.log(startDate);
+  console.log(endDate);
+  const fnfDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))); // +1 day to include the end date
+  websocketHandler.sendLog(req, `📆 Total FNF days: ${fnfDays}`, constants.LOG_TYPES.DEBUG);
+  console.log(fnfDays);
+  console.log(data.contributionData);
+  console.log(data.days);
+  // 4. Calculate FNF days TDS (basic formula, can be adjusted as per logic)
+  const dailyTDS = data.contributionData / data.days;
+  console.log(dailyTDS);
+  const fnfDaysTDS = parseFloat((dailyTDS * fnfDays).toFixed(2));
+  websocketHandler.sendLog(req, `💸 FNF Days TDS calculated: ₹${fnfDaysTDS}`, constants.LOG_TYPES.INFO);
+
+  // 5. Final response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      yearlyTDS: data.contributionData,
+      fnfDaysTDS,
+      regime: data.regime
+    }
+  });
+});

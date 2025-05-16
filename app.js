@@ -45,6 +45,7 @@ app.use(express.json({ extended: false, limit: '500mb' }))
 app.use(express.urlencoded({ limit: '500mb', extended: false, parameterLimit: 500000 }))
 const loggingMiddleware = require('./Logger/loggingMiddleware');
 var chatbotRouter = require(`./routes/chatbotRouter`);
+var helpdeskRouter = require(`./routes/helpdeskRouter`);
 
 // Initialize i18n middleware
 app.use(i18n.init);
@@ -135,6 +136,7 @@ app.use('/api/v1/eventNotifications', eventNotificationRouter);
 app.use('/api/v1/feedback', feedbackRouter);
 app.use('/api/v1/location', locationRouter);
 app.use('/api/v1/chatbot', chatbotRouter);
+app.use('/api/v1/helpdesk', helpdeskRouter);
 
 app.use((err, req, res, next) => {
   // If it's an instance of AppError, use custom method

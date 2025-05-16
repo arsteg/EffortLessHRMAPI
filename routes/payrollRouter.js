@@ -5584,6 +5584,40 @@ router.delete('/fnf/users/:id', authController.protect, payrollController.delete
  */
 router.post('/users-by-payroll-fnf', authController.protect, payrollController.getAllPayrollFNFUsersByPayrollFNF);
 
+// Payroll FNF Attendance Summary routes
+/**
+ * @swagger
+ * /api/v1/payroll/payroll-fnf-attendance-records:
+ *   post:
+ *     summary: Add a PayrollFNFAttendanceSummary
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: PayrollFNFAttendanceSummary details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payrollFNFUser:
+ *                 type: string
+ *                 required: true
+ *               payrollFNF:
+ *                 type: number
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: PayrollFNFAttendanceSummary fetched successfully
+ *       400:
+ *         description: Invalid data
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/payroll-fnf-attendance-records', authController.protect, payrollController.getPayrollFNFUserAttendanceSummaryRecords);
+
 /**
  * @swagger
  * /api/v1/payroll/payroll-fnf-attendance-summary:
@@ -6203,11 +6237,7 @@ router.delete('/payroll-fnf-manual-arrears/:id', authController.protect, payroll
  *               noticePeriod:
  *                 type: integer
  *                 required: true
- *               gratuityEligible:
- *                 type: integer
  *               yearsOfService:
- *                 type: integer
- *               gratuityAmount:
  *                 type: integer
  *               severancePay:
  *                 type: integer
@@ -6217,10 +6247,6 @@ router.delete('/payroll-fnf-manual-arrears/:id', authController.protect, payroll
  *                 type: integer
  *               outplacementServices:
  *                 type: integer
- *               status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'paid']
- *                 default: 'pending'
  *     responses:
  *       201:
  *         description: Payroll FNF Termination Compensation successfully created
@@ -6312,11 +6338,7 @@ router.get('/payroll-fnf-termination-compensation/:id', authController.protect, 
  *                 format: date
  *               noticePeriod:
  *                 type: integer
- *               gratuityEligible:
- *                 type: integer
  *               yearsOfService:
- *                 type: integer
- *               gratuityAmount:
  *                 type: integer
  *               severancePay:
  *                 type: integer
@@ -6326,9 +6348,6 @@ router.get('/payroll-fnf-termination-compensation/:id', authController.protect, 
  *                 type: integer
  *               outplacementServices:
  *                 type: integer
- *               status:
- *                 type: string
- *                 enum: ['pending', 'completed', 'paid']
  *     responses:
  *       200:
  *         description: Payroll FNF Termination Compensation successfully updated
@@ -6538,8 +6557,6 @@ router.get('/payroll-fnf-loan-advances-by-loan-advance/:loanAndAdvance', authCon
  *                 type: number
  *               fnfClearanceStatus:
  *                 type: string
- *               fnfDate:
- *                 type: string
  *     responses:
  *       200:
  *         description: Payroll FNF Loan Advance successfully updated
@@ -6597,12 +6614,8 @@ router.delete('/payroll-fnf-loan-advances/:id', authController.protect, payrollC
  *             properties:
  *               payrollFNFUser:
  *                 type: string
- *               IsGratuityApplicable:
- *                 type: boolean
  *               GratuityAmount:
  *                 type: number
- *               IsProvidentFundApplicable:
- *                 type: boolean
  *               ProvidentFundAmount:
  *                 type: number
  *               ProvidentFundPaymentProcess:
@@ -6699,12 +6712,8 @@ router.get('/payroll-fnf-statutory-benefits/payroll/:payrollFNF', authController
  *           schema:
  *             type: object
  *             properties:
- *               IsGratuityApplicable:
- *                 type: boolean
  *               GratuityAmount:
  *                 type: number
- *               IsProvidentFundApplicable:
- *                 type: boolean
  *               ProvidentFundAmount:
  *                 type: number
  *               ProvidentFundPaymentProcess:
@@ -7288,5 +7297,103 @@ router.put('/payroll-fnf-income-tax/:id', authController.protect, payrollControl
  *         description: Internal server error
  */
 router.delete('/payroll-fnf-income-tax/:id', authController.protect, payrollController.deletePayrollFNFIncomeTax);
+/**
+ * @swagger
+ * /api/v1/payroll/get-total-pf-amount/{userId}:
+ *   get:
+ *     summary: Get total PF Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-total-pf-amount/:userId', authController.protect, payrollController.getTotalPFAmountByUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/get-total-gratuity-amount/{userId}:
+ *   get:
+ *     summary: Get total PF Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-total-gratuity-amount/:userId', authController.protect, payrollController.getTotalGratuityAmountByUser);
+
+/**
+ * @swagger
+ * /api/v1/payroll/calculate-total-tds-amount/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/calculate-total-tds-amount/:userId', authController.protect, payrollController.getTDSAmountByUser);
+/**
+ * @swagger
+ * /api/v1/payroll/calculate-total-fnf-tds-amount/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/calculate-total-fnf-tds-amount/:userId', authController.protect, payrollController.getFNFTDSAmountByUser);
 
 module.exports = router;

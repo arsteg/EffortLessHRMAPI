@@ -1,326 +1,162 @@
-const userPreferences = require("../models/userPreferences/userPreferenceModel.js");
-const catchAsync = require("../utils/catchAsync");
-const User = require("../models/permissions/userModel.js");
-const UserPreference = require("../models/userPreferences/userPreferenceModel.js");
-const AppError = require("../utils/appError.js");
-const express = require("express");
-const { findById } = require("../models/item");
-const { ObjectId } = require('mongoose').Types;
-const mongoose = require('mongoose');
-const app = express();
-const constants = require('../constants');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+const UserPreference = require('../models/userPreferences/userPreferenceModel.js');
+const PreferenceOption = require('../models/userPreferences/userPreferenceOptionModel.js');
 const websocketHandler = require('../utils/websocketHandler');
-app.use(express.json);
+const constants = require('../constants');
 
-const preferenceCategories = [{
-  "_id": "64d5ef2e62f196f103918984",
-  "name": "TimeTracker",
-  "description": "Time Tracker"  
-},
-{
-  "_id": "64d6076dda83fed598e35bc5",
-  "name": "Dashboard",
-  "description": "Dashboard"  
-},
-{
-  "_id": "64e7133886c0652b1eda0e2b",
-  "name": "Manage",
-  "description": "Manage"  
-}];
-
-const PreferenceOptions = [{
-  "_id": "64df5b339aba07a9e0a775c9",
-  "category": "64d5ef2e62f196f103918984",
-  "name": "TimeTracker",
-  "key": "TimeTracker.EnableBeepSound",
-  "label": "Enable Beep Sound",
-  "description": "Check to enable the beep sound",
-  "dataType": "boolean",
-  "defaultValue": "false"  
-},
-{
-  "_id": "64df5b339aba07a9e0a775c1",
-  "category": "64d5ef2e62f196f103918984",
-  "name": "TimeTracker",
-  "key": "TimeTracker.EnableScreenshotPreview",
-  "label": "Enable Screenshot Preview ",
-  "description": "Check to enable the screenshot preview",
-  "dataType": "boolean",
-  "defaultValue": "false"  
-},
-{
-  "_id": "64e2ff5839f88b2ba694d42b",
-  "category": "64d5ef2e62f196f103918984",
-  "name": "BlurScreenshots",
-  "key": "TimeTracker.BlurScreenshots",
-  "label": "BlurScreenshots",
-  "description": "Check to blur the screenshots",
-  "dataType": "boolean",
-  "defaultValue": "false"  
-},
-{
-  "_id": "64e30e1139f88b2ba694d5da",
-  "category": "64d6076dda83fed598e35bc5",
-  "name": "DefaultPageSize",
-  "key": "TimeTracker.DefaultPageSize",
-  "label": "Default Page Size",
-  "description": "DefaultPageSize",
-  "dataType": "number",
-  "defaultValue": "10"  
-}];
-
-// controllers/preferenceCategoryController.js
-exports.getPreferenceCategory = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getPreferenceCategory request', constants.LOG_TYPES.TRACE);
-    const name = req.params.name;
-    websocketHandler.sendLog(req, `Searching for preference category with name: ${name}`, constants.LOG_TYPES.DEBUG);
-    
-    const preferenceCategory = preferenceCategories.find(category => category.name === name);
-    if (!preferenceCategory) {
-        websocketHandler.sendLog(req, `Preference category '${name}' not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('userPreferences.categoryNotFound')
-
-        , 404));
+exports.createOrUpdatePreference = catchAsync(async (req, res, next) => {
+    console.log('create Or Update Preference');
+    websocketHandler.sendLog(req, 'Creating or updating preference', constants.LOG_TYPES.TRACE);
+  
+    const { userId, preferenceKey, preferenceValue } = req.body;
+  
+    if (!userId || !preferenceKey || !preferenceValue) {
+      websocketHandler.sendLog(req, 'Missing required fields', constants.LOG_TYPES.WARN);
+      return next(new AppError('userId, preferenceKey, and preferenceValue are required', 400));
     }
-    
-    websocketHandler.sendLog(req, `Successfully retrieved preference category: ${name}`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: preferenceCategory
+  
+    // Find an existing PreferenceOption with the given preferenceKey and preferenceValue
+    let preferenceOption = await PreferenceOption.findOne({
+      preferenceKey,
+      preferenceValue
     });
-});
-
-exports.getAllPreferenceCategories = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getAllPreferenceCategories request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Returning ${preferenceCategories.length} preference categories`, constants.LOG_TYPES.INFO);
-    
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: preferenceCategories
-    });
-});
-
-exports.getPreferenceOption = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getPreferenceOption request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Searching for preference option with ID: ${req.params.id}`, constants.LOG_TYPES.DEBUG);
-    
-    const preferenceOption = PreferenceOptions.find(option => option._id === req.params.id);
+  
+    // If no PreferenceOption exists, create a new one
     if (!preferenceOption) {
-        websocketHandler.sendLog(req, `Preference option with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('userPreferences.optionNotFound')
-
-        , 404));
+      preferenceOption = await PreferenceOption.create({
+        preferenceKey,
+        preferenceValue,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      websocketHandler.sendLog(
+        req,
+        `Created new preference option: ${preferenceKey}=${preferenceValue}`,
+        constants.LOG_TYPES.INFO
+      );
     }
-    
-    websocketHandler.sendLog(req, `Successfully retrieved preference option: ${preferenceOption.name}`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: preferenceOption
+  
+    // Find an existing UserPreference for the userId and preferenceKey
+    const existingUserPreference = await UserPreference.findOne({
+      userId,
+      preferenceOptionId: {
+        $in: (await PreferenceOption.find({ preferenceKey })).map(opt => opt._id)
+      }
     });
-});
-
-exports.getPreferenceOptionByCategory = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getPreferenceOptionByCategory request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Searching for preference options in category: ${req.params.categoryId}`, constants.LOG_TYPES.DEBUG);
-    
-    const preferenceOption = PreferenceOptions.filter(option => option.category === req.params.categoryId);
-    if (!preferenceOption.length) {
-        websocketHandler.sendLog(req, `No preference options found for category ${req.params.categoryId}`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('userPreferences.optionNotFound')
-
-        , 404));
-    }
-    
-    websocketHandler.sendLog(req, `Found ${preferenceOption.length} preference options for category ${req.params.categoryId}`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: preferenceOption
-    });
-});
-
-// controllers/userPreferencesController.js
-exports.getAllPreferenceOptions = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getAllPreferenceOptions request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Returning ${PreferenceOptions.length} preference options`, constants.LOG_TYPES.INFO);
-    
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: PreferenceOptions
-    });
-});
-
-exports.createUserPreference = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting createUserPreference request', constants.LOG_TYPES.TRACE);
-    const { user, preference } = req.body;
-    let userPreference = {};
-    
-    websocketHandler.sendLog(req, `Processing preference creation for user: ${user}, preference: ${preference}`, constants.LOG_TYPES.DEBUG);
-    
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        websocketHandler.sendLog(req, `Checking if preference exists for user: ${user}`, constants.LOG_TYPES.DEBUG);
-        let userPreferenceExists = await UserPreference.findOne({ user, preference });
-        
-        if (userPreferenceExists) {
-            websocketHandler.sendLog(req, `Preference already exists for user ${user}`, constants.LOG_TYPES.WARN);
-            return next(new AppError(req.t('userPreferences.preferenceExists')
-
-            , 400));
-        }
-        
-        userPreference = new UserPreference(req.body);
-        userPreference.set(req.body);
-        await userPreference.save();
-        websocketHandler.sendLog(req, `Created new user preference with ID: ${userPreference._id}`, constants.LOG_TYPES.INFO);
+  
+    let userPreference;
+  
+    if (existingUserPreference) {
+      // Update the existing UserPreference with the new preferenceOptionId
+      existingUserPreference.preferenceOptionId = preferenceOption._id;
+      existingUserPreference.updatedAt = new Date();
+      await existingUserPreference.save();
+      userPreference = existingUserPreference;
+      websocketHandler.sendLog(
+        req,
+        `Updated preference for user ${userId}: ${preferenceKey}=${preferenceValue}`,
+        constants.LOG_TYPES.INFO
+      );
     } else {
-        userPreference = await UserPreference.findById(req.params.id);
-        if (!userPreference) {
-            websocketHandler.sendLog(req, `No existing preference found, creating new one`, constants.LOG_TYPES.DEBUG);
-            userPreference = new UserPreference(req.body);
-        } else {
-            websocketHandler.sendLog(req, `Updating existing preference with ID: ${req.params.id}`, constants.LOG_TYPES.DEBUG);
-            userPreference.set(req.body);
-        }
-        await userPreference.save();
-        websocketHandler.sendLog(req, `Successfully saved user preference with ID: ${userPreference._id}`, constants.LOG_TYPES.INFO);
+      // Create a new UserPreference
+      userPreference = await UserPreference.create({
+        userId,
+        preferenceOptionId: preferenceOption._id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      websocketHandler.sendLog(
+        req,
+        `Created preference for user ${userId}: ${preferenceKey}=${preferenceValue}`,
+        constants.LOG_TYPES.INFO
+      );
     }
-
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: userPreference
+  
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'Preference created or updated successfully',
+      data: { userPreference }
     });
+  });
+
+exports.getPreferenceByKey = catchAsync(async (req, res, next) => {
+    console.log('getPreferenceByKey');
+  const { preferenceKey } = req.params;
+
+  const preferences = await PreferenceOption.find({ preferenceKey }).populate({
+    path: 'preferenceOptionId',
+    model: 'UserPreference'
+  });
+
+  if (!preferences.length) {
+    return next(new AppError('No preferences found for this key', 404));
+  }
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: 'Preferences retrieved successfully',
+    data: { preferences }
+  });
 });
 
-exports.getUserPreference = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getUserPreference request', constants.LOG_TYPES.TRACE);
-    const userId = req.cookies.userId;
-    const categoryId = req.params.categoryId;
-    
-    websocketHandler.sendLog(req, `Fetching preferences for user: ${userId}, category: ${categoryId}`, constants.LOG_TYPES.DEBUG);
-    
-    const allPreferenceOptions = PreferenceOptions;
-    const userPreferences = await UserPreference.find({ user: userId });
-    
-    websocketHandler.sendLog(req, `Found ${userPreferences.length} preferences for user ${userId}`, constants.LOG_TYPES.INFO);
-    
-    const userPreferencesMap = {};
-    const userPreferencesIdMap = {};
-    userPreferences.forEach((pref) => {
-        userPreferencesMap[pref.preference.toString()] = pref.preferenceValue;
-        userPreferencesIdMap[pref.preference.toString()] = pref._id.toString();
-    });
+exports.getPreferencesByUserId = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
 
-    const userPreferencesAllCat = allPreferenceOptions.map((option) => {
-        const optionId = option._id.toString();
-        return {
-            preference: option._id,
-            category: option.category,
-            name: option.name,
-            key: option.key,
-            label: option.label,
-            description: option.description,
-            dataType: option.dataType,
-            preferenceValue: userPreferencesMap[optionId] || option.defaultValue,
-            Id: userPreferencesIdMap[optionId] || null
-        };
-    });
+  const preferences = await UserPreference.find({ userId }).populate('preferenceOptionId');
 
-    const result = userPreferencesAllCat.filter((r) => r.category == categoryId);
-    websocketHandler.sendLog(req, `Returning ${result.length} preferences for category ${categoryId}`, constants.LOG_TYPES.INFO);
+  if (!preferences.length) {
+    return next(new AppError('No preferences found for this user', 404));
+  }
 
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: result
-    });
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: 'User preferences retrieved successfully',
+    data: { preferences }
+  });
 });
 
-exports.updateUserPreference = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting updateUserPreference request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Attempting to update preference with ID: ${req.params.id}`, constants.LOG_TYPES.DEBUG);
-    
-    const userPreference = await UserPreference.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    });
+exports.deletePreferencesByUserId = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
 
-    if (!userPreference) {
-        websocketHandler.sendLog(req, `User preference with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('userPreferences.preferenceNotFound')
+  const result = await UserPreference.deleteMany({ userId });
 
-        , 404));
-    }
+  if (result.deletedCount === 0) {
+    return next(new AppError('No preferences found for this user', 404));
+  }
 
-    websocketHandler.sendLog(req, `Successfully updated user preference with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: userPreference
-    });
+  websocketHandler.sendLog(
+    req,
+    `Deleted preferences for user ${userId}`,
+    constants.LOG_TYPES.INFO
+  );
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: 'User preferences deleted successfully'
+  });
 });
 
-exports.deleteUserPreference = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting deleteUserPreference request', constants.LOG_TYPES.TRACE);
-    websocketHandler.sendLog(req, `Attempting to delete preference with ID: ${req.params.id}`, constants.LOG_TYPES.DEBUG);
-    
-    const userPreference = await UserPreference.findByIdAndDelete(req.params.id);
-    
-    if (!userPreference) {
-        websocketHandler.sendLog(req, `User preference with ID ${req.params.id} not found`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('userPreferences.preferenceNotFound')
+exports.deletePreferencesByKey = catchAsync(async (req, res, next) => {
+  const { preferenceKey } = req.params;
 
-        , 404));
-    }
-    
-    websocketHandler.sendLog(req, `Successfully deleted user preference with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-    res.status(204).json({
-        status: constants.APIResponseStatus.Success,
-        data: null
-    });
-});
+  const preferenceOptions = await PreferenceOption.find({ preferenceKey });
+  if (!preferenceOptions.length) {
+    return next(new AppError('No preferences found for this key', 404));
+  }
 
-exports.getAllUserPreferences = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getAllUserPreferences request', constants.LOG_TYPES.TRACE);
-    const userPreferences = await UserPreference.find();
-    
-    websocketHandler.sendLog(req, `Returning ${userPreferences.length} user preferences`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: userPreferences
-    });
-});
+  const preferenceOptionIds = preferenceOptions.map(opt => opt._id);
+  await UserPreference.deleteMany({ preferenceOptionId: { $in: preferenceOptionIds } });
+  await PreferenceOption.deleteMany({ preferenceKey });
 
-exports.getUserPreferenceByKey = catchAsync(async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getUserPreferenceByKey request', constants.LOG_TYPES.TRACE);
-    const { key } = req.params;
-    const userId = req.cookies.userId;
-    
-    websocketHandler.sendLog(req, `Searching preference for user ${userId} with key: ${key}`, constants.LOG_TYPES.DEBUG);
-    
-    const preferenceOption = PreferenceOptions.find(option => option.key === key);
-    if (!preferenceOption) {
-        websocketHandler.sendLog(req, `No preference option found for key: ${key}`, constants.LOG_TYPES.WARN);
-        res.status(200).json({
-            status: constants.APIResponseStatus.Failure,
-            data: null
-        });
-        return;
-    }
+  websocketHandler.sendLog(
+    req,
+    `Deleted preferences for key ${preferenceKey}`,
+    constants.LOG_TYPES.INFO
+  );
 
-    const userPreference = await UserPreference.findOne({
-        user: userId,
-        preference: preferenceOption._id
-    });
-
-    if (!userPreference) {
-        websocketHandler.sendLog(req, `No user preference found for user ${userId} and key ${key}`, constants.LOG_TYPES.INFO);
-        res.status(200).json({
-            status: constants.APIResponseStatus.Failure,
-            data: null
-        });
-        return;
-    }
-
-    websocketHandler.sendLog(req, `Successfully retrieved preference value for key: ${key}`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-        status: constants.APIResponseStatus.Success,
-        data: userPreference.preferenceValue || userPreference
-    });
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: 'Preferences deleted successfully'
+  });
 });

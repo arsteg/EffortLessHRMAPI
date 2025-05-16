@@ -7,15 +7,15 @@ const employeeSalutatoryDetailsSchema = new Schema({
       ref: 'User', // Reference to the User schema assuming it exists
       required: true
     },
-  isEmployeeEligibleForProvidentFundDeduction: {
+  isEmployeeEligibleForPFDeduction: {
     type: Boolean,
     default: false
   },
-  willEmployeeProvidentFundContributionCappedAtProvidentFundCeiling: {
+  isEmployerPFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },
-  willEmployerProvidentFundContributionBeCappedAtProvidentFundCeiling: {
+  isEmployeePFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },
@@ -54,7 +54,7 @@ const employeeSalutatoryDetailsSchema = new Schema({
   isIncomeTaxDeducted: {
     type: Boolean,
     default: false
-  },
+  },  
   isGratuityEligible: {
     type: Boolean,
     default: false

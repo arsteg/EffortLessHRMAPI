@@ -19,11 +19,11 @@ const employeeSalaryTaxAndStatutorySettingSchema = new Schema({
     type: Boolean,
     default: false
   },
-  isEmployeeProvidentFundCappedAtPFCeiling: {
+  isEmployeePFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },
-  isEmployerProvidentFundCappedAtPFCeiling: {
+  isEmployerPFCappedAtPFCeiling: {
     type: Boolean,
     default: false
   },

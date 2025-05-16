@@ -1249,19 +1249,48 @@ router.get('/get-resignation-status-list', authController.protect, commonControl
  * @swagger
  * /api/v1/common/get-payroll-status-list:
  *   get:
- *     summary: Test Log
+ *     summary: Get all Payroll incomeTax entries
  *     tags: [Common Management]
- *     security:
- *       - bearerAuth: []
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
  *     responses:
  *       200:
- *         description: Successfully retrieved the selected Resignation Status
- *       404:
- *         description: No selected user found
+ *         description: Successful response with Payroll incomeTax entries
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.get('/get-payroll-status-list', authController.protect, commonController.getPayrollStatusList);
 
+/**
+ * @swagger
+ * /api/v1/common/get-fnf-user-status-list:
+*   get:
+ *     summary: Get all Payroll incomeTax entries
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payrollFNF
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll incomeTax entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-fnf-user-status-list', authController.protect, commonController.getFNFUserStatusList);
 
 module.exports = router;

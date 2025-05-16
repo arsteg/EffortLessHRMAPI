@@ -27,6 +27,7 @@ const  websocketHandler  = require('../utils/websocketHandler');
 const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');  
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const AttendanceMode = require('../models/attendance/attendanceMode');
+const UserRole = require('../models/permissions/userRoleModel');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -448,6 +449,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
   }
+      
+  const appointments = await Appointment.find({ user: user._id });
+  user.appointment = appointments;
   // 3) If everything is okay, send token to client
   createAndSendToken(user, 200, res);
 });
@@ -909,7 +913,7 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllRolePermissions = catchAsync(async (req, res, next) => { 
-  const rolePermissions = await RolePermission.find({});   
+  const rolePermissions = await RolePermission.find({}).where('company').equals(req.cookies.companyId); 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermissions
@@ -917,10 +921,13 @@ exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
 });
 
 exports.createRolePermission = catchAsync(async (req, res, next) => { 
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
+  const rolePermissionexists = await RolePermission.find({}).where('company').equals(req.cookies.companyId).where('roleId').equals(req.body.roleId);  
   
   if (rolePermissionexists.length>0) {
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This role already has a permission assigned.",
+    });
   }
   else{    
     const rolePermission = await RolePermission.create({
@@ -937,24 +944,33 @@ exports.createRolePermission = catchAsync(async (req, res, next) => {
 });
 
 exports.updateRolePermission = catchAsync(async (req, res, next) => {
-  const rolePermissionexists = await RolePermission.find({}).where('permissionId').equals(req.body.permissionId).where('roleId').equals(req.body.roleId);  
-  
-  if (rolePermissionexists.length>0) {
-    return next(new AppError(req.t('auth.rolePermissionExists'), 403));
+  const rolePermissionExists = await RolePermission.find({
+    _id: { $ne: req.params.id }, // Exclude the record being updated
+    company: req.cookies.companyId,
+    roleId: req.body.roleId
+  });
+
+  if (rolePermissionExists.length > 0) {
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This role already has a permission assigned."
+    });
   }
-  else{ 
+
   const rolePermission = await RolePermission.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
+    new: true,
+    runValidators: true
   });
   if (!rolePermission) {
-    return next(new AppError(req.t('auth.noRolePermissionFound'), 404));
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "No role permission found with this ID."
+    });
   }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: rolePermission
   }); 
-}   
 });
 
 exports.deleteRolePermission = catchAsync(async (req, res, next) => {  
@@ -966,6 +982,117 @@ exports.deleteRolePermission = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     data: rolePermission
   });    
+});
+
+
+// Create UserRole
+exports.createUserRole = catchAsync(async (req, res, next) => {
+  const userRoleExists = await UserRole.find({
+    userId: req.body.userId,
+    company: req.cookies.companyId,
+  });
+
+  if (userRoleExists.length > 0) {
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This user already has a role assigned."
+    });
+  }
+
+  const userRole = await UserRole.create({
+    userId: req.body.userId,
+    roleId: req.body.roleId,
+    company: req.cookies.companyId,
+    createdBy: req.cookies.userId,
+    updatedBy: req.cookies.userId,
+    createdOn: new Date(),
+    updatedOn: new Date(),
+  });
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Get UserRole by ID
+exports.getUserRole = catchAsync(async (req, res, next) => {
+  const userRole = await UserRole.findById(req.params.id);
+
+  if (!userRole) {
+    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+  }
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Get All UserRoles
+exports.getAllUserRoles = catchAsync(async (req, res, next) => {
+  const userRoles = await UserRole.find({ company: req.cookies.companyId });
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRoles,
+  });
+});
+
+// Update UserRole
+exports.updateUserRole = catchAsync(async (req, res, next) => {
+  const userRoleExists = await UserRole.find({
+    userId: req.body.userId,
+    company: req.cookies.companyId,
+    _id: { $ne: req.params.id },
+  });
+
+  if (userRoleExists.length > 0) {
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "This user already has a role assigned."
+    });
+  }
+
+  const userRole = await UserRole.findByIdAndUpdate(
+    req.params.id,
+    {
+      userId: req.body.userId,
+      roleId: req.body.roleId,
+      updatedBy: req.cookies.userId,
+      updatedOn: new Date(),
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!userRole) {
+    return res.status(409).json({
+      status: constants.APIResponseStatus.Error,
+      message: "User role not found with this ID."
+    });
+  }
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userRole,
+  });
+});
+
+// Delete UserRole
+exports.deleteUserRole = catchAsync(async (req, res, next) => {
+  const userRole = await UserRole.findByIdAndDelete(req.params.id);
+
+  if (!userRole) {
+    return next(new AppError(req.t('auth.userRoleNotFound'), 404));
+  }
+
+  res.status(204).json({
+    status: constants.APIResponseStatus.Success,
+    data: null,
+  });
 });
 
  //#endregion

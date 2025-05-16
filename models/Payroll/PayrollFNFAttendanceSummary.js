@@ -7,6 +7,11 @@ var payrollFNFAttendanceSummarySchema = new Schema({
       ref: 'PayrollFNFUsers',
       required: true
     },
+    payrollFnf:{
+      type: mongoose.Schema.ObjectId,
+      ref: 'PayrollFNF',
+      required: true
+    },
     totalDays: {
       type: Number,
       required: true

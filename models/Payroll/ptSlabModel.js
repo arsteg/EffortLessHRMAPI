@@ -28,6 +28,11 @@ var ptSlabSchema = new Schema({
     type: String,
     required: true
   },
+  frequency: {
+    type: String,
+    enum: ['Monthly', 'Annually', 'Semi-Annually', 'Bi-Monthly', 'Quarterly'],
+    required: true
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming there's a Company schema for reference

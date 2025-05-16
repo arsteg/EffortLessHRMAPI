@@ -70,7 +70,7 @@ class WebSocketManager {
 
   // Updated sendLog function
   sendLog(req, message, logType) {
-    const userId = req.cookies?.userId || req.user?.id; // Fallback to req.user.id if cookies unavailable
+    const userId = req?.cookies?.userId || req?.user?.id || '';
     if (!userId) {
       console.warn('sendLog: No userId found in request');
       return; // Exit if no userId

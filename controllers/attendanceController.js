@@ -677,7 +677,7 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 
   var attendanceTemplate = null;
   if (attendanceTemplateAssignments.length > 0) {
-    attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attandanceTemplate);
+    attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attendanceTemplate);
   }
   
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
@@ -1057,9 +1057,9 @@ exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating attendance assignment for employee: ${req.body.employee}`, constants.LOG_TYPES.INFO);
   
-  const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attandanceTemplate });
+  const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attendanceTemplate });
   if (!attendanceTemplate) {
-    websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attandanceTemplate}`, constants.LOG_TYPES.WARNING);
+    websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       message: req.t('attendance.invalidAttendanceTemplate')
@@ -1100,7 +1100,7 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   // Create the attendance assignment
   const attendanceAssignment = await AttendanceTemplateAssignments.create({
     employee: req.body.employee,
-    attandanceTemplate: req.body.attandanceTemplate,
+    attendanceTemplate: req.body.attendanceTemplate,
     effectiveFrom: req.body.effectiveFrom,
     primaryApprover: primaryApprover,
     secondaryApprover: secondaryApprover,
@@ -2661,13 +2661,14 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   try {
     const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
     const endOfMonth = new Date(req.body.year, req.body.month, 0);
-    const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ user: req.body.user });
+    const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ employee: req.body.user });
     websocketHandler.sendLog(req, `Fetched attendance assignment for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
-
+    console.log(attendanceAssignment);
     if (attendanceAssignment) {
       const attendanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attendanceTemplate });
       websocketHandler.sendLog(req, `Fetched attendance template: ${attendanceTemplate?._id}`, constants.LOG_TYPES.TRACE);
-
+      console.log(attendanceAssignment.attendanceTemplate);
+      console.log(attendanceTemplate);
       if (attendanceTemplate) {
         const attendanceRecords = await AttendanceRecords.find({
           user: req.body.user,
@@ -2675,7 +2676,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           date: { $gte: startOfMonth, $lte: endOfMonth },
         });
         websocketHandler.sendLog(req, `Fetched ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.DEBUG);
-
+      
         const approvedLeaves = await LeaveApplication.find({
           user: req.body.user,
           status: constants.Leave_Application_Constant.Approved,
@@ -2683,7 +2684,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           endDate: { $gte: startOfMonth, $lte: endOfMonth },
         });
         websocketHandler.sendLog(req, `Fetched ${approvedLeaves.length} approved leaves`, constants.LOG_TYPES.DEBUG);
-
+   
         const approvedLeaveDays = approvedLeaves.flatMap(leave => {
           const leaveStart = new Date(leave.startDate);
           const leaveEnd = new Date(leave.endDate);
@@ -2695,11 +2696,11 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           }
           return leaveDays;
         });
-
+     
         const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
         const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
         websocketHandler.sendLog(req, `Fetched ${holidays.length} holidays`, constants.LOG_TYPES.DEBUG);
-
+    
         const daysInMonth = endOfMonth.getDate();
         for (let day = 1; day <= daysInMonth; day++) {
           const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
@@ -2767,7 +2768,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
         }
       }
     }
-
+ 
     websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${req.body.user}`, constants.LOG_TYPES.INFO);
 
     res.status(200).json({
