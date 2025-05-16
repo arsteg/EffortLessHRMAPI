@@ -7396,4 +7396,47 @@ router.get('/calculate-total-tds-amount/:userId', authController.protect, payrol
  */
 router.get('/calculate-total-fnf-tds-amount/:userId', authController.protect, payrollController.getFNFTDSAmountByUser);
 
+/**
+ * @swagger
+* /api/v1/payroll/generatedFNFPayroll-by-company:
+ *   post:
+ *     summary: Get a generatedPayroll by company
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the generatedPayroll
+ *       404:
+ *         description: generatedPayroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/generatedFNFPayroll-by-company', authController.protect, payrollController.getAllGeneratedFNFPayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/generatedPayroll-by-fnf-payroll/{fnfPayroll}:
+ *   get:
+ *     summary: get generated payroll
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: payroll
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll
+ *     responses:
+ *       200:
+ *         description: Successful response with Generated Payroll entries
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/generatedPayroll-by-fnf-payroll/:fnfPayroll', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
+
 module.exports = router;
