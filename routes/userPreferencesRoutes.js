@@ -6,6 +6,20 @@ module.exports = router;
 
 /**
  * @swagger
+ * /api/v1/userpreferences/structure:
+ *   get:
+ *     summary: Get all user preferences
+ *     tags: [User Preferences Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with all user preferences
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/structure', userPreferencesController.GetAllUserPreferences);
+
+/**
+ * @swagger
  * /api/v1/userPreferences/create:
  *   post:
  *     summary: Create or update a user preference
