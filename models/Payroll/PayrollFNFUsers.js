@@ -15,9 +15,6 @@ var payrollFNFUsersSchema = new Schema({
     totalFixedAllowance: {
       type: Number
     },
-    totalOtherBenefits: {
-      type: Number
-    },
     totalEmployeeStatutoryDeduction: {
       type: Number
     },

@@ -11,10 +11,6 @@ const employeeSalaryDetailsSchema = new Schema({
     type: Date,
     required: true
   },
-  actualEffectiveDate: {
-    type: Date,
-    required: true
-  },
   frequencyToEnterCTC: {
     type: String,
     required: true
@@ -34,10 +30,6 @@ const employeeSalaryDetailsSchema = new Schema({
     type: Number,
     required: true
   },
-  BasicSalary: {
-    type: Number,
-    required: true
-  },
   totalCTCExcludingVariableAndOtherBenefits: {
     type: Number
   },
@@ -51,7 +43,6 @@ const employeeSalaryDetailsSchema = new Schema({
   },
   taxAndSalutaorySetting: [],
   fixedAllowanceList:  [],
-  otherBenefitList:  [],
   employerContributionList: [],
   fixedDeductionList: [],
   variableDeductionList: [],

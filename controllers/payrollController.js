@@ -15,7 +15,6 @@ const VariableAllowanceApplicableEmployee = require("../models/Payroll/variableA
 const FixedDeduction = require("../models/Payroll/fixedDeductionModel");
 const VariableDeduction = require("../models/Payroll/variableDeductionModel");
 const VariableDeductionApplicableEmployee = require("../models/Payroll/variableDeductionApplicableEmployeeModel");
-const OtherBenefits = require("../models/Payroll/otherBenefitsModels");
 const LoanAdvancesCategory = require("../models/Payroll/loanAdvancesCategoryModel");
 const FlexiBenefitsCategory = require("../models/Payroll/flexiBenefitsCategoryModel");
 const PFCharge = require("../models/Payroll/pfChargeModel");
@@ -26,7 +25,6 @@ const CTCTemplateVariableDeduction = require("../models/Payroll/ctcTemplateVaria
 const CTCTemplateVariableAllowance = require("../models/Payroll/ctcTemplateVariableAllowanceModel");
 const CTCTemplateFixedDeduction = require("../models/Payroll/ctcTemplateFixedDeductionModel");
 const CTCTemplateEmployerContribution = require("../models/Payroll/ctcTemplateEmployerContributionModel");
-const CTCTemplateOtherBenefitAllowance = require("../models/Payroll/ctcTemplateOtherBenefitAllowanceModel");
 const CTCTemplateEmployeeDeduction = require("../models/Payroll/ctcTemplateEmployeeDeductionModel");
 const PTConfigureStates = require("../models/Payroll/ptConfigureStatesModel");
 const PFTemplates = require("../models/Payroll/pfTemplateModel");
@@ -59,7 +57,6 @@ const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetail
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel.js");
 const SalaryComponentVariableAllowance = require("../models/Employment/SalaryComponentVariableAllowance.js");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
-const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits.js");
 const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
@@ -1642,91 +1639,6 @@ exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
   });
 });
 
-// Add OtherBenefits
-exports.createOtherBenefits = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-
-  // Check if companyId exists in cookies
-  if (!companyId) {
-    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
-  }
-
-  // Add companyId to the request body
-  req.body.company = companyId;
-  const otherBenefits = await OtherBenefits.create(req.body);
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: otherBenefits,
-  });
-});
-
-// Get All OtherBenefits by Company
-exports.getAllOtherBenefitsByCompany = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await OtherBenefits.countDocuments({
-    company: req.cookies.companyId,
-  });
-
-  const otherBenefits = await OtherBenefits.find({ company: companyId })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: otherBenefits,
-    total: totalCount,
-  });
-});
-
-// Update OtherBenefits
-exports.updateOtherBenefits = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const otherBenefits = await OtherBenefits.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!otherBenefits) {
-    return next(new AppError(req.t('payroll.otherBenefitsNotFound'), 404));
-  }
-
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: otherBenefits,
-  });
-});
-
-// Get OtherBenefits by ID
-exports.getOtherBenefitsById = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const otherBenefits = await OtherBenefits.findById(id);
-
-  if (!otherBenefits) {
-    return next(new AppError(req.t('payroll.otherBenefitsNotFound'), 404));
-  }
-
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: otherBenefits,
-  });
-});
-
-// Delete OtherBenefits
-exports.deleteOtherBenefits = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const otherBenefits = await OtherBenefits.findByIdAndDelete(id);
-
-  if (!otherBenefits) {
-    return next(new AppError(req.t('payroll.otherBenefitsNotFound'), 404));
-  }
-
-  res.status(204).json({
-    status: constants.APIResponseStatus.Success,
-    data: null,
-  });
-});
-
 exports.addLoanAdvancesCategory = catchAsync(async (req, res, next) => {
   const { name } = req.body;
   const companyId = req.cookies.companyId;
@@ -1981,7 +1893,6 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     ctcTemplateVariableAllowance,
     ctcTemplateVariableDeduction,
     ctcTemplateEmployerContribution,
-    ctcTemplateOtherBenefitAllowance,
     ctcTemplateEmployeeDeduction,
     ...ctcTemplateData
   } = req.body;
@@ -2081,23 +1992,7 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
         req.body.ctcTemplateEmployerContribution
       );
   }
-  if (ctcTemplateOtherBenefitAllowance.length > 0) {
-    for (const item of ctcTemplateOtherBenefitAllowance) {
-      const result = await OtherBenefits.findById(item.otherBenefit);
-
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidOtherBenefits')
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateOtherBenefitAllowances =
-      await updateOrOtherBenefitsAllowance(
-        ctcTemplate._id,
-        req.body.ctcTemplateOtherBenefitAllowance
-      );
-  }
+ 
   if (ctcTemplateEmployeeDeduction.length > 0) {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
       const result = await FixedContribution.findById(
@@ -2373,53 +2268,6 @@ async function updateOrCreateEmployerContribution(
 async function deleteCTCEmployerContribution(ctcTemplateId) {
   await CTCTemplateEmployerContribution.deleteMany({ ctcTemplate: ctcTemplateId });
 }
-async function updateOrOtherBenefitsAllowance(
-  ctcTemplateId,
-  updatedCategories
-) {
-  const existingCategories = await CTCTemplateOtherBenefitAllowance.find({
-    ctcTemplate: ctcTemplateId,
-  });
-
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find((existing) =>
-      existing.otherBenefit.equals(category.otherBenefit)
-    );
-
-    if (existingCategory) {
-      // Manually update fields to ensure Mongoose detects the change
-      existingCategory.set(category);
-      return existingCategory.save();
-    } else {
-      // Create new category
-      const newCategory = new CTCTemplateOtherBenefitAllowance({
-        ctcTemplate: ctcTemplateId,
-        ...category,
-      });
-      return newCategory.save();
-    }
-  });
-  await Promise.all(updatedCategoriesPromises);
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) =>
-      !updatedCategories.find(
-        (updated) => updated.otherBenefit === existing.otherBenefit.toString()
-      )
-  );
-
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return CTCTemplateOtherBenefitAllowance.findByIdAndRemove(category._id);
-  });
-
-  await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateOtherBenefitAllowance.find({
-    ctcTemplate: ctcTemplateId,
-  });
-
-  return finalCategories;
-}
 
 async function updateOrCreateEmployeeDeduction(
   ctcTemplateId,
@@ -2518,17 +2366,6 @@ exports.getAllCTCTemplatesByCompany = catchAsync(async (req, res, next) => {
       } else {
         ctcTemplates[i].ctcTemplateEmployerContributions = null;
       }
-      const ctcTemplateOtherBenefitAllowances =
-        await CTCTemplateOtherBenefitAllowance.find({})
-          .where("ctcTemplate")
-          .equals(ctcTemplates[i]._id);
-      if (ctcTemplateOtherBenefitAllowances) {
-        ctcTemplates[i].ctcTemplateOtherBenefitAllowances =
-          ctcTemplateOtherBenefitAllowances;
-      } else {
-        ctcTemplates[i].ctcTemplateOtherBenefitAllowances = null;
-      }
-
       const ctcTemplateEmployeeDeductions =
         await CTCTemplateEmployeeDeduction.find({})
           .where("ctcTemplate")
@@ -2591,17 +2428,7 @@ exports.getCTCTemplateById = catchAsync(async (req, res, next) => {
       .equals(req.params.id);
   ctcTemplate.ctcTemplateEmployerContributions =
     ctcTemplateEmployerContribution;
-  const ctcTemplateOtherBenefitAllowances =
-    await CTCTemplateOtherBenefitAllowance.find({})
-      .where("ctcTemplate")
-      .equals(req.params.id);
-  if (ctcTemplateOtherBenefitAllowances) {
-    ctcTemplate.ctcTemplateOtherBenefitAllowances =
-      ctcTemplateOtherBenefitAllowances;
-  } else {
-    ctcTemplate.ctcTemplateOtherBenefitAllowances = null;
-  }
-
+  
   const ctcTemplateEmployeeDeductions = await CTCTemplateEmployeeDeduction.find(
     {}
   )
@@ -2649,7 +2476,6 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
     ctcTemplateVariableDeduction,
     ctcTemplateEmployerContribution,
     ctcTemplateEmployeeDeduction,
-    ctcTemplateOtherBenefitAllowance,
     ...ctcTemplateData
   } = req.body;
 
@@ -2730,23 +2556,7 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   else {
     await deleteCTCEmployerContribution(req.params.id);
   }
-  if (ctcTemplateOtherBenefitAllowance.length > 0) {
-    for (const otherBenefit of ctcTemplateOtherBenefitAllowance) {
-      const result = await OtherBenefits.findById(otherBenefit.otherBenefit);
 
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidOtherBenefits'),
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateOtherBenefitAllowances =
-      await updateOrOtherBenefitsAllowance(
-        req.params.id,
-        req.body.ctcTemplateOtherBenefitAllowance
-      );
-  }
   if (ctcTemplateEmployeeDeduction.length > 0) {
     for (const contirbution of ctcTemplateEmployeeDeduction) {
       const result = await FixedContribution.findById(
@@ -2823,10 +2633,7 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
     await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: req.params.id });
     await CTCTemplateEmployerContribution.deleteMany({
       ctcTemplate: req.params.id,
-    });
-    await CTCTemplateOtherBenefitAllowance.deleteMany({
-      ctcTemplate: req.params.id,
-    });
+    });  
     await CTCTemplateEmployeeDeduction.deleteMany({
       ctcTemplate: req.params.id,
     });
@@ -3690,18 +3497,16 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, variableAllowances, otherBenefits] = await Promise.all([
+      const [fixedAllowances, fixedDeductions, variableAllowances] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
         SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary?._id, company: companyId })
-      ]);
+         ]);
 
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
       const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd?.monthlyAmount || 0), 0);
       const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob?.monthlyAmount || 0), 0);
-
+    
       const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
 
       const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
@@ -3724,7 +3529,6 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         totalOvertime,
         totalFixedAllowance,
         totalVariableAllowance,
-        totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
@@ -3829,18 +3633,16 @@ console.log('payrolls----', payrolls);
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, variableAllowances, otherBenefits] = await Promise.all([
+      const [fixedAllowances, fixedDeductions, variableAllowances] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
         SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary?._id, company: companyId })
-      ]);
+       ]);
 
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
       const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd?.monthlyAmount || 0), 0);
       const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob?.monthlyAmount || 0), 0);
-
+   
       const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
 
       const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
@@ -3863,7 +3665,6 @@ console.log('payrolls----', payrolls);
         totalOvertime,
         totalFixedAllowance,
         totalVariableAllowance,
-        totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
@@ -3944,16 +3745,14 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, otherBenefits] = await Promise.all([
+      const [fixedAllowances, fixedDeductions] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
-        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary._id })
-      ]);
+        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id })
+         ]);
 
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
       const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
-
+     
       const payrollStatutory = await PayrollFNFStatutory.find({
         payrollFNFUser: { $in: payrollUser?._id },
       });
@@ -4012,7 +3811,6 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         attendanceSummary: userAttendanceSummary,
         totalOvertime: userOvertime[0]?.OvertimeAmount,
         totalFixedAllowance: totalFixedAllowance,
-        totalOtherBenefit: totalOtherBenefits,
         totalFixedDeduction: totalFixedDeductions,
         totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
         totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
@@ -4095,16 +3893,14 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         monthlySalary = yearlySalary / 12;
       }
 
-      const [fixedAllowances, fixedDeductions, otherBenefits] = await Promise.all([
+      const [fixedAllowances, fixedDeductions] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
-        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
-        SalaryComponentOtherBenefits.find({ employeeSalaryDetails: userSalary._id })
-      ]);
+        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id })
+       ]);
 
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
-      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-      const totalOtherBenefits = otherBenefits.reduce((sum, ob) => sum + (ob.monthlyAmount || 0), 0);
-
+      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0)
+   
       const payrollStatutory = await PayrollStatutory.find({
         payrollUser: { $in: payrollUser?._id },
       });
@@ -4167,8 +3963,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         attendanceSummary: userAttendanceSummary,
         totalOvertime: userOvertime[0]?.OvertimeAmount,
         totalFixedAllowance: totalFixedAllowance,
-        totalOtherBenefit: totalOtherBenefits,
-        totalFixedDeduction: totalFixedDeductions,
+         totalFixedDeduction: totalFixedDeductions,
         totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
         totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
