@@ -2846,23 +2846,28 @@ exports.deleteCTCTemplateById = catchAsync(async (req, res, next) => {
 });
 
 exports.addPayroll = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
-  const companyId = req.cookies.companyId;
+  websocketHandler.sendLog(req, 'Starting addPayroll process', constants.LOG_TYPES.INFO);
 
-  // Check if companyId exists in cookies
+  const companyId = req.cookies.companyId;
+  websocketHandler.sendLog(req, `Extracted companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
-  // Add companyId to the request body
   req.body.company = companyId;
+  websocketHandler.sendLog(req, 'Assigned companyId to request body', constants.LOG_TYPES.DEBUG);
 
   const payroll = await Payroll.create(req.body);
+  websocketHandler.sendLog(req, `Payroll record created with ID: ${payroll._id}`, constants.LOG_TYPES.INFO);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payroll
   });
 });
+
 
 exports.getPayroll = catchAsync(async (req, res, next) => {
   const payroll = await Payroll.findById(req.params.id);
@@ -2879,101 +2884,203 @@ exports.updatePayroll = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
 
+  websocketHandler.sendLog(req, `Starting updatePayroll process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
   try {
+    const validStatuses = [
+      constants.Payroll_Status.OnHold,
+      constants.Payroll_Status.Closed,
+      constants.Payroll_Status.InProgress
+    ];
+
+    if (!validStatuses.includes(status)) {
+      websocketHandler.sendLog(req, `Invalid Payroll status received: ${status}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('payroll.invalidPayrollStatus'), 400));
+    }
+
+    websocketHandler.sendLog(req, `Updating payroll status to: ${status} for ID: ${id}`, constants.LOG_TYPES.TRACE);
+
     const updatedPayroll = await Payroll.findByIdAndUpdate(
       id,
-      { status, updatedDate: new Date() }, // Update only status and updatedDate
-      { new: true } // Return the updated document
+      { status, updatedDate: new Date() },
+      { new: true }
     );
 
     if (!updatedPayroll) {
+      websocketHandler.sendLog(req, `No payroll found with ID: ${id}`, constants.LOG_TYPES.WARN);
       return res.status(404).json({ message: req.t('payroll.payrollNotFound') });
     }
 
+    websocketHandler.sendLog(req, `Successfully updated payroll ID: ${id} with status: ${status}`, constants.LOG_TYPES.INFO);
+
     res.status(200).json(updatedPayroll);
   } catch (error) {
+    websocketHandler.sendLog(req, `Error updating payroll ID: ${id} - ${error.message}`, constants.LOG_TYPES.ERROR);
     res.status(500).json({ message: error.message });
   }
 });
 
 exports.deletePayroll = catchAsync(async (req, res, next) => {
-  const payroll = await Payroll.findByIdAndDelete(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting deletePayroll process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payroll = await Payroll.findByIdAndDelete(id);
+
   if (!payroll) {
+    websocketHandler.sendLog(req, `No payroll found with ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully deleted payroll ID: ${id}`, constants.LOG_TYPES.INFO);
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
   });
 });
 
+
 exports.getPayrollsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+
+  websocketHandler.sendLog(req, `Starting getPayrollsByCompany process`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Pagination params - Skip: ${skip}, Limit: ${limit}`, constants.LOG_TYPES.TRACE);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
-  const totalCount = await Payroll.countDocuments({ company: companyId });
+  websocketHandler.sendLog(req, `Fetching payrolls for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
 
+  const totalCount = await Payroll.countDocuments({ company: companyId });
   const payrolls = await Payroll.find({ company: companyId })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
+
+  websocketHandler.sendLog(req, `Retrieved ${payrolls.length} payroll records out of total ${totalCount}`, constants.LOG_TYPES.DEBUG);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrolls,
     total: totalCount,
   });
-
 });
 
-// Add a PayrollUser
+
 exports.createPayrollUser = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
 
-  // Check if companyId exists in cookies
+  websocketHandler.sendLog(req, 'Starting createPayrollUser process', constants.LOG_TYPES.INFO);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
-  // Add companyId to the request body
   req.body.company = companyId;
-  const payrollUser = await PayrollUsers.create(req.body);
 
-  // Attach created payroll user to req for use in LWF
-  req.user = payrollUser.user; // or payrollUser.user if nested  
+  websocketHandler.sendLog(req, `Creating PayrollUser for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
+
+  const payrollUser = await PayrollUsers.create(req.body);
+  websocketHandler.sendLog(req, `Created PayrollUser with ID: ${payrollUser._id}`, constants.LOG_TYPES.INFO);
+
+  req.user = payrollUser.user;
   req.payrollUser = payrollUser._id;
   req.isFNF = false;
 
+  websocketHandler.sendLog(req, 'Starting payroll calculations for new user', constants.LOG_TYPES.TRACE);
+
   await payrollCalculationController.calculateProfessionalTax(req, res);
-  // ✅ Call calculateLWF immediately after user creation
   await payrollCalculationController.calculateLWF(req, res);
-
-  // ✅ Call calculatePF immediately after user creation
   await payrollCalculationController.calculatePF(req, res);
-
-  // ✅ Call calculateESIC immediately after user creation
   await payrollCalculationController.calculateESIC(req, res);
-  // ✅ Call calculateESIC immediately after user creation
   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
+
+  websocketHandler.sendLog(req, 'Completed all payroll calculations and storage for new PayrollUser', constants.LOG_TYPES.INFO);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
   });
 });
-
-// Get a PayrollUser by ID
 exports.getPayrollUser = catchAsync(async (req, res, next) => {
-  const payrollUser = await PayrollUsers.findById(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting getPayrollUser process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollUser = await PayrollUsers.findById(id);
+
   if (!payrollUser) {
+    websocketHandler.sendLog(req, `PayrollUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully retrieved PayrollUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: payrollUser
+  });
+});
+
+
+// Update a PayrollUser by ID
+exports.updatePayrollUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting updatePayrollUser process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollUser = await PayrollUsers.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollUser) {
+    websocketHandler.sendLog(req, `PayrollUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
+  }
+
+  websocketHandler.sendLog(req, `Successfully updated PayrollUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: payrollUser
+  });
+});
+exports.updatePayrollUserStatus = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  websocketHandler.sendLog(req, `Starting updatePayrollUserStatus process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const validStatuses = [
+    constants.Payroll_User_Status.OnHold,
+    constants.Payroll_User_Status.Closed,
+    constants.Payroll_User_Status.InProgress
+  ];
+
+  if (!validStatuses.includes(status)) {
+    websocketHandler.sendLog(req, `Invalid PayrollUser status: ${status}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.invalidPayrollUserStatus'), 400));
+  }
+
+  const payrollUser = await PayrollUsers.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollUser) {
+    websocketHandler.sendLog(req, `PayrollUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
+  }
+
+  websocketHandler.sendLog(req, `Successfully updated PayrollUser status for ID: ${id}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollUser
@@ -2981,35 +3088,57 @@ exports.getPayrollUser = catchAsync(async (req, res, next) => {
 });
 
 // Update a PayrollUser by ID
-exports.updatePayrollUser = catchAsync(async (req, res, next) => {
-  const payrollUser = await PayrollUsers.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+exports.getAllPayrollUsersByPayroll = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  const companyId = req.cookies.companyId;
 
-  if (!payrollUser) {
-    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
+  websocketHandler.sendLog(req, 'Starting getAllPayrollUsersByPayroll process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Pagination - Skip: ${skip}, Limit: ${limit}, Payroll: ${req.body.payroll}`, constants.LOG_TYPES.TRACE);
+
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
+
+  websocketHandler.sendLog(req, `Fetching payroll users for companyId: ${companyId}, payroll ID: ${req.body.payroll}`, constants.LOG_TYPES.TRACE);
+
+  const totalCount = await PayrollUsers.countDocuments({ company: companyId, payroll: req.body.payroll });
+
+  const payrolls = await PayrollUsers.find({ company: companyId, payroll: req.body.payroll })
+    .skip(skip)
+    .limit(limit);
+
+  websocketHandler.sendLog(req, `Retrieved ${payrolls.length} payroll users out of total ${totalCount}`, constants.LOG_TYPES.DEBUG);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: payrollUser
+    data: payrolls,
+    total: totalCount,
   });
 });
 
 // Delete a PayrollUser by ID
 exports.deletePayrollUser = catchAsync(async (req, res, next) => {
-  const payrollUser = await PayrollUsers.findByIdAndDelete(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting deletePayrollUser process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollUser = await PayrollUsers.findByIdAndDelete(id);
 
   if (!payrollUser) {
+    websocketHandler.sendLog(req, `PayrollUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully deleted PayrollUser ID: ${id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
   });
 });
+
 
 // Get all PayrollUsers by company
 exports.getAllPayrollUsersByPayroll = catchAsync(async (req, res, next) => {
@@ -4483,62 +4612,108 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
 });
 
 exports.getPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNF = await PayrollFNF.findById(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting getPayrollFNF process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollFNF = await PayrollFNF.findById(id);
+
   if (!payrollFNF) {
+    websocketHandler.sendLog(req, `PayrollFNF not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully retrieved PayrollFNF ID: ${id}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNF
   });
 });
 
+
 exports.updatePayrollFNF = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
+
+  websocketHandler.sendLog(req, `Starting updatePayrollFNF process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
   try {
+    const validStatuses = [
+      constants.Payroll_FNF_Status.OnHold,
+      constants.Payroll_FNF_Status.Closed,
+      constants.Payroll_FNF_Status.InProgress
+    ];
+
+    if (!validStatuses.includes(status)) {
+      websocketHandler.sendLog(req, `Invalid PayrollFNF status: ${status}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('payroll.invalidPayrollFNFStatus'), 400));
+    }
+
+    websocketHandler.sendLog(req, `Updating PayrollFNF status to ${status} for ID: ${id}`, constants.LOG_TYPES.TRACE);
+
     const updatedPayroll = await PayrollFNF.findByIdAndUpdate(
       id,
-      { status, updatedDate: new Date() }, // Update only status and updatedDate
-      { new: true } // Return the updated document
+      { status, updatedDate: new Date() },
+      { new: true }
     );
 
     if (!updatedPayroll) {
+      websocketHandler.sendLog(req, `PayrollFNF not found for ID: ${id}`, constants.LOG_TYPES.WARN);
       return res.status(404).json({ message: req.t('payroll.payrollNotFound') });
     }
 
+    websocketHandler.sendLog(req, `Successfully updated PayrollFNF ID: ${id}`, constants.LOG_TYPES.INFO);
+
     res.status(200).json(updatedPayroll);
   } catch (error) {
+    websocketHandler.sendLog(req, `Error updating PayrollFNF ID: ${id} - ${error.message}`, constants.LOG_TYPES.ERROR);
     res.status(500).json({ message: error.message });
   }
 });
 
+
 exports.deletePayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollfnf = await PayrollFNF.findByIdAndDelete(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Starting deletePayrollFNF process for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollfnf = await PayrollFNF.findByIdAndDelete(id);
+
   if (!payrollfnf) {
+    websocketHandler.sendLog(req, `PayrollFNF not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully deleted PayrollFNF ID: ${id}`, constants.LOG_TYPES.INFO);
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
   });
 });
 
+
 exports.getPayrollFNFByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+
+  websocketHandler.sendLog(req, 'Starting getPayrollFNFByCompany process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Pagination - Skip: ${skip}, Limit: ${limit}`, constants.LOG_TYPES.TRACE);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
   const totalCount = await PayrollFNF.countDocuments({ company: companyId });
 
   const payrollFNF = await PayrollFNF.find({ company: companyId })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
+
+  websocketHandler.sendLog(req, `Retrieved ${payrollFNF.length} PayrollFNF records out of ${totalCount}`, constants.LOG_TYPES.DEBUG);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4548,73 +4723,148 @@ exports.getPayrollFNFByCompany = catchAsync(async (req, res, next) => {
 });
 // Add a PayrollUser
 exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
 
-  // Check if companyId exists in cookies
+  websocketHandler.sendLog(req, 'Starting createPayrollFNFUser process', constants.LOG_TYPES.INFO);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
-  // Add companyId to the request body
   req.body.company = companyId;
   req.body.status = constants.Payroll_User_FNF.Pending;
 
   const payrollFNFUsers = await PayrollFNFUsers.create(req.body);
-  req.user = payrollFNFUsers.user; // or payrollUser.user if nested  
+
+  websocketHandler.sendLog(req, `Created PayrollFNFUser with ID: ${payrollFNFUsers._id}`, constants.LOG_TYPES.INFO);
+
+  req.user = payrollFNFUsers.user;
   req.payrollFNFUser = payrollFNFUsers._id;
   req.isFNF = true;
 
+  websocketHandler.sendLog(req, 'Starting calculations for new FNF user', constants.LOG_TYPES.TRACE);
+
   await payrollCalculationController.calculateProfessionalTax(req, res);
-  // ✅ Call calculateLWF immediately after user creation
   await payrollCalculationController.calculateLWF(req, res);
-
-  // ✅ Call calculatePF immediately after user creation
   await payrollCalculationController.calculatePF(req, res);
-
-  // ✅ Call calculateESIC immediately after user creation
   await payrollCalculationController.calculateESIC(req, res);
   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
+
+  websocketHandler.sendLog(req, 'Finished all calculations for PayrollFNFUser', constants.LOG_TYPES.INFO);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
 
+
 // Get a PayrollUser by ID
 exports.getPayrollFNFUserByUserId = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ user: req.params.userId });
+  const { userId } = req.params;
+
+  websocketHandler.sendLog(req, `Fetching PayrollFNFUsers by userId: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const payrollFNFUsers = await PayrollFNFUsers.find({ user: userId });
+
   if (!payrollFNFUsers) {
+    websocketHandler.sendLog(req, `No PayrollFNFUsers found for userId: ${userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
   }
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: payrollFNFUsers
-  });
-});
-// Get a PayrollUser by ID
-exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.findById(req.params.id);
-  if (!payrollFNFUsers) {
-    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
-  }
+
+  websocketHandler.sendLog(req, `Found ${payrollFNFUsers.length} PayrollFNFUsers for userId: ${userId}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers
   });
 });
 
+// Get a PayrollUser by ID
+exports.getPayrollFNFUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Fetching PayrollFNFUser by ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollFNFUsers = await PayrollFNFUsers.findById(id);
+
+  if (!payrollFNFUsers) {
+    websocketHandler.sendLog(req, `PayrollFNFUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.payrollUserNotFound'), 404));
+  }
+
+  websocketHandler.sendLog(req, `PayrollFNFUser found for ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: payrollFNFUsers
+  });
+});
+
+
 // Update a payrollFNFUsers by ID
 exports.updatePayrollFNFUser = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndUpdate(req.params.id, req.body, {
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Updating PayrollFNFUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true
   });
 
   if (!payrollFNFUsers) {
+    websocketHandler.sendLog(req, `PayrollFNFUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollFNFUsersNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully updated PayrollFNFUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: payrollFNFUsers
+  });
+});
+
+
+// Update a payrollFNFUsers by ID
+exports.updatePayrollFNFUserStatus = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  websocketHandler.sendLog(req, `Updating status for PayrollFNFUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const validStatuses = [
+    constants.Payroll_User_FNF_Status.Finilized,
+    constants.Payroll_User_FNF_Status.Rejected,
+    constants.Payroll_User_FNF_Status.Paid,
+    constants.Payroll_User_FNF_Status.Exit_Interview_Completed,
+    constants.Payroll_User_FNF_Status.Cleared,
+    constants.Payroll_User_FNF_Status.Approved,
+    constants.Payroll_User_FNF_Status.OnHold,
+    constants.Payroll_User_FNF_Status.Closed,
+    constants.Payroll_User_FNF_Status.Pending,
+    constants.Payroll_User_FNF_Status.InProgress
+  ];
+
+  if (!validStatuses.includes(status)) {
+    websocketHandler.sendLog(req, `Invalid PayrollFNFUser status: ${status}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.invalidPayrollFNFUserStatus'), 400));
+  }
+
+  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!payrollFNFUsers) {
+    websocketHandler.sendLog(req, `PayrollFNFUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.payrollFNFUsersNotFound'), 404));
+  }
+
+  websocketHandler.sendLog(req, `Status updated for PayrollFNFUser ID: ${id} to ${status}`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4624,11 +4874,18 @@ exports.updatePayrollFNFUser = catchAsync(async (req, res, next) => {
 
 // Delete a payrollFNFUsers by ID
 exports.deletePayrollFNFUser = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndDelete(req.params.id);
+  const { id } = req.params;
+
+  websocketHandler.sendLog(req, `Deleting PayrollFNFUser ID: ${id}`, constants.LOG_TYPES.INFO);
+
+  const payrollFNFUsers = await PayrollFNFUsers.findByIdAndDelete(id);
 
   if (!payrollFNFUsers) {
+    websocketHandler.sendLog(req, `PayrollFNFUser not found for ID: ${id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.payrollFNFUsersNotFound'), 404));
   }
+
+  websocketHandler.sendLog(req, `Successfully deleted PayrollFNFUser ID: ${id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -4640,18 +4897,23 @@ exports.deletePayrollFNFUser = catchAsync(async (req, res, next) => {
 exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+
+  websocketHandler.sendLog(req, 'Starting getAllPayrollFNFUsersByPayrollFNF process', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Pagination: Skip ${skip}, Limit ${limit}, PayrollFNF: ${req.body.payrollFNF}`, constants.LOG_TYPES.TRACE);
+
   if (!companyId) {
+    websocketHandler.sendLog(req, 'companyId not found in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
   const totalCount = await PayrollFNFUsers.countDocuments({ company: companyId, payrollFNF: req.body.payrollFNF });
 
   const payrollFNFUsers = await PayrollFNFUsers.find({ company: companyId, payrollFNF: req.body.payrollFNF })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
+
+  websocketHandler.sendLog(req, `Retrieved ${payrollFNFUsers.length} FNF users out of ${totalCount} total`, constants.LOG_TYPES.DEBUG);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -4659,6 +4921,7 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
     total: totalCount,
   });
 });
+
 
 // Fetch related records of user for attendance summary
 exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, next) => {

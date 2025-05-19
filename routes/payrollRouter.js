@@ -3544,7 +3544,6 @@ router.get('/:id', authController.protect, payrollController.getPayroll);
  *                 required: true
  *               status:
  *                 type: string
- *                 enum: ['InProgress', 'Complete Approval Pending', 'OnHold', 'Processed']
  *                 required: true
  *     responses:
  *       200:
@@ -3724,10 +3723,6 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *               totalTakeHome:
  *                  type: number
  *                  required: true
- *               status:
- *                  type: string
- *                  enum: [Active, OnHold, Processed]
- *                  required: true
  *               totalFixedAllowance:
  *                  type: number
  *               totalOtherBenefits:
@@ -3753,6 +3748,42 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *         description: Internal server error
  */
 router.put('/users/:id', authController.protect, payrollController.updatePayrollUser);
+/**
+ * @swagger
+ * /api/v1/payroll/users-status/{id}:
+ *   put:
+ *     summary: Update a Payroll User Status by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:  
+ *           type: string
+ *         description: ID of the PayrollUsers
+ *     requestBody:
+ *       description: New PayrollFNFUsers details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                  type: string
+ *                  required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PayrollFNFUsers
+ *       404:
+ *         description: PayrollFNFUsers not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/users-status/:id', authController.protect, payrollController.updatePayrollUserStatus);
 
 /**
  * @swagger
@@ -5297,7 +5328,6 @@ router.get('/fnf/:id', authController.protect, payrollController.getPayrollFNF);
  *                 required: true
  *               status:
  *                 type: string
- *                 enum: ['InProgress', 'Pending', 'OnHold', 'Processed','Approved','Paid','Cleared','Rejected','Finilized','Exit Interview Completed']
  *                 required: true
  *     responses:
  *       200:
@@ -5528,6 +5558,42 @@ router.get('/fnf/users-by-userId/:userId', authController.protect, payrollContro
  *         description: Internal server error
  */
 router.put('/fnf/users/:id', authController.protect, payrollController.updatePayrollFNFUser);
+/**
+ * @swagger
+ * /api/v1/payroll/fnf/users-status/{id}:
+ *   put:
+ *     summary: Update a PayrollFNF User Status by ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:  
+ *           type: string
+ *         description: ID of the PayrollFNFUsers
+ *     requestBody:
+ *       description: New PayrollFNFUsers details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                  type: string
+ *                  required: true
+ *     responses:
+ *       200:
+ *         description: Successful response with the updated PayrollFNFUsers
+ *       404:
+ *         description: PayrollFNFUsers not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/fnf/users-status/:id', authController.protect, payrollController.updatePayrollFNFUserStatus);
 
 /**
  * @swagger

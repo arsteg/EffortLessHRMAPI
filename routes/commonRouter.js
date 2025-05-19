@@ -1231,7 +1231,7 @@ router.get('/get-termination-appeal-status-list', authController.protect, common
  * @swagger
  * /api/v1/common/get-resignation-status-list:
  *   get:
- *     summary: Test Log
+ *     summary: Get Resignation Status List
  *     tags: [Common Management]
  *     security:
  *       - bearerAuth: []
@@ -1249,21 +1249,14 @@ router.get('/get-resignation-status-list', authController.protect, commonControl
  * @swagger
  * /api/v1/common/get-payroll-status-list:
  *   get:
- *     summary: Get all Payroll incomeTax entries
+ *     summary: Get all Payroll Status List
  *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
- *     parameters:
- *       - in: path
- *         name: payrollFNF
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Payroll
  *     responses:
  *       200:
- *         description: Successful response with Payroll incomeTax entries
+ *         description: Successful response with Payroll Status List
  *       500:
  *         description: Internal server error
  */
@@ -1271,26 +1264,52 @@ router.get('/get-payroll-status-list', authController.protect, commonController.
 
 /**
  * @swagger
- * /api/v1/common/get-fnf-user-status-list:
+ * /api/v1/common/get-payroll-user-status-list:
 *   get:
- *     summary: Get all Payroll incomeTax entries
+ *     summary: Get all Payroll Payroll FNF Status List
  *     tags: [Common Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
- *     parameters:
- *       - in: path
- *         name: payrollFNF
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the Payroll
  *     responses:
  *       200:
- *         description: Successful response with Payroll incomeTax entries
+ *         description: Successful response with Payroll FNF Status List
  *       500:
  *         description: Internal server error
  */
-router.get('/get-fnf-user-status-list', authController.protect, commonController.getFNFUserStatusList);
+router.get('/get-payroll-user-status-list', authController.protect, commonController.getPayrollUserStatusList);
+/**
+ * @swagger
+ * /api/v1/common/get-payroll-fnf-status-list:
+ *   get:
+ *     summary: Get all Payroll FNF Status List
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll Payroll FNF Status List
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-payroll-fnf-status-list', authController.protect, commonController.getPayrollFNFStatusList);
+
+/**
+ * @swagger
+ * /api/v1/common/get-payroll-fnf-user-status-list:
+*   get:
+ *     summary: Get all Payroll FNF User Status List
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with Payroll FNF User Status List
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-payroll-fnf-user-status-list', authController.protect, commonController.getPayrollFNFUserStatusList);
 
 module.exports = router;

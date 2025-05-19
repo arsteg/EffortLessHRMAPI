@@ -1577,8 +1577,6 @@ router.delete('/employee-salary-tax-salutaory-settings/:id', authController.prot
  *                 type: string
  *               roundOffApplicable:
  *                 type: boolean
- *               dailyWageApplicable:
- *                 type: boolean
  *               eligibleForOvertime:
  *                 type: boolean
  *     responses:
@@ -1703,8 +1701,6 @@ router.get('/employee-salutatory-details-by-user/:userId', authController.protec
  *               taxRegimeUpdatedBy:
  *                 type: string
  *               roundOffApplicable:
- *                 type: boolean
- *               dailyWageApplicable:
  *                 type: boolean
  *               eligibleForOvertime:
  *                 type: boolean

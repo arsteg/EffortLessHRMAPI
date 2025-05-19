@@ -77,10 +77,6 @@ const employeeSalutatoryDetailsSchema = new Schema({
     type: Boolean,
     default: false
   },
-  dailyWageApplicable: {
-    type: Boolean,
-    default: false
-  },
   eligibleForOvertime: {
     type: Boolean,
     default: false

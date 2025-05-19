@@ -12,7 +12,7 @@ var payrollSchema = new Schema({
     },
     status: {
       type: String,
-      enum: ['InProgress','Complete Approval Pending', 'OnHold', 'Processed'],
+      enum: ['InProgress', 'OnHold', 'Closed'],
       required: true
     },
     month: {

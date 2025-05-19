@@ -87,19 +87,22 @@ const Email_template_constant = {
     Rejected: "Rejected",  
     Approved: "Approved", 
   };
-  const Payroll_FNF = {   
+  const Payroll_Status = {   
     InProgress: "InProgress",
-    Pending: "Pending",
     OnHold: "OnHold",
-    Processed: "Processed",
-    Approved: "Approved",
-    Paid: "Paid",
-    Cleared: "Cleared",
-    Rejected: "Rejected",
-    Finilized: "Finilized",
-    Exit_Interview_Completed: "Exit Interview Completed"
+    Closed: "Closed"
   };
-  const Payroll_User_FNF = {   
+  const Payroll_User_Status = {   
+    InProgress: "Active",
+    OnHold: "OnHold",
+    Processed: "Processed"
+  };
+  const Payroll_FNF_Status = {   
+    InProgress: "InProgress",
+    OnHold: "OnHold",
+    Closed: "Closed"
+  };
+  const Payroll_User_FNF_Status = {   
     InProgress: "InProgress",
     Pending: "Pending",
     OnHold: "OnHold",
@@ -173,8 +176,9 @@ const Email_template_constant = {
     Partially_Cleared: "Partially Cleared",
     Cleared: "Cleared",
   };
-  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_FNF,
-    Payroll_User_FNF,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
+  module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_Status,
+    Payroll_User_Status,Payroll_FNF_Status,
+    Payroll_User_FNF_Status,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
     Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
     Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status,Payroll_FNF_Loan_Advance_status};
   
