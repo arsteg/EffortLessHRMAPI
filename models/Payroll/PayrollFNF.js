@@ -12,7 +12,7 @@ var payrollFNFSchema = new Schema({
     },
     status: {
       type: String,
-      enum: ['InProgress','Pending', 'OnHold', 'Processed','Approved','Paid','Cleared','Rjected','Finilized','Exit Interview Completed'],
+      enum: ['InProgress', 'OnHold', 'Closed'],
       required: true
     },
     month: {

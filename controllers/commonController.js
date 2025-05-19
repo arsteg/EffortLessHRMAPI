@@ -1012,7 +1012,7 @@ exports.getPayrollStatusList = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getPayrollStatusList', constants.LOG_TYPES.INFO);
 
   try {
-    const payrollStatusList = constants.Payroll_FNF;
+    const payrollStatusList = constants.Payroll_Status;
     console.log('status list: ', payrollStatusList);
     websocketHandler.sendLog(req, `Retrieved ${payrollStatusList.length} payroll statuses`, constants.LOG_TYPES.INFO);
 
@@ -1028,18 +1028,57 @@ exports.getPayrollStatusList = catchAsync(async (req, res, next) => {
     });
   }
 });
-
-exports.getFNFUserStatusList = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getFNFUserStatusList', constants.LOG_TYPES.INFO);
+exports.getPayrollFNFStatusList = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getPayrollFNFStatusList', constants.LOG_TYPES.INFO);
 
   try {
-    const fnfUserStatusList = Object.values(constants.Payroll_User_FNF);;
-
-    websocketHandler.sendLog(req, `Retrieved ${fnfUserStatusList.length} FNFUser statuses`, constants.LOG_TYPES.INFO);
+    const payrollFNFStatusList = constants.Payroll_FNF_Status;
+    console.log('status list: ', payrollFNFStatusList);
+    websocketHandler.sendLog(req, `Retrieved ${payrollFNFStatusList.length} payroll statuses`, constants.LOG_TYPES.INFO);
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      data: fnfUserStatusList
+      data: payrollFNFStatusList
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error fetching payroll statuses: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Error,
+      message: error.message
+    });
+  }
+});
+exports.getPayrollFNFUserStatusList = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getFNFUserStatusList', constants.LOG_TYPES.INFO);
+
+  try {
+    const payrollFNFUserStatus = Object.values(constants.Payroll_User_FNF_Status);;
+
+    websocketHandler.sendLog(req, `Retrieved ${payrollFNFUserStatus.length} FNFUser statuses`, constants.LOG_TYPES.INFO);
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: payrollFNFUserStatus
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error fetching fnfUser statuses: ${error.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Error,
+      message: err.message
+    });
+  }
+});
+exports.getPayrollUserStatusList = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getFNFUserStatusList', constants.LOG_TYPES.INFO);
+
+  try {
+    const payrollUserStatusList = Object.values(constants.Payroll_User_Status);
+
+    websocketHandler.sendLog(req, `Retrieved ${payrollUserStatusList.length} FNFUser statuses`, constants.LOG_TYPES.INFO);
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: payrollUserStatusList
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error fetching fnfUser statuses: ${error.message}`, constants.LOG_TYPES.ERROR);

@@ -496,7 +496,11 @@
     "noRemainingInstallments": "No remaining installments left for this loan or advance.",
     "invalidFNFUser": "The FNF payroll user provided is invalid.",
     "duplicateDisbursementEntry": "A disbursement entry already exists for this user and loan. Duplicate disbursement is not allowed.",
-    "statutoryNameMissing": "The statutory name is missing."    
+    "statutoryNameMissing": "The statutory name is missing.",
+    "invalidPayrollStatus": "Invalid Payroll Status",
+    "invalidPayrollFNFStatus": "Invalid Payroll FNF Status",
+    "invalidPayrollUserStatus":"Invalid Payroll User Status",
+    "invalidPayrollFNFUserStatus":"Invalid Payroll FNF User Status"
   },
   "pricing": {
     "employeeAssignmentNotFound": "The employee advance assignment was not found.",
@@ -674,10 +678,17 @@
     "missingUserId": "User ID missing in the request."
   },
   "userPreferences": {
+    "getAllSuccess": "Data fetched successfully.",
     "categoryNotFound": "The preference category was not found.",
     "optionNotFound": "The preference option was not found.",
     "preferenceExists": "The specified preference already exists.",
-    "preferenceNotFound": "The user preference was not found."
+    "preferenceNotFound": "The user preference was not found.",
+    "isscreenshotsoundenabled": "Screenshot Sound Enabled",
+    "isscreenshotnotificationenabled": "Screenshot Notification Enabled",
+    "isscreenshotblur": "Screenshot Blur",
+    "helpdeskaccessibale": "Helpdesk Accessible",
+    "livescreenview": "Live Screen View",
+    "ischatbotvisiable": "Enable Chatbot"
   },
   "zoom": {
     "meetingCreationFailed": "Unable to generate the meeting link.",

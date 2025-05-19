@@ -6,10 +6,26 @@ module.exports = router;
 
 /**
  * @swagger
+ * /api/v1/userpreferences/structure:
+ *   get:
+ *     summary: Get all user preferences
+ *     tags: [User Preferences Management]
+ *     responses:
+ *       200:
+ *         description: Successful response with all user preferences
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/structure', userPreferencesController.GetAllUserPreferences);
+
+/**
+ * @swagger
  * /api/v1/userPreferences/create:
  *   post:
  *     summary: Create or update a user preference
  *     tags: [User Preferences Management]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -44,8 +60,10 @@ router.post('/create', authController.protect, userPreferencesController.createO
  * @swagger
  * /api/v1/userPreferences/preference-key/{preferenceKey}:
  *   get:
- *     summary: Get preferences by preference key
+ *     summary: Get user preferences by preference key and user ID
  *     tags: [User Preferences Management]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: preferenceKey
@@ -53,9 +71,17 @@ router.post('/create', authController.protect, userPreferencesController.createO
  *         schema:
  *           type: string
  *         description: Preference key
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to fetch preferences for
  *     responses:
  *       200:
  *         description: Successful response with preferences
+ *       400:
+ *         description: User ID is required
  *       404:
  *         description: Preferences not found
  *       500:
@@ -69,6 +95,8 @@ router.get('/preference-key/:preferenceKey', authController.protect, userPrefere
  *   get:
  *     summary: Get preferences by user ID
  *     tags: [User Preferences Management]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -92,6 +120,8 @@ router.get('/user/:userId', authController.protect, userPreferencesController.ge
  *   delete:
  *     summary: Delete preferences by user ID
  *     tags: [User Preferences Management]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -113,8 +143,10 @@ router.delete('/user/:userId', authController.protect, userPreferencesController
  * @swagger
  * /api/v1/userPreferences/preference-key/{preferenceKey}:
  *   delete:
- *     summary: Delete preferences by preference key
+ *     summary: Delete user preferences by preference key and user ID
  *     tags: [User Preferences Management]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: preferenceKey
@@ -122,9 +154,17 @@ router.delete('/user/:userId', authController.protect, userPreferencesController
  *         schema:
  *           type: string
  *         description: Preference key
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to delete preferences for
  *     responses:
  *       200:
- *         description: Preferences deleted successfully
+ *         description: User preferences deleted successfully
+ *       400:
+ *         description: User ID is required
  *       404:
  *         description: Preferences not found
  *       500:

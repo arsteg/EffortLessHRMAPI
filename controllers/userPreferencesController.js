@@ -4,9 +4,43 @@ const UserPreference = require('../models/userPreferences/userPreferenceModel.js
 const PreferenceOption = require('../models/userPreferences/userPreferenceOptionModel.js');
 const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
+const path = require('path');
+const fs = require('fs').promises;
+
+exports.GetAllUserPreferences = catchAsync(async (req, res, next) => {
+  const prefFilePath = path.join(__dirname, '../config/user-preferences.json');
+
+  try {
+    const prefData = await fs.readFile(prefFilePath, 'utf8');
+    const preferenceStructure = JSON.parse(prefData);
+
+    const updatedStructure = preferenceStructure.map(pref => {
+      if (pref.key && pref.key.endsWith('_explicit') && pref.metadata && pref.metadata.id) {
+        const translationKey = `userPreferences.${pref.metadata.id}`;
+        return {
+          ...pref,
+          metadata: {
+            ...pref.metadata,
+            label: req.t(`${translationKey}`) || pref.metadata.id,
+            placeholder: req.t(`${translationKey}`) || pref.metadata.id
+          }
+        };
+      }
+      return pref;
+    });
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: req.t('userPreferences.getAllSuccess') || 'User preferences retrieved successfully',
+      data: updatedStructure
+    });
+  } catch (err) {
+    // Pass error to global error handler
+    next(err);
+  }
+});
 
 exports.createOrUpdatePreference = catchAsync(async (req, res, next) => {
-    console.log('create Or Update Preference');
     websocketHandler.sendLog(req, 'Creating or updating preference', constants.LOG_TYPES.TRACE);
   
     const { userId, preferenceKey, preferenceValue } = req.body;
@@ -81,22 +115,36 @@ exports.createOrUpdatePreference = catchAsync(async (req, res, next) => {
   });
 
 exports.getPreferenceByKey = catchAsync(async (req, res, next) => {
-    console.log('getPreferenceByKey');
   const { preferenceKey } = req.params;
+  const { userId } = req.query;
 
-  const preferences = await PreferenceOption.find({ preferenceKey }).populate({
-    path: 'preferenceOptionId',
-    model: 'UserPreference'
-  });
+  if (!userId) {
+    return next(new AppError('User ID is required', 400));
+  }
 
-  if (!preferences.length) {
+  // Step 1: Find all preference options for the key
+  const preferenceOptions = await PreferenceOption.find({ preferenceKey });
+
+  if (!preferenceOptions.length) {
     return next(new AppError('No preferences found for this key', 404));
+  }
+
+  const preferenceOptionIds = preferenceOptions.map(opt => opt._id);
+
+  // Step 2: Find user preferences for the given user and option IDs
+  const userPreferences = await UserPreference.find({
+    userId,
+    preferenceOptionId: { $in: preferenceOptionIds }
+  }).populate('preferenceOptionId');
+
+  if (!userPreferences.length) {
+    return next(new AppError('No preferences found for this user and key', 404));
   }
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     message: 'Preferences retrieved successfully',
-    data: { preferences }
+    data: { preferences: userPreferences }
   });
 });
 
@@ -139,24 +187,45 @@ exports.deletePreferencesByUserId = catchAsync(async (req, res, next) => {
 
 exports.deletePreferencesByKey = catchAsync(async (req, res, next) => {
   const { preferenceKey } = req.params;
+  const { userId } = req.query; // or req.body based on how you're sending it
 
+  if (!userId) {
+    return next(new AppError('User ID is required', 400));
+  }
+
+  // Step 1: Get preference options by key
   const preferenceOptions = await PreferenceOption.find({ preferenceKey });
+
   if (!preferenceOptions.length) {
     return next(new AppError('No preferences found for this key', 404));
   }
 
   const preferenceOptionIds = preferenceOptions.map(opt => opt._id);
-  await UserPreference.deleteMany({ preferenceOptionId: { $in: preferenceOptionIds } });
-  await PreferenceOption.deleteMany({ preferenceKey });
+
+  // Step 2: Delete user preferences for this user and preference key
+  const result = await UserPreference.deleteMany({
+    userId,
+    preferenceOptionId: { $in: preferenceOptionIds }
+  });
+
+  // Step 3: Optionally delete orphaned preference options (if no users reference them anymore)
+  const remainingUsage = await UserPreference.find({
+    preferenceOptionId: { $in: preferenceOptionIds }
+  });
+
+  if (!remainingUsage.length) {
+    await PreferenceOption.deleteMany({ _id: { $in: preferenceOptionIds } });
+  }
 
   websocketHandler.sendLog(
     req,
-    `Deleted preferences for key ${preferenceKey}`,
+    `Deleted preferences for user ${userId} and key ${preferenceKey}`,
     constants.LOG_TYPES.INFO
   );
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    message: 'Preferences deleted successfully'
+    message: 'User preferences deleted successfully',
+    deletedCount: result.deletedCount
   });
 });
