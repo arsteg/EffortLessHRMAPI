@@ -3843,7 +3843,6 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       data: []
     });
   }
-
   const userIds = payrollUsers.map(user => user.user._id);
 
   const salaryDetailsList = await EmployeeSalaryDetails.find({ user: { $in: userIds } })
@@ -4398,7 +4397,7 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
 
   // Add companyId to the request body
   req.body.company = companyId;
-  req.body.status = constants.Payroll_FNF.Pending;
+  req.body.status = constants.Payroll_FNF_Status.InProgress;
   const payrollFNF = await PayrollFNF.create(req.body);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
