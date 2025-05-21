@@ -68,7 +68,12 @@ const scheduleController = require('../controllers/ScheduleController');
 const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
-
+const {        
+  calculateIncomeTax,       // Checks if LWF is applicable for the current month
+  getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
+  GetTDSAppicableAmountAfterDeclartion,
+  getTotalHRAAmount
+} = require('../Services/tds.service');
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2664,6 +2669,7 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
   }
 
   req.body.company = companyId;
+  req.body.status = constants.Payroll_Status.InProgress;
   websocketHandler.sendLog(req, 'Assigned companyId to request body', constants.LOG_TYPES.DEBUG);
 
   const payroll = await Payroll.create(req.body);
@@ -5921,5 +5927,28 @@ exports.getFNFTDSAmountByUser = catchAsync(async (req, res, next) => {
       fnfDaysTDS,
       regime: data.regime
     }
+  });
+});
+
+// ✅ Get total TDS amount for a user including FNF days tax
+exports.getTotalTaxableAmountFromSalaryStructureByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ TDS: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+   
+ // 4️⃣ Calculate eligible salary amount
+   let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
+
+  // 5. Final response
+  res.status(200).json({
+    status: 'success',
+     data: totalTDSAppicablearlyAmount
   });
 });

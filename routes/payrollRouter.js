@@ -3299,9 +3299,6 @@ router.delete('/ctc-templates/:id', authController.protect, payrollController.de
  *               date:
  *                 type: string
  *                 format: date
- *               status:
- *                 type: string
- *                 enum: ['InProgress', 'Complete Approval Pending', 'OnHold', 'Processed']
  *               month:
  *                 type: string
  *               year:
@@ -3561,9 +3558,9 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *                  type: number
  *               totalVariableDeduction:
  *                  type: number
- *               totalLoan:
+ *               totalLoanDisbursed:
  *                  type: number
- *               totalAdvance:
+ *               totalLoanRepayment:
  *                  type: number
  *     responses:
  *       200:
@@ -7328,5 +7325,30 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
  *         description: Internal server error
  */
 router.get('/generatedPayroll-by-fnf-payroll/:fnfPayroll', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
+
+/**
+ * @swagger
+ * /api/v1/payroll/get-total-taxable-amount-from-salary-structure-by-user/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-total-taxable-amount-from-salary-structure-by-user/:userId', authController.protect, payrollController.getTotalTaxableAmountFromSalaryStructureByUser);
 
 module.exports = router;
