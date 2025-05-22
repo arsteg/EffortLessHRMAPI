@@ -4853,6 +4853,13 @@ router.post('/generatedPayroll-by-company', authController.protect, payrollContr
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
  *     responses:
  *       200:
  *         description: Successful response with the generatedPayroll
