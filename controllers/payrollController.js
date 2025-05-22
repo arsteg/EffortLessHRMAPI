@@ -3472,17 +3472,31 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   // Step 3: Fetch related data and construct response
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
-      websocketHandler.sendLog(req, `Fetching statutory details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `Fetching details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
-      // Fetch statutory details for this payrollUser
+      // Fetch statutory details, overtime, and income tax for this payrollUser
       const [statutoryDetails] = await Promise.all([
         PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
 
+    // Get latest PayrollOvertime and PayrollIncomeTax records
+    const [latestOvertime, latestIncomeTax] = await Promise.all([
+      PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
+        .sort({ _id: -1 }), // sort by newest
+      PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
+        .sort({ _id: -1 })  // sort by newest
+    ]);
+
+          // Extract required fields with fallback values
+          const finalOvertime = latestOvertime?.FinalOvertime || '0';
+          const tdsCalculated = latestIncomeTax?.TDSCalculated || 0 ;
+
       // Return the full PayrollUsers document with related data
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
-        statutoryDetails
+        statutoryDetails,
+        finalOvertime,
+        tdsCalculated
       };
     })
   );
@@ -3498,7 +3512,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 });
 
 exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
-  const userId = req.params.user; // Get user ID from URL (assuming 'user' as per previous versions)
+  const userId = req.params.userId; // Get user ID from URL (assuming 'user' as per previous versions)
 
   websocketHandler.sendLog(req, 'Starting getGeneratedPayrollByUserId process', constants.LOG_TYPES.INFO);
 
@@ -3548,11 +3562,24 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         payrollUser: payrollUser._id,
         company: payrollUser.company
       });
+    // Get latest PayrollOvertime and PayrollIncomeTax records
+    const [latestOvertime, latestIncomeTax] = await Promise.all([
+      PayrollOvertime.findOne({ payrollUser: payrollUser._id })
+        .sort({ _id: -1 }), // sort by newest
+      PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
+        .sort({ _id: -1 })  // sort by newest
+    ]);
+
+          // Extract required fields with fallback values
+          const finalOvertime = latestOvertime?.FinalOvertime || '0';
+          const tdsCalculated = latestIncomeTax?.TDSCalculated || 0 ;
 
       // Return the full PayrollUsers document with populated fields
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
-        statutoryDetails
+        statutoryDetails,
+        finalOvertime,
+        tdsCalculated
       };
     })
   );
