@@ -4302,15 +4302,13 @@ router.delete('/payroll-loan-advance/:id', authController.protect, payrollContro
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser1:
+ *               PayrollUser:
  *                 type: string
  *                 required: true
  *               TotalFlexiBenefitAmount:
  *                 type: number
  *                 required: true
- *               TotalProfessionalTaxAmount:
- *                 type: number
- *                 required: true
+
  *     responses:
  *       201:
  *         description: Flexi Benefits and PF Tax record successfully created
@@ -4422,8 +4420,6 @@ router.get('/flexi-benefits-pf-tax-by-payroll/:payroll', authController.protect,
  *             type: object
  *             properties:
  *               TotalFlexiBenefitAmount:
- *                 type: number
- *               TotalProfessionalTaxAmount:
  *                 type: number
  *     responses:
  *       200:
@@ -6688,9 +6684,6 @@ router.delete('/payroll-fnf-statutory-benefits/:id', authController.protect, pay
  *               TotalFlexiBenefitAmount:
  *                 type: number
  *                 required: true
- *               TotalProfessionalTaxAmount:
- *                 type: number
- *                 required: true
  *     responses:
  *       201:
  *         description: Flexi Benefits and PF Tax record successfully created
@@ -6802,8 +6795,6 @@ router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/:payrollFNF', auth
  *             type: object
  *             properties:
  *               TotalFlexiBenefitAmount:
- *                 type: number
- *               TotalProfessionalTaxAmount:
  *                 type: number
  *     responses:
  *       200:

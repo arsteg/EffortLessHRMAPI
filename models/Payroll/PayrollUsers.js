@@ -14,7 +14,7 @@ var payrollUsersSchema = new Schema({
     },
     totalFixedAllowance: {
       type: Number
-    },
+    },  
     totalEmployeeStatutoryDeduction: {
       type: Number
     },
@@ -27,10 +27,10 @@ var payrollUsersSchema = new Schema({
     totalVariableDeduction: {
       type: Number
     },
-    totalLoan: {
+    totalLoanDisbursed: {
       type: Number
     },
-    totalAdvance: {
+    totalLoanRepayment: {
       type: Number
     },
     totalFlexiBenefits: {

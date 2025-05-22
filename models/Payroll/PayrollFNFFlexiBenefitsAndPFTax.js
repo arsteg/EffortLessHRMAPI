@@ -9,10 +9,6 @@ var payrollFNFFlexiBenefitsAndPFTaxSchema = new Schema({
     TotalFlexiBenefitAmount: {
       type: Number,
       required: true
-    },
-    TotalProfessionalTaxAmount: {
-      type: Number,
-      required: true
     }
   }, { collection: 'PayrollFNFFlexiBenefitsAndPFTax' });
       
