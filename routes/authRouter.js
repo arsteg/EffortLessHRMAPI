@@ -512,6 +512,47 @@ authRouter.get('/rolePermission/:id',authController.protect,authController.getRo
  *
  */
 authRouter.get('/rolePermissions',authController.protect,authController.getAllRolePermissions);
+
+/**
+ * @swagger
+ * /api/v1/auth/rolePermissions/by-role:
+ *   get:
+ *     tags:
+ *       - Role-Based Access Control
+ *     summary: "Get Permission Names by Role Name"
+ *     description: "Fetches the list of permission names assigned to a given role name."
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: roleName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the role to retrieve permissions for.
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: "List of permission names"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: "Bad request if roleName is missing"
+ *       404:
+ *         description: "Role not found"
+ */
+authRouter.get('/rolePermissions/by-role', authController.protect, authController.getPermissionsByRole);
+
 /**
  * @swagger
  * /api/v1/auth/rolePermission/create:
