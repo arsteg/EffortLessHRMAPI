@@ -3680,7 +3680,6 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
         totalFixedDeduction: totalFixedDeductions,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
-        totalPfTax: pfTaxes,
         totalIncomeTax,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
@@ -3828,7 +3827,6 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
-        totalPfTax: pfTaxes,
         totalIncomeTax: taxes[0]?.TDSCalculated || 0,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
@@ -3963,16 +3961,14 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
 
-      const totalPfTax = flexiBenefits
-        .reduce((sum, pf) => sum + (pf.TotalProfessionalTaxAmount || 0), 0);
-
+   
       const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
       const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
 
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary + totalEmployeeStatutoryContribution + totalFlexiBenefits;
       const totalGrossSalary = monthlySalary + totalFixedAllowance + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalPfTax + totalIncomeTax);
+      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment  + totalIncomeTax);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -4003,7 +3999,6 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         statutoryDetails,
         overtime,
         flexiBenefits,
-        loanAdvances,
         incomeTax,
         totalFixedAllowance,
         totalFixedDeduction,
@@ -4012,7 +4007,6 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalLoanDisbursed,
         totalLoanRepayment,
         totalFlexiBenefits,
-        totalPfTax,
         totalOvertime,
         totalIncomeTax,
         yearlySalary,

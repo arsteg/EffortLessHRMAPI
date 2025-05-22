@@ -30,9 +30,6 @@ var payrollFNFUsersSchema = new Schema({
     totalLoan: {
       type: Number
     },
-    totalAdvance: {
-      type: Number
-    },
     totalFlexiBenefits: {
       type: Number,
       required: true
