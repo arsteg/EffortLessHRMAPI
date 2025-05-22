@@ -3424,130 +3424,72 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
 
 exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId; // Get companyId from cookies
-  if (!companyId) {
+
+  websocketHandler.sendLog(req, 'Starting getAllGeneratedPayroll process', constants.LOG_TYPES.INFO);
+
+  // Validate companyId
+  if (!companyId || !mongoose.isValidObjectId(companyId)) {
+    websocketHandler.sendLog(req, `Invalid companyId: ${companyId}`, constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       message: req.t('payroll.companyIdNotFound')
     });
   }
-  // Step 1: Find all PayrollUsers for the given payroll and company
+
+  websocketHandler.sendLog(req, `Fetching payrolls for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
+
+  // Step 1: Find all Payrolls for the given company
   const payrolls = await Payroll.find({ company: companyId });
 
+  // Step 2: Find all PayrollUsers for the given payrolls and company
   const payrollUsers = await PayrollUsers.find({
     payroll: { $in: payrolls.map(p => p._id) },
     company: companyId // Filter by company
-  }).populate({
-    path: 'user',
-    select: 'id firstName lastName email'
-  });
+  })
+    .populate({
+      path: 'user',
+      select: 'id firstName lastName email'
+    })
+    .populate({
+      path: 'payroll',
+      select: 'payrollPeriod' // Adjust fields as needed
+    })
+    .populate({
+      path: 'company',
+      select: 'name' // Adjust fields as needed
+    });
+
   if (!payrollUsers.length) {
+    websocketHandler.sendLog(req, `No payroll users found for companyId: ${companyId}`, constants.LOG_TYPES.INFO);
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: []
     });
   }
-  const userIds = payrollUsers.map(user => user?.user?._id);
 
-  const salaryDetailsList = await EmployeeSalaryDetails.find({
-    user: { $in: userIds },
-    company: companyId // Filter by company
-  })
-    .sort({ createdAt: -1 }) // Assuming latest salary is determined by creation date
-    .populate({ path: 'user', select: 'firstName lastName email' });
+  websocketHandler.sendLog(req, `Found ${payrollUsers.length} payroll users for companyId: ${companyId}`, constants.LOG_TYPES.INFO);
 
+  // Step 3: Fetch related data and construct response
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
-      const userSalary = salaryDetailsList.find(salary => salary?.user?._id.equals(payrollUser?.user?._id));
+      websocketHandler.sendLog(req, `Fetching statutory details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
-      const allLoanAdvances = await PayrollLoanAdvance.find({
-        payrollUser: payrollUser?._id,
-        type: 'Repayment',
-        company: companyId
-      });
-
-      const flexiBenefits = await PayrollFlexiBenefitsPFTax.find({
-        PayrollUser: payrollUser?._id,
-        company: companyId
-      });
-
-      const overtime = await PayrollOvertime.find({
-        PayrollUser: payrollUser?._id,
-        company: companyId
-      });
-
-      const incomeTax = await PayrollIncomeTax.find({
-        PayrollUser: payrollUser?._id,
-        company: companyId
-      });
-      const statutoryDetails = await PayrollStatutory.find({
-        payrollUser: payrollUser?._id,
-        company: companyId
-      });
-      const attendanceSummary = await PayrollAttendanceSummary.find({
-        payrollUser: payrollUser?._id,
-        company: companyId
-      });
-
-      if (!userSalary) {
-        return null;
-      }
-
-      let monthlySalary = 0;
-      let yearlySalary = 0;
-
-      if (userSalary?.enteringAmount === 'Monthly') {
-        monthlySalary = userSalary.Amount;
-        yearlySalary = monthlySalary * 12;
-      } else if (userSalary?.enteringAmount === 'Yearly') {
-        yearlySalary = userSalary.Amount;
-        monthlySalary = yearlySalary / 12;
-      }
-
-      const [fixedAllowances, fixedDeductions, variableAllowances] = await Promise.all([
-        SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
-        SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
-        SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary?._id, company: companyId }),
+      // Fetch statutory details for this payrollUser
+      const [statutoryDetails] = await Promise.all([
+        PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
 
-      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
-      const totalFixedDeductions = fixedDeductions.reduce((sum, fd) => sum + (fd?.monthlyAmount || 0), 0);
-      const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa?.monthlyAmount || 0), 0);
-
-      const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
-
-      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
-      
-      const totalOvertime = overtime?.reduce((sum, ot) => sum + (ot?.OvertimeAmount || 0), 0);
-
-      const totalIncomeTax = incomeTax?.length ? incomeTax[0]?.TDSCalculated : 0;
-
+      // Return the full PayrollUsers document with related data
       return {
-        PayrollUser: {
-          id: payrollUser._id,
-          user: {
-            name: `${payrollUser?.user?.firstName} ${payrollUser?.user?.lastName}`,
-            id: payrollUser?.user?._id
-          }
-        },
-        attendanceSummary,
-        totalOvertime,
-        totalFixedAllowance,
-        totalVariableAllowance,
-        totalFixedDeduction: totalFixedDeductions,
-        totalLoanAdvance: userLoanAdvances,
-        totalFlexiBenefits: flexiBenefitsTotal,
-        totalPfTax: pfTaxes,
-        totalIncomeTax,
-        yearlySalary: yearlySalary || 0,
-        monthlySalary: monthlySalary || 0,
-        payroll: payrolls.find(p => p._id.equals(payrollUser.payroll)),
-        statutoryDetails: statutoryDetails
+        PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
+        statutoryDetails
       };
     })
   );
 
   const filteredPayrollList = generatedPayrollList.filter(Boolean);
-  // const filteredPayrollList = await Payroll.find({ company: companyId })
+
+  websocketHandler.sendLog(req, `Successfully retrieved ${filteredPayrollList.length} payroll records for companyId: ${companyId}`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -3556,15 +3498,20 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 });
 
 exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
-  const userId = req.params.userId; // Get user ID from URL
+  const userId = req.params.user; // Get user ID from URL (assuming 'user' as per previous versions)
+
+  websocketHandler.sendLog(req, 'Starting getGeneratedPayrollByUserId process', constants.LOG_TYPES.INFO);
 
   // Validate userId
   if (!userId || !mongoose.isValidObjectId(userId)) {
+    websocketHandler.sendLog(req, `Invalid userId: ${userId}`, constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       message: req.t('payroll.userIdNotFound')
     });
   }
+
+  websocketHandler.sendLog(req, `Fetching payroll users for userId: ${userId}`, constants.LOG_TYPES.TRACE);
 
   // Step 1: Find all PayrollUsers for the given user
   const payrollUsers = await PayrollUsers.find({ user: userId })
@@ -3582,15 +3529,20 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
     });
 
   if (!payrollUsers.length) {
+    websocketHandler.sendLog(req, `No payroll users found for userId: ${userId}`, constants.LOG_TYPES.INFO);
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: []
     });
   }
 
+  websocketHandler.sendLog(req, `Found ${payrollUsers.length} payroll users for userId: ${userId}`, constants.LOG_TYPES.INFO);
+
   // Step 2: Fetch related data and construct response
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
+      websocketHandler.sendLog(req, `Fetching statutory details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
+
       // Fetch statutory details for this payrollUser
       const statutoryDetails = await PayrollStatutory.find({
         payrollUser: payrollUser._id,
@@ -3607,13 +3559,13 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
 
   const filteredPayrollList = generatedPayrollList.filter(Boolean);
 
+  websocketHandler.sendLog(req, `Successfully retrieved ${filteredPayrollList.length} payroll records for userId: ${userId}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: filteredPayrollList
   });
 });
-
-
 exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId; // Get companyId from cookies
   if (!companyId) {
@@ -3894,31 +3846,71 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
 });
 
 exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) => {
+  const payrollId = req.params.payroll; // Get payroll ID from URL
+
+  websocketHandler.sendLog(req, 'Starting getAllGeneratedPayrollByPayrollId process', constants.LOG_TYPES.INFO);
+
+  // Validate payrollId
+  if (!payrollId || !mongoose.isValidObjectId(payrollId)) {
+    websocketHandler.sendLog(req, `Invalid payrollId: ${payrollId}`, constants.LOG_TYPES.WARN);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('payroll.payrollIdNotFound')
+    });
+  }
+
+  websocketHandler.sendLog(req, `Fetching payroll users for payrollId: ${payrollId}`, constants.LOG_TYPES.TRACE);
+
   // Step 1: Fetch PayrollUsers for the given payroll ID
-  const payrollUsers = await PayrollUsers.find({ payroll: req.params.payroll }).populate({
-    path: 'user',
-    select: 'id firstName lastName email'
-  });
+  const payrollUsers = await PayrollUsers.find({ payroll: payrollId })
+    .populate({
+      path: 'user',
+      select: 'id firstName lastName email'
+    })
+    .populate({
+      path: 'payroll',
+      select: 'payrollPeriod' // Adjust fields as needed
+    })
+    .populate({
+      path: 'company',
+      select: 'name' // Adjust fields as needed
+    });
 
   if (!payrollUsers.length) {
+    websocketHandler.sendLog(req, `No payroll users found for payrollId: ${payrollId}`, constants.LOG_TYPES.INFO);
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: []
     });
   }
 
+  websocketHandler.sendLog(req, `Found ${payrollUsers.length} payroll users for payrollId: ${payrollId}`, constants.LOG_TYPES.INFO);
+
   const userIds = payrollUsers.map(user => user.user._id);
-  const payroll = await Payroll.findById(req.params.payroll);
+  websocketHandler.sendLog(req, `Fetching payroll and salary details for ${userIds.length} users`, constants.LOG_TYPES.TRACE);
+
+  const payroll = await Payroll.findById(payrollId);
+  if (!payroll) {
+    websocketHandler.sendLog(req, `No payroll found with ID: ${payrollId}`, constants.LOG_TYPES.WARN);
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('payroll.payrollNotFound')
+    });
+  }
+
   const salaryDetailsList = await EmployeeSalaryDetails.find({ user: { $in: userIds } })
-    .sort({ length: -1 })
+    .sort({ createdAt: -1 }) // Changed from length to createdAt for consistency
     .populate({ path: 'user', select: 'firstName lastName email' });
 
   // Step 2: Process each PayrollUser and save calculated values
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
+      websocketHandler.sendLog(req, `Processing payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
+
       const userSalary = salaryDetailsList.find(salary => salary.user._id.equals(payrollUser.user._id));
 
       if (!userSalary) {
+        websocketHandler.sendLog(req, `No salary details found for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.WARN);
         return null; // Skip users with no salary details
       }
 
@@ -3926,13 +3918,15 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       let monthlySalary = 0;
       let yearlySalary = 0;
 
-      if (userSalary?.enteringAmount === 'Monthly') {
+      if (userSalary.enteringAmount === 'Monthly') {
         monthlySalary = userSalary.Amount;
         yearlySalary = monthlySalary * 12;
-      } else if (userSalary?.enteringAmount === 'Yearly') {
+      } else if (userSalary.enteringAmount === 'Yearly') {
         yearlySalary = userSalary.Amount;
         monthlySalary = yearlySalary / 12;
       }
+
+      websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Fetch related data
       const [fixedAllowances, fixedDeductions, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary] = await Promise.all([
@@ -3968,7 +3962,9 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
-      
+
+      const totalPfTax = flexiBenefits
+        .reduce((sum, pf) => sum + (pf.TotalProfessionalTaxAmount || 0), 0);
 
       const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
       const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
@@ -3976,7 +3972,9 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary + totalEmployeeStatutoryContribution + totalFlexiBenefits;
       const totalGrossSalary = monthlySalary + totalFixedAllowance + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
+      const totalTakeHome = totalGrossSalary - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalPfTax + totalIncomeTax);
+
+      websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Update PayrollUsers document with calculated values
       await PayrollUsers.updateOne(
@@ -3993,22 +3991,20 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
             totalCTC,
             totalGrossSalary,
             totalTakeHome
+            // Add totalOvertime, totalPfTax, totalIncomeTax if in schema
           }
         }
       );
 
+      // Return the full PayrollUsers document with related data
       return {
-        PayrollUser: {
-          id: payrollUser._id,
-          status: payrollUser.status,
-          user: {
-            name: `${payrollUser.user.firstName} ${payrollUser.user.lastName}`,
-            id: payrollUser.user._id,
-            email: payrollUser.user.email
-          }
-        },
+        PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
         attendanceSummary,
-        totalOvertime,
+        statutoryDetails,
+        overtime,
+        flexiBenefits,
+        loanAdvances,
+        incomeTax,
         totalFixedAllowance,
         totalFixedDeduction,
         totalEmployeeStatutoryContribution,
@@ -4016,19 +4012,22 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalLoanDisbursed,
         totalLoanRepayment,
         totalFlexiBenefits,
+        totalPfTax,
+        totalOvertime,
         totalIncomeTax,
         yearlySalary,
         monthlySalary,
         totalCTC,
         totalGrossSalary,
         totalTakeHome,
-        statutoryDetails,
         payroll
       };
     })
   );
 
   const filteredPayrollList = generatedPayrollList.filter(Boolean);
+
+  websocketHandler.sendLog(req, `Successfully retrieved ${filteredPayrollList.length} payroll records for payrollId: ${payrollId}`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
