@@ -267,6 +267,45 @@ exports.webSignup = catchAsync(async(req, res, next) => {
         } else {
           console.log('No Attendance Mode found to duplicate.');
         }
+
+        // Step: Map role names to new role IDs for the new company
+        const newRoles = await Role.find({ company: company._id });
+        const roleNameToNewRoleIdMap = {};
+        newRoles.forEach(role => {
+          roleNameToNewRoleIdMap[role.name] = role._id.toString();
+        });
+        
+        // Step: Fetch RolePermissions of default company
+        const defaultRolePermissions = await RolePermission.find({ company: companyId });
+        if (defaultRolePermissions.length > 0) {
+          const duplicatedRolePermissions = await Promise.all(
+            defaultRolePermissions.map(async rp => {
+            const role = await Role.findById(rp.roleId);
+            if (!role) return null;
+            const newRoleId = roleNameToNewRoleIdMap[role.name];
+            if (!newRoleId) return null;
+
+            return {
+              roleId: newRoleId,
+              permissionId: rp.permissionId,
+              company: company._id,
+              createdBy: null, // or set to system/admin user if available
+              updatedBy: null,
+              createdOn: new Date(),
+              updatedOn: new Date()
+            };
+          }));
+
+          const filteredPermissions = duplicatedRolePermissions.filter(p => p !== null);
+          if (filteredPermissions.length > 0) {
+            await RolePermission.insertMany(filteredPermissions);
+            console.log('RolePermissions duplicated successfully.');
+          } else {
+            console.log('No matching roles found for duplicating RolePermissions.');
+          }
+        } else {
+          console.log('No RolePermission entries found to duplicate.');
+        }
   }
   var role =null;
   if(newCompany==true)
@@ -920,13 +959,52 @@ exports.getAllRolePermissions = catchAsync(async (req, res, next) => {
   });    
 });
 
+exports.getPermissionsByRole = catchAsync(async (req, res, next) => {
+  const roleName = req.query.roleName;
+  if (!roleName) {
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.notFound')
+    });
+  }
+  // Get the role by name
+  const role = await Role.findOne({ name: roleName, company: req.cookies.companyId });
+  if (!role) {
+    return res.status(404).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('common.notFound')
+    });
+  }
+
+  // Get role-permission mappings for the role
+  const rolePermissions = await RolePermission.find({
+    roleId: role._id,
+    company: req.cookies.companyId
+  }).populate('permissionId');
+
+  // Extract permission names
+  //const permissionNames = rolePermissions.map(rp => rp.permission.name);
+  const permissionNames = rolePermissions.map(rp => rp.permissionId.permissionName);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: permissionNames
+  });
+});
+
 exports.createRolePermission = catchAsync(async (req, res, next) => { 
-  const rolePermissionexists = await RolePermission.find({}).where('company').equals(req.cookies.companyId).where('roleId').equals(req.body.roleId);  
+  const { roleId, permissionId } = req.body;
+  const companyId = req.cookies.companyId;
+  const rolePermissionexists = await RolePermission.findOne({
+    company: companyId,
+    roleId: roleId,
+    permissionId: permissionId
+  });
   
-  if (rolePermissionexists.length>0) {
+  if (rolePermissionexists) {
     return res.status(409).json({
       status: constants.APIResponseStatus.Error,
-      message: "This role already has a permission assigned.",
+      message: "This role already has the selected permission assigned.",
     });
   }
   else{    
@@ -947,13 +1025,14 @@ exports.updateRolePermission = catchAsync(async (req, res, next) => {
   const rolePermissionExists = await RolePermission.find({
     _id: { $ne: req.params.id }, // Exclude the record being updated
     company: req.cookies.companyId,
-    roleId: req.body.roleId
+    roleId: req.body.roleId,
+    permissionId: req.body.permissionId
   });
 
   if (rolePermissionExists.length > 0) {
     return res.status(409).json({
       status: constants.APIResponseStatus.Error,
-      message: "This role already has a permission assigned."
+      message: "This role already has the selected permission assigned."
     });
   }
 
