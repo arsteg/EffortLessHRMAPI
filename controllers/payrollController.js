@@ -68,7 +68,7 @@ const scheduleController = require('../controllers/ScheduleController');
 const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
-const {        
+const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
   GetTDSAppicableAmountAfterDeclartion,
@@ -3452,7 +3452,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
     })
     .populate({
       path: 'payroll',
-      select: 'payrollPeriod' // Adjust fields as needed
+      select: 'month year date status' // Adjust fields as needed
     })
     .populate({
       path: 'company',
@@ -3479,17 +3479,17 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
 
-    // Get latest PayrollOvertime and PayrollIncomeTax records
-    const [latestOvertime, latestIncomeTax] = await Promise.all([
-      PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
-        .sort({ _id: -1 }), // sort by newest
-      PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
-        .sort({ _id: -1 })  // sort by newest
-    ]);
+      // Get latest PayrollOvertime and PayrollIncomeTax records
+      const [latestOvertime, latestIncomeTax] = await Promise.all([
+        PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
+          .sort({ _id: -1 }), // sort by newest
+        PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
+          .sort({ _id: -1 })  // sort by newest
+      ]);
 
-          // Extract required fields with fallback values
-          const finalOvertime = latestOvertime?.FinalOvertime || '0';
-          const tdsCalculated = latestIncomeTax?.TDSCalculated || 0 ;
+      // Extract required fields with fallback values
+      const finalOvertime = latestOvertime?.FinalOvertime || '0';
+      const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
 
       // Return the full PayrollUsers document with related data
       return {
@@ -3535,13 +3535,12 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
     })
     .populate({
       path: 'payroll',
-      select: 'payrollPeriod' // Adjust fields as needed
+      select: 'month year date status' // Adjust fields as needed
     })
     .populate({
       path: 'company',
       select: 'name' // Adjust fields as needed
     });
-
   if (!payrollUsers.length) {
     websocketHandler.sendLog(req, `No payroll users found for userId: ${userId}`, constants.LOG_TYPES.INFO);
     return res.status(200).json({
@@ -3562,17 +3561,17 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         payrollUser: payrollUser._id,
         company: payrollUser.company
       });
-    // Get latest PayrollOvertime and PayrollIncomeTax records
-    const [latestOvertime, latestIncomeTax] = await Promise.all([
-      PayrollOvertime.findOne({ payrollUser: payrollUser._id })
-        .sort({ _id: -1 }), // sort by newest
-      PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
-        .sort({ _id: -1 })  // sort by newest
-    ]);
+      // Get latest PayrollOvertime and PayrollIncomeTax records
+      const [latestOvertime, latestIncomeTax] = await Promise.all([
+        PayrollOvertime.findOne({ payrollUser: payrollUser._id })
+          .sort({ _id: -1 }), // sort by newest
+        PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
+          .sort({ _id: -1 })  // sort by newest
+      ]);
 
-          // Extract required fields with fallback values
-          const finalOvertime = latestOvertime?.FinalOvertime || '0';
-          const tdsCalculated = latestIncomeTax?.TDSCalculated || 0 ;
+      // Extract required fields with fallback values
+      const finalOvertime = latestOvertime?.FinalOvertime || '0';
+      const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
 
       // Return the full PayrollUsers document with populated fields
       return {
@@ -3830,7 +3829,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         .filter(flexi => flexi.PayrollFNFUser.equals(payrollUser._id))
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
 
-  
+
       const userOvertime = overtime.filter(ot => ot.PayrollFNFUser.equals(payrollUser._id))
 
       const userAttendanceSummary = attendanceSummary.filter(as => as.payrollFNFUser?._id)
@@ -3988,14 +3987,14 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
 
-   
+
       const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
       const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
 
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary + totalEmployeeStatutoryContribution + totalFlexiBenefits;
       const totalGrossSalary = monthlySalary + totalFixedAllowance + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment  + totalIncomeTax);
+      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -6001,13 +6000,13 @@ exports.getTotalTaxableAmountFromSalaryStructureByUser = catchAsync(async (req, 
   websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
 
   const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
-   
- // 4️⃣ Calculate eligible salary amount
-   let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
+
+  // 4️⃣ Calculate eligible salary amount
+  let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
 
   // 5. Final response
   res.status(200).json({
     status: 'success',
-     data: totalTDSAppicablearlyAmount
+    data: totalTDSAppicablearlyAmount
   });
 });
