@@ -7322,7 +7322,7 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
 
 /**
  * @swagger
- * /api/v1/payroll/generatedPayroll-by-fnf-payroll/{fnfPayroll}:
+ * /api/v1/payroll/generatedPayroll-by-fnf-payroll/{payrollFNF}:
  *   get:
  *     summary: get generated payroll
  *     tags: [Payroll Management]
@@ -7331,7 +7331,7 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
  *     }]
  *     parameters:
  *       - in: path
- *         name: payroll
+ *         name: payrollFNF
  *         required: true
  *         schema:
  *           type: string
@@ -7342,7 +7342,7 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
  *       500:
  *         description: Internal server error
  */
-router.get('/generatedPayroll-by-fnf-payroll/:fnfPayroll', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
+router.get('/generatedPayroll-by-fnf-payroll/:payrollFNF', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
 
 /**
  * @swagger

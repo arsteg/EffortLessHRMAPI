@@ -30,7 +30,7 @@ var payrollFNFUsersSchema = new Schema({
     totalVariableDeduction: {
       type: Number
     },
-    totalLoan: {
+    totalLoanRepayment: {
       type: Number
     },
     totalFlexiBenefits: {
@@ -51,7 +51,7 @@ var payrollFNFUsersSchema = new Schema({
     },
     status: {
       type: String,
-      enum: ['InProgress','Pending', 'OnHold', 'Processed','Approved','Paid','Cleared','Rjected','Finilized','Exit Interview Completed'],
+      enum: ['InProgress','Pending', 'OnHold', 'Processed','Approved','Paid','Cleared','Rejected','Finilized','Exit Interview Completed'],
       required: true
     },
     company: {
