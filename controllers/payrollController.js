@@ -57,6 +57,7 @@ const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetail
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel.js");
 const SalaryComponentVariableAllowance = require("../models/Employment/SalaryComponentVariableAllowance.js");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction.js");
+const SalaryComponentVariableDeduction = require("../models/Employment/SalaryComponentVariableDeduction.js");
 const websocketHandler = require('../utils/websocketHandler');
 const professionalTaxSlabs = require('../data/professionalTaxSlabs.json');
 const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
@@ -3480,10 +3481,12 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       ]);
 
       // Get latest PayrollOvertime and PayrollIncomeTax records
-      const [latestOvertime, latestIncomeTax] = await Promise.all([
+      const [latestOvertime, latestIncomeTax,latestAttendanceSummary] = await Promise.all([
         PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
+          .sort({ _id: -1 }),  // sort by newest
+        PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 })  // sort by newest
       ]);
 
@@ -3496,7 +3499,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
         statutoryDetails,
         finalOvertime,
-        tdsCalculated
+        tdsCalculated,
+        latestAttendanceSummary
       };
     })
   );
@@ -3562,23 +3566,28 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         company: payrollUser.company
       });
       // Get latest PayrollOvertime and PayrollIncomeTax records
-      const [latestOvertime, latestIncomeTax] = await Promise.all([
+      const [latestOvertime, latestIncomeTax,latestAttendanceSummary] = await Promise.all([
         PayrollOvertime.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
+          .sort({ _id: -1 }),  // sort by newest
+        PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 })  // sort by newest
       ]);
 
       // Extract required fields with fallback values
       const finalOvertime = latestOvertime?.FinalOvertime || '0';
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
-
+      
+      PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
+      .sort({ _id: -1 })  // sort by newest
       // Return the full PayrollUsers document with populated fields
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
         statutoryDetails,
         finalOvertime,
-        tdsCalculated
+        tdsCalculated,
+        latestAttendanceSummary
       };
     })
   );
@@ -3797,7 +3806,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       });
 
       // 💰 Sum amounts where ContributorType is 'Employer' (i.e., company contribution)
-      const totalEmployeeStatutoryContribution = payrollStatutory
+      const totalEmployerStatutoryContribution = payrollStatutory
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (item.amount || 0), 0);
 
@@ -3849,7 +3858,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         totalOvertime: userOvertime[0]?.OvertimeAmount,
         totalFixedAllowance: totalFixedAllowance,
         totalFixedDeduction: totalFixedDeductions,
-        totalEmployeeStatutoryContribution: totalEmployeeStatutoryContribution,
+        totalEmployerStatutoryContribution: totalEmployerStatutoryContribution,
         totalEmployeeStatutoryDeduction: totalEmployeeStatutoryDeduction,
         totalLoanAdvance: userLoanAdvances,
         totalFlexiBenefits: flexiBenefitsTotal,
@@ -3953,9 +3962,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Fetch related data
-      const [fixedAllowances, fixedDeductions, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary] = await Promise.all([
+      const [fixedAllowances, variableAllowances,fixedDeductions,variableDeductions, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
+        SalaryComponentVariableAllowance.find({ employeeSalaryDetails: userSalary._id }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
+        SalaryComponentVariableDeduction.find({ employeeSalaryDetails: userSalary._id }),
+     
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }),
         PayrollOvertime.find({ PayrollUser: payrollUser._id }),
@@ -3967,8 +3979,9 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       // Calculate totals
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
       const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-
-      const totalEmployeeStatutoryContribution = statutoryDetails
+      const totalVariableDeduction = variableDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
+      const totalVariableAllowance = variableAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
+      const totalEmployerStatutoryContribution = statutoryDetails
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (item.amount || 0), 0);
 
@@ -3992,9 +4005,9 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
 
       // Calculate total CTC, gross salary, and take-home
-      const totalCTC = yearlySalary + totalEmployeeStatutoryContribution + totalFlexiBenefits;
-      const totalGrossSalary = monthlySalary + totalFixedAllowance + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
+      const totalCTC = yearlySalary + totalEmployeeStatutoryDeduction +totalEmployerStatutoryContribution+ totalFlexiBenefits;
+      const totalGrossSalary = monthlySalary + totalFixedAllowance+totalVariableAllowance + totalOvertime + totalFlexiBenefits;
+      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction +totalVariableDeduction+ totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -4004,8 +4017,10 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         {
           $set: {
             totalFixedAllowance,
+            totalVariableAllowance,
             totalFixedDeduction,
-            totalEmployeeStatutoryContribution,
+            totalVariableDeduction,
+            totalEmployerStatutoryContribution,
             totalEmployeeStatutoryDeduction,
             totalLoanDisbursed,
             totalLoanRepayment,
@@ -4028,7 +4043,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         incomeTax,
         totalFixedAllowance,
         totalFixedDeduction,
-        totalEmployeeStatutoryContribution,
+        totalEmployerStatutoryContribution,
         totalEmployeeStatutoryDeduction,
         totalLoanDisbursed,
         totalLoanRepayment,

@@ -3552,7 +3552,7 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *                  type: number
  *               totalEmployeeStatutoryDeduction:
  *                  type: number
- *               totalEmployeeStatutoryContribution:
+ *               totalEmployerStatutoryContribution:
  *                  type: number
  *               totalFixedDeduction:
  *                  type: number
@@ -5383,7 +5383,7 @@ router.get('/fnf/users-by-userId/:userId', authController.protect, payrollContro
  *                  type: number
  *               totalEmployeeStatutoryDeduction:
  *                  type: number
- *               totalEmployeeStatutoryContribution:
+ *               totalEmployerStatutoryContribution:
  *                  type: number
  *               totalFixedDeduction:
  *                  type: number
