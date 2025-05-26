@@ -1531,6 +1531,32 @@ router.delete('/employee-salary-tax-salutaory-settings/:id', authController.prot
 
 /**
  * @swagger
+ * /api/v1/users/get-daily-amount-from-salary-structure-by-user/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [User Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-daily-amount-from-salary-structure-by-user/:userId', authController.protect, userController.getDailySalaryFromSalaryStructureByUser);
+
+
+/**
+ * @swagger
  * /api/v1/users/employee-salutatory-details:
  *   post:
  *     summary: Add a new Employee Salutatory Details

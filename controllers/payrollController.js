@@ -72,9 +72,11 @@ const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
+
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
-  getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
+  getTotalTDSEligibleAmount, 
+  getTotalMonthlyAllownaceAmount,       // Finds the correct LWF slab and calculates employee/employer contributions
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
 } = require('../Services/tds.service');
@@ -2811,12 +2813,12 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, 'Starting payroll calculations for new user', constants.LOG_TYPES.TRACE);
 
+  await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+  await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   await payrollCalculationController.calculateProfessionalTax(req, res);
   await payrollCalculationController.calculateLWF(req, res);
   await payrollCalculationController.calculatePF(req, res);
   await payrollCalculationController.calculateESIC(req, res);
-  await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
-  await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
 
   websocketHandler.sendLog(req, 'Completed all payroll calculations and storage for new PayrollUser', constants.LOG_TYPES.INFO);
 
@@ -3794,7 +3796,8 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
   }).populate({
     path: 'user',
     select: 'id firstName lastName email'
-  });
+  })
+  ;
   websocketHandler.sendLog(req, `Found ${payrollUsers.length} PayrollFNFUsers`, constants.LOG_TYPES.INFO);
 
   if (!payrollUsers.length) {
@@ -3839,7 +3842,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
 
       // Fetch related data
       websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
-      const [allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays] =
+      const [allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays,manualArrears,compensation,statutoryBenefis] =
         await Promise.all([
           PayrollFNFLoanAdvance.find({
             payrollFNFUser: payrollUser._id,
@@ -3866,8 +3869,11 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
             payrollFNFUser: payrollUser._id,
             company: companyId
           }),
-          PayrollVariablePay.find({ payrollUser: payrollUser._id }),
-          PayrollFixedPay.find({ payrollUser: payrollUser._id })
+          PayrollFNFVariablePay.find({ payrollFNFUser: payrollUser._id }),
+          PayrollFNFFixedPay.find({ payrollFNFUser: payrollUser._id }),
+          PayrollFNFManualArrears.find({ payrollFNFUser: payrollUser._id }),
+          PayrollFNFTerminationCompensation.find({ payrollFNFUser: payrollUser._id }),
+          PayrollFNFStatutoryBenefits.find({ payrollFNFUser: payrollUser._id })
         ]);
 
       websocketHandler.sendLog(
@@ -3895,7 +3901,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
         `Calculated salary for payrollUser: ${payrollUser._id} - Monthly: ${monthlySalary}, Yearly: ${yearlySalary}`,
         constants.LOG_TYPES.TRACE
       );
-
+console.log(payrollUser);
       // Create allowance and deduction lists
       websocketHandler.sendLog(req, `Creating lists for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
       const fixedAllowancesList = fixedPays
@@ -3925,7 +3931,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
           year: vp.year || 0,
           company: vp.company
         }));
-
+console.log(variablePays);
       const variableAllowancesList = variablePays
         .filter(vp => vp.variableAllowance)
         .map(vp => ({
@@ -3975,7 +3981,6 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
           `Total Overtime: ${totalOvertime}, Total Income Tax: ${totalIncomeTax}`,
         constants.LOG_TYPES.INFO
       );
-
       // Return the processed data
       return {
         PayrollFNFUser: {
@@ -4000,7 +4005,8 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
         totalIncomeTax,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
-        payroll: payrolls.find(p => p._id.equals(payrollUser.PayrollFNF)),
+        payroll: payrolls.find(p => p._id.equals(payrollUser.payrollFNF)),
+        manualArrears,compensation,statutoryBenefis,
         statutoryDetails
       };
     })
@@ -4109,6 +4115,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         PayrollFNFTerminationCompensation.find({ payrollFNFUser: payrollFNFUser._id }),
         PayrollFNFStatutoryBenefits.find({ payrollFNFUser: payrollFNFUser._id })
       ]);     
+      console.log(fixedAllowances);
       const allowancePromises = fixedAllowances.map(async (allowance) => {
         console.log(allowance.fixedAllowance);
         return PayrollFNFFixedPay.findOneAndUpdate(
@@ -5028,12 +5035,12 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, 'Starting calculations for new FNF user', constants.LOG_TYPES.TRACE);
 
+  await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
+  await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   await payrollCalculationController.calculateProfessionalTax(req, res);
   await payrollCalculationController.calculateLWF(req, res);
   await payrollCalculationController.calculatePF(req, res);
   await payrollCalculationController.calculateESIC(req, res);
-  await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
-  await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
 
   websocketHandler.sendLog(req, 'Finished all calculations for PayrollFNFUser', constants.LOG_TYPES.INFO);
 
@@ -6383,16 +6390,10 @@ exports.getFNFTDSAmountByUser = catchAsync(async (req, res, next) => {
   const { startDate, endDate } = await getFNFDateRange(req, userId);
   websocketHandler.sendLog(req, `📅 FNF Date Range: ${startDate.toDateString()} to ${endDate.toDateString()}`, constants.LOG_TYPES.DEBUG);
   // 3. Calculate number of FNF days
-  console.log(startDate);
-  console.log(endDate);
   const fnfDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))); // +1 day to include the end date
   websocketHandler.sendLog(req, `📆 Total FNF days: ${fnfDays}`, constants.LOG_TYPES.DEBUG);
-  console.log(fnfDays);
-  console.log(data.contributionData);
-  console.log(data.days);
   // 4. Calculate FNF days TDS (basic formula, can be adjusted as per logic)
   const dailyTDS = data.contributionData / data.days;
-  console.log(dailyTDS);
   const fnfDaysTDS = parseFloat((dailyTDS * fnfDays).toFixed(2));
   websocketHandler.sendLog(req, `💸 FNF Days TDS calculated: ₹${fnfDaysTDS}`, constants.LOG_TYPES.INFO);
 

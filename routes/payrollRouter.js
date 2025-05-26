@@ -7369,4 +7369,5 @@ router.get('/generatedPayroll-by-fnf-payroll/:payrollFNF', authController.protec
  */
 router.get('/get-total-taxable-amount-from-salary-structure-by-user/:userId', authController.protect, payrollController.getTotalTaxableAmountFromSalaryStructureByUser);
 
+
 module.exports = router;

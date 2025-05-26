@@ -641,32 +641,42 @@ const calculateProfessionalTax = async (req, res, next) => {
     const userId = req.user;
     const companyId = req.cookies.companyId;
     const isFNF = req.isFNF;
-
+    
+    console.log(`Starting Professional Tax calculation for userId: ${userId}, companyId: ${companyId}, isFNF: ${isFNF}`);
     websocketHandler.sendLog(req, '🔄 Starting Professional Tax calculation...', constants.LOG_TYPES.INFO);
 
     const enabled = await isProfessionalTaxEnabledForUser(userId, req);
+    console.log(`Professional Tax enabled for user: ${enabled}`);
     if (!enabled) {
+      console.log(`PT not applicable for userId: ${userId}`);
       websocketHandler.sendLog(req, '🚫 PT not applicable for this user', constants.LOG_TYPES.WARN);
       return;
     }
 
     const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
-     if (!salaryDetails) {
+    console.log(`Salary details found: ${!!salaryDetails}`);
+    if (!salaryDetails) {
+      console.log(`No salary details for userId: ${userId}`);
       websocketHandler.sendLog(req, '❌ Salary details not found', constants.LOG_TYPES.ERROR);
       return;
     }
 
     if (isFNF) {
+      console.log(`Processing FNF for userId: ${userId}`);
       websocketHandler.sendLog(req, `📆 Calculating PT for FNF months`, constants.LOG_TYPES.INFO);
-      const { startDate, endDate } = await getFNFDateRange(req,userId);
+      const { startDate, endDate } = await getFNFDateRange(req, userId);
+      console.log(startDate+ " hiii "+endDate);
       const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
       const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
+      console.log(`FNF date range: startDate: ${startDate}, endDate: ${endDate}`);
 
       for (let year = startYear; year <= endYear; year++) {
         const fromMonth = year === startYear ? startMonth : 0;
         const toMonth = year === endYear ? endMonth : 11;
+        console.log(`Processing year: ${year}, months: ${fromMonth} to ${toMonth}`);
 
         for (let m = fromMonth; m <= toMonth; m++) {
+          console.log(`Processing PT for month: ${m}, year: ${year}`);
           await processProfessionalTaxForMonth({
             req,
             userId,
@@ -681,6 +691,7 @@ const calculateProfessionalTax = async (req, res, next) => {
       }
     } else {
       const now = new Date();
+      console.log(`Processing current month PT for userId: ${userId}, month: ${now.getMonth()}, year: ${now.getFullYear()}`);
       websocketHandler.sendLog(req, `📆 Calculating PT for current month`, constants.LOG_TYPES.INFO);
  
       await processProfessionalTaxForMonth({
@@ -695,11 +706,13 @@ const calculateProfessionalTax = async (req, res, next) => {
       });
     }
 
+    console.log(`PT calculation completed for userId: ${userId}`);
     websocketHandler.sendLog(req, `✅ PT calculation complete`, constants.LOG_TYPES.SUCCESS);
   } catch (err) {
     const errorMsg = `❌ PT calculation failed: ${err.message}`;
+    console.log(errorMsg);
     websocketHandler.sendLog(req, errorMsg, constants.LOG_TYPES.ERROR);
-   }
+  }
 };
 
 

@@ -41,7 +41,30 @@ const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
   websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
+const getTotalMonthlyAllownaceAmount = async (req, salaryDetails) => {
+  let total = 0; 
+ 
+  const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+  
+  for (const item of fixedAllowances) {
+    const detail = await FixedAllowance.findById(item.fixedAllowance);   
+      total += item.monthlyAmount || 0;
+      websocketHandler.sendLog(req, `➕ ESIC Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+   
+  }
 
+  const variableAllowances = await SalaryComponentVariableAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+ 
+  for (const item of variableAllowances) {
+    const detail = await VariableAllowance.findById(item.variableAllowance);  
+      total += item.monthlyAmount || 0;
+      websocketHandler.sendLog(req, `➕ ESIC Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+   
+  }
+
+  websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  return total;
+};
 /**
  * Calculates the total ESIC-eligible salary amount.
  * Includes basic salary and all ESIC-affected fixed and variable allowances.
@@ -173,5 +196,6 @@ module.exports = {
   getTotalTDSEligibleAmount,
   calculateIncomeTax,
   GetTDSAppicableAmountAfterDeclartion,
-  getTotalHRAAmount
+  getTotalHRAAmount,
+  getTotalMonthlyAllownaceAmount
 };

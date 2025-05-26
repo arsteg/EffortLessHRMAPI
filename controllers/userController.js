@@ -35,6 +35,13 @@ const Appointment = require("../models/permissions/appointmentModel");  // Impor
 const UserActionLog = require("../models/Logging/userActionModel");
 const StorageController = require('./storageController.js');
 const websocketHandler = require('../utils/websocketHandler');
+const {
+  calculateIncomeTax,       // Checks if LWF is applicable for the current month
+  getTotalTDSEligibleAmount, 
+  getTotalMonthlyAllownaceAmount,       // Finds the correct LWF slab and calculates employee/employer contributions
+  GetTDSAppicableAmountAfterDeclartion,
+  getTotalHRAAmount
+} = require('../Services/tds.service');
 
 exports.logUserAction = catchAsync(async (req, action, next) => {
   websocketHandler.sendLog(req, 'Starting user action logging', constants.LOG_TYPES.TRACE);
@@ -2385,5 +2392,27 @@ exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: user
+  });
+});
+// ✅ Get total TDS amount for a user including FNF days tax
+exports.getDailySalaryFromSalaryStructureByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ TDS: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+
+  // 4️⃣ Calculate eligible salary amount
+  let totalMonthlyAllownaceAmount = await getTotalMonthlyAllownaceAmount(req, salaryDetails);
+let dailySalaryAmount = totalMonthlyAllownaceAmount/30;
+  // 5. Final response
+  res.status(200).json({
+    status: 'success',
+    data: dailySalaryAmount
   });
 });
