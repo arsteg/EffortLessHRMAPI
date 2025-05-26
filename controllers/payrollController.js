@@ -71,6 +71,7 @@ const scheduleController = require('../controllers/ScheduleController');
 const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
+const UserEmployment = require("../models/Employment/UserEmploymentModel");
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount,        // Finds the correct LWF slab and calculates employee/employer contributions
@@ -3481,7 +3482,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       const [statutoryDetails] = await Promise.all([
         PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
-
+      const userEmployment = await UserEmployment.findOne({ user: payrollUser.user });
       // Get latest PayrollOvertime and PayrollIncomeTax records
       const [latestOvertime, latestIncomeTax,latestAttendanceSummary,variablePays,fixedPays] = await Promise.all([
         PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
@@ -3581,7 +3582,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         fixedAllowancesList,
         fixedDeductionsList,
         variableAllowancesList,
-        variableDeductionsList
+        variableDeductionsList,
+        userEmployment
       };
     })
   );
@@ -3635,8 +3637,8 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
   }
 
   websocketHandler.sendLog(req, `Found ${payrollUsers.length} payroll users for userId: ${userId}`, constants.LOG_TYPES.INFO);
-
-  // Step 2: Fetch related data and construct response
+  const userEmployment = await UserEmployment.findOne({ user: userId });
+   // Step 2: Fetch related data and construct response
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
       websocketHandler.sendLog(req, `Fetching statutory details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
@@ -3749,7 +3751,8 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         totalFixedAllowance,
         totalFixedDeduction,
         totalVariableDeduction,
-        totalVariableAllowance
+        totalVariableAllowance,
+        userEmployment
       };
     })
   );

@@ -2663,13 +2663,10 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const endOfMonth = new Date(req.body.year, req.body.month, 0);
     const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ employee: req.body.user });
     websocketHandler.sendLog(req, `Fetched attendance assignment for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
-    console.log(attendanceAssignment);
     if (attendanceAssignment) {
       const attendanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attendanceTemplate });
       websocketHandler.sendLog(req, `Fetched attendance template: ${attendanceTemplate?._id}`, constants.LOG_TYPES.TRACE);
-      console.log(attendanceAssignment.attendanceTemplate);
-      console.log(attendanceTemplate);
-      if (attendanceTemplate) {
+        if (attendanceTemplate) {
         const attendanceRecords = await AttendanceRecords.find({
           user: req.body.user,
           company: req.cookies.companyId,
@@ -2684,8 +2681,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           endDate: { $gte: startOfMonth, $lte: endOfMonth },
         });
         websocketHandler.sendLog(req, `Fetched ${approvedLeaves.length} approved leaves`, constants.LOG_TYPES.DEBUG);
-   
-        const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+          const approvedLeaveDays = approvedLeaves.flatMap(leave => {
           const leaveStart = new Date(leave.startDate);
           const leaveEnd = new Date(leave.endDate);
           const leaveDays = [];
@@ -2696,17 +2692,15 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           }
           return leaveDays;
         });
-     
         const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
         const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
         websocketHandler.sendLog(req, `Fetched ${holidays.length} holidays`, constants.LOG_TYPES.DEBUG);
-    
         const daysInMonth = endOfMonth.getDate();
         for (let day = 1; day <= daysInMonth; day++) {
           const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
           const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
           const dayOfWeek = currentDate.getDay();
-          const weeklyOffDays = attendanceTemplate.weeklyOffDays;
+          const weeklyOffDays = attendanceTemplate.weeklyOfDays;
           const alternateWeekOffRoutine = attendanceTemplate.alternateWeekOffRoutine;
           const daysForAlternateWeekOffRoutine = attendanceTemplate.daysForAlternateWeekOffRoutine || [];
           const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -2732,14 +2726,12 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
               continue;
             }
           }
-
           const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);
           if (!isWeeklyOffDay) {
             const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
             const isPresent = attendanceRecords.find(record => {
               return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
             });
-
             if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
               const existingRecord = await LOP.findOne({
                 user: req.body.user,
@@ -2749,7 +2741,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
               if (existingRecord) {
                 websocketHandler.sendLog(req, `LOP already processed for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.ERROR);
-                res.status(200).json({
+               res.status(200).json({
                   status: constants.APIResponseStatus.Failure,
                   message: req.t('attendance.lopAlreadyProcessedForUser', { userId: req.body.user }),
                 });
@@ -2763,12 +2755,16 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
                 await lopRecord.save();
                 websocketHandler.sendLog(req, `Inserted LOP record for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.INFO);
               }
+            } else {
+              console.log(`No LOP for ${currentDateForValidate.toISOString().split('T')[0]}: ${isPresent ? 'Employee was present' : 'Covered by approved leave'}`);
             }
+          } else {
+            console.log(`Skipping LOP for ${currentDate.toISOString().split('T')[0]}: It is a weekly off or holiday`);
           }
         }
       }
     }
- 
+
     websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${req.body.user}`, constants.LOG_TYPES.INFO);
 
     res.status(200).json({
@@ -2777,6 +2773,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error processing attendance and LOP: ${error.message}`, constants.LOG_TYPES.ERROR);
+    console.log('Error:', error.message);
     res.status(500).json({
       status: constants.APIResponseStatus.Failure,
       message: req.t('attendance.processAttendanceAndLOPFailure'),
