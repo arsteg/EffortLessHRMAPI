@@ -3565,7 +3565,6 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       }));
 
       // Extract required fields with fallback values
-      const finalOvertime = latestOvertime?.FinalOvertime || '0';
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
           // Calculate totals
           const totalFixedAllowance = fixedPays
@@ -3586,7 +3585,6 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
         statutoryDetails,
-        finalOvertime,
         tdsCalculated,
         latestAttendanceSummary,
         totalVariableAllowance,
@@ -3598,7 +3596,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         variableAllowancesList,
         variableDeductionsList,
         userEmployment,
-        allLoanAdvances, flexiBenefits,manualArrears
+        allLoanAdvances, flexiBenefits,manualArrears,latestOvertime
       };
     })
   );
@@ -3680,7 +3678,6 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })    
       ]);
       // Extract required fields with fallback values
-      const finalOvertime = latestOvertime?.FinalOvertime || '0';
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
       console.log(fixedPays);
       const fixedAllowancesList = fixedPays
@@ -3760,7 +3757,6 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
         statutoryDetails,
-        finalOvertime,
         tdsCalculated,
         latestAttendanceSummary,
         fixedAllowancesList,
@@ -3772,7 +3768,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         totalVariableDeduction,
         totalVariableAllowance,
         userEmployment,
-        allLoanAdvances, flexiBenefits,manualArrears
+        allLoanAdvances, flexiBenefits,manualArrears,latestOvertime
       };
     })
   );
