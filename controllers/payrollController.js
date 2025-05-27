@@ -3844,6 +3844,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
 
       // Find salary details for the user
       const userSalary = salaryDetailsList.find(salary => salary?.user?._id.equals(payrollUser?.user?._id));
+      const userEmployment = await UserEmployment.findOne({ user: userIds });
       if (!userSalary) {
         websocketHandler.sendLog(
           req,
@@ -3856,47 +3857,47 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
 
       // Fetch related data
       websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
-      const [allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays,manualArrears,compensation,statutoryBenefis] =
+      const [allLoanAdvances, flexiBenefits, latestOvertime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays,manualArrears,compensation,statutoryBenefis] =
         await Promise.all([
           PayrollFNFLoanAdvance.find({
             payrollFNFUser: payrollUser._id,
             type: 'Repayment',
             company: companyId
           }),
-          PayrollFNFFlexiBenefitsPFTax.find({
+          PayrollFNFFlexiBenefitsPFTax.findOne({
             PayrollFNFUser: payrollUser._id,
             company: companyId
-          }),
-          PayrollFNFOvertime.find({
+          }).sort({ _id: -1 }),
+          PayrollFNFOvertime.findOne({
             PayrollFNFUser: payrollUser._id,
             company: companyId
-          }),
-          PayrollFNFIncomeTax.find({
+          }).sort({ _id: -1 }),
+          PayrollFNFIncomeTax.findOne({
             payrollFNFUser: payrollUser._id,
             company: companyId
-          }),
+          }).sort({ _id: -1 }),
           PayrollFNFStatutory.find({
             payrollFNFUser: payrollUser._id,
             company: companyId
           }),
-          PayrollFNFAttendanceSummary.find({
+          PayrollFNFAttendanceSummary.findOne({
             payrollFNFUser: payrollUser._id,
             company: companyId
-          }),
+          }).sort({ _id: -1 }),
           PayrollFNFVariablePay.find({ payrollFNFUser: payrollUser._id }),
           PayrollFNFFixedPay.find({ payrollFNFUser: payrollUser._id }),
-          PayrollFNFManualArrears.find({ payrollFNFUser: payrollUser._id }),
-          PayrollFNFTerminationCompensation.find({ payrollFNFUser: payrollUser._id }),
-          PayrollFNFStatutoryBenefits.find({ payrollFNFUser: payrollUser._id })
+          PayrollFNFManualArrears.findOne({ payrollFNFUser: payrollUser._id }).sort({ _id: -1 }),
+          PayrollFNFTerminationCompensation.findOne({ payrollFNFUser: payrollUser._id }).sort({ _id: -1 }),
+          PayrollFNFStatutoryBenefits.findOne({ payrollFNFUser: payrollUser._id }).sort({ _id: -1 })
         ]);
 
       websocketHandler.sendLog(
         req,
         `Fetched data for payrollUser: ${payrollUser._id} - ` +
-          `LoanAdvances: ${allLoanAdvances.length}, FlexiBenefits: ${flexiBenefits.length}, ` +
-          `Overtime: ${overtime.length}, IncomeTax: ${incomeTax.length}, ` +
-          `StatutoryDetails: ${statutoryDetails.length}, AttendanceSummary: ${attendanceSummary.length}, ` +
-          `VariablePays: ${variablePays.length}, FixedPays: ${fixedPays.length}`,
+          `LoanAdvances: ${allLoanAdvances.length}, FlexiBenefits: ${flexiBenefits}, ` +
+          `Overtime: ${latestOvertime}, IncomeTax: ${incomeTax}, ` +
+          `StatutoryDetails: ${statutoryDetails}, AttendanceSummary: ${attendanceSummary}, ` +
+          `VariablePays: ${variablePays.length}, FixedPays: ${fixedPays}`,
         constants.LOG_TYPES.INFO
       );
 
@@ -3915,7 +3916,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
         `Calculated salary for payrollUser: ${payrollUser._id} - Monthly: ${monthlySalary}, Yearly: ${yearlySalary}`,
         constants.LOG_TYPES.TRACE
       );
-console.log(payrollUser);
+console.log(incomeTax);
       // Create allowance and deduction lists
       websocketHandler.sendLog(req, `Creating lists for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
       const fixedAllowancesList = fixedPays
@@ -3980,10 +3981,7 @@ console.log(variablePays);
       const totalVariableAllowance = variableAllowancesList.reduce((sum, vp) => sum + (vp.amount || 0), 0);
       const totalVariableDeduction = variableDeductionsList.reduce((sum, vp) => sum + (vp.amount || 0), 0);
       const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
-      const flexiBenefitsTotal = flexiBenefits.reduce((sum, flexi) => sum + (flexi?.TotalFlexiBenefitAmount || 0), 0);
-      const totalOvertime = overtime?.reduce((sum, ot) => sum + (ot?.OvertimeAmount || 0), 0) || 0;
-      const totalIncomeTax = incomeTax?.length ? incomeTax[0]?.TDSCalculated : 0;
-
+     
       websocketHandler.sendLog(
         req,
         `Generated lists and totals for payrollUser: ${payrollUser._id} - ` +
@@ -3991,8 +3989,7 @@ console.log(variablePays);
           `Variable Allowances: ${variableAllowancesList.length}, Variable Deductions: ${variableDeductionsList.length}, ` +
           `Total Fixed Allowance: ${totalFixedAllowance}, Total Fixed Deduction: ${totalFixedDeduction}, ` +
           `Total Variable Allowance: ${totalVariableAllowance}, Total Variable Deduction: ${totalVariableDeduction}, ` +
-          `Total Loan Advances: ${userLoanAdvances}, Total Flexi Benefits: ${flexiBenefitsTotal}, ` +
-          `Total Overtime: ${totalOvertime}, Total Income Tax: ${totalIncomeTax}`,
+          `Total Loan Advances: ${userLoanAdvances}`,
         constants.LOG_TYPES.INFO
       );
       // Return the processed data
@@ -4004,8 +4001,7 @@ console.log(variablePays);
             id: payrollUser?.user?._id
           }
         },
-        attendanceSummary,
-        totalOvertime,
+        attendanceSummary,latestOvertime,
         fixedAllowancesList,
         fixedDeductionsList,
         variableAllowancesList,
@@ -4015,13 +4011,13 @@ console.log(variablePays);
         totalVariableDeduction,
         totalFixedDeduction,
         totalLoanAdvance: userLoanAdvances,
-        totalFlexiBenefits: flexiBenefitsTotal,
-        totalIncomeTax,
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
         payroll: payrolls.find(p => p._id.equals(payrollUser.payrollFNF)),
         manualArrears,compensation,statutoryBenefis,
-        statutoryDetails
+        statutoryDetails,
+        userEmployment,
+        incomeTax
       };
     })
   );
@@ -4120,14 +4116,14 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
         PayrollFNFVariablePay.find({ payrollFNFUser: payrollFNFUser._id }),
         PayrollFNFLoanAdvance.find({ payrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFFlexiBenefitsPFTax.find({ PayrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFOvertime.find({ PayrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFIncomeTax.find({ PayrollFNFUser: payrollFNFUser._id }),
+        PayrollFNFFlexiBenefitsPFTax.findOne({ PayrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFOvertime.findOne({ PayrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFIncomeTax.findOne({ PayrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
         PayrollFNFStatutory.find({ payrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFAttendanceSummary.find({ payrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFManualArrears.find({ payrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFTerminationCompensation.find({ payrollFNFUser: payrollFNFUser._id }),
-        PayrollFNFStatutoryBenefits.find({ payrollFNFUser: payrollFNFUser._id })
+        PayrollFNFAttendanceSummary.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFManualArrears.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFTerminationCompensation.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFStatutoryBenefits.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 })
       ]);     
       console.log(fixedAllowances);
       const allowancePromises = fixedAllowances.map(async (allowance) => {
@@ -4193,11 +4189,10 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         .filter(loan => loan.type === 'Repayment')
         .reduce((sum, loan) => sum + (loan.amount || 0), 0);
 
-      const totalFlexiBenefits = flexiBenefits
-        .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
+        const totalFlexiBenefits = flexiBenefits?.TotalFlexiBenefitAmount || 0;
 
-      const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
-      const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
+      const totalOvertime = overtime.OvertimeAmount || 0;
+      const totalIncomeTax = incomeTax.TDSCalculated || 0;
 
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
