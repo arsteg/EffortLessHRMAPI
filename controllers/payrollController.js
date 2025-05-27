@@ -72,6 +72,7 @@ const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
+const moment = require("moment");
 
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
@@ -80,6 +81,7 @@ const {
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
 } = require('../Services/tds.service');
+
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
@@ -2810,15 +2812,20 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   req.user = payrollUser.user;
   req.payrollUser = payrollUser._id;
   req.isFNF = false;
-
+  const payroll = await Payroll.findById(req.body.payroll);
+   req.month =payroll.month; // 1-based month (1-12)
+    req.year =payroll.year; // Current year (e.g., 2025)
+    req.month = moment().month(payroll.month).month() + 1; // 1-based month
   websocketHandler.sendLog(req, 'Starting payroll calculations for new user', constants.LOG_TYPES.TRACE);
-
+  await payrollCalculationController.CalculateOvertime(req, res);
+  await payrollCalculationController.StoreAttendanceSummary(req, res);
+  await payrollCalculationController.calculateAndStoreIncomeTax(req, res);
   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   await payrollCalculationController.calculateProfessionalTax(req, res);
   await payrollCalculationController.calculateLWF(req, res);
   await payrollCalculationController.calculatePF(req, res);
-  await payrollCalculationController.calculateESIC(req, res);
+  await payrollCalculationController.calculateESIC(req, res);   
 
   websocketHandler.sendLog(req, 'Completed all payroll calculations and storage for new PayrollUser', constants.LOG_TYPES.INFO);
 
@@ -3496,6 +3503,11 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollVariablePay.find({ payrollUser: payrollUser._id }),
         PayrollFixedPay.find({ payrollUser: payrollUser._id })
       ]);
+      const [allLoanAdvances, flexiBenefits,manualArrears] = await Promise.all([        
+        PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
+        PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
+        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })    
+      ]);
       const fixedAllowancesList = fixedPays
       .filter(vp => vp.fixedAllowance)
       .map(vp => ({
@@ -3585,7 +3597,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         fixedDeductionsList,
         variableAllowancesList,
         variableDeductionsList,
-        userEmployment
+        userEmployment,
+        allLoanAdvances, flexiBenefits,manualArrears
       };
     })
   );
@@ -3661,7 +3674,11 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
           PayrollVariablePay.find({ payrollUser: payrollUser._id }),
           PayrollFixedPay.find({ payrollUser: payrollUser._id }),
       ]);
-
+      const [allLoanAdvances, flexiBenefits,manualArrears] = await Promise.all([        
+        PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
+        PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
+        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })    
+      ]);
       // Extract required fields with fallback values
       const finalOvertime = latestOvertime?.FinalOvertime || '0';
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
@@ -3754,7 +3771,8 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         totalFixedDeduction,
         totalVariableDeduction,
         totalVariableAllowance,
-        userEmployment
+        userEmployment,
+        allLoanAdvances, flexiBenefits,manualArrears
       };
     })
   );
@@ -4321,13 +4339,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       }
 
       // Calculate monthly and yearly salary
-      let monthlySalary = 0;
-      let yearlySalary = 0;
+    
 
            websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Fetch related data
-      const [fixedAllowances, fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary] = await Promise.all([
+      const [fixedAllowances, fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary,manualArrears] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
         PayrollVariablePay.find({ payrollUser: payrollUser._id }),     
@@ -4336,7 +4353,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         PayrollOvertime.find({ PayrollUser: payrollUser._id }),
         PayrollIncomeTax.find({ PayrollUser: payrollUser._id }),
         PayrollStatutory.find({ payrollUser: payrollUser._id }),
-        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id })
+        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }),
+        PayrollManualArrears.find({ payrollUser: payrollUser._id })     
       ]);
     console.log(fixedAllowances);
       // Store fixed allowances in PayrollVariablePay
@@ -4410,15 +4428,16 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
-
+        const totalManualArrears = manualArrears
+        .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);
 
       const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
       const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
 
       // Calculate total CTC, gross salary, and take-home
-      const totalCTC = yearlySalary + totalEmployeeStatutoryDeduction +totalEmployerStatutoryContribution+ totalFlexiBenefits;
-      const totalGrossSalary = monthlySalary + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary + totalLoanDisbursed - (totalFixedDeduction +totalVariableDeduction+ totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
+      const totalCTC = (totalFixedAllowance)*12;
+      const totalGrossSalary = totalFixedAllowance;
+      const totalTakeHome = (totalGrossSalary + totalLoanDisbursed+totalOvertime+totalVariableAllowance+totalFlexiBenefits+totalManualArrears) - (totalFixedDeduction +totalVariableDeduction+ totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -4459,6 +4478,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalLoanDisbursed,
         totalLoanRepayment,
         totalFlexiBenefits,
+        totalManualArrears,
         totalOvertime,
         totalIncomeTax,
         yearlySalary,
@@ -6430,3 +6450,5 @@ exports.getTotalTaxableAmountFromSalaryStructureByUser = catchAsync(async (req, 
     data: totalTDSAppicablearlyAmount
   });
 });
+
+

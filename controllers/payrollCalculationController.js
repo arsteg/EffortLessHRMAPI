@@ -26,9 +26,9 @@ const {
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
 } = require('../Services/tds.service');
-
+const LOP = require('../models/attendance/lop.js');
 const { storeInPayrollVariableAllowances,storeInPayrollVariableDeductions } = require('../Services/variable_pay.service');
-
+const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
 const { getFNFDateRange  } = require('../Services/userDates.service');
 const { getTotalGratuityEligibleAmount , calculateGratuityFund  } = require('../Services/gratuity.service');
 // 👉 Import reusable service methods from the LWF service module
@@ -36,18 +36,19 @@ const {
   getTotalProfessionalTaxEligibleAmount,      // Calculates monthly LWF-eligible earnings (basic + allowances)
   isProfessionalTaxApplicableThisMonth       // Checks if LWF is applicable for the current month
 } = require('../Services/professional_tax.service');
-
+const {
+  calculateAndStoreOvertime
+} = require('../Services/overtime.service.js');
 // 👉 Required models for fetching employee and salary-related data
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const EmployeeSalaryTaxAndStatutorySetting = require("../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js");
-
+const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
 const User = require('../models/permissions/userModel');
 // 👉 Utilities and constants
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
-
 const isLwfEnabledForUser = async (userId, req) => {
   // Check if statutory settings allow LWF deduction from payslip
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
@@ -642,41 +643,30 @@ const calculateProfessionalTax = async (req, res, next) => {
     const companyId = req.cookies.companyId;
     const isFNF = req.isFNF;
     
-    console.log(`Starting Professional Tax calculation for userId: ${userId}, companyId: ${companyId}, isFNF: ${isFNF}`);
     websocketHandler.sendLog(req, '🔄 Starting Professional Tax calculation...', constants.LOG_TYPES.INFO);
-
     const enabled = await isProfessionalTaxEnabledForUser(userId, req);
-    console.log(`Professional Tax enabled for user: ${enabled}`);
     if (!enabled) {
-      console.log(`PT not applicable for userId: ${userId}`);
       websocketHandler.sendLog(req, '🚫 PT not applicable for this user', constants.LOG_TYPES.WARN);
       return;
     }
 
     const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
-    console.log(`Salary details found: ${!!salaryDetails}`);
     if (!salaryDetails) {
-      console.log(`No salary details for userId: ${userId}`);
       websocketHandler.sendLog(req, '❌ Salary details not found', constants.LOG_TYPES.ERROR);
       return;
     }
 
     if (isFNF) {
-      console.log(`Processing FNF for userId: ${userId}`);
       websocketHandler.sendLog(req, `📆 Calculating PT for FNF months`, constants.LOG_TYPES.INFO);
       const { startDate, endDate } = await getFNFDateRange(req, userId);
-      console.log(startDate+ " hiii "+endDate);
-      const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
+       const startMonth = startDate.getMonth(), startYear = startDate.getFullYear();
       const endMonth = endDate.getMonth(), endYear = endDate.getFullYear();
-      console.log(`FNF date range: startDate: ${startDate}, endDate: ${endDate}`);
-
+   
       for (let year = startYear; year <= endYear; year++) {
         const fromMonth = year === startYear ? startMonth : 0;
         const toMonth = year === endYear ? endMonth : 11;
-        console.log(`Processing year: ${year}, months: ${fromMonth} to ${toMonth}`);
-
+   
         for (let m = fromMonth; m <= toMonth; m++) {
-          console.log(`Processing PT for month: ${m}, year: ${year}`);
           await processProfessionalTaxForMonth({
             req,
             userId,
@@ -691,7 +681,6 @@ const calculateProfessionalTax = async (req, res, next) => {
       }
     } else {
       const now = new Date();
-      console.log(`Processing current month PT for userId: ${userId}, month: ${now.getMonth()}, year: ${now.getFullYear()}`);
       websocketHandler.sendLog(req, `📆 Calculating PT for current month`, constants.LOG_TYPES.INFO);
  
       await processProfessionalTaxForMonth({
@@ -706,11 +695,9 @@ const calculateProfessionalTax = async (req, res, next) => {
       });
     }
 
-    console.log(`PT calculation completed for userId: ${userId}`);
-    websocketHandler.sendLog(req, `✅ PT calculation complete`, constants.LOG_TYPES.SUCCESS);
+     websocketHandler.sendLog(req, `✅ PT calculation complete`, constants.LOG_TYPES.SUCCESS);
   } catch (err) {
     const errorMsg = `❌ PT calculation failed: ${err.message}`;
-    console.log(errorMsg);
     websocketHandler.sendLog(req, errorMsg, constants.LOG_TYPES.ERROR);
   }
 };
@@ -721,43 +708,38 @@ const calculateTDS = async (req, res) => {
   try {
     const userId = req.user;
     const companyId = req.cookies.companyId;
-
     // 1️⃣ Check statutory eligibility
     const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
-   
     if (!statutoryDetails?.isIncomeTaxDeducted) {
       return;
     }
 
     // 2️⃣ Check salary details
     const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
- 
     if (!salaryDetails) {
-      return;
+      return { contributionData: 0, regime: '', days: 0 };
+
     }
 
     // 3️⃣ Check tax settings
     const taxSettings = await EmployeeSalaryTaxAndStatutorySetting.findOne({ employeeSalaryDetails: salaryDetails._id });
-     if (!taxSettings?.isIncomeTaxDeduction) {
-      return;
+    if (!taxSettings?.isIncomeTaxDeduction) {
+      return { contributionData: 0, regime: '', days: 0 };
     }
 
     // 4️⃣ Calculate eligible salary amount
     let totalTDSAppicablearlyAmount = await getTotalTDSEligibleAmount(req, salaryDetails);
-     const userEmployment = await UserEmployment.findOne({ user: userId });
- 
+    const userEmployment = await UserEmployment.findOne({ user: userId });
     if (!userEmployment) {
-       return;
+      return { contributionData: 0, regime: '', days: 0 };
     }
 
-   let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
+    let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
  
     // 5️⃣ Calculate applicable amount after declaration if old regime
-    if (statutoryDetails?.taxRegime === 'Old Regime') {
+    if(statutoryDetails?.taxRegime === 'Old Regime') {
       const financialYear = generateFinancialYearString();
-  
       const hraReceived = await getTotalHRAAmount(req, salaryDetails);
-  
       const totalDeclaredAmount = await GetTDSAppicableAmountAfterDeclartion(
         req,
         userId,
@@ -766,8 +748,7 @@ const calculateTDS = async (req, res) => {
         totalTDSAppicableAmount,
         hraReceived
       );
- 
-      totalTDSAppicableAmount -= totalDeclaredAmount.totalDeduction;
+     totalTDSAppicableAmount -= totalDeclaredAmount.totalDeduction;
     }
 
     // 6️⃣ Calculate final TDS using slab
@@ -777,14 +758,43 @@ const calculateTDS = async (req, res) => {
       totalTDSAppicableAmount,
       statutoryDetails?.taxRegime
     );
-   let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount); 
-   
-    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime,days:daysinPayrollCycle  };
+    let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
+    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime, days: daysinPayrollCycle };
 
   } catch (err) {
-    console.error('❌ Error in calculateTDS:', err);
+    const errorMsg = `❌ Error in calculateTDS: ${err.message}`;
+    console.error(errorMsg);
   }
 };
+
+  const calculateAndStoreIncomeTax = async (req, res) => {
+  try {     
+    // Calculate TDS
+    const tdsResult = await calculateTDS(req);   
+    // Validate TDS result
+    const taxAmount = parseFloat(tdsResult.contributionData);
+    if (isNaN(taxAmount) || taxAmount < 0) {
+      throw new Error('Invalid tax calculation result');
+    }
+    if (!tdsResult.regime || typeof tdsResult.regime !== 'string') {
+      throw new Error('Invalid tax regime');
+    }
+
+    // Prepare and save PayrollIncomeTax data
+    const payrollIncomeTaxData = {
+      PayrollUser: req.payrollUser,
+      TaxCalculatedMethod: tdsResult.regime,
+      TaxCalculated: taxAmount,
+      TDSCalculated: (taxAmount/12).toFixed(2) // Assuming same as TaxCalculated; adjust if different
+    };  
+    const payrollIncomeTax = new PayrollIncomeTax(payrollIncomeTaxData);
+    await payrollIncomeTax.save();
+   
+  } catch (error) {
+    console.error('Error in calculateAndStoreIncomeTax:', error.message);
+    throw error;
+  }
+}
 
 function getCurrentFinancialYearStart() {
   const now = new Date();
@@ -840,6 +850,59 @@ function generateFinancialYearString(date = new Date()) {
   }
 }
 
+const CalculateOvertime = async (req, res) => {
+ 
+  try {       
+    const result = await calculateAndStoreOvertime(req,req.user, req.month, req.year, req.payrollUser, req.isFNF);
+  
+  } catch (error) {
+    console.error('Error in /calculate-overtime:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const StoreAttendanceSummary = async (req, res) => {
+
+  try {
+    // Calculate total days in the month
+    const totalDays = new Date(req.year, req.month, 0).getDate();
+  
+    // Fetch LOP days
+     // Ensure month is 1-based and convert to 0-based for JavaScript Date
+  const startDate = new Date(req.year, req.month - 1, 1); // Start of the month
+  const endDate = new Date(req.year, req.month, 1); // Start of the next month
+
+  // Fetch records from the database
+ 
+  
+      const lopList = await LOP.find({
+        date: {
+          $gte: startDate,
+          $lt: endDate
+        },
+        user:req.user
+      });
+     let lopDays=lopList.length;
+    if (!Number.isInteger(lopDays) || lopDays < 0 || lopDays > totalDays) {
+      throw new Error('Invalid LOP days returned');    }
+    // Calculate payable days
+    const payableDays = totalDays - lopDays;
+     // Prepare and save PayrollAttendanceSummary data
+    const payrollAttendanceSummaryData = {
+      payrollUser: req.payrollUser,
+      totalDays,
+      lopDays,
+      payableDays
+    };
+   
+    const payrollAttendanceSummary = new PayrollAttendanceSummary(payrollAttendanceSummaryData);
+    await payrollAttendanceSummary.save();   
+  } catch (error) {
+    console.error('Error in calculateAndStoreAttendanceSummary:', error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   calculateLWF,
   calculateESIC,
@@ -848,6 +911,9 @@ module.exports = {
   StoreInPayrollVariableAllowances,
   StoreInPayrollVariableDeductions,
   calculateProfessionalTax,
-  calculateTDS
+  calculateTDS,
+  CalculateOvertime,
+  StoreAttendanceSummary,
+  calculateAndStoreIncomeTax
   // Add more exports here if you build additional payroll stat functions
 };

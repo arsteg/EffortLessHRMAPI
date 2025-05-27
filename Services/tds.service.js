@@ -52,16 +52,6 @@ const getTotalMonthlyAllownaceAmount = async (req, salaryDetails) => {
       websocketHandler.sendLog(req, `➕ ESIC Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
    
   }
-
-  const variableAllowances = await SalaryComponentVariableAllowance.find({ employeeSalaryDetails: salaryDetails._id });
- 
-  for (const item of variableAllowances) {
-    const detail = await VariableAllowance.findById(item.variableAllowance);  
-      total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ ESIC Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
-   
-  }
-
   websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };

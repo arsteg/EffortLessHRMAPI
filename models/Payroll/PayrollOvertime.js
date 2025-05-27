@@ -7,19 +7,19 @@ var payrollOvertimeSchema = new Schema({
       required: true
     },
     LateComing: {
-      type: String,
+      type: Number,
       required: true
     },
     EarlyGoing: {
-      type: String,
+      type: Number,
       required: true
     },
     FinalOvertime: {
-      type: String,
+      type: Number,
       required: true
     },
     OvertimeAmount: {
-      type: String,
+      type: Number,
       required: true
     }
 
