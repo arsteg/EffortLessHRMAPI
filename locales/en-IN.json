@@ -681,12 +681,11 @@
     "optionNotFound": "The preference option was not found.",
     "preferenceExists": "The specified preference already exists.",
     "preferenceNotFound": "The user preference was not found.",
-    "isscreenshotsoundenabled": "Screenshot Sound Enabled",
-    "isscreenshotnotificationenabled": "Screenshot Notification Enabled",
+    "isscreenshotsounddisabled": "Screenshot Sound Disable",
+    "isscreenshotnotificationdisabled": "Screenshot Notification Disable",
     "isscreenshotblur": "Screenshot Blur",
-    "helpdeskaccessibale": "Helpdesk Accessible",
-    "livescreenview": "Live Screen View",
-    "ischatbotvisiable": "Enable Chatbot"
+    "weeklyhourslimit": "Weekly hours limit(hours)",
+    "monthlyhourslimit": "Monthly hours limit(hours)"
   },
   "zoom": {
     "meetingCreationFailed": "Unable to generate the meeting link.",
