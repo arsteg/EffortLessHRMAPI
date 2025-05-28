@@ -650,9 +650,11 @@
     "optionNotFound": "प्राथमिकता विकल्प नहीं मिला।",
     "preferenceExists": "निर्दिष्ट प्राथमिकता पहले से मौजूद है।",
     "preferenceNotFound": "उपयोगकर्ता प्राथमिकता नहीं मिली।",
-    "isscreenshotsoundenabled": "स्क्रीनशॉट ध्वनि सक्षम",
-    "isscreenshotnotificationenabled": "स्क्रीनशॉट सूचना सक्षम",
-    "isscreenshotblur": "स्क्रीनशॉट धुंधला करना"
+    "isscreenshotsounddisabled": "स्क्रीनशॉट ध्वनि अक्षम",
+    "isscreenshotnotificationdisabled": "स्क्रीनशॉट अधिसूचना अक्षम",
+    "isscreenshotblur": "स्क्रीनशॉट धुंधला करना",
+    "weeklyhourslimit": "साप्ताहिक घंटे सीमा(घंटे में)",
+    "monthlyhourslimit": "मासिक घंटे सीमा(घंटे में)"
   },
   "zoom": {
     "meetingCreationFailed": "मीटिंग लिंक उत्पन्न करने में असमर्थ।",

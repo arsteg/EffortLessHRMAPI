@@ -3,40 +3,82 @@
         "key": "AppMode"
     },
     {
-        "key": "Language"
+        "key": "MenuCollapseOrExpand"
     },
     {
-        "key": "SelectedScreenshotUser"
+        "key": "Dashboard.TimeSpent"
     },
     {
-        "key": "IsScreenshotSoundEnabled_explicit",
+        "key": "Dashboard.ProjectwiseMember"
+    },
+    {
+        "key": "Dashboard.ProductivitywiseMember"
+    },
+    {
+        "key": "Dashboard.ProjectwiseMemberForEachTask"
+    },
+    {
+        "key": "Screenshot.SelectedMember"
+    },
+    {
+        "key": "Task.SelectedTasksView"
+    },
+    {
+        "key": "Manage.Projects.SelectedMember"
+    },
+    {
+        "key": "Reports.Timeline.ColumnBy"
+    },
+    {
+        "key": "Reports.Timeline.SelectedMember"
+    },
+    {
+        "key": "Reports.Timeline.SelectedProject"
+    },
+    {
+        "key": "Reports.BrowserHistory.SelectedMember"
+    },
+    {
+        "key": "Reports.AppWebsite.SelectedMember"
+    },
+    {
+        "key": "Reports.AppWebsite.SelectedProject"
+    },
+    {
+        "key": "Reports.Productivity.ReportsBy"
+    },
+    {
+        "key": "Reports.Leave.SelectedMember"
+    },
+    {
+        "key": "Settings.UserSettings.SelectedMember"
+    },
+    {
+        "key": "Approvals.ProductivityApps.SelectedMember"
+    },
+    {
+        "key": "Approvals.ManualTime.SelectedMember"
+    },
+    {
+        "key": "Tracker.ScreenshotSoundDisabled_explicit",
         "metadata": {
             "inputType": "checkbox",
-            "id": "isscreenshotsoundenabled",
-            "name": "isscreenshotsoundenabled",
+            "id": "isscreenshotsounddisabled",
+            "name": "isscreenshotsounddisabled",
             "setbyadmin": false
         }
     },
     {
-        "key": "IsChatbotVisiable_explicit",
+        "key": "Tracker.ScreenshotNotificationDisabled_explicit",
         "metadata": {
             "inputType": "checkbox",
-            "id": "ischatbotvisiable",
-            "name": "ischatbotvisiable",
+            "id": "isscreenshotnotificationdisabled",
+            "name": "isscreenshotnotificationdisabled",
             "setbyadmin": false
         }
     },
     {
-        "key": "IsScreenshotNotificationEnabled_explicit",
-        "metadata": {
-            "inputType": "checkbox",
-            "id": "isscreenshotnotificationenabled",
-            "name": "isscreenshotnotificationenabled",
-            "setbyadmin": false
-        }
-    },
-    {
-        "key": "IsScreenshotBlur_explicit",
+        "key": "Tracker.ScreenshotBlur_explicit",
         "metadata": {
             "inputType": "checkbox",
             "id": "isscreenshotblur",
@@ -45,21 +87,24 @@
         }
     },
     {
-        "key": "IsLiveScreenView_explicit",
+        "key": "Tracker.WeeklyHoursLimit_explicit",
         "metadata": {
-            "inputType": "checkbox",
-            "id": "livescreenview",
-            "name": "livescreenview",
+            "inputType": "number",
+            "id": "weeklyhourslimit",
+            "name": "weeklyhourslimit",
             "setbyadmin": true
         }
     },
     {
-        "key": "IsHelpdeskAccessibale_explicit",
+        "key": "Tracker.MonthlyHoursLimit_explicit",
         "metadata": {
-            "inputType": "checkbox",
-            "id": "helpdeskaccessibale",
-            "name": "helpdeskaccessibale",
+            "inputType": "number",
+            "id": "monthlyhourslimit",
+            "name": "monthlyhourslimit",
             "setbyadmin": true
         }
+    },
+    {
+        "key": "Tracker.SelectedProject"
     }
 ]
