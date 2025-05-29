@@ -13,9 +13,7 @@ const PayrollStatutory = require('../models/Payroll/PayrollStatutory');
  * Includes basic salary and all PF-affected fixed and variable allowances.
  */
 const getTotalPFEligibleAmount = async (req, salaryDetails) => {
-  let total = salaryDetails?.BasicSalary / 12 || 0;
-  websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
-
+  let total = 0;
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
  
   for (const item of fixedAllowances) {

@@ -2518,158 +2518,6 @@ router.delete('/variable-deductions/:id', authController.protect, payrollControl
 
 /**
  * @swagger
- * /api/v1/payroll/other-benefits:
- *   post:
- *     summary: Add a new OtherBenefits
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *       description: OtherBenefits details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               label:
- *                 type: string
- *                 required: true
- *               isEffectAttendanceOnEligibility:
- *                 type: boolean
- *                 required: true
- *     responses:
- *       201:
- *         description: OtherBenefits successfully added
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/other-benefits', authController.protect, payrollController.createOtherBenefits);
-
-/**
- * @swagger
- * /api/v1/payroll/other-benefits-by-company:
- *   post:
- *     summary: Get all OtherBenefits by Company ID
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     requestBody:
- *         content:
- *             application/json:
- *                 schema:
- *                     type: object
- *                     properties:
- *                         skip:
- *                             type: string
- *                         next:
- *                             type: string
- *     responses:
- *       200:
- *         description: Successful response with OtherBenefits
- *       404:
- *         description: OtherBenefits not found
- *       500:
- *         description: Internal server error
- */
-router.post('/other-benefits-by-company', authController.protect, payrollController.getAllOtherBenefitsByCompany);
-
-/**
- * @swagger
- * /api/v1/payroll/other-benefits/{id}:
- *   put:
- *     summary: Update OtherBenefits by ID
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: OtherBenefits ID
- *     requestBody:
- *       description: Updated OtherBenefits details
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               label:
- *                 type: string
- *               isEffectAttendanceOnEligibility:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: Successful response with updated OtherBenefits
- *       404:
- *         description: OtherBenefits not found
- *       500:
- *         description: Internal server error
- */
-router.put('/other-benefits/:id', authController.protect, payrollController.updateOtherBenefits);
-
-/**
- * @swagger
- * /api/v1/payroll/other-benefits/{id}:
- *   get:
- *     summary: Get OtherBenefits by ID
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: OtherBenefits ID
- *     responses:
- *       200:
- *         description: Successful response with OtherBenefits
- *       404:
- *         description: OtherBenefits not found
- *       500:
- *         description: Internal server error
- */
-router.get('/other-benefits/:id', authController.protect, payrollController.getOtherBenefitsById);
-
-/**
- * @swagger
- * /api/v1/payroll/other-benefits/{id}:
- *   delete:
- *     summary: Delete OtherBenefits by ID
- *     tags: [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: OtherBenefits ID
- *     responses:
- *       204:
- *         description: OtherBenefits successfully deleted
- *       404:
- *         description: OtherBenefits not found
- *       500:
- *         description: Internal server error
- */
-router.delete('/other-benefits/:id', authController.protect, payrollController.deleteOtherBenefits);
-
-/**
- * @swagger
  * /api/v1/payroll/loan-advances-category:
  *   post:
  *     summary: Add a Loan Advances Category
@@ -3164,16 +3012,6 @@ router.post('/pf-charge-by-company', authController.protect, payrollController.g
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
- *               ctcTemplateOtherBenefitAllowance:
- *                  type: array
- *                  items:
- *                     type: object
- *                     properties:
- *                       otherBenefit:
- *                         type: string
- *                         description: Field value
- *                         required: true
- *                  description: Array of field values
  *               ctcTemplateEmployeeDeduction:
  *                  type: array
  *                  items:
@@ -3391,16 +3229,6 @@ router.get('/ctc-templates/:id', authController.protect, payrollController.getCT
  *                         description: Field value
  *                         required: true
  *                  description: Array of field values
- *               ctcTemplateOtherBenefitAllowance:
- *                  type: array
- *                  items:
- *                     type: object
- *                     properties:
- *                       otherBenefit:
- *                         type: string
- *                         description: Field value
- *                         required: true
- *                  description: Array of field values
  *               ctcTemplateEmployeeDeduction :
  *                  type: array
  *                  items:
@@ -3471,9 +3299,6 @@ router.delete('/ctc-templates/:id', authController.protect, payrollController.de
  *               date:
  *                 type: string
  *                 format: date
- *               status:
- *                 type: string
- *                 enum: ['InProgress', 'Complete Approval Pending', 'OnHold', 'Processed']
  *               month:
  *                 type: string
  *               year:
@@ -3725,19 +3550,17 @@ router.get('/users/:id', authController.protect, payrollController.getPayrollUse
  *                  required: true
  *               totalFixedAllowance:
  *                  type: number
- *               totalOtherBenefits:
- *                  type: number
  *               totalEmployeeStatutoryDeduction:
  *                  type: number
- *               totalEmployeeStatutoryContribution:
+ *               totalEmployerStatutoryContribution:
  *                  type: number
  *               totalFixedDeduction:
  *                  type: number
  *               totalVariableDeduction:
  *                  type: number
- *               totalLoan:
+ *               totalLoanDisbursed:
  *                  type: number
- *               totalAdvance:
+ *               totalLoanRepayment:
  *                  type: number
  *     responses:
  *       200:
@@ -4479,15 +4302,13 @@ router.delete('/payroll-loan-advance/:id', authController.protect, payrollContro
  *           schema:
  *             type: object
  *             properties:
- *               PayrollUser1:
+ *               PayrollUser:
  *                 type: string
  *                 required: true
  *               TotalFlexiBenefitAmount:
  *                 type: number
  *                 required: true
- *               TotalProfessionalTaxAmount:
- *                 type: number
- *                 required: true
+
  *     responses:
  *       201:
  *         description: Flexi Benefits and PF Tax record successfully created
@@ -4599,8 +4420,6 @@ router.get('/flexi-benefits-pf-tax-by-payroll/:payroll', authController.protect,
  *             type: object
  *             properties:
  *               TotalFlexiBenefitAmount:
- *                 type: number
- *               TotalProfessionalTaxAmount:
  *                 type: number
  *     responses:
  *       200:
@@ -5024,6 +4843,33 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
  *         description: Internal server error
  */
 router.post('/generatedPayroll-by-company', authController.protect, payrollController.getAllGeneratedPayroll);
+
+/**
+ * @swagger
+ * /api/v1/payroll/generatedPayroll-by-userId/{userId}:
+ *   get:
+ *     summary: Get a generatedPayroll by userId
+ *     tags:  [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Payroll Income Tax record
+ *     responses:
+ *       200:
+ *         description: Successful response with the generatedPayroll
+ *       404:
+ *         description: generatedPayroll not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/generatedPayroll-by-userId/:userId', authController.protect, payrollController.getGeneratedPayrollByUserId);
+
 
 /**
  * @swagger
@@ -5535,11 +5381,9 @@ router.get('/fnf/users-by-userId/:userId', authController.protect, payrollContro
  *                  required: true
  *               totalFixedAllowance:
  *                  type: number
- *               totalOtherBenefits:
- *                  type: number
  *               totalEmployeeStatutoryDeduction:
  *                  type: number
- *               totalEmployeeStatutoryContribution:
+ *               totalEmployerStatutoryContribution:
  *                  type: number
  *               totalFixedDeduction:
  *                  type: number
@@ -6847,9 +6691,6 @@ router.delete('/payroll-fnf-statutory-benefits/:id', authController.protect, pay
  *               TotalFlexiBenefitAmount:
  *                 type: number
  *                 required: true
- *               TotalProfessionalTaxAmount:
- *                 type: number
- *                 required: true
  *     responses:
  *       201:
  *         description: Flexi Benefits and PF Tax record successfully created
@@ -6961,8 +6802,6 @@ router.get('/payroll-fnf-flexi-benefits-pf-tax-by-payroll-fnf/:payrollFNF', auth
  *             type: object
  *             properties:
  *               TotalFlexiBenefitAmount:
- *                 type: number
- *               TotalProfessionalTaxAmount:
  *                 type: number
  *     responses:
  *       200:
@@ -7483,7 +7322,7 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
 
 /**
  * @swagger
- * /api/v1/payroll/generatedPayroll-by-fnf-payroll/{fnfPayroll}:
+ * /api/v1/payroll/generatedPayroll-by-fnf-payroll/{payrollFNF}:
  *   get:
  *     summary: get generated payroll
  *     tags: [Payroll Management]
@@ -7492,7 +7331,7 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
  *     }]
  *     parameters:
  *       - in: path
- *         name: payroll
+ *         name: payrollFNF
  *         required: true
  *         schema:
  *           type: string
@@ -7503,6 +7342,32 @@ router.post('/generatedFNFPayroll-by-company', authController.protect, payrollCo
  *       500:
  *         description: Internal server error
  */
-router.get('/generatedPayroll-by-fnf-payroll/:fnfPayroll', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
+router.get('/generatedPayroll-by-fnf-payroll/:payrollFNF', authController.protect, payrollController.getAllGeneratedFNFPayrollByFNFPayrollId);
+
+/**
+ * @swagger
+ * /api/v1/payroll/get-total-taxable-amount-from-salary-structure-by-user/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-total-taxable-amount-from-salary-structure-by-user/:userId', authController.protect, payrollController.getTotalTaxableAmountFromSalaryStructureByUser);
+
 
 module.exports = router;

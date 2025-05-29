@@ -449,7 +449,6 @@
     "variableAllowanceNotFound": "The variable allowance was not found.",
     "fixedDeductionNotFound": "The fixed deduction was not found.",
     "variableDeductionNotFound": "The variable deduction was not found.",
-    "otherBenefitsNotFound": "Other benefits were not found.",
     "loanAdvancesCategoryExists": "The loan advances category already exists.",
     "loanAdvancesCategoryNotFound": "The loan advances category was not found.",
     "noLoanAdvancesCategoriesFound": "No loan advances categories were found for the specified company.",
@@ -463,7 +462,6 @@
     "invalidVariableAllowance": "The variable allowance provided is invalid.",
     "invalidVariableDeduction": "The variable deduction provided is invalid.",
     "invalidFixedContribution": "The fixed contribution provided is invalid.",
-    "invalidOtherBenefits": "The other benefits provided are invalid.",
     "invalidEmployeeDeduction": "The employee deduction provided is invalid.",
     "payrollNotFound": "The payroll was not found.",
     "payrollUserNotFound": "The payroll user was not found.",
@@ -683,12 +681,11 @@
     "optionNotFound": "The preference option was not found.",
     "preferenceExists": "The specified preference already exists.",
     "preferenceNotFound": "The user preference was not found.",
-    "isscreenshotsoundenabled": "Screenshot Sound Enabled",
-    "isscreenshotnotificationenabled": "Screenshot Notification Enabled",
+    "isscreenshotsounddisabled": "Screenshot Sound Disable",
+    "isscreenshotnotificationdisabled": "Screenshot Notification Disable",
     "isscreenshotblur": "Screenshot Blur",
-    "helpdeskaccessibale": "Helpdesk Accessible",
-    "livescreenview": "Live Screen View",
-    "ischatbotvisiable": "Enable Chatbot"
+    "weeklyhourslimit": "Weekly hours limit(hours)",
+    "monthlyhourslimit": "Monthly hours limit(hours)"
   },
   "zoom": {
     "meetingCreationFailed": "Unable to generate the meeting link.",

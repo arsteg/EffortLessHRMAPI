@@ -55,5 +55,19 @@ var userEmploymentSchema = new Schema({
     required: true
   }
 }, { collection: 'UserEmployment' });
-
+userEmploymentSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'department',
+      select: 'id departmentName'
+    })
+    this.populate({
+      path: 'designation',
+      select: 'id designation'
+    })
+  } catch (error) {
+    console.error("Error populating fixed allowance:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('UserEmployment', userEmploymentSchema);

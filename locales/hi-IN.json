@@ -444,8 +444,7 @@
     "variableAllowanceNotFound": "परिवर्तनीय भत्ता नहीं मिला।",
     "fixedDeductionNotFound": "निश्चित कटौती नहीं मिली।",
     "variableDeductionNotFound": "परिवर्तनीय कटौती नहीं मिली।",
-    "otherBenefitsNotFound": "अन्य लाभ नहीं मिले।",
-    "loanAdvancesCategoryExists": "ऋण अग्रिम श्रेणी पहले से मौजूद है।",
+     "loanAdvancesCategoryExists": "ऋण अग्रिम श्रेणी पहले से मौजूद है।",
     "loanAdvancesCategoryNotFound": "ऋण अग्रिम श्रेणी नहीं मिली।",
     "noLoanAdvancesCategoriesFound": "निर्दिष्ट कंपनी के लिए कोई ऋण अग्रिम श्रेणियाँ नहीं मिलीं।",
     "flexiBenefitsCategoryExists": "इस कंपनी के लिए फ्लेक्सी लाभ श्रेणी पहले से मौजूद है।",
@@ -458,7 +457,6 @@
     "invalidVariableAllowance": "प्रदान किया गया परिवर्तनीय भत्ता अमान्य है।",
     "invalidVariableDeduction": "प्रदान की गई परिवर्तनीय कटौती अमान्य है।",
     "invalidFixedContribution": "प्रदान किया गया निश्चित योगदान अमान्य है।",
-    "invalidOtherBenefits": "प्रदान किए गए अन्य लाभ अमान्य हैं।",
     "invalidEmployeeDeduction": "प्रदान की गई कर्मचारी कटौती अमान्य है।",
     "payrollNotFound": "पेरोल नहीं मिला।",
     "payrollUserNotFound": "पेरोल उपयोगकर्ता नहीं मिला।",
@@ -652,9 +650,11 @@
     "optionNotFound": "प्राथमिकता विकल्प नहीं मिला।",
     "preferenceExists": "निर्दिष्ट प्राथमिकता पहले से मौजूद है।",
     "preferenceNotFound": "उपयोगकर्ता प्राथमिकता नहीं मिली।",
-    "isscreenshotsoundenabled": "स्क्रीनशॉट ध्वनि सक्षम",
-    "isscreenshotnotificationenabled": "स्क्रीनशॉट सूचना सक्षम",
-    "isscreenshotblur": "स्क्रीनशॉट धुंधला करना"
+    "isscreenshotsounddisabled": "स्क्रीनशॉट ध्वनि अक्षम",
+    "isscreenshotnotificationdisabled": "स्क्रीनशॉट अधिसूचना अक्षम",
+    "isscreenshotblur": "स्क्रीनशॉट धुंधला करना",
+    "weeklyhourslimit": "साप्ताहिक घंटे सीमा(घंटे में)",
+    "monthlyhourslimit": "मासिक घंटे सीमा(घंटे में)"
   },
   "zoom": {
     "meetingCreationFailed": "मीटिंग लिंक उत्पन्न करने में असमर्थ।",

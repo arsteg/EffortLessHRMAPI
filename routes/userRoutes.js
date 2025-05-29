@@ -887,11 +887,6 @@ router.get('/user-employment-by-userId/:userId',authController.protect, userCont
  *                 format: date
  *                 description: Effective date of the salary details
  *                 required: true
- *               actualEffectiveDate:
- *                 type: string
- *                 format: date
- *                 description: Effective date of the salary details
- *                 required: true
  *               frequencyToEnterCTC:
  *                 type: string
  *                 description: Basic salary amount
@@ -956,21 +951,6 @@ router.get('/user-employment-by-userId/:userId',authController.protect, userCont
  *                   required: true
  *                   properties:
  *                     fixedAllowance:
- *                       type: string 
- *                       required: true
- *                     monthlyAmount:
- *                       type: number
- *                       required: true
- *                     yearlyAmount:
- *                       type: number
- *                       required: true
- *               salaryComponentOtherBenefits:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     otherBenefits:
  *                       type: string 
  *                       required: true
  *                     monthlyAmount:
@@ -1119,11 +1099,6 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *                 format: date
  *                 description: Effective date of the salary details
  *                 required: true
- *               actualEffectiveDate:
- *                 type: string
- *                 format: date
- *                 description: Effective date of the salary details
- *                 required: true
  *               frequencyToEnterCTC:
  *                 type: string
  *                 description: Basic salary amount
@@ -1188,21 +1163,6 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *                   required: true
  *                   properties:
  *                     fixedAllowance:
- *                       type: string 
- *                       required: true
- *                     monthlyAmount:
- *                       type: number
- *                       required: true
- *                     yearlyAmount:
- *                       type: number
- *                       required: true
- *               salaryComponentOtherBenefits:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required: true
- *                   properties:
- *                     otherBenefits:
  *                       type: string 
  *                       required: true
  *                     monthlyAmount:
@@ -1348,6 +1308,56 @@ router.delete('/salary-details/:id', authController.protect, userController.dele
  */
 router.get('/salary-details-by-userId/:userId', authController.protect, userController.getEmployeeSalaryDetailsByUser);
 
+/**
+ * @swagger
+ * /api/v1/users/basic-salary-by-userId/{userId}:
+ *   get:
+ *     summary: Get employee basic salary by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee salary details record
+ *     responses:
+ *       '200':
+ *         description: Successful response with the employee salary details
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.get('/basic-salary-by-userId/:userId', authController.protect, userController.getEmployeeBasicSalaryByUser);
+/**
+ * @swagger
+ * /api/v1/users/hra-by-userId/{userId}:
+ *   get:
+ *     summary: Get employee HRA by ID
+ *     tags:
+ *       - User Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the employee HRA record
+ *     responses:
+ *       '200':
+ *         description: Successful response with the employee salary details
+ *       '404':
+ *         description: Employee salary details not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.get('/hra-by-userId/:userId', authController.protect, userController.getEmployeeHRAByUser);
 
 /**
  * @swagger
@@ -1518,6 +1528,32 @@ router.put('/employee-salary-tax-salutaory-settings/:id', authController.protect
  *         description: Internal server error
  */
 router.delete('/employee-salary-tax-salutaory-settings/:id', authController.protect, userController.deleteEmployeeTaxAndSalutaorySetting);
+
+/**
+ * @swagger
+ * /api/v1/users/get-daily-amount-from-salary-structure-by-user/{userId}:
+ *   get:
+ *     summary: Get total TDS Amount  by user ID
+ *     tags: [User Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }] 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response with  PF Amount details
+ *       404:
+ *         description:  PF Amount not found for user
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-daily-amount-from-salary-structure-by-user/:userId', authController.protect, userController.getDailySalaryFromSalaryStructureByUser);
+
 
 /**
  * @swagger

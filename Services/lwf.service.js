@@ -13,9 +13,8 @@ const constants = require('../constants');
  */
 const getTotalLwfEligibleAmount = async (req, salaryDetails) => {
   // Divide annual Basic Salary by 12 to get monthly value
-  let total = salaryDetails?.BasicSalary / 12 || 0;
-  websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
-
+  let total = 0;
+ 
   // Fetch and add fixed allowances that affect LWF
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
   for (const item of fixedAllowances) {

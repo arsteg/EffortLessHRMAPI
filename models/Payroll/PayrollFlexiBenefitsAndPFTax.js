@@ -9,11 +9,8 @@ var payrollFlexiBenefitsAndPFTaxSchema = new Schema({
     TotalFlexiBenefitAmount: {
       type: Number,
       required: true
-    },
-    TotalProfessionalTaxAmount: {
-      type: Number,
-      required: true
     }
+
   }, { collection: 'PayrollFlexiBenefitsAndPFTax' });
       
 module.exports = mongoose.model('PayrollFlexiBenefitsAndPFTax', payrollFlexiBenefitsAndPFTaxSchema);

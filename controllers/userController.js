@@ -11,14 +11,12 @@ const EmployeeTaxAndSalutaorySetting = require("../models/Employment/EmployeeSal
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const SalaryComponentFixedAllowance = require("../models/Employment/SalaryComponentFixedAllowanceModel");
-const SalaryComponentOtherBenefits = require("../models/Employment/SalaryComponentOtherBenefits");
 const SalaryComponentEmployerContribution = require("../models/Employment/SalaryComponentEmployerContribution");
 const SalaryComponentFixedDeduction = require("../models/Employment/SalaryComponentFixedDeduction");
 const SalaryComponentVariableDeduction = require("../models/Employment/SalaryComponentVariableDeduction");
 const SalaryComponentPFCharge = require("../models/Employment/SalaryComponentPFCharge");
 const SalaryComponentVariableAllowance = require("../models/Employment/SalaryComponentVariableAllowance");
 const FixedAllowance = require("../models/Payroll/fixedAllowancesModel");
-const OtherBenefits = require("../models/Payroll/otherBenefitsModels");
 const FixedContribution = require("../models/Payroll/fixedContributionModel");
 const FixedDeduction = require("../models/Payroll/fixedDeductionModel");
 const VariableAllowance = require("../models/Payroll/variableAllowanceModel");
@@ -37,6 +35,13 @@ const Appointment = require("../models/permissions/appointmentModel");  // Impor
 const UserActionLog = require("../models/Logging/userActionModel");
 const StorageController = require('./storageController.js');
 const websocketHandler = require('../utils/websocketHandler');
+const {
+  calculateIncomeTax,       // Checks if LWF is applicable for the current month
+  getTotalTDSEligibleAmount, 
+  getTotalMonthlyAllownaceAmount,       // Finds the correct LWF slab and calculates employee/employer contributions
+  GetTDSAppicableAmountAfterDeclartion,
+  getTotalHRAAmount
+} = require('../Services/tds.service');
 
 exports.logUserAction = catchAsync(async (req, action, next) => {
   websocketHandler.sendLog(req, 'Starting user action logging', constants.LOG_TYPES.TRACE);
@@ -660,16 +665,6 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     }
   }
 
-  const otherBenefits = await OtherBenefits.find({ company: companyId })
-    .select("_id")
-    .exec();
-  const validBenefits = otherBenefits.map((fa) => fa._id.toString());
-  for (const item of req.body.salaryComponentOtherBenefits) {
-    if (!validBenefits.includes(item.otherBenefits)) {
-      next(new AppError(req.t('user.invalidComponent', { id: item.otherBenefits, type: 'Other Benefits' }), 400))
-    }
-  }
-
   const fixedContribution = await FixedContribution.find({ company: companyId })
     .select("_id")
     .exec();
@@ -746,7 +741,6 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   req.body.company = companyId;
   websocketHandler.sendLog(req, 'Creating employee salary details record', constants.LOG_TYPES.DEBUG);
   const employeeSalaryDetails = await EmployeeSalaryDetails.create(req.body);
-  employeeSalaryDetails.BasicSalary = employeeSalaryDetails.Amount;
   const employeeSalaryTaxAndStatutorySetting =
     req.body.employeeSalaryTaxAndStatutorySetting.map((item) => {
       return {
@@ -772,16 +766,6 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
       employeesalaryComponentFixedAllowance
     );
   employeeSalaryDetails.fixedAllowanceList = salaryComponentFixedAllowance;
-
-  const employeeSalaryComponentFixedAllowance =
-    req.body.salaryComponentOtherBenefits.map((item) => {
-      return { ...item, employeeSalaryDetails: employeeSalaryDetails._id };
-    });
-  const salaryComponentOtherBenefits =
-    await SalaryComponentOtherBenefits.create(
-      employeeSalaryComponentFixedAllowance
-    );
-  employeeSalaryDetails.otherBenefitList = salaryComponentOtherBenefits;
 
   const employeeSalaryComponentEmployerContribution =
     req.body.salaryComponentEmployerContribution.map((item) => {
@@ -865,10 +849,7 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
       .equals(employeeSalaryDetails[i]._id);
     employeeSalaryDetails[i].fixedAllowanceList = await SalaryComponentFixedAllowance.find({})
       .where("employeeSalaryDetails")
-      .equals(employeeSalaryDetails[i]._id);
-    employeeSalaryDetails[i].otherBenefitList = await SalaryComponentOtherBenefits.find({})
-      .where("employeeSalaryDetails")
-      .equals(employeeSalaryDetails[i]._id);
+      .equals(employeeSalaryDetails[i]._id);  
     employeeSalaryDetails[i].employerContributionList = await SalaryComponentEmployerContribution.find({})
       .where("employeeSalaryDetails")
       .equals(employeeSalaryDetails[i]._id);
@@ -894,6 +875,89 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Returned salary details for user ${req.params.userId}`, constants.LOG_TYPES.INFO);
 });
 // controllers/employeeSalaryDetailsController.js
+exports.getEmployeeBasicSalaryByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findOne(({ user: req.params.userId })).sort({ payrollEffectiveFrom: -1 });;
+  
+  if (!employeeSalaryDetails) {
+    websocketHandler.sendLog(req, `No salary details found with ID ${req.params.userId}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.noSalaryDetailsFound')
+
+    , 404));
+  }
+  
+  websocketHandler.sendLog(req, 'Fetching related salary components', constants.LOG_TYPES.TRACE);
+
+  const fixedAllowances = await SalaryComponentFixedAllowance.find({
+    employeeSalaryDetails: employeeSalaryDetails._id
+  }).populate({
+    path: 'fixedAllowance',
+    select: 'label'
+  });
+  // Filter in JS where label is "Basic Salary"
+  employeeSalaryDetails.fixedAllowanceList = fixedAllowances.filter(
+    item => item.fixedAllowance?.label === constants.Salaray_Default_Fixed_Allowance.Basic_Salary
+  );
+  if (!employeeSalaryDetails) {
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
+  }
+  let basicSalary = 0;
+  if (!employeeSalaryDetails.fixedAllowanceList.length > 0) {
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
+  }
+  else
+  {
+  basicSalary = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
+  }
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: basicSalary,
+  });
+});
+
+// controllers/employeeSalaryDetailsController.js
+exports.getEmployeeHRAByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  
+  const employeeSalaryDetails = await EmployeeSalaryDetails.findOne(({ user: req.params.userId })).sort({ payrollEffectiveFrom: -1 });;
+  
+  if (!employeeSalaryDetails) {
+    websocketHandler.sendLog(req, `No salary details found with ID ${req.params.userId}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.noSalaryDetailsFound')
+
+    , 404));
+  }
+  
+  websocketHandler.sendLog(req, 'Fetching related salary components', constants.LOG_TYPES.TRACE);
+
+  const fixedAllowances = await SalaryComponentFixedAllowance.find({
+    employeeSalaryDetails: employeeSalaryDetails._id
+  }).populate({
+    path: 'fixedAllowance',
+    select: 'label'
+  });
+  // Filter in JS where label is "Basic Salary"
+  employeeSalaryDetails.fixedAllowanceList = fixedAllowances.filter(
+    item => item.fixedAllowance?.label === constants.Salaray_Default_Fixed_Allowance.HRA
+  );
+  if (!employeeSalaryDetails) {
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
+  }
+  let hra = 0;
+  if (!employeeSalaryDetails.fixedAllowanceList.length > 0) {
+    return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
+  }
+  else
+  {
+  hra = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
+  }
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: hra,
+  });
+});
+// controllers/employeeSalaryDetailsController.js
 exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
   
@@ -911,9 +975,6 @@ exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     .where("employeeSalaryDetails")
     .equals(req.params.id);
   employeeSalaryDetails.fixedAllowanceList = await SalaryComponentFixedAllowance.find({})
-    .where("employeeSalaryDetails")
-    .equals(req.params.id);
-  employeeSalaryDetails.otherBenefitList = await SalaryComponentOtherBenefits.find({})
     .where("employeeSalaryDetails")
     .equals(req.params.id);
   employeeSalaryDetails.employerContributionList = await SalaryComponentEmployerContribution.find({})
@@ -971,19 +1032,6 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     if (!validAllowances.includes(item.fixedAllowance)) {
       websocketHandler.sendLog(req, `Invalid fixed allowance: ${item.fixedAllowance}`, constants.LOG_TYPES.WARN);
       next(new AppError(req.t('user.invalidComponent', { id: item.fixedAllowance, type: 'fixed allowance' }), 400))
-
-
-    }
-  }
-
-  const otherBenefits = await OtherBenefits.find({ company: companyId })
-    .select("_id")
-    .exec();
-  const validBenefits = otherBenefits.map((fa) => fa._id.toString());
-  for (const item of req.body.salaryComponentOtherBenefits) {
-    if (!validBenefits.includes(item.otherBenefits)) {
-      websocketHandler.sendLog(req, `Invalid other benefit: ${item.otherBenefits}`, constants.LOG_TYPES.WARN);
-      next(new AppError(req.t('user.invalidComponent', { id: item.otherBenefits, type: 'Other Benefits' }), 400))
 
 
     }
@@ -1115,14 +1163,6 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Handle other components similarly
-  if (req.body.salaryComponentOtherBenefits.length > 0) {
-    await updateOrCreateRecords(
-      SalaryComponentOtherBenefits,
-      req.body.salaryComponentOtherBenefits,
-      "otherBenefits"
-    );
-  }
   if (req.body.salaryComponentEmployerContribution.length > 0) {
     await updateOrCreateRecords(
       SalaryComponentEmployerContribution,
@@ -1171,10 +1211,6 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     await SalaryComponentFixedAllowance.find({})
       .where("employeeSalaryDetails")
       .equals(req.params.id);
-  employeeSalaryDetails.otherBenefitList =
-    await SalaryComponentOtherBenefits.find({})
-      .where("employeeSalaryDetails")
-      .equals(req.params.id);
   employeeSalaryDetails.employerContributionList =
     await SalaryComponentEmployerContribution.find({})
       .where("employeeSalaryDetails")
@@ -1221,9 +1257,6 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     employeeSalaryDetails: employeeSalaryDetailsId,
   });
   await SalaryComponentFixedAllowance.deleteMany({
-    employeeSalaryDetails: employeeSalaryDetailsId,
-  });
-  await SalaryComponentOtherBenefits.deleteMany({
     employeeSalaryDetails: employeeSalaryDetailsId,
   });
   await SalaryComponentEmployerContribution.deleteMany({
@@ -1378,7 +1411,6 @@ exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) =
   websocketHandler.sendLog(req, `Fetching salutatory details for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
   
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findOne({ user: req.params.userId });
-  
   websocketHandler.sendLog(req, `Found salutatory details`, constants.LOG_TYPES.INFO);
   
   res.status(200).json({
@@ -2360,5 +2392,27 @@ exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: user
+  });
+});
+// ✅ Get total TDS amount for a user including FNF days tax
+exports.getDailySalaryFromSalaryStructureByUser = catchAsync(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    websocketHandler.sendLog(req, '❌ TDS: User ID missing in request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('user.missingUserId'), 404));
+  }
+
+  websocketHandler.sendLog(req, `🔄 Starting TDS calculation for user: ${userId}`, constants.LOG_TYPES.INFO);
+
+  const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId });
+
+  // 4️⃣ Calculate eligible salary amount
+  let totalMonthlyAllownaceAmount = await getTotalMonthlyAllownaceAmount(req, salaryDetails);
+let dailySalaryAmount = totalMonthlyAllownaceAmount/30;
+  // 5. Final response
+  res.status(200).json({
+    status: 'success',
+    data: dailySalaryAmount
   });
 });

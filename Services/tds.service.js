@@ -16,10 +16,8 @@ const TaxSlab = require('../models/Company/TaxSlab');
  * Includes basic salary and all ESIC-affected fixed and variable allowances.
  */
 const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
-  let total = salaryDetails?.BasicSalary || 0;
-  
-  websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
-
+  let total = 0; 
+ 
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
   
   for (const item of fixedAllowances) {
@@ -43,16 +41,26 @@ const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
   websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
-
+const getTotalMonthlyAllownaceAmount = async (req, salaryDetails) => {
+  let total = 0; 
+ 
+  const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
+  
+  for (const item of fixedAllowances) {
+    const detail = await FixedAllowance.findById(item.fixedAllowance);   
+      total += item.monthlyAmount || 0;
+      websocketHandler.sendLog(req, `➕ ESIC Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+   
+  }
+  websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  return total;
+};
 /**
  * Calculates the total ESIC-eligible salary amount.
  * Includes basic salary and all ESIC-affected fixed and variable allowances.
  */
 const getTotalHRAAmount = async (req, salaryDetails) => {
   let total = 0;
-
-  websocketHandler.sendLog(req, `➡️ Basic Salary considered: ${salaryDetails?.BasicSalary}`, constants.LOG_TYPES.DEBUG);
-
   // Fetch fixed allowances
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
 
@@ -71,7 +79,7 @@ const getTotalHRAAmount = async (req, salaryDetails) => {
 /**
  * Calculates total taxable deduction (including approved HRA and other tax components)
  */
-const GetTDSAppicableAmountAfterDeclartion = async ({ req,userId, companyId, financialYear, basicSalary, hraReceived }) => {
+const GetTDSAppicableAmountAfterDeclartion = async ({ req,userId, companyId, financialYear, totalTDSAppicableAmount, hraReceived }) => {
   try {
     // Step 1: Get Employee Income Tax Declaration ID
     const declaration = await EmployeeIncomeTaxDeclaration.findOne({
@@ -109,7 +117,7 @@ const GetTDSAppicableAmountAfterDeclartion = async ({ req,userId, companyId, fin
     hraDeclarations.forEach(hra => {
       const rentPaid = hra.rentDeclared;
       const cityType = hra.cityType.toLowerCase();
-      const salary = basicSalary;
+      const salary = totalTDSAppicableAmount;
 
       const rentExcess = rentPaid - (0.1 * salary);
       const cityLimit = cityType === 'metro' ? (0.5 * salary) : (0.4 * salary);
@@ -178,5 +186,6 @@ module.exports = {
   getTotalTDSEligibleAmount,
   calculateIncomeTax,
   GetTDSAppicableAmountAfterDeclartion,
-  getTotalHRAAmount
+  getTotalHRAAmount,
+  getTotalMonthlyAllownaceAmount
 };

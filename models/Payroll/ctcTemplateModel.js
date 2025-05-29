@@ -15,7 +15,6 @@ const ctcTemplateSchema = new Schema({
   ctcTemplateVariableAllowances:[],
   ctcTemplateVariableDeductions:[],
   ctcTemplateEmployerContributions:[],
-  ctcTemplateOtherBenefitAllowances: [],
   ctcTemplateEmployeeDeductions:[],
   ctcTemplateFixedAllowances:[],
   ctcTemplateFixedDeductions:[]
