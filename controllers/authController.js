@@ -28,6 +28,9 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const AttendanceMode = require('../models/attendance/attendanceMode');
 const UserRole = require('../models/permissions/userRoleModel');
+const fs = require('fs');
+const path = require('path');
+const Permission = require('../models/permissions/permissionModel');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -268,44 +271,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
           console.log('No Attendance Mode found to duplicate.');
         }
 
-        // Step: Map role names to new role IDs for the new company
-        const newRoles = await Role.find({ company: company._id });
-        const roleNameToNewRoleIdMap = {};
-        newRoles.forEach(role => {
-          roleNameToNewRoleIdMap[role.name] = role._id.toString();
-        });
-        
-        // Step: Fetch RolePermissions of default company
-        const defaultRolePermissions = await RolePermission.find({ company: companyId });
-        if (defaultRolePermissions.length > 0) {
-          const duplicatedRolePermissions = await Promise.all(
-            defaultRolePermissions.map(async rp => {
-            const role = await Role.findById(rp.roleId);
-            if (!role) return null;
-            const newRoleId = roleNameToNewRoleIdMap[role.name];
-            if (!newRoleId) return null;
-
-            return {
-              roleId: newRoleId,
-              permissionId: rp.permissionId,
-              company: company._id,
-              createdBy: null, // or set to system/admin user if available
-              updatedBy: null,
-              createdOn: new Date(),
-              updatedOn: new Date()
-            };
-          }));
-
-          const filteredPermissions = duplicatedRolePermissions.filter(p => p !== null);
-          if (filteredPermissions.length > 0) {
-            await RolePermission.insertMany(filteredPermissions);
-            console.log('RolePermissions duplicated successfully.');
-          } else {
-            console.log('No matching roles found for duplicating RolePermissions.');
-          }
-        } else {
-          console.log('No RolePermission entries found to duplicate.');
-        }
+        seedRolePermissions(company);
   }
   var role =null;
   if(newCompany==true)
@@ -1175,3 +1141,64 @@ exports.deleteUserRole = catchAsync(async (req, res, next) => {
 });
 
  //#endregion
+
+ async function seedRolePermissions(company) {
+  try {
+    // Step 1: Read role-permission mappings from RolePermission.json
+    const rolePermissionFilePath = path.join(__dirname, '../config/rolePermissions.json');
+    const rolePermissionData = JSON.parse(fs.readFileSync(rolePermissionFilePath, 'utf-8'));
+
+    // Step 2: Fetch all roles for the current company and map by name
+    const roles = await Role.find({ company: company._id });
+    const roleMap = {};
+    roles.forEach(role => {
+      roleMap[role.name] = role._id.toString();
+    });
+
+    // Step 3: Fetch all permissions and map by name
+    const permissions = await Permission.find();
+    const permissionMap = {};
+    permissions.forEach(permission => {
+      permissionMap[permission.permissionName] = permission._id.toString();
+    });
+
+    // Step 4: Prepare RolePermission entries
+    const rolePermissionRecords = [];
+
+    for (const roleEntry of rolePermissionData) {
+      const roleId = roleMap[roleEntry.roleName];
+      if (!roleId) {
+        console.warn(`Role not found: ${roleEntry.roleName}`);
+        continue;
+      }
+
+      for (const permissionName of roleEntry.permissions) {
+        const permissionId = permissionMap[permissionName];
+        if (!permissionId) {
+          console.warn(`Permission not found: ${permissionName}`);
+          continue;
+        }
+
+        rolePermissionRecords.push({
+          roleId,
+          permissionId,
+          company: company._id,
+          createdBy: null,
+          updatedBy: null,
+          createdOn: new Date(),
+          updatedOn: new Date(),
+        });
+      }
+    }
+
+    // Step 5: Insert RolePermission entries
+    if (rolePermissionRecords.length > 0) {
+      await RolePermission.insertMany(rolePermissionRecords);
+      console.log('RolePermissions seeded successfully.');
+    } else {
+      console.log('No RolePermissions to insert.');
+    }
+  } catch (error) {
+    console.error('Error while seeding RolePermissions:', error);
+  }
+}

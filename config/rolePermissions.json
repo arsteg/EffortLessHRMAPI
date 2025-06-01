@@ -1,0 +1,53 @@
+[
+  {
+    "roleName": "Admin",
+    "permissions": [
+      "Dashboard",
+      "Screenshots",
+      "Realtime",
+      "Organization",
+      "Manage",
+      "Calender",
+      "Attendance",
+      "Timesheets",
+      "Leave",
+      "Expenses",
+      "Alerts",
+      "Payroll",
+      "Taxation",
+      "Reports",
+      "Separation",
+      "Settings",
+      "Permissions",
+      "Approvals",
+      "Interview Process",
+      "Feedback",
+      "Helpdesk",
+      "Profile"
+    ]
+  },
+  {
+    "roleName": "User",
+    "permissions": [
+      "Screenshots",
+      "Dashboard",
+      "Realtime",
+      "Tasks",
+      "Alerts",
+      "Organization",
+      "Calender",
+      "Leave",
+      "Attendance",
+      "Timesheets",
+      "Taxation",
+      "Expenses",
+      "PaySlips",
+      "Separation",
+      "Reports",
+      "Manual Time",
+      "Settings",
+      "Helpdesk",
+      "Profile"
+    ]
+  }
+]
