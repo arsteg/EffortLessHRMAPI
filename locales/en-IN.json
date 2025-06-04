@@ -189,7 +189,11 @@
     "ShiftTemplateAssignmentNF": "The shift template assignment was not found.",
     "TimeEntryNF": "The time entry was not found.",
     "UserIDMonthYearRequired": "User ID, month, and year are required.",
-    "OvertimeRecordsNF": "Overtime records were not found."
+    "OvertimeRecordsNF": "Overtime records were not found.",
+    "createOnDutyRequestsNotificationTitle": "On-Duty Request Created",
+    "createOnDutyRequestsNotificationMessage": "On-Duty Request has been created.",
+    "updateOnDutyRequestsNotificationTitle": "On-Duty Request Updated",
+    "updateOnDutyRequestsNotificationMessage": "On-Duty Request has been updated."
   },
   "auth": {
     "signupSuccess": "The user signed up successfully for company {companyId}.",
@@ -411,7 +415,13 @@
     "AttachmentPropertiesMustBeProvided": "All attachment properties must be provided.",
     "InvaliddateFormat": "The date format is invalid. Please provide valid dates.",
     "InvalidEndDate": "The end date must be after the start date.",
-    "ErrorCreatingLeaveTemplateCategory": "An error occurred while creating the leave template category."
+    "ErrorCreatingLeaveTemplateCategory": "An error occurred while creating the leave template category.",
+    "addLeaveRequestNotificationTitle": "Leave Request Created",
+    "addLeaveRequestNotificationMessage": "A leave request has been created.",
+    "leaveApprovalNotificationTitle": "Leave Request Approved",
+    "leaveApprovalNotificationMessage": "A leave request has been approved.",
+    "leaveRejectNotificationTitle": "Leave Request Rejected",
+    "leaveRejectNotificationMessage": "A leave request has been rejected."
   },
   "liveTracking": {
     "userAlreadyAdded": "The user is already added for live tracking.",
@@ -429,7 +439,11 @@
     "projectRequired": "A project is required.",
     "invalidDateRange": "The from date must be earlier than the to date.",
     "timeEntryOverlap": "The time entry overlaps with an existing record. Please adjust the time.",
-    "manualTimeRequestNotFound": "No manual time request was found with the specified ID."
+    "manualTimeRequestNotFound": "No manual time request was found with the specified ID.",
+    "addManualTimenotificationTitle": "Created Manual Time Request",
+    "addManualTimenotificationMessage": "{{userName}} has requested you to approve a manual time request.",
+    "updateManualTimenotificationTitle":"Manual time request approved",
+    "updateManualTimenotificationMessage": "Your manual time request has been approved."
   },
   "payroll": {
     "companyIdNotFound": "The company ID was not found in cookies.",
@@ -638,7 +652,9 @@
     "projectTaskRequired": "A project and task are required.",
     "noOpenCheckIn": "No open check-in record was found.",
     "serverError": "An internal server error occurred.",
-    "CheckedInSuccessfully": "Checked in successfully."
+    "CheckedInSuccessfully": "Checked in successfully.",
+    "timeLogNotificationTitle": "Time log deleted",
+    "timeLogNotificationMessage": "Time log deleted."
   },
   "user": {
     "noDocumentFound": "No document was found with the specified ID.",
@@ -673,7 +689,9 @@
     "lastWorkingDateNotFound": "Last working date not found for user.",
     "fnfDateRangeCalculated": "FNF date range calculated successfully.",
     "errorRetrievingData": "Error retrieving data, please try again later.",
-    "missingUserId": "User ID missing in the request."
+    "missingUserId": "User ID missing in the request.",
+    "loanAdvanceRequestTitle": "Loan/advance Request created",
+    "loanAdvanceRequestMessage": "A loan/advance request has been created for {{amount}}, with a monthly installment of {{monthlyInstallment}} over {{noOfInstallment}} installments."
   },
   "userPreferences": {
     "getAllSuccess": "Data fetched successfully.",

@@ -185,7 +185,11 @@
     "ShiftTemplateAssignmentNF": "शिफ्ट टेम्पलेट असाइनमेंट नहीं मिला।",
     "TimeEntryNF": "समय प्रविष्टि नहीं मिली।",
     "UserIDMonthYearRequired": "उपयोगकर्ता आईडी, माह, और वर्ष आवश्यक हैं।",
-    "OvertimeRecordsNF": "ओवरटाइम रिकॉर्ड नहीं मिले।"
+    "OvertimeRecordsNF": "ओवरटाइम रिकॉर्ड नहीं मिले।",
+    "createOnDutyRequestsNotificationTitle": "ऑन-ड्यूटी अनुरोधों के लिए अधिसूचना",
+    "createOnDutyRequestsNotificationMessage":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक बनाया गया।",
+    "updateOnDutyRequestsNotificationTitle":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक अपडेट किया गया",
+    "updateOnDutyRequestsNotificationMessage":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक अपडेट किया गया।"
   },
   "auth": {
     "signupSuccess": "उपयोगकर्ता ने कंपनी {companyId} के लिए सफलतापूर्वक साइन अप किया।",
@@ -407,7 +411,13 @@
     "AttachmentPropertiesMustBeProvided": "सभी संलग्नक गुण प्रदान किए जाने चाहिए।",
     "InvaliddateFormat": "तारीख प्रारूप अमान्य है। कृपया मान्य तारीखें प्रदान करें।",
     "InvalidEndDate": "समाप्ति तारीख प्रारंभ तारीख के बाद होनी चाहिए।",
-    "ErrorCreatingLeaveTemplateCategory": "छुट्टी टेम्पलेट श्रेणी बनाने में त्रुटि हुई।"
+    "ErrorCreatingLeaveTemplateCategory": "छुट्टी टेम्पलेट श्रेणी बनाने में त्रुटि हुई।",
+    "addLeaveRequestNotificationTitle": "छुट्टी अनुरोध जोड़ा गया",
+    "addLeaveRequestNotificationMessage": "एक अवकाश अनुरोध बनाया गया है।",
+    "leaveApprovalNotificationTitle": "छुट्टी अनुरोध स्वीकृत",
+    "leaveApprovalNotificationMessage": "आपका छुट्टी अनुरोध स्वीकृत कर दिया गया है।",
+    "leaveRejectionNotificationTitle": "छुट्टी अनुरोध अस्वीकृत",
+    "leaveRejectionNotificationMessage": "आपका छुट्टी अनुरोध अस्वीकृत कर दिया गया है।"
   },
   "liveTracking": {
     "userAlreadyAdded": "उपयोगकर्ता पहले से लाइव ट्रैकिंग के लिए जोड़ा जा चुका है।",
@@ -425,7 +435,11 @@
     "projectRequired": "एक प्रोजेक्ट आवश्यक है।",
     "invalidDateRange": "प्रारंभ तारीख समाप्ति तारीख से पहले होनी चाहिए।",
     "timeEntryOverlap": "समय प्रविष्टि एक मौजूदा रिकॉर्ड के साथ ओवरलैप करती है। कृपया समय समायोजित करें।",
-    "manualTimeRequestNotFound": "निर्दिष्ट आईडी के साथ कोई मैनुअल समय अनुरोध नहीं मिला।"
+    "manualTimeRequestNotFound": "निर्दिष्ट आईडी के साथ कोई मैनुअल समय अनुरोध नहीं मिला।",
+    "addManualTimenotificationTitle": "निर्मित मैनुअल समय अनुरोध",
+    "addManualTimenotificationMessage": "{{userName}} ने आपको एक मैनुअल समय अनुरोध को मंजूरी देने के लिए कहा है।",
+    "updateManualTimenotificationTitle":"मैनुअल समय अनुरोध को मंजूरी दी गई",
+    "updateManualTimenotificationMessage": "आपका मैनुअल समय अनुरोध मंजूर कर दिया गया है।"
   },
   "payroll": {
     "companyIdNotFound": "कुकीज़ में कंपनी आईडी नहीं मिली।",
@@ -615,7 +629,9 @@
     "projectTaskRequired": "प्रोजेक्ट और कार्य आवश्यक हैं।",
     "noOpenCheckIn": "कोई खुला चेक-इन रिकॉर्ड नहीं मिला।",
     "serverError": "आंतरिक सर्वर त्रुटि हुई।",
-    "CheckedInSuccessfully": "सफलतापूर्वक चेक इन किया गया।"
+    "CheckedInSuccessfully": "सफलतापूर्वक चेक इन किया गया।",
+    "timeLogNotificationTitle": "समय लॉग हटाया गया",
+    "timeLogNotificationMessage": "समय लॉग हटाया गया।"
   },
   "user": {
     "noDocumentFound": "निर्दिष्ट आईडी के साथ कोई दस्तावेज़ नहीं मिला।",
@@ -643,7 +659,9 @@
     "ErrorCancellingOTP": "ओटीपी रद्द करने में त्रुटि हुई।",
     "OTPCancelledSuccessfully.": "ओटीपी सफलतापूर्वक रद्द किया गया।",
     "ErrorVerifyingOTP": "ओटीपी सत्यापित करने में त्रुटि हुई।",
-    "otpVerifiedSuccessfully": "ओटीपी सफलतापूर्वक सत्यापित किया गया।"
+    "otpVerifiedSuccessfully": "ओटीपी सफलतापूर्वक सत्यापित किया गया।",
+    "loanAdvanceRequestTitle": "ऋण/अग्रिम अनुरोध बनाया गया",
+    "loanAdvanceRequestMessage": "{{amount}} के लिए एक ऋण/अग्रिम अनुरोध बनाया गया है, जिसकी मासिक किस्त {{monthlyInstallment}} होगी और कुल {{noOfInstallment}} किस्तों में चुकाया जाएगा।"
   },
   "userPreferences": {
     "categoryNotFound": "प्राथमिकता श्रेणी नहीं मिली।",

@@ -35,6 +35,8 @@ const Appointment = require("../models/permissions/appointmentModel");  // Impor
 const UserActionLog = require("../models/Logging/userActionModel");
 const StorageController = require('./storageController.js');
 const websocketHandler = require('../utils/websocketHandler');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount, 
@@ -1565,6 +1567,50 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     }
   }
   
+  const notificationType = await eventNotificationType.findOne({ name: 'loan_advance', company: companyId });
+  if (!notificationType) {
+    console.warn('Notification type "loan_advance" not found.');
+  }
+
+  if (user) {
+    try {
+      const notificationBody = {
+        name: req.t('user.loanAdvanceRequestTitle'),
+        description: req.t('user.loanAdvanceRequestMessage', { amount: req.body.amount, monthlyInstallment: req.body.monthlyInstallment, noOfInstallment: req.body.noOfInstallment }),
+        eventNotificationType: notificationType?._id?.toString() || null,
+        date: new Date(),
+        navigationUrl: '',
+        isRecurring: false,
+        recurringFrequency: null,
+        leadTime: 0,
+        status: 'unread'
+      };
+
+      // Simulate the req object for addNotificationForUser
+      const notificationReq = {
+        ...req,
+        body: notificationBody,
+        cookies: {
+          ...req.cookies,
+          userId: user._id.toString(),
+          companyId: companyId
+        }
+      };
+
+      //Fire and forget
+      (async () => {
+        try {
+          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+        } catch (err) {
+          console.error('Error calling addNotificationForUser:', err.message);
+        }
+      })();
+    } catch (error) {
+      websocketHandler.sendLog(req, `Failed to create event notification`, constants.LOG_TYPES.ERROR);
+      // Don't fail the task creation if notification fails
+    }
+  }
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
