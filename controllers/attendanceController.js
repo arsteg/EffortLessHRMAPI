@@ -2295,11 +2295,11 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.MappedTimlogToAttendance = catchAsync(async (req, res, next) => {
+exports.MappedTimlogToAttendance = async (req, res, next) => {
+  
   websocketHandler.sendLog(req, 'Starting MappedTimlogToAttendance', constants.LOG_TYPES.INFO);
-
   const companyId = req.cookies.companyId;
-  const month = req.body.month || new Date().getMonth() + 1; // +1 since getMonth is 0-based
+  const month = req.body.month || new Date().getMonth(); // +1 since getMonth is 0-based
   const year = req.body.year || new Date().getFullYear();
   websocketHandler.sendLog(req, `Extracted companyId: ${companyId}, month: ${month}, year: ${year}`, constants.LOG_TYPES.TRACE);
 
@@ -2307,7 +2307,6 @@ exports.MappedTimlogToAttendance = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
-
   req.body.company = companyId;
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
@@ -2408,7 +2407,7 @@ exports.MappedTimlogToAttendance = catchAsync(async (req, res, next) => {
       error: error.message,
     });
   }
-});
+};
 
 // Controller function to handle the upload and processing of attendance JSON data
 exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
@@ -2537,7 +2536,7 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
         company: companyId,
-        attandanceShift: shift._id,  
+        attendanceShift: shift._id,  
         isOvertime,
       };
       
@@ -2563,7 +2562,7 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
     .filter(record => record.isOvertime)
     .map(record => ({
       User: record.user, // Replace with appropriate user name
-      AttandanceShift: record.attandanceShift,
+      attendanceShift: record.attendanceShift,
       OverTime: record.deviationHour,
       ShiftTime: record.shiftTiming,
       Date: record.date,
@@ -2574,19 +2573,19 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
       company: companyId,
     }));
 
-  // Remove duplicates within the array based on Date, User, and AttandanceShift
+  // Remove duplicates within the array based on Date, User, and AttendanceShift
   const uniqueOvertimeRecords = Array.from(
     new Map(overtimeRecords.map(record =>
-      [`${record.User}-${record.AttandanceShift}-${record.Date}`, record]
+      [`${record.User}-${record.attendanceShift}-${record.Date}`, record]
     )).values()
   );
 
   // Check for existing records in the database to avoid duplicates
   if (uniqueOvertimeRecords.length) {
-    // Fetch existing records from the database that match the User, AttandanceShift, and Date
+    // Fetch existing records from the database that match the User, AttendanceShift, and Date
     const existingRecords = await OvertimeInformation.find({
       User: { $in: uniqueOvertimeRecords.map(record => record.User) },
-      AttandanceShift: { $in: uniqueOvertimeRecords.map(record => record.AttandanceShift) },
+      attendanceShift: { $in: uniqueOvertimeRecords.map(record => record.attendanceShift) },
       Date: { $in: uniqueOvertimeRecords.map(record => record.Date) },
     });
 
@@ -2594,7 +2593,7 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
     const newRecords = uniqueOvertimeRecords.filter(record =>
       !existingRecords.some(existing =>
         existing.User.toString() === record.User.toString() &&
-        existing.AttandanceShift.toString() === record.AttandanceShift.toString() &&
+        existing.attendanceShift.toString() === record.attendanceShift.toString() &&
         existing.Date === record.Date
       )
     );

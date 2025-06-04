@@ -3163,7 +3163,7 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
 
 /**
  * @swagger
- * /api/v1/attendance/timelog-mapped-attandance:
+ * /api/v1/attendance/timelog-mapped-attendance:
  *   post:
  *     summary: Add a TimeEntry
  *     tags: [Attendance Management]
@@ -3188,7 +3188,7 @@ attendanceRouter.post('/employee-duty-requests-by-company', authController.prote
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/timelog-mapped-attandance', authController.protect, attendanceController.MappedTimlogToAttendance);
+attendanceRouter.post('/timelog-mapped-attendance', authController.protect, attendanceController.MappedTimlogToAttendance);
 /**
  * @swagger
  * /api/v1/attendance/upload-json:

@@ -37,7 +37,7 @@ var attendanceRecordsSchema = new Schema({
     type: String,
     required: true
   },
-  attandanceShift: {
+  attendanceShift: {
     type: mongoose.Schema.ObjectId,
     ref: 'Shift',
     required: true

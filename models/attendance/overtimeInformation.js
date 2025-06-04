@@ -7,7 +7,7 @@ const overTimeInformationSchema = new Schema({
         ref: 'User',
         required: true
     },
-    AttandanceShift: {
+    attendanceShift: {
         type: mongoose.Schema.ObjectId,
         ref: 'Shift',
         required: true
