@@ -591,7 +591,13 @@
     "initiateSeparationRequestNotFound": "अलगाव अनुरोध शुरू नहीं मिला।",
     "separationRequestNotFound": "अलगाव अनुरोध नहीं मिला।",
     "separationTypeInUse": "अलगाव प्रकार वर्तमान में उपयोग में है। कृपया अलगाव प्रकार हटाने से पहले संबंधित रिकॉर्ड हटाएँ।",
-    "ExitInterviewQuestionAlreadyInUse": "निकास साक्षात्कार प्रश्न वर्तमान में उपयोग में है। कृपया निकास साक्षात्कार प्रश्न हटाने से पहले संबंधित रिकॉर्ड हटाएँ।"
+    "ExitInterviewQuestionAlreadyInUse": "निकास साक्षात्कार प्रश्न वर्तमान में उपयोग में है। कृपया निकास साक्षात्कार प्रश्न हटाने से पहले संबंधित रिकॉर्ड हटाएँ।",
+    "addTerminationNotificationTitle": "आपकी सेवा समाप्ति प्रक्रिया पूर्ण हुई",
+    "addTerminationNotificationMessage": "आपकी सेवा समाप्ति सफलतापूर्वक प्रक्रिया की गई है।",
+    "updateTerminationNotificationTitle": "आपकी सेवा समाप्ति को अपडेट किया गया है",
+    "updateTerminationNotificationMessage": "आपकी सेवा समाप्ति को अपडेट कर दिया गया है।",
+    "terminationStatusChangedNotificationTitle": "आपकी सेवा समाप्ति की स्थिति बदली गई है",
+    "terminationStatusChangedNotificationMessage": "आपकी सेवा समाप्ति की स्थिति अब '{{status}}' हो गई है।"
   },
   "settings": {
     "productivityNotFound": "निर्दिष्ट आईडी के साथ कोई उत्पादकता नहीं मिली।",

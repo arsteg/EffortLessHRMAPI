@@ -15,6 +15,10 @@ const TerminationAppeal = require('../models/Separation/TerminationAppeal');
 const mongoose = require('mongoose');
 const  websocketHandler  = require('../utils/websocketHandler');
 const { getFNFDateRange  } = require('../Services/userDates.service');
+const EmailTemplate = require('../models/commons/emailTemplateModel');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
+const sendEmail = require('../utils/email');
 exports.addResignation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addResignation execution', constants.LOG_TYPES.TRACE);
 
@@ -231,6 +235,86 @@ exports.addTermination = catchAsync(async (req, res, next) => {
   });
   websocketHandler.sendLog(req, `Created termination with ID: ${termination._id}`, constants.LOG_TYPES.INFO);
 
+  const emailTemplate = await EmailTemplate.findOne({})
+    .where('Name')
+    .equals(constants.Email_template_constant.Employee_Termination)
+    .where('company')
+    .equals(company);
+  const user = await User.findById(termination.user);
+  console.log('user', termination.user.toString());
+  console.log('user', user._id.toString());
+
+  if (emailTemplate) {
+    websocketHandler.sendLog(req, `Preparing notification email for ${user.email}`, constants.LOG_TYPES.TRACE);
+    const template = emailTemplate.contentData;
+    const message = template
+      .replace("{firstName}", user.firstName)
+      .replace("{lastName}", user.lastName)
+      .replace("{company}", req.cookies.companyName)
+      .replace("{terminationDate}", termination.termination_date.toDateString())
+      .replace("{terminationReason}", termination.termination_reason)
+      .replace("{noticeGiven}", termination.notice_given ? 'Yes' : 'No')
+      .replace("{PerformanceWarningIssued}", termination.performance_warnings)
+      .replace("{exitInterview}", termination.exit_interview_date.toDateString());
+    
+      try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplate.subject,
+        message
+      });
+      websocketHandler.sendLog(req, `Notification email sent to ${user.email}`, constants.LOG_TYPES.INFO);
+    } catch (err) {
+      websocketHandler.sendLog(req, `Error sending email: ${err.message}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('user.emailError')
+
+      , 500));
+    }
+  }
+
+  // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.separation, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.separation} not found`, constants.LOG_TYPES.WARN); 
+    }
+    
+    if (user && user?._id) {
+        try {
+        const notificationBody = {
+            name: req.t('separation.addTerminationNotificationTitle'),
+            description: req.t('separation.addTerminationNotificationMessage'),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: new Date(), 
+            navigationUrl: '',
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+        };
+
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+            ...req.cookies,
+            userId: termination?.user?.toString() // Set the userId to the assigned user
+          }
+        };
+        //Fire and forget
+        (async () => {
+            try {
+              await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+            } catch (err) {
+              console.error('Error calling addNotificationForUser:', err.message);
+            }
+        })();
+        } catch (error) {
+          websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+          // Don't fail the task creation if notification fails
+        }
+    }
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: termination
@@ -319,6 +403,50 @@ exports.updateTermination = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, `Termination ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
 
+  // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.separation, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.separation} not found`, constants.LOG_TYPES.WARN); 
+    }
+
+    if (termination.user) {
+        try {
+        const notificationBody = {
+            name: req.t('separation.updateTerminationNotificationTitle'),
+            description: req.t('separation.updateTerminationNotificationMessage'),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: new Date(), 
+            navigationUrl: '',
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+        };
+
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+            ...req.cookies,
+            userId: termination?.user?.toString() // Set the userId to the assigned user
+          }
+        };
+
+        //Fire and forget
+        (async () => {
+            try {
+              await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+            } catch (err) {
+              console.error('Error calling addNotificationForUser:', err.message);
+            }
+        })();
+        } catch (error) {
+          websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+          // Don't fail the task creation if notification fails
+        }
+    }
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: updatedTermination
@@ -370,6 +498,50 @@ exports.changeTerminationStatus = catchAsync(async (req, res, next) => {
     await user.save();
     websocketHandler.sendLog(req, `Updated user ${user._id} status to Active`, constants.LOG_TYPES.INFO);
     }
+
+    // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.separation, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.separation} not found`, constants.LOG_TYPES.WARN); 
+    }
+    
+    if (user && user?._id) {
+        try {
+        const notificationBody = {
+            name: req.t('separation.terminationStatusChangedNotificationTitle'),
+            description: req.t('separation.terminationStatusChangedNotificationMessage', { status: termination_status }),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: new Date(), 
+            navigationUrl: '',
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+        };
+
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+            ...req.cookies,
+            userId: termination?.user?.toString() // Set the userId to the assigned user
+          }
+        };
+        //Fire and forget
+        (async () => {
+            try {
+              await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+            } catch (err) {
+              console.error('Error calling addNotificationForUser:', err.message);
+            }
+        })();
+        } catch (error) {
+          websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+          // Don't fail the task creation if notification fails
+        }
+    }
+
   res.status(200).json({
   status: constants.APIResponseStatus.Success,
   data: updatedTermination

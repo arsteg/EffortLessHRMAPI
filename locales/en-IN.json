@@ -258,7 +258,9 @@
     "noRoleFound": "No role was found.",
     "userSubordinateExists": "The user subordinate already exists.",
     "noRolePermissionFound": "No role permission was found.",
-    "userLimitReached": "You have reached the user limit for your subscription plan. You cannot add more than {userLimit} users. Please upgrade your plan to add more users."
+    "userLimitReached": "You have reached the user limit for your subscription plan. You cannot add more than {userLimit} users. Please upgrade your plan to add more users.",
+    "roleAssignmentNotificationTitle": "Role Assignment Notification",
+    "roleAssignmentNotificationMessage": "The role '{{roleName}}' has been assigned to you."
   },
   "company": {
     "notFound": "No document was found with the specified ID.",
@@ -614,7 +616,13 @@
     "initiateSeparationRequestNotFound": "The initiate separation request was not found.",
     "separationRequestNotFound": "The separation request was not found.",
     "separationTypeInUse": "The separation type is currently in use. Please delete related records before deleting the separation type.",
-    "ExitInterviewQuestionAlreadyInUse": "The exit interview question is currently in use. Please delete related records before deleting the exit interview question."
+    "ExitInterviewQuestionAlreadyInUse": "The exit interview question is currently in use. Please delete related records before deleting the exit interview question.",
+    "addTerminationNotificationTitle": "Your termination has been processed",
+    "addTerminationNotificationMessage": "Your termination has been processed successfully.",
+    "updateTerminationNotificationTitle": "Your termination has been updated",
+    "updateTerminationNotificationMessage": "Your termination has been updated.",
+    "terminationStatusChangedNotificationTitle": "Your termination status has been changed",
+    "terminationStatusChangedNotificationMessage": "Your termination status has been changed to {{status}}."
   },
   "settings": {
     "productivityNotFound": "No productivity was found with the specified ID.",
