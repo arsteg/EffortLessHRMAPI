@@ -178,9 +178,9 @@ exports.updateTask = catchAsync(async (req, res, next) => {
       if (user && user._id) {
         try {
           // Fetch the notification type once
-          const notificationType = await eventNotificationType.findOne({ name: 'task_assignment', company: req.cookies.companyId });
+          const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
           if (!notificationType) { 
-            websocketHandler.sendLog(req, 'Notification type "task_assignment" not found', constants.LOG_TYPES.WARN); 
+            websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found`, constants.LOG_TYPES.WARN); 
           }
           const notificationBody = {
             name: `Task update: ${updatedTask.taskName}`,
@@ -805,9 +805,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
    if (req.body.user) {
     try {
       // Fetch the notification type once
-      const notificationType = await eventNotificationType.findOne({ name: 'task_assignment', company: req.cookies.companyId });
+      const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
       if (!notificationType) {
-        console.warn('Notification type "task_assignment" not found.');
+        console.warn(`Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found.`);
       }
       const notificationBody = {
         name: `Task Assigned: ${newTask.taskName}`,

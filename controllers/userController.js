@@ -1567,9 +1567,9 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     }
   }
   
-  const notificationType = await eventNotificationType.findOne({ name: 'loan_advance', company: companyId });
+  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.loan_advance, company: companyId });
   if (!notificationType) {
-    console.warn('Notification type "loan_advance" not found.');
+    console.warn(`Notification type ${constants.Event_Notification_Type_Status.loan_advance} not found.`);
   }
 
   if (user) {

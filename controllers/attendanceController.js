@@ -2015,9 +2015,9 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
     }
 
     // Fetch the notification type once
-    const notificationType = await eventNotificationType.findOne({ name: 'attendance', company: companyId });
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.attendance, company: companyId });
     if (!notificationType) { 
-        websocketHandler.sendLog(req, 'Notification type "attendance" not found', constants.LOG_TYPES.WARN); 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.attendance} not found`, constants.LOG_TYPES.WARN); 
     }
     if (req.body.user) {
         try {
@@ -2117,9 +2117,9 @@ exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
   const companyId = req.cookies.companyId;
   // Fetch the notification type once
-  const notificationType = await eventNotificationType.findOne({ name: 'attendance', company: companyId });
+  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.attendance, company: companyId });
   if (!notificationType) { 
-      websocketHandler.sendLog(req, 'Notification type "attendance" not found', constants.LOG_TYPES.WARN); 
+      websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.attendance} not found`, constants.LOG_TYPES.WARN); 
   }
 
   if (req.body.user) {

@@ -115,9 +115,9 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   }
 
     // Fetch the notification type once
-    const notificationType = await eventNotificationType.findOne({ name: 'manual_time', company: req.cookies.companyId  });
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.manual_time, company: req.cookies.companyId  });
     if (!notificationType) { 
-        websocketHandler.sendLog(req, 'Notification type "manual_time" not found', constants.LOG_TYPES.WARN); 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.manual_time} not found`, constants.LOG_TYPES.WARN); 
     }
 
     if (req.body.user) {

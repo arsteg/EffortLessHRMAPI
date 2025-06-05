@@ -429,9 +429,9 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Processing ${req.body.logs.length} logs for deletion`, constants.LOG_TYPES.DEBUG);
   
   // Fetch the notification type once
-  const notificationType = await eventNotificationType.findOne({ name: 'timelog_delete', company: req.cookies.companyId });
+  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.timelog_delete, company: req.cookies.companyId });
   if (!notificationType) {
-    console.warn('Notification type "timelog_delete" not found.');
+    console.warn(`Notification type ${constants.Event_Notification_Type_Status.timelog_delete} not found.`);
   }
 
 
