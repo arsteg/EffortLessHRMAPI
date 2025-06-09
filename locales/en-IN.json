@@ -699,7 +699,19 @@
     "errorRetrievingData": "Error retrieving data, please try again later.",
     "missingUserId": "User ID missing in the request.",
     "loanAdvanceRequestTitle": "Loan/advance Request created",
-    "loanAdvanceRequestMessage": "A loan/advance request has been created for {{amount}}, with a monthly installment of {{monthlyInstallment}} over {{noOfInstallment}} installments."
+    "loanAdvanceRequestMessage": "A loan/advance request has been created for {{amount}}, with a monthly installment of {{monthlyInstallment}} over {{noOfInstallment}} installments.",
+    "BirthdayNotificationTitle": "Happy Birthday",
+    "BirthdayNotificationMessage": "Dear {{userName}}, wishes you a fantastic birthday! Have a great day filled with joy and celebration.",
+    "BirthdayNotificationForManagerTitle": "Team Member Birthday Reminder",
+    "BirthdayNotificationForManagerMessage": "Today is {{userName}}'s birthday. You may want to reach out and wish them a happy birthday!",
+    "WorkAnniversaryNotificationTitle": "Happy Work Anniversary!",
+    "WorkAnniversaryNotificationMessage": "Dear {{userName}}, congratulations on your {{years}} year work anniversary with {{companyName}}! We appreciate your dedication and contributions.",
+    "WorkAnniversaryNotificationForManagerTitle": "Team Member Work Anniversary",
+    "WorkAnniversaryNotificationForManagerMessage": "Today marks {{userName}}'s {{years}} year work anniversary.",
+    "AppraisalNotificationTitle": "Appraisal Update",
+    "AppraisalNotificationMessage": "Dear {{userName}}, your performance appraisal has been completed. Please log in to the HR portal to view your appraisal details.",
+    "AppraisalNotificationForManagerTitle": "Appraisal Notification Sent",
+    "AppraisalNotificationForManagerMessage": "The appraisal results for {{userName}} have been shared with them."
   },
   "userPreferences": {
     "getAllSuccess": "Data fetched successfully.",

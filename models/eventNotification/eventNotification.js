@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const baseSchema = require('./baseSchema');
 const { RecurringFrequency } = require('../eventNotification/enums');
 const Schema = mongoose.Schema;
-const { NotificationStatus } = require('../eventNotification/enums'); // Corrected import path
+const { NotificationStatus, NotificationChannel } = require('../eventNotification/enums'); // Corrected import path
 
 const eventNotificationSchema = new Schema({
   name: {
@@ -49,7 +49,13 @@ recurringFrequency: {
     type: Schema.Types.ObjectId,
     ref: 'Company',
     required: true
-  }  
+  },
+  notificationChannel: {
+    type: [String],
+    enum: Object.values(NotificationChannel),
+    required: true,
+    default: [NotificationChannel.UI]
+  }
 });
 eventNotificationSchema.add(baseSchema);
 module.exports = mongoose.model('eventNotification', eventNotificationSchema);
