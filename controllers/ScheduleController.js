@@ -282,30 +282,16 @@ const runRecuringNotifications = async (req, res,next) => {
       for (const userLink of userLinks) {
         const userId = userLink.user;
 
-        const eventNotificationData = {
-          name: notification.name,
-          description: notification.description,
-          eventNotificationType: notification?.eventNotificationType || null,
-          date: new Date(),
-          navigationUrl: notification.navigationUrl,
-          isRecurring: notification.isRecurring,
-          recurringFrequency: notification.recurringFrequency,
-          leadTime: notification.leadTime,
-          status: 'unread'
-        };
+        const user = await User.findById(userId);
+        const userSubordinates = await userSubordinate.find({ subordinateUserId: userId });
+        const managers = await User.find({ _id: { $in: userSubordinates.map(s => s.userId) } });
 
         if (notification.notificationChannel.includes(NotificationChannel.UI)) {
-          //notification to employee
-          websocketHandler.sendNotification(userId, eventNotificationData);
-          //send notification to manager
-          sendNotificationToManager(req, eventNotificationData, userId, company);
+          sendUINotification(req, user, managers, notification.eventNotificationType.toString(), notification, company);
 
         }
 
         if (notification.notificationChannel.includes(NotificationChannel.EMAIL)) {
-          const user = await User.findById(userId);
-          const userSubordinates = await userSubordinate.find({ subordinateUserId: userId });
-          const managers = await User.find({ _id: { $in: userSubordinates.map(s => s.userId) } });
           await sendEmailNotifications(user, managers, notification.eventNotificationType.toString(), company);
         }
       }
@@ -337,6 +323,110 @@ function getNextDate(currentDate, frequency) {
   }
   return next;
 }
+
+const sendUINotification = async (req, user, managerList, notificationTypeId, notification, company) => {
+  try {
+    const eventNotificationType = await EventNotificationType.findById(notificationTypeId);
+    if (!eventNotificationType) return;
+    const today = new Date();
+    let employeeTitle = '';
+    let employeeMessage = '';
+    let managerTitle = '';
+    let managerMessage = '';
+
+    switch (eventNotificationType.name) {
+      case constants.Event_Notification_Type_Status.Birthday:
+        employeeTitle = notification.name;
+        employeeMessage = notification.description;
+
+        managerTitle = 'Team Member Birthday Reminder';
+        managerMessage = `Today is ${user?.firstName} ${user?.lastName}'s birthday. You may want to reach out and wish them a happy birthday!`;
+        break;
+
+      case constants.Event_Notification_Type_Status.WorkAnniversary:
+        const appointment = await Appointment.findOne({ user: user._id });
+        if (!appointment) return;
+
+        const joiningDate = new Date(appointment.joiningDate);
+        const years = today.getFullYear() - joiningDate.getFullYear();
+
+        employeeTitle = notification.name;
+        employeeMessage = `Dear ${user?.firstName} ${user?.lastName}, congratulations on your ${years} year work anniversary at ${company.companyName}! We appreciate your dedication and contributions!`;
+
+        managerTitle = `Team Member Work Anniversary`;
+        managerMessage = `Today marks ${user?.firstName} ${user?.lastName}'s ${years} year work anniversary.`;
+        break;
+
+      case constants.Event_Notification_Type_Status.Appraisal:
+        employeeTitle = notification.name;
+        employeeMessage = notification.description;
+
+        managerTitle = `Appraisal Notification Sent`;
+        managerMessage = `The appraisal results for ${user?.firstName} ${user?.lastName} have been shared with them.`;
+        break;
+
+      default:
+        return;
+    }
+
+    // Create notification for the employee
+    const employeeNotification = {
+      name: employeeTitle,
+      description: employeeMessage,
+      eventNotificationType: eventNotificationType?._id?.toString(),
+      date: new Date(),
+      navigationUrl: '',
+      isRecurring: false,
+      leadTime: 0,
+      status: 'unread'
+    };
+
+    const employeeReq = {
+      ...req,
+      body: employeeNotification,
+      cookies: {
+        userId: user._id.toString(),
+        companyId: company._id.toString()
+      }
+    };
+
+    await eventNotificationController.addNotificationForUser(employeeReq, {}, () => {});
+    // Create notifications for each manager
+    const managerNotification = {
+      name: managerTitle,
+      description: managerMessage,
+      eventNotificationType: eventNotificationType?._id?.toString(),
+      date: new Date(),
+      navigationUrl: '',
+      isRecurring: false,
+      leadTime: 0,
+      status: 'unread'
+    };
+
+    for (const manager of managerList) {
+      const managerReq = {
+        ...req,
+        body: managerNotification,
+        cookies: {
+          userId: manager._id.toString(),
+          companyId: company._id.toString()
+        }
+      };
+
+      // Fire-and-forget
+      (async () => {
+        try {
+          await eventNotificationController.addNotificationForUser(managerReq, {}, () => {});
+        } catch (err) {
+          console.error(`Error sending UI notification to manager ${manager._id}:`, err.message);
+        }
+      })();
+    }
+  } catch (err) {
+    console.error("Error in sendUINotification:", err.message);
+  }
+};
+
 
 async function sendNotificationToManager(req, notification, userId, company) {
   try {
