@@ -667,7 +667,19 @@
     "ErrorVerifyingOTP": "ओटीपी सत्यापित करने में त्रुटि हुई।",
     "otpVerifiedSuccessfully": "ओटीपी सफलतापूर्वक सत्यापित किया गया।",
     "loanAdvanceRequestTitle": "ऋण/अग्रिम अनुरोध बनाया गया",
-    "loanAdvanceRequestMessage": "{{amount}} के लिए एक ऋण/अग्रिम अनुरोध बनाया गया है, जिसकी मासिक किस्त {{monthlyInstallment}} होगी और कुल {{noOfInstallment}} किस्तों में चुकाया जाएगा।"
+    "loanAdvanceRequestMessage": "{{amount}} के लिए एक ऋण/अग्रिम अनुरोध बनाया गया है, जिसकी मासिक किस्त {{monthlyInstallment}} होगी और कुल {{noOfInstallment}} किस्तों में चुकाया जाएगा।",
+    "BirthdayNotificationTitle": "जन्मदिन की शुभकामनाएँ",
+    "BirthdayNotificationMessage": "प्रिय {{userName}}, आपको जन्मदिन की ढेर सारी शुभकामनाएँ! आपका दिन खुशियों और उत्सव से भरा हो।",
+    "BirthdayNotificationForManagerTitle": "टीम सदस्य का जन्मदिन",
+    "BirthdayNotificationForManagerMessage": "आज {{userName}} का जन्मदिन है। कृपया उन्हें जन्मदिन की शुभकामनाएँ देना न भूलें।",
+    "WorkAnniversaryNotificationTitle": "कार्य वर्षगांठ की शुभकामनाएँ!",
+    "WorkAnniversaryNotificationMessage": "प्रिय {{userName}}, {{companyName}} में आपके {{years}} वर्षों की सेवा के लिए बधाई! हम आपके समर्पण और योगदान की सराहना करते हैं।",
+    "WorkAnniversaryNotificationForManagerTitle": "टीम सदस्य की कार्य वर्षगांठ",
+    "WorkAnniversaryNotificationForManagerMessage": "आज {{userName}} की {{companyName}} में {{years}} वर्षों की कार्य वर्षगांठ है।",
+    "AppraisalNotificationTitle": "प्रदर्शन मूल्यांकन अपडेट",
+    "AppraisalNotificationMessage": "प्रिय {{userName}}, आपका प्रदर्शन मूल्यांकन पूरा हो गया है। कृपया HR पोर्टल में लॉग इन करके अपने मूल्यांकन विवरण देखें।",
+    "AppraisalNotificationForManagerTitle": "प्रदर्शन मूल्यांकन सूचना भेजी गई",
+    "AppraisalNotificationForManagerMessage": "{{userName}} के मूल्यांकन परिणाम उन्हें भेजे जा चुके हैं। कृपया किसी भी प्रश्न या स्पष्टीकरण के लिए उपलब्ध रहें।"
   },
   "userPreferences": {
     "categoryNotFound": "प्राथमिकता श्रेणी नहीं मिली।",

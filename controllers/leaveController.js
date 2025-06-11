@@ -387,7 +387,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       });
       return;
     }
-    leaveTemplate.leaveCategories = await updateOrCreateLeaveTemplateCategories(req.params.id, req.body.leaveCategories);
+    const updatedCategories = await updateOrCreateLeaveTemplateCategories(req.params.id, req.body.leaveCategories);
 
     await TemplateCubbingRestriction.deleteMany({
       leaveCategory: leaveTemplate._id,
@@ -402,7 +402,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      data: leaveTemplate
+     data: { leaveTemplate: leaveTemplate, leaveCategories: updatedCategories },
     });
   } catch (err) {
     res.status(500).json({
@@ -1641,7 +1641,7 @@ async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCat
   });
   // Remove categories not present in the updated list
   const categoriesToRemove = existingCategories.filter(
-    (existing) => !updatedCategories.find((updated) => updated.leaveCategory === existing.leaveCategory.toString())
+    (existing) => !updatedCategories.find((updated) => updated.leaveCategory === existing.leaveCategory._id.toString())
   );
 
 

@@ -633,6 +633,46 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
       data: null
     });
   });
+
+  exports.updateNotificationStatus = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting updateNotificationStatus process', constants.LOG_TYPES.INFO);
+
+  const { userId, notificationId, status } = req.body;
+
+  if (!userId || !notificationId || !status) {
+    websocketHandler.sendLog(req, 'Missing userId, notificationId or status in request', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('eventNotification.userNotificationStatusRequired'), 400));
+  }
+
+  websocketHandler.sendLog(req, `Updating notification ${notificationId} to status "${status}" for user ${userId}`, constants.LOG_TYPES.TRACE);
+
+  const userNotification = await UserNotification.findOne({
+    user: userId,
+    notification: notificationId
+  });
+
+  if (!userNotification) {
+    websocketHandler.sendLog(req, `UserNotification not found for user ${userId} and notification ${notificationId}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('eventNotification.userNotificationLinkNotFound'), 404));
+  }
+
+  const eventNotification = await EventNotification.findById(notificationId);
+  if (!eventNotification) {
+    websocketHandler.sendLog(req, `EventNotification ${notificationId} not found`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
+  }
+
+  eventNotification.status = status;
+  await eventNotification.save();
+
+  websocketHandler.sendLog(req, `Updated EventNotification ${notificationId} status to "${status}"`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: null
+  });
+});
+
   
 
 

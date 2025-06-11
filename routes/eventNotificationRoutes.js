@@ -792,4 +792,41 @@ router.get('/user/:userId/notifications', eventNotificationController.getAllUser
  */
 router.delete('/user/notification', eventNotificationController.deleteNotificationForUser);
 
+/**
+ * @swagger
+ * /api/v1/eventNotifications/user/notification/updatestatus:
+ *   patch:
+ *     summary: Update the status of an event notification for a user
+ *     tags: [Event Notification]
+ *     requestBody:
+ *       description: User ID, Notification ID, and Status to update
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 required: true
+ *               notificationId:
+ *                 type: string
+ *                 required: true
+ *               status:
+ *                 type: string
+ *                 required: true
+ *                 enum: [read, unread, scheduled, archived]
+ *     responses:
+ *       200:
+ *         description: Notification status updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/user/notification/updatestatus', eventNotificationController.updateNotificationStatus);
+
+
 module.exports = router;
