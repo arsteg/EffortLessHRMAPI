@@ -274,7 +274,8 @@
     "designationNotFound": "The designation was not found.",
     "bandNotFound": "The band was not found.",
     "signatoryNotFound": "The signatory was not found.",
-    "taxSlabNotFound": "The tax slab was not found."
+    "taxSlabNotFound": "The tax slab was not found.",
+    "missingcompanyLogoProperties": "All Company Logo properties must be provided."  
   },
   "dashboardController": {
     "userIdAndDateRequired": "User ID and date are required.",

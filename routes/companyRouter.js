@@ -1310,6 +1310,38 @@ router.get('/',authController.protect, companyController.getCompany);
  */
 router.put('/',authController.protect, companyController.updateCompany);
 
+/**
+ * @swagger
+ * /api/v1/company/update-company-logo:
+ *   put:
+ *     summary: Update an Company Logo
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Update Company Logo details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyLogo:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   example: {attachmentSize,extention,file} 
+ *     responses:
+ *       200:
+ *         description: Successfully updated the ProfilePhoto
+ *       404:
+ *         description: No Profile Photo found with that ID
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/update-company-logo',  authController.protect, companyController.updateCompanyLogo);
+
+
  /**
  * @swagger
  * /api/v1/company/tax-slabs:

@@ -40,6 +40,7 @@ const Email_template_constant = {
   };
   const SubContainers = {   
     Profile: "Profile",
+    Company: "Company",
     Timelog: "Timelog",
     TaskAttachment: "TaskAttachment",
     ExpenseAttachment: "ExpenseAttachment",

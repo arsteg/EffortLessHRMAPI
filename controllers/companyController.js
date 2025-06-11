@@ -14,7 +14,7 @@ const Signatory = require("../models/Company/Signatory");
 const TaxSlab = require('../models/Company/TaxSlab');
 const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
-
+const StorageController = require('./storageController');
 
 exports.getAllCompanies = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getAllCompanies', constants.LOG_TYPES.INFO);
@@ -65,7 +65,46 @@ exports.updateCompany =  catchAsync(async (req, res, next) => {
     }
   });
 });
+exports.updateCompanyLogo = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating Company Logo for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+  
+  const company = await Company.findById(req.cookies.companyId);
+  if (!company) {
+    websocketHandler.sendLog(req, `Company ${req.cookies.companyId} not found`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('company.notFound')
 
+    , 404));
+  }
+  
+  for (let i = 0; i < req.body.companyLogo.length; i++) {
+    if (!req.body.companyLogo[i].attachmentSize || !req.body.companyLogo[i].extention || !req.body.companyLogo[i].file ||
+        req.body.companyLogo[i].attachmentSize === null || req.body.companyLogo[i].extention === null || req.body.companyLogo[i].file === null) {
+      websocketHandler.sendLog(req, 'Missing company logo properties', constants.LOG_TYPES.WARN);
+      return res.status(400).json({ error: req.t('company.missingcompanyLogoProperties')
+
+      });
+    }
+    
+    const attachmentName = company.companyName;
+    req.body.companyLogo[i].filePath = attachmentName + "_" + company._id + req.body.companyLogo[i].extention;
+    websocketHandler.sendLog(req, `Uploading Company Logo ${req.body.companyLogo[i].filePath}`, constants.LOG_TYPES.DEBUG);
+    
+    const url = await StorageController.createContainerInContainer(
+      req.cookies.companyId,
+      constants.SubContainers.Company,
+      req.body.companyLogo[i]
+    );
+    
+    company.logo = url;
+    await company.save();
+    websocketHandler.sendLog(req, `Company Logo updated with URL ${url}`, constants.LOG_TYPES.INFO);
+  }
+  
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: company
+  });
+});
 exports.getCompany  = catchAsync(async (req, res, next) => {    
   websocketHandler.sendLog(req, 'Starting getCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching company with ID: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);

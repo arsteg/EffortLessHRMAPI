@@ -30,6 +30,9 @@ var companyModelSchema = new Schema({
     pincode: {
       type: String
     },
+    logo: {
+      type: String
+    },
     email: {
       type: String,
       required: true,
