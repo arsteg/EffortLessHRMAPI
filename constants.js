@@ -200,6 +200,8 @@ const Email_template_constant = {
     Birthday: "birthday",
     WorkAnniversary: "work_anniversary",
     Appraisal: "appraisal",
+    Approval: "approval",
+    Expense: "expense"
   }
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_Status,
     Payroll_User_Status,Payroll_FNF_Status,Salaray_Default_Fixed_Allowance,

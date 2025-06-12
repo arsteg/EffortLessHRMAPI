@@ -39,8 +39,7 @@ const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
 const moment = require('moment'); // Using moment.js for easy date manipulation
 const  websocketHandler  = require('../utils/websocketHandler');
-const eventNotificationController = require('./eventNotificationController.js');
-const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
+const { SendUINotification } = require('../utils/uiNotificationSender');
 
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
@@ -2014,48 +2013,8 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Inserted ${employeeOnDutyShift.length} employee on-duty shifts`, constants.LOG_TYPES.INFO);
     }
 
-    // Fetch the notification type once
-    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.attendance, company: companyId });
-    if (!notificationType) { 
-        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.attendance} not found`, constants.LOG_TYPES.WARN); 
-    }
-    if (req.body.user) {
-        try {
-        const notificationBody = {
-            name: req.t('attendance.createOnDutyRequestsNotificationTitle'),
-            description: req.t('attendance.createOnDutyRequestsNotificationMessage'),
-            eventNotificationType: notificationType?._id?.toString() || null,
-            date: new Date(), 
-            navigationUrl: '',
-            isRecurring: false, 
-            recurringFrequency: null, 
-            leadTime: 0, 
-            status: 'unread' 
-        };
-
-        // Simulate the req object for addNotificationForUser
-        const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: {
-            ...req.cookies,
-            userId: req.body.user?.toString() // Set the userId to the assigned user
-            }
-        };
-
-        //Fire and forget
-        (async () => {
-            try {
-            await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-            } catch (err) {
-            console.error('Error calling addNotificationForUser:', err.message);
-            }
-        })();
-        } catch (error) {
-        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-        // Don't fail the task creation if notification fails
-        }
-    }
+    SendUINotification(req.t('attendance.createOnDutyRequestsNotificationTitle'), req.t('attendance.createOnDutyRequestsNotificationMessage', { startDate: moment(employeeOnDutyRequest.startDate).format('YYYY-MM-DD HH:mm:ss'), endDate: moment(employeeOnDutyRequest.endDate).format('YYYY-MM-DD HH:mm:ss') }),
+      constants.Event_Notification_Type_Status.attendance, req.body.user?.toString(), companyId, req);
 
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
@@ -2116,49 +2075,8 @@ exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Successfully updated employee duty request: ${employeeOnDutyRequest._id}`, constants.LOG_TYPES.INFO);
 
   const companyId = req.cookies.companyId;
-  // Fetch the notification type once
-  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.attendance, company: companyId });
-  if (!notificationType) { 
-      websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.attendance} not found`, constants.LOG_TYPES.WARN); 
-  }
-
-  if (req.body.user) {
-      try {
-      const notificationBody = {
-          name: req.t('attendance.updateOnDutyRequestsNotificationTitle'),
-          description: req.t('attendance.updateOnDutyRequestsNotificationMessage'),
-          eventNotificationType: notificationType?._id?.toString() || null,
-          date: new Date(), 
-          navigationUrl: '',
-          isRecurring: false, 
-          recurringFrequency: null, 
-          leadTime: 0, 
-          status: 'unread' 
-      };
-      
-      // Simulate the req object for addNotificationForUser
-      const notificationReq = {
-          ...req,
-          body: notificationBody,
-          cookies: {
-          ...req.cookies,
-          userId: employeeOnDutyRequest.user?._id?.toString() // Set the userId to the assigned user
-          }
-      };
-
-      //Fire and forget
-      (async () => {
-          try {
-          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-          } catch (err) {
-          console.error('Error calling addNotificationForUser:', err.message);
-          }
-      })();
-      } catch (error) {
-      websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-      // Don't fail the task creation if notification fails
-      }
-  }
+    SendUINotification(req.t('attendance.updateOnDutyRequestsNotificationTitle'), req.t('attendance.updateOnDutyRequestsNotificationMessage', { startDate: moment(employeeOnDutyRequest.startDate).format('YYYY-MM-DD HH:mm:ss'), endDate: moment(employeeOnDutyRequest.endDate).format('YYYY-MM-DD HH:mm:ss'), status: employeeOnDutyRequest.status }),
+      constants.Event_Notification_Type_Status.attendance, employeeOnDutyRequest.user?._id?.toString(), companyId, req);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,

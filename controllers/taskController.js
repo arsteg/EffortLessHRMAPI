@@ -20,8 +20,7 @@ const Project = require('../models/projectModel');
 const constants = require('../constants');
 const StorageController = require('./storageController');
 const  websocketHandler  = require('../utils/websocketHandler');
-const eventNotificationController = require('./eventNotificationController.js');
-const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
+const { SendUINotification } = require('../utils/uiNotificationSender');
 
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -175,48 +174,8 @@ exports.updateTask = catchAsync(async (req, res, next) => {
       }
 
       // Add Event Notification for the assigned user
-      if (user && user._id) {
-        try {
-          // Fetch the notification type once
-          const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
-          if (!notificationType) { 
-            websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found`, constants.LOG_TYPES.WARN); 
-          }
-          const notificationBody = {
-            name: `Task update: ${updatedTask.taskName}`,
-            description: updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-            eventNotificationType: notificationType?._id?.toString() || null, 
-            date: updatedTask.startDate || new Date(),
-            navigationUrl: `${taskURL}`,
-            isRecurring: false, 
-            recurringFrequency: null, 
-            leadTime: 0, 
-            status: 'unread' 
-          };
-
-          // Simulate the req object for addNotificationForUser
-          const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: {
-              ...req.cookies,
-              userId: user?._id?.toString() || null // Set the userId to the assigned user
-            }
-          };
-
-          // Call the addNotificationForUser function
-          await eventNotificationController.addNotificationForUser(notificationReq, {
-            status: (code) => ({
-              json: (data) => {
-                websocketHandler.sendLog(req, `Event notification created for task ${updatedTask._id}: ${JSON.stringify(data)}`, constants.LOG_TYPES.INFO);
-              }
-            })
-          }, next);
-        } catch (error) {
-          websocketHandler.sendLog(req, `Failed to create event notification for task ${updatedTask._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
-          // Don't fail the task creation if notification fails
-        }
-      }
+        SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
+          constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
     }
 
   const getTask = await Task.findById(req.params.id);
@@ -802,49 +761,8 @@ exports.addTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Task created with ${newTaskUserList.length} users and ${newTaskAttachmentList.length} attachments`, constants.LOG_TYPES.INFO);
 
    // Add Event Notification for the assigned user
-   if (req.body.user) {
-    try {
-      // Fetch the notification type once
-      const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
-      if (!notificationType) {
-        console.warn(`Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found.`);
-      }
-      const notificationBody = {
-        name: `Task Assigned: ${newTask.taskName}`,
-        description: newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
-        eventNotificationType: notificationType?._id?.toString() || null, 
-        date: newTask.startDate || new Date(),
-        navigationUrl: `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`,
-        isRecurring: false, 
-        recurringFrequency: null, 
-        leadTime: 0, 
-        status: 'unread' 
-      };
-
-      // Simulate the req object for addNotificationForUser
-      const notificationReq = {
-        ...req,
-        body: notificationBody,
-        cookies: {
-          ...req.cookies,
-          userId: req.body.user // Set the userId to the assigned user
-        }
-      };
-
-      // Call the addNotificationForUser function
-      await eventNotificationController.addNotificationForUser(notificationReq, {
-        status: (code) => ({
-          json: (data) => {
-            websocketHandler.sendLog(req, `Event notification created for task ${newTask._id}: ${JSON.stringify(data)}`, constants.LOG_TYPES.INFO);
-          }
-        })
-      }, next);
-    } catch (error) {
-      websocketHandler.sendLog(req, `Failed to create event notification for task ${newTask._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
-      // Don't fail the task creation if notification fails
-    }
-  }
-
+     SendUINotification(`Task Assigned: ${newTask.taskName}`, newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
+        constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,

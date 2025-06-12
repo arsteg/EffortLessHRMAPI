@@ -8,6 +8,7 @@ const Productivity = require('./../models/productivityModel');
 const BrowserHistory = require('./../models/appsWebsites/browserHistory');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
+const { SendUINotification } = require('../utils/uiNotificationSender');
 
 exports.addNew = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `User initiated adding a new app/website record. User ID: ${req.body.userReference}, Company ID: ${req.cookies.companyId}`);
@@ -350,6 +351,9 @@ exports.updateProductivity = catchAsync(async (req, res, next) => {
                 message: req.t('common.notFound')
             });
         }
+
+          SendUINotification(req.t('appWebsite.productivityApprovalNotificationTitle'), req.t('appWebsite.productivityApprovalNotificationMessage', { status: status }),
+                constants.Event_Notification_Type_Status.Approval, productivityData?.user?.toString(), req.cookies.companyId, req);
 
         websocketHandler.sendLog(req, `User successfully updated a productivity record. Record ID: ${productivityData._id}, User ID: ${req.cookies.userId}`);
         res.status(200).json({

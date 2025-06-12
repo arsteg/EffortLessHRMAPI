@@ -52,7 +52,9 @@
     "deleteBrowserHistorySuccess": "ब्राउज़र इतिहास रिकॉर्ड {recordId} सफलतापूर्वक हटा दिया गया।",
     "deleteBrowserHistoryFailure": "ब्राउज़र इतिहास रिकॉर्ड हटाने में विफल रहा।",
     "getBrowserHistorySuccess": "ब्राउज़र इतिहास रिकॉर्ड सफलतापूर्वक प्राप्त हुए।",
-    "getBrowserHistoryFailure": "ब्राउज़र इतिहास रिकॉर्ड प्राप्त करने में विफल रहा।"
+    "getBrowserHistoryFailure": "ब्राउज़र इतिहास रिकॉर्ड प्राप्त करने में विफल रहा।",
+    "productivityApprovalNotificationTitle": "उत्पादकता अनुमोदन",
+    "productivityApprovalNotificationMessage": "आपकी उत्पादकता ऐप प्रविष्टि {{status}} हो गई है।"
   },
   "assetsManagement": {
     "addAssetTypeSuccess": "संपत्ति प्रकार '{typeName}' सफलतापूर्वक बनाया गया।",
@@ -187,9 +189,9 @@
     "UserIDMonthYearRequired": "उपयोगकर्ता आईडी, माह, और वर्ष आवश्यक हैं।",
     "OvertimeRecordsNF": "ओवरटाइम रिकॉर्ड नहीं मिले।",
     "createOnDutyRequestsNotificationTitle": "ऑन-ड्यूटी अनुरोधों के लिए अधिसूचना",
-    "createOnDutyRequestsNotificationMessage":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक बनाया गया।",
-    "updateOnDutyRequestsNotificationTitle":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक अपडेट किया गया",
-    "updateOnDutyRequestsNotificationMessage":"ऑन-ड्यूटी अनुरोध सफलतापूर्वक अपडेट किया गया।"
+    "createOnDutyRequestsNotificationMessage": "ऑन-ड्यूटी अनुरोध {{startDate}} से {{endDate}} तक के लिए बनाया गया है।",
+    "updateOnDutyRequestsNotificationTitle": "ऑन-ड्यूटी अनुरोध अपडेट किया गया",
+    "updateOnDutyRequestsNotificationMessage": "ऑन-ड्यूटी अनुरोध को {{startDate}} से {{endDate}} तक के लिए अपडेट ({{status}}) किया गया है।"
   },
   "auth": {
     "signupSuccess": "उपयोगकर्ता ने कंपनी {companyId} के लिए सफलतापूर्वक साइन अप किया।",
@@ -339,7 +341,11 @@
     "advanceNotFound": "निर्दिष्ट उपयोगकर्ता के लिए व्यय अग्रिम नहीं मिला।",
     "advanceCategoryNotInRequest": "अनुरोध में अग्रिम श्रेणी विवरण गायब हैं।",
     "advanceTemplateNotFound": "अग्रिम टेम्पलेट नहीं मिला।",
-    "userNotFound": "उपयोगकर्ता नहीं मिला।"
+    "userNotFound": "उपयोगकर्ता नहीं मिला।",
+    "expensesCreateionNotificationTitle": "व्यय बनाया गया",
+    "expensesCreateionNotificationMessage": "Hi {{firstName}} {{lastName}}, {{teamMember}} ने एक व्यय बनाया है।", 
+    "expensesApprovalNotificationTitle": "व्यय की स्थिति",
+    "expensesApprovalNotificationMessage": "Hi {{firstName}} {{lastName}}, आपका व्यय {{status}} हो गया है।"
   },
   "feedback": {
     "feedbackFieldNotFound": "फ़ीडबैक फ़ील्ड नहीं मिला।",
@@ -413,11 +419,21 @@
     "InvalidEndDate": "समाप्ति तारीख प्रारंभ तारीख के बाद होनी चाहिए।",
     "ErrorCreatingLeaveTemplateCategory": "छुट्टी टेम्पलेट श्रेणी बनाने में त्रुटि हुई।",
     "addLeaveRequestNotificationTitle": "छुट्टी अनुरोध जोड़ा गया",
-    "addLeaveRequestNotificationMessage": "एक अवकाश अनुरोध बनाया गया है।",
+    "addLeaveRequestNotificationMessage": "एक अवकाश अनुरोध ({{date}}) बनाया गया है।",
     "leaveApprovalNotificationTitle": "छुट्टी अनुरोध स्वीकृत",
     "leaveApprovalNotificationMessage": "आपका छुट्टी अनुरोध स्वीकृत कर दिया गया है।",
     "leaveRejectionNotificationTitle": "छुट्टी अनुरोध अस्वीकृत",
-    "leaveRejectionNotificationMessage": "आपका छुट्टी अनुरोध अस्वीकृत कर दिया गया है।"
+    "leaveRejectionNotificationMessage": "आपका छुट्टी अनुरोध अस्वीकृत कर दिया गया है।",
+    "employeeLeaveRequestNotificationTitle": "आपका अवकाश आवेदन सफल हुआ",
+    "employeeLeaveRequestNotificationMessage": "Hi {employeeName}, आपने {{days}} दिन का अवकाश सफलतापूर्वक आवेदन किया है।",
+    "managerLeaveApprovalNotificationTitle": "टीम सदस्य द्वारा अवकाश अनुरोध",
+    "managerLeaveApprovalNotificationMessage": "प्रिय {{firstName}} {{lastName}}, आपके टीम सदस्य {{employeeName}} ने {{days}} दिन का अवकाश आवेदन किया है।",
+    "employeeShortLeaveRequestNotificationTitle": "आपका शॉर्ट लीव आवेदन सफल हुआ",
+    "employeeShortLeaveRequestNotificationMessage": "Hi {employeeName}, आपने {{date}} को {{duration}} minutes की शॉर्ट लीव के लिए सफलतापूर्वक आवेदन किया है।",
+    "managerShortLeaveApprovalNotificationTitle": "टीम सदस्य द्वारा शॉर्ट लीव अनुरोध",
+    "managerShortLeaveApprovalNotificationMessage": "Hi {{firstName}} {{lastName}}, आपके टीम सदस्य {{employeeName}} ने {{date}} को {{duration}} minutes की शॉर्ट लीव के लिए आवेदन किया है।",
+    "employeeShortLeaveUpdateNotificationTitle": "शॉर्ट लीव आवेदन अपडेट",
+    "employeeShortLeaveUpdateNotificationMessage": "हाय {{employeeName}}, {{date}} को {{duration}} मिनट की आपकी शॉर्ट लीव का स्टेटस {{status}} हो गया है।"
   },
   "liveTracking": {
     "userAlreadyAdded": "उपयोगकर्ता पहले से लाइव ट्रैकिंग के लिए जोड़ा जा चुका है।",
@@ -597,7 +613,9 @@
     "updateTerminationNotificationTitle": "आपकी सेवा समाप्ति को अपडेट किया गया है",
     "updateTerminationNotificationMessage": "आपकी सेवा समाप्ति को अपडेट कर दिया गया है।",
     "terminationStatusChangedNotificationTitle": "आपकी सेवा समाप्ति की स्थिति बदली गई है",
-    "terminationStatusChangedNotificationMessage": "आपकी सेवा समाप्ति की स्थिति अब '{{status}}' हो गई है।"
+    "terminationStatusChangedNotificationMessage": "आपकी सेवा समाप्ति की स्थिति अब '{{status}}' हो गई है।",
+    "ResignationNotificatioToManagerTitle": "टीम सदस्य का इस्तीफ़ा",
+    "ResignationNotificatioToManagerMessage": "नमस्ते {{firstName}} {{lastName}}, {{teamMember}} ने इस्तीफ़ा दिया है।"
   },
   "settings": {
     "productivityNotFound": "निर्दिष्ट आईडी के साथ कोई उत्पादकता नहीं मिली।",
