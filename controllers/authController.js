@@ -31,6 +31,8 @@ const UserRole = require('../models/permissions/userRoleModel');
 const fs = require('fs');
 const path = require('path');
 const Permission = require('../models/permissions/permissionModel');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -1054,6 +1056,53 @@ exports.createUserRole = catchAsync(async (req, res, next) => {
     updatedOn: new Date(),
   });
 
+  // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.role_assignment, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.role_assignment} not found`, constants.LOG_TYPES.WARN); 
+    }
+
+    if (req.body?.userId) {
+        try {
+          const role = await Role.findById(req.body.roleId);
+          const notificationBody = {
+            name: req.t('auth.roleAssignmentNotificationTitle'),
+            description: req.t('auth.roleAssignmentNotificationMessage', { roleName: role.name }),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: new Date(), 
+            navigationUrl: '',
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+        };
+
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+            ...req.cookies,
+            userId: req.body?.userId // Set the userId to the assigned user
+            }
+        };
+
+        //Fire and forget
+        (async () => {
+            try {
+            await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+            } catch (err) {
+              console.log("notification error", err);
+            console.error('Error calling addNotificationForUser:', err.message);
+            }
+        })();
+        } catch (error) {
+          console.log("notification error", error);
+        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+        // Don't fail the task creation if notification fails
+        }
+    }
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: userRole,
@@ -1119,7 +1168,48 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
       message: "User role not found with this ID."
     });
   }
+  
+  // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.role_assignment, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.role_assignment} not found`, constants.LOG_TYPES.WARN); 
+    }
 
+    try {
+      const role = await Role.findById(req.body.roleId);
+      const notificationBody = {
+        name: req.t('auth.roleAssignmentNotificationTitle'),
+        description: req.t('auth.roleAssignmentNotificationMessage', { roleName: role.name }),
+        eventNotificationType: notificationType?._id?.toString() || null,
+        date: new Date(), 
+        navigationUrl: '',
+        isRecurring: false, 
+        recurringFrequency: null, 
+        leadTime: 0, 
+        status: 'unread' 
+    };
+
+    // Simulate the req object for addNotificationForUser
+    const notificationReq = {
+        ...req,
+        body: notificationBody,
+        cookies: {
+        ...req.cookies,
+        userId: req.body?.userId?.toString() // Set the userId to the assigned user
+        }
+    };
+    //Fire and forget
+    (async () => {
+        try {
+        await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+        } catch (err) {
+        console.error('Error calling addNotificationForUser:', err.message);
+        }
+    })();
+    } catch (error) {
+      websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+    // Don't fail the task creation if notification fails
+    }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: userRole,

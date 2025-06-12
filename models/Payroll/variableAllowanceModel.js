@@ -35,20 +35,16 @@ const variableAllowanceSchema = new Schema({
     required: true
   },
   deductIncomeTaxAllowance: {
-    type: String,
-    required: true
+    type: String
   },
   taxRegime: {
-    type: [String],
-    required: true
+    type: [String]
   },
   isShowInCTCStructure: {
-    type: Boolean,
-    required: true
+    type: Boolean
   },
   paidAllowanceFrequently: {
-    type: String,
-    required: true
+    type: String
   },
   allowanceEffectiveFromMonth: {
     type: String,
@@ -69,8 +65,7 @@ const variableAllowanceSchema = new Schema({
     type: String
   },
   amountEnterForThisVariableAllowance: {
-    type: String,
-    required: true
+    type: String
   },
   amount: {
     type: Number
@@ -79,8 +74,7 @@ const variableAllowanceSchema = new Schema({
     type: Number
   },
   isAttandanceToAffectEligibility: {
-    type: Boolean,
-    required: true
+    type: Boolean
   },
   company: {
     type: mongoose.Schema.ObjectId,

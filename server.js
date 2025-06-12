@@ -8,6 +8,7 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const cron = require("node-cron");
 const routes = require('./routes');
 const scheduleController = require('./controllers/ScheduleController');
+const attendanceController = require('./controllers/attendanceController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 const { initWebSocket } = require('./utils/websocketHandler');
 //let { setSocketIO } = require('./utils/liveScreenSender');
@@ -59,18 +60,21 @@ cron.schedule('0 0 1 * *', async () => {
   await updateRecurringNotifications();
   //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
-
-//Execute every 10 minutes
+//execute on 1st day of each month
 cron.schedule('0 0 1 * *', async () => {
-  const currentTime = new Date();
-  const formattedTime = currentTime.toLocaleString();
-  console.log('Job started'); 
   try {
     await scheduleController.assignLeavesByJobs();
+    await attendanceController.MappedTimlogToAttendance();
     console.log(`${currentTime}: This Job ran successfully.`);
 } catch (error) {
     console.error('Error occurred:', error);
 }
+});
+//Execute every 10 minutes
+cron.schedule('0 0 1 * *', async () => {
+  const currentTime = new Date();
+  const formattedTime = currentTime.toLocaleString();
+  console.log('Job started');  
   console.log(`${currentTime}:This Job will run every 10 minutes...`);
   //62dfa8d13babb9ac2072863c
   //664229eec5a0b7f0dc0b7e0f
@@ -89,6 +93,19 @@ cron.schedule('0 0 1 * *', async () => {
     }    
   }  
   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
+});
+
+cron.schedule('*/30 * * * *', async () => {
+  try {
+    const currentTime = new Date();
+    const formattedTime = currentTime.toLocaleString();
+    console.log(`Job triggered at ${formattedTime}`);
+
+    await scheduleController.runRecuringNotifications();
+    console.log(`Job completed `);
+  } catch (error) {
+    console.error('Error occurred:', error);
+  }
 });
 
 // This is important, Heroku won't work with hard coded port

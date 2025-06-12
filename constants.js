@@ -16,7 +16,14 @@ const Email_template_constant = {
     Leave_Application_Received_Confiration: "Leave Application Received Confiration",
     CancelReject_Request_Leave_Application: "Leave Application Rejected or Canceled",
     Leave_Application_Approval_Request: "Approval Request Leave Application",
-    Your_Leave_Application_Has_Been_Approved: "Your Leave Application Has Been Approved"
+    Your_Leave_Application_Has_Been_Approved: "Your Leave Application Has Been Approved",
+    Employee_Termination: "Termination of Employment",
+    Birthday_Email_To_Employee: "Birthday email template to employee",
+    Birthday_Email_To_Manager: "Birthday email template to manager",
+    Work_Anniversary_Email_To_Employee: "Work anniversary email template to employee",
+    Work_Anniversary_Email_To_Manager: "Work anniversary email template to manager",
+    Appraisal_Email_To_Employee: "Appraisal notification email template to employee",
+    Appraisal_Email_To_Manager: "Appraisal notification email template to manager"
     // Add other email templates as needed
   };
   const Leave_Accrual_Period = {
@@ -39,6 +46,7 @@ const Email_template_constant = {
   };
   const SubContainers = {   
     Profile: "Profile",
+    Company: "Company",
     Timelog: "Timelog",
     TaskAttachment: "TaskAttachment",
     ExpenseAttachment: "ExpenseAttachment",
@@ -179,11 +187,25 @@ const Email_template_constant = {
     Partially_Cleared: "Partially Cleared",
     Cleared: "Cleared",
   };
+  const Event_Notification_Type_Status = {
+    project_assignment: "project_assignment",
+    timelog_delete: "timelog_delete",
+    loan_advance: "loan_advance",
+    task_assignment: "task_assignment",
+    manual_time: "manual_time",
+    attendance: "attendance",
+    leave: "leave",
+    separation: "employee_separation",
+    role_assignment: "role_assignment",
+    Birthday: "birthday",
+    WorkAnniversary: "work_anniversary",
+    Appraisal: "appraisal",
+  }
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_Status,
     Payroll_User_Status,Payroll_FNF_Status,Salaray_Default_Fixed_Allowance,
     Payroll_User_FNF_Status,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
     Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
-    Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status,Payroll_FNF_Loan_Advance_status};
+    Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status,Payroll_FNF_Loan_Advance_status,Event_Notification_Type_Status};
   
 
 

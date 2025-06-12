@@ -20,7 +20,8 @@ const Project = require('../models/projectModel');
 const constants = require('../constants');
 const StorageController = require('./storageController');
 const  websocketHandler  = require('../utils/websocketHandler');
-const eventNotificationController = require('./eventNotificationController'); 
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -143,37 +144,80 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     .where('Name').equals(constants.Email_template_constant.Update_Task_Notification)
     .where('company').equals(req.cookies.companyId);
 
-  if (emailTemplate) {
     const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
     const updatedTask = await Task.findById(req.params.id);
     
     if (updatedTask && newTaskUserList.length > 0) {
       const user = await User.findOne({ _id: newTaskUserList[0].user });
       const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${updatedTask.taskNumber}?taskId=${updatedTask._id}`;
-      
-      const emailTemplateNewUser = emailTemplate.contentData
-        .replace("{firstName}", user.firstName)
-        .replace("{taskName}", updatedTask.taskName)
-        .replace("{date}", formatDateToDDMMYY(new Date()))
-        .replace("{company}", req.cookies.companyName)
-        .replace("{projectName}", updatedTask.project.projectName)
-        .replace("{description}", updatedTask.description)
-        .replace("{priority}", updatedTask.priority)
-        .replace("{taskURL}", taskURL)
-        .replace("{lastName}", user.lastName);
+      if (emailTemplate) {        
+        const emailTemplateNewUser = emailTemplate.contentData
+          .replace("{firstName}", user.firstName)
+          .replace("{taskName}", updatedTask.taskName)
+          .replace("{date}", formatDateToDDMMYY(new Date()))
+          .replace("{company}", req.cookies.companyName)
+          .replace("{projectName}", updatedTask.project.projectName)
+          .replace("{description}", updatedTask.description)
+          .replace("{priority}", updatedTask.priority)
+          .replace("{taskURL}", taskURL)
+          .replace("{lastName}", user.lastName);
 
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: emailTemplate.Name,
-          message: emailTemplateNewUser
-        });
-        websocketHandler.sendLog(req, `Update notification sent to ${user.email}`, constants.LOG_TYPES.INFO);
-      } catch (error) {
-        websocketHandler.sendLog(req, `Failed to send update notification: ${error.message}`, constants.LOG_TYPES.ERROR);
+        try {
+          await sendEmail({
+            email: user.email,
+            subject: emailTemplate.Name,
+            message: emailTemplateNewUser
+          });
+          websocketHandler.sendLog(req, `Update notification sent to ${user.email}`, constants.LOG_TYPES.INFO);
+        } catch (error) {
+          websocketHandler.sendLog(req, `Failed to send update notification: ${error.message}`, constants.LOG_TYPES.ERROR);
+        }
+      }
+
+      // Add Event Notification for the assigned user
+      if (user && user._id) {
+        try {
+          // Fetch the notification type once
+          const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
+          if (!notificationType) { 
+            websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found`, constants.LOG_TYPES.WARN); 
+          }
+          const notificationBody = {
+            name: `Task update: ${updatedTask.taskName}`,
+            description: updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
+            eventNotificationType: notificationType?._id?.toString() || null, 
+            date: updatedTask.startDate || new Date(),
+            navigationUrl: `${taskURL}`,
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+          };
+
+          // Simulate the req object for addNotificationForUser
+          const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+              ...req.cookies,
+              userId: user?._id?.toString() || null // Set the userId to the assigned user
+            }
+          };
+
+          // Call the addNotificationForUser function
+          await eventNotificationController.addNotificationForUser(notificationReq, {
+            status: (code) => ({
+              json: (data) => {
+                websocketHandler.sendLog(req, `Event notification created for task ${updatedTask._id}: ${JSON.stringify(data)}`, constants.LOG_TYPES.INFO);
+              }
+            })
+          }, next);
+        } catch (error) {
+          websocketHandler.sendLog(req, `Failed to create event notification for task ${updatedTask._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
+          // Don't fail the task creation if notification fails
+        }
       }
     }
-  }
 
   const getTask = await Task.findById(req.params.id);
   websocketHandler.sendLog(req, `Task ${req.params.id} successfully updated`, constants.LOG_TYPES.INFO);
@@ -760,16 +804,21 @@ exports.addTask = catchAsync(async (req, res, next) => {
    // Add Event Notification for the assigned user
    if (req.body.user) {
     try {
+      // Fetch the notification type once
+      const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.task_assignment, company: req.cookies.companyId });
+      if (!notificationType) {
+        console.warn(`Notification type ${constants.Event_Notification_Type_Status.task_assignment} not found.`);
+      }
       const notificationBody = {
         name: `Task Assigned: ${newTask.taskName}`,
         description: newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
-        eventNotificationType: 'task_assignment', // Ensure this matches an existing EventNotificationType ID or fetch dynamically
-        date: newTask.startDate || new Date(), // Use task start date or current date
+        eventNotificationType: notificationType?._id?.toString() || null, 
+        date: newTask.startDate || new Date(),
         navigationUrl: `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`,
-        isRecurring: false, // Set based_structures on your requirements
-        recurringFrequency: null, // Not applicable if not recurring
-        leadTime: 0, // Adjust as needed (e.g., notification lead time in minutes)
-        status: 'unread' // Default status
+        isRecurring: false, 
+        recurringFrequency: null, 
+        leadTime: 0, 
+        status: 'unread' 
       };
 
       // Simulate the req object for addNotificationForUser

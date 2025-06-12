@@ -12,6 +12,8 @@ const Task = require("../models/taskModel");
 var moment = require("moment");
 const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 
 exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addManualTimeRequest process', constants.LOG_TYPES.INFO);
@@ -112,6 +114,51 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Sent approval email to manager: ${manager.email}`, constants.LOG_TYPES.DEBUG);
   }
 
+    // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.manual_time, company: req.cookies.companyId  });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.manual_time} not found`, constants.LOG_TYPES.WARN); 
+    }
+
+    if (req.body.user) {
+        try {
+        const notificationBody = {
+            name: req.t('manualTime.addManualTimenotificationTitle'),
+            description: req.t('manualTime.addManualTimenotificationMessage', { userName: userName }),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: new Date(), 
+            navigationUrl: `${requestApprovalLink}`,
+            isRecurring: false, 
+            recurringFrequency: null, 
+            leadTime: 0, 
+            status: 'unread' 
+        };
+
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: {
+            ...req.cookies,
+            userId: manager?._id?.toString() // Set the userId to the assigned user
+            }
+        };
+
+        //Fire and forget
+        (async () => {
+            try {
+            await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+            } catch (err) {
+            console.error('Error calling addNotificationForUser:', err.message);
+            }
+        })();
+        } catch (error) {
+        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+        // Don't fail the task creation if notification fails
+        }
+    }
+
+
   websocketHandler.sendLog(req, 'Completed addManualTimeRequest process', constants.LOG_TYPES.INFO);
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -184,6 +231,52 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
               startTime = moment(startTime).add(10, "m").toDate();
           }
           websocketHandler.sendLog(req, `Created ${recordCount} time log entries for approved request`, constants.LOG_TYPES.DEBUG);
+
+
+          // Fetch the notification type once
+        const notificationType = await eventNotificationType.findOne({ name: 'manual_time', company: req.cookies.companyId });
+        if (!notificationType) { 
+            websocketHandler.sendLog(req, 'Notification type "manual_time" not found', constants.LOG_TYPES.WARN); 
+        }
+
+        if (user) {
+            try {
+            const notificationBody = {
+                name: req.t('manualTime.updateManualTimenotificationTitle'),
+                description: req.t('manualTime.updateManualTimenotificationMessage'),
+                eventNotificationType: notificationType?._id?.toString() || null,
+                date: new Date(), 
+                navigationUrl: ``,
+                isRecurring: false, 
+                recurringFrequency: null, 
+                leadTime: 0, 
+                status: 'unread' 
+            };
+
+            // Simulate the req object for addNotificationForUser
+            const notificationReq = {
+                ...req,
+                body: notificationBody,
+                cookies: {
+                ...req.cookies,
+                userId: user?._id?.toString() // Set the userId to the assigned user
+                }
+            };
+
+            //Fire and forget
+            (async () => {
+                try {
+                await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+                } catch (err) {
+                console.error('Error calling addNotificationForUser:', err.message);
+                }
+            })();
+            } catch (error) {
+            websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+            // Don't fail the task creation if notification fails
+            }
+        }
+
       }
   } else {
       websocketHandler.sendLog(req, `No manual time request found with ID: ${req.body.id}`, constants.LOG_TYPES.WARN);

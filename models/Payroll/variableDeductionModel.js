@@ -34,12 +34,10 @@ var variableDeductionSchema = new Schema({
   },
  
   amount: {
-    type: Number,
-    required: true
+    type: Number
   },
   percentage: {
-    type: Number,
-    required: true
+    type: Number
   },
   company: {
     type: mongoose.Schema.ObjectId,

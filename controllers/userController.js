@@ -35,6 +35,11 @@ const Appointment = require("../models/permissions/appointmentModel");  // Impor
 const UserActionLog = require("../models/Logging/userActionModel");
 const StorageController = require('./storageController.js');
 const websocketHandler = require('../utils/websocketHandler');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
+const { RecurringFrequency, NotificationStatus, NotificationChannel } = require('../models/eventNotification/enums.js');
+const UserNotification   = require('../models/eventNotification/userNotification');
+const EventNotification= require('../models/eventNotification/eventNotification');
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount, 
@@ -125,6 +130,20 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     action: 'User Deleted'
   }
   await exports.logUserAction(req, userAction, next);
+
+  const notificationTypeIds = await eventNotificationType.find({
+      name: {
+        $in: [
+          constants.Event_Notification_Type_Status.Birthday,
+          constants.Event_Notification_Type_Status.WorkAnniversary,
+          constants.Event_Notification_Type_Status.Appraisal
+        ]
+      },
+      company: req.cookies.companyId
+    }).then(types => types.map(t => t._id));
+
+  deleteInvalidRecurringNotifications(req, req.params.id, req.cookies.companyId, notificationTypeIds);
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: document,
@@ -267,6 +286,8 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.create(req.body);
   websocketHandler.sendLog(req, `Appointment created with ID ${appointment._id}`, constants.LOG_TYPES.INFO);
   
+  createAnniversaryAndAppraisalNotificationData(req, companyId, appointment);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: appointment
@@ -308,6 +329,8 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
   
   websocketHandler.sendLog(req, `Appointment ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
   
+  createAnniversaryAndAppraisalNotificationData(req, req.cookies.companyId, appointment);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: appointment
@@ -348,7 +371,7 @@ const filterObj = (obj, ...allowedFields) => {
 
 exports.updateUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating user ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   if (req.body.password || req.body.passwordConfirm) {
     websocketHandler.sendLog(req, 'Attempt to update password through wrong route', constants.LOG_TYPES.WARN);
     return next(new AppError(
@@ -365,15 +388,139 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true,
   });
-  
+
   if (!updatedUser) {
     websocketHandler.sendLog(req, `No user found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUserFound')
     , 404));
   }
-  
   websocketHandler.sendLog(req, `User ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
-  
+  //send notification for birthday
+  if (updatedUser.DOB) {
+    const rawDate = new Date(updatedUser.DOB);
+    const dobDate = new Date(rawDate);
+    if (!rawDate || !(dobDate instanceof Date) || isNaN(dobDate.getTime())) {
+      websocketHandler.sendLog(req, `Invalid DOB format`, constants.LOG_TYPES.ERROR);
+      return;
+    }
+    // Fetch the notification type once
+    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.Birthday, company: req.cookies.companyId });
+    if (!notificationType) { 
+        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.Birthday} not found`, constants.LOG_TYPES.WARN); 
+    }
+
+    if (updatedUser) {
+        try {
+          // Step 1: Check if user already has a birthday notification
+          const userNotifications = await UserNotification.find({ user: updatedUser._id });
+          const notificationIds = userNotifications.map(n => n.notification);
+          // Now query EventNotification with additional filters
+          const matchingNotification = await EventNotification.findOne({
+            _id: { $in: notificationIds },
+            eventNotificationType: notificationType._id,
+            company: req.cookies.companyId,
+            isRecurring: true
+          });
+
+          if (matchingNotification) {
+            const existingDate = new Date(matchingNotification.date);
+            if (existingDate.toISOString().split('T')[0] !== dobDate.toISOString().split('T')[0]) {
+              matchingNotification.date = dobDate;
+              matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`});
+              await matchingNotification.save();
+              websocketHandler.sendLog(req, `Updated DOB for existing birthday notification`, constants.LOG_TYPES.INFO);
+            }
+          } else {
+          const notificationBody = {
+              name: req.t('user.BirthdayNotificationTitle'),
+              description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`}),
+              eventNotificationType: notificationType?._id?.toString() || null,
+              date: dobDate, 
+              navigationUrl: '',
+              isRecurring: true, 
+              recurringFrequency: RecurringFrequency.ANNUALLY, 
+              leadTime: 0, 
+              status: NotificationStatus.SCHEDULED,
+              company: req.cookies.companyId,
+              notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI] 
+          };
+
+          // Simulate the req object for addNotificationForUser
+          const notificationReq = {
+            ...req,
+            body: notificationBody,
+            cookies: 
+            {
+              ...req.cookies,
+              userId: updatedUser?._id?.toString() // Set the userId to the assigned user
+            }
+          };
+          const createdNotificationId = await new Promise(async (resolve, reject) => {
+            const notificationRes = {
+              status: function () {
+                return {
+                  json: function (response) {
+                    try {
+                      if (response?.data?._id) {
+                        resolve(response.data._id.toString());
+                      } else { 
+                        reject(new Error('No _id in response'));
+                      }
+                    } catch (err) {
+                      reject(err);
+                    }
+                  }
+                };
+              }
+            };
+            
+            await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
+          });
+          
+          if (createdNotificationId) {
+              const userNotificationBody = {
+                  user: updatedUser?._id?.toString(), // or any relevant user
+                  notification: createdNotificationId
+              };
+
+              const userNotificationReq = {
+                  ...req,
+                  body: userNotificationBody,
+                  cookies: {
+                      ...req.cookies,
+                      userId: updatedUser?._id?.toString()
+                  }
+              };
+
+              const userNotificationRes = {
+                  status: () => ({
+                      json: () => {}
+                  })
+              };
+              await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
+          }
+          else {
+              websocketHandler.sendLog(req, `Failed to extract EventNotification ID.`, constants.LOG_TYPES.ERROR);
+          }
+        }
+      }
+      catch (error) { 
+        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+        // Don't fail the task creation if notification fails
+      }
+    }
+  }
+  else {
+    const notificationTypeIds = await eventNotificationType.find({
+            name: {
+              $in: [
+                constants.Event_Notification_Type_Status.Birthday
+              ]
+            },
+            company: req.cookies.companyId
+          }).then(types => types.map(t => t._id));
+    deleteInvalidRecurringNotifications(req, updatedUser, req.cookies.companyId, notificationTypeIds);
+  }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
@@ -1565,6 +1712,50 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     }
   }
   
+  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.loan_advance, company: companyId });
+  if (!notificationType) {
+    console.warn(`Notification type ${constants.Event_Notification_Type_Status.loan_advance} not found.`);
+  }
+
+  if (user) {
+    try {
+      const notificationBody = {
+        name: req.t('user.loanAdvanceRequestTitle'),
+        description: req.t('user.loanAdvanceRequestMessage', { amount: req.body.amount, monthlyInstallment: req.body.monthlyInstallment, noOfInstallment: req.body.noOfInstallment }),
+        eventNotificationType: notificationType?._id?.toString() || null,
+        date: new Date(),
+        navigationUrl: '',
+        isRecurring: false,
+        recurringFrequency: null,
+        leadTime: 0,
+        status: 'unread'
+      };
+
+      // Simulate the req object for addNotificationForUser
+      const notificationReq = {
+        ...req,
+        body: notificationBody,
+        cookies: {
+          ...req.cookies,
+          userId: user._id.toString(),
+          companyId: companyId
+        }
+      };
+
+      //Fire and forget
+      (async () => {
+        try {
+          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+        } catch (err) {
+          console.error('Error calling addNotificationForUser:', err.message);
+        }
+      })();
+    } catch (error) {
+      websocketHandler.sendLog(req, `Failed to create event notification`, constants.LOG_TYPES.ERROR);
+      // Don't fail the task creation if notification fails
+    }
+  }
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
@@ -2416,3 +2607,201 @@ let dailySalaryAmount = totalMonthlyAllownaceAmount/30;
     data: dailySalaryAmount
   });
 });
+
+async function createAnniversaryAndAppraisalNotificationData(req, companyId, appointment) {
+  const updatedUser = appointment.user;
+  const user = await User.findById(updatedUser);
+  const notificationEvents = [
+    {
+      key: 'joiningDate',
+      typeKey: constants.Event_Notification_Type_Status.WorkAnniversary,
+      titleKey: 'user.WorkAnniversaryNotificationTitle',
+      messageKey: 'user.WorkAnniversaryNotificationMessage',
+    },
+    {
+      key: 'joiningDate',
+      typeKey: constants.Event_Notification_Type_Status.Appraisal,
+      titleKey: 'user.AppraisalNotificationTitle',
+      messageKey: 'user.AppraisalNotificationMessage'
+    }
+  ];
+
+  if (!updatedUser?._id) {
+    websocketHandler.sendLog(req, `Invalid or missing user in appointment`, constants.LOG_TYPES.WARN);
+    return;
+  }
+
+  for (const event of notificationEvents) {
+    try {
+      if (!companyId || !appointment[event.key]) {
+        websocketHandler.sendLog(req, `Missing company ID or ${event.key} in appointment`, constants.LOG_TYPES.WARN);
+        continue;
+      }
+
+      let rawDate = appointment[event.key];
+      const date = new Date(rawDate);
+      if (!rawDate || !(date instanceof Date) || isNaN(date.getTime())) {
+        websocketHandler.sendLog(req, `Invalid or missing date for ${event.key}: ${rawDate}`, constants.LOG_TYPES.ERROR);
+        const notificationTypeIds = await eventNotificationType.find({
+            name: {
+              $in: [
+                event.typeKey
+              ]
+            },
+            company: companyId
+          }).then(types => types.map(t => t._id));
+        deleteInvalidRecurringNotifications(req, updatedUser, companyId, notificationTypeIds);
+        continue;
+      }
+
+      const notificationType = await eventNotificationType.findOne({
+        name: event.typeKey,
+        company: companyId
+      });
+
+      if (!notificationType) {
+        websocketHandler.sendLog(req, `Notification type ${event.typeKey} not found`, constants.LOG_TYPES.WARN);
+        continue;
+      }
+
+      const userNotifications = await UserNotification.find({ user: updatedUser._id });
+      const notificationIds = userNotifications.map(n => n.notification);
+
+      const description = event.typeKey === constants.Event_Notification_Type_Status.WorkAnniversary
+        ? req.t(event.messageKey, {
+            userName: `${user.firstName} ${user.lastName}`,
+            years: (new Date()).getFullYear() - (new Date(appointment.joiningDate)).getFullYear(),
+            companyName: req.cookies.companyName
+          })
+        : req.t('user.AppraisalNotificationMessage', {
+            userName: `${user.firstName} ${user.lastName}`
+          });
+
+      const existingNotification = await EventNotification.findOne({
+        _id: { $in: notificationIds },
+        eventNotificationType: notificationType._id,
+        company: companyId,
+        isRecurring: true
+      });
+
+      if (existingNotification) {
+        const existingDate = new Date(existingNotification.date);
+        if (existingDate.toISOString().split('T')[0] !== date.toISOString().split('T')[0]) {
+          existingNotification.date = date;
+          existingNotification.description = description;
+          await existingNotification.save();
+          websocketHandler.sendLog(req, `Updated date for existing ${event.typeKey} notification`, constants.LOG_TYPES.INFO);
+        }
+      } else {
+        const notificationBody = {
+          name: req.t(event.titleKey),
+          description: description,
+          eventNotificationType: notificationType._id.toString(),
+          date: date,
+          navigationUrl: '',
+          isRecurring: true,
+          recurringFrequency: RecurringFrequency.ANNUALLY,
+          leadTime: 0,
+          status: NotificationStatus.SCHEDULED,
+          company: companyId,
+          notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI]
+        };
+
+        const notificationReq = {
+          ...req,
+          body: notificationBody,
+          cookies: {
+            ...req.cookies,
+            userId: updatedUser._id.toString()
+          }
+        };
+
+        const createdNotificationId = await new Promise(async (resolve, reject) => {
+          const notificationRes = {
+            status: () => ({
+              json: (response) => {
+                if (response?.data?._id) {
+                  resolve(response.data._id.toString());
+                } else {
+                  reject(new Error('No _id in notification response'));
+                }
+              }
+            })
+          };
+          await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
+        });
+
+        if (createdNotificationId) {
+          const userNotificationBody = {
+            user: updatedUser._id.toString(),
+            notification: createdNotificationId
+          };
+
+          const userNotificationReq = {
+            ...req,
+            body: userNotificationBody,
+            cookies: {
+              ...req.cookies,
+              userId: updatedUser._id.toString()
+            }
+          };
+
+          const userNotificationRes = {
+            status: () => ({
+              json: () => {}
+            })
+          };
+
+          await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
+        } else {
+          websocketHandler.sendLog(req, `Failed to extract EventNotification ID`, constants.LOG_TYPES.ERROR);
+        }
+      }
+    } catch (error) {
+      console.error(`Error creating notification for ${event.typeKey}: ${error.message}`);
+      websocketHandler.sendLog(req, `Failed to handle ${event.typeKey} notification: ${error.message}`, constants.LOG_TYPES.ERROR);
+    }
+  }
+}
+
+async function deleteInvalidRecurringNotifications(req, userId, companyId, eventNotificationTypeIds = []) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(companyId)) {
+      websocketHandler.sendLog(req, `Invalid userId or companyId`, constants.LOG_TYPES.WARN);
+      return;
+    }
+
+    if (!Array.isArray(eventNotificationTypeIds) || eventNotificationTypeIds.length === 0) {
+      websocketHandler.sendLog(req, `No EventNotificationType IDs provided for deletion`, constants.LOG_TYPES.WARN);
+      return;
+    }
+
+    const userNotifications = await UserNotification.find({ user: userId });
+    const eventNotificationIds = userNotifications.map(un => un.notification);
+
+    const notificationsToDelete = await EventNotification.find({
+      _id: { $in: eventNotificationIds },
+      isRecurring: true,
+      eventNotificationType: { $in: eventNotificationTypeIds },
+      company: companyId
+    });
+
+    if (notificationsToDelete.length === 0) {
+      websocketHandler.sendLog(req, `No invalid recurring notifications found for user`, constants.LOG_TYPES.INFO);
+      return;
+    }
+
+    const deleteIds = notificationsToDelete.map(n => n._id);
+
+    // Step 2: Delete EventNotifications
+    await EventNotification.deleteMany({ _id: { $in: deleteIds } });
+
+    // Step 3: Delete associated UserNotifications
+    await UserNotification.deleteMany({ user: userId, notification: { $in: deleteIds } });
+
+    websocketHandler.sendLog(req, `Deleted ${deleteIds.length} invalid recurring notifications for user`, constants.LOG_TYPES.INFO);
+  } catch (error) {
+    console.error('Error deleting invalid recurring notifications:', error);
+    websocketHandler.sendLog(req, `Error deleting invalid recurring notifications: ${error.message}`, constants.LOG_TYPES.ERROR);
+  }
+}

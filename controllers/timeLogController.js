@@ -12,6 +12,8 @@ const mongoose = require('mongoose');
 const websocketHandler = require('../utils/websocketHandler');
 const UserDevice = require('../models/commons/userDeviceModel.js');
 const User = require('../models/permissions/userModel');
+const eventNotificationController = require('./eventNotificationController.js');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 
 exports.addLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addLog operation', constants.LOG_TYPES.TRACE);
@@ -425,9 +427,20 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteLog operation', constants.LOG_TYPES.TRACE);
 
   websocketHandler.sendLog(req, `Processing ${req.body.logs.length} logs for deletion`, constants.LOG_TYPES.DEBUG);
+  
+  // Fetch the notification type once
+  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.timelog_delete, company: req.cookies.companyId });
+  if (!notificationType) {
+    console.warn(`Notification type ${constants.Event_Notification_Type_Status.timelog_delete} not found.`);
+  }
+
+
   for (let i = 0; i < req.body.logs.length; i++) {
     const timeLogsExists = await TimeLog.findById(req.body.logs[i].logId);
     if (timeLogsExists) {
+      const userId = timeLogsExists.user?._id || timeLogsExists.user;
+      const companyId = timeLogsExists.user?.company?._id || timeLogsExists.user?.company || req.cookies.companyId;
+
       if (timeLogsExists.url) {
         websocketHandler.sendLog(req, `Deleting file ${timeLogsExists.url}`, constants.LOG_TYPES.DEBUG);
         await StorageController.deleteBlobFromContainer(req.cookies.companyId, timeLogsExists.url);
@@ -437,6 +450,44 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `No document found with ID ${req.body.logs[i].logId}`, constants.LOG_TYPES.WARN);
       } else {
         websocketHandler.sendLog(req, `Deleted log ${req.body.logs[i].logId}`, constants.LOG_TYPES.INFO);
+        if (userId) {
+          try {
+            const notificationBody = {
+              name: req.t('timeLog.timeLogNotificationTitle'),
+              description: req.t('timeLog.timeLogNotificationMessage'),
+              eventNotificationType: notificationType?._id?.toString() || null,
+              date: new Date(),
+              navigationUrl: `${process.env.WEBSITE_DOMAIN}/home/screenshots`,
+              isRecurring: false,
+              recurringFrequency: null,
+              leadTime: 0,
+              status: 'unread'
+            };
+
+            // Simulate the req object for addNotificationForUser
+            const notificationReq = {
+              ...req,
+              body: notificationBody,
+              cookies: {
+                ...req.cookies,
+                userId: userId, // Set the userId to the assigned user
+                companyId: companyId
+              }
+            };
+
+            //Fire and forget
+            (async () => {
+              try {
+                await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+              } catch (err) {
+                console.error('Error calling addNotificationForUser:', err.message);
+              }
+            })();
+          } catch (error) {
+            websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+            // Don't fail the task creation if notification fails
+          }
+        }
       }
     } else {
       websocketHandler.sendLog(req, `No document found with ID ${req.body.logs[i].logId}`, constants.LOG_TYPES.WARN);
