@@ -31,9 +31,8 @@ const UserRole = require('../models/permissions/userRoleModel');
 const fs = require('fs');
 const path = require('path');
 const Permission = require('../models/permissions/permissionModel');
-const eventNotificationController = require('./eventNotificationController.js');
-const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -272,6 +271,20 @@ exports.webSignup = catchAsync(async(req, res, next) => {
           await AttendanceMode.insertMany(duplicateAttendnaceModeList);
         } else {
           console.log('No Attendance Mode found to duplicate.');
+        }
+
+        const eventNotificationTypesToDuplicate = await eventNotificationType.find({ company: companyId });
+        if (eventNotificationTypesToDuplicate.length > 0) {
+          const duplicatedEventNotificationTypes = eventNotificationTypesToDuplicate.map((record) => {
+            const duplicatedRecord = Object.assign({}, record.toObject());
+            duplicatedRecord._id = new mongoose.Types.ObjectId();
+            duplicatedRecord.company = company._id;
+            return duplicatedRecord;
+          });
+
+          await eventNotificationType.insertMany(duplicatedEventNotificationTypes);
+        } else {
+          console.log('No Event Notification Types found to duplicate.');
         }
 
         seedRolePermissions(company);

@@ -422,10 +422,22 @@ exports.updateUser = catchAsync(async (req, res, next) => {
             isRecurring: true
           });
 
+          const today = new Date();
+            const currentYear = today.getFullYear();
+
+            // Set the dobDate's year to the current year
+            let adjustedDate = new Date(dobDate);
+            adjustedDate.setFullYear(currentYear);
+
+            // If the adjusted date is in the past, set the year to next year
+            if (adjustedDate < today) {
+              adjustedDate.setFullYear(currentYear + 1);
+            }
+
           if (matchingNotification) {
             const existingDate = new Date(matchingNotification.date);
             if (existingDate.toISOString().split('T')[0] !== dobDate.toISOString().split('T')[0]) {
-              matchingNotification.date = dobDate;
+              matchingNotification.date = adjustedDate;
               matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`});
               await matchingNotification.save();
               websocketHandler.sendLog(req, `Updated DOB for existing birthday notification`, constants.LOG_TYPES.INFO);
@@ -435,7 +447,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
               name: req.t('user.BirthdayNotificationTitle'),
               description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`}),
               eventNotificationType: notificationType?._id?.toString() || null,
-              date: dobDate, 
+              date: adjustedDate, 
               navigationUrl: '',
               isRecurring: true, 
               recurringFrequency: RecurringFrequency.ANNUALLY, 
@@ -2684,10 +2696,22 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
         isRecurring: true
       });
 
+      const today = new Date();
+        const currentYear = today.getFullYear();
+
+        // Set the joining's year to the current year
+        let adjustedDate = new Date(date);
+        adjustedDate.setFullYear(currentYear);
+
+        // If the adjusted date is in the past, set the year to next year
+        if (adjustedDate < today) {
+          adjustedDate.setFullYear(currentYear + 1);
+        }
+
       if (existingNotification) {
         const existingDate = new Date(existingNotification.date);
         if (existingDate.toISOString().split('T')[0] !== date.toISOString().split('T')[0]) {
-          existingNotification.date = date;
+          existingNotification.date = adjustedDate;
           existingNotification.description = description;
           await existingNotification.save();
           websocketHandler.sendLog(req, `Updated date for existing ${event.typeKey} notification`, constants.LOG_TYPES.INFO);
@@ -2697,7 +2721,7 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
           name: req.t(event.titleKey),
           description: description,
           eventNotificationType: notificationType._id.toString(),
-          date: date,
+          date: adjustedDate,
           navigationUrl: '',
           isRecurring: true,
           recurringFrequency: RecurringFrequency.ANNUALLY,
