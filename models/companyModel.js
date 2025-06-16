@@ -23,9 +23,7 @@ var companyModelSchema = new Schema({
       type: String
     },
     country: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Country'//,
-     // required: [true, 'Country must belong to a Country']
+      type: String
     },
     pincode: {
       type: String
