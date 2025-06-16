@@ -263,7 +263,8 @@ const runRecuringNotifications = async (req, res,next) => {
     endOfToday.setUTCHours(23, 59, 59, 999);
     
     const notifications = await EventNotification.find({
-      isRecurring: true,
+      //isRecurring: true,
+      status: 'scheduled',
       date: {
           $gte: startOfToday,
           $lte: endOfToday
@@ -297,8 +298,19 @@ const runRecuringNotifications = async (req, res,next) => {
       }
 
       //// Update the `date` to next based on recurringFrequency
-      const nextDate = getNextDate(notification.date, notification.recurringFrequency);
-      await EventNotification.updateOne({ _id: notification._id }, { date: nextDate });
+      if (
+        notification.isRecurring &&
+        notification.recurringFrequency &&
+        typeof notification.recurringFrequency === 'string' &&
+        notification.recurringFrequency.trim() !== '') 
+      {
+        const nextDate = getNextDate(notification.date, notification.recurringFrequency);
+        await EventNotification.updateOne({ _id: notification._id }, { date: nextDate });
+      }
+      else {
+        // One-time notification: update status to 'sent'
+        await EventNotification.updateOne({ _id: notification._id }, { status: 'sent' });
+      }
     }
   } catch (error) {
     console.error('Error in runRecuringNotifications:', error);
@@ -366,7 +378,10 @@ const sendUINotification = async (req, user, managerList, notificationTypeId, no
         break;
 
       default:
-        return;
+        employeeTitle = notification.name;
+        employeeMessage = notification.description;
+        managerList = [];
+        break;
     }
 
     // Create notification for the employee
