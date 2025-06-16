@@ -4,7 +4,7 @@ const sendEmail = async options => {
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)  
   // 1) Define the email options  
   const msg = {
-    from: 'hrmeffortless@gmail.com',
+    from: 'info@arsteg.com',
     to: options.email,
     subject: options.subject,
     html: options.message

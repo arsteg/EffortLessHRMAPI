@@ -26,6 +26,7 @@ const ExpenseAdvance = require('../models/Expense/ExpenseAdvance');
 const constants = require('../constants');
 const StorageController = require('./storageController');
 const  websocketHandler  = require('../utils/websocketHandler');
+const { SendUINotification } = require('../utils/uiNotificationSender');
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -953,6 +954,19 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
       })
     );
 
+    const user = await User.findById(expenseReport.employee);
+    const userName = `${user?.firstName} ${user?.lastName}`;
+    const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(user._id);      
+    if(managerTeamsIds)
+    { 
+      for(var j = 0; j < managerTeamsIds.length; j++)
+      {
+        const manager = await User.findById(managerTeamsIds[j]._id);
+        SendUINotification(req.t('expense.expensesCreateionNotificationTitle'), req.t('expense.expensesCreateionNotificationMessage', { fistName: manager?.firstName, lastName: manager?.lastName, teamMember: userName }),
+        constants.Event_Notification_Type_Status.Expense, manager?._id?.toString(), req.cookies.companyId, req);
+      }
+    }
+    
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: {
@@ -1035,7 +1049,12 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
         }
       }
       expenseReport.expenseReportExpense=expenseReportExpenses;
-   }  
+   }
+   
+  const user = await User.findById(expenseReport.employee);
+  SendUINotification(req.t('expense.expensesApprovalNotificationTitle'), req.t('expense.expensesApprovalNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName, status: req.body.status }),
+  constants.Event_Notification_Type_Status.Expense, user?._id?.toString(), req.cookies.companyId, req);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: expenseReport
