@@ -18,6 +18,18 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   req.body.company = req.cookies.companyId;
   websocketHandler.sendLog(req, `Creating event notification with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
 
+  if (req.body.isRecurring === true) {
+    req.body.status = 'scheduled';
+    let inputDate = new Date(req.body.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to start of day
+
+    if (inputDate < today) {
+      inputDate = getNextRecuringDate(inputDate, req.body.recurringFrequency);
+    }
+
+    req.body.date = inputDate;
+  }
   const eventNotification = await EventNotification.create(req.body);
   websocketHandler.sendLog(req, `Successfully created event notification with ID: ${eventNotification._id}`, constants.LOG_TYPES.INFO);
 
@@ -49,6 +61,18 @@ exports.updateEventNotification = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateEventNotification process', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating event notification ID: ${req.params.id} with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
 
+  if (req.body.isRecurring === true) {
+    req.body.status = 'scheduled';
+    let inputDate = new Date(req.body.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to start of day
+
+    if (inputDate < today) {
+      inputDate = getNextRecuringDate(inputDate, req.body.recurringFrequency);
+    }
+
+    req.body.date = inputDate;
+  }
   const eventNotification = await EventNotification.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
@@ -552,6 +576,7 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     };
     const userNotification = await UserNotification.create(userNotificationData);
     websocketHandler.sendLog(req, `Linked notification ${eventNotification._id} to user ${userId} with UserNotification ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
+    eventNotificationData._id = eventNotification._id;
     websocketHandler.sendNotification(userId, eventNotificationData);
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
@@ -673,7 +698,24 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
   });
 });
 
-  
+function getNextRecuringDate(currentDate, frequency) {
+  const next = new Date(currentDate);
+  switch (frequency?.toUpperCase()) {
+    case 'DAILY':
+      next.setDate(next.getDate() + 1);
+      break;
+    case 'WEEKLY':
+      next.setDate(next.getDate() + 7);
+      break;
+    case 'MONTHLY':
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case 'ANNUALLY':
+      next.setFullYear(next.getFullYear() + 1);
+      break;
+  }
+  return next;
+}  
 
 
 

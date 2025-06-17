@@ -22,9 +22,7 @@ const User = require('../models/permissions/userModel');
 const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
 const StorageController = require('./storageController');
-const  websocketHandler  = require('../utils/websocketHandler');
-const eventNotificationController = require('./eventNotificationController.js');
-const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
+const { SendUINotification } = require('../utils/uiNotificationSender');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -711,11 +709,6 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('leave.usersRequired'), 400));
   }
 
-  // Notify the user about the leave grant
-  const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.leave, company: companyId });
-  if (!notificationType) { 
-      websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.leave} not found`, constants.LOG_TYPES.WARN); 
-  }
   var leavsGrants = [];
   for (var i = 0; i < users.length; i++) {
     const leavegrantExits = await LeaveGrant.findOne({
@@ -737,43 +730,8 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
     console.log('users[i].user', users[i].user);
 
-    if (users[i].user) {
-      try {
-        const notificationBody = {
-          name: req.t('leave.addLeaveRequestNotificationTitle'),
-          description: req.t('leave.addLeaveRequestNotificationMessage'),
-          eventNotificationType: notificationType?._id?.toString() || null,
-          date: new Date(), 
-          navigationUrl: '',
-          isRecurring: false, 
-          recurringFrequency: null, 
-          leadTime: 0, 
-          status: 'unread' 
-        };
-
-        // Simulate the req object for addNotificationForUser
-        const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: {
-            ...req.cookies,
-            userId: users[i].user.toString() // Set the userId to the assigned user
-            }
-        };
-
-      //Fire and forget
-      (async () => {
-          try {
-          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-          } catch (err) {
-          console.error('Error calling addNotificationForUser:', err.message);
-          }
-      })();
-      } catch (error) {
-      websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-      // Don't fail the task creation if notification fails
-      }
-    }
+     SendUINotification(req.t('leave.addLeaveRequestNotificationTitle'), req.t('leave.addLeaveRequestNotificationMessage', { date: new Date(grantData.date).toISOString().split('T')[0] }),
+      constants.Event_Notification_Type_Status.leave, users[i].user.toString(), companyId, req);
   }
   // Send success response
   res.status(201).json({
@@ -849,50 +807,9 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     // Save the updated leave grant
     await leaveGrant.save();
 
-    // Fetch the notification type once
-    const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.leave, company: req.cookies.companyId });
-    if (!notificationType) { 
-        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.leave} not found`, constants.LOG_TYPES.WARN); 
-    }
-
-    if (existingUser && existingUser._id) {
-        try {
-        const notificationBody = {
-            name: 'Your leave request has been updated',
-            description: `Your leave request has been ${leaveGrant.status}.`,
-            eventNotificationType: notificationType?._id?.toString() || null,
-            date: new Date(), 
-            navigationUrl: '',
-            isRecurring: false, 
-            recurringFrequency: null, 
-            leadTime: 0, 
-            status: 'unread' 
-        };
-
-        // Simulate the req object for addNotificationForUser
-        const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: {
-            ...req.cookies,
-            userId: existingUser?._id?.toString() // Set the userId to the assigned user
-            }
-        };
-
-        //Fire and forget
-        (async () => {
-            try {
-            await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-            } catch (err) {
-            console.error('Error calling addNotificationForUser:', err.message);
-            }
-        })();
-        } catch (error) {
-        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-        // Don't fail the task creation if notification fails
-        }
-    }
-
+     SendUINotification('Your leave request has been updated', `Your leave request has been ${leaveGrant.status}.`,
+      constants.Event_Notification_Type_Status.leave, existingUser?._id?.toString(), req.cookies.companyId, req);
+      
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: leaveGrant
@@ -1033,57 +950,21 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);      
       if(managerTeamsIds)
       {
-        // Fetch the notification type once
-        const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.leave, company: companyId });
-        if (!notificationType) { 
-            websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.leave} not found`, constants.LOG_TYPES.WARN); 
-        }
+        const user = await User.findById(req.body.employee);
+        const userName = `${user?.firstName} ${user?.lastName}`;
+        SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
+          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+
         for(var j = 0; j < managerTeamsIds.length; j++)
-          {       
-            const user = await User.findById(req.body.employee);
-            const manager = await User.findById(managerTeamsIds[j]._id);
-            const companyDetails=await Company.findById(req.cookies.companyId);
-            sendEmailToUsers(user,manager,constants.Email_template_constant.Leave_Application_Approval_Request,newLeaveApplication,companyDetails);
+        {       
+          const manager = await User.findById(managerTeamsIds[j]._id);
+          const companyDetails=await Company.findById(req.cookies.companyId);
+          sendEmailToUsers(user,manager,constants.Email_template_constant.Leave_Application_Approval_Request,newLeaveApplication,companyDetails);
 
-            console.log('employee leave application');
-            if (req.body.user) {
-                try {
-                const notificationBody = {
-                    name: req.t('leave.addLeaveRequestNotificationTitle'),
-                    description: req.t('leave.addLeaveRequestNotificationMessage'),
-                    eventNotificationType: notificationType?._id?.toString() || null,
-                    date: new Date(), 
-                    navigationUrl: '',
-                    isRecurring: false, 
-                    recurringFrequency: null, 
-                    leadTime: 0, 
-                    status: 'unread' 
-                };
-
-                // Simulate the req object for addNotificationForUser
-                const notificationReq = {
-                    ...req,
-                    body: notificationBody,
-                    cookies: {
-                    ...req.cookies,
-                    userId: user?._id?.toString() // Set the userId to the assigned user
-                    }
-                };
-
-                //Fire and forget
-                (async () => {
-                    try {
-                    await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-                    } catch (err) {
-                    console.error('Error calling addNotificationForUser:', err.message);
-                    }
-                })();
-                } catch (error) {
-                websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-                // Don't fail the task creation if notification fails
-                }
-            }
-          }
+          //send ui notification to manager
+          SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
+            constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
+        }
       }
 
     } catch (error) {
@@ -1192,11 +1073,6 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
         console.log("company id."+ req.cookies.companyId);
         console.log("employee id."+ updatedLeaveApplication.user._id?.toString());
-        const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.leave, company: req.cookies.companyId });
-        if (!notificationType) { 
-            websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.leave} not found`, constants.LOG_TYPES.WARN); 
-        }
-
         // Check if the status is 'Cancelled' or 'Rejected'
         if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
           const leaveDays = calculateLeaveDays(startDate, endDate);
@@ -1210,11 +1086,11 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           // Save the updated leave assigned record
           await leaveAssigned.save();
           sendEmailToUsers(req.body.employee,constants.Email_template_constant.CancelReject_Request_Leave_Application,updatedLeaveApplication,req.cookies.companyId);   
-          sendUiNotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), notificationType?._id?.toString() || null, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);      
+          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);      
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
           sendEmailToUsers(req.body.employee,constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved,updatedLeaveApplication,req.cookies.companyId);  
-          sendUiNotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), notificationType?._id?.toString() || null, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
+          SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
          
       }
       }
@@ -1403,6 +1279,24 @@ exports.addShortLeave = async (req, res, next) => {
     const company = req.cookies.companyId; // Get company from cookies
     req.body.company = company; // Set company in the request body
     const shortLeave = await ShortLeave.create(req.body);
+    
+    const user = await User.findById(req.body.employee);
+    const userName = `${user?.firstName} ${user?.lastName}`;
+
+    SendUINotification(req.t('leave.employeeShortLeaveRequestNotificationTitle'), req.t('leave.employeeShortLeaveRequestNotificationMessage', { employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
+      constants.Event_Notification_Type_Status.leave, user?._id?.toString(), company, req);
+    const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(req.body.employee);      
+    if(managerTeamsIds)
+    { 
+      for(var j = 0; j < managerTeamsIds.length; j++)
+      {
+        const manager = await User.findById(managerTeamsIds[j]._id);
+        //send ui notification to manager
+        SendUINotification(req.t('leave.managerShortLeaveApprovalNotificationTitle'), req.t('leave.managerShortLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
+          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), company, req);
+      }
+    }
+
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: shortLeave
@@ -1439,6 +1333,7 @@ exports.getShortLeave = async (req, res, next) => {
 
 exports.updateShortLeave = async (req, res, next) => {
   try {
+    const companyId = req.cookies.companyId;
     const shortLeave = await ShortLeave.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!shortLeave) {
       res.status(404).json({
@@ -1446,6 +1341,13 @@ exports.updateShortLeave = async (req, res, next) => {
         message:  req.t('leave.shortLeaveNotFound')
       });
     } else {
+      const user = await User.findById(req.body.employee);
+      const userName = `${user?.firstName} ${user?.lastName}`;
+
+      if (req.body?.status?.toLowerCase() !== 'pending') {
+        SendUINotification(req.t('leave.employeeShortLeaveUpdateNotificationTitle'), req.t('leave.employeeShortLeaveUpdateNotificationMessage', { employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date, status: req.body?.status }),
+          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+      }
       res.status(200).json({
         status: constants.APIResponseStatus.Success,
         data: shortLeave
@@ -1653,48 +1555,4 @@ async function updateOrCreateLeaveTemplateCategories(leaveTemplateId, updatedCat
   const finalCategories = await LeaveTemplateCategory.find({ leaveTemplate: leaveTemplateId });
   return finalCategories;
 
-}
-
-async function sendUiNotification(title, message, notificatioTypeId, userId, companyId, req) 
-{
-  console.log('message', message);
-  console.log('title', title);
-    if (userId) {
-        try {
-        const notificationBody = {
-            name: title,
-            description: message,
-            eventNotificationType: notificatioTypeId,
-            date: new Date(), 
-            navigationUrl: '',
-            isRecurring: false, 
-            recurringFrequency: null, 
-            leadTime: 0, 
-            status: 'unread' 
-        };
-
-        // Simulate the req object for addNotificationForUser
-        const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: {
-            ...req.cookies,
-            userId: userId, // Set the userId to the assigned user
-            companyId: companyId // Set the companyId to the assigned user
-            }
-        };
-
-        //Fire and forget
-        (async () => {
-            try {
-            await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
-            } catch (err) {
-            console.error('Error calling addNotificationForUser:', err.message);
-            }
-        })();
-        } catch (error) {
-          websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-          // Don't fail the task creation if notification fails
-        }
-    }
 }

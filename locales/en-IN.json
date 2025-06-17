@@ -53,7 +53,9 @@
     "deleteBrowserHistorySuccess": "The browser history record {recordId} was deleted successfully.",
     "deleteBrowserHistoryFailure": "Failed to delete the browser history record.",
     "getBrowserHistorySuccess": "Browser history records were retrieved successfully.",
-    "getBrowserHistoryFailure": "Failed to retrieve browser history records."
+    "getBrowserHistoryFailure": "Failed to retrieve browser history records.",
+    "productivityApprovalNotificationTitle": "Productivity Approval",
+    "productivityApprovalNotificationMessage": "Your productivity app entry has been {{status}}"
   },
   "assetsManagement": {
     "addAssetTypeSuccess": "The asset type '{typeName}' was created successfully.",
@@ -191,9 +193,9 @@
     "UserIDMonthYearRequired": "User ID, month, and year are required.",
     "OvertimeRecordsNF": "Overtime records were not found.",
     "createOnDutyRequestsNotificationTitle": "On-Duty Request Created",
-    "createOnDutyRequestsNotificationMessage": "On-Duty Request has been created.",
+    "createOnDutyRequestsNotificationMessage": "On-Duty request has been created with start date {{startDate}} and end date {{endDate}}.",
     "updateOnDutyRequestsNotificationTitle": "On-Duty Request Updated",
-    "updateOnDutyRequestsNotificationMessage": "On-Duty Request has been updated."
+    "updateOnDutyRequestsNotificationMessage": "On-Duty request has been updated to {{status}} with start date {{startDate}} and end date {{endDate}}."
   },
   "auth": {
     "signupSuccess": "The user signed up successfully for company {companyId}.",
@@ -346,7 +348,11 @@
     "advanceNotFound": "The expense advance was not found for the specified user.",
     "advanceCategoryNotInRequest": "Advance category details are missing from the request.",
     "advanceTemplateNotFound": "The advance template was not found.",
-    "userNotFound": "The user was not found."
+    "userNotFound": "The user was not found.",
+    "expensesCreateionNotificationTitle": "Expense Created",
+    "expensesCreateionNotificationMessage": "Hi {{firstName}} {{lastName}}, {{teamMember}} has created an expense.",
+    "expensesApprovalNotificationTitle": "Expense Status",
+    "expensesApprovalNotificationMessage": "Hi {{firstName}} {{lastName}}, your expense has been {{status}}."
   },
   "feedback": {
     "feedbackFieldNotFound": "The feedback field was not found.",
@@ -420,11 +426,21 @@
     "InvalidEndDate": "The end date must be after the start date.",
     "ErrorCreatingLeaveTemplateCategory": "An error occurred while creating the leave template category.",
     "addLeaveRequestNotificationTitle": "Leave Request Created",
-    "addLeaveRequestNotificationMessage": "A leave request has been created.",
+    "addLeaveRequestNotificationMessage": "A leave request has been created for {{date}}.",
     "leaveApprovalNotificationTitle": "Leave Request Approved",
     "leaveApprovalNotificationMessage": "A leave request has been approved.",
     "leaveRejectNotificationTitle": "Leave Request Rejected",
-    "leaveRejectNotificationMessage": "A leave request has been rejected."
+    "leaveRejectNotificationMessage": "A leave request has been rejected.",
+    "employeeLeaveRequestNotificationTitle": "Leave Application Submitted",
+    "employeeLeaveRequestNotificationMessage": "Dear {{employeeName}}, you have successfully applied for {{days}} day(s) of leave.",
+    "managerLeaveApprovalNotificationTitle": "Leave Approval Request from Team Member",
+    "managerLeaveApprovalNotificationMessage": "Dear {{firstName}} {{lastName}}, your team member {{employeeName}} has applied for {{days}} day(s) of leave.",
+    "employeeShortLeaveRequestNotificationTitle": "Short Leave Application Submitted",
+    "employeeShortLeaveRequestNotificationMessage": "Dear {{employeeName}}, you have successfully applied for a short leave of {{duration}} minutes on {{date}}.",  
+    "managerShortLeaveApprovalNotificationTitle": "Short Leave Request from Team Member",
+    "managerShortLeaveApprovalNotificationMessage": "Dear {{firstName}} {{lastName}}, your team member {{employeeName}} has applied for a short leave of {{duration}} minutes on {{date}}.",
+    "employeeShortLeaveUpdateNotificationTitle": "Short Leave Application Update",
+    "employeeShortLeaveUpdateNotificationMessage": "Hi {{employeeName}}, your short leave request for {{duration}} minutes on {{date}} has been {{status}}."
   },
   "liveTracking": {
     "userAlreadyAdded": "The user is already added for live tracking.",
@@ -623,7 +639,9 @@
     "updateTerminationNotificationTitle": "Your termination has been updated",
     "updateTerminationNotificationMessage": "Your termination has been updated.",
     "terminationStatusChangedNotificationTitle": "Your termination status has been changed",
-    "terminationStatusChangedNotificationMessage": "Your termination status has been changed to {{status}}."
+    "terminationStatusChangedNotificationMessage": "Your termination status has been changed to {{status}}.",
+    "ResignationNotificatioToManagerTitle": "Team Member Resignation Notice",
+    "ResignationNotificatioToManagerMessage":"Hi {{firstName}} {{lastName}}, {{teamMember}} has submitted their resignation."
   },
   "settings": {
     "productivityNotFound": "No productivity was found with the specified ID.",
