@@ -33,6 +33,15 @@ exports.createEventNotification = catchAsync(async (req, res, next) => {
   const eventNotification = await EventNotification.create(req.body);
   websocketHandler.sendLog(req, `Successfully created event notification with ID: ${eventNotification._id}`, constants.LOG_TYPES.INFO);
 
+  if (req.body.view.toLowerCase() === 'user') {
+    websocketHandler.sendLog(req, 'Starting create User Notification process for user', constants.LOG_TYPES.INFO);
+    req.body.company = req.cookies.companyId;
+    req.body.user = req.cookies.userId;
+    req.body.notification = eventNotification?._id;
+    const userNotification = await UserNotification.create(req.body);
+    websocketHandler.sendLog(req, `Successfully created user notification with ID: ${userNotification._id}`, constants.LOG_TYPES.INFO);
+  }
+
   res.status(201).json({
       status: constants.APIResponseStatus.Success,
       data: eventNotification
@@ -98,6 +107,11 @@ exports.deleteEventNotification = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Event notification not found with ID: ${req.params.id}`, constants.LOG_TYPES.WARN);
       return next(new AppError(req.t('eventNotification.eventNotificationNotFound'), 404));
   }
+
+  // Delete related UserNotifications
+  await UserNotification.deleteMany({ notification: req.params.id });
+  websocketHandler.sendLog(req, `Deleted related UserNotifications for event notification ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+
   websocketHandler.sendLog(req, `Successfully deleted event notification ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
@@ -108,7 +122,7 @@ exports.deleteEventNotification = catchAsync(async (req, res, next) => {
 
 exports.getAllEventNotifications = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getAllEventNotifications process', constants.LOG_TYPES.INFO);
-  const eventNotifications = await EventNotification.find();
+  const eventNotifications = await EventNotification.find({ createdBy: req.cookies.userId });
   websocketHandler.sendLog(req, `Retrieved ${eventNotifications.length} event notifications`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, 'Completed getAllEventNotifications process', constants.LOG_TYPES.INFO);
 
@@ -696,6 +710,49 @@ exports.addNotificationForUser = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     data: null
   });
+});
+
+exports.getUserCalenderEvents = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.cookies.userId;
+    const createdEvents = await EventNotification.find({ createdBy: userId });
+    const userNotifications = await UserNotification.find({ user: userId }).select('notification');
+    const userNotificationEventIds = userNotifications.map(un => un.notification);
+
+    const linkedEvents = await EventNotification.find({
+      _id: { $in: userNotificationEventIds }
+    });
+
+    // 4. Combine both arrays and make them unique by _id
+    const allEventsMap = new Map();
+
+    [...createdEvents, ...linkedEvents].forEach(event => {
+      allEventsMap.set(event._id.toString(), event);
+    });
+
+    const uniqueEvents = Array.from(allEventsMap.values());
+
+    // 5. Map to calendar event format
+    const calendarEvents = uniqueEvents.map(event => {
+
+    const dateOnly = moment(event.date).format('YYYY-MM-DD');
+
+      return {
+        title: `${event.name}`,
+        start: dateOnly,
+        allDay: true,
+        id: event._id.toString()
+        //url: event.navigationUrl || undefined
+      };
+    });
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: calendarEvents
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 function getNextRecuringDate(currentDate, frequency) {

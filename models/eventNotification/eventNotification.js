@@ -55,6 +55,20 @@ recurringFrequency: {
     enum: Object.values(NotificationChannel),
     required: true,
     default: [NotificationChannel.UI]
+  },
+  createdBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  updatedBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  isCreatedFromUI: {
+    type: Boolean,
+    default: false
   }
 });
 eventNotificationSchema.add(baseSchema);
