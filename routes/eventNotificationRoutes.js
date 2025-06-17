@@ -828,5 +828,32 @@ router.delete('/user/notification', eventNotificationController.deleteNotificati
  */
 router.patch('/user/notification/updatestatus', eventNotificationController.updateNotificationStatus);
 
+/**
+ * @swagger
+ * /api/v1/eventNotifications/userevents:
+ *   get:
+ *     summary: Get calendar events for the current user
+ *     tags: [Event Notification]
+ *     responses:
+ *       200:
+ *         description: Successful response with calendar events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized - user not logged in
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/userevents', eventNotificationController.getUserCalenderEvents);
 
 module.exports = router;
