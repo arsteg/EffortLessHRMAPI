@@ -5045,7 +5045,9 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   req.isFNF = true;
 
   websocketHandler.sendLog(req, 'Starting calculations for new FNF user', constants.LOG_TYPES.TRACE);
-
+  await payrollCalculationController.CalculateOvertime(req, res);
+  await payrollCalculationController.StoreAttendanceSummary(req, res);
+  await payrollCalculationController.calculateAndStoreIncomeTax(req, res);
   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
   await payrollCalculationController.calculateProfessionalTax(req, res);
