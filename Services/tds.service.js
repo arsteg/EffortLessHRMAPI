@@ -24,7 +24,7 @@ const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
     const detail = await FixedAllowance.findById(item.fixedAllowance);
     if (detail?.isTDSAffected) {
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ ESIC Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ TDS Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
     }
   }
 
@@ -34,25 +34,24 @@ const getTotalTDSEligibleAmount = async (req, salaryDetails) => {
     const detail = await VariableAllowance.findById(item.variableAllowance);
     if (detail?.isIncomeTaxAffected) {
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ ESIC Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ TDS Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
     }
   }
 
-  websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `✅ Total TDS Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
 const getTotalMonthlyAllownaceAmount = async (req, salaryDetails) => {
   let total = 0; 
  
   const fixedAllowances = await SalaryComponentFixedAllowance.find({ employeeSalaryDetails: salaryDetails._id });
-  
+  console.log(fixedAllowances);
   for (const item of fixedAllowances) {
-    const detail = await FixedAllowance.findById(item.fixedAllowance);   
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ ESIC Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ Fixed Allowance: ${item.monthlyAmount}`, constants.LOG_TYPES.TRACE);
    
   }
-  websocketHandler.sendLog(req, `✅ Total ESIC Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `✅ Total Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
 /**

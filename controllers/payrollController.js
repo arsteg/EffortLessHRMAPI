@@ -4164,42 +4164,42 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       // Calculate totals
       await Promise.all([...allowancePromises, ...deductionPromises]);
       // Calculate totals
-    const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
-    const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-
-      const totalVariableAllowance = variablePays
-      .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
-
-       const totalVariableDeduction = variablePays
-      .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
-
-      monthlySalary = totalFixedAllowance+totalVariableAllowance;
-      yearlySalary = monthlySalary * 12;
-      const totalEmployerStatutoryContribution = statutoryDetails
+      const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (Number(fa.monthlyAmount) || 0), 0);
+      const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (Number(fd.monthlyAmount) || 0), 0);
+         const totalVariableAllowance = variablePays
+        .filter(vp => vp.variableAllowance)
+        .reduce((sum, vp) => sum + (Number(vp.amount) || 0), 0);
+      const totalVariableDeduction = variablePays
+        .filter(vp => vp.variableDeduction)
+        .reduce((sum, vp) => sum + (Number(vp.amount) || 0), 0);
+      monthlySalary = Number(totalFixedAllowance) + Number(totalVariableAllowance);
+      
+       yearlySalary = monthlySalary * 12;
+     const totalEmployerStatutoryContribution = statutoryDetails
         .filter(item => item.ContributorType === 'Employer')
-        .reduce((sum, item) => sum + (item.amount || 0), 0);
-
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
       const totalEmployeeStatutoryDeduction = statutoryDetails
         .filter(item => item.ContributorType === 'Employee')
-        .reduce((sum, item) => sum + (item.amount || 0), 0);
-
-      const totalLoanRepayment = allLoanAdvances
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+     const totalLoanRepayment = allLoanAdvances
         .filter(loan => loan.type === 'Repayment')
-        .reduce((sum, loan) => sum + (loan.amount || 0), 0);
-
-        const totalFlexiBenefits = flexiBenefits?.TotalFlexiBenefitAmount || 0;
-
-      const totalOvertime = overtime.OvertimeAmount || 0;
-      const totalIncomeTax = incomeTax.TDSCalculated || 0;
-
-      // Calculate total CTC, gross salary, and take-home
+        .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
+      const totalFlexiBenefits = Number(flexiBenefits?.TotalFlexiBenefitAmount) || 0;
+     const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
+     const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;
+     // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
-      const totalGrossSalary = monthlySalary + totalOvertime + totalFlexiBenefits;
-      const totalTakeHome = totalGrossSalary - (totalFixedDeduction +totalVariableDeduction + totalEmployerStatutoryContribution + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
-
-      websocketHandler.sendLog(req, `Updating PayrollFNFUsers document for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
+      const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits);
+     
+      const totalTakeHome = totalGrossSalary - (
+        Number(totalFixedDeduction) +
+        Number(totalVariableDeduction) +
+        Number(totalEmployerStatutoryContribution) +
+        Number(totalEmployeeStatutoryDeduction) +
+        Number(totalLoanRepayment) +
+        Number(totalIncomeTax)
+      );
+     websocketHandler.sendLog(req, `Updating PayrollFNFUsers document for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Update PayrollFNFUsers document with calculated values
       await PayrollFNFUsers.updateOne(
@@ -4341,10 +4341,10 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         PayrollVariablePay.find({ payrollUser: payrollUser._id }),     
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }),
-        PayrollOvertime.find({ PayrollUser: payrollUser._id }),
-        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }),
+        PayrollOvertime.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
+        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
         PayrollStatutory.find({ payrollUser: payrollUser._id }),
-        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }),
+        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }).sort({ _id: -1 }),,
         PayrollManualArrears.find({ payrollUser: payrollUser._id })     
       ]);
     console.log(fixedAllowances);
@@ -4420,11 +4420,12 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
         const totalManualArrears = manualArrears
-        .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);
-
-      const totalOvertime = overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0);
-      const totalIncomeTax = incomeTax.reduce((sum, tax) => sum + (tax.TDSCalculated || 0), 0);
-
+        .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);    
+      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
+      console.log('Total Overtime:', totalOvertime);
+      console.log('Income Tax:', incomeTax);
+      const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;
+      console.log('Total Income Tax:', totalIncomeTax);
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance)*12;
       const totalGrossSalary = totalFixedAllowance;

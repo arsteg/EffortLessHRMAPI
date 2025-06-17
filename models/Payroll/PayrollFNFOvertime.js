@@ -15,10 +15,13 @@ var payrollFNFOvertimeSchema = new Schema({
       required: true
     },
     FinalOvertime: {
-      type: String,
+      type: Number,
+      required: true
+    },
+    OvertimeAmount: {
+      type: Number,
       required: true
     }
-
   }, { collection: 'PayrollFNFOvertime' });
   
 module.exports = mongoose.model('PayrollFNFOvertime', payrollFNFOvertimeSchema);
