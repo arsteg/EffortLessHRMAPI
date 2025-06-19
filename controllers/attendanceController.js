@@ -38,21 +38,21 @@ const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUs
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
 const moment = require('moment'); // Using moment.js for easy date manipulation
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   websocketHandler.sendLog(req, `Extracted companyId from cookies: ${companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
-  
+
   req.body.company = companyId;
   const filter = { company: companyId };
   const update = req.body;
@@ -67,7 +67,7 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   try {
     const generalSettings = await GeneralSettings.findOneAndUpdate(filter, update, options);
     websocketHandler.sendLog(req, `Successfully created/updated general settings: ${generalSettings._id}`, constants.LOG_TYPES.INFO);
-    
+
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
       message: req.t('attendance.createGeneralSettingsSuccess', { companyId }),
@@ -85,10 +85,10 @@ exports.createGeneralSettings = catchAsync(async (req, res, next) => {
 
 exports.getGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching general settings for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   const generalSettings = await GeneralSettings.find({ company: companyId });
-  
+
   if (!generalSettings || generalSettings.length === 0) {
     websocketHandler.sendLog(req, `No general settings found for company: ${companyId}`, constants.LOG_TYPES.WARNING);
     return res.status(404).json({
@@ -96,7 +96,7 @@ exports.getGeneralSettings = catchAsync(async (req, res, next) => {
       message: req.t('attendance.getGeneralSettingsFailure')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved general settings for company: ${companyId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -107,7 +107,7 @@ exports.getGeneralSettings = catchAsync(async (req, res, next) => {
 
 exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating general settings with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const generalSettings = await GeneralSettings.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -131,7 +131,7 @@ exports.updateGeneralSettings = catchAsync(async (req, res, next) => {
 
 exports.createRegularizationReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating regularization reason for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const company = req.cookies.companyId;
   req.body.company = company;
 
@@ -166,7 +166,7 @@ exports.createRegularizationReason = catchAsync(async (req, res, next) => {
 
 exports.getRegularizationReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const regularizationReason = await RegularizationReason.findById(req.params.id);
 
   if (!regularizationReason) {
@@ -196,7 +196,7 @@ exports.getRegularizationReason = catchAsync(async (req, res, next) => {
 
 exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const isRegularizationReason = await RegularizationReason.findById(req.params.id);
 
   if (!isRegularizationReason) {
@@ -258,7 +258,7 @@ exports.updateRegularizationReason = catchAsync(async (req, res, next) => {
 
 exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting regularization reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const regularizationReason = await RegularizationReason.findByIdAndDelete(req.params.id);
   if (!regularizationReason) {
     websocketHandler.sendLog(req, `Regularization reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -267,7 +267,7 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
       message: req.t('attendance.deleteRegularizationReasonFailure')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted regularization reason: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -278,7 +278,7 @@ exports.deleteRegularizationReason = catchAsync(async (req, res, next) => {
 
 exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all regularization reasons for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await RegularizationReason.countDocuments({ company: req.cookies.companyId });
@@ -307,7 +307,7 @@ exports.getAllRegularizationReasons = catchAsync(async (req, res, next) => {
 
 exports.createOnDutyReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating on-duty reason for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const company = req.cookies.companyId;
   req.body.company = company;
 
@@ -342,7 +342,7 @@ exports.createOnDutyReason = catchAsync(async (req, res, next) => {
 
 exports.getOnDutyReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const onDutyReason = await OnDutyReason.findById(req.params.id);
 
   if (!onDutyReason) {
@@ -370,7 +370,7 @@ exports.getOnDutyReason = catchAsync(async (req, res, next) => {
 
 exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const isOnDutyReason = await OnDutyReason.findById(req.params.id);
 
   if (!isOnDutyReason) {
@@ -431,7 +431,7 @@ exports.updateOnDutyReason = catchAsync(async (req, res, next) => {
 
 exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting on-duty reason with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const onDutyReason = await OnDutyReason.findByIdAndDelete(req.params.id);
   if (!onDutyReason) {
     websocketHandler.sendLog(req, `On-duty reason not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -440,7 +440,7 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
       message: req.t('attendance.deleteOnDutyReasonFailure')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted on-duty reason: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -451,7 +451,7 @@ exports.deleteOnDutyReason = catchAsync(async (req, res, next) => {
 
 exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all on-duty reasons for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OnDutyReason.countDocuments({ company: req.cookies.companyId });
@@ -482,7 +482,7 @@ exports.getAllOnDutyReasons = catchAsync(async (req, res, next) => {
 // Create a new attendance mode
 exports.createAttendanceMode = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating attendance mode for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -505,7 +505,7 @@ exports.createAttendanceMode = catchAsync(async (req, res, next) => {
 // Get an attendance mode by ID
 exports.getAttendanceMode = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceMode = await AttendanceMode.findById(req.params.id);
   if (!attendanceMode) {
     websocketHandler.sendLog(req, `Attendance mode not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -514,7 +514,7 @@ exports.getAttendanceMode = catchAsync(async (req, res, next) => {
       message: req.t('attendance.getAttendanceModeFailure')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved attendance mode: ${attendanceMode._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -526,7 +526,7 @@ exports.getAttendanceMode = catchAsync(async (req, res, next) => {
 // Update an attendance mode by ID
 exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceMode = await AttendanceMode.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -551,7 +551,7 @@ exports.updateAttendanceMode = catchAsync(async (req, res, next) => {
 // Delete an attendance mode by ID
 exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance mode with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceMode = await AttendanceMode.findByIdAndDelete(req.params.id);
 
   if (!attendanceMode) {
@@ -573,9 +573,9 @@ exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
 // Get all attendance modes
 exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Fetching all attendance modes', constants.LOG_TYPES.INFO);
-  
+
   const attendanceModes = await AttendanceMode.find();
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved ${attendanceModes.length} attendance modes`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -587,7 +587,7 @@ exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
 // Create a new Attendance Template
 exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating attendance template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -610,7 +610,7 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
 // Get an Attendance Template by ID
 exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -619,7 +619,7 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
       message: req.t('attendance.attendanceTemplateNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved attendance template: ${attendanceTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -631,7 +631,7 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
 // Update an Attendance Template by ID
 exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceTemplate = await AttendanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -656,7 +656,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
 // Delete an Attendance Template by ID
 exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceTemplate = await AttendanceTemplate.findByIdAndDelete(req.params.id);
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -673,25 +673,25 @@ exports.deleteAttendanceTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
-  
-  const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ user: req.params.userId });
 
-  var attendanceTemplate = null;
-  if (attendanceTemplateAssignments.length > 0) {
-    attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0].attendanceTemplate);
-  }
-  
+  const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ employee: req.params.userId });
+  console.log('attendance template assignment:', attendanceTemplateAssignments);
+  // var attendanceTemplate = [];
+  // if (attendanceTemplateAssignments?.length > 0) {
+  //   attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0]?.attandanceTemplate);
+  //   console.log('attendance template:', attendanceTemplate);
+  // }
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     message: req.t('attendance.getAttendanceTemplateByUserSuccess', { userId: req.params.userId }),
-    data: attendanceTemplate,
+    data: attendanceTemplateAssignments
   });
 });
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all attendance templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceTemplate.countDocuments({ company: req.cookies.companyId });
@@ -708,7 +708,7 @@ exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
 
 exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Adding attendance regularization for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -768,23 +768,23 @@ exports.addAttendanceRegularization = catchAsync(async (req, res, next) => {
   }
 
   res.status(201).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: attendanceRegularization
   });
 });
 
 exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceRegularization = await AttendanceRegularization.findById(req.params.id);
   if (!attendanceRegularization) {
     websocketHandler.sendLog(req, `Attendance regularization not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.AttendanceRegularizationNF'), 404));
   }
-  
+
   const attendanceRegularizationRestrictedIP = await AttendanceRegularizationRestrictedIP.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
   attendanceRegularization.AttendanceRegularizationRestrictedIPDetails = attendanceRegularizationRestrictedIP || null;
-  
+
   const attendanceRegularizationRestrictedLocation = await AttendanceRegularizationRestrictedLocation.find({}).where('attendanceRegularization').equals(attendanceRegularization._id);
   attendanceRegularization.AttendanceRegularizationRestrictedLocations = attendanceRegularizationRestrictedLocation || null;
 
@@ -797,7 +797,7 @@ exports.getAttendanceRegularization = catchAsync(async (req, res, next) => {
 
 exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance regularization by template: ${req.params.templateId}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceRegularization = await AttendanceRegularization.findOne({
     attendanceTemplate: req.params.templateId,
     company: req.cookies.companyId,
@@ -834,7 +834,7 @@ exports.getAttendanceRegularizationByTemplate = catchAsync(async (req, res, next
 });
 exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const templateExists = await AttendanceTemplate.exists({ name: req.body.attendanceTemplate });
   if (!templateExists) {
     websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
@@ -913,7 +913,7 @@ exports.updateAttendanceRegularization = catchAsync(async (req, res, next) => {
 
 exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all attendance regularizations for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceRegularization.countDocuments({ company: req.cookies.companyId });
@@ -948,7 +948,7 @@ exports.getAllAttendanceRegularizationsByCompany = catchAsync(async (req, res, n
 
 exports.deleteAttendanceRegularization = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance regularization with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceRegularization = await AttendanceRegularization.findByIdAndDelete(req.params.id);
 
   if (!attendanceRegularization) {
@@ -977,9 +977,9 @@ exports.addAttendanceRegularizationRestrictedLocation = catchAsync(async (req, r
 
 exports.getAllAttendanceRegularizationRestrictedLocations = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching restricted locations for regularization: ${req.params.attendanceRegularization}`, constants.LOG_TYPES.INFO);
-  
+
   const locations = await AttendanceRegularizationRestrictedLocation.find({ attendanceRegularization: req.params.attendanceRegularization });
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved ${locations.length} restricted locations`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -990,7 +990,7 @@ exports.getAllAttendanceRegularizationRestrictedLocations = catchAsync(async (re
 
 exports.updateAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const updatedLocation = await AttendanceRegularizationRestrictedLocation.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -1014,7 +1014,7 @@ exports.updateAttendanceRegularizationRestrictedLocation = catchAsync(async (req
 
 exports.getAttendanceRegularizationRestrictedLocationById = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const location = await AttendanceRegularizationRestrictedLocation.findById(req.params.id);
 
   if (!location) {
@@ -1035,7 +1035,7 @@ exports.getAttendanceRegularizationRestrictedLocationById = catchAsync(async (re
 
 exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting restricted location with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const location = await AttendanceRegularizationRestrictedLocation.findByIdAndDelete(req.params.id);
 
   if (!location) {
@@ -1057,7 +1057,7 @@ exports.deleteAttendanceRegularizationRestrictedLocation = catchAsync(async (req
 // Create a new Attendance Template Assignment
 exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating attendance assignment for employee: ${req.body.employee}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceTemplate = await AttendanceTemplate.findOne({ _id: req.body.attendanceTemplate });
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Invalid attendance template: ${req.body.attendanceTemplate}`, constants.LOG_TYPES.WARNING);
@@ -1117,7 +1117,7 @@ exports.createAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Get an Attendance Template Assignment by ID
 exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1126,7 +1126,7 @@ exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
       message: req.t('attendance.attendanceAssignmentNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved attendance assignment: ${attendanceAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1138,7 +1138,7 @@ exports.getAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Update an Attendance Template Assignment by ID
 exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceAssignment = await AttendanceTemplateAssignments.findById(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1168,7 +1168,7 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1177,7 +1177,7 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
       message: req.t('attendance.attendanceAssignmentNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted attendance assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1189,7 +1189,7 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all attendance assignments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });
@@ -1205,7 +1205,7 @@ exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
 
 exports.createRoundingInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating rounding information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -1226,7 +1226,7 @@ exports.createRoundingInformation = catchAsync(async (req, res, next) => {
 
 exports.getRoundingInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const roundingInformation = await RoundingInformation.findById(req.params.id);
   if (!roundingInformation) {
     websocketHandler.sendLog(req, `Rounding information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1235,7 +1235,7 @@ exports.getRoundingInformation = catchAsync(async (req, res, next) => {
       message: req.t('attendance.roundingInformationNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved rounding information: ${roundingInformation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1246,7 +1246,7 @@ exports.getRoundingInformation = catchAsync(async (req, res, next) => {
 
 exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const roundingInformation = await RoundingInformation.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -1270,7 +1270,7 @@ exports.updateRoundingInformation = catchAsync(async (req, res, next) => {
 
 exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting rounding information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const roundingInformation = await RoundingInformation.findByIdAndDelete(req.params.id);
 
   if (!roundingInformation) {
@@ -1291,7 +1291,7 @@ exports.deleteRoundingInformation = catchAsync(async (req, res, next) => {
 
 exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all rounding information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await RoundingInformation.countDocuments({ company: req.cookies.companyId });
@@ -1309,7 +1309,7 @@ exports.getAllRoundingInformation = catchAsync(async (req, res, next) => {
 
 exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching overtime information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const overtimeInformation = await OvertimeInformation.findById(req.params.id);
   if (!overtimeInformation) {
     websocketHandler.sendLog(req, `Overtime information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1318,7 +1318,7 @@ exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
       message: req.t('attendance.overtimeInformationNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved overtime information: ${overtimeInformation._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1329,7 +1329,7 @@ exports.getOvertimeInformation = catchAsync(async (req, res, next) => {
 
 exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting overtime information with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const overtimeInformation = await OvertimeInformation.findByIdAndDelete(req.params.id);
   if (!overtimeInformation) {
     websocketHandler.sendLog(req, `Overtime information not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1338,7 +1338,7 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
       message: req.t('attendance.overtimeInformationNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted overtime information: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1349,7 +1349,7 @@ exports.deleteOvertimeInformation = catchAsync(async (req, res, next) => {
 
 exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all overtime information for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OvertimeInformation.countDocuments({ company: req.cookies.companyId });
@@ -1366,7 +1366,7 @@ exports.getAllOvertimeInformation = catchAsync(async (req, res, next) => {
 
 exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating on-duty template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -1387,7 +1387,7 @@ exports.createOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const onDutyTemplate = await OnDutyTemplate.findById(req.params.id);
   if (!onDutyTemplate) {
     websocketHandler.sendLog(req, `On-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1396,7 +1396,7 @@ exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
       message: req.t('attendance.onDutyTemplateNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved on-duty template: ${onDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1407,7 +1407,7 @@ exports.getOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const onDutyTemplate = await OnDutyTemplate.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -1431,7 +1431,7 @@ exports.updateOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const onDutyTemplate = await OnDutyTemplate.findByIdAndDelete(req.params.id);
   if (!onDutyTemplate) {
     websocketHandler.sendLog(req, `On-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1440,7 +1440,7 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
       message: req.t('attendance.onDutyTemplateNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted on-duty template: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1451,7 +1451,7 @@ exports.deleteOnDutyTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all on-duty templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await OnDutyTemplate.countDocuments({ company: req.cookies.companyId });
@@ -1469,7 +1469,7 @@ exports.getAllOnDutyTemplates = catchAsync(async (req, res, next) => {
 // Create a UserOnDutyTemplate
 exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating user on-duty template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -1507,7 +1507,7 @@ exports.createUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 // Get a UserOnDutyTemplate by ID
 exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
   if (!userOnDutyTemplate) {
     websocketHandler.sendLog(req, `User on-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1516,7 +1516,7 @@ exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
       message: req.t('attendance.userOnDutyTemplateNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved user on-duty template: ${userOnDutyTemplate._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1528,12 +1528,12 @@ exports.getUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 // Get a UserOnDutyTemplate by ID
 exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching user on-duty template for user: ${req.params.user}`, constants.LOG_TYPES.INFO);
-  
+
   const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.params.user });
   if (!userOnDutyTemplate) {
     return next(new AppError(req.t('attendance.UserOnDutyTemplateNF'), 404));
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved user on-duty template for user: ${req.params.user}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1545,7 +1545,7 @@ exports.getUserOnDutyTemplateByUser = catchAsync(async (req, res, next) => {
 // Update a UserOnDutyTemplate by ID
 exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const userOnDutyTemplate = await UserOnDutyTemplate.findById(req.params.id);
   if (!userOnDutyTemplate) {
     websocketHandler.sendLog(req, `User on-duty template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1585,7 +1585,7 @@ exports.updateUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 // Delete a UserOnDutyTemplate by ID
 exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting user on-duty template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const userOnDutyTemplate = await UserOnDutyTemplate.findByIdAndDelete(req.params.id);
 
   if (!userOnDutyTemplate) {
@@ -1607,7 +1607,7 @@ exports.deleteUserOnDutyTemplate = catchAsync(async (req, res, next) => {
 // Get all UserOnDutyTemplates
 exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all user on-duty templates for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await UserOnDutyTemplate.countDocuments({ company: req.cookies.companyId });
@@ -1624,7 +1624,7 @@ exports.getAllUserOnDutyTemplates = catchAsync(async (req, res, next) => {
 
 exports.createShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating shift for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   // Check if companyId exists in cookies
   if (!companyId) {
@@ -1646,7 +1646,7 @@ exports.createShift = catchAsync(async (req, res, next) => {
 
 exports.getShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const shift = await Shift.findById(req.params.id);
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1655,7 +1655,7 @@ exports.getShift = catchAsync(async (req, res, next) => {
       message: req.t('attendance.shiftNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved shift: ${shift._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1666,7 +1666,7 @@ exports.getShift = catchAsync(async (req, res, next) => {
 
 exports.updateShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -1690,7 +1690,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
 
 exports.deleteShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const shift = await Shift.findByIdAndDelete(req.params.id);
 
   if (!shift) {
@@ -1700,7 +1700,7 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
       message: req.t('attendance.shiftNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1711,13 +1711,13 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 
 exports.getAllShifts = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all shifts for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await Shift.countDocuments({ company: req.cookies.companyId });
 
   const shifts = await Shift.find({ company: req.cookies.companyId }).skip(skip).limit(limit);
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved ${shifts.length} shifts`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1744,16 +1744,16 @@ exports.getShiftByUser = catchAsync(async (req, res, next) => {
 // Create a new ShiftTemplateAssignment
 exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating shift template assignment for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
-  
+
   req.body.company = companyId;
   const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
-  
+
   websocketHandler.sendLog(req, `Successfully created shift template assignment: ${shiftTemplateAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -1764,13 +1764,13 @@ exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 // Get a ShiftTemplateAssignment by ID
 exports.getShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching shift template assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const shiftTemplateAssignment = await ShiftTemplateAssignment.findById(req.params.id);
   if (!shiftTemplateAssignment) {
     websocketHandler.sendLog(req, `Shift template assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.ShiftTemplateAssignmentNF'), 404));
   }
-  
+
   websocketHandler.sendLog(req, `Successfully retrieved shift template assignment: ${shiftTemplateAssignment._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1801,7 +1801,7 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
   if (!shiftTemplateAssignment) {
     return next(new AppError(req.t('attendance.ShiftTemplateAssignmentNF'), 404));
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted shift assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1862,14 +1862,14 @@ exports.getRosterShiftAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
   const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.id);
-  
+
   if (!rosterShiftAssignment) {
     websocketHandler.sendLog(req, `Roster shift assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.getRosterShiftAssignmentFailure'), 404));
   }
 
   websocketHandler.sendLog(req, `Successfully retrieved roster shift assignment: ${rosterShiftAssignment._id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     message: req.t('attendance.getRosterShiftAssignmentSuccess', { recordId: req.params.id }),
@@ -1882,14 +1882,14 @@ exports.getRosterShiftAssignmentByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching roster shift assignment for user ID: ${req.params.userId}`, constants.LOG_TYPES.TRACE);
 
   const rosterShiftAssignment = await RosterShiftAssignment.findById(req.params.userId);
-  
+
   if (!rosterShiftAssignment) {
     websocketHandler.sendLog(req, `Roster shift assignment not found for user ID: ${req.params.userId}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.getRosterShiftAssignmentByUserFailure'), 404));
   }
 
   websocketHandler.sendLog(req, `Successfully retrieved roster shift assignment for user: ${rosterShiftAssignment._id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     message: req.t('attendance.getRosterShiftAssignmentByUserSuccess', { userId: req.params.userId }),
@@ -1899,7 +1899,7 @@ exports.getRosterShiftAssignmentByUser = catchAsync(async (req, res, next) => {
 
 exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -1923,7 +1923,7 @@ exports.updateRosterShiftAssignment = catchAsync(async (req, res, next) => {
 
 exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting roster shift assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   const rosterShiftAssignment = await RosterShiftAssignment.findByIdAndDelete(req.params.id);
 
   if (!rosterShiftAssignment) {
@@ -1933,7 +1933,7 @@ exports.deleteRosterShiftAssignment = catchAsync(async (req, res, next) => {
       message: req.t('attendance.rosterShiftAssignmentNotFound')
     });
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted roster shift assignment: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1970,7 +1970,7 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
   const userOnDutyTemplate = await UserOnDutyTemplate.find({ user: req.body.user });
   websocketHandler.sendLog(req, `Checked for UserOnDutyTemplate for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!userOnDutyTemplate || userOnDutyTemplate.length === 0) {
     websocketHandler.sendLog(req, `UserOnDutyTemplate not found for user: ${req.body.user}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.userOnDutyTemplateNotFound'), 404));
@@ -1978,7 +1978,7 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
   const employeeOnDutyRequestIsExists = await EmployeeOnDutyRequest.find({ user: req.body.user });
   websocketHandler.sendLog(req, `Checked for existing EmployeeOnDutyRequest for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
-  
+
   if (employeeOnDutyRequestIsExists && employeeOnDutyRequestIsExists.length > 0) {
     websocketHandler.sendLog(req, `EmployeeOnDutyRequest already exists for user: ${req.body.user}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.employeeOnDutyRequestExists'), 404));
@@ -1986,12 +1986,12 @@ exports.createEmployeeDutyRequest = catchAsync(async (req, res, next) => {
 
   const companyId = req.cookies.companyId;
   websocketHandler.sendLog(req, `Extracted companyId from cookies: ${companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
-  
+
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Preparing to create employee duty request for company: ${companyId}`, constants.LOG_TYPES.DEBUG);
 
@@ -2075,8 +2075,8 @@ exports.updateEmployeeDutyRequest = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Successfully updated employee duty request: ${employeeOnDutyRequest._id}`, constants.LOG_TYPES.INFO);
 
   const companyId = req.cookies.companyId;
-    SendUINotification(req.t('attendance.updateOnDutyRequestsNotificationTitle'), req.t('attendance.updateOnDutyRequestsNotificationMessage', { startDate: moment(employeeOnDutyRequest.startDate).format('YYYY-MM-DD HH:mm:ss'), endDate: moment(employeeOnDutyRequest.endDate).format('YYYY-MM-DD HH:mm:ss'), status: employeeOnDutyRequest.status }),
-      constants.Event_Notification_Type_Status.attendance, employeeOnDutyRequest.user?._id?.toString(), companyId, req);
+  SendUINotification(req.t('attendance.updateOnDutyRequestsNotificationTitle'), req.t('attendance.updateOnDutyRequestsNotificationMessage', { startDate: moment(employeeOnDutyRequest.startDate).format('YYYY-MM-DD HH:mm:ss'), endDate: moment(employeeOnDutyRequest.endDate).format('YYYY-MM-DD HH:mm:ss'), status: employeeOnDutyRequest.status }),
+    constants.Event_Notification_Type_Status.attendance, employeeOnDutyRequest.user?._id?.toString(), companyId, req);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -2214,7 +2214,7 @@ exports.deleteTimeEntry = catchAsync(async (req, res, next) => {
 });
 
 exports.MappedTimlogToAttendance = async (req, res, next) => {
-  
+
   websocketHandler.sendLog(req, 'Starting MappedTimlogToAttendance', constants.LOG_TYPES.INFO);
   const companyId = req.cookies.companyId;
   const month = req.body.month || new Date().getMonth(); // +1 since getMonth is 0-based
@@ -2348,10 +2348,10 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
     for (let i = 0; i < attendanceData.length; i++) {
       const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
       websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
-      const user = await getUserByEmpCode(EmpCode,req.cookies.companyId);
+      const user = await getUserByEmpCode(EmpCode, req.cookies.companyId);
       if (!user) {
         websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
-        return next(new AppError(req.t('attendance.empCodeNotValid'), 400));       
+        return next(new AppError(req.t('attendance.empCodeNotValid'), 400));
       }
 
       const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
@@ -2366,8 +2366,7 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       await insertOvertimeRecords(attendanceRecords, req.cookies.companyId);
       websocketHandler.sendLog(req, `Inserted ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.INFO);
     }
-    else
-    {
+    else {
       return next(new AppError(req.t('attendance.uploadAttendanceJSONNoData'), 400));
     }
 
@@ -2379,16 +2378,16 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       data: attendanceRecords,
     });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
   }
 });
 
 // Helper function to fetch user by empCode
-async function getUserByEmpCode(empCode,company) {
+async function getUserByEmpCode(empCode, company) {
   try {
     // Fetch the appointment by empCode and populate the user data
-    const appointments = await Appointment.find({ empCode: empCode,company: company })
+    const appointments = await Appointment.find({ empCode: empCode, company: company })
       .populate('user')  // Populate the user field with user details
       .select('user empCode company joiningDate confirmationDate'); // Select relevant fields    
     if (appointments && appointments.length > 0) {
@@ -2454,16 +2453,15 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
         shiftTiming: `${shift.startTime} - ${shift.endTime}`,
         lateComingRemarks,
         company: companyId,
-        attendanceShift: shift._id,  
+        attendanceShift: shift._id,
         isOvertime,
       };
-      
+
     }
   }
-  else
-  {
+  else {
     return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
-  } 
+  }
 }
 
 // Function to get late coming remarks (if needed)
@@ -2544,7 +2542,7 @@ async function insertAttendanceRecords(attendanceRecords) {
       // If no record exists, insert it
       if (!existingRecord) {
         await AttendanceRecords.create(record);
-      
+
       } else {
         console.log('Duplicate found for record:', record);
       }
@@ -2553,7 +2551,7 @@ async function insertAttendanceRecords(attendanceRecords) {
     // Wait for all insertions to complete
     await Promise.all(insertPromises);
 
-   
+
   } catch (error) {
     console.error('Error inserting records:', error);
   }
@@ -2673,14 +2671,14 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     if (attendanceAssignment) {
       const attendanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attendanceTemplate });
       websocketHandler.sendLog(req, `Fetched attendance template: ${attendanceTemplate?._id}`, constants.LOG_TYPES.TRACE);
-        if (attendanceTemplate) {
+      if (attendanceTemplate) {
         const attendanceRecords = await AttendanceRecords.find({
           user: req.body.user,
           company: req.cookies.companyId,
           date: { $gte: startOfMonth, $lte: endOfMonth },
         });
         websocketHandler.sendLog(req, `Fetched ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.DEBUG);
-      
+
         const approvedLeaves = await LeaveApplication.find({
           user: req.body.user,
           status: constants.Leave_Application_Constant.Approved,
@@ -2688,7 +2686,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
           endDate: { $gte: startOfMonth, $lte: endOfMonth },
         });
         websocketHandler.sendLog(req, `Fetched ${approvedLeaves.length} approved leaves`, constants.LOG_TYPES.DEBUG);
-          const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+        const approvedLeaveDays = approvedLeaves.flatMap(leave => {
           const leaveStart = new Date(leave.startDate);
           const leaveEnd = new Date(leave.endDate);
           const leaveDays = [];
@@ -2748,7 +2746,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
               if (existingRecord) {
                 websocketHandler.sendLog(req, `LOP already processed for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.ERROR);
-               res.status(200).json({
+                res.status(200).json({
                   status: constants.APIResponseStatus.Failure,
                   message: req.t('attendance.lopAlreadyProcessedForUser', { userId: req.body.user }),
                 });
@@ -3014,7 +3012,7 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month);
 
   res.status(200).json({
@@ -3032,23 +3030,23 @@ async function getOvertimeRecordsByYearAndMonth(year, month) {
   // Ensure month is 1-based and convert to 0-based for JavaScript Date
   //const startDate = new Date(year, month - 1, 1); // Start of the month
   //const endDate = new Date(year, month, 1); // Start of the next month
-  
+
 
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
-  
+
     // Convert start and end date based on the year and month
     const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
     const endDate = moment(startDate).endOf('month').toDate();
-      // Get all records for the month, applying skip and limit for pagination
-      const records = await OvertimeInformation.find({
-        CheckInDate: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      }).exec();    
-      return records; // Return the actual records
+    // Get all records for the month, applying skip and limit for pagination
+    const records = await OvertimeInformation.find({
+      CheckInDate: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }).exec();
+    return records; // Return the actual records
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed
@@ -3176,7 +3174,7 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     data: overtimeRecords,
   });
-});exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
+}); exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getOvertimeByUser', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching overtime records for user: ${req.body.user}, month: ${req.body.month}, year: ${req.body.year}`, constants.LOG_TYPES.TRACE);
 
