@@ -1923,10 +1923,6 @@ router.delete('/esicContributions/:id', authController.protect, payrollControlle
  *               deductIncomeTaxAllowance:
  *                 type: string
  *                 required: true
- *               taxRegime:
- *                 type: array
- *                 items:
- *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *                 required: true
@@ -2074,10 +2070,6 @@ router.get('/variable-allowances/:id', authController.protect, payrollController
  *                 required: true
  *               deductIncomeTaxAllowance:
  *                 type: string
- *               taxRegime:
- *                 type: array
- *                 items:
- *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *               paidAllowanceFrequently:

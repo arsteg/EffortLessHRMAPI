@@ -148,7 +148,7 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     
     if (updatedTask && newTaskUserList.length > 0) {
       const user = await User.findOne({ _id: newTaskUserList[0].user });
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${updatedTask.taskNumber}?taskId=${updatedTask._id}`;
+      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
       if (emailTemplate) {        
         const emailTemplateNewUser = emailTemplate.contentData
           .replace("{firstName}", user.firstName)
@@ -700,7 +700,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
         .where('Name').equals(constants.Email_template_constant.Task_Assigned)
         .where('company').equals(req.cookies.companyId);
       if (templateNewUser) {
-        const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`;
+        const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`;
         const emailTemplateNewUser = templateNewUser.contentData
           .replace("{firstName}", newUser.firstName)
           .replace("{taskURL}", taskURL)
@@ -857,7 +857,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       .where('Name').equals(constants.Email_template_constant.Task_Assigned)
       .where('company').equals(req.cookies.companyId);
     if (templateNewUser) {
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
+      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`;
       const emailTemplateNewUser = templateNewUser.contentData
         .replace("{firstName}", newUser.firstName)
         .replace("{startDate}", task.startDate)
@@ -1608,7 +1608,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
     for (let j = 0; j < newTaskUserList.length; j++) {
       const user = await User.findOne({ _id: newTaskUserList[j].user });
       if (user) {
-        const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+        const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
         if (emailTemplate) {
           const emailTemplateNewUser = emailTemplate.contentData
             .replace("{firstName}", user.firstName)
@@ -1721,7 +1721,7 @@ exports.deleteComment = async (req, res) => {
       for (let j = 0; j < newTaskUserList.length; j++) {
         const user = await User.findOne({ _id: newTaskUserList[j].user._id });
         if (user) {
-          const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+          const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
           if (emailTemplate) {
             const emailTemplateNewUser = emailTemplate.contentData
               .replace("{firstName}", user.firstName)
