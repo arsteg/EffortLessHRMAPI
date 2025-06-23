@@ -288,12 +288,12 @@ const runRecuringNotifications = async (req, res,next) => {
         const managers = await User.find({ _id: { $in: userSubordinates.map(s => s.userId) } });
 
         if (notification.notificationChannel.includes(NotificationChannel.UI)) {
-          sendUINotification(req, user, managers, notification.eventNotificationType.toString(), notification, company);
+          sendUINotification(req, user, managers, notification?.eventNotificationType?.toString(), notification, company);
 
         }
 
         if (notification.notificationChannel.includes(NotificationChannel.EMAIL)) {
-          await sendEmailNotifications(user, managers, notification.eventNotificationType.toString(), company);
+          await sendEmailNotifications(user, managers, notification?.eventNotificationType?.toString(), company);
         }
       }
 
@@ -338,57 +338,66 @@ function getNextDate(currentDate, frequency) {
 
 const sendUINotification = async (req, user, managerList, notificationTypeId, notification, company) => {
   try {
-    const eventNotificationType = await EventNotificationType.findById(notificationTypeId);
-    if (!eventNotificationType) return;
+    let eventNotificationType = null;
+    if (!notificationTypeId) {
+      eventNotificationType = await EventNotificationType.findById(notificationTypeId);
+    }
+
     const today = new Date();
     let employeeTitle = '';
     let employeeMessage = '';
     let managerTitle = '';
     let managerMessage = '';
 
-    switch (eventNotificationType.name) {
-      case constants.Event_Notification_Type_Status.Birthday:
-        employeeTitle = notification.name;
-        employeeMessage = notification.description;
+    if (eventNotificationType?.name) {
+      switch (eventNotificationType.name) {
+        case constants.Event_Notification_Type_Status.Birthday:
+          employeeTitle = notification.name;
+          employeeMessage = notification.description;
 
-        managerTitle = 'Team Member Birthday Reminder';
-        managerMessage = `Today is ${user?.firstName} ${user?.lastName}'s birthday. You may want to reach out and wish them a happy birthday!`;
-        break;
+          managerTitle = 'Team Member Birthday Reminder';
+          managerMessage = `Today is ${user?.firstName} ${user?.lastName}'s birthday. You may want to reach out and wish them a happy birthday!`;
+          break;
 
-      case constants.Event_Notification_Type_Status.WorkAnniversary:
-        const appointment = await Appointment.findOne({ user: user._id });
-        if (!appointment) return;
+        case constants.Event_Notification_Type_Status.WorkAnniversary:
+          const appointment = await Appointment.findOne({ user: user._id });
+          if (!appointment) return;
 
-        const joiningDate = new Date(appointment.joiningDate);
-        const years = today.getFullYear() - joiningDate.getFullYear();
+          const joiningDate = new Date(appointment.joiningDate);
+          const years = today.getFullYear() - joiningDate.getFullYear();
 
-        employeeTitle = notification.name;
-        employeeMessage = `Dear ${user?.firstName} ${user?.lastName}, congratulations on your ${years} year work anniversary at ${company.companyName}! We appreciate your dedication and contributions!`;
+          employeeTitle = notification.name;
+          employeeMessage = `Dear ${user?.firstName} ${user?.lastName}, congratulations on your ${years} year work anniversary at ${company.companyName}! We appreciate your dedication and contributions!`;
 
-        managerTitle = `Team Member Work Anniversary`;
-        managerMessage = `Today marks ${user?.firstName} ${user?.lastName}'s ${years} year work anniversary.`;
-        break;
+          managerTitle = `Team Member Work Anniversary`;
+          managerMessage = `Today marks ${user?.firstName} ${user?.lastName}'s ${years} year work anniversary.`;
+          break;
 
-      case constants.Event_Notification_Type_Status.Appraisal:
-        employeeTitle = notification.name;
-        employeeMessage = notification.description;
+        case constants.Event_Notification_Type_Status.Appraisal:
+          employeeTitle = notification.name;
+          employeeMessage = notification.description;
 
-        managerTitle = `Appraisal Notification Sent`;
-        managerMessage = `The appraisal results for ${user?.firstName} ${user?.lastName} have been shared with them.`;
-        break;
+          managerTitle = `Appraisal Notification Sent`;
+          managerMessage = `The appraisal results for ${user?.firstName} ${user?.lastName} have been shared with them.`;
+          break;
 
-      default:
-        employeeTitle = notification.name;
-        employeeMessage = notification.description;
-        managerList = [];
-        break;
+        default:
+          employeeTitle = notification.name;
+          employeeMessage = notification.description;
+          managerList = [];
+          break;
+      }
+    } else {
+      employeeTitle = notification.name;
+      employeeMessage = notification.description;
+      managerList = [];
     }
-
+    
     // Create notification for the employee
     const employeeNotification = {
       name: employeeTitle,
       description: employeeMessage,
-      eventNotificationType: eventNotificationType?._id?.toString(),
+      eventNotificationType: eventNotificationType?._id?.toString() ?? null,
       date: new Date(),
       navigationUrl: '',
       isRecurring: false,
@@ -410,7 +419,7 @@ const sendUINotification = async (req, user, managerList, notificationTypeId, no
     const managerNotification = {
       name: managerTitle,
       description: managerMessage,
-      eventNotificationType: eventNotificationType?._id?.toString(),
+      eventNotificationType: eventNotificationType?._id?.toString() ?? null,
       date: new Date(),
       navigationUrl: '',
       isRecurring: false,
