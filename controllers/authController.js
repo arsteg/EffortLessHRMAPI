@@ -330,7 +330,7 @@ exports.webSignup = catchAsync(async(req, res, next) => {
       company: company.id,
     });
     await newAppointment.save();
-  const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/home/profile/employee-profile`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
   if(emailTemplate)
   {
@@ -406,7 +406,7 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
   newUser.appointment = newAppointment
 
   // 3) Send it to user's email
-  const resetURL = `${req.protocol}://${process.env.WEBSITE_DOMAIN}/updateuser/${newUser._id}`;
+  const resetURL =  `${process.env.WEBSITE_DOMAIN}/#/home/profile/employee-profile`;
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(req.cookies.companyId); 
   if(emailTemplate) {
     const template = emailTemplate.contentData; 

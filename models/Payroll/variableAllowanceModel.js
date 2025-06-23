@@ -37,9 +37,6 @@ const variableAllowanceSchema = new Schema({
   deductIncomeTaxAllowance: {
     type: String
   },
-  taxRegime: {
-    type: [String]
-  },
   isShowInCTCStructure: {
     type: Boolean
   },

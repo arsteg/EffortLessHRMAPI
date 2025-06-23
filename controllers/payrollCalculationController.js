@@ -29,6 +29,7 @@ const {
 const LOP = require('../models/attendance/lop.js');
 const { storeInPayrollVariableAllowances,storeInPayrollVariableDeductions } = require('../Services/variable_pay.service');
 const PayrollIncomeTax = require('../models/Payroll/PayrollIncomeTax');
+const PayrollFNFIncomeTax = require('../models/Payroll/PayrollFNFIncomeTax.js');
 const { getFNFDateRange  } = require('../Services/userDates.service');
 const { getTotalGratuityEligibleAmount , calculateGratuityFund  } = require('../Services/gratuity.service');
 // 👉 Import reusable service methods from the LWF service module
@@ -37,13 +38,14 @@ const {
   isProfessionalTaxApplicableThisMonth       // Checks if LWF is applicable for the current month
 } = require('../Services/professional_tax.service');
 const {
-  calculateAndStoreOvertime
+  calculateAndStoreOvertime,calculateAndStoreOvertimeForFNF
 } = require('../Services/overtime.service.js');
 // 👉 Required models for fetching employee and salary-related data
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const EmployeeSalaryTaxAndStatutorySetting = require("../models/Employment/EmployeeSalaryTaxAndStatutorySettingModel.js");
 const PayrollAttendanceSummary = require('../models/Payroll/PayrollAttendanceSummary');
+const PayrollFNFAttendanceSummary = require('../models/Payroll/PayrollFNFAttendanceSummary.js');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
 const User = require('../models/permissions/userModel');
 // 👉 Utilities and constants
@@ -767,10 +769,22 @@ const calculateTDS = async (req, res) => {
   }
 };
 
-  const calculateAndStoreIncomeTax = async (req, res) => {
-  try {     
+const calculateAndStoreIncomeTax = async (req, res) => {
+  try {
+    console.log('📥 Starting calculateAndStoreIncomeTax...');
+    console.log('🔢 Input:', {
+      year: req.year,
+      month: req.month,
+      isFNF: req.isFNF,
+      user: req.user,
+      payrollUser: req.payrollUser,
+      payrollFNFUser: req.payrollFNFUser
+    });
+
     // Calculate TDS
-    const tdsResult = await calculateTDS(req);   
+    const tdsResult = await calculateTDS(req);
+    console.log('📊 TDS Result:', tdsResult);
+
     // Validate TDS result
     const taxAmount = parseFloat(tdsResult.contributionData);
     if (isNaN(taxAmount) || taxAmount < 0) {
@@ -780,21 +794,46 @@ const calculateTDS = async (req, res) => {
       throw new Error('Invalid tax regime');
     }
 
-    // Prepare and save PayrollIncomeTax data
-    const payrollIncomeTaxData = {
-      PayrollUser: req.payrollUser,
-      TaxCalculatedMethod: tdsResult.regime,
-      TaxCalculated: taxAmount,
-      TDSCalculated: (taxAmount/12).toFixed(2) // Assuming same as TaxCalculated; adjust if different
-    };  
-    const payrollIncomeTax = new PayrollIncomeTax(payrollIncomeTaxData);
-    await payrollIncomeTax.save();
+    let totalDays = new Date(req.year, req.month, 0).getDate();
+    
+    // Initialize date range
+    let startDate = new Date(req.year, req.month - 1, 1); // 1st of the month
+    let endDate = new Date(req.year, req.month, 1); // 1st of next month
    
+    if (req.isFNF) {
+      websocketHandler.sendLog(req, `📆 Processing Income Tax for FNF range`, constants.LOG_TYPES.INFO);
+      
+      ({ startDate, endDate } = await getFNFDateRange(req, req.user));
+    
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+      totalDays = Math.round((endDate - startDate) / oneDayInMs) + 1;
+    
+      const payrollIncomeTaxData = {
+        PayrollFNFUser: req.payrollFNFUser,
+        TaxCalculatedMethod: tdsResult.regime,
+        TaxCalculated: taxAmount,
+        TDSCalculated: (taxAmount / 365 * totalDays).toFixed(2)
+      };
+      const payrollIncomeTax = new PayrollFNFIncomeTax(payrollIncomeTaxData);
+      await payrollIncomeTax.save();
+      } else {
+      // Non-FNF Payroll
+      const payrollIncomeTaxData = {
+        PayrollUser: req.payrollUser,
+        TaxCalculatedMethod: tdsResult.regime,
+        TaxCalculated: taxAmount,
+        TDSCalculated: (taxAmount / 12).toFixed(2)
+      };
+      const payrollIncomeTax = new PayrollIncomeTax(payrollIncomeTaxData);
+      await payrollIncomeTax.save();
+    }
+
   } catch (error) {
-    console.error('Error in calculateAndStoreIncomeTax:', error.message);
+    console.error('❌ Error in calculateAndStoreIncomeTax:', error.message);
     throw error;
   }
-}
+};
+
 
 function getCurrentFinancialYearStart() {
   const now = new Date();
@@ -853,8 +892,15 @@ function generateFinancialYearString(date = new Date()) {
 const CalculateOvertime = async (req, res) => {
  
   try {       
-    const result = await calculateAndStoreOvertime(req,req.user, req.month, req.year, req.payrollUser, req.isFNF);
-  
+    if (req.isFNF) {
+      websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
+   
+      const { startDate, endDate } = await getFNFDateRange(req, req.user);
+      await calculateAndStoreOvertimeForFNF(req,req.user, startDate,endDate,req.payrollFNFUser);
+
+    } else {
+       await calculateAndStoreOvertime(req,req.user, req.month, req.year, req.payrollUser, req.isFNF);
+    }
   } catch (error) {
     console.error('Error in /calculate-overtime:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -865,13 +911,19 @@ const StoreAttendanceSummary = async (req, res) => {
 
   try {
     // Calculate total days in the month
-    const totalDays = new Date(req.year, req.month, 0).getDate();
+    let totalDays = new Date(req.year, req.month, 0).getDate();
   
     // Fetch LOP days
      // Ensure month is 1-based and convert to 0-based for JavaScript Date
-  const startDate = new Date(req.year, req.month - 1, 1); // Start of the month
-  const endDate = new Date(req.year, req.month, 1); // Start of the next month
-
+  let startDate = new Date(req.year, req.month - 1, 1); // Start of the month
+  let endDate = new Date(req.year, req.month, 1); // Start of the next month
+  if (req.isFNF) {
+    websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
+ 
+    ({ startDate, endDate } = await getFNFDateRange(req, req.user));
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    totalDays = Math.round((endDate - startDate) / oneDayInMs) + 1;
+  }
   // Fetch records from the database
  
   
@@ -887,6 +939,19 @@ const StoreAttendanceSummary = async (req, res) => {
       throw new Error('Invalid LOP days returned');    }
     // Calculate payable days
     const payableDays = totalDays - lopDays;
+    if (req.isFNF) {
+      const payrollAttendanceSummaryData = {
+        payrollFNFUser: req.payrollFNFUser,
+        totalDays,
+        lopDays,
+        payableDays
+      };
+     
+      const payrollAttendanceSummary = new PayrollFNFAttendanceSummary(payrollAttendanceSummaryData);
+      await payrollAttendanceSummary.save();   
+    }
+    else
+    {
      // Prepare and save PayrollAttendanceSummary data
     const payrollAttendanceSummaryData = {
       payrollUser: req.payrollUser,
@@ -897,6 +962,7 @@ const StoreAttendanceSummary = async (req, res) => {
    
     const payrollAttendanceSummary = new PayrollAttendanceSummary(payrollAttendanceSummaryData);
     await payrollAttendanceSummary.save();   
+  }
   } catch (error) {
     console.error('Error in calculateAndStoreAttendanceSummary:', error.message);
     throw error;

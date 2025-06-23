@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 // constants.js
 const Email_template_constant = {
-    UPDATE_PROFILE: "Update Your Profile1",
+    UPDATE_PROFILE: "Update Your Profile",
     Forgot_Password: "Forgot Password",
     DELETE_TASK: "Delete Task",
     Update_Task_Notification: "Update Task Notification",

@@ -69,7 +69,7 @@ exports.createHelpdesk = catchAsync(async (req, res, next) => {
     }
     console.log("User found for email notification:", req.cookies.userId);
     // Generate ticket URL (adjust based on your application's URL structure)
-    const ticketUrl = `${process.env.WEBSITE_DOMAIN}/helpdesk/tickets/${newTicket._id}`;
+    const ticketUrl = `${process.env.WEBSITE_DOMAIN}/#/helpdesk/tickets/${newTicket._id}`;
 
     const userMessage = `<p>Hello ${newUser.firstName} ${newUser.lastName},</p>
       <p>Your helpdesk ticket has been successfully created in the Effortless HRM management system.</p>

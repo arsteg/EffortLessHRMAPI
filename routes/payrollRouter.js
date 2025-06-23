@@ -1923,10 +1923,6 @@ router.delete('/esicContributions/:id', authController.protect, payrollControlle
  *               deductIncomeTaxAllowance:
  *                 type: string
  *                 required: true
- *               taxRegime:
- *                 type: array
- *                 items:
- *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *                 required: true
@@ -2074,10 +2070,6 @@ router.get('/variable-allowances/:id', authController.protect, payrollController
  *                 required: true
  *               deductIncomeTaxAllowance:
  *                 type: string
- *               taxRegime:
- *                 type: array
- *                 items:
- *                   type: string
  *               isShowInCTCStructure:
  *                 type: boolean
  *               paidAllowanceFrequently:
@@ -5565,8 +5557,6 @@ router.post('/payroll-fnf-attendance-records', authController.protect, payrollCo
  *                 type: number
  *               adjustmentReason:
  *                 type: string
- *               overtimeHours:
- *                 type: number
  *               adjustmentDetails:
  *                 type: array
  *                 items:
@@ -5587,7 +5577,6 @@ router.post('/payroll-fnf-attendance-records', authController.protect, payrollCo
  *               leaveBalance: 10
  *               adjustedPayableDays: 22
  *               adjustmentReason: "Sick Leave"
- *               overtimeHours: 5
  *               adjustmentDetails:
  *                 - reason: "Leave Without Pay"
  *                   amountAdjusted: 200
@@ -5692,8 +5681,6 @@ router.get('/payroll-fnf-attendance-summary/:payrollFNFUser', authController.pro
  *                 type: number
  *               adjustmentReason:
  *                 type: string
- *               overtimeHours:
- *                 type: number
  *               adjustmentDetails:
  *                 type: array
  *                 items:
@@ -5713,7 +5700,6 @@ router.get('/payroll-fnf-attendance-summary/:payrollFNFUser', authController.pro
  *               leaveBalance: 10
  *               adjustedPayableDays: 22
  *               adjustmentReason: "Sick Leave"
- *               overtimeHours: 5
  *               adjustmentDetails:
  *                 - reason: "Leave Without Pay"
  *                   amountAdjusted: 200

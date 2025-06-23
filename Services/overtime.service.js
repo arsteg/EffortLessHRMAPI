@@ -1,8 +1,8 @@
-const PayrollOvertime = require('../models/Payroll/PayrollOvertime');
+const PayrollOvertime = require('../models/Payroll/PayrollOvertime.js');
 const OvertimeInformation = require('../models/attendance/overtimeInformation');
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const Shift = require('../models/attendance/shift');
-
+const PayrollFNFOvertime = require('../models/Payroll/PayrollFNFOvertime.js');
 const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
 const mongoose = require('mongoose');
@@ -227,6 +227,124 @@ async function calculateAndStoreOvertime(req, userId, month, year, payrollUserId
     throw error;
   }
 }
+async function calculateAndStoreOvertimeForFNF(req, userId, startDate, endDate, payrollFNFUserId) {
+  try {
+    const logPrefix = `[FNF Overtime]`;
+    websocketHandler.sendLog(req, `🔄 Starting FNF overtime calculation for userId: ${userId}, startDate: ${startDate}, endDate: ${endDate}`, constants.LOG_TYPES.INFO);
+
+    // Validate date inputs
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start) || isNaN(end) || start > end) {
+      console.error(`${logPrefix} ❌ Invalid date range`);
+      websocketHandler.sendLog(req, `❌ Invalid date range: ${startDate} - ${endDate}`, constants.LOG_TYPES.ERROR);
+      throw new Error('Invalid startDate or endDate');
+    }
+
+    // Check if overtime calculation is allowed
+    const payrollSettings = await PayrollGeneralSetting.findOne({}).exec();
+    if (!payrollSettings?.isAllowToCalculateOvertime) {
+      websocketHandler.sendLog(req, '🚫 Overtime calculation disabled in PayrollGeneralSetting', constants.LOG_TYPES.WARN);
+      console.warn(`${logPrefix} 🚫 Overtime calculation disabled`);
+
+      const payrollOvertimeData = {
+        PayrollFNFUser: payrollFNFUserId,
+        LateComing: '0',
+        EarlyGoing: '0',
+        FinalOvertime: '0',
+        OvertimeAmount: '0'
+      };
+      const payrollOvertime = new PayrollFNFOvertime(payrollOvertimeData);
+      await payrollOvertime.save();
+      return {
+        message: 'Overtime calculation disabled, saved record with zero values',
+        data: payrollOvertimeData
+      };
+    }
+
+    // Check employee eligibility
+    const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId }).exec();
+    const eligibleForOvertime = statutoryDetails?.eligibleForOvertime || false;
+    // Fetch overtime records
+    const overtimeRecords = await OvertimeInformation.find({
+      CheckInDate: { $gte: start, $lte: end },
+      User: userId
+    }).exec();
+    let totalOvertime = 0;
+    let lateCount = 0;
+    let earlyCount = 0;
+
+    overtimeRecords.forEach(record => {
+      const overtimeMinutes = parseFloat(record.OverTime) || 0;
+      totalOvertime += overtimeMinutes;
+
+      if (record.ShiftTime && record.CheckInTime && record.CheckOutTime) {
+        const [shiftStart, shiftEnd] = record.ShiftTime.split(' ');
+        const checkIn = new Date(record.CheckInTime);
+        const checkOut = new Date(record.CheckOutTime);
+
+        const shiftStartTime = new Date(checkIn);
+        shiftStartTime.setHours(...shiftStart.split(':').map(Number), 0);
+
+        const shiftEndTime = new Date(checkOut);
+        shiftEndTime.setHours(...shiftEnd.split(':').map(Number), 0);
+
+        if (checkIn > shiftStartTime) {
+          lateCount++;
+        }
+        if (checkOut < shiftEndTime) {
+          earlyCount++;
+         }
+      }
+    });
+
+ 
+    let finalOvertime = eligibleForOvertime ? totalOvertime : 0;
+    let overtimeAmount = '0.00';
+
+    if (eligibleForOvertime && finalOvertime > 0) {
+      const salaryDetails = await EmployeeSalaryDetails.findOne({ user: userId }).exec();
+      if (!salaryDetails) {
+        console.error(`${logPrefix} ❌ No salary details found`);
+        throw new Error('Salary details not found');
+      }    
+      const totalMonthlyAllownaceAmount = await getTotalMonthlyAllownaceAmount(req, salaryDetails);
+      const salaryPerDay = totalMonthlyAllownaceAmount / 30;
+      const shiftData = await Shift.findOne({ user: userId }).exec();
+      if (!shiftData) {
+        console.error(`${logPrefix} ❌ No shift data found`);
+        throw new Error('Shift data not found');
+      }
+      const fullDayCreditHours = parseFloat(shiftData.minHoursPerDayToGetCreditForFullDay) || 1;
+      const salaryPerHour = salaryPerDay / fullDayCreditHours;   
+      overtimeAmount = (salaryPerHour * (finalOvertime / 60)).toFixed(2);
+   }
+
+    const payrollOvertimeData = {
+      PayrollFNFUser: payrollFNFUserId,
+      LateComing: lateCount.toString(),
+      EarlyGoing: earlyCount.toString(),
+      FinalOvertime: finalOvertime.toFixed(2),
+      OvertimeAmount: overtimeAmount
+    };
+
+    const payrollOvertime = new PayrollFNFOvertime(payrollOvertimeData);
+    await payrollOvertime.save();
+    websocketHandler.sendLog(req, `✅ FNF PayrollOvertime saved for userId: ${userId}`, constants.LOG_TYPES.SUCCESS);
+    return {
+      message: 'FNF overtime calculation completed successfully',
+      data: payrollOvertimeData
+    };
+
+  } catch (error) {
+    console.error(`[FNF Overtime] ❌ Error occurred:`, error);
+    websocketHandler.sendLog(req, `❌ FNF Overtime calculation failed: ${error.message}`, constants.LOG_TYPES.ERROR);
+    throw error;
+  }
+}
+
+
 module.exports = {
-    calculateAndStoreOvertime      
+    calculateAndStoreOvertime,
+    calculateAndStoreOvertimeForFNF    
   };

@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 var leaveGrantSchema = new Schema({
   employee: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Employee', // Assuming the reference is to an Employee schema
+    ref: 'User', // Assuming the reference is to an Employee schema
     required: true
   },
   date: {
@@ -40,5 +40,17 @@ var leaveGrantSchema = new Schema({
     required: true
   }
 }, { collection: 'LeaveGrant' });
+
+leaveGrantSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'employee',
+      select: '_id firstName lastName'
+    });
+  } catch (error) {
+    console.error("Error populating employee", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('LeaveGrant', leaveGrantSchema);

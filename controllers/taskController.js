@@ -148,7 +148,7 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     
     if (updatedTask && newTaskUserList.length > 0) {
       const user = await User.findOne({ _id: newTaskUserList[0].user });
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${updatedTask.taskNumber}?taskId=${updatedTask._id}`;
+      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
       if (emailTemplate) {        
         const emailTemplateNewUser = emailTemplate.contentData
           .replace("{firstName}", user.firstName)
@@ -415,67 +415,60 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaskListByUser execution', constants.LOG_TYPES.TRACE);
 
-  const teamIdsArray = [req.body.userId];
-  websocketHandler.sendLog(req, `Processing task list for user ${req.body.userId}`, constants.LOG_TYPES.DEBUG);
+  const { userId, skip = 0, limit = 10 } = req.body;
+  websocketHandler.sendLog(req, `Processing task list for user ${userId}`, constants.LOG_TYPES.DEBUG);
 
-  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
+  const objectId = new ObjectId(userId);
   websocketHandler.sendLog(req, 'Converted user ID to ObjectId', constants.LOG_TYPES.TRACE);
 
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  websocketHandler.sendLog(req, `Pagination parameters - skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
-
-  websocketHandler.sendLog(req, 'Building task user aggregation query', constants.LOG_TYPES.TRACE);
-  const taskUserQuery = TaskUser.aggregate([
-    { $match: { user: { $in: objectIdArray }, task: { $exists: true } } },
-    { $lookup: { from: 'tasks', localField: 'task', foreignField: '_id', as: 'taskDetails' } },
+  // Combine task list and count in a single aggregation
+  const taskAggregation = TaskUser.aggregate([
+    { $match: { user: objectId, task: { $exists: true } } },
+    {
+      $lookup: {
+        from: 'tasks',
+        localField: 'task',
+        foreignField: '_id',
+        as: 'taskDetails'
+      }
+    },
     { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
     { $match: { 'taskDetails': { $ne: null } } },
-    { $skip: skip },
-    { $limit: limit },
-    { $project: { _id: 1, task: '$taskDetails' } },
-  ]);
-
-  websocketHandler.sendLog(req, 'Building task count aggregation query', constants.LOG_TYPES.TRACE);
-  const taskCountQuery = TaskUser.aggregate([
-    { $match: { user: { $in: objectIdArray }, task: { $exists: true } } },
-    { $lookup: { from: 'tasks', localField: 'task', foreignField: '_id', as: 'taskDetails' } },
-    { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
-    { $match: { 'taskDetails': { $ne: null } } },
-    { $project: { _id: 1, task: '$taskDetails' } },
-  ]);
-
-  const taskCountResult = await taskCountQuery.exec();
-  websocketHandler.sendLog(req, `Task count query executed, result length: ${taskCountResult.length}`, constants.LOG_TYPES.DEBUG);
-
-  const taskList = [];
-  const [taskUserList, taskCount] = await Promise.all([taskUserQuery, taskCountResult.length]);
-  websocketHandler.sendLog(req, `Fetched ${taskUserList.length} tasks from aggregation`, constants.LOG_TYPES.INFO);
-
-  if (taskUserList) {
-    for (let i = 0; i < taskUserList.length; i++) {
-      if (taskUserList[i]) {
-        websocketHandler.sendLog(req, `Processing task ${taskUserList[i].task._id}`, constants.LOG_TYPES.TRACE);
-        const task = await Task.findById(taskUserList[i].task)
-          .select('id taskName startDate endDate comment priority status taskNumber parentTask');
-        if (task) {
-          const taskUser = await TaskUser.find({}).where('task').equals(task.id);
-          task.TaskUsers = taskUser || null;
-          taskList.push(task);
-          websocketHandler.sendLog(req, `Added task ${task._id} with ${taskUser?.length || 0} users`, constants.LOG_TYPES.DEBUG);
-        } else {
-          websocketHandler.sendLog(req, `Task ${taskUserList[i].task} not found`, constants.LOG_TYPES.WARN);
-        }
+    {
+      $facet: {
+        taskList: [
+          { $skip: parseInt(skip) },
+          { $limit: parseInt(limit) },
+          { $project: { _id: 1, task: '$taskDetails' } }
+        ],
+        taskCount: [{ $count: 'total' }]
       }
     }
-  } else {
-    websocketHandler.sendLog(req, 'No tasks found for user', constants.LOG_TYPES.WARN);
-  }
+  ]);
 
-  websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
+  const [{ taskList, taskCount }] = await taskAggregation.exec();
+  const totalCount = taskCount[0]?.total || 0;
+
+  websocketHandler.sendLog(req, `Fetched ${taskList.length} tasks, total count: ${totalCount}`, constants.LOG_TYPES.INFO);
+
+  // Fetch TaskUsers for all tasks in parallel
+  const taskIds = taskList.map(item => item.task._id);
+  const taskUsers = await TaskUser.find({ task: { $in: taskIds } });
+  websocketHandler.sendLog(req, `Fetched ${taskUsers.length} task users`, constants.LOG_TYPES.DEBUG);
+
+  // Map task users to their respective tasks
+  const taskListWithUsers = taskList.map(taskItem => {
+    const task = taskItem.task;
+    task.TaskUsers = taskUsers.filter(tu => tu.task.toString() === task._id.toString()) || [];
+    websocketHandler.sendLog(req, `Added ${task.TaskUsers.length} users to task ${task._id}`, constants.LOG_TYPES.TRACE);
+    return task;
+  });
+
+  websocketHandler.sendLog(req, `Returning ${taskListWithUsers.length} tasks with total count ${totalCount}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: { taskList, taskCount }
+    data: { taskList: taskListWithUsers, taskCount: totalCount }
   });
 });
 
@@ -700,7 +693,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
         .where('Name').equals(constants.Email_template_constant.Task_Assigned)
         .where('company').equals(req.cookies.companyId);
       if (templateNewUser) {
-        const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${newTask.taskNumber}?taskId=${newTask._id}`;
+        const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`;
         const emailTemplateNewUser = templateNewUser.contentData
           .replace("{firstName}", newUser.firstName)
           .replace("{taskURL}", taskURL)
@@ -857,7 +850,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       .where('Name').equals(constants.Email_template_constant.Task_Assigned)
       .where('company').equals(req.cookies.companyId);
     if (templateNewUser) {
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${task.taskNumber}?taskId=${task._id}`;
+      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`;
       const emailTemplateNewUser = templateNewUser.contentData
         .replace("{firstName}", newUser.firstName)
         .replace("{startDate}", task.startDate)
@@ -1608,7 +1601,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
     for (let j = 0; j < newTaskUserList.length; j++) {
       const user = await User.findOne({ _id: newTaskUserList[j].user });
       if (user) {
-        const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+        const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
         if (emailTemplate) {
           const emailTemplateNewUser = emailTemplate.contentData
             .replace("{firstName}", user.firstName)
@@ -1721,7 +1714,7 @@ exports.deleteComment = async (req, res) => {
       for (let j = 0; j < newTaskUserList.length; j++) {
         const user = await User.findOne({ _id: newTaskUserList[j].user._id });
         if (user) {
-          const taskURL = `${process.env.WEBSITE_DOMAIN}/edit-task/${currentTask.taskNumber}?taskId=${currentTask._id}`;
+          const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
           if (emailTemplate) {
             const emailTemplateNewUser = emailTemplate.contentData
               .replace("{firstName}", user.firstName)

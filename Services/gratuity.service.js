@@ -20,10 +20,10 @@ const getTotalGratuityEligibleAmount = async (req, salaryDetails) => {
     const detail = await FixedAllowance.findById(item.fixedAllowance);
     if (detail?.isGratuityFundAffected) {
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ PF Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ Gratuity Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
     }
   }  
-  websocketHandler.sendLog(req, `✅ Total PF Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `✅ Total Gratuity Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
 

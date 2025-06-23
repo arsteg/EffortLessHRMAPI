@@ -20,7 +20,7 @@ const getTotalProfessionalTaxEligibleAmount = async (req, salaryDetails) => {
     const detail = await FixedAllowance.findById(item.fixedAllowance);
     if (detail?.isProfessionalTaxAffected) {
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ LWF Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ Professional Tax Fixed Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
     }
   }
 
@@ -30,11 +30,11 @@ const getTotalProfessionalTaxEligibleAmount = async (req, salaryDetails) => {
     const detail = await VariableAllowance.findById(item.variableAllowance);
     if (detail?.isProfessionalTaxAffected) {
       total += item.monthlyAmount || 0;
-      websocketHandler.sendLog(req, `➕ LWF Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `➕ Professional Tax Variable Allowance: ${item.monthlyAmount} from ${detail.label}`, constants.LOG_TYPES.TRACE);
     }
   }
 
-  websocketHandler.sendLog(req, `✅ Total LWF Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `✅ Total Professional Tax Eligible Amount: ${total}`, constants.LOG_TYPES.INFO);
   return total;
 };
 
