@@ -415,7 +415,9 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
 exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaskListByUser execution', constants.LOG_TYPES.TRACE);
 
-  const { userId, skip = 0, limit = 10 } = req.body;
+  const userId = req.body.userId;
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
   websocketHandler.sendLog(req, `Processing task list for user ${userId}`, constants.LOG_TYPES.DEBUG);
 
   const objectId = new ObjectId(userId);
