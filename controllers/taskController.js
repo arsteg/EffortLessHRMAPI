@@ -239,191 +239,23 @@ exports.getTaskAttachments = catchAsync(async (req, res, next) => {
 
 exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaskListByTeam execution', constants.LOG_TYPES.TRACE);
-  
-  var teamIdsArray = [];
-  var teamIds;
-  
+
+  // Fetch subordinate user IDs and include current user
   websocketHandler.sendLog(req, `Fetching subordinate users for user ${req.cookies.userId}`, constants.LOG_TYPES.TRACE);
-  const ids = await userSubordinate.find({})
-    .distinct('subordinateUserId')
-    .where('userId')
-    .equals(req.cookies.userId);
+  const subordinateIds = await userSubordinate
+    .find({ userId: req.cookies.userId })
+    .distinct('subordinateUserId');
   
-  websocketHandler.sendLog(req, `Found ${ids.length} subordinate users`, constants.LOG_TYPES.DEBUG);
-  
-  if (ids.length > 0) {
-    for (var i = 0; i < ids.length; i++) {
-      teamIdsArray.push(ids[i]);
-      websocketHandler.sendLog(req, `Added team member ID: ${ids[i]}`, constants.LOG_TYPES.TRACE);
-    }
-  }
-  
-  if (teamIds == null) {
-    teamIdsArray.push(req.cookies.userId);
-    websocketHandler.sendLog(req, `Added current user ${req.cookies.userId} to team list`, constants.LOG_TYPES.DEBUG);
-  }
-  
+  const teamIdsArray = [...subordinateIds, req.cookies.userId];
+  websocketHandler.sendLog(req, `Processing ${teamIdsArray.length} team members`, constants.LOG_TYPES.DEBUG);
+
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
-  websocketHandler.sendLog(req, `Converted ${teamIdsArray.length} IDs to ObjectId array`, constants.LOG_TYPES.DEBUG);
-  
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   websocketHandler.sendLog(req, `Pagination parameters - skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
 
-  websocketHandler.sendLog(req, 'Constructing task user aggregation query', constants.LOG_TYPES.TRACE);
-  const taskUserQuery = TaskUser.aggregate([
-    {
-      $match: {
-        user: { $in: objectIdArray },
-        task: { $exists: true },
-      },
-    },
-    {
-      $lookup: {
-        from: 'tasks',
-        localField: 'task',
-        foreignField: '_id',
-        as: 'taskDetails',
-      },
-    },
-    {
-      $unwind: {
-        path: '$taskDetails',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $match: {
-        'taskDetails': { $ne: null },
-      },
-    },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
-    {
-      $project: {
-        _id: 1,
-        task: '$taskDetails',
-      },
-    },
-  ]);
-
-  websocketHandler.sendLog(req, 'Constructing task count aggregation query', constants.LOG_TYPES.TRACE);
-  const taskCountQuery = TaskUser.aggregate([
-    {
-      $match: {
-        user: { $in: objectIdArray },
-        task: { $exists: true },
-      },
-    },
-    {
-      $lookup: {
-        from: 'tasks',
-        localField: 'task',
-        foreignField: '_id',
-        as: 'taskDetails',
-      },
-    },
-    {
-      $unwind: {
-        path: '$taskDetails',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $match: {
-        'taskDetails': { $ne: null },
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        task: '$taskDetails',
-      },
-    },
-  ]);
-
-  websocketHandler.sendLog(req, 'Executing aggregation queries', constants.LOG_TYPES.TRACE);
-  const taskUserResults = await taskUserQuery.exec();
-  const taskCountResult = await taskCountQuery.exec();
-  
-  if (!taskUserResults || !taskCountResult) {
-    websocketHandler.sendLog(req, 'Failed to execute aggregation queries', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('task.failedToFetchTaskList')
-    , 500));
-  }
-
-  websocketHandler.sendLog(req, `Aggregation results - tasks: ${taskUserResults.length}, count: ${taskCountResult.length}`, constants.LOG_TYPES.INFO);
-
-  const taskList = [];
-  const [taskUserList, taskCount] = await Promise.all([
-    taskUserQuery,
-    taskCountResult.length
-  ]);
-
-  if (taskUserList) {
-    websocketHandler.sendLog(req, `Processing ${taskUserList.length} task user entries`, constants.LOG_TYPES.TRACE);
-    
-    for (var i = 0; i < taskUserList.length; i++) {
-      if (taskUserList[i]) {
-        websocketHandler.sendLog(req, `Fetching task details for task ${taskUserList[i].task._id}`, constants.LOG_TYPES.TRACE);
-        
-        const task = await Task.findById(taskUserList[i].task)
-          .select('id taskName startDate endDate description comment priority status taskNumber parentTask');
-        
-        if (task) {
-          websocketHandler.sendLog(req, `Processing task ${task._id}`, constants.LOG_TYPES.TRACE);
-          
-          const taskUser = await TaskUser.find({})
-            .where('task')
-            .equals(task.id);
-          
-          if (taskUser) {
-            task.TaskUsers = taskUser;
-            websocketHandler.sendLog(req, `Added ${taskUser.length} users to task ${task._id}`, constants.LOG_TYPES.DEBUG);
-          } else {
-            task.TaskUsers = null;
-            websocketHandler.sendLog(req, `No users found for task ${task._id}`, constants.LOG_TYPES.DEBUG);
-          }
-          
-          taskList.push(task);
-          websocketHandler.sendLog(req, `Added task ${task._id} to result list`, constants.LOG_TYPES.TRACE);
-        } else {
-          websocketHandler.sendLog(req, `Task ${taskUserList[i].task} not found`, constants.LOG_TYPES.WARN);
-        }
-      }
-    }
-  } else {
-    websocketHandler.sendLog(req, 'No task user list returned from query', constants.LOG_TYPES.WARN);
-  }
-
-  websocketHandler.sendLog(req, `Successfully retrieved ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
-
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: {
-      taskList: taskList,
-      taskCount: taskCount
-    }
-  });
-});
-
-
-exports.getTaskListByUser = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getTaskListByUser execution', constants.LOG_TYPES.TRACE);
-
-  const { userId, skip = 0, limit = 10 } = req.body;
-  websocketHandler.sendLog(req, `Processing task list for user ${userId}`, constants.LOG_TYPES.DEBUG);
-
-  const objectId = new ObjectId(userId);
-  websocketHandler.sendLog(req, 'Converted user ID to ObjectId', constants.LOG_TYPES.TRACE);
-
-  // Combine task list and count in a single aggregation
-  const taskAggregation = TaskUser.aggregate([
-    { $match: { user: objectId, task: { $exists: true } } },
+  const aggregationPipeline = [
+    { $match: { user: { $in: objectIdArray }, task: { $exists: true } } },
     {
       $lookup: {
         from: 'tasks',
@@ -432,45 +264,235 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
         as: 'taskDetails'
       }
     },
-    { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
-    { $match: { 'taskDetails': { $ne: null } } },
+    { $unwind: '$taskDetails' },
+    {
+      $lookup: {
+        from: 'taskusers',
+        let: { taskId: '$taskDetails._id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'createdBy',
+              foreignField: '_id',
+              as: 'createdBy'
+            }
+          },
+          { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user'
+            }
+          },
+          { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: 1,
+              task: 1,
+              createdBy: {
+                _id: '$createdBy._id',
+                firstName: '$createdBy.firstName',
+                lastName: '$createdBy.lastName'
+              },
+              user: {
+                _id: '$user._id',
+                firstName: '$user.firstName',
+                lastName: '$createdBy.lastName'
+              }
+            }
+          }
+        ],
+        as: 'TaskUsers'
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'taskDetails.createdBy',
+        foreignField: '_id',
+        as: 'taskCreatedBy'
+      }
+    },
+    { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 0,
+        task: {
+          _id: '$taskDetails._id',
+          id: '$taskDetails._id',
+          taskName: '$taskDetails.taskName',
+          startDate: '$taskDetails.startDate',
+          endDate: '$taskDetails.endDate',
+          description: '$taskDetails.description',
+          comment: '$taskDetails.comment',
+          priority: '$taskDetails.priority',
+          status: '$taskDetails.status',
+          taskNumber: '$taskDetails.taskNumber',
+          parentTask: '$taskDetails.parentTask',
+          TaskUsers: '$TaskUsers',
+          createdBy: {
+            _id: '$taskCreatedBy._id',
+           firstName: '$taskCreatedBy.firstName',
+           lastName: '$taskCreatedBy.lastName'
+          }
+        }
+      }
+    },
     {
       $facet: {
-        taskList: [
-          { $skip: parseInt(skip) },
-          { $limit: parseInt(limit) },
-          { $project: { _id: 1, task: '$taskDetails' } }
-        ],
-        taskCount: [{ $count: 'total' }]
+        taskList: [{ $skip: skip }, { $limit: limit }],
+        taskCount: [{ $count: 'count' }]
       }
     }
-  ]);
+  ];
 
   websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
-  const [{ taskList, taskCount }] = await taskAggregation.exec();
-  const totalCount = taskCount[0]?.total || 0;
+  const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
 
-  websocketHandler.sendLog(req, `Fetched ${taskList.length} tasks, total count: ${totalCount}`, constants.LOG_TYPES.INFO);
+  if (!result || !result.taskList || !result.taskCount) {
+    websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
+  }
 
-  // Fetch TaskUsers for all tasks in parallel
-  const taskIds = taskList.map(item => item.task._id);
-  const taskUsers = await TaskUser.find({ task: { $in: taskIds } });
-  websocketHandler.sendLog(req, `Fetched ${taskUsers.length} task users`, constants.LOG_TYPES.DEBUG);
+  const taskList = result.taskList.map(item => item.task);
+  const taskCount = result.taskCount[0]?.count || 0;
 
-  // Map task users to their respective tasks
-  const taskListWithUsers = taskList.map(taskItem => {
-    const task = taskItem.task;
-    task.TaskUsers = taskUsers.filter(tu => tu.task.toString() === task._id.toString()) || [];
-    websocketHandler.sendLog(req, `Added ${task.TaskUsers.length} users to task ${task._id}`, constants.LOG_TYPES.TRACE);
-    return task;
-  });
+  websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
 
-  websocketHandler.sendLog(req, `Returning ${taskListWithUsers.length} tasks with total count ${totalCount}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: { taskList: taskListWithUsers, taskCount: totalCount }
+    data: { taskList, taskCount }
   });
 });
+
+exports.getTaskListByUser = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getTaskListByUser execution', constants.LOG_TYPES.TRACE);
+
+  const userId = new ObjectId(req.body.userId);
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10;
+  
+  websocketHandler.sendLog(req, `Processing task list for user ${req.body.userId}, skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
+
+  const aggregationPipeline = [
+    { $match: { user: userId, task: { $exists: true } } },
+    {
+      $lookup: {
+        from: 'tasks',
+        localField: 'task',
+        foreignField: '_id',
+        as: 'taskDetails'
+      }
+    },
+    { $unwind: '$taskDetails' },
+    {
+      $lookup: {
+        from: 'taskusers',
+        let: { taskId: '$taskDetails._id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'createdBy',
+              foreignField: '_id',
+              as: 'createdBy'
+            }
+          },
+          { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user'
+            }
+          },
+          { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: 1,
+              task: 1,
+              createdBy: {
+                _id: '$createdBy._id',
+                firstName: '$createdBy.firstName',
+                lastName: '$createdBy.lastName'
+              },
+              user: {
+                _id: '$user._id',
+                firstName: '$user.firstName',
+                lastName: '$user.lastName'
+              }
+            }
+          }
+        ],
+        as: 'TaskUsers'
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'taskDetails.createdBy',
+        foreignField: '_id',
+        as: 'taskCreatedBy'
+      }
+    },
+    { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 0,
+        task: {
+          _id: '$taskDetails._id',
+          id: '$taskDetails._id',
+          taskName: '$taskDetails.taskName',
+          startDate: '$taskDetails.startDate',
+          endDate: '$taskDetails.endDate',
+          comment: '$taskDetails.comment',
+          priority: '$taskDetails.priority',
+          status: '$taskDetails.status',
+          taskNumber: '$taskDetails.taskNumber',
+          parentTask: '$taskDetails.parentTask',
+          TaskUsers: '$TaskUsers',
+          createdBy: {
+            _id: '$taskCreatedBy._id',
+            firstName: '$taskCreatedBy.firstName',
+            lastName: '$taskCreatedBy.lastName'
+          }
+        }
+      }
+    },
+    {
+      $facet: {
+        taskList: [{ $skip: skip }, { $limit: limit }],
+        taskCount: [{ $count: 'count' }]
+      }
+    }
+  ];
+
+  websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
+  const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
+
+  if (!result || !result.taskList || !result.taskCount) {
+    websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
+  }
+
+  const taskList = result.taskList.map(item => item.task);
+  const taskCount = result.taskCount[0]?.count || 0;
+
+  websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: { taskList, taskCount }
+  });
+});
+   
+  
 
 exports.getTaskUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getTaskUser for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -1093,95 +1115,133 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
 
-  try {
-    const { skip, next: limit, projectId, userId } = req.body;
-    websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
+  const { skip, next: limit, projectId, userId } = req.body;
+  websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
 
-    // Determine if pagination should be applied
-    const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
-    const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0; // Default to 0 if invalid, but only if pagination is applied
-    const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER; // Use max if no pagination
-    websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
+  // Determine if pagination should be applied
+  const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
+  const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0;
+  const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER;
+  websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
-    // Step 1: Single aggregation to fetch TaskUsers, tasks, and their associated TaskUsers
-    let taskUserAggregationPipeline = [
-      // Match TaskUsers for the given user
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
-      // Lookup tasks for the project
-      {
-        $lookup: {
-          from: 'tasks',
-          let: { taskId: '$task' },
-          pipeline: [
-            { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', mongoose.Types.ObjectId(projectId)] }] } } },
-          ],
-          as: 'task',
-        },
-      },
-      // Unwind task array (each TaskUser has one task)
-      { $unwind: { path: '$task', preserveNullAndEmptyArrays: true } },
-      // Filter out null tasks (no match in project)
-      { $match: { 'task': { $ne: null } } },
-      // Lookup all TaskUsers for each task
-      {
-        $lookup: {
-          from: 'TaskUsers',
-          localField: 'task._id',
-          foreignField: 'task',
-          as: 'task.TaskUsers',
-        },
-      },
-    ];
-
-    // Apply pagination only if specified
-    if (applyPagination) {
-      taskUserAggregationPipeline.push({ $skip: adjustedSkip });
-      taskUserAggregationPipeline.push({ $limit: adjustedLimit });
+  const aggregationPipeline = [
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    {
+      $lookup: {
+        from: 'tasks',
+        let: { taskId: '$task' },
+        pipeline: [
+          { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', new mongoose.Types.ObjectId(projectId)] }] } } },
+        ],
+        as: 'taskDetails'
+      }
+    },
+    { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
+    { $match: { 'taskDetails': { $ne: null } } },
+    {
+      $lookup: {
+        from: 'taskusers',
+        let: { taskId: '$taskDetails._id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'createdBy',
+              foreignField: '_id',
+              as: 'createdBy'
+            }
+          },
+          { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user'
+            }
+          },
+          { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: 1,
+              task: 1,
+              createdBy: {
+                _id: '$createdBy._id',
+                firstName: '$createdBy.firstName',
+                lastName: '$createdBy.lastName'
+              },
+              user: {
+                _id: '$user._id',
+                firstName: '$user.firstName',
+                lastName: '$user.lastName'
+              }
+            }
+          }
+        ],
+        as: 'TaskUsers'
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'taskDetails.createdBy',
+        foreignField: '_id',
+        as: 'taskCreatedBy'
+      }
+    },
+    { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 0,
+        task: {
+          _id: '$taskDetails._id',
+          id: '$taskDetails._id',
+          taskName: '$taskDetails.taskName',
+          startDate: '$taskDetails.startDate',
+          endDate: '$taskDetails.endDate',
+          description: '$taskDetails.description',
+          comment: '$taskDetails.comment',
+          priority: '$taskDetails.priority',
+          status: '$taskDetails.status',
+          taskNumber: '$taskDetails.taskNumber',
+          parentTask: '$taskDetails.parentTask',
+          project: '$taskDetails.project',
+          TaskUsers: '$TaskUsers',
+          createdBy: {
+            _id: '$taskCreatedBy._id',
+            firstName: '$taskCreatedBy.firstName',
+            lastName: '$taskCreatedBy.lastName'
+          }
+        }
+      }
+    },
+    {
+      $facet: {
+        taskList: applyPagination ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }] : [],
+        taskCount: [{ $count: 'count' }]
+      }
     }
+  ];
 
-    const taskUserAggregation = await TaskUser.aggregate(taskUserAggregationPipeline).exec();
-    websocketHandler.sendLog(req, `Fetched ${taskUserAggregation.length} TaskUser records with tasks`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
+  const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
 
-    // Step 2: Count total TaskUsers for pagination (always calculate for consistency)
-    const taskCountAggregation = await TaskUser.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
-      {
-        $lookup: {
-          from: 'tasks',
-          let: { taskId: '$task' },
-          pipeline: [
-            { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', mongoose.Types.ObjectId(projectId)] }] } } },
-          ],
-          as: 'task',
-        },
-      },
-      { $unwind: { path: '$task', preserveNullAndEmptyArrays: true } },
-      { $match: { 'task': { $ne: null } } },
-      { $count: 'total' },
-    ]).exec();
-
-    const taskCount = taskCountAggregation.length > 0 ? taskCountAggregation[0].total : 0;
-    websocketHandler.sendLog(req, `Total task count: ${taskCount}`, constants.LOG_TYPES.DEBUG);
-
-    // Step 3: Format task list (no additional queries)
-    const taskList = taskUserAggregation.map((taskUser) => {
-      const task = taskUser.task;
-      websocketHandler.sendLog(req, `Processed task ${task._id} with ${task.TaskUsers.length} users`, constants.LOG_TYPES.TRACE);
-      return task;
-    });
-
-    websocketHandler.sendLog(req, `Returning ${taskList.length} tasks`, constants.LOG_TYPES.INFO);
-
-    // Step 4: Return the response
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      taskList,
-      taskCount,
-    });
-  } catch (error) {
-    websocketHandler.sendLog(req, `Error in getUserTaskListByProject: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({ status: 'error', message: error.message });
+  if (!result || !result.taskList || !result.taskCount) {
+    websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
   }
+
+  const taskList = result.taskList.map(item => item.task);
+  const taskCount = result.taskCount[0]?.count || 0;
+
+  websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    taskList,
+    taskCount
+  });
 });
 
 
