@@ -15,6 +15,7 @@ const User = require('../models/permissions/userModel');
 // const eventNotificationController = require('./eventNotificationController.js');
 // const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const UserPreference = require('../models/userPreferences/userPreferenceModel.js');
 
 exports.addLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addLog operation', constants.LOG_TYPES.TRACE);
@@ -71,6 +72,57 @@ exports.addLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Document uploaded with URL: ${url}`, constants.LOG_TYPES.INFO);
 
   websocketHandler.sendLog(req, 'Creating new time log', constants.LOG_TYPES.TRACE);
+
+  //Need to add check for weekly and monthly time limit
+  const MINUTES_PER_LOG = 10;
+  // Step 1: Calculate week range (Monday to Sunday)
+  const today = new Date();
+  const day = today.getUTCDay(); // Sunday = 0
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const startOfWeek = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + mondayOffset));
+  const endOfWeek = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + (7 - day)));
+
+  // Step 2: Calculate month range (1st to last date)
+  const startOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+  const endOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0));
+
+  // Step 3: Get total logs in current week & month
+  const [weekLogs, monthLogs] = await Promise.all([
+    TimeLog.find({ user: req.cookies.userId, date: { $gte: startOfWeek, $lte: endOfWeek } }),
+    TimeLog.find({ user: req.cookies.userId, date: { $gte: startOfMonth, $lte: endOfMonth } })
+  ]);
+
+  // Convert to total hours
+  const totalWeekHours = (weekLogs.length * MINUTES_PER_LOG);
+  const totalMonthHours = (monthLogs.length * MINUTES_PER_LOG);
+
+  // Step 4: Get user limits (in hours)
+  const preferences = await UserPreference.find({ userId: req.cookies.userId }).populate('preferenceOptionId');
+  const weeklyLimitPref = preferences?.find(p => p.preferenceOptionId.preferenceKey === 'Tracker.WeeklyHoursLimit_explicit');
+  const monthlyLimitPref = preferences?.find(p => p.preferenceOptionId.preferenceKey === 'Tracker.MonthlyHoursLimit_explicit');
+  const weeklyLimit = weeklyLimitPref ? parseFloat(weeklyLimitPref.preferenceOptionId.preferenceValue) * 60 : 0;
+  const monthlyLimit = monthlyLimitPref ? parseFloat(monthlyLimitPref.preferenceOptionId.preferenceValue) * 60 : 0;
+  
+  // Perform weekly check only if weeklyLimit is a positive number
+  if (weeklyLimit && weeklyLimit > 0 && totalWeekHours >= weeklyLimit) {
+    websocketHandler.sendLog(req, 'Weekly time limit exceeded', constants.LOG_TYPES.WARN);
+    return res.status(406).json({
+      status: constants.APIResponseStatus.Info,
+      message: req.t('timeLog.weeklyLimitExceeded'),
+      statusCode: 406
+    });
+  }
+
+  // Perform monthly check only if monthlyLimit is a positive number
+  if (monthlyLimit && monthlyLimit > 0 && totalMonthHours >= monthlyLimit) {
+    websocketHandler.sendLog(req, 'Monthly time limit exceeded', constants.LOG_TYPES.WARN);
+    return res.status(406).json({
+      status: constants.APIResponseStatus.Info,
+      message: req.t('timeLog.monthlyLimitExceeded'),
+      data: {  },
+      statusCode: 406
+    });
+  }
   const newTimeLog = await TimeLog.create({
     user: req.body.user,
     task: req.body.task,

@@ -681,7 +681,9 @@
     "serverError": "An internal server error occurred.",
     "CheckedInSuccessfully": "Checked in successfully.",
     "timeLogNotificationTitle": "Time log deleted",
-    "timeLogNotificationMessage": "Time log deleted."
+    "timeLogNotificationMessage": "Time log deleted.",
+    "weeklyLimitExceeded": "Weekly time limit exceeded.",
+    "monthlyLimitExceeded": "Monthly time limit exceeded."
   },
   "user": {
     "noDocumentFound": "No document was found with the specified ID.",
