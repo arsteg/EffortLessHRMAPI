@@ -966,7 +966,9 @@ exports.getPermissionsByRole = catchAsync(async (req, res, next) => {
 
   // Extract permission names
   //const permissionNames = rolePermissions.map(rp => rp.permission.name);
-  const permissionNames = rolePermissions.map(rp => rp.permissionId.permissionName);
+  const permissionNames = rolePermissions
+    .filter(rp => rp?.permissionId?.permissionName)  // Filter valid permissionIds
+    .map(rp => rp.permissionId.permissionName);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
