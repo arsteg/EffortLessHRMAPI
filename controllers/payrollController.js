@@ -1390,7 +1390,6 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
       runValidators: true,
     }
   );
-
   if (
     req.body.variableAllowanceApplicableEmployee &&
     req.body.variableAllowanceApplicableEmployee.length > 0
@@ -1983,250 +1982,208 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
         ctcTemplate._id,
         ctcTemplateVariableDeduction
       );
-  }
-
-  //hello
-  if (ctcTemplateEmployerContribution.length > 0) {
-    for (const contirbution of ctcTemplateEmployerContribution) {
-      const result = await FixedContribution.findById(
-        contirbution.fixedContribution
-      );
-
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidFixedContribution')
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateEmployerContributions =
-      await updateOrCreateEmployerContribution(
-        ctcTemplate._id,
-        req.body.ctcTemplateEmployerContribution
-      );
-  }
-
-  if (ctcTemplateEmployeeDeduction.length > 0) {
-    for (const contirbution of ctcTemplateEmployeeDeduction) {
-      const result = await FixedContribution.findById(
-        contirbution.employeeDeduction
-      );
-
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidEmployeeDeduction')
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateEmployeeDeductions =
-      await updateOrCreateEmployeeDeduction(
-        ctcTemplate._id,
-        req.body.ctcTemplateEmployeeDeduction
-      );
-  }
+  } 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
   });
 });
 
-async function updateOrCreateVariableAllownace(
-  ctcTemplateId,
-  updatedCategories
-) {
+async function updateOrCreateVariableAllownace(ctcTemplateId, updatedCategories) {
+  if (!updatedCategories || updatedCategories.length === 0) {
+    console.log("Hii");
+    await CTCTemplateVariableAllowance.deleteMany({ ctcTemplate: ctcTemplateId });
+    return [];
+  }
   const existingCategories = await CTCTemplateVariableAllowance.find({
     ctcTemplate: ctcTemplateId,
   });
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find((existing) =>
-      existing.variableAllowance.equals(category.variableAllowance)
-    );
 
-    if (existingCategory) {
-      // Update existing category
-      return CTCTemplateVariableAllowance.findByIdAndUpdate(
-        existingCategory._id,
-        { ...category },
-        { new: true, runValidators: true }
+  const operations = [];
+  const matchedIds = new Set();
+
+  for (const category of updatedCategories) {
+    if (category._id) {
+      const existing = existingCategories.find(
+        (e) => e._id.toString() === category._id
       );
-    } else {
-      // Create new category
-      const newCategory = new CTCTemplateVariableAllowance({
-        ctcTemplate: ctcTemplateId,
-        ...category,
-      });
-      return newCategory.save();
+
+      if (existing) {
+        matchedIds.add(existing._id.toString());
+        Object.assign(existing, category);
+        operations.push(existing.save());
+        continue;
+      }
     }
-  });
-  await Promise.all(updatedCategoriesPromises);
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) =>
-      !updatedCategories.find(
-        (updated) =>
-          updated.variableAllowance === existing.variableAllowance.toString()
-      )
+
+    // New category creation (no valid _id match)
+    const newCategory = new CTCTemplateVariableAllowance({
+      ctcTemplate: ctcTemplateId,
+      ...category,
+    });
+    operations.push(newCategory.save());
+  }
+
+  // Remove any that are not in the new list
+  const toRemove = existingCategories.filter(
+    (e) => !matchedIds.has(e._id.toString())
   );
 
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return CTCTemplateVariableAllowance.findByIdAndRemove(category._id);
-  });
+  for (const category of toRemove) {
+    operations.push(CTCTemplateVariableAllowance.findByIdAndDelete(category._id));
+  }
 
-  await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateVariableAllowance.find({
-    ctcTemplate: ctcTemplateId,
-  });
-  return finalCategories;
+  await Promise.all(operations);
+
+  return CTCTemplateVariableAllowance.find({ ctcTemplate: ctcTemplateId });
 }
 
-async function updateOrCreateVariableDeduction(
-  ctcTemplateId,
-  updatedCategories
-) {
+
+async function updateOrCreateVariableDeduction(ctcTemplateId, updatedCategories) {
+  if (!updatedCategories || updatedCategories.length === 0) {
+    await CTCTemplateVariableDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
+    return [];
+  }
   const existingCategories = await CTCTemplateVariableDeduction.find({
     ctcTemplate: ctcTemplateId,
   });
 
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find((existing) =>
-      existing.variableDeduction.equals(category.variableDeduction)
-    );
+  const operations = [];
+  const matchedIds = new Set();
 
-    if (existingCategory) {
-      // Update existing category
-      return CTCTemplateVariableDeduction.findByIdAndUpdate(
-        existingCategory._id,
-        { ...category },
-        { new: true, runValidators: true }
+  for (const category of updatedCategories) {
+    if (category._id) {
+      const existing = existingCategories.find(
+        (e) => e._id.toString() === category._id
       );
-    } else {
-      // Create new category
-      const newCategory = new CTCTemplateVariableDeduction({
-        ctcTemplate: ctcTemplateId,
-        ...category,
-      });
 
-      return newCategory.save();
+      if (existing) {
+        matchedIds.add(existing._id.toString());
+        Object.assign(existing, category);
+        operations.push(existing.save());
+        continue;
+      }
     }
-  });
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) =>
-      !updatedCategories.find(
-        (updated) =>
-          updated.variableDeduction === existing.variableDeduction.toString()
-      )
+
+    // Create new entry
+    const newCategory = new CTCTemplateVariableDeduction({
+      ctcTemplate: ctcTemplateId,
+      ...category,
+    });
+    operations.push(newCategory.save());
+  }
+
+  // Remove obsolete records
+  const toRemove = existingCategories.filter(
+    (e) => !matchedIds.has(e._id.toString())
   );
 
-  await Promise.all(updatedCategoriesPromises);
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return CTCTemplateVariableDeduction.findByIdAndRemove(category._id);
-  });
-  await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateVariableDeduction.find({
-    ctcTemplate: ctcTemplateId,
-  });
-  return finalCategories;
+  for (const category of toRemove) {
+    operations.push(CTCTemplateVariableDeduction.findByIdAndDelete(category._id));
+  }
+
+  await Promise.all(operations);
+
+  return CTCTemplateVariableDeduction.find({ ctcTemplate: ctcTemplateId });
 }
 
 async function updateOrCreateFixedAllowances(ctcTemplateId, updatedCategories) {
+  if (!updatedCategories || updatedCategories.length === 0) {
+    await CTCTemplateFixedAllowance.deleteMany({ ctcTemplate: ctcTemplateId });
+    return [];
+  }
   const existingCategories = await CTCTemplateFixedAllowance.find({
     ctcTemplate: ctcTemplateId,
   });
 
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find((existing) =>
-      existing.fixedAllowance.equals(category.fixedAllowance)
-    );
+  const operations = [];
+  const matchedIds = new Set();
 
-    if (existingCategory) {
-      // Update existing category
-      Object.assign(existingCategory, category);
-      return existingCategory.save();
-    } else {
-      // Create new category
-      const newCategory = new CTCTemplateFixedAllowance({
-        ctcTemplate: ctcTemplateId,
-        ...category,
-      });
-      return newCategory.save();
+  for (const category of updatedCategories) {
+    // If _id is present, attempt to update
+    if (category._id) {
+      const existing = existingCategories.find(
+        (e) => e._id.toString() === category._id
+      );
+
+      if (existing) {
+        matchedIds.add(existing._id.toString());
+        Object.assign(existing, category);
+        operations.push(existing.save());
+        continue;
+      }
     }
-  });
-  await Promise.all(updatedCategoriesPromises);
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) =>
-      !updatedCategories.find(
-        (updated) =>
-          updated.fixedAllowance === existing.fixedAllowance.toString()
-      )
+
+    // Else, create new
+    const newCategory = new CTCTemplateFixedAllowance({
+      ctcTemplate: ctcTemplateId,
+      ...category,
+    });
+    operations.push(newCategory.save());
+  }
+
+  // Remove any existing not matched
+  const toRemove = existingCategories.filter(
+    (e) => !matchedIds.has(e._id.toString())
   );
 
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return CTCTemplateFixedAllowance.findByIdAndRemove(category._id);
-  });
+  for (const category of toRemove) {
+    operations.push(CTCTemplateFixedAllowance.findByIdAndDelete(category._id));
+  }
 
-  await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateFixedAllowance.find({
-    ctcTemplate: ctcTemplateId,
-  });
-  return finalCategories;
+  await Promise.all(operations);
+
+  return CTCTemplateFixedAllowance.find({ ctcTemplate: ctcTemplateId });
 }
 
 async function updateOrCreateFixedDeduction(ctcTemplateId, updatedCategories) {
+  if (!updatedCategories || updatedCategories.length === 0) {
+    await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
+    return [];
+  }
   const existingCategories = await CTCTemplateFixedDeduction.find({
     ctcTemplate: ctcTemplateId,
   });
 
-  // Update existing and create new categories
-  const updatedCategoriesPromises = updatedCategories.map(async (category) => {
-    const existingCategory = existingCategories.find((existing) =>
-      existing.fixedDeduction.equals(category.fixedDeduction)
-    );
+  const operations = [];
+  const matchedIds = new Set();
 
-    if (existingCategory) {
-      // Update existing category
-      Object.assign(existingCategory, category);
-      return existingCategory.save();
-    } else {
-      // Create new category
-      const newCategory = new CTCTemplateFixedDeduction({
-        ctcTemplate: ctcTemplateId,
-        ...category,
-      });
-      return newCategory.save();
+  for (const category of updatedCategories) {
+    // If _id is present, attempt to update the existing document
+    if (category._id) {
+      const existing = existingCategories.find(
+        (e) => e._id.toString() === category._id
+      );
+
+      if (existing) {
+        matchedIds.add(existing._id.toString());
+        Object.assign(existing, category);
+        operations.push(existing.save());
+        continue;
+      }
     }
-  });
-  await Promise.all(updatedCategoriesPromises);
-  // Remove categories not present in the updated list
-  const categoriesToRemove = existingCategories.filter(
-    (existing) =>
-      !updatedCategories.find(
-        (updated) =>
-          updated.fixedDeduction === existing.fixedDeduction.toString()
-      )
+
+    // Else, create a new document
+    const newCategory = new CTCTemplateFixedDeduction({
+      ctcTemplate: ctcTemplateId,
+      ...category,
+    });
+    operations.push(newCategory.save());
+  }
+
+  // Remove any documents that were not included in the updated list
+  const toRemove = existingCategories.filter(
+    (e) => !matchedIds.has(e._id.toString())
   );
 
-  const removalPromises = categoriesToRemove.map(async (category) => {
-    return CTCTemplateFixedDeduction.findByIdAndRemove(category._id);
-  });
+  for (const category of toRemove) {
+    operations.push(CTCTemplateFixedDeduction.findByIdAndDelete(category._id));
+  }
 
-  await Promise.all(removalPromises);
-  const finalCategories = await CTCTemplateFixedDeduction.find({
-    ctcTemplate: ctcTemplateId,
-  });
-  return finalCategories;
-}
+  await Promise.all(operations);
 
-async function deleteCTCFixedDeduction(ctcTemplateId) {
-  await CTCTemplateFixedDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
-}
-async function deleteCTCEmployeeDeduction(ctcTemplateId) {
-  await CTCTemplateEmployeeDeduction.deleteMany({ ctcTemplate: ctcTemplateId });
+  // Return the final list after update/create/delete
+  return CTCTemplateFixedDeduction.find({ ctcTemplate: ctcTemplateId });
 }
 
 async function updateOrCreateEmployerContribution(
@@ -2487,8 +2444,6 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
     ctcTemplateFixedDeduction,
     ctcTemplateVariableAllowance,
     ctcTemplateVariableDeduction,
-    ctcTemplateEmployerContribution,
-    ctcTemplateEmployeeDeduction,
     ...ctcTemplateData
   } = req.body;
 
@@ -2539,58 +2494,12 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
+  }
     ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(
       req.params.id,
       req.body.ctcTemplateFixedDeduction
     );
-  } else {
-
-    await deleteCTCFixedDeduction(req.params.id);
-  }
-  if (ctcTemplateEmployerContribution.length > 0) {
-    for (const contirbution of ctcTemplateEmployerContribution) {
-      const result = await FixedContribution.findById(
-        contirbution.fixedContribution
-      );
-
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidFixedContribution'),
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateEmployerContributions =
-      await updateOrCreateEmployerContribution(
-        req.params.id,
-        req.body.ctcTemplateEmployerContribution
-      );
-  }
-  else {
-    await deleteCTCEmployerContribution(req.params.id);
-  }
-
-  if (ctcTemplateEmployeeDeduction.length > 0) {
-    for (const contirbution of ctcTemplateEmployeeDeduction) {
-      const result = await FixedContribution.findById(
-        contirbution.employeeDeduction
-      );
-      if (!result) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('payroll.invalidEmployeeDeduction'),
-        });
-      }
-    }
-    ctcTemplate.ctcTemplateEmployeeDeductions =
-      await updateOrCreateEmployeeDeduction(
-        req.params.id,
-        req.body.ctcTemplateEmployeeDeduction
-      );
-  }
-  else {
-    await deleteCTCEmployeeDeduction(req.params.id);
-  }
+  
   if (ctcTemplateVariableAllowance.length > 0) {
     for (const allowance of ctcTemplateVariableAllowance) {
       const result = await VariableAllowance.findById(
@@ -2604,12 +2513,13 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
+  }
     ctcTemplate.ctcTemplateVariableAllowances =
       await updateOrCreateVariableAllownace(
         req.params.id,
         ctcTemplateVariableAllowance
       );
-  }
+  
 
   if (ctcTemplateVariableDeduction.length > 0) {
     for (const allowance of ctcTemplateVariableDeduction) {
@@ -2624,12 +2534,13 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
         });
       }
     }
+  }
     ctcTemplate.ctcTemplateVariableDeductions =
       await updateOrCreateVariableDeduction(
         req.params.id,
         ctcTemplateVariableDeduction
       );
-  }
+  
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
