@@ -380,8 +380,13 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
     ));
   }
-  
-  const filteredBody = filterObj(req.body, "name", "email");
+
+  //const filteredBody = filterObj(req.body, "name", "email");
+  const filteredBody = filterObj(req.body,
+    "firstName", "lastName", "jobTitle", "address", "city", "state", "extraDetails", "role", "phone", "mobile", "pincode",
+    "emergancyContactName", "emergancyContactNumber", "Gender", "DOB", "MaritalStatus", "MarraigeAniversary", "PassportDetails",
+    "Pancard", "AadharNumber", "Disability", "FatherHusbandName", "NoOfChildren", "BankName", "BankAccountNumber",
+    "BankIFSCCode", "BankBranch", "BankAddress");
   websocketHandler.sendLog(req, `Filtered update body: ${JSON.stringify(filteredBody)}`, constants.LOG_TYPES.DEBUG);
   
   const updatedUser = await User.findByIdAndUpdate(req.params.id, filteredBody, {
@@ -409,117 +414,111 @@ exports.updateUser = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.Birthday} not found`, constants.LOG_TYPES.WARN); 
     }
 
-    if (updatedUser) {
-        try {
-          // Step 1: Check if user already has a birthday notification
-          const userNotifications = await UserNotification.find({ user: updatedUser._id });
-          const notificationIds = userNotifications.map(n => n.notification);
-          // Now query EventNotification with additional filters
-          const matchingNotification = await EventNotification.findOne({
-            _id: { $in: notificationIds },
-            eventNotificationType: notificationType._id,
+    try {
+      // Check if user already has a birthday notification
+      const userNotifications = await UserNotification.find({ user: updatedUser._id });
+      const notificationIds = userNotifications.map(n => n.notification);
+      const matchingNotification = await EventNotification.findOne({
+        _id: { $in: notificationIds },
+        eventNotificationType: notificationType._id,
+        company: req.cookies.companyId,
+        isRecurring: true
+      });
+
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      let adjustedDate = new Date(dobDate);
+      adjustedDate.setFullYear(currentYear);
+
+      if (adjustedDate < today) {
+        adjustedDate.setFullYear(currentYear + 1);
+      }
+
+      if (matchingNotification) {
+        matchingNotification.date = adjustedDate;
+        matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`});
+        await matchingNotification.save();
+        websocketHandler.sendLog(req, `Updated DOB for existing birthday notification`, constants.LOG_TYPES.INFO);
+      } 
+      else {
+        const notificationBody = {
+            name: req.t('user.BirthdayNotificationTitle'),
+            description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`}),
+            eventNotificationType: notificationType?._id?.toString() || null,
+            date: adjustedDate, 
+            navigationUrl: '',
+            isRecurring: true, 
+            recurringFrequency: RecurringFrequency.ANNUALLY, 
+            leadTime: 0, 
+            status: NotificationStatus.SCHEDULED,
             company: req.cookies.companyId,
-            isRecurring: true
-          });
-
-          const today = new Date();
-            const currentYear = today.getFullYear();
-
-            // Set the dobDate's year to the current year
-            let adjustedDate = new Date(dobDate);
-            adjustedDate.setFullYear(currentYear);
-
-            // If the adjusted date is in the past, set the year to next year
-            if (adjustedDate < today) {
-              adjustedDate.setFullYear(currentYear + 1);
-            }
-
-          if (matchingNotification) {
-            const existingDate = new Date(matchingNotification.date);
-            if (existingDate.toISOString().split('T')[0] !== dobDate.toISOString().split('T')[0]) {
-              matchingNotification.date = adjustedDate;
-              matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`});
-              await matchingNotification.save();
-              websocketHandler.sendLog(req, `Updated DOB for existing birthday notification`, constants.LOG_TYPES.INFO);
-            }
-          } else {
-          const notificationBody = {
-              name: req.t('user.BirthdayNotificationTitle'),
-              description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`}),
-              eventNotificationType: notificationType?._id?.toString() || null,
-              date: adjustedDate, 
-              navigationUrl: '',
-              isRecurring: true, 
-              recurringFrequency: RecurringFrequency.ANNUALLY, 
-              leadTime: 0, 
-              status: NotificationStatus.SCHEDULED,
-              company: req.cookies.companyId,
-              notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI] 
-          };
-
-          // Simulate the req object for addNotificationForUser
-          const notificationReq = {
-            ...req,
-            body: notificationBody,
-            cookies: 
-            {
-              ...req.cookies,
-              userId: updatedUser?._id?.toString() // Set the userId to the assigned user
-            }
-          };
-          const createdNotificationId = await new Promise(async (resolve, reject) => {
-            const notificationRes = {
-              status: function () {
-                return {
-                  json: function (response) {
-                    try {
-                      if (response?.data?._id) {
-                        resolve(response.data._id.toString());
-                      } else { 
-                        reject(new Error('No _id in response'));
-                      }
-                    } catch (err) {
-                      reject(err);
-                    }
-                  }
-                };
-              }
-            };
-            
-            await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
-          });
+            notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI] 
+        };
+        // Simulate the req object for addNotificationForUser
+        const notificationReq = {
+          ...req,
+          body: notificationBody,
+          cookies: 
+          {
+            ...req.cookies,
+            userId: updatedUser?._id?.toString() // Set the userId to the assigned user
+          }
+        };
+        // const createdNotificationId = await new Promise(async (resolve, reject) => {
+        //   const notificationRes = {
+        //     status: function () {
+        //       return {
+        //         json: function (response) {
+        //           try {
+        //             if (response?.data?._id) {
+        //               console.log(`Notification created with ID: ${response.data._id}`);
+        //               resolve(response.data._id.toString());
+        //             } else { 
+        //               console.log(`No _id in response: ${JSON.stringify(response)}`);
+        //               reject(new Error('No _id in response'));
+        //             }
+        //           } catch (err) {
+        //             console.error(`Error processing response: ${err.message}`);
+        //             reject(err);
+        //           }
+        //         }
+        //       };
+        //     }
+        //   };
           
-          if (createdNotificationId) {
-              const userNotificationBody = {
-                  user: updatedUser?._id?.toString(), // or any relevant user
-                  notification: createdNotificationId
-              };
+        //   await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
+        // });
+        const eventNotification = await EventNotification.create(notificationReq.body);
+        if (eventNotification) {
+            const userNotificationBody = {
+                user: updatedUser?._id?.toString(), // or any relevant user
+                notification: eventNotification?._id
+            };
 
-              const userNotificationReq = {
-                  ...req,
-                  body: userNotificationBody,
-                  cookies: {
-                      ...req.cookies,
-                      userId: updatedUser?._id?.toString()
-                  }
-              };
+            const userNotificationReq = {
+                ...req,
+                body: userNotificationBody,
+                cookies: {
+                    ...req.cookies,
+                    userId: updatedUser?._id?.toString()
+                }
+            };
 
-              const userNotificationRes = {
-                  status: () => ({
-                      json: () => {}
-                  })
-              };
-              await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
-          }
-          else {
-              websocketHandler.sendLog(req, `Failed to extract EventNotification ID.`, constants.LOG_TYPES.ERROR);
-          }
+            const userNotificationRes = {
+                status: () => ({
+                    json: () => {}
+                })
+            };
+            await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
+        }
+        else {
+            websocketHandler.sendLog(req, `Failed to extract EventNotification ID.`, constants.LOG_TYPES.ERROR);
         }
       }
-      catch (error) { 
-        websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
-        // Don't fail the task creation if notification fails
-      }
+    }
+    catch (error) { 
+      websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
+      // Don't fail the task creation if notification fails
     }
   }
   else {
@@ -2740,25 +2739,27 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
           }
         };
 
-        const createdNotificationId = await new Promise(async (resolve, reject) => {
-          const notificationRes = {
-            status: () => ({
-              json: (response) => {
-                if (response?.data?._id) {
-                  resolve(response.data._id.toString());
-                } else {
-                  reject(new Error('No _id in notification response'));
-                }
-              }
-            })
-          };
-          await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
-        });
+        // const createdNotificationId = await new Promise(async (resolve, reject) => {
+        //   const notificationRes = {
+        //     status: () => ({
+        //       json: (response) => {
+        //         if (response?.data?._id) {
+        //           resolve(response.data._id.toString());
+        //         } else {
+        //           reject(new Error('No _id in notification response'));
+        //         }
+        //       }
+        //     })
+        //   };
+        //   await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
+        // });
 
-        if (createdNotificationId) {
+        const eventNotification = await EventNotification.create(notificationReq.body);
+
+        if (eventNotification) {
           const userNotificationBody = {
             user: updatedUser._id.toString(),
-            notification: createdNotificationId
+            notification: eventNotification?._id
           };
 
           const userNotificationReq = {

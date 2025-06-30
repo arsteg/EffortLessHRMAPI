@@ -52,18 +52,19 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
-  if (emailTemplate) {
-    const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
-    const task = await Task.findById(req.params.id);
-    
+  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
+  const task = await Task.findById(req.params.id);
+  let isUINotificationSentToReporter = false;
+
+  if (newTaskUserList && newTaskUserList.length > 0) {    
     websocketHandler.sendLog(req, `Found ${newTaskUserList.length} task users for task ${req.params.id}`, constants.LOG_TYPES.INFO);
 
-    if (newTaskUserList) {
-      for (let j = 0; j < newTaskUserList.length; j++) {
-        const user = await User.findOne({ _id: newTaskUserList[j].user });
-        websocketHandler.sendLog(req, `Processing user ${user?._id} for task deletion notification`, constants.LOG_TYPES.TRACE);
-        
-        if (user) {
+    for (let j = 0; j < newTaskUserList.length; j++) {
+      const user = await User.findOne({ _id: newTaskUserList[j].user });
+      websocketHandler.sendLog(req, `Processing user ${user?._id} for task deletion notification`, constants.LOG_TYPES.TRACE);
+     
+      if (user) {
+        if (emailTemplate) {
           const contentNewUser = emailTemplate.contentData;
           const emailTemplateNewUser = contentNewUser
             .replace("{firstName}", user.firstName)
@@ -91,7 +92,20 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
             }
           }
         }
+
+        //Add Event Notification for delete task
+        SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
+          constants.Event_Notification_Type_Status.task_delete, user?._id?.toString(), req.cookies.companyId, req);
+
+          if (user._id.toString() === task?.createdBy?._id?.toString()){
+            isUINotificationSentToReporter = true;
+          }
       }
+    }
+    if(!isUINotificationSentToReporter){
+      //Add Event Notification for delete task to reporter
+      SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
+        constants.Event_Notification_Type_Status.task_delete, task?.createdBy?._id?.toString(), req.cookies.companyId, req);
     }
   }
 
@@ -174,8 +188,14 @@ exports.updateTask = catchAsync(async (req, res, next) => {
       }
 
       // Add Event Notification for the assigned user
+      SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
+        constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
+
+      if (user?._id?.toString() !== updatedTask?.createdBy?.toString()){
+        // Add Event Notification for the reporter user
         SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-          constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
+          constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req);
+      }
     }
 
   const getTask = await Task.findById(req.params.id);
@@ -864,6 +884,9 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `Failed to send unassignment email: ${error.message}`, constants.LOG_TYPES.ERROR);
       }
     }
+    //Add Event Notification for the assigned user
+    SendUINotification(`Task Unassignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been Unassigned to you.`,
+      constants.Event_Notification_Type_Status.task_assignment, emailOldUser?._id?.toString(), req.cookies.companyId, req);
   }
 
   if (newTaskUserItem != null) {
@@ -894,6 +917,10 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `Failed to send assignment email: ${error.message}`, constants.LOG_TYPES.ERROR);
       }
     }
+    //Add Event Notification for the assigned user
+    SendUINotification(`Task assignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been assigned to you.`,
+      constants.Event_Notification_Type_Status.task_assignment, newUser?._id?.toString(), req.cookies.companyId, req);
+
   }
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.body.task);
@@ -941,6 +968,10 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Failed to send unassignment email: ${error.message}`, constants.LOG_TYPES.ERROR);
     }
   }
+
+  //Add Event Notification for the deleted user
+  SendUINotification(`Task Unassigned: ${task.taskName}`, task.description || `Task ${task.taskName} has been unassigned to you.`,
+    constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,

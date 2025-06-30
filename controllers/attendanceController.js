@@ -574,7 +574,7 @@ exports.deleteAttendanceMode = catchAsync(async (req, res, next) => {
 exports.getAllAttendanceModes = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Fetching all attendance modes', constants.LOG_TYPES.INFO);
 
-  const attendanceModes = await AttendanceMode.find();
+  const attendanceModes = await AttendanceMode.find({}).where('company').equals(req.cookies.companyId);
 
   websocketHandler.sendLog(req, `Successfully retrieved ${attendanceModes.length} attendance modes`, constants.LOG_TYPES.INFO);
   res.status(200).json({

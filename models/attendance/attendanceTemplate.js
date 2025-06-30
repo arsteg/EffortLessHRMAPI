@@ -11,14 +11,6 @@ const attendanceTemplateSchema = new Schema({
     required: true,
     enum: ['Tracker', 'Manually Upload', 'Web Check-In'] 
   },
-  missingCheckInCheckoutHandlingMode: {
-    type: String,
-    required: true
-  },
-  missingCheckinCheckoutAttendanceProcessMode: {
-    type: String,
-    required: true
-  },
   minimumHoursRequiredPerWeek: {
     type: Number,
     required: true
@@ -28,10 +20,6 @@ const attendanceTemplateSchema = new Schema({
     required: true
   },
   notifyEmployeeMinHours: {
-    type: Boolean,
-    default: true
-  },
-  isShortTimeLeaveDeductible: {
     type: Boolean,
     default: true
   },
