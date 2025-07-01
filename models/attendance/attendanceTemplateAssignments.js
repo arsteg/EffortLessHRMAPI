@@ -27,5 +27,15 @@ const attendanceTemplateAssignmentsSchema = new Schema({
     required: true
   }
 }, { collection: 'AttendanceTemplateAssignments' });
-
+attendanceTemplateAssignmentsSchema.pre(/^find/,async function(next) {
+  try {
+    this.populate({
+      path: 'attendanceTemplate',
+      select: 'id label approversType'
+    });
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('AttendanceTemplateAssignments', attendanceTemplateAssignmentsSchema);
