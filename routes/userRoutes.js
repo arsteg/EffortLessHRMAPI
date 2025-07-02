@@ -914,11 +914,7 @@ router.get('/user-employment-by-userId/:userId',authController.protect, userCont
  *                   type: object
  *                   required: true
  *                   properties:
- *                     isVariableAllowancePartOfCTC:
- *                       type: boolean 
  *                     isPFDeduction:
- *                       type: boolean
- *                     isProvidentPensionDeduction:
  *                       type: boolean
  *                     isEmployeePFCappedAtPFCeiling:
  *                       type: boolean
@@ -1126,11 +1122,7 @@ router.get('/salary-details/:id', authController.protect, userController.getEmpl
  *                   type: object
  *                   required: true
  *                   properties:
- *                     isVariableAllowancePartOfCTC:
- *                       type: boolean 
  *                     isPFDeduction:
- *                       type: boolean
- *                     isProvidentPensionDeduction:
  *                       type: boolean
  *                     isEmployeePFCappedAtPFCeiling:
  *                       type: boolean
@@ -1378,11 +1370,7 @@ router.get('/hra-by-userId/:userId', authController.protect, userController.getE
  *               employeeSalaryDetails:
  *                 type: string
  *                 required: true
- *               isVariableAllowancePartOfCTC:
- *                 type: boolean
  *               isPFDeduction:
- *                 type: boolean
- *               isProvidentPensionDeduction:
  *                 type: boolean
  *               isEmployeePFCappedAtPFCeiling:
  *                 type: boolean
@@ -1464,11 +1452,7 @@ router.get('/employee-salary-tax-salutaory-settings/:id', authController.protect
  *           schema:
  *             type: object
  *             properties:
- *               isVariableAllowancePartOfCTC:
- *                 type: boolean
  *               isPFDeduction:
- *                 type: boolean
- *               isProvidentPensionDeduction:
  *                 type: boolean
  *               isEmployeePFCappedAtPFCeiling:
  *                 type: boolean
