@@ -196,7 +196,7 @@ exports.updateManualTimeRequest = catchAsync(async (req, res, next) => {
   } else {
       websocketHandler.sendLog(req, `No manual time request found with ID: ${req.body.id}`, constants.LOG_TYPES.WARN);
   }
-
+let result = 'success';
   websocketHandler.sendLog(req, 'Completed updateManualTimeRequest process', constants.LOG_TYPES.INFO);
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
