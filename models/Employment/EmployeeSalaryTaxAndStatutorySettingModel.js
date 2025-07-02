@@ -7,15 +7,7 @@ const employeeSalaryTaxAndStatutorySettingSchema = new Schema({
     ref: 'EmployeeSalaryDetails',
     required: true
   },
-  isVariableAllowancePartOfCTC: {
-    type: Boolean,
-    default: false
-  },
   isPFDeduction: {
-    type: Boolean,
-    default: false
-  },
-  isProvidentPensionDeduction: {
     type: Boolean,
     default: false
   },

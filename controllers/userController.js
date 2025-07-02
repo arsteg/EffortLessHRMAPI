@@ -821,20 +821,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
 
     }
-  }
-
-  const fixedContribution = await FixedContribution.find({ company: companyId })
-    .select("_id")
-    .exec();
-  const validEmployeeContribution = fixedContribution.map((fa) =>
-    fa._id.toString()
-  );
-
-  for (const item of req.body.salaryComponentEmployerContribution) {
-    if (!validEmployeeContribution.includes(item.employerContribution)) {
-      next(new AppError(req.t('user.invalidComponent', { id: item.employerContribution, type: 'Fixed Contribution' }), 400))
-    }
-  }
+  } 
 
   const variableAllowance = await VariableAllowance.find({ company: companyId })
     .select("_id")
@@ -882,20 +869,6 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     }
   }
 
-  const pfCharge = await PFCharge.find({ company: companyId })
-    .select("_id")
-    .exec();
-  const validPFCharge = pfCharge.map((fa) => fa._id.toString());
-
-  for (const item of req.body.salaryComponentPFCharge) {
-    if (!validPFCharge.includes(item.pfCharge)) {
-      websocketHandler.sendLog(req, `Invalid PF charge: ${item.pfCharge}`, constants.LOG_TYPES.WARN);      
-      next(new AppError(req.t('user.invalidComponent', { id: item.pfCharge, type: 'PF Charge' }), 400))
-
-
-    }
-  }
-
   req.body.company = companyId;
   websocketHandler.sendLog(req, 'Creating employee salary details record', constants.LOG_TYPES.DEBUG);
   const employeeSalaryDetails = await EmployeeSalaryDetails.create(req.body);
@@ -923,18 +896,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     await SalaryComponentFixedAllowance.create(
       employeesalaryComponentFixedAllowance
     );
-  employeeSalaryDetails.fixedAllowanceList = salaryComponentFixedAllowance;
-
-  const employeeSalaryComponentEmployerContribution =
-    req.body.salaryComponentEmployerContribution.map((item) => {
-      return { ...item, employeeSalaryDetails: employeeSalaryDetails._id };
-    });
-  const salaryComponentEmployerContribution =
-    await SalaryComponentEmployerContribution.create(
-      employeeSalaryComponentEmployerContribution
-    );
-  employeeSalaryDetails.employerContributionList =
-    salaryComponentEmployerContribution;
+  employeeSalaryDetails.fixedAllowanceList = salaryComponentFixedAllowance;  
 
   const employeesalaryComponentFixedDeduction =
     req.body.salaryComponentFixedDeduction.map((item) => {
@@ -956,16 +918,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     );
   employeeSalaryDetails.variableDeductionList =
     salaryComponentVariableDeduction;
-
-  const employeeSalaryComponentPFCharge = req.body.salaryComponentPFCharge.map(
-    (item) => {
-      return { ...item, employeeSalaryDetails: employeeSalaryDetails._id };
-    }
-  );
-  const salaryComponentPFCharge = await SalaryComponentPFCharge.create(
-    employeeSalaryComponentPFCharge
-  );
-  employeeSalaryDetails.pfChargeList = salaryComponentPFCharge;
+  
 
   const employeeSalaryComponentVariableAllowance =
     req.body.salaryComponentVariableAllowance.map((item) => {
