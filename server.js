@@ -95,14 +95,12 @@ cron.schedule('0 0 1 * *', async () => {
   // await leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 
-cron.schedule('*/30 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   try {
     const currentTime = new Date();
     const formattedTime = currentTime.toLocaleString();
-    console.log(`Job triggered at ${formattedTime}`);
 
     await scheduleController.runRecuringNotifications();
-    console.log(`Job completed `);
   } catch (error) {
     console.error('Error occurred:', error);
   }
