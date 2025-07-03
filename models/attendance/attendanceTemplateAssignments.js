@@ -32,7 +32,7 @@ attendanceTemplateAssignmentsSchema.pre(/^find/, async function (next) {
     this.populate({
       path: 'attendanceTemplate',
       select: 'id label approversType'
-    },
+    }),
       this.populate({
         path: 'employee',
         select: 'id firstName lastName'
@@ -44,8 +44,7 @@ attendanceTemplateAssignmentsSchema.pre(/^find/, async function (next) {
       this.populate({
         path: 'secondaryApprover',
         select: 'id firstName lastName'
-      })
-    );
+      });
   } catch (error) {
     console.error("Error populating fixed deductions:", error);
   }
