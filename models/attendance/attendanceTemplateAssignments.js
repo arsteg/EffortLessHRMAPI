@@ -27,12 +27,24 @@ const attendanceTemplateAssignmentsSchema = new Schema({
     required: true
   }
 }, { collection: 'AttendanceTemplateAssignments' });
-attendanceTemplateAssignmentsSchema.pre(/^find/,async function(next) {
+attendanceTemplateAssignmentsSchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'attendanceTemplate',
-      select: 'id label approversType'
-    });
+      select: 'id label approversType weeklyOfDays weklyofHalfDay'
+    }),
+      this.populate({
+        path: 'employee',
+        select: 'id firstName lastName'
+      }),
+      this.populate({
+        path: 'primaryApprover',
+        select: 'id firstName lastName'
+      }),
+      this.populate({
+        path: 'secondaryApprover',
+        select: 'id firstName lastName'
+      });
   } catch (error) {
     console.error("Error populating fixed deductions:", error);
   }
