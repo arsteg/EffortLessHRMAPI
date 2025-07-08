@@ -589,24 +589,48 @@ exports.getUserUiState = catchAsync(async (req, res, next) => {
 
 //End Country region
 
-
-
 exports.createIncomeTaxSection = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createIncomeTaxSection', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Creating income tax section for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+
   // Extract companyId from req.cookies
   const companyId = req.cookies.companyId;
+  const { section } = req.body;
+
   // Check if companyId exists in cookies
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
+
+  // Check if section is provided
+  if (!section) {
+    websocketHandler.sendLog(req, 'Section field missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.sectionMissing'), 400));
+  }
+
+  // Check for duplicate section for the same company
+  const existingSection = await IncomeTaxSection.findOne({
+    company: companyId,
+    section: section,
+  });
+
+  if (existingSection) {
+    websocketHandler.sendLog(req, `Duplicate section found: ${section} for company ${companyId}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.duplicateSection'), 400));
+  }
+
+  // Add companyId to the request body
   req.body.company = companyId;
+
+  // Create the new income tax section
   const incomeTaxSection = await IncomeTaxSection.create(req.body);
+
   websocketHandler.sendLog(req, `Income tax section created: ${incomeTaxSection._id}`, constants.LOG_TYPES.INFO);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
-    data: incomeTaxSection
+    data: incomeTaxSection,
   });
 });
 
@@ -628,18 +652,51 @@ exports.getIncomeTaxSectionsByCompany = catchAsync(async (req, res, next) => {
 exports.updateIncomeTaxSection = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateIncomeTaxSection', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating income tax section with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  const incomeTaxSection = await IncomeTaxSection.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
+  const { section } = req.body;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
+
+  // If section is provided, check for duplicates
+  if (section) {
+    const existingSection = await IncomeTaxSection.findOne({
+      company: companyId,
+      section: section,
+      _id: { $ne: req.params.id }, // Exclude the current document
+    });
+
+    if (existingSection) {
+      websocketHandler.sendLog(req, `Duplicate section found: ${section} for company ${companyId}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('common.duplicateSection'), 400));
+    }
+  }
+
+  // Update the income tax section
+  const incomeTaxSection = await IncomeTaxSection.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, company: companyId }, // Ensure companyId is included
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
   if (!incomeTaxSection) {
     websocketHandler.sendLog(req, `Income tax section not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.incomeTaxSectionNotFound'), 404));
   }
+
   websocketHandler.sendLog(req, `Income tax section updated: ${incomeTaxSection._id}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: incomeTaxSection
+    data: incomeTaxSection,
   });
 });
 
@@ -661,6 +718,16 @@ exports.getIncomeTaxSectionById = catchAsync(async (req, res, next) => {
 exports.deleteIncomeTaxSection = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteIncomeTaxSection', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Deleting income tax section with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  const componentUsingSection = await IncomeTaxComponant.findOne({ section: req.params.id });
+
+  if (componentUsingSection) {
+    websocketHandler.sendLog(
+      req,
+      `Cannot delete section ${req.params.id} — used by component ${componentUsingSection._id}`,
+      constants.LOG_TYPES.ERROR
+    );
+    return next(new AppError(req.t('common.sectionInUseByComponent'), 400));
+  }
   const incomeTaxSection = await IncomeTaxSection.findByIdAndDelete(req.params.id);
   if (!incomeTaxSection) {
     websocketHandler.sendLog(req, `Income tax section not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
@@ -677,15 +744,49 @@ exports.deleteIncomeTaxSection = catchAsync(async (req, res, next) => {
 exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createIncomeTaxComponant', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Creating income tax component for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+
   const companyId = req.cookies.companyId;
+  const { componantName, section } = req.body;
+console.log(componantName);
+console.log(section);
+  // Validate company ID
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
+
+  // Validate required fields
+  if (!componantName || !section) {
+    websocketHandler.sendLog(req, 'Component name or section missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.popupRequiredFieldsMissing'), 400));
+  }
+
+  // Check for duplicates: same component name under same section for the same company
+  const existingComponent = await IncomeTaxComponant.findOne({
+    company: companyId,
+    section: section,
+    componantName: componantName,
+  });
+
+  if (existingComponent) {
+    websocketHandler.sendLog(req, `Duplicate component found: ${componantName} in section ${section} for company ${companyId}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.duplicateComponent'), 400));
+  }
+
+  // Add company ID
   req.body.company = companyId;
+
+  // Create new component
   const incomeTaxComponant = await IncomeTaxComponant.create(req.body);
+
   websocketHandler.sendLog(req, `Income tax component created: ${incomeTaxComponant._id}`, constants.LOG_TYPES.INFO);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: incomeTaxComponant
   });
 });
+
 
 exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getIncomeTaxComponant', constants.LOG_TYPES.INFO);
@@ -705,6 +806,41 @@ exports.getIncomeTaxComponant = catchAsync(async (req, res, next) => {
 exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateIncomeTaxComponant', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating income tax component with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+
+  const companyId = req.cookies.companyId;
+  const { componantName, section } = req.body;
+
+  // Validate company ID
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
+
+  console.log(componantName);
+  console.log(section);
+  // Validate required fields
+  if (!componantName || !section) {
+    websocketHandler.sendLog(req, 'Component name or section missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.popupRequiredFieldsMissing'), 400));
+  }
+
+  // Check for duplicates excluding current record
+  const duplicateComponent = await IncomeTaxComponant.findOne({
+    _id: { $ne: req.params.id }, // Exclude current component
+    company: companyId,
+    section: section,
+    componantName: componantName
+  });
+
+  if (duplicateComponent) {
+    websocketHandler.sendLog(
+      req,
+      `Duplicate component found during update: ${componantName} in section ${section} for company ${companyId}`,
+      constants.LOG_TYPES.ERROR
+    );
+    return next(new AppError(req.t('common.duplicateComponent'), 400));
+  }
+
   const incomeTaxComponant = await IncomeTaxComponant.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -714,6 +850,7 @@ exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Income tax component not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.incomeTaxComponantNotFound'), 404));
   }
+
   websocketHandler.sendLog(req, `Income tax component updated: ${incomeTaxComponant._id}`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
@@ -721,6 +858,7 @@ exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
     data: incomeTaxComponant
   });
 });
+
 
 exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteIncomeTaxComponant', constants.LOG_TYPES.INFO);

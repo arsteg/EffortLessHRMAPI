@@ -209,6 +209,34 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.CheckEmailExists = catchAsync(async (req, res, next) => {
+  try {
+    const { email } = req.params;
+   
+    const companyId = req.cookies.companyId;
+
+    if (!email || !companyId) {
+    
+      return next(new AppError(req.t('user.EmailANdCompanyRequired'), 400));
+    }
+
+    const users = await User.find({
+      company: companyId, // Match users by companyId
+      email: email,      // Match users by provided email
+    });
+
+    websocketHandler.sendLog(req, `Found ${users.length} users with email ${email}`, constants.LOG_TYPES.INFO);
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      exists: users.length > 0 // Return true if users found, false otherwise      
+    });
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error checking email: ${error.message}`, constants.LOG_TYPES.ERROR);
+   
+    return next(new AppError(req.t('user.serverError'), 400));
+  }
+});
 // Function to get the list of users by empCode
 exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
   const { empCode } = req.params;

@@ -217,6 +217,34 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  */
 router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
 
+/**
+ * @swagger
+ * /api/v1/users/checkemailexists/{email}:
+ *  get:
+ *      tags:
+ *          - User Management
+ *      summary: "Get User by email"   
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      parameters:
+ *       - name: email
+ *         in: path
+ *         description: email of the user 
+ *         required: true
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+router.get('/checkemailexists/:email',authController.protect,userController.CheckEmailExists);
+
 // Route to get users by empCode
 /**
  * @swagger

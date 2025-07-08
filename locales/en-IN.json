@@ -20,8 +20,16 @@
     "invalidLogLevels": "Log levels must be an array of strings.",
     "testLogSuccess": "The test log was executed successfully.",
     "requiredFieldsMissing": "The fields userId, machineId, and isOnline are required.",
-    "recordNotFound": "No record was found with the specified ID.",
-    "stateNotFound": "State is missing."
+    "sectionMissing": "Section field missing in request body.",
+    "duplicateSection": "Duplicate section found." ,
+    "popupRequiredFieldsMissing": "The fields are required.",
+    "duplicateComponent": "Duplicate componant found.",
+    "sectionInUseByComponent": "Cannot delete section because it's used by component",    
+    "bandExists": "Band Already Exists.",
+    "dateMissing": "Holiday date missing in request body",
+    "duplicateDate": "Holiday already exists on same day.",
+    "pastHolidayDeleteNotAllowed": "Can not delete past holidays"
+   
   },
   "appWebsite": {
     "addSuccess": "The app/website record was added successfully for user {userId}.",
@@ -273,8 +281,12 @@
     "locationNotFound": "The location was not found.",
     "departmentNotFound": "The department was not found.",
     "subDepartmentNotFound": "The sub-department was not found.",
+    "subDepartmentExists": "Sub-department with this name and code already exists.",
+    "departmentExists": "Department with this name and code already exists.",
     "designationNotFound": "The designation was not found.",
+    "designationExists": "Designation already Exists.",
     "bandNotFound": "The band was not found.",
+    "locationExists": "The location already Exists.",   
     "signatoryNotFound": "The signatory was not found.",
     "taxSlabNotFound": "The tax slab was not found.",
     "missingcompanyLogoProperties": "All Company Logo properties must be provided."  
@@ -732,7 +744,9 @@
     "AppraisalNotificationTitle": "Appraisal Update",
     "AppraisalNotificationMessage": "Dear {{userName}}, your performance appraisal has been completed. Please log in to the HR portal to view your appraisal details.",
     "AppraisalNotificationForManagerTitle": "Appraisal Notification Sent",
-    "AppraisalNotificationForManagerMessage": "The appraisal results for {{userName}} have been shared with them."
+    "AppraisalNotificationForManagerMessage": "The appraisal results for {{userName}} have been shared with them.",
+     "EmailANdCompanyRequired": "Email and companyId are required",
+     "serverError": "A server error occurred."
   },
   "userPreferences": {
     "getAllSuccess": "Data fetched successfully.",
