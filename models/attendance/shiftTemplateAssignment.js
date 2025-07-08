@@ -23,4 +23,15 @@ const shiftTemplateAssignmentSchema = new Schema({
   }
 }, { collection: 'ShiftTemplateAssignment' });
 
+shiftTemplateAssignmentSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'template',
+      select: 'id minHoursPerDayToGetCreditForFullDay minHoursPerDayToGetCreditforHalfDay'
+    })
+  } catch (error) {
+    console.error("Error populating fixed deductions:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('ShiftTemplateAssignment', shiftTemplateAssignmentSchema);
