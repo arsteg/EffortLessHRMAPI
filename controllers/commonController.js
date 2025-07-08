@@ -435,13 +435,18 @@ exports.saveCountry = catchAsync(async (req, res, next) => {
 exports.addEmailTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addEmailTemplate', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Adding email template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-
+  const companyId = req.cookies.companyId; 
+  // Validate company ID
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
   const newEmailTemplate = req.body;
   newEmailTemplate.createdOn = new Date();
   newEmailTemplate.updatedOn = new Date();
   newEmailTemplate.createdBy = req.cookies.userId;
   newEmailTemplate.updatedBy = req.cookies.userId;
-  newEmailTemplate.company = req.cookies.companyId;
+  newEmailTemplate.company = companyId;
   newEmailTemplate.isDelete = true;
   const result = await EmailTemplate.create(newEmailTemplate);
   websocketHandler.sendLog(req, `Email template saved: ${result._id}`, constants.LOG_TYPES.INFO);
@@ -466,7 +471,10 @@ exports.changeEmailTemplatesStatus = catchAsync(async (req, res, next) => {
     })
     .catch((error) => {
       websocketHandler.sendLog(req, `Error updating email template status: ${error.message}`, constants.LOG_TYPES.ERROR);
-      res.status(500).json({ error: req.t('common.serverError') });
+     
+     return next(new AppError(
+              req.t('common.serverError')
+            ));
     });
 });
 
@@ -485,7 +493,9 @@ exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
     })
     .catch((error) => {
       websocketHandler.sendLog(req, `Error updating email template: ${error.message}`, constants.LOG_TYPES.ERROR);
-      res.status(500).json({ error: req.t('common.serverError') });
+      return next(new AppError(
+        req.t('common.serverError')
+      ));
     });
 });
 
@@ -503,7 +513,9 @@ exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {
       })
       .catch((error) => {
         websocketHandler.sendLog(req, `Error deleting email template: ${error.message}`, constants.LOG_TYPES.ERROR);
-        res.status(500).json({ error: req.t('common.serverError') });
+        return next(new AppError(
+          req.t('common.serverError')
+        ));
       });
   }
 
@@ -747,8 +759,6 @@ exports.createIncomeTaxComponant = catchAsync(async (req, res, next) => {
 
   const companyId = req.cookies.companyId;
   const { componantName, section } = req.body;
-console.log(componantName);
-console.log(section);
   // Validate company ID
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);

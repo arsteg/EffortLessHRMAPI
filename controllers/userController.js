@@ -434,7 +434,9 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     const dobDate = new Date(rawDate);
     if (!rawDate || !(dobDate instanceof Date) || isNaN(dobDate.getTime())) {
       websocketHandler.sendLog(req, `Invalid DOB format`, constants.LOG_TYPES.ERROR);
-      return;
+      return next(new AppError(
+        req.t('user.invalidDOBFormat')
+      ));
     }
     // Fetch the notification type once
     const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.Birthday, company: req.cookies.companyId });

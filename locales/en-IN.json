@@ -700,6 +700,7 @@
   "user": {
     "noDocumentFound": "No document was found with the specified ID.",
     "noUserFound": "No user was found with the specified ID.",
+    "invalidDOBFormat": "Invalid DOB format.", 
     "companyIdRequired": "The company ID was not found in cookies.",
     "passwordUpdateNotAllowed": "You cannot update the password using this route. Please use /updateMyPassword.",
     "noAppointmentFound": "No appointment was found with the specified ID.",
