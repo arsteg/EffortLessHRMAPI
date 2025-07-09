@@ -215,7 +215,7 @@ exports.getHoliday = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateHoliday = catchAsync(async (req, res, next) => {
+exports.updateHoliday = catchAsync(async (req, res, next) => { 
   websocketHandler.sendLog(req, 'Starting updateHoliday', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating holiday with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const isHolidayCalendar = await HolidayCalendar.findById(req.params.id);
@@ -224,7 +224,22 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Holiday not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.holidayNotFound'), 404));
   }
-
+  const company = req.cookies.companyId; // Get company from cookies
+  const holidayDate = req.body.date; 
+  // Validate if company value exists in cookies
+  if (!company) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);   
+    return next(new AppError(req.t('company.companyIdMissing'), 400));
+  }
+  const existingHoliday = await HolidayCalendar.findOne({
+    _id: { $ne: req.params.id },
+    company,
+    date: new Date(holidayDate),
+  }); 
+  if (existingHoliday) {
+    websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
+  }
   // Extract the user IDs from the request body
   const { users: allUsers } = req.body;
 
@@ -1021,7 +1036,7 @@ exports.createBand = async (req, res, next) => {
     const existing = await Band.findOne({ band: band, company });
 
     if (existing) {
-      websocketHandler.sendLog(req, `band already exists: ${designation}`, constants.LOG_TYPES.WARN);
+      websocketHandler.sendLog(req, `band already exists: ${band}`, constants.LOG_TYPES.WARN);
        return next(new AppError(req.t('company.bandExists'), 400));
     }
     const bandCreated = await Band.create(req.body);
