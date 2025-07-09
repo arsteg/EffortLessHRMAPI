@@ -27,7 +27,7 @@ shiftTemplateAssignmentSchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'template',
-      select: 'id minHoursPerDayToGetCreditForFullDay minHoursPerDayToGetCreditforHalfDay'
+      select: 'id name minHoursPerDayToGetCreditForFullDay minHoursPerDayToGetCreditforHalfDay'
     })
   } catch (error) {
     console.error("Error populating fixed deductions:", error);

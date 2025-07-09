@@ -201,7 +201,7 @@ router.delete('/holiday/:id', authController.protect, companyController.deleteHo
  *                             type: string
  *                         status:
  *                             type: string
- *                         years:
+ *                         year:
  *                             type: array
  *                             items:
  *                                 type: string

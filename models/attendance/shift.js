@@ -8,7 +8,6 @@ var shiftSchema = new Schema({
   },
   dashboardColor: {
     type: String,
-    required: true
   },
   isOffShift: {
     type: Boolean,
@@ -96,8 +95,7 @@ var shiftSchema = new Schema({
   },
   company: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Company',
-    required: true,
+    ref: 'Company'
   }
 }, { collection: 'Shift' });
 

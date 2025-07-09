@@ -12,16 +12,14 @@ var userEmploymentSchema = new Schema({
     required: true
   },
   location: {
-    type: String,
-    required: true
+    type: String
   },
   designation: {
     type: mongoose.Schema.ObjectId,
     ref: 'Designation', // Replace 'User' with the actual user reference schema
   },
   employmentType: {
-    type: String,
-    required: true
+    type: String
   },
   reportingSupervisor: {
     type: mongoose.Schema.ObjectId,
