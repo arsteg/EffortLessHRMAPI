@@ -1712,8 +1712,8 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 exports.getAllShifts = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all shifts for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
 
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip) || '';
+  const limit = parseInt(req.body.next) || '';
   const totalCount = await Shift.countDocuments({ company: req.cookies.companyId });
 
   const shifts = await Shift.find({ company: req.cookies.companyId }).skip(skip).limit(limit);

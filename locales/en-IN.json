@@ -286,6 +286,7 @@
     "designationNotFound": "The designation was not found.",
     "designationExists": "Designation already Exists.",
     "bandNotFound": "The band was not found.",
+    "bandExists": "The band was already Exists.",
     "locationExists": "The location already Exists.",   
     "signatoryNotFound": "The signatory was not found.",
     "taxSlabNotFound": "The tax slab was not found.",
