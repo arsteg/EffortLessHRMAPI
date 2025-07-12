@@ -2651,7 +2651,7 @@ async function getRecordsByYearAndMonthByUser(year, month, user) {
         $lt: endDate
       },
       user: user
-    }).exec();
+    }).sort({ date: 1 }).exec();
     return records;
 
   } catch (error) {
