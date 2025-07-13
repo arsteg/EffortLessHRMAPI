@@ -48,70 +48,71 @@ const signToken = async (id) => {
   });
 };
 
-const createAndSendToken = async (user, statusCode, res) => {  
-  const token = await signToken(user._id);
+const createAndSendToken = async (user, statusCode, res, req, next) => {
+  try {
+    const token = await signToken(user._id);
 
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 
-    ),
-    httpOnly: true
-  };    
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development'|| process.env.NODE_ENV === 'test')
-  {
-      res.cookie('companyId', user.company.id, {
-        secure: true,
-        sameSite: 'none'
-      });
-      res.cookie('userId', user._id, {
-        secure: true,
-        sameSite: 'none'
-      });
-      res.cookie('companyName', user.company.companyName, {
-        secure: true,
-        sameSite: 'none'
-      });
-     
-  }
-  else
-  {
-    res.cookie('companyId', user.company.id);
-    res.cookie('userId', user._id);
-    res.cookie('companyName', user.company.companyName);
-  }
-  // In production save cookie only in https connection
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') cookieOptions.secure = true;
-  res.cookie('jwt', token, cookieOptions);
+    const cookieOptions = {
+      expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60),
+      httpOnly: true
+    };
+
+    if (['production', 'development', 'test'].includes(process.env.NODE_ENV)) {
+      cookieOptions.secure = true;
+      res.cookie('companyId', user.company.id, { secure: true, sameSite: 'none' });
+      res.cookie('userId', user._id, { secure: true, sameSite: 'none' });
+      res.cookie('companyName', user.company.companyName, { secure: true, sameSite: 'none' });
+    } else {
+      res.cookie('companyId', user.company.id);
+      res.cookie('userId', user._id);
+      res.cookie('companyName', user.company.companyName);
+    }
+
+    user.password = undefined;
+    const companySubscription = await checkCompanySubscription(user, req);
+    res.status(statusCode).json({
+      status: constants.APIResponseStatus.Success,
+      token,
+      data: {
+        user,
+        companySubscription
+      }
+    });
+
+  } catch (error) {
   
-  // Remove password from the output
-  user.password = undefined;
+    throw new AppError(error, 403);
+  }
+};
 
+const checkCompanySubscription = async (user, req) => {
   const subscriptions = await Subscription.find({
     companyId: user.company.id,
-    "razorpaySubscription.status": {$in: constants.Active_Subscription}
+    "razorpaySubscription.status": { $in: constants.Active_Subscription }
   }).populate("currentPlanId");
-  const activeSubscription = subscriptions.find((item)=>{return item.razorpaySubscription.status === 'active'});
-  let companySubscription = {status: 'new'};
-  if(activeSubscription){
-    companySubscription = activeSubscription.razorpaySubscription;
+
+  const activeSubscription = subscriptions.find((item) =>
+    item.razorpaySubscription.status === 'active'
+  );
+
+  if (activeSubscription) {
+    const companySubscription = activeSubscription.razorpaySubscription;
     const addOns = await razorpay.addons.all({
       subscription_id: companySubscription.id
     });
     companySubscription.addOns = addOns.items;
-  } else if(subscriptions.length > 0){
-    const razorpaySubscription = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
-    companySubscription = razorpaySubscription;
+    return companySubscription;
+  } else if (subscriptions.length > 0) {
+    const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
+    return fallback;
+  } else {
+
+    const message = typeof req?.t === 'function'
+      ? req.t('auth.noSubscription')
+      : 'Your company does not have a valid subscription.';
+      
+    throw new AppError(message, 403);  
   }
-
-
-  res.status(statusCode).json({
-    status: constants.APIResponseStatus.Success,
-    token,
-    data: {
-      user,
-      companySubscription
-    }
-  });
 };
 
 exports.signup = catchAsync(async(req, res, next) => { 
@@ -134,231 +135,169 @@ exports.signup = catchAsync(async(req, res, next) => {
   createAndSendToken(newUser, 201, res);
 });
 
-exports.webSignup = catchAsync(async(req, res, next) => {
-  var company = await Company.findOne({companyName:req.body.companyName});
-  var newCompany=false;
-  if(company === null){
-    newCompany=true;
-  }
-  var companyId = process.env.DEFAULT_COMPANY_Id;
-  if(company === null)
-  {
-          company = await Company.create({
-          companyName: req.body.companyName,
-          contactPerson: req.body.firstName + " "+ req.body.lastName,
-          email: req.body.email,      
-          active:true,
-          createdOn: new Date(Date.now()),
-          updatedOn: new Date(Date.now())    
-        }); 
+exports.webSignup = catchAsync(async (req, res, next) => {
+  const { companyName, firstName, lastName, email, password, passwordConfirm } = req.body; 
 
-        //Copy Master Tables Data from Master Compnay to newly created Company
-        const rolesToDuplicate = await Role.find({ company: companyId });
-        if (rolesToDuplicate.length > 0) {   
-        // Step 3: Create new records by cloning and assigning a new id
-        const duplicatedRoles= rolesToDuplicate.map((record) => {
-          // Create a new object with the same properties as the original record
-          const duplicatedRole = Object.assign({}, record.toObject());
-          duplicatedRole._id = new mongoose.Types.ObjectId();
-          // Assign a new id to the duplicated record (you can generate new id as you like)
-          duplicatedRole.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-          return duplicatedRole;
-      
-        });
-        // Step 4: Save the duplicated records back to the database
-        await Role.insertMany(duplicatedRoles);
-        } else {
-          console.log('No Roles found to duplicate.');
-        }
-        const taskStatusToDuplicate = await TaskStatus.find({ company: companyId });
-        if (taskStatusToDuplicate.length > 0) {            
-          // Step 3: Create new records by cloning and assigning a new id
-          const duplicatedTaskStatusList = taskStatusToDuplicate.map((record) => {
-            // Create a new object with the same properties as the original record
-            const duplicatedTaskStatus= Object.assign({}, record.toObject());
-            duplicatedTaskStatus._id = new mongoose.Types.ObjectId();
-        
-            // Assign a new id to the duplicated record (you can generate new id as you like)
-            duplicatedTaskStatus.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-            return duplicatedTaskStatus;
-          });
-          // Step 4: Save the duplicated records back to the database
-          await TaskStatus.insertMany(duplicatedTaskStatusList);
-        } else {
-          console.log('No Task Status Templates found to duplicate.');
-        }
-        const taskPriorityToDuplicate = await TaskPriority.find({ company: companyId });
-        if (taskPriorityToDuplicate.length > 0) {     
-          // Step 3: Create new records by cloning and assigning a new id
-          const duplicatedTaskPriorityList = taskPriorityToDuplicate.map((record) => {
-            // Create a new object with the same properties as the original record
-            const duplicatedTaskPriority  = Object.assign({}, record.toObject());
-            // Assign a new id to the duplicated record (you can generate new id as you like)
-            duplicatedTaskPriority.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-            duplicatedTaskPriority._id = new mongoose.Types.ObjectId();
-            return duplicatedTaskPriority;
-          });
-          await TaskPriority.insertMany(duplicatedTaskPriorityList);
-        } else {
-          console.log('No Task Priority Templates found to duplicate.');
-        }
-        const emailTemplateToDuplicate = await EmailTemplate.find({ company: companyId });
-        if (emailTemplateToDuplicate.length > 0) {     
-            // Step 3: Create new records by cloning and assigning a new id
-            const duplicatedEmailTemplateList = emailTemplateToDuplicate.map((record) => {
-              // Create a new object with the same properties as the original record
-              const duplicatedEmailTemplate  = Object.assign({}, record.toObject());
-              // Assign a new id to the duplicated record (you can generate new id as you like)
-              duplicatedEmailTemplate.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-              duplicatedEmailTemplate._id = new mongoose.Types.ObjectId();
-              duplicatedEmailTemplate.isDelete=false;
-              return duplicatedEmailTemplate;
-            });
-            await EmailTemplate.insertMany(duplicatedEmailTemplateList);
-        } else {
-          console.log('No Email Templates found to duplicate.');
-        }
+if (!email) {
+  return next(
+    new AppError(
+      req.t('auth.emailRequired') || 'Email is required.',
+      400
+    )
+  );
+}
+const existingUser = await User.findOne({ email});
+if (existingUser) {
+  return next(
+    new AppError(
+      req.t('auth.emailExistsForUser'),
+      400
+    )
+  );
+}
+  const existingCompany = await Company.findOne({ companyName });
+  const isNewCompany = !existingCompany;
 
-        const taxSectonsToDuplicate = await IncomeTaxSection.find({ company: companyId });
-        if (taxSectonsToDuplicate.length > 0) {
-          // Step 3: Create new records by cloning and assigning a new id
-          const duplicatedTaxSectionList= taxSectonsToDuplicate.map((record) => {
-            // Create a new object with the same properties as the original record
-            const duplicatedTaxSection = Object.assign({}, record.toObject());
-            duplicatedTaxSection._id = new mongoose.Types.ObjectId();
-            // Assign a new id to the duplicated record (you can generate new id as you like)
-            duplicatedTaxSection.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-            return duplicatedTaxSection;
-        
-          });
-          // Step 4: Save the duplicated records back to the database
-          await IncomeTaxSection.insertMany(duplicatedTaxSectionList);
-        } else {
-          console.log('No Tax Sections found to duplicate.');
-        }
+  const masterCompanyId = process.env.DEFAULT_COMPANY_Id;
+  let company = existingCompany;
 
-        const taxComponanatsToDuplicate = await IncomeTaxComponant.find({ company: companyId });
-        if (taxComponanatsToDuplicate.length > 0) {
-        // Step 3: Create new records by cloning and assigning a new id
-          const duplicatedTaxComponantList= taxComponanatsToDuplicate.map((record) => {
-            // Create a new object with the same properties as the original record
-            const duplicatedTaxComponant = Object.assign({}, record.toObject());
-            duplicatedTaxComponant._id = new mongoose.Types.ObjectId();
-            // Assign a new id to the duplicated record (you can generate new id as you like)
-            duplicatedTaxComponant.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-            return duplicatedTaxComponant;
-        
-          });
-          // Step 4: Save the duplicated records back to the database
-          await IncomeTaxComponant.insertMany(duplicatedTaxComponantList);
-        } else {
-          console.log('No Tax Componants found to duplicate.');
-        }
-
-        const attendnaceModeToDuplicate = await AttendanceMode.find({ company: companyId });
-        if (attendnaceModeToDuplicate.length > 0) {
-        // Step 3: Create new records by cloning and assigning a new id
-          const duplicateAttendnaceModeList= attendnaceModeToDuplicate.map((record) => {
-            // Create a new object with the same properties as the original record
-            const duplicateAttendnaceMode = Object.assign({}, record.toObject());
-            duplicateAttendnaceMode._id = new mongoose.Types.ObjectId();
-            // Assign a new id to the duplicated record (you can generate new id as you like)
-            duplicateAttendnaceMode.company = company._id; // For example, assigning a new id of 2 to the duplicated records
-            return duplicateAttendnaceMode;
-        
-          });
-          // Step 4: Save the duplicated records back to the database
-          await AttendanceMode.insertMany(duplicateAttendnaceModeList);
-        } else {
-          console.log('No Attendance Mode found to duplicate.');
-        }
-
-        const eventNotificationTypesToDuplicate = await eventNotificationType.find({ company: companyId });
-        if (eventNotificationTypesToDuplicate.length > 0) {
-          const duplicatedEventNotificationTypes = eventNotificationTypesToDuplicate.map((record) => {
-            const duplicatedRecord = Object.assign({}, record.toObject());
-            duplicatedRecord._id = new mongoose.Types.ObjectId();
-            duplicatedRecord.company = company._id;
-            return duplicatedRecord;
-          });
-
-          await eventNotificationType.insertMany(duplicatedEventNotificationTypes);
-        } else {
-          console.log('No Event Notification Types found to duplicate.');
-        }
-
-        seedRolePermissions(company);
-  }
-  var role =null;
-  if(newCompany==true)
-  {
-    role = await Role.findOne({
-      company: company._id,
-      Name: "Admin"
+  // 1. Create company if it doesn't exist
+  if (!existingCompany) {
+    const existingCompany = await Company.findOne({ email});
+if (existingCompany) {
+  return next(
+    new AppError(
+      req.t('auth.emailExistsForComapny'),
+      400
+    )
+  );
+}
+    company = await Company.create({
+      companyName,
+      contactPerson: `${firstName} ${lastName}`,
+      email,
+      active: true,
+      createdOn: new Date(),
+      updatedOn: new Date()
     });
+
+    // 2. Duplicate master data
+    await duplicateData(Role, company._id, masterCompanyId);
+    await duplicateData(TaskStatus, company._id, masterCompanyId);
+    await duplicateData(TaskPriority, company._id, masterCompanyId);
+    await duplicateData(EmailTemplate, company._id, masterCompanyId, { isDelete: false });
+    await duplicateData(IncomeTaxSection, company._id, masterCompanyId);
+    await duplicateData(IncomeTaxComponant, company._id, masterCompanyId);
+    await duplicateData(AttendanceMode, company._id, masterCompanyId);
+    await duplicateData(eventNotificationType, company._id, masterCompanyId);
+
+    // 3. Seed role permissions
+    await seedRolePermissions(company);
   }
-  else
-  {
-      role = await Role.findOne({
-      company: company._id,
-      Name: "User"
-    });
-  
+
+  // 4. Get role
+  const roleName = isNewCompany ? 'Admin' : 'User';
+  const role = await Role.findOne({ company: company._id, Name: roleName });
+
+  if (!role) {
+    return next(new AppError(req.t('auth.roleNotFound') || 'User role could not be found.', 500));
   }
+  try {
+   
+  // 5. Create user
   const newUser = await User.create({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,    
-    role: role.id,   
+    firstName,
+    lastName,
+    email,
+    password,
+    passwordConfirm,
+    role: role.id,
     isSuperAdmin: false,
-    company:company.id,
-    status:constants.User_Status.Active,
-    active:true,
-    createdOn: new Date(Date.now()),
-    updatedOn: new Date(Date.now())
-  }); 
-  if(newUser)
-  {
-    const newAppointment = new Appointment({
-      user: newUser._id,   // Linking the user with the attendance record
-      salaryTypePaid: '',
-      joiningDate: null,
-      confirmationDate: null,
-      // Add other necessary fields here as empty or default values
-      company: company.id,
-    });
-    await newAppointment.save();
-  const resetURL = `${process.env.WEBSITE_DOMAIN}/#/home/profile/employee-profile`;
-  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.UPDATE_PROFILE).where('company').equals(companyId); 
-  if(emailTemplate)
-  {
-    const template = emailTemplate.contentData;
-    const message = template
-    .replace("{firstName}", newUser.firstName)
-    .replace("{url}", resetURL)
-    .replace("{company}",  req.cookies.companyName)
-    .replace("{company}", req.cookies.companyName)
-    .replace("{lastName}", newUser.lastName); 
+    company: company.id,
+    status: constants.User_Status.Active,
+    active: true,
+    createdOn: new Date(),
+    updatedOn: new Date()
+  });
 
+  // 6. Create appointment record
+    if (newUser) {
       try {
+      await Appointment.create({
+        user: newUser._id,
+        salaryTypePaid: '',
+        joiningDate: null,
+        confirmationDate: null,
+        company: company.id
+      });
+    } catch (err) {
+      return next(
+        new AppError(
+          req.t('auth.appointmentCreateError') || 'Could not create appointment record for the new user.',
+          500
+        )
+      );
+    }
+  }
+ }
+ catch (err) {
+    return next(
+      new AppError(
+        req.t('auth.userCreateError') || 'Could not create user record for the new user.',
+        500
+      )
+    );
+  }
+
+    // 7. Send welcome/update profile email
+    try {
+      const resetURL = `${process.env.WEBSITE_DOMAIN}/#/home/profile/employee-profile`;
+      const emailTemplate = await EmailTemplate.findOne({
+        Name: constants.Email_template_constant.UPDATE_PROFILE,
+        company: masterCompanyId
+      });
+
+      if (emailTemplate) {
+        const message = emailTemplate.contentData
+          .replace("{firstName}", newUser.firstName)
+          .replace("{lastName}", newUser.lastName)
+          .replaceAll("{company}", req.cookies.companyName)
+          .replace("{url}", resetURL);
+
         await sendEmail({
           email: newUser.email,
           subject: emailTemplate.subject,
           message
         });
-      
-      } catch (err) {   
-        return next(
-          new AppError(req.t('auth.emailSendError'), 500)
-      );
+      }
+    } catch (err) {
+      return next(new AppError(req.t('auth.emailSendError') || 'Failed to send welcome email.', 500));
     }
-    }
-  createAndSendToken(newUser, 201, res);
-  }
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: {
+        User:newUser    
+      }
+    });
+    // 8. Send auth token response
+   // return createAndSendToken(newUser, 201, res);  
 
 });
+async function duplicateData(Model, newCompanyId, masterCompanyId, additionalFields = {}) {
+  const records = await Model.find({ company: masterCompanyId });
+  if (records.length === 0) {
+    console.log(`No ${Model.modelName} records to duplicate.`);
+    return;
+  }
+
+  const duplicated = records.map(record => {
+    const clone = { ...record.toObject(), _id: new mongoose.Types.ObjectId(), company: newCompanyId };
+    return { ...clone, ...additionalFields };
+  });
+
+  await Model.insertMany(duplicated);
+}
+
 exports.CreateUser = catchAsync(async(req, res, next) => {      
   try{
    const subscription = await Subscription.findOne({
@@ -457,11 +396,9 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // 1) Validate email and password input
   if (!email || !password) {
     return next(new AppError(req.t('auth.emailOrPasswordNotSpecified'), 400));
   }
-  // 2) Check if user exists and is not deleted, then retrieve password
   const user = await User.findOne({
     email,
     status: { $ne: constants.User_Status.Deleted }
@@ -470,11 +407,11 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError(req.t('auth.incorrectEmailOrPassword'), 401));
   }
-      
   const appointments = await Appointment.find({ user: user._id });
   user.appointment = appointments;
-  // 3) If everything is okay, send token to client
-  createAndSendToken(user, 200, res);
+
+  // ✅ Send token and check subscription
+  await createAndSendToken(user, 200, res, req, next);
 });
 
 // Authentication
@@ -649,8 +586,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   });
  
   // 2) If token has not expired, and there is user, set the new password
-  if (!user) return next(new AppError(req.t('auth.tokenInvalidOrExpired'), 400));
-  
+  if (!user) return next(new AppError(req.t('auth.tokenInvalidOrExpired'), 400)); // ✅ GOOD
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
@@ -659,9 +595,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // 3) Update changedPasswordAt property for the user
   // It is set every time that password property changes
-
   // 4) Log the user in, send JWT
-  createAndSendToken(user, 200, res);
+  await createAndSendToken(user, 200, res);
 });
 exports.sendLog = catchAsync(async (req, res, next) => {
  

@@ -2105,9 +2105,21 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
     if (employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0) {
       for (let j = 0; j < employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length; j++) {
         const incomeTaxComponent = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
-        employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section = incomeTaxComponent.section;
-        websocketHandler.sendLog(req, `Added section to component ${employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j]._id}`, constants.LOG_TYPES.DEBUG);
-      }
+        if (incomeTaxComponent?.section != null) {
+          employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section = incomeTaxComponent.section;
+        
+          websocketHandler.sendLog(
+            req,
+            `Added section to component ${employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j]._id}`,
+            constants.LOG_TYPES.DEBUG
+          );
+        } else {
+          websocketHandler.sendLog(
+            req,
+            `Section not found for component ${employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j]._id}`,
+            constants.LOG_TYPES.WARN
+          );
+        }}
     }
     
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({})
@@ -2465,11 +2477,23 @@ exports.generateOTP = catchAsync(async (req, res, next) => {
     await newOTP.save();
     websocketHandler.sendLog(req, 'OTP saved to database', constants.LOG_TYPES.DEBUG);
     
-    const message = `Your one-time password (OTP) for verification is: ${otp}. \n Please do not share this OTP with anyone. If you did not request this, please ignore this email or contact our support team immediately.`;
+    const message = `
+    <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+      <h2 style="color: #2E86C1;">Effortless HRM - OTP Verification</h2>
+      <p>Dear User,</p>
+      <p>Your one-time password (OTP) for verification is:</p>
+      <p style="font-size: 20px; font-weight: bold; color: #d32f2f;">${otp}</p>
+      <p>Please <strong>do not share</strong> this OTP with anyone.</p>
+      <p>If you did not request this, please ignore this email or contact our support team immediately.</p>
+      <br>
+      <p>Thanks,</p>
+      <p><strong>Effortless HRM Team</strong></p>
+    </div>
+  `;
     try {
       await sendEmail({
         email: req.body.email,
-        subject: 'OTP',
+        subject: 'Confirm Your Email – Signup OTP Code',
         message
       });
       websocketHandler.sendLog(req, `OTP email sent to ${req.body.email}`, constants.LOG_TYPES.INFO);
@@ -2477,13 +2501,13 @@ exports.generateOTP = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Error sending OTP email: ${err.message}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('user.emailError')
 
-      , 500));
+      , 404));
     }
     
     res.status(200).json({ message: 'OTP generated and emailed successfully.' });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error generating OTP: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({ message: 'Error generating OTP' + error });
+    websocketHandler.sendLog(req, `Error generating OTP: ${error.message}`, constants.LOG_TYPES.ERROR)    
+    return next(new AppError('Error generating OTP' + error), 404);
   }
 });
 
@@ -2495,11 +2519,10 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     const existingOTP = await OTP.findOne({ email, otp });
     
     if (!existingOTP || existingOTP.status !== 'active') {
-      websocketHandler.sendLog(req, 'Invalid or expired OTP', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('user.invalidOtp')
-
-      });
-    }
+      websocketHandler.sendLog(req, 'Invalid or expired OTP', constants.LOG_TYPES.WARN);     
+      return next(new AppError(req.t('user.invalidOtp'), 400));
+      };
+   
     
     existingOTP.status = 'verified';
     await existingOTP.save();
@@ -2508,7 +2531,8 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     res.status(200).json({ message: req.t('user.otpVerifiedSuccessfully') });
   } catch (error) {
     websocketHandler.sendLog(req, `Error verifying OTP: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({ message: req.t('user.ErrorVerifyingOTP') + error });
+  
+    return next(new AppError(req.t('user.ErrorVerifyingOTP')+ error ), 400);
   }
 });
 
