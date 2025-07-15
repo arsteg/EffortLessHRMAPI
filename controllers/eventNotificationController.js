@@ -137,6 +137,16 @@ exports.createEventNotificationType = catchAsync(async (req, res, next) => {
   req.body.company = req.cookies.companyId;
   websocketHandler.sendLog(req, `Creating event notification type with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
 
+  const existingNotificationType = await EventNotificationType.findOne({
+    name: req.body.name,
+    company: req.body.company
+  });
+
+  if (existingNotificationType) {
+    websocketHandler.sendLog(req, `Event notification type with name '${req.body.name}' already exists`, constants.LOG_TYPES.WARN);
+    return next(new AppError(`Event notification type with name '${req.body.name}' already exists`, 400));
+  }
+
   const eventNotificationType = await EventNotificationType.create(req.body);
   websocketHandler.sendLog(req, `Successfully created event notification type with ID: ${eventNotificationType._id}`, constants.LOG_TYPES.INFO);
 
