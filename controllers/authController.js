@@ -80,8 +80,10 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
     });
 
   } catch (error) {
-  
-    throw new AppError(error, 403);
+    const message = typeof req?.t === 'function'
+    ? req.t('auth.noSubscription')
+    : 'Your company does not have a valid subscription.';
+    throw new AppError(error.description || message, 403);
   }
 };
 
