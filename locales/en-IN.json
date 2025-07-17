@@ -217,6 +217,8 @@
     "loginFailure": "Failed to log in.",
     "emailExistsForUser":"Email Already Exists for another user",
     "emailExistsForComapny":"Email Already Exists for another company",    
+   "companyDataCreateError": "You are trying to register with new company and master data creation has issue while creating company please contact your admin",
+   "incomeTaxComponentsCreateError": "You are trying to register with new company and master data creation has issue while creating company please contact your admin", 
     "emailOrPasswordMissing": "Email or password was not provided.",
     "incorrectEmailOrPassword": "The email or password is incorrect.",
     "notLoggedIn": "You are not logged in. Please log in to access this resource.",

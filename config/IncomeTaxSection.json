@@ -1,0 +1,26 @@
+[
+    { "section": "Chapter VI Deductions", "isHRA": false, "maximumAmount": 300 },
+    { "section": "80C Deduction", "isHRA": false, "maximumAmount": 150000 },
+    { "section": "80CCC Pension Funds", "isHRA": false, "maximumAmount": 150000 },
+    { "section": "80CCD - NPS Contribution", "isHRA": false, "maximumAmount": 150000 },
+    { "section": "80CCD(1B) Additional NPS", "isHRA": false, "maximumAmount": 50000 },
+    { "section": "80D Health Insurance", "isHRA": false, "maximumAmount": 50000 },
+    { "section": "80DD - Dependent Disability", "isHRA": false, "maximumAmount": 125000 },
+    { "section": "80DDB - Medical Treatment", "isHRA": false, "maximumAmount": 100000 },
+    { "section": "80E Education Loan Interest", "isHRA": false, "maximumAmount": 0 },
+    { "section": "80EE First-Time Home Loan Interest", "isHRA": false, "maximumAmount": 50000 },
+    { "section": "80EEA Affordable Housing Interest", "isHRA": false, "maximumAmount": 150000 },
+    { "section": "80EEB EV Loan Interest", "isHRA": false, "maximumAmount": 150000 },
+    { "section": "80G Charitable Donations", "isHRA": false, "maximumAmount": 0 },
+    { "section": "80GGA Research Donations", "isHRA": false, "maximumAmount": 0 },
+    { "section": "80GGB Political Donations by Companies", "isHRA": false, "maximumAmount": 0 },
+    { "section": "80GGC Political Donations by Others", "isHRA": false, "maximumAmount": 0 },
+    { "section": "80GG Rent Paid (No HRA)", "isHRA": false, "maximumAmount": 60000 },
+    { "section": "80TTA Savings Interest", "isHRA": false, "maximumAmount": 10000 },
+    { "section": "80TTB Senior Citizens' Interest", "isHRA": false, "maximumAmount": 50000 },
+    { "section": "80U Disability Deduction", "isHRA": false, "maximumAmount": 125000 },
+    { "section": "10(13A) House Rent Allowance Exemption", "isHRA": true, "maximumAmount": 0 },
+    { "section": "24 Interest on Home Loan", "isHRA": true, "maximumAmount": 0 }
+  
+  ]
+  

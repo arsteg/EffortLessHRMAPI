@@ -1,0 +1,20 @@
+[    
+        { "name": "project_assignment" },
+        { "name": "timelog_delete" },
+        { "name": "loan_advance" },
+        { "name": "task_assignment" },
+        { "name": "manual_time" },
+        { "name": "attendance" },
+        { "name": "leave" },
+        { "name": "employee_separation" },
+        { "name": "role_assignment" },
+        { "name": "birthday" },
+        { "name": "appraisal" },
+        { "name": "work_anniversary" },
+        { "name": "approval" },
+        { "name": "expense" },
+        { "name": "employee_review" },
+        { "name": "work_update" },
+        { "name": "task_delete" }   
+
+  ]

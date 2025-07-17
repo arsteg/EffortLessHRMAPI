@@ -1,0 +1,5 @@
+[
+    { "name": "Admin",     "description": "Company administrator",    "active": true },
+    { "name": "User",      "description": "Regular company user",     "active": true }
+    
+  ]

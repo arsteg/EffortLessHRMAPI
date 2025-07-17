@@ -1,0 +1,8 @@
+[
+    { "status": "Blocked",     "isDelete": false },
+    { "status": "Done",        "isDelete": false },
+    { "status": "To Do",       "isDelete": false },
+    { "status": "Closed",      "isDelete": false },
+    { "status": "In Progress", "isDelete": false }
+  ]
+  

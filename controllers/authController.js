@@ -157,10 +157,8 @@ if (existingUser) {
 }
   const existingCompany = await Company.findOne({ companyName });
   const isNewCompany = !existingCompany;
-
-  const masterCompanyId = process.env.DEFAULT_COMPANY_Id;
   let company = existingCompany;
-
+  let newUser=null;
   // 1. Create company if it doesn't exist
   if (!existingCompany) {
     const existingCompany = await Company.findOne({ email});
@@ -180,17 +178,20 @@ if (existingCompany) {
       createdOn: new Date(),
       updatedOn: new Date()
     });
-
+    try {
     // 2. Duplicate master data
-    await duplicateData(Role, company._id, masterCompanyId);
-    await duplicateData(TaskStatus, company._id, masterCompanyId);
-    await duplicateData(TaskPriority, company._id, masterCompanyId);
-    await duplicateData(EmailTemplate, company._id, masterCompanyId, { isDelete: false });
-    await duplicateData(IncomeTaxSection, company._id, masterCompanyId);
-    await duplicateData(IncomeTaxComponant, company._id, masterCompanyId);
-    await duplicateData(AttendanceMode, company._id, masterCompanyId);
-    await duplicateData(eventNotificationType, company._id, masterCompanyId);
-
+    await seedCompanyData(company._id);
+  }
+  catch (err) {
+    return next(err);   
+   }
+   try{
+    await seedIncomeTaxComponents(company._id);
+   }  
+  catch (err) {
+    return next(err);   
+   }
+    
     // 3. Seed role permissions
     await seedRolePermissions(company);
   }
@@ -205,7 +206,7 @@ if (existingCompany) {
   try {
    
   // 5. Create user
-  const newUser = await User.create({
+  newUser = await User.create({
     firstName,
     lastName,
     email,
@@ -254,9 +255,9 @@ if (existingCompany) {
       const resetURL = `${process.env.WEBSITE_DOMAIN}/#/home/profile/employee-profile`;
       const emailTemplate = await EmailTemplate.findOne({
         Name: constants.Email_template_constant.UPDATE_PROFILE,
-        company: masterCompanyId
+        company: company.id
       });
-
+      console.log(newUser);
       if (emailTemplate) {
         const message = emailTemplate.contentData
           .replace("{firstName}", newUser.firstName)
@@ -271,6 +272,7 @@ if (existingCompany) {
         });
       }
     } catch (err) {
+      console.log(err.message);
       return next(new AppError(req.t('auth.emailSendError') || 'Failed to send welcome email.', 500));
     }
     res.status(200).json({
@@ -283,19 +285,109 @@ if (existingCompany) {
    // return createAndSendToken(newUser, 201, res);  
 
 });
-async function duplicateData(Model, newCompanyId, masterCompanyId, additionalFields = {}) {
-  const records = await Model.find({ company: masterCompanyId });
-  if (records.length === 0) {
-    console.log(`No ${Model.modelName} records to duplicate.`);
-    return;
+
+async function seedCompanyData(newCompanyId, req, next) {
+  const seedFiles = [
+    { model: Role, file: 'Role.json' },
+    { model: EmailTemplate, file: 'EmailTemplate.json' },
+    { model: IncomeTaxSection, file: 'IncomeTaxSection.json' },
+    { model: TaskPriority, file: 'TaskPriority.json' },
+    { model: AttendanceMode, file: 'AttendanceMode.json' },
+    { model: eventNotificationType, file: 'EventNotificationType.json' },
+    { model: TaskStatus, file: 'TaskStatus.json' }
+  ];
+
+  for (const { model, file } of seedFiles) {
+    const filePath = path.join(__dirname, '..', 'config', file);
+    let data;
+
+    try {
+      data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch (err) {
+      console.error(`Unable to read/parse ${file}:`, err);
+      // Immediately return error up the chain
+      throw new AppError(`Failed to load configuration for ${file}`,
+        500
+      );
+    }
+
+    // Prepare docs
+    const docs = data.map(d => ({
+      ...d,
+      company: newCompanyId,
+      createdOn: new Date(),
+      updatedOn: new Date()
+    }));
+
+    try {
+      const result = await model.insertMany(docs);
+      console.log(`Seeded ${model.modelName} (${result.length} docs)`);
+    } catch (err) {
+      console.error(`Insert failure for ${file}:`, err);
+      // Return upstream if one seeding fails
+      throw new AppError(`Failed to seed ${model.modelName}`,
+        500
+      );
+    }
   }
 
-  const duplicated = records.map(record => {
-    const clone = { ...record.toObject(), _id: new mongoose.Types.ObjectId(), company: newCompanyId };
-    return { ...clone, ...additionalFields };
+  // If all files succeeded
+  console.log('All seed data inserted successfully');
+}
+
+async function seedIncomeTaxComponents(newCompanyId, req, next) {
+  const filePath = path.join(__dirname, '..', 'config', 'IncomeTaxComponant.json');
+  let data;
+
+  // 1️⃣ Load and parse JSON file
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (err) {
+    console.error(`Failed to read or parse IncomeTaxComponant.json: ${err.message}`);
+    throw new AppError('Failed to load tax components file', 500);
+  }
+
+  // 2️⃣ Load sections for mapping
+  let sections;
+  try {
+    sections = await IncomeTaxSection.find({ company: newCompanyId });
+  } catch (err) {
+    console.error(`Failed to fetch IncomeTaxSection for company ${newCompanyId}: ${err.message}`);
+    throw new AppError('Failed to query tax sections', 500);
+  }
+  const sectionMap = Object.fromEntries(sections.map(s => [s.section, s._id]));
+
+  // 3️⃣ Build component docs
+  const promiseDocs = data.map(async item => {
+    const sectionId = sectionMap[item.section];
+    if (!sectionId) {
+      console.error(`Section missing for "${item.section}"`);
+      return null;
+    }
+    return {
+      componantName: item.componantName,
+      section: sectionId,
+      maximumAmount: item.maximumAmount,
+      order: item.order,
+      company: newCompanyId
+    };
   });
 
-  await Model.insertMany(duplicated);
+  const resolved = await Promise.all(promiseDocs);
+  const validDocs = resolved.filter(d => d);
+
+  // 4️⃣ Insert documents or handle error
+  if (validDocs.length) {
+    try {
+      const result = await IncomeTaxComponant.insertMany(validDocs);
+      console.log(`Seeded ${result.length} tax components.`);
+    } catch (err) {
+      console.error(`Failed to insert tax components: ${err.message}`);
+      throw new AppError('Failed to seed tax components', 500);
+    }
+  } else {
+    console.log('No valid tax components to insert.');
+  }
 }
 
 exports.CreateUser = catchAsync(async(req, res, next) => {      

@@ -1,0 +1,236 @@
+[
+    {
+      "componantName": "Employee Provident Fund (EPF)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 1
+    },
+    {
+      "componantName": "Public Provident Fund (PPF)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 2
+    },
+    {
+      "componantName": "National Savings Certificates (NSC)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 3
+    },
+    {
+      "componantName": "5-Year Fixed Deposit with Banks",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 4
+    },
+    {
+      "componantName": "Senior Citizens Savings Scheme (SCSS)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 5
+    },
+    {
+      "componantName": "Tax-saving Fixed Deposit",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 6
+    },
+    {
+      "componantName": "Life Insurance Premium (LIC)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 7
+    },
+    {
+      "componantName": "Equity Linked Savings Scheme (ELSS)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 8
+    },
+    {
+      "componantName": "Sukanya Samriddhi Yojana (SSY)",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 9
+    },
+    {
+      "componantName": "Tuition Fees for Children",
+      "section": "80C Deduction",
+      "maximumAmount": 150000,
+      "order": 10
+    },
+    {
+      "componantName": "Pension Funds (Section 80CCC)",
+      "section": "80CCC Pension Funds",
+      "maximumAmount": 150000,
+      "order": 11
+    },
+    {
+      "componantName": "National Pension Scheme (NPS) Contribution",
+      "section": "80CCD - NPS Contribution",
+      "maximumAmount": 150000,
+      "order": 12
+    },
+    {
+      "componantName": "Additional NPS Contribution (Section 80CCD(1B))",
+      "section": "80CCD(1B) Additional NPS",
+      "maximumAmount": 50000,
+      "order": 13
+    },
+    {
+      "componantName": "Health Insurance Premium (Section 80D)",
+      "section": "80D Health Insurance",
+      "maximumAmount": 25000,
+      "order": 14
+    },
+    {
+      "componantName": "Health Insurance Premium for Senior Citizens",
+      "section": "80D Health Insurance",
+      "maximumAmount": 50000,
+      "order": 15
+    },
+    {
+      "componantName": "Preventive Health Check-up Expenses",
+      "section": "80D Health Insurance",
+      "maximumAmount": 5000,
+      "order": 16
+    },
+    {
+      "componantName": "Medical Expenditure for Senior Citizens (No Insurance)",
+      "section": "80D Health Insurance",
+      "maximumAmount": 50000,
+      "order": 17
+    },
+    {
+      "componantName": "Maintenance of Disabled Dependent (Section 80DD)",
+      "section": "80DD - Dependent Disability",
+      "maximumAmount": 75000,
+      "order": 18
+    },
+    {
+      "componantName": "Maintenance of Severely Disabled Dependent (Section 80DD)",
+      "section": "80DD - Dependent Disability",
+      "maximumAmount": 125000,
+      "order": 19
+    },
+    {
+      "componantName": "Medical Treatment of Specified Diseases (Section 80DDB)",
+      "section": "80DDB - Medical Treatment",
+      "maximumAmount": 40000,
+      "order": 20
+    },
+    {
+      "componantName": "Medical Treatment of Specified Diseases for Senior Citizens",
+      "section": "80DDB - Medical Treatment",
+      "maximumAmount": 100000,
+      "order": 21
+    },
+    {
+      "componantName": "Interest on Education Loan (Section 80E)",
+      "section": "80E Education Loan Interest",
+      "maximumAmount": 0,
+      "order": 22
+    },
+    {
+      "componantName": "Interest on First-Time Home Loan (Section 80EE)",
+      "section": "80EE First-Time Home Loan Interest",
+      "maximumAmount": 50000,
+      "order": 23
+    },
+    {
+      "componantName": "Interest on Affordable Housing Loan (Section 80EEA)",
+      "section": "80EEA Affordable Housing Interest",
+      "maximumAmount": 150000,
+      "order": 24
+    },
+    {
+      "componantName": "Interest on Electric Vehicle Loan (Section 80EEB)",
+      "section": "80EEB EV Loan Interest",
+      "maximumAmount": 150000,
+      "order": 25
+    },
+    {
+      "componantName": "Donations to Charitable Institutions (Section 80G)",
+      "section": "80G Charitable Donations",
+      "maximumAmount": 0,
+      "order": 26
+    },
+    {
+      "componantName": "Donations to Specified Funds (100% Deduction)",
+      "section": "80G Charitable Donations",
+      "maximumAmount": 0,
+      "order": 27
+    },
+    {
+      "componantName": "Donations to Other Funds (50% Deduction)",
+      "section": "80G Charitable Donations",
+      "maximumAmount": 0,
+      "order": 28
+    },
+    {
+      "componantName": "Donations for Scientific Research (Section 80GGA)",
+      "section": "80GGA Research Donations",
+      "maximumAmount": 0,
+      "order": 29
+    },
+    {
+      "componantName": "Political Donations by Companies (Section 80GGB)",
+      "section": "80GGB Political Donations by Companies",
+      "maximumAmount": 0,
+      "order": 30
+    },
+    {
+      "componantName": "Political Donations by Others (Section 80GGC)",
+      "section": "80GGC Political Donations by Others",
+      "maximumAmount": 0,
+      "order": 31
+    },
+    {
+      "componantName": "Rent Paid (No HRA) (Section 80GG)",
+      "section": "80GG Rent Paid (No HRA)",
+      "maximumAmount": 60000,
+      "order": 32
+    },
+    {
+      "componantName": "Interest on Savings Account (Section 80TTA)",
+      "section": "80TTA Savings Interest",
+      "maximumAmount": 10000,
+      "order": 33
+    },
+    {
+      "componantName": "Interest on Savings Account for Senior Citizens (Section 80TTB)",
+      "section": "80TTB Senior Citizens' Interest",
+      "maximumAmount": 50000,
+      "order": 34
+    },
+    {
+      "componantName": "Disability Deduction (Section 80U)",
+      "section": "80U Disability Deduction",
+      "maximumAmount": 75000,
+      "order": 35
+    },
+    {
+      "componantName": "Severe Disability Deduction (Section 80U)",
+      "section": "80U Disability Deduction",
+      "maximumAmount": 125000,
+      "order": 36
+    },
+    {
+      "componantName": "House Rent Allowance Exemption (Section 10(13A))",
+      "section": "10(13A) House Rent Allowance Exemption",
+      "maximumAmount": 0,
+      "order": 37
+    },
+    {
+      "componantName": "Interest on Home Loan for Self-Occupied Property (Section 24)",
+      "section": "24 Interest on Home Loan",
+      "maximumAmount": 200000,
+      "order": 38
+    },
+    {
+      "componantName": "Interest on Home Loan for Let-Out Property (Section 24)",
+      "section": "24 Interest on Home Loan",
+      "maximumAmount": 0,
+      "order": 39
+    }
+  ]
