@@ -1,0 +1,93 @@
+[
+  {
+    "Name": "Update Your Profile",
+    "subject": "Update Your Profile",
+    "templateType": 3,
+    "contentData": "<p>Hello {firstName} {lastName},</p><p>We are delighted to welcome you to {company}.</p><p>As an essential step towards getting started, we kindly request you to update your profile information to ensure that we have accurate and up-to-date details about you.</p><p>To update your profile, please follow these steps:</p><ol><li>Click on the following link: {url}</li><li>Review and update your information as needed.</li><li>Click 'Save' to confirm your changes.</li></ol><p>Your participation in keeping your profile information current is crucial for effective communication and collaboration within the organization. Please take a moment to ensure that your information is complete and accurate.</p><p>If you encounter any difficulties or have any questions, please don't hesitate to reach out to our support team.</p><p>Thank you for joining us, and we look forward to your active participation!</p><p>Best regards,</p><p>{company}.</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Forgot Password",
+    "subject": "Forgot Password",
+    "templateType": 2,
+    "contentData": "<p><span style=\"color: rgb(206, 145, 120);\">Dear </span><strong style=\"color: rgb(206, 145, 120);\">{firstName} {lastName},</strong></p><p><span style=\"color: rgb(206, 145, 120);\"> We received a request to reset your password for your EffortlessHRM account. To proceed with the password reset, please click the link below:</span></p><p><span style=\"color: rgb(206, 145, 120);\">{url}</span></p><p><span style=\"color: rgb(206, 145, 120);\"> If you did not initiate this request or believe it to be in error, please ignore this email.</span></p><p><strong style=\"color: rgb(206, 145, 120);\">Thank you for using EffortlessHRM!</strong></p><p><em style=\"color: rgb(206, 145, 120);\">Best Regards, Team EffortlessHRM</em></p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Delete Task",
+    "subject": "Task Deletion Notification",
+    "templateType": 4,
+    "contentData": "<p>Hello {firstName} {lastName},</p><p>We wanted to inform you that a task has been deleted in the Effortless HRM management system.</p><p><strong>Task Name:</strong> {taskName}</p><p><strong>Project:</strong> {projectName}</p><p><strong>Date of Deletion:</strong> {date}</p><p>If you have any questions or concerns, please contact support.</p><p>Thank you,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Task Unassigned",
+    "subject": "Task Unassigned Notification",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>We hope this message finds you well. We wanted to inform you that the following task has been unassigned from you in the Effortless HRM management system:</p><p><strong>Task Name:</strong> {taskName}</p><p><strong>Project:</strong> {projectName}</p><p><strong>Date of Unassignment:</strong> {date}</p><p>If you have any questions or concerns, please reach out to us.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Task Assigned",
+    "subject": "Task Assigned Notification",
+    "templateType": 5,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>I hope this email finds you well. We have assigned a new task to you.</p><p>Your expertise and skills make you the ideal candidate for this task.</p><p><strong>Task Details:</strong></p><ul><li><strong>Task Title:</strong> {taskName}</li><li><strong>Due Date:</strong> {endDate}</li><li><strong>Priority:</strong> {priority}</li><li><strong>Description:</strong> {description}</li></ul><p>Thanks,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Approval Request Leave Application",
+    "subject": "Approval Request Leave Application",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>{employeeName} has submitted a leave application and requires your approval.</p><p>Leave Application Details:</p><p>Employee Name: {employeeName}</p><p>Type of Leave: {leaveType}</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p>Please log into the {company} portal to approve or decline.</p><p>If no action is taken, the request remains pending.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Termination of Employment",
+    "subject": "Termination of Employment",
+    "templateType": 8,
+    "contentData": "<p>Hello {firstName} {lastName},</p><p>We confirm your employment with {company} has been terminated, effective {terminationDate}.</p><p>Reason: {terminationReason}</p><p>Notice Given: {noticeGiven}</p><p>Performance Warnings Issued: {PerformanceWarningIssued}</p><p>Return company property and attend the exit interview scheduled for {exitInterview}.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Birthday email template to employee",
+    "subject": "Happy Birthday, {firstName}",
+    "templateType": 8,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Happy Birthday from all of us at {company}! Wishing you a joyous day!</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Birthday email template to manager",
+    "subject": "It's {employeeFirstName} {employeeLastName}'s Birthday Today! 🎂",
+    "templateType": 8,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Today is {employeeFirstName} {employeeLastName}'s birthday! 🎂</p><p>Please extend your wishes.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Work anniversary email template to employee",
+    "subject": "Celebrating Your {years} Year Work Anniversary with {company}!",
+    "templateType": 9,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Congratulations on your {years} year anniversary with {company}!</p><p>Thank you!</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Work anniversary email template to manager",
+    "subject": "Celebrating {employeeFirstName} {employeeLastName}'s {years} Year Work Anniversary!",
+    "templateType": 9,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Today marks {employeeFirstName} {employeeLastName}'s {years} year anniversary! Please recognize their dedication.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Appraisal notification email template to employee",
+    "subject": "Your Performance Appraisal Results Are Ready!",
+    "templateType": 10,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Your performance appraisal has been completed. Please check the portal for details.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  },
+  {
+    "Name": "Appraisal notification email template to manager",
+    "subject": "{employeeFirstName} {employeeLastName}'s Appraisal Results Shared",
+    "templateType": 10,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>The appraisal results for {employeeFirstName} {employeeLastName} have been shared. Please follow up if needed.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": true
+  }
+]

@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var leaveApplicationSchema = new Schema({
   employee: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'User', // Assuming the reference is to an Employee schema
     required: true
   },
   leaveCategory: {
@@ -49,5 +50,17 @@ var leaveApplicationSchema = new Schema({
   },
   halfDays:[]
 }, { collection: 'LeaveApplication' });
+
+leaveApplicationSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'employee',
+      select: '_id firstName lastName'
+    });
+  } catch (error) {
+    console.error("Error populating employee", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('LeaveApplication', leaveApplicationSchema);
