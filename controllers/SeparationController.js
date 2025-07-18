@@ -169,7 +169,7 @@ exports.updateResignation = catchAsync(async (req, res, next) => {
 exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting changeResignationStatus for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const resignation_status = req.body.resignation_status;
-  const validStatuses = [constants.Resignation_Status.Approved, constants.Resignation_Status.InProgress, constants.Resignation_Status.Completed,constants.Resignation_Status.Deleted];
+  const validStatuses = [constants.Resignation_Status.Pending,constants.Resignation_Status.Approved, constants.Resignation_Status.InProgress, constants.Resignation_Status.Completed,constants.Resignation_Status.Deleted];
   if (!validStatuses.includes(resignation_status)) {
   websocketHandler.sendLog(req, `Invalid resignation status: ${resignation_status}`, constants.LOG_TYPES.ERROR);
   return next(new AppError(req.t('separation.invalidResignationStatus'), 400));
@@ -185,20 +185,23 @@ exports.changeResignationStatus = catchAsync(async (req, res, next) => {
   resignation.resignation_status = req.body.resignation_status;
   await resignation.save();
   websocketHandler.sendLog(req, `Changed resignation status to ${req.body.resignation_status}`, constants.LOG_TYPES.INFO);
- 
-  if (resignation.resignation_status === constants.Resignation_Status.Approved) {
-  websocketHandler.sendLog(req, `Processing approved status for user ${resignation.user}`, constants.LOG_TYPES.TRACE);
   const user = await User.findById(resignation.user);
   if (!user) {
-  websocketHandler.sendLog(req, `User ${resignation.user} not found`, constants.LOG_TYPES.ERROR);
-  return next(new AppError(req.t('separation.userNotFound'), 404));
+    websocketHandler.sendLog(req, `User ${resignation.user} not found`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('separation.userNotFound'), 404));
+  } 
+  if (resignation.resignation_status === constants.Resignation_Status.Approved) {
+    websocketHandler.sendLog(req, `Processing approved status for user ${resignation.user}`, constants.LOG_TYPES.TRACE); 
+    user.status = constants.User_Status.Resigned; 
+    await user.save();
+    websocketHandler.sendLog(req, `Updated user ${user._id} status to Resigned`, constants.LOG_TYPES.INFO);
   }
- 
-  user.status = constants.User_Status.Resigned;
-  await user.save();
-  websocketHandler.sendLog(req, `Updated user ${user._id} status to Resigned`, constants.LOG_TYPES.INFO);
-  }
- 
+  if (resignation.resignation_status === constants.Resignation_Status.Deleted || resignation.resignation_status === constants.Resignation_Status.Pending) {
+    websocketHandler.sendLog(req, `Processing deleted status for user ${resignation.user}`, constants.LOG_TYPES.TRACE);  
+    user.status = constants.User_Status.Active;
+    await user.save();
+    websocketHandler.sendLog(req, `Updated user ${user._id} status to Active`, constants.LOG_TYPES.INFO);
+    }
   res.status(200).json({
   status: constants.APIResponseStatus.Success,
   data: resignation
