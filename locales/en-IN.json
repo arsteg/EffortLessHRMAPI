@@ -23,7 +23,7 @@
     "sectionMissing": "Section field missing in request body.",
     "duplicateSection": "Duplicate section found." ,
     "popupRequiredFieldsMissing": "The fields are required.",
-    "duplicateComponent": "Duplicate componant found.",
+    "duplicateComponent": "Duplicate component found.",
     "sectionInUseByComponent": "Cannot delete section because it's used by component",    
     "bandExists": "Band Already Exists.",
     "dateMissing": "Holiday date missing in request body",
