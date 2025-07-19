@@ -487,7 +487,21 @@ exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
   }
 
   if (appeal_status) {
-    const validStatuses = [constants.Termination_Appealed_status.Approved, constants.Termination_Appealed_status.Rejected];
+    const validStatuses = [
+      constants.Termination_Appealed_status.Approved,
+      constants.Termination_Appealed_status.Rejected
+    ];
+  
+    // ❌ Disallow changing from Approved/Rejected to any other status (e.g., Pending)
+    const currentStatus = appeal.appeal_status;
+    const isFinalStatus = validStatuses.includes(currentStatus);
+    const isTryingToUndo = !validStatuses.includes(appeal_status) && isFinalStatus;
+  
+    if (isTryingToUndo) {
+      websocketHandler.sendLog(req, `Cannot revert appeal status from ${currentStatus} to ${appeal_status}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('separation.appealStatusCannotBeReverted'), 400));
+    }
+  
     if (!validStatuses.includes(appeal_status)) {
       websocketHandler.sendLog(req, `Invalid appeal status provided: ${appeal_status}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('separation.invalidAppealStatus'), 400));

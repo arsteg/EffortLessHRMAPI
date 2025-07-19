@@ -28,6 +28,7 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const AttendanceMode = require('../models/attendance/attendanceMode');
 const UserRole = require('../models/permissions/userRoleModel');
+const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const fs = require('fs');
 const path = require('path');
 const Permission = require('../models/permissions/permissionModel');
@@ -296,6 +297,7 @@ async function seedCompanyData(newCompanyId, req, next) {
     { model: TaskPriority, file: 'TaskPriority.json' },
     { model: AttendanceMode, file: 'AttendanceMode.json' },
     { model: eventNotificationType, file: 'EventNotificationType.json' },
+    { model: FixedAllowances, file: 'fixedAllowancesModel.json' },
     { model: TaskStatus, file: 'TaskStatus.json' }
   ];
 

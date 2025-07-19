@@ -1,0 +1,23 @@
+[
+    {
+      "label": "Basic Salary",  
+      "isProvidentFundAffected": true,
+      "isESICAffected": true,
+      "isGratuityFundAffected": true,
+      "isLWFAffected": true,
+      "isProfessionalTaxAffected": true,
+      "isTDSAffected": true,
+      "isDelete": "false"
+    },
+    {
+      "label": "HRA",
+      "isProvidentFundAffected": true,
+      "isESICAffected": true,
+      "isGratuityFundAffected": true,
+      "isLWFAffected": true,
+      "isProfessionalTaxAffected": true,
+      "isTDSAffected": true,
+      "isDelete": "false"
+    }
+  ]
+  
