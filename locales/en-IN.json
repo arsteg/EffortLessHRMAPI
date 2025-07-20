@@ -153,7 +153,9 @@
     "deleteAttendanceModeFailure": "The attendance mode was not found.",
     "getAllAttendanceModesSuccess": "All attendance modes were retrieved successfully.",
     "createAttendanceTemplateSuccess": "The attendance template was created successfully for company {companyId}.",
-    "attendanceTemplateNotFound": "The attendance template was not found.",
+     "shiftAlreadyExists": "A shift with this label already exists",
+    "deleteRestricted": "This shift cannot be deleted because it is assigned to employees.",
+    "attendanceTemplateNotFound": "The attendance template was not found.",  
     "invalidAttendanceTemplate": "The attendance template is invalid.",
     "createAttendanceRegularizationSuccess": "The attendance regularization was created successfully for company {companyId}.",
     "attendanceRegularizationExists": "An attendance regularization with this template already exists.",
@@ -203,7 +205,9 @@
     "createOnDutyRequestsNotificationTitle": "On-Duty Request Created",
     "createOnDutyRequestsNotificationMessage": "On-Duty request has been created with start date {{startDate}} and end date {{endDate}}.",
     "updateOnDutyRequestsNotificationTitle": "On-Duty Request Updated",
-    "updateOnDutyRequestsNotificationMessage": "On-Duty request has been updated to {{status}} with start date {{startDate}} and end date {{endDate}}."
+    "updateOnDutyRequestsNotificationMessage": "On-Duty request has been updated to {{status}} with start date {{startDate}} and end date {{endDate}}.",
+     "templateAlreadyExists": "An attendance template with this name already exists.",
+     "attendanceTemplateAssignedError": "This attendance template is assigned to one or more employees and cannot be deleted."
   },
   "auth": {
     "signupSuccess": "The user signed up successfully for company {companyId}.",
@@ -641,6 +645,7 @@
     "invalidTerminationStatus": "The termination status provided is invalid. Valid statuses are: Pending, Completed, Appealed.",
     "appealReviewSuccess": "The appeal has been reviewed and updated successfully.",
     "invalidAppealStatus": "The provided appeal status is invalid. Allowed values are: Approved or Rejected.",
+    "appealStatusCannotBeReverted": "The appeal decision has already been finalized and cannot be changed.",
     "separationTypeNotFound": "The separation type was not found.",  
     "existingResignation": "User already has an active resignation.",
     "exitInterviewQuestionNotFound": "The exit interview question was not found.",
