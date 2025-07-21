@@ -589,23 +589,33 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating attendance template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
 
   const companyId = req.cookies.companyId;
-  // Check if companyId exists in cookies
+
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('common.missingParams')
-    });
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    return next(new AppError(req.t('common.missingParams'), 400));
   }
+
+  const { label } = req.body;
+
+  // Check if a template with the same label already exists for the company
+  const existingTemplate = await AttendanceTemplate.findOne({ label, company: companyId, isDelete: { $ne: true } });
+
+  if (existingTemplate) {
+    websocketHandler.sendLog(req, `Attendance template with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.templateAlreadyExists'), 400));
+  }
+
   // Add companyId to the request body
   req.body.company = companyId;
 
   const attendanceTemplate = await AttendanceTemplate.create(req.body);
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: attendanceTemplate,
   });
 });
+
 
 // Get an Attendance Template by ID
 exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
@@ -614,10 +624,8 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
   const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.attendanceTemplateNotFound')
-    });
+  
+    return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
   websocketHandler.sendLog(req, `Successfully retrieved attendance template: ${attendanceTemplate._id}`, constants.LOG_TYPES.INFO);
@@ -631,18 +639,34 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
 // Update an Attendance Template by ID
 exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating attendance template with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  const companyId = req.cookies.companyId;
 
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    return next(new AppError(req.t('common.missingParams'), 400));
+  }
+
+  const label = req.body.label?.trim();
+
+  // 🔍 Check if another template with the same label exists (excluding the current one)
+  const duplicate = await AttendanceTemplate.findOne({
+    _id: { $ne: req.params.id },
+    company: companyId,
+    label: { $regex: new RegExp(`^${label}$`, 'i') } // case-insensitive match
+  });
+
+  if (duplicate) {
+    websocketHandler.sendLog(req, `Duplicate label "${label}" found for another template`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.templateAlreadyExists'), 400));
+  }
   const attendanceTemplate = await AttendanceTemplate.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!attendanceTemplate) {
-    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.attendanceTemplateNotFound')
-    });
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
   websocketHandler.sendLog(req, `Successfully updated attendance template: ${attendanceTemplate._id}`, constants.LOG_TYPES.INFO);
@@ -682,11 +706,8 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
   //   console.log('attendance template:', attendanceTemplate);
   // }
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    message: req.t('attendance.getAttendanceTemplateByUserSuccess', { userId: req.params.userId }),
-    data: attendanceTemplateAssignments
-  });
+ 
+  return next(new AppError(req.t('attendance.getAttendanceTemplateByUserSuccess'), 400));
 });
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
@@ -1168,7 +1189,7 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
-
+ 
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1629,13 +1650,19 @@ exports.createShift = catchAsync(async (req, res, next) => {
   // Check if companyId exists in cookies
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('common.missingParams')
-    });
+    return next(new AppError(req.t('common.missingParams'), 400));
   }
   // Add companyId to the request body
   req.body.company = companyId;
+  const { label } = req.body;
+
+  // Check for duplicate shift label in same company
+  const existingShift = await Shift.findOne({ label, company: companyId, isDelete: { $ne: true } });
+
+  if (existingShift) {
+    websocketHandler.sendLog(req, `Shift with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.shiftAlreadyExists'), 400));
+  }
   const shift = await Shift.create(req.body);
 
   res.status(201).json({
@@ -1649,11 +1676,8 @@ exports.getShift = catchAsync(async (req, res, next) => {
 
   const shift = await Shift.findById(req.params.id);
   if (!shift) {
-    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.shiftNotFound')
-    });
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
 
   websocketHandler.sendLog(req, `Successfully retrieved shift: ${shift._id}`, constants.LOG_TYPES.INFO);
@@ -1666,7 +1690,26 @@ exports.getShift = catchAsync(async (req, res, next) => {
 
 exports.updateShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  const companyId = req.cookies.companyId;
 
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    return next(new AppError(req.t('common.missingParams'), 400));
+  }
+
+  const label = req.body.label?.trim();
+
+  // 🔍 Check if another template with the same label exists (excluding the current one)
+  const duplicate = await Shift.findOne({
+    _id: { $ne: req.params.id },
+    company: companyId,
+    label: { $regex: new RegExp(`^${label}$`, 'i') } // case-insensitive match
+  });
+
+  if (duplicate) {
+    websocketHandler.sendLog(req, `Duplicate label "${label}" found for another template`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('attendance.shiftAlreadyExists'), 400));
+  }
   const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -1674,10 +1717,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.shiftNotFound')
-    });
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
   }
 
   websocketHandler.sendLog(req, `Successfully updated shift: ${shift._id}`, constants.LOG_TYPES.INFO);
@@ -1695,12 +1735,14 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return res.status(404).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('attendance.shiftNotFound')
-    });
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
   }
+  const isAssigned = await ShiftTemplateAssignment.exists({ shift: req.params.id });
 
+  if (isAssigned) {
+    websocketHandler.sendLog(req, `Shift ID ${shift.label} is currently assigned and cannot be deleted`, constants.LOG_TYPES.WARNING);
+    return next(new AppError(req.t('attendance.deleteRestricted'), 400));
+  }
   websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,

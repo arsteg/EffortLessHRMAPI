@@ -28,6 +28,7 @@ const IncomeTaxSection = require('../models/commons/IncomeTaxSectionModel');
 const IncomeTaxComponant = require("../models/commons/IncomeTaxComponant");
 const AttendanceMode = require('../models/attendance/attendanceMode');
 const UserRole = require('../models/permissions/userRoleModel');
+const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const fs = require('fs');
 const path = require('path');
 const Permission = require('../models/permissions/permissionModel');
@@ -69,7 +70,12 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
     }
 
     user.password = undefined;
-    const companySubscription = await checkCompanySubscription(user, req);
+    let companySubscription=null;
+    const companyDetails = await Company.findById( user.company.id);
+    if(!companyDetails.freeCompany){
+       companySubscription = await checkCompanySubscription(user, req);
+    }
+   
     res.status(statusCode).json({
       status: constants.APIResponseStatus.Success,
       token,
@@ -296,6 +302,7 @@ async function seedCompanyData(newCompanyId, req, next) {
     { model: TaskPriority, file: 'TaskPriority.json' },
     { model: AttendanceMode, file: 'AttendanceMode.json' },
     { model: eventNotificationType, file: 'EventNotificationType.json' },
+    { model: FixedAllowances, file: 'fixedAllowancesModel.json' },
     { model: TaskStatus, file: 'TaskStatus.json' }
   ];
 
@@ -404,11 +411,8 @@ exports.CreateUser = catchAsync(async(req, res, next) => {
     company: mongoose.Types.ObjectId(req.cookies.companyId),
     status: {$in: constants.Active_Statuses}
   });
-  if(subscription?.currentPlanId?.users <= activeUsers){
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      error: req.t('auth.userLimitReached').replace('{userLimit}', subscription?.currentPlanId?.users)
-    })
+  if(subscription?.currentPlanId?.users <= activeUsers){   
+    new AppError(req.t('auth.userLimitReached'), 500)
   }
   const newUser = await User.create({
     firstName: req.body.firstName,

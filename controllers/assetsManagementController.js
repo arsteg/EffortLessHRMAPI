@@ -735,7 +735,7 @@ exports.createEmployeeAsset = catchAsync(async (req, res, next) => {
 exports.getEmployeeAsset = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Fetching employee asset');
   const employeeAsset = await EmployeeAssets.find({
-    employee: req.params.id,
+    Employee: req.params.id,
   }).populate("Asset");
   if (!employeeAsset) {
     websocketHandler.sendLog(req, 'Employee asset not found');
