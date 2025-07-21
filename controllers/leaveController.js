@@ -876,7 +876,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
 
     if (!assignmentExists) {     
-      res.status(201).json({
+      res.status(400).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
         message:  req.t('leave.leaveAssignmentNotExist')
