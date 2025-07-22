@@ -8,7 +8,7 @@ var leaveApplicationSchema = new Schema({
     required: true
   },
   leaveCategory: {
-    type: mongooese.Schema.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'LeaveCategory', // Assuming the reference is to a LeaveCategory schema
     required: true
   },
