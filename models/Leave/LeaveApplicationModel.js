@@ -60,7 +60,7 @@ leaveApplicationSchema.pre(/^find/, async function (next) {
     }),
     this.populate({
       path: 'leaveCategory',
-      select: 'id lable'
+      select: 'id label'
     });
   } catch (error) {
     console.error("Error populating employee", error);
