@@ -8,7 +8,8 @@ var leaveApplicationSchema = new Schema({
     required: true
   },
   leaveCategory: {
-    type: String,
+    type: mongooese.Schema.ObjectId,
+    ref: 'LeaveCategory', // Assuming the reference is to a LeaveCategory schema
     required: true
   },
   startDate: {
@@ -56,6 +57,10 @@ leaveApplicationSchema.pre(/^find/, async function (next) {
     this.populate({
       path: 'employee',
       select: '_id firstName lastName'
+    }),
+    this.populate({
+      path: 'leaveCategory',
+      select: 'id lable'
     });
   } catch (error) {
     console.error("Error populating employee", error);
