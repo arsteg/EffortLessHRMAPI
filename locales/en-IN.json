@@ -431,6 +431,8 @@
     "leaveTemplateLabelExists": "The leave template label already exists.",
     "leaveCategoryNotInRequest": "The leave category is missing from the request.",
     "invalidCategory": "The category provided is invalid.",
+    "categoryAlreadyExists": "A leave category with this name already exists.",
+    "updateLeaveCategorySuccess": "The leave category was updated successfully.",
     "internalServerError": "An internal server error occurred.",
     "invalidRequestData": "The request data provided is invalid.",
     "usersRequired": "Users are required.",

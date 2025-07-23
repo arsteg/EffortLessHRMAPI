@@ -700,14 +700,14 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 
   const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ employee: req.params.userId });
   console.log('attendance template assignment:', attendanceTemplateAssignments);
-  // var attendanceTemplate = [];
-  // if (attendanceTemplateAssignments?.length > 0) {
-  //   attendanceTemplate = await AttendanceTemplate.findById(attendanceTemplateAssignments[0]?.attandanceTemplate);
-  //   console.log('attendance template:', attendanceTemplate);
-  // }
+  const totalCount = await AttendanceTemplate.countDocuments({employee: req.params.userId });
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
- 
-  return next(new AppError(req.t('attendance.getAttendanceTemplateByUserSuccess'), 400));
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: req.t('attendance.getAllAttendanceTemplatesSuccess', { companyId: req.cookies.companyId }),
+    data: attendanceTemplateAssignments,
+    total: totalCount
+  });
 });
 // Get all Attendance Templates
 exports.getAllAttendanceTemplates = catchAsync(async (req, res, next) => {
@@ -2706,118 +2706,25 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Processing for user: ${req.body.user}, month: ${req.body.month}, year: ${req.body.year}`, constants.LOG_TYPES.TRACE);
 
   try {
-    const startOfMonth = new Date(req.body.year, req.body.month - 1, 2);
-    const endOfMonth = new Date(req.body.year, req.body.month, 0);
-    const attendanceAssignment = await AttendanceTemplateAssignments.findOne({ employee: req.body.user });
-    websocketHandler.sendLog(req, `Fetched attendance assignment for user: ${req.body.user}`, constants.LOG_TYPES.TRACE);
-    if (attendanceAssignment) {
-      const attendanceTemplate = await AttendanceTemplate.findOne({ _id: attendanceAssignment.attendanceTemplate });
-      websocketHandler.sendLog(req, `Fetched attendance template: ${attendanceTemplate?._id}`, constants.LOG_TYPES.TRACE);
-      if (attendanceTemplate) {
-        const attendanceRecords = await AttendanceRecords.find({
-          user: req.body.user,
-          company: req.cookies.companyId,
-          date: { $gte: startOfMonth, $lte: endOfMonth },
-        });
-        websocketHandler.sendLog(req, `Fetched ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.DEBUG);
+    const { user, month, year } = req.body;
+    const companyId = req.cookies.companyId;
 
-        const approvedLeaves = await LeaveApplication.find({
-          user: req.body.user,
-          status: constants.Leave_Application_Constant.Approved,
-          startDate: { $gte: startOfMonth, $lte: endOfMonth },
-          endDate: { $gte: startOfMonth, $lte: endOfMonth },
-        });
-        websocketHandler.sendLog(req, `Fetched ${approvedLeaves.length} approved leaves`, constants.LOG_TYPES.DEBUG);
-        const approvedLeaveDays = approvedLeaves.flatMap(leave => {
-          const leaveStart = new Date(leave.startDate);
-          const leaveEnd = new Date(leave.endDate);
-          const leaveDays = [];
-          for (let d = leaveStart; d <= leaveEnd; d.setDate(d.getDate() + 1)) {
-            if (d >= startOfMonth && d <= endOfMonth) {
-              leaveDays.push(d.toISOString().split('T')[0]);
-            }
-          }
-          return leaveDays;
-        });
-        const holidays = await HolidayCalendar.find({ company: req.cookies.companyId });
-        const holidayDates = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
-        websocketHandler.sendLog(req, `Fetched ${holidays.length} holidays`, constants.LOG_TYPES.DEBUG);
-        const daysInMonth = endOfMonth.getDate();
-        for (let day = 1; day <= daysInMonth; day++) {
-          const currentDate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
-          const localDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-          const dayOfWeek = currentDate.getDay();
-          const weeklyOffDays = attendanceTemplate.weeklyOfDays;
-          const alternateWeekOffRoutine = attendanceTemplate.alternateWeekOffRoutine;
-          const daysForAlternateWeekOffRoutine = attendanceTemplate.daysForAlternateWeekOffRoutine || [];
-          const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const weeklyOffDaysSet = new Set(weeklyOffDays);
-          const alternateWeekOffDaysSet = new Set(daysForAlternateWeekOffRoutine);
-          const dayName = daysOfWeek[dayOfWeek];
+    const { startOfMonth, endOfMonth } = getStartAndEndDates(year, month);
 
-          function getWeekNumber(date) {
-            const startDate = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000));
-            return Math.ceil((days + 1) / 7);
-          }
-          const currentWeekNumber = getWeekNumber(currentDate);
-          const isOddWeek = currentWeekNumber % 2 !== 0;
-          let currentWeekOffDaysSet;
-          if (alternateWeekOffRoutine === 'odd' || alternateWeekOffRoutine === 'even') {
-            if (alternateWeekOffRoutine === 'odd' && isOddWeek) {
-              currentWeekOffDaysSet = alternateWeekOffDaysSet;
-            } else if (alternateWeekOffRoutine === 'even' && !isOddWeek) {
-              currentWeekOffDaysSet = alternateWeekOffDaysSet;
-            }
-            if (currentWeekOffDaysSet && currentWeekOffDaysSet.has(dayName)) {
-              continue;
-            }
-          }
-          const isWeeklyOffDay = weeklyOffDaysSet.has(dayName) || holidayDates.includes(currentDate.toISOString().split('T')[0]);
-          if (!isWeeklyOffDay) {
-            const currentDateForValidate = new Date(Date.UTC(req.body.year, req.body.month - 1, day));
-            const isPresent = attendanceRecords.find(record => {
-              return record.date.toISOString().split('T')[0] === currentDateForValidate.toISOString().split('T')[0];
-            });
-            if (!isPresent && !approvedLeaveDays.includes(currentDateForValidate.toISOString().split('T')[0])) {
-              const existingRecord = await LOP.findOne({
-                user: req.body.user,
-                date: currentDate,
-                company: req.cookies.companyId,
-              });
+    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
+      await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
 
-              if (existingRecord) {
-                websocketHandler.sendLog(req, `LOP already processed for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.ERROR);
-                res.status(200).json({
-                  status: constants.APIResponseStatus.Failure,
-                  message: req.t('attendance.lopAlreadyProcessedForUser', { userId: req.body.user }),
-                });
-                return;
-              } else {
-                const lopRecord = new LOP({
-                  user: req.body.user,
-                  date: currentDate,
-                  company: req.cookies.companyId,
-                });
-                await lopRecord.save();
-                websocketHandler.sendLog(req, `Inserted LOP record for user: ${req.body.user} on date: ${currentDate}`, constants.LOG_TYPES.INFO);
-              }
-            } else {
-              console.log(`No LOP for ${currentDateForValidate.toISOString().split('T')[0]}: ${isPresent ? 'Employee was present' : 'Covered by approved leave'}`);
-            }
-          } else {
-            console.log(`Skipping LOP for ${currentDate.toISOString().split('T')[0]}: It is a weekly off or holiday`);
-          }
-        }
-      }
-    }
+    await processLOPForMonth({
+      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
+    });
 
-    websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${req.body.user}`, constants.LOG_TYPES.INFO);
+    websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${user}`, constants.LOG_TYPES.INFO);
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      message: req.t('attendance.processAttendanceAndLOPSuccess', { userId: req.body.user }),
+      message: req.t('attendance.processAttendanceAndLOPSuccess', { userId: user }),
     });
+
   } catch (error) {
     websocketHandler.sendLog(req, `Error processing attendance and LOP: ${error.message}`, constants.LOG_TYPES.ERROR);
     console.log('Error:', error.message);
@@ -2828,6 +2735,198 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     });
   }
 });
+function getStartAndEndDates(year, month) {
+  const startOfMonth = new Date(year, month - 1, 2);
+  const endOfMonth = new Date(year, month, 0);
+  return { startOfMonth, endOfMonth };
+}
+async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
+  const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
+  if (!assignment) throw new Error("Attendance template assignment not found");
+
+  const attendanceTemplate = await AttendanceTemplate.findById(assignment.attendanceTemplate);
+  if (!attendanceTemplate) throw new Error("Attendance template not found");
+
+  const attendanceRecords = await AttendanceRecords.find({
+    user, company: companyId, date: { $gte: startOfMonth, $lte: endOfMonth }
+  });
+
+  const approvedLeaves = await LeaveApplication.find({
+    user,
+    status: constants.Leave_Application_Constant.Approved,
+    startDate: { $lte: endOfMonth },
+    endDate: { $gte: startOfMonth },
+  });
+
+  const approvedLeaveDays = approvedLeaves.flatMap(leave => {
+    const days = [];
+    let d = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+    while (d <= end) {
+      if (d >= startOfMonth && d <= endOfMonth) {
+        days.push(d.toISOString().split('T')[0]);
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  });
+
+  const holidays = await HolidayCalendar.find({ company: companyId });
+  const holidayDates = holidays.map(h => h.date.toISOString().split('T')[0]);
+
+  websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
+
+  return { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates };
+}
+async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
+  const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
+  const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
+  const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(Date.UTC(year, month - 1, day));
+    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' });
+
+    const currentWeekNumber = getWeekNumber(currentDate);
+    const isOddWeek = currentWeekNumber % 2 !== 0;
+
+    let isAlternateOff = false;
+    if ((isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)) {
+      isAlternateOff = alternateSet.has(dayName);
+    }
+
+    const isHoliday = holidayDates.includes(currentDate.toISOString().split('T')[0]);
+    const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff || isHoliday;
+
+    if (isWeeklyOff) continue;
+
+    const dateStr = currentDate.toISOString().split('T')[0];
+
+    const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
+    const isOnLeave = approvedLeaveDays.includes(dateStr);
+
+    if (!wasPresent && !isOnLeave) {
+      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
+      if (!existingLOP) {
+        await new LOP({ user, date: currentDate, company: companyId }).save();
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${dateStr}`, constants.LOG_TYPES.INFO);
+      } else {
+        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${dateStr}`, constants.LOG_TYPES.WARN);
+      }
+    }
+  }
+}
+function getWeekNumber(date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = Math.floor((date - start) / (24 * 60 * 60 * 1000));
+  return Math.ceil((diff + 1) / 7);
+}
+exports.validateCompleteAttendanceMonthByUser = catchAsync(async (req, res, next) => {
+  const { user, month, year } = req.body;
+  const isMonthComplete = await validateCompleteAttendanceMonth(user, month, year, req.cookies.companyId);
+console.log(isMonthComplete);
+if (!isMonthComplete) {
+  return res.status(400).json({
+    data:isMonthComplete
+  });
+}
+});
+async function validateCompleteAttendanceMonth(user, month, year, companyId) {
+  const { startOfMonth, endOfMonth } = getStartAndEndDates(year, month);
+  console.log("hello");
+  const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
+  if (!assignment) return false;
+  console.log("hello1");
+  const attendanceTemplate = await AttendanceTemplate.findById(assignment.attendanceTemplate);
+  if (!attendanceTemplate) return false;
+  console.log("hello");
+  const attendanceRecords = await AttendanceRecords.find({
+    user, company: companyId,
+    date: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  const leaves = await LeaveApplication.find({
+    user,
+    status: constants.Leave_Application_Constant.Approved,
+    startDate: { $lte: endOfMonth },
+    endDate: { $gte: startOfMonth },
+  });
+
+  const holidays = await HolidayCalendar.find({ company: companyId });
+
+  const lopRecords = await LOP.find({
+    user,
+    company: companyId,
+    date: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  // Convert to date strings for easy matching
+  const attendanceDates = new Set(attendanceRecords.map(r => r.date.toISOString().split('T')[0]));
+  const lopDates = new Set(lopRecords.map(r => r.date.toISOString().split('T')[0]));
+  const holidayDates = new Set(holidays.map(h => h.date.toISOString().split('T')[0]));
+
+  const leaveDates = new Set();
+  for (const leave of leaves) {
+    let d = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+    while (d <= end) {
+      if (d >= startOfMonth && d <= endOfMonth) {
+        leaveDates.add(d.toISOString().split('T')[0]);
+      }
+      d.setDate(d.getDate() + 1);
+    }
+  }
+
+  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
+  const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
+  const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
+  const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(Date.UTC(year, month - 1, day));
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' });
+
+    // Check alternate week offs
+    const weekNumber = getWeekNumber(currentDate);
+    const isOddWeek = weekNumber % 2 !== 0;
+    const isAlternateOff = (isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)
+      ? alternateSet.has(dayName)
+      : false;
+
+    const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff;
+
+    // Check if the date is covered
+    const isCovered =
+      attendanceDates.has(dateStr) ||
+      leaveDates.has(dateStr) ||
+      holidayDates.has(dateStr) ||
+      isWeeklyOff ||
+      lopDates.has(dateStr);
+
+    if (!isCovered) {
+      return false; // Found a missing day
+    }
+  }
+
+  return true; // All days accounted for
+}
+
+function getStartAndEndDates(year, month) {
+  const startOfMonth = new Date(year, month - 1, 2);
+  const endOfMonth = new Date(year, month, 0);
+  return { startOfMonth, endOfMonth };
+}
+
+function getWeekNumber(date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = Math.floor((date - start) / (24 * 60 * 60 * 1000));
+  return Math.ceil((diff + 1) / 7);
+}
 
 exports.ProcessAttendanceUpdate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting ProcessAttendanceUpdate', constants.LOG_TYPES.INFO);

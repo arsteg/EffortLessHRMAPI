@@ -23,6 +23,8 @@ const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
 const StorageController = require('./storageController');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const websocketHandler = require('../utils/websocketHandler');
+
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -88,24 +90,27 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
 });
 
 exports.createLeaveCategory = catchAsync(async (req, res, next) => {
-  // Retrieve companyId from cookies
-  const company = req.cookies.companyId;
+  websocketHandler.sendLog(req, `Creating leave template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+ 
+   const companyId = req.cookies.companyId;
+   if (!companyId) {
+     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+     return next(new AppError(req.t('common.missingParams'), 400));
+   }
 
-  // Validate if company value exists in cookies
-  if (!company) {
-    return res.status(500).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('leave.companyInfoMissing'),
-    });
+  const { label } = req.body;
+  const existingLeaveCategory = await LeaveCategory.findOne({ label, company: companyId, isDelete: { $ne: true } });
+  if (existingLeaveCategory) {
+    websocketHandler.sendLog(req, `Leave category with label "${label}" already exists for company ${req.cookies.companyName}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
   }
-
-  // Create the general setting with the companyId
-  const leaveCategoryData = { ...req.body, company }; // Assuming req.body contains the general setting data
-  const leaveCategory = await LeaveCategory.create(leaveCategoryData);
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: leaveCategory
-  });
+  req.body.company = companyId;
+  
+    const leaveCategory = await LeaveCategory.create(req.body);
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: leaveCategory,
+    });
 });
 
 exports.getLeaveCategory = catchAsync(async (req, res, next) => {
@@ -131,20 +136,47 @@ exports.getLeaveCategoryByTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating leave category with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  const companyId = req.cookies.companyId;
+
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.missingParams'), 400));
+  }
+
+  const label = req.body.label?.trim();
+
+  // 🔍 Check if another leave category with the same label exists (excluding the current one)
+  const duplicate = await LeaveCategory.findOne({
+    _id: { $ne: req.params.id },
+    company: companyId,
+    label: { $regex: new RegExp(`^${label}$`, 'i') } // case-insensitive match
+  });
+
+  if (duplicate) {
+    websocketHandler.sendLog(req, `Duplicate label "${label}" found for another leave category`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('leave.leaveCategoryAlreadyExists'), 400));
+  }
+
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
 
   if (!leaveCategory) {
+    websocketHandler.sendLog(req, `Leave category not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
 
+  websocketHandler.sendLog(req, `Successfully updated leave category: ${leaveCategory._id}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('leave.updateLeaveCategorySuccess', { recordId: leaveCategory._id }),
     data: leaveCategory
   });
 });
+
 
 exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
