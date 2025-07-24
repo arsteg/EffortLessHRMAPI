@@ -446,47 +446,64 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await LeaveTemplate.countDocuments({ company: req.cookies.companyId });
-    const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-      .limit(parseInt(limit));
-    if (leaveTemplates) {
-      for (var i = 0; i < leaveTemplates.length; i++) {
-        const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
-        if (leaveTemplateCategories) {
-          for (var m = 0; m < leaveTemplateCategories.length; m++) {
+    const companyId = req.cookies.companyId;
 
-            const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
-            if (templateApplicableCategoryEmployee) {          
-              leaveTemplateCategories[m].templateApplicableCategoryEmployee = templateApplicableCategoryEmployee;
-            }
-            else {
-              leaveTemplateCategories[m].templateApplicableCategoryEmployee = null;
-            }
-          }
-          leaveTemplates[i].applicableCategories = leaveTemplateCategories;
-        }
-        else {
-          leaveTemplates[i].applicableCategories = null;
-        }
-        const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
+    // Get total count
+    const totalCount = await LeaveTemplate.countDocuments({ company: companyId });
 
-        if (leaveClubbingRestrictions) {
-          leaveTemplates[i].cubbingRestrictionCategories = leaveClubbingRestrictions;
+    // Fetch leave templates
+    const leaveTemplates = await LeaveTemplate.find({ company: companyId })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Convert to plain JavaScript objects
+
+    // Process each leave template
+    for (let i = 0; i < leaveTemplates.length; i++) {
+      // Fetch applicable categories
+      const leaveTemplateCategories = await LeaveTemplateCategory.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      if (leaveTemplateCategories.length > 0) {
+        for (let m = 0; m < leaveTemplateCategories.length; m++) {
+          const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({
+            leaveTemplateCategory: leaveTemplateCategories[m]._id,
+          }).lean();
+
+          leaveTemplateCategories[m].templateApplicableCategoryEmployee =
+            templateApplicableCategoryEmployee.length > 0 ? templateApplicableCategoryEmployee : null;
         }
-        else {
-          leaveTemplates[i].cubbingRestrictionCategories = null;
-        }
+        leaveTemplates[i].applicableCategories = leaveTemplateCategories;
+      } else {
+        leaveTemplates[i].applicableCategories = null;
       }
+
+      // Fetch leave clubbing restrictions
+      const leaveClubbingRestrictions = await LeaveTemplateCategory.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      leaveTemplates[i].cubbingRestrictionCategories =
+        leaveClubbingRestrictions.length > 0 ? leaveClubbingRestrictions : null;
+
+      // Fetch and set leave template assignment count
+      const templateAssignment = await EmployeeLeaveAssignment.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      leaveTemplates[i].leaveTemplateAssignmentCount = templateAssignment.length;
     }
+
+    // Send response
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: leaveTemplates,
-      total: totalCount
+      total: totalCount,
     });
   } catch (err) {
     res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: err.message
+      message: err.message,
     });
   }
 };
