@@ -1141,6 +1141,95 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
   }
 };
 
+exports.updateEmployeeLeaveStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return next(new AppError(req.t('leave.statusRequired'), 400)); 
+    }
+
+    // Only update the status field
+    const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedLeaveApplication) {
+      return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
+    }
+
+    try {
+      if (
+        status === constants.Leave_Application_Constant.Cancelled ||
+        status === constants.Leave_Application_Constant.Rejected
+      ) {
+        const { startDate, endDate, user, leaveCategory } = updatedLeaveApplication;
+        const leaveDays = calculateLeaveDays(startDate, endDate);
+        const cycle = await scheduleController.createFiscalCycle();
+
+        const leaveAssigned = await LeaveAssigned.findOne({
+          employee: user._id,
+          cycle,
+          category: leaveCategory
+        });
+
+        if (leaveAssigned) {
+          leaveAssigned.leaveRemaining += leaveDays;
+          leaveAssigned.leaveTaken -= leaveDays;
+          await leaveAssigned.save();
+        }
+
+        sendEmailToUsers(
+          user._id,
+          constants.Email_template_constant.CancelReject_Request_Leave_Application,
+          updatedLeaveApplication,
+          req.cookies.companyId
+        );
+
+        SendUINotification(
+          req.t('leave.leaveRejectNotificationTitle'),
+          req.t('leave.leaveRejectNotificationMessage'),
+          constants.Event_Notification_Type_Status.leave,
+          user._id?.toString(),
+          req.cookies.companyId,
+          req
+        );
+      }
+
+      if (status === constants.Leave_Application_Constant.Approved) {
+        sendEmailToUsers(
+          updatedLeaveApplication.user._id,
+          constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved,
+          updatedLeaveApplication,
+          req.cookies.companyId
+        );
+
+        SendUINotification(
+          req.t('leave.leaveApprovalNotificationTitle'),
+          req.t('leave.leaveApprovalNotificationMessage'),
+          constants.Event_Notification_Type_Status.leave,
+          updatedLeaveApplication.user._id?.toString(),
+          req.cookies.companyId,
+          req
+        );
+      }
+    } catch (error) {
+      console.error("Error updating leave status notifications:", error);
+      return res.status(500).send(req.t('common.InternalServerError'));
+    }
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: updatedLeaveApplication
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
