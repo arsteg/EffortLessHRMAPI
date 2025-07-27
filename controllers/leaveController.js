@@ -23,6 +23,8 @@ const Company = require('../models/companyModel');
 const sendEmail = require('../utils/email');
 const StorageController = require('./storageController');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const websocketHandler = require('../utils/websocketHandler');
+
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -88,24 +90,27 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
 });
 
 exports.createLeaveCategory = catchAsync(async (req, res, next) => {
-  // Retrieve companyId from cookies
-  const company = req.cookies.companyId;
+  websocketHandler.sendLog(req, `Creating leave template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
+ 
+   const companyId = req.cookies.companyId;
+   if (!companyId) {
+     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+     return next(new AppError(req.t('common.missingParams'), 400));
+   }
 
-  // Validate if company value exists in cookies
-  if (!company) {
-    return res.status(500).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('leave.companyInfoMissing'),
-    });
+  const { label } = req.body;
+  const existingLeaveCategory = await LeaveCategory.findOne({ label, company: companyId, isDelete: { $ne: true } });
+  if (existingLeaveCategory) {
+    websocketHandler.sendLog(req, `Leave category with label "${label}" already exists for company ${req.cookies.companyName}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
   }
-
-  // Create the general setting with the companyId
-  const leaveCategoryData = { ...req.body, company }; // Assuming req.body contains the general setting data
-  const leaveCategory = await LeaveCategory.create(leaveCategoryData);
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: leaveCategory
-  });
+  req.body.company = companyId;
+  
+    const leaveCategory = await LeaveCategory.create(req.body);
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: leaveCategory,
+    });
 });
 
 exports.getLeaveCategory = catchAsync(async (req, res, next) => {
@@ -131,20 +136,47 @@ exports.getLeaveCategoryByTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, `Updating leave category with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  const companyId = req.cookies.companyId;
+
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.missingParams'), 400));
+  }
+
+  const label = req.body.label?.trim();
+
+  // 🔍 Check if another leave category with the same label exists (excluding the current one)
+  const duplicate = await LeaveCategory.findOne({
+    _id: { $ne: req.params.id },
+    company: companyId,
+    label: { $regex: new RegExp(`^${label}$`, 'i') } // case-insensitive match
+  });
+
+  if (duplicate) {
+    websocketHandler.sendLog(req, `Duplicate label "${label}" found for another leave category`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('leave.leaveCategoryAlreadyExists'), 400));
+  }
+
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
 
   if (!leaveCategory) {
+    websocketHandler.sendLog(req, `Leave category not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404));
   }
 
+  websocketHandler.sendLog(req, `Successfully updated leave category: ${leaveCategory._id}`, constants.LOG_TYPES.INFO);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
+    message: req.t('leave.updateLeaveCategorySuccess', { recordId: leaveCategory._id }),
     data: leaveCategory
   });
 });
+
 
 exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
@@ -414,47 +446,64 @@ exports.getAllLeaveTemplates = async (req, res, next) => {
   try {
     const skip = parseInt(req.body.skip) || 0;
     const limit = parseInt(req.body.next) || 10;
-    const totalCount = await LeaveTemplate.countDocuments({ company: req.cookies.companyId });
-    const leaveTemplates = await LeaveTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-      .limit(parseInt(limit));
-    if (leaveTemplates) {
-      for (var i = 0; i < leaveTemplates.length; i++) {
-        const leaveTemplateCategories = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
-        if (leaveTemplateCategories) {
-          for (var m = 0; m < leaveTemplateCategories.length; m++) {
+    const companyId = req.cookies.companyId;
 
-            const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
-            if (templateApplicableCategoryEmployee) {          
-              leaveTemplateCategories[m].templateApplicableCategoryEmployee = templateApplicableCategoryEmployee;
-            }
-            else {
-              leaveTemplateCategories[m].templateApplicableCategoryEmployee = null;
-            }
-          }
-          leaveTemplates[i].applicableCategories = leaveTemplateCategories;
-        }
-        else {
-          leaveTemplates[i].applicableCategories = null;
-        }
-        const leaveClubbingRestrictions = await LeaveTemplateCategory.find({}).where('leaveTemplate').equals(leaveTemplates[i]._id);
+    // Get total count
+    const totalCount = await LeaveTemplate.countDocuments({ company: companyId });
 
-        if (leaveClubbingRestrictions) {
-          leaveTemplates[i].cubbingRestrictionCategories = leaveClubbingRestrictions;
+    // Fetch leave templates
+    const leaveTemplates = await LeaveTemplate.find({ company: companyId })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Convert to plain JavaScript objects
+
+    // Process each leave template
+    for (let i = 0; i < leaveTemplates.length; i++) {
+      // Fetch applicable categories
+      const leaveTemplateCategories = await LeaveTemplateCategory.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      if (leaveTemplateCategories.length > 0) {
+        for (let m = 0; m < leaveTemplateCategories.length; m++) {
+          const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({
+            leaveTemplateCategory: leaveTemplateCategories[m]._id,
+          }).lean();
+
+          leaveTemplateCategories[m].templateApplicableCategoryEmployee =
+            templateApplicableCategoryEmployee.length > 0 ? templateApplicableCategoryEmployee : null;
         }
-        else {
-          leaveTemplates[i].cubbingRestrictionCategories = null;
-        }
+        leaveTemplates[i].applicableCategories = leaveTemplateCategories;
+      } else {
+        leaveTemplates[i].applicableCategories = null;
       }
+
+      // Fetch leave clubbing restrictions
+      const leaveClubbingRestrictions = await LeaveTemplateCategory.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      leaveTemplates[i].cubbingRestrictionCategories =
+        leaveClubbingRestrictions.length > 0 ? leaveClubbingRestrictions : null;
+
+      // Fetch and set leave template assignment count
+      const templateAssignment = await EmployeeLeaveAssignment.find({
+        leaveTemplate: leaveTemplates[i]._id,
+      }).lean();
+
+      leaveTemplates[i].leaveTemplateAssignmentCount = templateAssignment.length;
     }
+
+    // Send response
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: leaveTemplates,
-      total: totalCount
+      total: totalCount,
     });
   } catch (err) {
     res.status(500).json({
       status: constants.APIResponseStatus.Failure,
-      message: err.message
+      message: err.message,
     });
   }
 };
@@ -1098,6 +1147,95 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
         console.error("Error updating leave balance:", error);
         return res.status(500).send(req.t('common.InternalServerError'));
       }
+    }
+
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: updatedLeaveApplication
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateEmployeeLeaveStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return next(new AppError(req.t('leave.statusRequired'), 400)); 
+    }
+
+    // Only update the status field
+    const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedLeaveApplication) {
+      return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
+    }
+
+    try {
+      if (
+        status === constants.Leave_Application_Constant.Cancelled ||
+        status === constants.Leave_Application_Constant.Rejected
+      ) {
+        const { startDate, endDate, user, leaveCategory } = updatedLeaveApplication;
+        const leaveDays = calculateLeaveDays(startDate, endDate);
+        const cycle = await scheduleController.createFiscalCycle();
+
+        const leaveAssigned = await LeaveAssigned.findOne({
+          employee: user._id,
+          cycle,
+          category: leaveCategory
+        });
+
+        if (leaveAssigned) {
+          leaveAssigned.leaveRemaining += leaveDays;
+          leaveAssigned.leaveTaken -= leaveDays;
+          await leaveAssigned.save();
+        }
+
+        sendEmailToUsers(
+          user._id,
+          constants.Email_template_constant.CancelReject_Request_Leave_Application,
+          updatedLeaveApplication,
+          req.cookies.companyId
+        );
+
+        SendUINotification(
+          req.t('leave.leaveRejectNotificationTitle'),
+          req.t('leave.leaveRejectNotificationMessage'),
+          constants.Event_Notification_Type_Status.leave,
+          user._id?.toString(),
+          req.cookies.companyId,
+          req
+        );
+      }
+
+      if (status === constants.Leave_Application_Constant.Approved) {
+        sendEmailToUsers(
+          updatedLeaveApplication.user._id,
+          constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved,
+          updatedLeaveApplication,
+          req.cookies.companyId
+        );
+
+        SendUINotification(
+          req.t('leave.leaveApprovalNotificationTitle'),
+          req.t('leave.leaveApprovalNotificationMessage'),
+          constants.Event_Notification_Type_Status.leave,
+          updatedLeaveApplication.user._id?.toString(),
+          req.cookies.companyId,
+          req
+        );
+      }
+    } catch (error) {
+      console.error("Error updating leave status notifications:", error);
+      return res.status(500).send(req.t('common.InternalServerError'));
     }
 
     res.status(200).json({

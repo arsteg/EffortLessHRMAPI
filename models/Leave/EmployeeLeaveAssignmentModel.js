@@ -9,7 +9,7 @@ var employeeLeaveAssignmentSchema = new Schema({
   },
   leaveTemplate: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ExpenseTemplate',
+    ref: 'LeaveTemplate',
     required: true
   },
   primaryApprover: {
@@ -28,5 +28,17 @@ var employeeLeaveAssignmentSchema = new Schema({
     required: true
   }
 }, { collection: 'EmployeeLeaveAssignment' });
+
+employeeLeaveAssignmentSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'leaveTemplate',
+      select: 'id label approvalType'
+    })
+  } catch (error) {
+    console.error("Error populating leave templates:", error);
+  }
+  next();
+});
 
 module.exports = mongoose.model('EmployeeLeaveAssignment', employeeLeaveAssignmentSchema);

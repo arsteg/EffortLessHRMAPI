@@ -293,7 +293,15 @@ const runRecuringNotifications = async (req, res,next) => {
         }
 
         if (notification.notificationChannel.includes(NotificationChannel.EMAIL)) {
-          await sendEmailNotifications(user, managers, notification?.eventNotificationType?.toString(), company);
+          await sendEmailNotifications(user, managers, notification?.eventNotificationType?.toString(), company, notification);
+        }
+
+        if (notification.notificationChannel.includes(NotificationChannel.SMS)) {
+          //to be implemented
+        }
+
+        if (notification.notificationChannel.includes(NotificationChannel.APP)) {
+          //to be implemented
         }
       }
 
@@ -534,10 +542,13 @@ async function sendNotificationToManager(req, notification, userId, company) {
   }
 }
 
-const sendEmailNotifications = async (user, managerList, notificationType, company) => {
+const sendEmailNotifications = async (user, managerList, notificationType, company, notification) => {
   try {
-    const eventNotificationType = await EventNotificationType.findById(notificationType);
-    if (!eventNotificationType || eventNotificationType.length === 0) return;
+    let eventNotificationType = null;
+    if (notificationType) {
+      eventNotificationType = await EventNotificationType.findById(notificationType);
+      if (!eventNotificationType) return;
+    }
  
     const today = new Date();
     let employeeTemplateConstant;
@@ -545,62 +556,76 @@ const sendEmailNotifications = async (user, managerList, notificationType, compa
     let employeeReplacements = {};
     let managerReplacements = {};
 
-    switch (eventNotificationType.name) {
-      case constants.Event_Notification_Type_Status.Birthday:
-        employeeTemplateConstant = constants.Email_template_constant.Birthday_Email_To_Employee;
-        managerTemplateConstant = constants.Email_template_constant.Birthday_Email_To_Manager;
-        employeeReplacements = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          company: company.companyName
-        };
-        managerReplacements = {
-          employeeFirstName: user.firstName,
-          employeeLastName: user.lastName,
-          company: company.companyName
-        };
-        break;
+    if (eventNotificationType?.name) {
+      switch (eventNotificationType?.name) {
+        case constants.Event_Notification_Type_Status.Birthday:
+          employeeTemplateConstant = constants.Email_template_constant.Birthday_Email_To_Employee;
+          managerTemplateConstant = constants.Email_template_constant.Birthday_Email_To_Manager;
+          employeeReplacements = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            company: company.companyName
+          };
+          managerReplacements = {
+            employeeFirstName: user.firstName,
+            employeeLastName: user.lastName,
+            company: company.companyName
+          };
+          break;
 
-      case constants.Event_Notification_Type_Status.WorkAnniversary:
-        const appointment = await Appointment.findOne({ user: user._id });
-        if (!appointment) return;
+        case constants.Event_Notification_Type_Status.WorkAnniversary:
+          const appointment = await Appointment.findOne({ user: user._id });
+          if (!appointment) return;
 
-        const joiningDate = new Date(appointment.joiningDate);
-        const years = today.getFullYear() - joiningDate.getFullYear();
+          const joiningDate = new Date(appointment.joiningDate);
+          const years = today.getFullYear() - joiningDate.getFullYear();
 
-        employeeTemplateConstant = constants.Email_template_constant.Work_Anniversary_Email_To_Employee;
-        managerTemplateConstant = constants.Email_template_constant.Work_Anniversary_Email_To_Manager;
-        employeeReplacements = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          years,
-          company: company.companyName
-        };
-        managerReplacements = {
-          employeeFirstName: user.firstName,
-          employeeLastName: user.lastName,
-          years,
-          company: company.companyName
-        };
-        break;
+          employeeTemplateConstant = constants.Email_template_constant.Work_Anniversary_Email_To_Employee;
+          managerTemplateConstant = constants.Email_template_constant.Work_Anniversary_Email_To_Manager;
+          employeeReplacements = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            years,
+            company: company.companyName
+          };
+          managerReplacements = {
+            employeeFirstName: user.firstName,
+            employeeLastName: user.lastName,
+            years,
+            company: company.companyName
+          };
+          break;
 
-      case constants.Event_Notification_Type_Status.Appraisal:
-        employeeTemplateConstant = constants.Email_template_constant.Appraisal_Email_To_Employee;
-        managerTemplateConstant = constants.Email_template_constant.Appraisal_Email_To_Manager;
-        employeeReplacements = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          company: company.companyName
-        };
-        managerReplacements = {
-          employeeFirstName: user.firstName,
-          employeeLastName: user.lastName,
-          company: company.companyName
-        };
-        break;
+        case constants.Event_Notification_Type_Status.Appraisal:
+          employeeTemplateConstant = constants.Email_template_constant.Appraisal_Email_To_Employee;
+          managerTemplateConstant = constants.Email_template_constant.Appraisal_Email_To_Manager;
+          employeeReplacements = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            company: company.companyName
+          };
+          managerReplacements = {
+            employeeFirstName: user.firstName,
+            employeeLastName: user.lastName,
+            company: company.companyName
+          };
+          break;
 
-      default:
-        return;
+        default:          
+          await sendEmail({
+            email: user.email,
+            subject: notification.name,
+            message: notification.description
+          });
+          return;
+      }
+    } else {
+      await sendEmail({
+        email: user.email,
+        subject: notification.name,
+        message: notification.description
+      });
+      return;
     }
 
     // Send email to the user

@@ -119,14 +119,24 @@ exports.getPreferenceByKey = catchAsync(async (req, res, next) => {
   const { userId } = req.query;
 
   if (!userId) {
-    return next(new AppError('User ID is required', 400));
+    //return next(new AppError('User ID is required', 400));
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'User ID is missing',
+      data: { preferences: [] }
+    });
   }
 
   // Step 1: Find all preference options for the key
   const preferenceOptions = await PreferenceOption.find({ preferenceKey });
 
   if (!preferenceOptions.length) {
-    return next(new AppError('No preferences found for this key', 404));
+    //return next(new AppError('No preferences found for this key', 404));
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'No preferences found for this key',
+      data: { preferences: [] }
+    });
   }
 
   const preferenceOptionIds = preferenceOptions.map(opt => opt._id);
@@ -138,7 +148,12 @@ exports.getPreferenceByKey = catchAsync(async (req, res, next) => {
   }).populate('preferenceOptionId');
 
   if (!userPreferences.length) {
-    return next(new AppError('No preferences found for this user and key', 404));
+    //return next(new AppError('No preferences found for this user and key', 404));
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      message: 'No preferences found for this user and key',
+      data: { preferences: [] }
+    });
   }
 
   res.status(200).json({

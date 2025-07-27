@@ -431,6 +431,8 @@
     "leaveTemplateLabelExists": "The leave template label already exists.",
     "leaveCategoryNotInRequest": "The leave category is missing from the request.",
     "invalidCategory": "The category provided is invalid.",
+    "categoryAlreadyExists": "A leave category with this name already exists.",
+    "updateLeaveCategorySuccess": "The leave category was updated successfully.",
     "internalServerError": "An internal server error occurred.",
     "invalidRequestData": "The request data provided is invalid.",
     "usersRequired": "Users are required.",
@@ -461,7 +463,8 @@
     "managerShortLeaveApprovalNotificationTitle": "Short Leave Request from Team Member",
     "managerShortLeaveApprovalNotificationMessage": "Dear {{firstName}} {{lastName}}, your team member {{employeeName}} has applied for a short leave of {{duration}} minutes on {{date}}.",
     "employeeShortLeaveUpdateNotificationTitle": "Short Leave Application Update",
-    "employeeShortLeaveUpdateNotificationMessage": "Hi {{employeeName}}, your short leave request for {{duration}} minutes on {{date}} has been {{status}}."
+    "employeeShortLeaveUpdateNotificationMessage": "Hi {{employeeName}}, your short leave request for {{duration}} minutes on {{date}} has been {{status}}.",
+    "statusRequired": "Leave status required"
   },
   "liveTracking": {
     "userAlreadyAdded": "The user is already added for live tracking.",

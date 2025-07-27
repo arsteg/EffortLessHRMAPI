@@ -66,8 +66,12 @@ leaveTemplateCategorySchema.pre(/^find/,async function(next) {
   try {
     this.populate({
       path: 'leaveCategory',
-      select: 'id label'
+      select: 'id label isHalfDayTypeOfLeave submitBefore'
     });
+    this.populate({
+      path: 'leaveTemplate',
+      select: 'id label isCommentMandatory'
+    })
   } catch (error) {
     console.error("Error populating leave Category:", error);
   }
