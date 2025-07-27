@@ -941,6 +941,23 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
   });
       
  });
+ exports.getManagers = catchAsync(async (req, res, next) => {  
+  const ids = await userSubordinate.find({}).distinct("userId");   
+   
+  const activeUsers = await User.find({
+    _id: { $in: ids },
+    active: true
+  });
+  
+  const activeUserIds = activeUsers.map(user => user._id);
+  
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: activeUserIds
+  });
+      
+ });
+
 
  exports.deleteSubordinates = catchAsync(async (req, res, next) => {  
    userSubordinate.deleteOne({userId:req.params.userId,subordinateUserId:req.params.subordinateUserId}, function (err) {
