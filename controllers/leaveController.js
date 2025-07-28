@@ -91,12 +91,12 @@ exports.updateGeneralSetting = catchAsync(async (req, res, next) => {
 
 exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Creating leave template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
- 
-   const companyId = req.cookies.companyId;
-   if (!companyId) {
-     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
-     return next(new AppError(req.t('common.missingParams'), 400));
-   }
+
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.missingParams'), 400));
+  }
 
   const { label } = req.body;
   const existingLeaveCategory = await LeaveCategory.findOne({ label, company: companyId, isDelete: { $ne: true } });
@@ -105,12 +105,12 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
   }
   req.body.company = companyId;
-  
-    const leaveCategory = await LeaveCategory.create(req.body);
-    res.status(201).json({
-      status: constants.APIResponseStatus.Success,
-      data: leaveCategory,
-    });
+
+  const leaveCategory = await LeaveCategory.create(req.body);
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: leaveCategory,
+  });
 });
 
 exports.getLeaveCategory = catchAsync(async (req, res, next) => {
@@ -186,7 +186,7 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
     .limit(parseInt(limit));
   if (!leaveCategory) {
     return next(new AppError(req.t('leave.leaveCategoryNotFound'), 404)
-  );
+    );
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -194,8 +194,8 @@ exports.getAllLeaveCategory = catchAsync(async (req, res, next) => {
     total: totalCount
   });
 });
-exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => { 
-  const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);  
+exports.getAllLeaveCategoryByUser = catchAsync(async (req, res, next) => {
+  const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({}).where('user').equals(req.params.userId);
   const leaveTemplateCategory = await LeaveTemplateCategory.find({ leaveTemplate: employeeLeaveAssignment.leaveTemplate });
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -342,7 +342,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
     if (!leaveTemplate) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:  req.t('leave.leaveTemplateNotFound')
+        message: req.t('leave.leaveTemplateNotFound')
       });
       return;
     }
@@ -352,7 +352,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
     for (var m = 0; m < leaveTemplateCategories.length; m++) {
 
       const templateApplicableCategoryEmployee = await TemplateApplicableCategoryEmployee.find({}).where('leaveTemplateCategory').equals(leaveTemplateCategories[m]._id);
-      if (templateApplicableCategoryEmployee) {       
+      if (templateApplicableCategoryEmployee) {
         leaveTemplateCategories[m].templateApplicableCategoryEmployee = templateApplicableCategoryEmployee;
       }
       else {
@@ -369,7 +369,7 @@ exports.getLeaveTemplate = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -390,7 +390,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     if (existingTemplate) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
-        message:req.t('leave.leaveTemplateLabelExists'),
+        message: req.t('leave.leaveTemplateLabelExists'),
       });
     }
     if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
@@ -399,11 +399,11 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     // Extract companyId from req.cookies
 
     for (const category of leaveCategories) {
-      const result = await LeaveCategory.findById(category.leaveCategory);   
+      const result = await LeaveCategory.findById(category.leaveCategory);
       if (!result) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
-          message:  req.t('leave.invalidCategory'),
+          message: req.t('leave.invalidCategory'),
         });
       }
     }
@@ -432,7 +432,7 @@ exports.updateLeaveTemplate = async (req, res, next) => {
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
-     data: { leaveTemplate: leaveTemplate, leaveCategories: updatedCategories },
+      data: { leaveTemplate: leaveTemplate, leaveCategories: updatedCategories },
     });
   } catch (err) {
     res.status(500).json({
@@ -520,8 +520,8 @@ exports.createLeaveTemplateCategory = catchAsync(async (req, res, next) => {
     const result = await LeaveCategory.findById(category.leaveCategory);
     if (!result) {
       return res.status(400).json({
-        status:constants.APIResponseStatus.Failure,
-        message:  req.t('leave.invalidCategory'),
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('leave.invalidCategory'),
       });
     }
   }
@@ -764,7 +764,7 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
       employee: users[i].user,
       date: grantData.date
     });
-   
+
     if (leavegrantExits !== null) {
       return next(new AppError(req.t('leave.leaveAlreadyGranted'), 404));
     }
@@ -779,7 +779,7 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
     console.log('users[i].user', users[i].user);
 
-     SendUINotification(req.t('leave.addLeaveRequestNotificationTitle'), req.t('leave.addLeaveRequestNotificationMessage', { date: new Date(grantData.date).toISOString().split('T')[0] }),
+    SendUINotification(req.t('leave.addLeaveRequestNotificationTitle'), req.t('leave.addLeaveRequestNotificationMessage', { date: new Date(grantData.date).toISOString().split('T')[0] }),
       constants.Event_Notification_Type_Status.leave, users[i].user.toString(), companyId, req);
   }
   // Send success response
@@ -842,7 +842,7 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     // Check if a LeaveGrant with the same date for the same user already exists
     const existingLeaveGrant = await LeaveGrant.findOne({ user, date });
     if (existingLeaveGrant && existingLeaveGrant._id.toString() !== id) {
-      return next( new AppError(req.t('leave.leaveGrantDateExists'), 400));
+      return next(new AppError(req.t('leave.leaveGrantDateExists'), 400));
     }
 
     // Update the leave grant fields
@@ -856,9 +856,9 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     // Save the updated leave grant
     await leaveGrant.save();
 
-     SendUINotification('Your leave request has been updated', `Your leave request has been ${leaveGrant.status}.`,
+    SendUINotification('Your leave request has been updated', `Your leave request has been ${leaveGrant.status}.`,
       constants.Event_Notification_Type_Status.leave, existingUser?._id?.toString(), req.cookies.companyId, req);
-      
+
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: leaveGrant
@@ -914,224 +914,199 @@ exports.getEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
 // Helper function to calculate leave days, now considering weekly offs
 const calculateLeaveDays = (startDate, endDate, weeklyOffDays = [], includeWeeklyOffs = false) => {
-    let count = 0;
-    let currentDate = new Date(startDate);
-    const end = new Date(endDate);
+  let count = 0;
+  let currentDate = new Date(startDate);
+  const end = new Date(endDate);
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // New array for abbreviations
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // New array for abbreviations
 
-    while (currentDate <= end) {
-        const dayIndex = currentDate.getDay(); // Get the numeric day (0 for Sunday, 1 for Monday, etc.)
-        const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex]; // Get the abbreviated name
+  while (currentDate <= end) {
+    const dayIndex = currentDate.getDay(); // Get the numeric day (0 for Sunday, 1 for Monday, etc.)
+    const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex]; // Get the abbreviated name
 
-        if (weeklyOffDays.includes(dayOfWeekAbbreviated) && !includeWeeklyOffs) {
-            // If it's a weekly off and we don't include weekly offs, skip this day
-        } else {
-            count++;
-        }
-        currentDate.setDate(currentDate.getDate() + 1);
+    if (weeklyOffDays.includes(dayOfWeekAbbreviated) && !includeWeeklyOffs) {
+      // If it's a weekly off and we don't include weekly offs, skip this day
+    } else {
+      count++;
     }
-    return count;
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return count;
 };
 
 // Helper function to count weekly off days within a date range
 const countWeeklyOffDays = (startDate, endDate, weeklyOffDays = []) => {
-    let count = 0;
-    let currentDate = new Date(startDate);
-    const end = new Date(endDate);
+  let count = 0;
+  let currentDate = new Date(startDate);
+  const end = new Date(endDate);
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // New array for abbreviations
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // New array for abbreviations
 
-    while (currentDate <= end) {
-        const dayIndex = currentDate.getDay(); // Get the numeric day
-        const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex]; // Get the abbreviated name
+  while (currentDate <= end) {
+    const dayIndex = currentDate.getDay(); // Get the numeric day
+    const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex]; // Get the abbreviated name
 
-        if (weeklyOffDays.includes(dayOfWeekAbbreviated)) {
-            count++;
-        }
-        currentDate.setDate(currentDate.getDate() + 1);
+    if (weeklyOffDays.includes(dayOfWeekAbbreviated)) {
+      count++;
     }
-    return count;
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return count;
 };
-
 
 exports.createEmployeeLeaveApplication = async (req, res, next) => {
-    try {
-        // Extract companyId from req.cookies
-        const companyId = req.cookies.companyId;
-        // Check if companyId exists in cookies
-        if (!companyId) {
-            return next(new AppError(req.t('leave.companyIdNotFound'), 400));
-        }
-        const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
-
-        const cycle = await scheduleController.createFiscalCycle();
-        const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
-
-        if (!assignmentExists) {
-            return res.status(400).json({
-                status: constants.APIResponseStatus.Failure,
-                data: null,
-                message: req.t('leave.leaveAssignmentNotExist')
-            });
-        }
-
-        // Get the current leave assigned record
-        const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
-
-        // Fetch the Leave Category details
-        const leaveCat = await LeaveCategory.findById(leaveCategory);
-        if (!leaveCat) {
-            return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
-        }
-
-        // Fetch the Attendance Template for the company to get weekly off days
-        const attendanceTemplate = await AttendanceTemplate.findOne({ company: companyId });
-        const weeklyOffDays = attendanceTemplate ? attendanceTemplate.weeklyOfDays : [];
-
-        // Determine if weekly offs should be part of the days taken
-        const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
-
-        // Calculate leave days based on whether weekly offs are included
-        const leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
-        const numberOfWeeklyOffDays = countWeeklyOffDays(startDate, endDate, weeklyOffDays);
-
-
-        // Check if there are enough leaves available
-        if (leaveAssigned.leaveRemaining < leaveDays) {
-            return res.status(400).json({ // Changed status to 400 for a more appropriate error
-                status: constants.APIResponseStatus.Failure,
-                data: null,
-                message: req.t('leave.insufficientLeaveBalance')
-            });
-        }
-
-        var documentLink;
-        if (leaveApplicationAttachments != null) {
-            for (var i = 0; i < leaveApplicationAttachments.length; i++) {
-                if (!leaveApplicationAttachments[i].attachmentType || !leaveApplicationAttachments[i].attachmentName || !leaveApplicationAttachments[i].attachmentSize || !leaveApplicationAttachments[i].extention || !leaveApplicationAttachments[i].file
-                    || leaveApplicationAttachments[i].attachmentType === null || leaveApplicationAttachments[i].attachmentName === null || leaveApplicationAttachments[i].attachmentSize === null || leaveApplicationAttachments[i].extention === null || leaveApplicationAttachments[i].file === null) {
-                    return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
-                }
-                leaveApplicationAttachments[i].filePath = leaveApplicationAttachments[i].attachmentName + "_" + uuidv1() + leaveApplicationAttachments[i].extention;
-                documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, leaveApplicationAttachments[i]);
-            }
-        }
-
-        const newLeaveApplication = await LeaveApplication.create({
-            employee,
-            leaveCategory,
-            level1Reason,
-            level2Reason,
-            startDate,
-            endDate,
-            comment,
-            isHalfDayOption,
-            status,
-            company: req.cookies.companyId, // Assuming companyId is stored in cookies
-            documentLink
-        });
-
-        var createdHalfDays = null;
-        // Check if haldDays is provided and valid
-        if (Array.isArray(haldDays)) {
-            // Create haldDays instances
-            createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
-                leaveApplication: newLeaveApplication._id,
-                date: haldDay.date,
-                dayHalf: haldDay.dayHalf
-            })));
-        }
-        newLeaveApplication.halfDays = createdHalfDays;
-
-        try {
-            // Deduct the applied leave days from the leave remaining
-            leaveAssigned.leaveRemaining -= leaveDays;
-            leaveAssigned.leaveTaken += leaveDays; // Update the leave taken count
-
-            // Save the updated leave assigned record
-            await leaveAssigned.save();
-
-            console.log("Leave applied successfully. Remaining leave:", leaveAssigned.leaveRemaining);
-            //fetch manager for respective user
-            //trigger email to manager that emploee applied levae and waiting for approval
-
-            const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
-            if (managerTeamsIds && managerTeamsIds.length > 0) { // Check if managerTeamsIds is not empty
-                const user = await User.findById(req.body.employee);
-                const userName = `${user?.firstName} ${user?.lastName}`;
-                SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
-                    constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
-
-                for (var j = 0; j < managerTeamsIds.length; j++) {
-                    const manager = await User.findById(managerTeamsIds[j]); // Corrected to use managerTeamsIds[j] directly
-                    const companyDetails = await Company.findById(req.cookies.companyId);
-                    sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
-
-                    //send ui notification to manager
-                    SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
-                        constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
-                }
-            }
-
-        } catch (error) {
-            console.error("Error applying for leave and updating assigned leave:", error);
-            // Potentially re-throw or handle this error differently if it should halt the process
-        }
-
-        res.status(201).json({
-            status: constants.APIResponseStatus.Success,
-            data: {
-                leaveApplication: newLeaveApplication,
-                calculatedLeaveDays: leaveDays,
-                weeklyOffDaysIncluded: includeWeeklyOffsInLeaveDays,
-                numberOfWeeklyOffDays: numberOfWeeklyOffDays // Added the count of weekly off days
-            }
-        });
-    } catch (error) {
-        next(error);
+  try {
+    const companyId = req.cookies.companyId;
+    if (!companyId) {
+      return next(new AppError(req.t('leave.companyIdNotFound'), 400));
     }
+
+    const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
+
+    const cycle = await scheduleController.createFiscalCycle();
+    const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
+
+    if (!assignmentExists) {
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        data: null,
+        message: req.t('leave.leaveAssignmentNotExist')
+      });
+    }
+
+    const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+    const leaveCat = await LeaveCategory.findById(leaveCategory);
+    if (!leaveCat) {
+      return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
+    }
+
+    const attendanceTemplate = await AttendanceTemplate.findOne({ company: companyId });
+    const weeklyOffDays = attendanceTemplate ? attendanceTemplate.weeklyOfDays : [];
+
+    const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
+
+    const leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
+    const numberOfWeeklyOffDays = countWeeklyOffDays(startDate, endDate, weeklyOffDays);
+
+    if (leaveAssigned?.leaveRemaining < leaveDays) {
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        data: null,
+        message: req.t('leave.insufficientLeaveBalance')
+      });
+    }
+
+    let documentLink;
+    if (leaveApplicationAttachments && leaveApplicationAttachments.length > 0) { 
+      for (const attachment of leaveApplicationAttachments) { 
+        if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || !attachment.extention || !attachment.file
+          || attachment.attachmentType === null || attachment.attachmentName === null || attachment.attachmentSize === null || attachment.extention === null || attachment.file === null) {
+          return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
+        }
+        attachment.filePath = attachment.attachmentName + "_" + uuidv1() + attachment.extention;
+        documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, attachment);
+      }
+    }
+
+    const newLeaveApplication = await LeaveApplication.create({
+      employee,
+      leaveCategory,
+      level1Reason,
+      level2Reason,
+      startDate,
+      endDate,
+      comment,
+      isHalfDayOption,
+      status,
+      company: req.cookies.companyId,
+      documentLink,
+      calculatedLeaveDays: leaveDays,
+      weeklyOffDaysIncluded: includeWeeklyOffsInLeaveDays,
+      numberOfWeeklyOffDays: numberOfWeeklyOffDays
+    });
+
+    let createdHalfDays = null;
+    if (Array.isArray(haldDays) && haldDays.length > 0) { // Check for empty array too
+      createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
+        leaveApplication: newLeaveApplication._id,
+        date: haldDay.date,
+        dayHalf: haldDay.dayHalf
+      })));
+      newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id); // Store only IDs
+      await newLeaveApplication.save(); // Save to link half-days
+    }
+
+    try {
+      leaveAssigned.leaveRemaining -= leaveDays;
+      leaveAssigned.leaveTaken += leaveDays;
+      await leaveAssigned.save();
+
+
+      const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
+      if (managerTeamsIds && managerTeamsIds.length > 0) {
+        const user = await User.findById(req.body.employee);
+        const userName = `${user?.firstName} ${user?.lastName}`;
+        SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
+          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+
+        for (const managerId of managerTeamsIds) { 
+          const manager = await User.findById(managerId); 
+          const companyDetails = await Company.findById(req.cookies.companyId);
+          sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
+
+          SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
+            constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
+        }
+      }
+    } catch (error) {
+      console.error("Error applying for leave and updating assigned leave:", error);
+    }
+
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: newLeaveApplication 
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplication,company) => {
+const sendEmailToUsers = async (user, manager, email_template_constant, leaveApplication, company) => {
 
-       
-      const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id); 
-   
-      if(emailTemplate)
-      {
-        if(email_template_constant==constants.Email_template_constant.Leave_Application_Approval_Request)     
-          {  
-          const template = emailTemplate.contentData;
-          const totalDays=leaveApplication.endDate-leaveApplication.startDate;
-          const message = template
-          .replace("{firstName}", manager.firstName)       
-          .replace("{employeeName}", user.firstName + " "+user.lastName)
-          .replace("{employeeName}", user.firstName + " "+user.lastName)      
-          .replace("{leaveType}", leaveApplication.leaveCategory)       
-          .replace("{startDate}", leaveApplication.startDate)       
-          .replace("{endDate}", leaveApplication.endDate)       
-          .replace("{totalDays}", totalDays)       
-          .replace("{reason}", leaveApplication.comment)            
-          .replace("{company}",  company.companyName)
-          .replace("{company}", company.companyName)
-          .replace("{lastName}", manager.lastName); 
-          if(attendanceUser.email=="hrmeffortless@gmail.com")
-          {
-              try {
-              await sendEmail({
-                email: attendanceUser.email,
-                subject: emailTemplate.subject,
-                message
-              });
-              
-            } catch (err) {   
-              console.error(`Error sending email to user ${user}:`, err); 
-          }
-          }
+
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id);
+
+  if (emailTemplate) {
+    if (email_template_constant == constants.Email_template_constant.Leave_Application_Approval_Request) {
+      const template = emailTemplate.contentData;
+      const totalDays = leaveApplication.endDate - leaveApplication.startDate;
+      const message = template
+        .replace("{firstName}", manager.firstName)
+        .replace("{employeeName}", user.firstName + " " + user.lastName)
+        .replace("{employeeName}", user.firstName + " " + user.lastName)
+        .replace("{leaveType}", leaveApplication.leaveCategory)
+        .replace("{startDate}", leaveApplication.startDate)
+        .replace("{endDate}", leaveApplication.endDate)
+        .replace("{totalDays}", totalDays)
+        .replace("{reason}", leaveApplication.comment)
+        .replace("{company}", company.companyName)
+        .replace("{company}", company.companyName)
+        .replace("{lastName}", manager.lastName);
+      if (attendanceUser.email == "hrmeffortless@gmail.com") {
+        try {
+          await sendEmail({
+            email: attendanceUser.email,
+            subject: emailTemplate.subject,
+            message
+          });
+
+        } catch (err) {
+          console.error(`Error sending email to user ${user}:`, err);
+        }
       }
+    }
   }
 };
 
@@ -1162,9 +1137,9 @@ const sendEmailToUsers = async (user,manager,email_template_constant,leaveApplic
 exports.updateEmployeeLeaveApplication = async (req, res, next) => {
   try {
     const { id } = req.params;
-   // const { haldDays, ...leaveApplicationData } = req.body;
+    // const { haldDays, ...leaveApplicationData } = req.body;
     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
- 
+
     const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true
@@ -1189,8 +1164,8 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     else {
       try {
 
-        console.log("company id."+ req.cookies.companyId);
-        console.log("employee id."+ updatedLeaveApplication.user._id?.toString());
+        console.log("company id." + req.cookies.companyId);
+        console.log("employee id." + updatedLeaveApplication.user._id?.toString());
         // Check if the status is 'Cancelled' or 'Rejected'
         if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
           const leaveDays = calculateLeaveDays(startDate, endDate);
@@ -1203,14 +1178,14 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
           // Save the updated leave assigned record
           await leaveAssigned.save();
-          sendEmailToUsers(req.body.employee,constants.Email_template_constant.CancelReject_Request_Leave_Application,updatedLeaveApplication,req.cookies.companyId);   
-          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);      
+          sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
+          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
-          sendEmailToUsers(req.body.employee,constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved,updatedLeaveApplication,req.cookies.companyId);  
+          sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
           SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
-         
-      }
+
+        }
       }
       catch (error) {
         console.error("Error updating leave balance:", error);
@@ -1233,7 +1208,7 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
     const { status } = req.body;
 
     if (!status) {
-      return next(new AppError(req.t('leave.statusRequired'), 400)); 
+      return next(new AppError(req.t('leave.statusRequired'), 400));
     }
 
     // Only update the status field
@@ -1334,7 +1309,7 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
         total: 0,
       });
     }
-    
+
     for (var i = 0; i < leaveApplications.length; i++) {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
       if (halfDays) {
@@ -1367,7 +1342,7 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
     teamIdsArray.push(req.cookies.userId);
   }
 
-  const objectIdArray = teamIdsArray.map(id => new ObjectId(id)); 
+  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
   const totalCount = await LeaveApplication.countDocuments({ employee: { $in: objectIdArray } });
@@ -1399,18 +1374,18 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     const { id } = req.params;
     const leaveApplication = await LeaveApplication.findById(id);
     if (leaveApplication) {
-    
-        const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);   
-        const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);      
-        const cycle = await scheduleController.createFiscalCycle();
-        const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
-        // Deduct the applied leave days from the leave remaining
-        leaveAssigned.leaveRemaining += leaveDays;
-        leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
-        // Save the updated leave assigned record
-        await leaveAssigned.save();
-      }
-    
+
+      const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);
+      const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
+      const cycle = await scheduleController.createFiscalCycle();
+      const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
+      // Deduct the applied leave days from the leave remaining
+      leaveAssigned.leaveRemaining += leaveDays;
+      leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
+      // Save the updated leave assigned record
+      await leaveAssigned.save();
+    }
+
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
@@ -1486,17 +1461,15 @@ exports.addShortLeave = async (req, res, next) => {
     const company = req.cookies.companyId; // Get company from cookies
     req.body.company = company; // Set company in the request body
     const shortLeave = await ShortLeave.create(req.body);
-    
+
     const user = await User.findById(req.body.employee);
     const userName = `${user?.firstName} ${user?.lastName}`;
 
     SendUINotification(req.t('leave.employeeShortLeaveRequestNotificationTitle'), req.t('leave.employeeShortLeaveRequestNotificationMessage', { employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
       constants.Event_Notification_Type_Status.leave, user?._id?.toString(), company, req);
-    const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(req.body.employee);      
-    if(managerTeamsIds)
-    { 
-      for(var j = 0; j < managerTeamsIds.length; j++)
-      {
+    const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(req.body.employee);
+    if (managerTeamsIds) {
+      for (var j = 0; j < managerTeamsIds.length; j++) {
         const manager = await User.findById(managerTeamsIds[j]._id);
         //send ui notification to manager
         SendUINotification(req.t('leave.managerShortLeaveApprovalNotificationTitle'), req.t('leave.managerShortLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
@@ -1522,7 +1495,7 @@ exports.getShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:  req.t('leave.shortLeaveNotFound')
+        message: req.t('leave.shortLeaveNotFound')
       });
     } else {
       res.status(200).json({
@@ -1545,7 +1518,7 @@ exports.updateShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:  req.t('leave.shortLeaveNotFound')
+        message: req.t('leave.shortLeaveNotFound')
       });
     } else {
       const user = await User.findById(req.body.employee);
@@ -1562,7 +1535,7 @@ exports.updateShortLeave = async (req, res, next) => {
     }
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1574,7 +1547,7 @@ exports.deleteShortLeave = async (req, res, next) => {
     if (!shortLeave) {
       res.status(404).json({
         status: constants.APIResponseStatus.Failure,
-        message:  req.t('leave.shortLeaveNotFound')
+        message: req.t('leave.shortLeaveNotFound')
       });
     } else {
       res.status(204).json({
@@ -1584,7 +1557,7 @@ exports.deleteShortLeave = async (req, res, next) => {
     }
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1605,7 +1578,7 @@ exports.getShortLeaveByUser = async (req, res, next) => {
     });
   } catch (err) {
     res.status(500).json({
-      status:constants.APIResponseStatus.Failure,
+      status: constants.APIResponseStatus.Failure,
       message: err.message
     });
   }
@@ -1625,7 +1598,7 @@ exports.getShortLeaveByTeam = catchAsync(async (req, res, next) => {
     teamIdsArray.push(req.cookies.userId);
   }
 
-  const objectIdArray = teamIdsArray.map(id => new ObjectId(id)); 
+  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
