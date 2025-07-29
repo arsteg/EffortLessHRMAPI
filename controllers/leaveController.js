@@ -105,11 +105,11 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
   }
   req.body.company = companyId;
-
   const leaveCategory = await LeaveCategory.create(req.body);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: leaveCategory,
+    message: req.t('leave.leaveCategory')
   });
 });
 
