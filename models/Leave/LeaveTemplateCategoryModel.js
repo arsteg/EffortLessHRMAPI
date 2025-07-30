@@ -66,7 +66,7 @@ leaveTemplateCategorySchema.pre(/^find/,async function(next) {
   try {
     this.populate({
       path: 'leaveCategory',
-      select: 'id label isHalfDayTypeOfLeave submitBefore isDocumentRequired maximumNumberConsecutiveLeaveDaysAllowed minimumNumberOfDaysAllowed'
+      select: 'id label isHalfDayTypeOfLeave canEmployeeApply submitBefore isDocumentRequired maximumNumberConsecutiveLeaveDaysAllowed minimumNumberOfDaysAllowed'
     });
     this.populate({
       path: 'leaveTemplate',

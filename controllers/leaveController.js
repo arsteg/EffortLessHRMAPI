@@ -798,23 +798,39 @@ exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
-  var teamIdsArray = [];
-  var teamIds;
-  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);
-  if (ids.length > 0) {
-    for (var i = 0; i < ids.length; i++) {
-      teamIdsArray.push(ids[i]);
-    }
+  let teamIdsArray = [];
+
+  // Get subordinate user IDs
+  const subordinateIds = await userSubordinate.find({})
+    .distinct('subordinateUserId')
+    .where('userId')
+    .equals(req.cookies.userId);
+
+  if (subordinateIds.length > 0) {
+    teamIdsArray = subordinateIds; // Directly assign if there are subordinates
   }
-  if (teamIds == null) {
-    teamIdsArray.push(req.cookies.userId);
-  }
+ const currentUserObjectId = new ObjectId(req.cookies.userId);
+  teamIdsArray = teamIdsArray.filter(id => !id.equals(currentUserObjectId));
+
 
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+
+  // Only proceed if there are actual team members to query for
+  if (objectIdArray.length === 0) {
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: [],
+      total: 0
+    });
+  }
+
   const totalCount = await LeaveGrant.countDocuments({ employee: { $in: objectIdArray }, status: req.body.status });
-  const leaveGrants = await LeaveGrant.find({ employee: { $in: objectIdArray }, status: req.body.status }).skip(parseInt(skip)).limit(parseInt(limit));
+  const leaveGrants = await LeaveGrant.find({ employee: { $in: objectIdArray }, status: req.body.status })
+                                     .skip(parseInt(skip))
+                                     .limit(parseInt(limit));
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: leaveGrants,
