@@ -944,16 +944,14 @@ exports.addSubordinate = catchAsync(async (req, res, next) => {
  exports.getManagers = catchAsync(async (req, res, next) => {  
   const ids = await userSubordinate.find({}).distinct("userId");   
    
-  const activeUsers = await User.find({
+ const activeUsers = await User.find({
     _id: { $in: ids },
     active: true
-  });
-  
-  const activeUserIds = activeUsers.map(user => user._id);
-  
+  }).select('_id firstName lastName');
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
-    data: activeUserIds
+    data: activeUsers
   });
       
  });
