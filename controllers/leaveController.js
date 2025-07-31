@@ -1346,36 +1346,43 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
 };
 
 exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) => {
-  var teamIdsArray = [];
-  var teamIds;
-  const ids = await userSubordinate.find({}).distinct('subordinateUserId').where('userId').equals(req.cookies.userId);
-  if (ids.length > 0) {
-    for (var i = 0; i < ids.length; i++) {
-      teamIdsArray.push(ids[i]);
-    }
-  }
-  if (teamIds == null) {
-    teamIdsArray.push(req.cookies.userId);
+  let teamIdsArray = [];
+
+  // Find subordinates' user IDs
+  const subordinateIds = await userSubordinate.find({})
+    .distinct('subordinateUserId')
+    .where('userId')
+    .equals(req.cookies.userId);
+
+  if (subordinateIds.length > 0) {
+    teamIdsArray = subordinateIds.map(id => new ObjectId(id));
+  } else {
+    // If no subordinates, return empty data as per the requirement to exclude current user
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: [],
+      total: 0
+    });
   }
 
-  const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await LeaveApplication.countDocuments({ employee: { $in: objectIdArray } });
+
+  const totalCount = await LeaveApplication.countDocuments({ employee: { $in: teamIdsArray } });
 
   const leaveApplications = await LeaveApplication.find({
-    employee: { $in: objectIdArray }
-  }).skip(parseInt(skip))
-    .limit(parseInt(limit));
+    employee: { $in: teamIdsArray }
+  })
+    .skip(skip)
+    .limit(limit);
 
-  for (var i = 0; i < leaveApplications.length; i++) {
-    const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
-    if (halfDays) {
-      leaveApplications[i].halfDays = halfDays;
-    }
-    else {
-      leaveApplications[i].halfDays = null;
-    }
+  // Populate halfDays for each leave application
+  for (let i = 0; i < leaveApplications.length; i++) {
+    const halfDays = await LeaveApplicationHalfDay.find({})
+      .where('leaveApplication')
+      .equals(leaveApplications[i]._id);
+    // Assign halfDays, even if null, to avoid undefined properties and maintain consistency
+    leaveApplications[i].halfDays = halfDays.length > 0 ? halfDays : null;
   }
 
   res.status(200).json({
@@ -1390,18 +1397,15 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     const { id } = req.params;
     const leaveApplication = await LeaveApplication.findById(id);
     if (leaveApplication) {
-
       const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);
       const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
       const cycle = await scheduleController.createFiscalCycle();
       const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
-      // Deduct the applied leave days from the leave remaining
+      
       leaveAssigned.leaveRemaining += leaveDays;
-      leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
-      // Save the updated leave assigned record
+      leaveAssigned.leaveTaken -= leaveDays;
       await leaveAssigned.save();
     }
-
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
