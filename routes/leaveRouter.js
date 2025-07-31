@@ -1022,7 +1022,7 @@ router.post('/employee-leave-grant', authController.protect, leaveController.cre
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-grant-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveGrantByUser);
+router.post('/employee-leave-grant-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveGrantByUser);
 
 /**
  * @swagger

@@ -790,10 +790,26 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 });
 
 exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
-  const leaveGrants = await LeaveGrant.find({}).where('employee').equals(req.params.userId);
+  const { userId } = req.params;
+  const skip = parseInt(req.body.skip) || 0;
+  const limit = parseInt(req.body.next) || 10; 
+  const status = req.body.status; 
+
+  let query = { employee: userId };
+  if (status) {
+    query.status = status;
+  }
+
+  const totalCount = await LeaveGrant.countDocuments(query);
+
+  const leaveGrants = await LeaveGrant.find(query)
+    .skip(skip)
+    .limit(limit);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: leaveGrants,
+    total: totalCount
   });
 });
 
@@ -807,7 +823,7 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
     .equals(req.cookies.userId);
 
   if (subordinateIds.length > 0) {
-    teamIdsArray = subordinateIds; // Directly assign if there are subordinates
+    teamIdsArray = subordinateIds;
   }
  const currentUserObjectId = new ObjectId(req.cookies.userId);
   teamIdsArray = teamIdsArray.filter(id => !id.equals(currentUserObjectId));
