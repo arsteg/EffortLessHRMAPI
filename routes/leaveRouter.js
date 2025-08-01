@@ -208,8 +208,6 @@ router.put('/general-settings/:id', authController.protect, leaveController.upda
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *               isEmployeeAccrualLeaveInAdvance:
- *                 type: boolean
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
@@ -329,8 +327,6 @@ router.get('/leave-categories/:id', authController.protect, leaveController.getL
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *               isEmployeeAccrualLeaveInAdvance:
- *                 type: boolean
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:

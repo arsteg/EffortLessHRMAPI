@@ -5,7 +5,7 @@ var employeeLeaveAssignmentSchema = new Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: [true, 'User must belong to a User']
+    required: true
   },
   leaveTemplate: {
     type: mongoose.Schema.ObjectId,
@@ -14,17 +14,17 @@ var employeeLeaveAssignmentSchema = new Schema({
   },
   primaryApprover: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User', // Replace 'User' with the actual user reference schema
+    ref: 'User',
     required: false
   },
   secondaryApprover: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User', // Replace 'User' with the actual user reference schema
+    ref: 'User',
     required: false
   },
   company: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Company', // Assuming the reference is to a Company schema
+    ref: 'Company',
     required: true
   }
 }, { collection: 'EmployeeLeaveAssignment' });
@@ -34,6 +34,14 @@ employeeLeaveAssignmentSchema.pre(/^find/, async function (next) {
     this.populate({
       path: 'leaveTemplate',
       select: 'id label approvalType'
+    })
+    this.populate({
+      path: 'primaryApprover',
+      select: 'id firstName lastName'
+    })
+    this.populate({
+      path: 'user',
+      select: 'id firstName lastName'
     })
   } catch (error) {
     console.error("Error populating leave templates:", error);
