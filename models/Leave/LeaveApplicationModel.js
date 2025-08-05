@@ -49,7 +49,21 @@ var leaveApplicationSchema = new Schema({
   documentLink: {
     type: String
   },
-  halfDays:[]
+  halfDays:[],
+  calculatedLeaveDays: {
+        type: Number,
+        min: 0,
+        default: 0 // Default to 0, will be updated on creation
+    },
+    weeklyOffDaysIncluded: {
+        type: Boolean,
+        default: false // Default to false, will be updated on creation
+    },
+    numberOfWeeklyOffDays: {
+        type: Number,
+        min: 0,
+        default: 0 // Default to 0, will be updated on creation
+    }
 }, { collection: 'LeaveApplication' });
 
 leaveApplicationSchema.pre(/^find/, async function (next) {

@@ -208,8 +208,6 @@ router.put('/general-settings/:id', authController.protect, leaveController.upda
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *               isEmployeeAccrualLeaveInAdvance:
- *                 type: boolean
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
@@ -329,8 +327,6 @@ router.get('/leave-categories/:id', authController.protect, leaveController.getL
  *                 type: boolean
  *               leaveAccrualPeriod:
  *                 type: string
- *               isEmployeeAccrualLeaveInAdvance:
- *                 type: boolean
  *               isAnnualHolidayLeavePartOfNumberOfDaysTaken:
  *                 type: boolean
  *               isWeeklyOffLeavePartOfNumberOfDaysTaken:
@@ -1022,7 +1018,7 @@ router.post('/employee-leave-grant', authController.protect, leaveController.cre
  *       500:
  *         description: Internal server error
  */
-router.get('/employee-leave-grant-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveGrantByUser);
+router.post('/employee-leave-grant-by-user/:userId', authController.protect, leaveController.getEmployeeLeaveGrantByUser);
 
 /**
  * @swagger
@@ -1335,6 +1331,43 @@ router.post('/employee-leave-application', authController.protect, leaveControll
  *         description: Internal server error
  */
 router.put('/employee-leave-application/:id', authController.protect, leaveController.updateEmployeeLeaveApplication);
+
+/**
+ * @swagger
+ * /api/v1/Leave/employee-leave-status/{id}:
+ *   put:
+ *     summary: update EmployeeLeaveApplication status
+ *     tags: [Leave Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Employee Leave Application
+ *     requestBody:
+ *       description: EmployeeLeaveApplication details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: EmployeeLeaveApplication successfully updated
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/employee-leave-status/:id', authController.protect, leaveController.updateEmployeeLeaveStatus);
 
 /**
  * @swagger

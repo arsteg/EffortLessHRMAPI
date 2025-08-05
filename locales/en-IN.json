@@ -463,7 +463,9 @@
     "managerShortLeaveApprovalNotificationTitle": "Short Leave Request from Team Member",
     "managerShortLeaveApprovalNotificationMessage": "Dear {{firstName}} {{lastName}}, your team member {{employeeName}} has applied for a short leave of {{duration}} minutes on {{date}}.",
     "employeeShortLeaveUpdateNotificationTitle": "Short Leave Application Update",
-    "employeeShortLeaveUpdateNotificationMessage": "Hi {{employeeName}}, your short leave request for {{duration}} minutes on {{date}} has been {{status}}."
+    "employeeShortLeaveUpdateNotificationMessage": "Hi {{employeeName}}, your short leave request for {{duration}} minutes on {{date}} has been {{status}}.",
+    "statusRequired": "Leave status required",
+    "leaveCategory": "Leave Category Created successfully"
   },
   "liveTracking": {
     "userAlreadyAdded": "The user is already added for live tracking.",

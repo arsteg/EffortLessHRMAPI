@@ -227,6 +227,28 @@ authRouter
  *
  */
   authRouter.route('/roles/getSubordinates/:id').get(authController.protect,authController.getSubordinates);
+    /**
+ * @swagger
+ * /api/v1/auth/roles/getManagers:
+ *  get:
+ *      tags:
+ *          - Role-Based Access Control
+ *      summary: "Get team member Based On UserId"
+ *      security: [{
+ *         bearerAuth: []
+ *     }]
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "Success"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *
+ */
+    authRouter.route('/roles/getManagers').get(authController.protect,authController.getManagers);
 /**
  * @swagger
  * /api/v1/auth/roles/deleteSubordinate/{userId}/{subordinateUserId}:
