@@ -99,7 +99,8 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   }
 
   const { label } = req.body;
-  const existingLeaveCategory = await LeaveCategory.findOne({ label, company: companyId, isDelete: { $ne: true } });
+  const existingLeaveCategory = await LeaveCategory.findOne({ 
+   label : { $regex: new RegExp(`^${label}$`, 'i') }, company: companyId, isDelete: { $ne: true } });
   if (existingLeaveCategory) {
     websocketHandler.sendLog(req, `Leave category with label "${label}" already exists for company ${req.cookies.companyName}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
