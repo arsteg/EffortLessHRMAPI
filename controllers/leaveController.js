@@ -294,8 +294,16 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
-  // Check if label already exists
-  const existingTemplate = await LeaveTemplate.findOne({ 'label': leaveTemplateData.label });
+
+  // --- FIX STARTS HERE ---
+  // Create a case-insensitive regular expression for the label
+  const labelRegex = new RegExp(`^${leaveTemplateData.label}$`, 'i');
+
+  // Check if a template with the same label (case-insensitive) already exists
+  const existingTemplate = await LeaveTemplate.findOne({
+    company: companyId, // It's good practice to also check by company
+    'label': { $regex: labelRegex }
+  });
 
   if (existingTemplate) {
     return res.status(400).json({
@@ -303,6 +311,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
       message: req.t('leave.labelExists'),
     });
   }
+  // --- FIX ENDS HERE ---
 
   // Check if leaveCategories is provided and valid
   if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {
