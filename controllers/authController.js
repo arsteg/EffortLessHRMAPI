@@ -936,20 +936,29 @@ exports.getSubordinates = catchAsync(async (req, res, next) => {
 });
 
 exports.getManagers = catchAsync(async (req, res, next) => {
-  const ids = await userSubordinate.find({}).distinct("userId");
+  const companyId = req.cookies.companyId;
 
+  if (!companyId) {
+    return next(new AppError('Company ID is missing in cookies', 400));
+  }
+
+  // Get all unique userIds from userSubordinate for the current company
+  const ids = await userSubordinate
+    .find({ company: companyId })
+    .distinct("userId");
+
+  // Find all active users whose IDs match and belong to the current company
   const activeUsers = await User.find({
     _id: { $in: ids },
-    active: true
+    active: true,
+    company: companyId // <-- Add this to filter users by company too
   }).select('_id firstName lastName');
 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: activeUsers
   });
-
 });
-
 
 exports.deleteSubordinates = catchAsync(async (req, res, next) => {
   userSubordinate.deleteOne({ userId: req.params.userId, subordinateUserId: req.params.subordinateUserId }, function (err) {
