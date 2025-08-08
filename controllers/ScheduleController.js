@@ -34,7 +34,7 @@ assignLeavesByJobs = async (req, res, next) => {
                 websocketHandler.sendLog(req, `Found leave assignment for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
                 
                 const leaveTemplateCategory = await LeaveTemplateCategory.findOne({})
-                    .where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate.toString());
+                    .where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate._id.toString());
                 
                 if (leaveTemplateCategory) {           
                     const leaveCategory = await LeaveCategory.findById(leaveTemplateCategory.leaveCategory); 
