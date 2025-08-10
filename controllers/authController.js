@@ -933,21 +933,17 @@ exports.getSubordinates = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     data: activeUsers
   });
-});
-
-exports.getManagers = catchAsync(async (req, res, next) => {
+ });
+exports.getManagers = catchAsync(async (req, res, next) => {  
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
     return next(new AppError('Company ID is missing in cookies', 400));
   }
 
-  // Get all unique userIds from userSubordinate for the current company
   const ids = await userSubordinate
     .find({ company: companyId })
-    .distinct("userId");
-
-  // Find all active users whose IDs match and belong to the current company
+    .distinct("userId");  
   const activeUsers = await User.find({
     _id: { $in: ids },
     active: true,

@@ -43,10 +43,6 @@ const attendanceTemplateSchema = new Schema({
     type: Boolean,
     required: true
   },
-  isCommentMandatoryForRegularisation: {
-    type: Boolean,
-    required: true
-  },
   departmentDesignations: {
     type: String,
     required: true

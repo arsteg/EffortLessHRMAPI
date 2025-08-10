@@ -199,6 +199,7 @@
     "AttendanceRegularizationNF": "Attendance regularization was not found.",
     "UserOnDutyTemplateNF": "The user on-duty template was not found.",
     "ShiftTemplateAssignmentNF": "The shift template assignment was not found.",
+    "shiftTemplateAssignmentExists": "The shift template was allready assigned to User.",
     "TimeEntryNF": "The time entry was not found.",
     "UserIDMonthYearRequired": "User ID, month, and year are required.",
     "OvertimeRecordsNF": "Overtime records were not found.",
