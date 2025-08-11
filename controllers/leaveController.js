@@ -156,7 +156,7 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
 
   if (duplicate) {
     websocketHandler.sendLog(req, `Duplicate label "${label}" found for another leave category`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('leave.leaveCategoryAlreadyExists'), 400));
+    return next(new AppError(req.t('leave.labelExists'), 400));
   }
 
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
