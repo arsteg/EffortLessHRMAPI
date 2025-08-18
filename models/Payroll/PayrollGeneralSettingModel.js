@@ -3,25 +3,15 @@ const Schema = mongoose.Schema;
 
 const payrollGeneralSettingSchema = new Schema({
   dayOfMonthToRunPayroll: {
-    type: Number,
+    type: String,
     required: true
   },
   payrollApprovar: {
     type: String,
     required: true
   },
-  attendanceCycle:
-  {
-    type: String,
-    required: true
-  },
-  dayOfMonthToStartAttendanceCycle: {
-    type: Number,
-    required: true
-  },
   password: {
-    type: String,
-    required: true
+    type: String
   },
   isPasswordForSalaryRegister: {
     type: Boolean,
@@ -32,50 +22,9 @@ const payrollGeneralSettingSchema = new Schema({
     required: true
   },
   percentageForGraduity: {
-    type: String,
-    required: true
-  },
-  graduityComponentsGraduitycalculation:{
-    type: [String],
-    required: true
-  },
-  leaveEncashment: {
-    type: [String],
-    required: true
-  },
-  denominatorForCalculatingTheEncashment: {
-    type: String,
-    required: true
-  },
-  payoutRolloverLeaveEncashmentForEmployees: {
-    type: [String],
-    required: true
-  },
-  calculateLeaveRecovery: {
-    type: [String],
-    required: true
-  },
-  denominatorForCalculatingTheLeaveRecovery: {
-    type: [String],
-    required: true
-  },
-  recoverOutstandingIncomeTaxOfEmployees: {
-    type: [String],
-    required: true
-  },
-  isNoticePeriodRecoveryApplicable: {
-    type: Boolean,
-    required: true
-  },
-  denominatorForCalculatingTheNoticeRecovery: {
-    type: String,
-    required: true
-  },
+    type: String
+  },  
   isAllowTDSFromEffortlessHRM: {
-    type: Boolean,
-    required: true
-  },
-  isAllowNcpDaysApplicableInPF: {
     type: Boolean,
     required: true
   },

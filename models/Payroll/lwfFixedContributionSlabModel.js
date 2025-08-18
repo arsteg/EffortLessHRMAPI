@@ -51,7 +51,6 @@ var fixedContributionSlabSchema = new Schema({
 }, { collection: 'LWFFixedContributionSlab' });
 // 🔄 Middleware to deactivate old active slabs with same state + contribution + company
 fixedContributionSlabSchema.pre('save', async function (next) {
-  if ((this.isNew || this.isModified('isActive')) && this.minAmount === 0 && this.maxAmount === 0) {
     await this.constructor.updateMany(
       {
         state: this.state,
@@ -64,7 +63,7 @@ fixedContributionSlabSchema.pre('save', async function (next) {
         $set: { isActive: false }
       }
     );
-  }
+
   next();
 });
 

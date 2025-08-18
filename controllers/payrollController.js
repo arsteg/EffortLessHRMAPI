@@ -1,4 +1,4 @@
-const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel.js");
+const GeneralSetting = require("../models/Payroll/payrollGeneralSettingModel.js");
 const RoundingRule = require("../models/Payroll/RoundingRulesModel");
 const FixedAllowances = require("../models/Payroll/fixedAllowancesModel");
 const FixedContribution = require("../models/Payroll/fixedContributionModel");
@@ -370,6 +370,14 @@ exports.createFixedAllowances = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
+const { label } = req.body;
+
+  // Check if a template with the same label already exists for the company
+  const existingFixedAllowances = await FixedAllowances.findOne({ label, company: companyId });
+  if (existingFixedAllowances) {
+    websocketHandler.sendLog(req, `Fixed Allowances with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_fixed_allowance_label_error'), 400));
+  }
 
   // Add companyId to the request body
   req.body.company = companyId;
@@ -392,6 +400,20 @@ exports.getFixedAllowancesById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
+   // Extract companyId from req.cookies
+   const companyId = req.cookies.companyId;
+
+   // Check if companyId exists in cookies
+   if (!companyId) {
+     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+   }
+   const { label } = req.body;
+  const existingFixedAllowances = await FixedAllowances.findOne({ label, company: companyId , _id: { $ne: req.params.id },});
+  if (existingFixedAllowances) {
+    websocketHandler.sendLog(req, `Fixed Allowances with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_fixed_allowance_label_error'), 400));
+  }
+
   const fixedAllowances = await FixedAllowances.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -418,6 +440,15 @@ exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
   // Step 2: If not found, return 404
   if (!fixedAllowance) {
     return next(new AppError(req.t('payroll.fixedAllowancesNotFound'), 404));
+  }
+  const isUsedInSalaryStructure  = await SalaryComponentFixedAllowance.findOne({
+    fixedAllowance: req.params.id
+  });
+  const isUsedInCTCTemplate = await CTCTemplateFixedAllowance.findOne({
+    fixedAllowance: req.params.id
+  });
+  if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
+    return next(new AppError(req.t('payroll.fixedAllowancesAlreadyExistsinUse'), 404));   
   }
 
   // Step 3: Check if deletion is allowed
@@ -1302,7 +1333,13 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
   }
 
   // Add companyId to the request body
-  req.body.company = companyId;
+  req.body.company = companyId;  
+  const { label } = req.body;
+ const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId});
+ if (existinVariableAllowance) {
+   websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
+ }
   const variableAllowance = await VariableAllowance.create(req.body);
   if (
     req.body.variableAllowanceApplicableEmployee &&
@@ -1382,6 +1419,21 @@ exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
 
 // Update a VariableAllowance by ID
 exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;  
+  const { label } = req.body;
+ const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId , _id: { $ne: req.params.id }});
+ if (existinVariableAllowance) {
+   websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
+ }
   const variableAllowance = await VariableAllowance.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -1436,6 +1488,12 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
+ const existingFixedDeduction = await FixedDeduction.findOne({ label, company: companyId});
+ if (existingFixedDeduction) {
+   websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
+ }
+
   // Add companyId to the request body
   req.body.company = companyId;
 
@@ -1487,6 +1545,18 @@ exports.getFixedDeductionById = catchAsync(async (req, res, next) => {
 // Update Fixed Deduction
 exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+  const { label } = req.body;
+ const existingeFixedDeduction = await FixedDeduction.findOne({ label, company: companyId , _id: { $ne: req.params.id }});
+ if (existingeFixedDeduction) {
+   websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
+ }
   const fixedDeduction = await FixedDeduction.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
@@ -1505,6 +1575,15 @@ exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
 // Delete Fixed Deduction
 exports.deleteFixedDeduction = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const isUsedInSalaryStructure  = await SalaryComponentFixedDeduction.findOne({
+    fixedDeduction: req.params.id
+  });
+  const isUsedInCTCTemplate = await SalaryComponentFixedDeduction.findOne({
+    fixedDeduction: req.params.id
+  });
+  if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
+    return next(new AppError(req.t('payroll.fixedDeductionAlreadyExistsinUse'), 404));   
+  }
   const fixedDeduction = await FixedDeduction.findByIdAndDelete(id);
 
   if (!fixedDeduction) {
@@ -1527,7 +1606,11 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
 
   // Add companyId to the request body
   req.body.company = companyId;
-
+  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId});
+  if (existingVariableDeduction) {
+    websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_variable_Deduction_label_error'), 400));
+  }
   const variableDeduction = await VariableDeduction.create(req.body);
   if (
     req.body.variableDeductionApplicableEmployee &&
@@ -1607,6 +1690,20 @@ exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+
+  // Add companyId to the request body
+  req.body.company = companyId;
+  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId,_id: { $ne: req.params.id }});
+  if (existingVariableDeduction) {
+    websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_variable_Deduction_label_error'), 400));
+  }
   const variableDeduction = await VariableDeduction.findByIdAndUpdate(
     req.params.id,
     req.body,

@@ -599,7 +599,6 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
 
   // Check if a template with the same label already exists for the company
   const existingTemplate = await AttendanceTemplate.findOne({ label, company: companyId, isDelete: { $ne: true } });
-
   if (existingTemplate) {
     websocketHandler.sendLog(req, `Attendance template with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.templateAlreadyExists'), 400));
@@ -1654,13 +1653,13 @@ exports.createShift = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
-  const { label } = req.body;
+  const { name } = req.body;
 
   // Check for duplicate shift label in same company
-  const existingShift = await Shift.findOne({ name:label, company: companyId, isDelete: { $ne: true } });
+  const existingShift = await Shift.findOne({ name:name, company: companyId, isDelete: { $ne: true } });
 
   if (existingShift) {
-    websocketHandler.sendLog(req, `Shift with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, `Shift with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.shiftAlreadyExists'), 400));
   }
   const shift = await Shift.create(req.body);
