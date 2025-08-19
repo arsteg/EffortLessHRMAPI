@@ -277,7 +277,7 @@
     "noRoleFound": "No role was found.",
     "userSubordinateExists": "The user subordinate already exists.",
     "noRolePermissionFound": "No role permission was found.",
-    "userLimitReached": "You have reached the user limit for your subscription plan. You cannot add more than {userLimit} users. Please upgrade your plan to add more users.",
+    "userLimitReached": "You have reached the user limit for your subscription plan. You cannot add more than {{userLimit}} users. Please upgrade your plan to add more users.",
     "roleAssignmentNotificationTitle": "Role Assignment Notification",
     "roleAssignmentNotificationMessage": "The role '{{roleName}}' has been assigned to you."
   },

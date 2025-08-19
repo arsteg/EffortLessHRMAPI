@@ -72,10 +72,10 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
     user.password = undefined;
     let companySubscription = null;
     const companyDetails = await Company.findById(user.company.id);
-    if (!companyDetails.freeCompany) {
-      companySubscription = await checkCompanySubscription(user, req);
-    }
-
+    //use test card do not use freecompany
+    //if (!companyDetails.freeCompany) {
+    companySubscription = await checkCompanySubscription(user, req);
+    //}
     res.status(statusCode).json({
       status: constants.APIResponseStatus.Success,
       token,
@@ -114,12 +114,20 @@ const checkCompanySubscription = async (user, req) => {
     const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
     return fallback;
   } else {
+    return {
+        id: null,
+        companyId: user.company.id,
+        status: "",
+        currentPlanId: null,
+        addOns: [],
+        pendingUpdates: [],
+        scheduledChanges: null,
+      };
+    // const message = typeof req?.t === 'function'
+    //   ? req.t('auth.noSubscription')
+    //   : 'Your company does not have a valid subscription.';
 
-    const message = typeof req?.t === 'function'
-      ? req.t('auth.noSubscription')
-      : 'Your company does not have a valid subscription.';
-
-    throw new AppError(message, 403);
+    // throw new AppError(message, 403);
   }
 };
 
@@ -412,7 +420,7 @@ exports.CreateUser = catchAsync(async (req, res, next) => {
       status: { $in: constants.Active_Statuses }
     });
     if (subscription?.currentPlanId?.users <= activeUsers) {
-      new AppError(req.t('auth.userLimitReached'), 500)
+      return next(new AppError(req.t('auth.userLimitReached', { userLimit: subscription?.currentPlanId?.users }), 500))
     }
     const newUser = await User.create({
       firstName: req.body.firstName,

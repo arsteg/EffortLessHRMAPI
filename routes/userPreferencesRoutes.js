@@ -54,7 +54,7 @@ router.get('/structure', userPreferencesController.GetAllUserPreferences);
  *       500:
  *         description: Internal server error
  */
-router.post('/create', authController.protect, userPreferencesController.createOrUpdatePreference);
+router.post('/create', userPreferencesController.createOrUpdatePreference);
 
 /**
  * @swagger
@@ -112,7 +112,8 @@ router.get('/preference-key/:preferenceKey', authController.protect, userPrefere
  *       500:
  *         description: Internal server error
  */
-router.get('/user/:userId', authController.protect, userPreferencesController.getPreferencesByUserId);
+//router.get('/user/:userId', authController.protect, userPreferencesController.getPreferencesByUserId);
+router.get('/user/:userId', userPreferencesController.getPreferencesByUserId);
 
 /**
  * @swagger

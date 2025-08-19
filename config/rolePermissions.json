@@ -20,10 +20,14 @@
       "Settings",
       "Permissions",
       "Approvals",
-      "Interview Process",
-      "Feedback",
       "Helpdesk",
-      "Profile"
+      "Profile",
+      "Leave Settings",
+      "Attendance Settings",
+      "Organization Settings",
+      "Alerts Settings",
+      "Taxation Settings",
+      "Expenses Settings"
     ]
   },
   {
@@ -34,7 +38,6 @@
       "Realtime",
       "Tasks",
       "Alerts",
-      "Organization",
       "Calender",
       "Leave",
       "Attendance",
