@@ -7,8 +7,7 @@ var leaveTemplateSchema = new Schema({
     required: true
   },
   approvalLevel: {
-    type: String,
-    required: true
+    type: String
   },
   approvalType: {
     type: String,

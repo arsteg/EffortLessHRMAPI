@@ -7,7 +7,6 @@ const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
 const mongoose = require('mongoose');
 const moment = require('moment');
-const PayrollGeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel.js");
 const EmployeeSalutatoryDetails = require("../models/Employment/EmployeeSalutatoryDetailsModel");
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month

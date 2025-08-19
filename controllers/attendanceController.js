@@ -40,7 +40,7 @@ const Appointment = require("../models/permissions/appointmentModel");
 const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
-
+const mongoose = require('mongoose'); // Added mongoose import
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -599,7 +599,6 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
 
   // Check if a template with the same label already exists for the company
   const existingTemplate = await AttendanceTemplate.findOne({ label, company: companyId, isDelete: { $ne: true } });
-
   if (existingTemplate) {
     websocketHandler.sendLog(req, `Attendance template with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.templateAlreadyExists'), 400));
@@ -1654,13 +1653,13 @@ exports.createShift = catchAsync(async (req, res, next) => {
   }
   // Add companyId to the request body
   req.body.company = companyId;
-  const { label } = req.body;
+  const { name } = req.body;
 
   // Check for duplicate shift label in same company
-  const existingShift = await Shift.findOne({ label, company: companyId, isDelete: { $ne: true } });
+  const existingShift = await Shift.findOne({ name:name, company: companyId, isDelete: { $ne: true } });
 
   if (existingShift) {
-    websocketHandler.sendLog(req, `Shift with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, `Shift with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.shiftAlreadyExists'), 400));
   }
   const shift = await Shift.create(req.body);
@@ -1697,17 +1696,17 @@ exports.updateShift = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
-  const label = req.body.label?.trim();
+  const name = req.body.name?.trim();
 
   // 🔍 Check if another template with the same label exists (excluding the current one)
   const duplicate = await Shift.findOne({
     _id: { $ne: req.params.id },
     company: companyId,
-    label: { $regex: new RegExp(`^${label}$`, 'i') } // case-insensitive match
+    name: { $regex: new RegExp(`^${name}$`, 'i') } // case-insensitive match
   });
 
   if (duplicate) {
-    websocketHandler.sendLog(req, `Duplicate label "${label}" found for another template`, constants.LOG_TYPES.ERROR);
+    websocketHandler.sendLog(req, `Duplicate name "${name}" found for another template`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.shiftAlreadyExists'), 400));
   }
   const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
@@ -1730,19 +1729,19 @@ exports.updateShift = catchAsync(async (req, res, next) => {
 
 exports.deleteShift = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting shift with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
+  const isAssigned = await ShiftTemplateAssignment.exists({ template: req.params.id });
 
+  if (isAssigned) {
+    websocketHandler.sendLog(req, `Shift ID ${req.params.id} is currently assigned and cannot be deleted`, constants.LOG_TYPES.WARNING);
+    return next(new AppError(req.t('attendance.deleteRestricted'), 400));
+  }
   const shift = await Shift.findByIdAndDelete(req.params.id);
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
   }
-  const isAssigned = await ShiftTemplateAssignment.exists({ shift: req.params.id });
-
-  if (isAssigned) {
-    websocketHandler.sendLog(req, `Shift ID ${shift.label} is currently assigned and cannot be deleted`, constants.LOG_TYPES.WARNING);
-    return next(new AppError(req.t('attendance.deleteRestricted'), 400));
-  }
+  
   websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1792,7 +1791,23 @@ exports.createShiftTemplateAssignment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
+  if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
+    websocketHandler.sendLog(req, `Invalid user ID: ${req.body.user}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.invalidUserId'), 400));
+  }
 
+  console.log('Request body:', req.body);
+
+  // Convert req.body.user to ObjectId
+  const userId = new mongoose.Types.ObjectId(req.body.user);
+  const shiftTemplateAssignmentExists = await ShiftTemplateAssignment.find({ user: userId });
+  console.log('Existing assignments:', shiftTemplateAssignmentExists);
+
+  // Check if any assignments exist for the user
+  if (shiftTemplateAssignmentExists.length > 0) {
+    websocketHandler.sendLog(req, `Shift template assignment found for User: ${req.body.userd}`, constants.LOG_TYPES.WARNING);
+    return next(new AppError(req.t('attendance.shiftTemplateAssignmentExists'), 404));
+  }
   req.body.company = companyId;
   const shiftTemplateAssignment = await ShiftTemplateAssignment.create(req.body);
 
@@ -2827,11 +2842,11 @@ exports.validateCompleteAttendanceMonthByUser = catchAsync(async (req, res, next
   const { user, month, year } = req.body;
   const isMonthComplete = await validateCompleteAttendanceMonth(user, month, year, req.cookies.companyId);
 console.log(isMonthComplete);
-if (!isMonthComplete) {
+
   return res.status(400).json({
     data:isMonthComplete
   });
-}
+
 });
 async function validateCompleteAttendanceMonth(user, month, year, companyId) {
   const { startOfMonth, endOfMonth } = getStartAndEndDates(year, month);

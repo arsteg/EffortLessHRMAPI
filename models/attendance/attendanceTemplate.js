@@ -43,10 +43,6 @@ const attendanceTemplateSchema = new Schema({
     type: Boolean,
     required: true
   },
-  isCommentMandatoryForRegularisation: {
-    type: Boolean,
-    required: true
-  },
   departmentDesignations: {
     type: String,
     required: true
@@ -57,7 +53,8 @@ const attendanceTemplateSchema = new Schema({
   },
   approvalLevel: {
     type: String,
-    required: true
+    required: true,
+    default: '1'
   },
   primaryApprover: {
     type: mongoose.Schema.ObjectId,

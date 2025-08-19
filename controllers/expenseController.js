@@ -935,7 +935,8 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
           isReimbursable: isReimbursable || true,
           isBillable: isBillable || false,
           reason,
-          documentLink
+          documentLink,
+          documentName
         });
         // Create ExpenseReportExpenseFields for each expense
         if (expenseReportExpenseFields && expenseReportExpenseFields.length > 0) {
@@ -1277,9 +1278,12 @@ exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
           const id = Date.now().toString(36);
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
             //req.body.attachment.file = req.body.taskAttachments[i].file;
+          var documentName = expenseAttachments[i].attachmentName;
+
           var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);
          
           req.body.documentLink=documentLink;
+          req.body.documentName = documentName
   }
   const expenseReportExpense = await ExpenseReportExpense.create(req.body);
 

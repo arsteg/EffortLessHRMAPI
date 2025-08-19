@@ -99,7 +99,8 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   }
 
   const { label } = req.body;
-  const existingLeaveCategory = await LeaveCategory.findOne({ label, company: companyId, isDelete: { $ne: true } });
+  const existingLeaveCategory = await LeaveCategory.findOne({ 
+   label : { $regex: new RegExp(`^${label}$`, 'i') }, company: companyId, isDelete: { $ne: true } });
   if (existingLeaveCategory) {
     websocketHandler.sendLog(req, `Leave category with label "${label}" already exists for company ${req.cookies.companyName}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
@@ -155,7 +156,7 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
 
   if (duplicate) {
     websocketHandler.sendLog(req, `Duplicate label "${label}" found for another leave category`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('leave.leaveCategoryAlreadyExists'), 400));
+    return next(new AppError(req.t('leave.labelExists'), 400));
   }
 
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
@@ -293,8 +294,16 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('leave.companyIdNotFound'), 400));
   }
-  // Check if label already exists
-  const existingTemplate = await LeaveTemplate.findOne({ 'label': leaveTemplateData.label });
+
+  // --- FIX STARTS HERE ---
+  // Create a case-insensitive regular expression for the label
+  const labelRegex = new RegExp(`^${leaveTemplateData.label}$`, 'i');
+
+  // Check if a template with the same label (case-insensitive) already exists
+  const existingTemplate = await LeaveTemplate.findOne({
+    company: companyId, // It's good practice to also check by company
+    'label': { $regex: labelRegex }
+  });
 
   if (existingTemplate) {
     return res.status(400).json({
@@ -302,6 +311,7 @@ exports.createLeaveTemplate = catchAsync(async (req, res, next) => {
       message: req.t('leave.labelExists'),
     });
   }
+  // --- FIX ENDS HERE ---
 
   // Check if leaveCategories is provided and valid
   if (!Array.isArray(leaveCategories) || leaveCategories.length === 0) {

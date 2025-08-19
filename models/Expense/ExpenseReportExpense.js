@@ -47,6 +47,9 @@ var expenseReportExpenseSchema = new Schema({
   documentLink: {
     type: String
   },
+  documentName: {
+    type: String
+  },
 
   expenseReportExpenseFields:[]
  

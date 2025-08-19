@@ -15,15 +15,7 @@ var ptSlabSchema = new Schema({
   employeeAmount: {
     type: Number,
     required: true
-  },
-  twelfthMonthValue: {
-    type: Number,
-    required: true
-  },
-  twelfthMonthAmount: {
-    type: Number,
-    required: true
-  },
+  }, 
   state: {
     type: String,
     required: true

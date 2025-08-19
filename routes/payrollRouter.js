@@ -18,13 +18,9 @@ const router = express.Router();
  *             type: object
  *             properties:
  *               dayOfMonthToRunPayroll:
- *                 type: number
+ *                 type: string
  *               payrollApprovar:
  *                 type: string
- *               attendanceCycle:
- *                 type: string
- *               dayOfMonthToStartAttendanceCycle:
- *                 type: number
  *               password:
  *                 type: string
  *               isPasswordForSalaryRegister:
@@ -33,39 +29,7 @@ const router = express.Router();
  *                 type: boolean
  *               percentageForGraduity:
  *                 type: string
- *               leaveEncashment:
- *                 type: array
- *                 items:
- *                   type: string
- *               graduityComponentsGraduitycalculation:
- *                 type: array
- *                 items:
- *                   type: string
- *               denominatorForCalculatingTheEncashment:
- *                 type: string
- *               payoutRolloverLeaveEncashmentForEmployees:
- *                 type: array
- *                 items:
- *                   type: string
- *               calculateLeaveRecovery:
- *                 type: array
- *                 items:
- *                   type: string
- *               denominatorForCalculatingTheLeaveRecovery:
- *                 type: array
- *                 items:
- *                   type: string
- *               recoverOutstandingIncomeTaxOfEmployees:
- *                 type: array
- *                 items:
- *                   type: string
- *               isNoticePeriodRecoveryApplicable:
- *                 type: boolean
- *               denominatorForCalculatingTheNoticeRecovery:
- *                 type: string
  *               isAllowTDSFromEffortlessHRM:
- *                 type: boolean
- *               isAllowNcpDaysApplicableInPF:
  *                 type: boolean
  *               isAllowToCalculateOvertime:
  *                 type: boolean
@@ -130,13 +94,9 @@ router.get('/general-settings/:companyId', payrollController.getGeneralSettingBy
  *             type: object
  *             properties:
  *               dayOfMonthToRunPayroll:
- *                 type: number
+ *                 type: string
  *               payrollApprovar:
  *                 type: string
- *               attendanceCycle:
- *                 type: string
- *               dayOfMonthToStartAttendanceCycle:
- *                 type: number
  *               password:
  *                 type: string
  *               isPasswordForSalaryRegister:
@@ -145,39 +105,7 @@ router.get('/general-settings/:companyId', payrollController.getGeneralSettingBy
  *                 type: boolean
  *               percentageForGraduity:
  *                 type: string
- *               leaveEncashment:
- *                 type: array
- *                 items:
- *                   type: string
- *               graduityComponentsGraduitycalculation:
- *                 type: array
- *                 items:
- *                   type: string
- *               denominatorForCalculatingTheEncashment:
- *                 type: string
- *               payoutRolloverLeaveEncashmentForEmployees:
- *                 type: array
- *                 items:
- *                   type: string
- *               calculateLeaveRecovery:
- *                 type: array
- *                 items:
- *                   type: string
- *               denominatorForCalculatingTheLeaveRecovery:
- *                 type: array
- *                 items:
- *                   type: string
- *               recoverOutstandingIncomeTaxOfEmployees:
- *                 type: array
- *                 items:
- *                   type: string
- *               isNoticePeriodRecoveryApplicable:
- *                 type: boolean
- *               denominatorForCalculatingTheNoticeRecovery:
- *                 type: string
  *               isAllowTDSFromEffortlessHRM:
- *                 type: boolean
- *               isAllowNcpDaysApplicableInPF:
  *                 type: boolean
  *               isAllowToCalculateOvertime:
  *                 type: boolean
@@ -1277,12 +1205,6 @@ router.get('/pt-eligible-states', authController.protect, payrollController.getA
  *               employeeAmount:
  *                 type: number
  *                 required: true
- *               twelfthMonthValue:
- *                 type: number
- *                 required: true
- *               twelfthMonthAmount:
- *                 type: number
- *                 required: true
  *     responses:
  *       201:
  *         description: PTSlab successfully added
@@ -1356,10 +1278,6 @@ router.post('/pt-slabs-list', authController.protect, payrollController.getAllPT
  *               employeePercentage:
  *                 type: number
  *               employeeAmount:
- *                 type: number
- *               twelfthMonthValue:
- *                 type: number
- *               twelfthMonthAmount:
  *                 type: number
  *     responses:
  *       200:

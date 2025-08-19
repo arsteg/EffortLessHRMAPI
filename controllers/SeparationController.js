@@ -536,7 +536,12 @@ exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
       await user.save();
       websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
     }
-  
+    if (terminationStatus === constants.Termination_status.Reinstated) {
+      websocketHandler.sendLog(req, `Processing completed status for user ${termination.user}`, constants.LOG_TYPES.TRACE);
+      user.status = constants.User_Status.Active;
+      await user.save();
+      websocketHandler.sendLog(req, `Updated user ${user._id} status to Terminated`, constants.LOG_TYPES.INFO);
+    }
     websocketHandler.sendLog(req, `Termination status updated based on appeal outcome`, constants.LOG_TYPES.INFO);
   }
 
@@ -560,6 +565,7 @@ exports.getTerminationAppealByTerminationId = catchAsync(async (req, res, next) 
   if (!mongoose.Types.ObjectId.isValid(terminationId)) {
     websocketHandler.sendLog(req, `Invalid termination ID format: ${terminationId}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('separation.invalidTerminationId'), 400));
+    
   }
 
   const terminationExists = await Termination.findById(terminationId);
@@ -569,17 +575,22 @@ exports.getTerminationAppealByTerminationId = catchAsync(async (req, res, next) 
   }
 
   const appeal = await TerminationAppeal.findOne({ termination: terminationId });
-  if (!appeal) {
-    websocketHandler.sendLog(req, `No appeal found for termination ID ${terminationId}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('separation.appealNotFound'), 404));
-  }
-
   websocketHandler.sendLog(req, `Appeal retrieved successfully for termination ID ${terminationId}`, constants.LOG_TYPES.INFO);
 
+  if (!appeal) {
+    websocketHandler.sendLog(req, `No appeal found for termination ID ${terminationId}`, constants.LOG_TYPES.ERROR);
+    res.status(200).json({
+      message: req.t('separation.appealNotFound'),
+      data: null
+    });
+  }
+  else
+  { 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: appeal
   });
+}
 });
 
 

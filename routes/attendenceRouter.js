@@ -675,10 +675,6 @@ attendanceRouter.get('/attendance-modes', authController.protect, attendanceCont
  *                 type: boolean
  *                 description: Whether to send notifications to supervisors.
  *                 example: true
- *               isCommentMandatoryForRegularisation:
- *                 type: boolean
- *                 description: Whether comment is mandatory for regularization.
- *                 example: false
  *               departmentDesignations:
  *                 type: string
  *                 description: Department designations.
@@ -798,10 +794,6 @@ attendanceRouter.post('/attendance-templates', authController.protect, attendanc
  *                 type: boolean
  *                 description: Whether to send notifications to supervisors.
  *                 example: true
- *               isCommentMandatoryForRegularisation:
- *                 type: boolean
- *                 description: Whether comment is mandatory for regularization.
- *                 example: false
  *               departmentDesignations:
  *                 type: string
  *                 description: Department designations.
@@ -3292,6 +3284,36 @@ attendanceRouter.post('/get-attendance-by-month', authController.protect, attend
  *         description: Internal server error
  */
 attendanceRouter.post('/process-attendance-lop', authController.protect, attendanceController.ProcessAttendanceAndLOP);
+/**
+ * @swagger
+ * /api/v1/attendance/validate-user-monthly-days-for-attendance:
+ *   post:
+ *     summary: Add a Process Attendance LOP
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                     type: object
+ *                     properties:
+ *                         month:
+ *                             type: string
+ *                         year:
+ *                             type: string
+ *                         user:
+ *                             type: string
+ *     responses:
+ *       201:
+ *         description: Process Attendance LOP
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.post('/validate-user-monthly-days-for-attendance', authController.protect, attendanceController.validateCompleteAttendanceMonthByUser);
 
 /**
  * @swagger
