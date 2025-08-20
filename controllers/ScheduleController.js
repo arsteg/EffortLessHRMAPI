@@ -188,7 +188,7 @@ assignLeavesByJobs = async (req, res, next) => {
                         }
                     }
                     
-                    if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Quaterly) {
+                    if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Quarterly) {
                         const accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
                         const endMonth = createdOn.getMonth();
                         endMonth.setMonth(startMonth.getMonth() + 4);

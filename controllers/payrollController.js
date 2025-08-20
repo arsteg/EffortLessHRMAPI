@@ -81,6 +81,7 @@ const {
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
 } = require('../Services/tds.service');
+const ctcTemplateVariableDeductionModel = require("../models/Payroll/ctcTemplateVariableDeductionModel");
 
 exports.createGeneralSetting = async (req, res, next) => {
   // Extract companyId from req.cookies
@@ -469,22 +470,28 @@ exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
 
 exports.getAllFixedAllowances = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+
   const totalCount = await FixedAllowances.countDocuments({
     company: req.cookies.companyId,
   });
 
-  const fixedAllowances = await FixedAllowances.find({})
-    .where("company")
-    .equals(req.cookies.companyId)
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+  // If 'next' is null or not a number, fetch all
+  const limit =
+    req.body.next === null || req.body.next === undefined || isNaN(parseInt(req.body.next))
+      ? totalCount
+      : parseInt(req.body.next);
+
+  const fixedAllowances = await FixedAllowances.find({ company: req.cookies.companyId })
+    .skip(skip)
+    .limit(limit);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: fixedAllowances,
     total: totalCount,
   });
 });
+
 
 exports.createFixedContribution = catchAsync(async (req, res, next) => {
   const fixedContributions = await FixedContribution.create(req.body);
@@ -1359,39 +1366,42 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
 });
 
 // Get all VariableAllowances by company
-exports.getAllVariableAllowancesByCompany = catchAsync(
-  async (req, res, next) => {
-    const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;
-    const totalCount = await VariableAllowance.countDocuments({
-      company: req.cookies.companyId,
-    });
+exports.getAllVariableAllowancesByCompany = catchAsync(async (req, res, next) => {
+  const skip = parseInt(req.body.skip) || 0;
 
-    const variableAllowances = await VariableAllowance.where("company")
-      .equals(req.cookies.companyId)
-      .skip(parseInt(skip))
-      .limit(parseInt(limit));
-    if (variableAllowances) {
-      for (var i = 0; i < variableAllowances.length; i++) {
-        const variableAllowanceApplicableEmployees =
-          await VariableAllowanceApplicableEmployee.find({})
-            .where("variableAllowance")
-            .equals(variableAllowances[i]._id);
-        if (variableAllowanceApplicableEmployees) {
-          variableAllowances[i].variableAllowanceApplicableEmployees =
-            variableAllowanceApplicableEmployees;
-        } else {
-          variableAllowances[i].variableAllowanceApplicableEmployees = null;
-        }
-      }
+  const totalCount = await VariableAllowance.countDocuments({
+    company: req.cookies.companyId,
+  });
+
+  // If 'next' is null/undefined/invalid, fetch all
+  const limit =
+    req.body.next === null || req.body.next === undefined || isNaN(parseInt(req.body.next))
+      ? totalCount
+      : parseInt(req.body.next);
+
+  const variableAllowances = await VariableAllowance.find({ company: req.cookies.companyId })
+    .skip(skip)
+    .limit(limit);
+
+  if (variableAllowances) {
+    for (let i = 0; i < variableAllowances.length; i++) {
+      const applicableEmployees = await VariableAllowanceApplicableEmployee.find({
+        variableAllowance: variableAllowances[i]._id,
+      });
+
+      variableAllowances[i] = variableAllowances[i].toObject(); // Convert to plain object to assign new props
+      variableAllowances[i].variableAllowanceApplicableEmployees =
+        applicableEmployees || null;
     }
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: variableAllowances,
-      total: totalCount,
-    });
   }
-);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: variableAllowances,
+    total: totalCount,
+  });
+});
+
 
 // Get a VariableAllowance by ID
 exports.getVariableAllowanceById = catchAsync(async (req, res, next) => {
@@ -1467,6 +1477,22 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
 
 // Delete a VariableAllowance by ID
 exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
+  const variableAllowanceExists = await VariableAllowance.findById(req.params.id);
+
+  // Step 2: If not found, return 404
+  if (!variableAllowanceExists) {
+    return next(new AppError(req.t('payroll.variableAllowanceNotFound'), 404));
+  }
+  const isUsedInSalaryStructure  = await SalaryComponentVariableAllowance.findOne({
+    variableAllowance: req.params.id
+  });
+  const isUsedInCTCTemplate = await CTCTemplateVariableAllowance.findOne({
+    variableAllowance: req.params.id
+  });
+  if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
+    return next(new AppError(req.t('payroll.variableAllowancesAlreadyExistsinUse'), 404));   
+  }
+  
   const variableAllowance = await VariableAllowance.findByIdAndDelete(
     req.params.id
   );
@@ -1482,7 +1508,7 @@ exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
 // Create Fixed Deduction
 exports.createFixedDeduction = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
-
+  const { label } = req.body;
   // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
@@ -1507,19 +1533,24 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
 // Get all Fixed Deductions by company
 exports.getAllFixedDeductionsByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
 
   const companyId = req.cookies.companyId;
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
-  const totalCount = await FixedDeduction.countDocuments({
-    company: req.cookies.companyId,
-  });
+
+  const totalCount = await FixedDeduction.countDocuments({ company: companyId });
+
+  // Use totalCount if 'next' is null/undefined/invalid
+  const limit =
+    req.body.next === null || req.body.next === undefined || isNaN(parseInt(req.body.next))
+      ? totalCount
+      : parseInt(req.body.next);
 
   const fixedDeductions = await FixedDeduction.find({ company: companyId })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: fixedDeductions,
@@ -1606,6 +1637,7 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
 
   // Add companyId to the request body
   req.body.company = companyId;
+  const { label } = req.body;
   const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId});
   if (existingVariableDeduction) {
     websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
@@ -1632,39 +1664,42 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
 exports.getAllVariableDeductions = catchAsync(async (req, res, next) => {
   const company = req.cookies.companyId;
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
 
   // Check if companyId exists in cookies
   if (!company) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
-  const totalCount = await VariableDeduction.countDocuments({
-    company: req.cookies.companyId,
-  });
 
-  const variableDeductions = await VariableDeduction.find({ company: company })
-    .skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const totalCount = await VariableDeduction.countDocuments({ company });
+
+  // Use totalCount if 'next' is null/undefined/invalid
+  const limit =
+    req.body.next === null || req.body.next === undefined || isNaN(parseInt(req.body.next))
+      ? totalCount
+      : parseInt(req.body.next);
+
+  const variableDeductions = await VariableDeduction.find({ company })
+    .skip(skip)
+    .limit(limit);
+
   if (variableDeductions) {
-    for (var i = 0; i < variableDeductions.length; i++) {
-      const variableDeductionApplicableEmployees =
-        await VariableDeductionApplicableEmployee.find({})
-          .where("variableDeduction")
-          .equals(variableDeductions[i]._id);
-      if (variableDeductionApplicableEmployees) {
-        variableDeductions[i].variableDeductionApplicableEmployees =
-          variableDeductionApplicableEmployees;
-      } else {
-        variableDeductions[i].variableDeductionApplicableEmployees = null;
-      }
+    for (let i = 0; i < variableDeductions.length; i++) {
+      const applicableEmployees = await VariableDeductionApplicableEmployee.find({
+        variableDeduction: variableDeductions[i]._id,
+      });
+
+      variableDeductions[i].variableDeductionApplicableEmployees =
+        applicableEmployees.length > 0 ? applicableEmployees : null;
     }
   }
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: variableDeductions,
     total: totalCount,
   });
 });
+
 
 exports.getVariableDeductionById = catchAsync(async (req, res, next) => {
   const variableDeduction = await VariableDeduction.findById(req.params.id);
@@ -1699,6 +1734,7 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
 
   // Add companyId to the request body
   req.body.company = companyId;
+  const { label } = req.body;
   const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId,_id: { $ne: req.params.id }});
   if (existingVariableDeduction) {
     websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
@@ -1736,6 +1772,22 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
+  const variableDeductionExists = await VariableDeduction.findById(req.params.id);
+
+  // Step 2: If not found, return 404
+  if (!variableDeductionExists) {
+    return next(new AppError(req.t('payroll.variableDeductionNotFound'), 404));
+  }
+  const isUsedInSalaryStructure  = await SalaryComponentVariableDeduction.findOne({
+    variableDeduction: req.params.id
+  });
+  const isUsedInCTCTemplate = await ctcTemplateVariableDeductionModel.findOne({
+    variableDeduction: req.params.id
+  });
+  if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
+    return next(new AppError(req.t('payroll.variableDeductionAlreadyExistsinUse'), 404));   
+  }
+  
   const variableDeduction = await VariableDeduction.findByIdAndDelete(
     req.params.id
   );
@@ -1773,24 +1825,35 @@ exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(
   async (req, res, next) => {
     const companyId = req.cookies.companyId;
     const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;
+
+    if (!companyId) {
+      return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+    }
+
     const totalCount = await LoanAdvancesCategory.countDocuments({
-      company: req.cookies.companyId,
+      company: companyId,
     });
+
+    // Return all if next is null, undefined, or 0
+    const limit =
+      req.body.next === null ||
+      req.body.next === undefined ||
+      parseInt(req.body.next) === 0
+        ? totalCount
+        : parseInt(req.body.next);
 
     const loanAdvancesCategories = await LoanAdvancesCategory.find({
       company: companyId,
     })
-      .skip(parseInt(skip))
-      .limit(parseInt(limit));
-    if (!loanAdvancesCategories) {
+      .skip(skip)
+      .limit(limit);
+
+    if (!loanAdvancesCategories || loanAdvancesCategories.length === 0) {
       return next(
-        new AppError(
-          req.t('payroll.noLoanAdvancesCategoriesFound'),
-          404
-        )
+        new AppError(req.t('payroll.noLoanAdvancesCategoriesFound'), 404)
       );
     }
+
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: loanAdvancesCategories,
@@ -1798,6 +1861,7 @@ exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(
     });
   }
 );
+
 
 exports.getLoanAdvancesCategoryById = catchAsync(async (req, res, next) => {
   const loanAdvancesCategory = await LoanAdvancesCategory.findById(
@@ -1813,6 +1877,19 @@ exports.getLoanAdvancesCategoryById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateLoanAdvancesCategory = catchAsync(async (req, res, next) => {
+  const { name } = req.body;
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+  const existingCategory = await LoanAdvancesCategory.findOne({
+    name: name,
+    company: companyId,
+    _id: { $ne: req.params.id }
+  });
+  if (existingCategory) {
+    return next(new AppError(req.t('payroll.loanAdvancesCategoryExists'), 400));
+  }
   const loanAdvancesCategory = await LoanAdvancesCategory.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -1874,16 +1951,28 @@ exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
   async (req, res, next) => {
     const companyId = req.cookies.companyId;
     const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;
+
+    if (!companyId) {
+      return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+    }
+
     const totalCount = await FlexiBenefitsCategory.countDocuments({
       company: companyId,
     });
 
+    // If 'next' is null, undefined, or 0, fetch all
+    const limit =
+      req.body.next === null ||
+      req.body.next === undefined ||
+      parseInt(req.body.next) === 0
+        ? totalCount
+        : parseInt(req.body.next);
+
     const flexiBenefitsCategories = await FlexiBenefitsCategory.find({
       company: companyId,
     })
-      .skip(parseInt(skip))
-      .limit(parseInt(limit));
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1896,6 +1985,19 @@ exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
 // Update a FlexiBenefitsCategory
 exports.updateFlexiBenefitsCategory = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const { name } = req.body;
+  const companyId = req.cookies.companyId;
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+  const existingCategory = await FlexiBenefitsCategory.findOne({
+    name: name,
+    company: companyId,
+    _id: { $ne: req.params.id }
+  });
+  if (existingCategory) {
+    return next(new AppError(req.t('payroll.flexiBenefitsCategoryExists'), 400));
+  }
   const updatedCategory = await FlexiBenefitsCategory.findByIdAndUpdate(
     id,
     req.body,
