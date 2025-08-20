@@ -66,6 +66,14 @@ var companyModelSchema = new Schema({
     freeCompany: {
       type: Boolean,
       default: false
+    },
+    isTrial: {
+      type: Boolean,
+      default: true
+    },
+    trialPeriodDays: {
+      type: Number,
+      default: 30
     }
   },
   {
