@@ -31,7 +31,7 @@ const Email_template_constant = {
     Annually: "Annually",
     Semi_Annually: "Semi-Annually",
     Bi_Monthly: "Bi-Monthly",
-    Quaterly: "Quaterly"
+    Quarterly: "Quarterly"
   };
   const User_Status = {   
     Active: "Active",

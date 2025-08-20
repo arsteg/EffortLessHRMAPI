@@ -515,9 +515,41 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const appointments = await Appointment.find({ user: user._id });
   user.appointment = appointments;
+const userObj = user.toObject();
+  const company = await Company.findById(user.company.id);
+  if (company && company.isTrial) {
+    const trialStart = company.createdOn;
+    const trialDays = company.trialPeriodDays || 30;
+    const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    const now = new Date();
 
+    if (now > trialEnd) {
+      company.isTrial = false;
+      await company.save();
+      userObj.trialInfo = {
+        isTrial: false,
+        trialEndsOn: trialEnd,
+        daysLeft: 0
+      };
+    } else {
+      userObj.trialInfo = {
+        isTrial: true,
+        trialEndsOn: trialEnd,
+        daysLeft: Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24))
+      };
+    }
+  } else if (company) {
+    const trialStart = company.createdOn;
+    const trialDays = company.trialPeriodDays || 30;
+    const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    userObj.trialInfo = {
+      isTrial: false,
+      trialEndsOn: trialEnd,
+      daysLeft: 0
+    };
+  }
   // ✅ Send token and check subscription
-  await createAndSendToken(user, 200, res, req, next);
+  await createAndSendToken(userObj, 200, res, req, next);
 });
 
 // Authentication
@@ -571,6 +603,22 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!subscription) {
     const companyDetails = await Company.findById(currentUser.company._id);
+
+    if (companyDetails.isTrial) {
+      const trialStart = companyDetails.createdOn;
+      const trialDays = companyDetails.trialPeriodDays || 30;
+      const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+      const now = new Date();
+
+      if (now <= trialEnd) {
+        req.user = currentUser;
+        return next();
+      } else {
+        companyDetails.isTrial = false;
+        await companyDetails.save();
+      }
+    }
+
     if (!companyDetails.freeCompany) {
       return next(
         new AppError(req.t('auth.subscriptionInactive'), 401).sendErrorJson(res)
