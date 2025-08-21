@@ -74,6 +74,10 @@ var companyModelSchema = new Schema({
     trialPeriodDays: {
       type: Number,
       default: 30
+    },
+    trialUserLimit: {
+      type: Number,
+      default: 2
     }
   },
   {

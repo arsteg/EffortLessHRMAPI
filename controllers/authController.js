@@ -422,6 +422,15 @@ exports.CreateUser = catchAsync(async (req, res, next) => {
     if (subscription?.currentPlanId?.users <= activeUsers) {
       return next(new AppError(req.t('auth.userLimitReached', { userLimit: subscription?.currentPlanId?.users }), 500))
     }
+    //Trial user limit
+    const companyDetails = await Company.findById(req.cookies.companyId);
+
+    if (companyDetails?.isTrial) {
+      if (companyDetails?.trialUserLimit <= activeUsers) {
+        return next(new AppError(req.t('auth.trialUserLimitReached', { userLimit: companyDetails?.trialUserLimit }), 500))   
+      }
+    }
+
     const newUser = await User.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -523,19 +532,22 @@ const userObj = user.toObject();
     const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
     const now = new Date();
 
-    if (now > trialEnd) {
+    const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (nowDate > trialEndDate) {
       company.isTrial = false;
       await company.save();
       userObj.trialInfo = {
         isTrial: false,
-        trialEndsOn: trialEnd,
+        trialEndsOn: trialEndDate,
         daysLeft: 0
       };
     } else {
       userObj.trialInfo = {
         isTrial: true,
-        trialEndsOn: trialEnd,
-        daysLeft: Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24))
+        trialEndsOn: trialEndDate,
+        daysLeft: Math.ceil((trialEndDate - nowDate) / (1000 * 60 * 60 * 24))
       };
     }
   } else if (company) {
@@ -609,8 +621,10 @@ exports.protect = catchAsync(async (req, res, next) => {
       const trialDays = companyDetails.trialPeriodDays || 30;
       const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
       const now = new Date();
+      const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+      const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      if (now <= trialEnd) {
+      if (nowDate <= trialEndDate) {
         req.user = currentUser;
         return next();
       } else {
