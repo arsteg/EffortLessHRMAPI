@@ -2098,6 +2098,8 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
+ 
+
   const {
     ctcTemplateFixedAllowance,
     ctcTemplateFixedDeduction,
@@ -2107,6 +2109,12 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     ctcTemplateEmployeeDeduction,
     ...ctcTemplateData
   } = req.body;
+ const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId});
+ if (existingCTCTemplate) {
+   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${ctcTemplateData.name}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+ }
+ 
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
@@ -2652,10 +2660,18 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   }
 
   // Check if policyLabel already exists
-  const existingTemplate = await CTCTemplate.findOne({
-    name: ctcTemplateData.name,
-    _id: { $ne: req.params.id },
-  });
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+ 
+  const { name } = req.body;
+ const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId , _id: { $ne: req.params.id },});
+ if (existingCTCTemplate) {
+   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+ }
 
   if (
     !Array.isArray(ctcTemplateFixedAllowance) ||
