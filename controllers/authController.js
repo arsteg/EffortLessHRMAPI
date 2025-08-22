@@ -422,6 +422,15 @@ exports.CreateUser = catchAsync(async (req, res, next) => {
     if (subscription?.currentPlanId?.users <= activeUsers) {
       return next(new AppError(req.t('auth.userLimitReached', { userLimit: subscription?.currentPlanId?.users }), 500))
     }
+    //Trial user limit
+    const companyDetails = await Company.findById(req.cookies.companyId);
+
+    if (companyDetails?.isTrial) {
+      if (companyDetails?.trialUserLimit <= activeUsers) {
+        return next(new AppError(req.t('auth.trialUserLimitReached', { userLimit: companyDetails?.trialUserLimit }), 500))   
+      }
+    }
+
     const newUser = await User.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -515,9 +524,44 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const appointments = await Appointment.find({ user: user._id });
   user.appointment = appointments;
+const userObj = user.toObject();
+  const company = await Company.findById(user.company.id);
+  if (company && company.isTrial) {
+    const trialStart = company.createdOn;
+    const trialDays = company.trialPeriodDays || 30;
+    const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    const now = new Date();
 
+    const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (nowDate > trialEndDate) {
+      company.isTrial = false;
+      await company.save();
+      userObj.trialInfo = {
+        isTrial: false,
+        trialEndsOn: trialEndDate,
+        daysLeft: 0
+      };
+    } else {
+      userObj.trialInfo = {
+        isTrial: true,
+        trialEndsOn: trialEndDate,
+        daysLeft: Math.ceil((trialEndDate - nowDate) / (1000 * 60 * 60 * 24))
+      };
+    }
+  } else if (company) {
+    const trialStart = company.createdOn;
+    const trialDays = company.trialPeriodDays || 30;
+    const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    userObj.trialInfo = {
+      isTrial: false,
+      trialEndsOn: trialEnd,
+      daysLeft: 0
+    };
+  }
   // ✅ Send token and check subscription
-  await createAndSendToken(user, 200, res, req, next);
+  await createAndSendToken(userObj, 200, res, req, next);
 });
 
 // Authentication
@@ -571,6 +615,24 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!subscription) {
     const companyDetails = await Company.findById(currentUser.company._id);
+
+    if (companyDetails.isTrial) {
+      const trialStart = companyDetails.createdOn;
+      const trialDays = companyDetails.trialPeriodDays || 30;
+      const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+      const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (nowDate <= trialEndDate) {
+        req.user = currentUser;
+        return next();
+      } else {
+        companyDetails.isTrial = false;
+        await companyDetails.save();
+      }
+    }
+
     if (!companyDetails.freeCompany) {
       return next(
         new AppError(req.t('auth.subscriptionInactive'), 401).sendErrorJson(res)
