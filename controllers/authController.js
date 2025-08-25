@@ -93,6 +93,44 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
   }
 };
 
+// const checkCompanySubscription = async (user, req) => {
+//   const subscriptions = await Subscription.find({
+//     companyId: user.company.id,
+//     "razorpaySubscription.status": { $in: constants.Active_Subscription }
+//   }).populate("currentPlanId");
+
+//   const activeSubscription = subscriptions.find((item) =>
+//     item.razorpaySubscription.status === 'active'
+//   );
+
+//   if (activeSubscription) {
+//     const companySubscription = activeSubscription.razorpaySubscription;
+//     const addOns = await razorpay.addons.all({
+//       subscription_id: companySubscription.id
+//     });
+//     companySubscription.addOns = addOns.items;
+//     return companySubscription;
+//   } else if (subscriptions.length > 0) {
+//     const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
+//     return fallback;
+//   } else {
+//     return {
+//         id: null,
+//         companyId: user.company.id,
+//         status: "",
+//         currentPlanId: null,
+//         addOns: [],
+//         pendingUpdates: [],
+//         scheduledChanges: null,
+//       };
+//     // const message = typeof req?.t === 'function'
+//     //   ? req.t('auth.noSubscription')
+//     //   : 'Your company does not have a valid subscription.';
+
+//     // throw new AppError(message, 403);
+//   }
+// };
+
 const checkCompanySubscription = async (user, req) => {
   const subscriptions = await Subscription.find({
     companyId: user.company.id,
@@ -105,29 +143,37 @@ const checkCompanySubscription = async (user, req) => {
 
   if (activeSubscription) {
     const companySubscription = activeSubscription.razorpaySubscription;
-    const addOns = await razorpay.addons.all({
-      subscription_id: companySubscription.id
-    });
-    companySubscription.addOns = addOns.items;
-    return companySubscription;
+    if (!companySubscription?.id) {
+      console.error('Error: companySubscription.id is undefined or null');
+      return {
+        ...companySubscription,
+        addOns: [],
+      };
+    }
+    
+    try {
+      const addOns = await razorpay.addons.all({
+        subscription_id: companySubscription.id
+      });
+      companySubscription.addOns = addOns.items || [];
+      return companySubscription;
+    } catch (error) {
+      companySubscription.addOns = [];
+      return companySubscription;
+    }
   } else if (subscriptions.length > 0) {
     const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
     return fallback;
   } else {
     return {
-        id: null,
-        companyId: user.company.id,
-        status: "",
-        currentPlanId: null,
-        addOns: [],
-        pendingUpdates: [],
-        scheduledChanges: null,
-      };
-    // const message = typeof req?.t === 'function'
-    //   ? req.t('auth.noSubscription')
-    //   : 'Your company does not have a valid subscription.';
-
-    // throw new AppError(message, 403);
+      id: null,
+      companyId: user.company.id,
+      status: "",
+      currentPlanId: null,
+      addOns: [],
+      pendingUpdates: [],
+      scheduledChanges: null,
+    };
   }
 };
 
