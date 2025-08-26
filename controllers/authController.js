@@ -562,7 +562,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const user = await User.findOne({
     email,
-    status: { $ne: constants.User_Status.Deleted }
+    status: constants.User_Status.Active 
   }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {

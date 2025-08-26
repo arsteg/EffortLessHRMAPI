@@ -489,6 +489,7 @@ exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
   if (appeal_status) {
     const validStatuses = [
       constants.Termination_Appealed_status.Approved,
+      constants.Termination_Appealed_status.Pending,
       constants.Termination_Appealed_status.Rejected
     ];
   
@@ -513,7 +514,8 @@ exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
     appeal.decided_on = new Date();
 
     websocketHandler.sendLog(req, `Appeal status set to ${appeal_status}`, constants.LOG_TYPES.INFO);
-
+if(appeal_status != constants.Termination_Appealed_status.Pending)
+{
     const terminationStatus =
       appeal_status === constants.Termination_Appealed_status.Approved
         ? constants.Termination_status.Reinstated
@@ -544,7 +546,7 @@ exports.updateTerminationAppeal = catchAsync(async (req, res, next) => {
     }
     websocketHandler.sendLog(req, `Termination status updated based on appeal outcome`, constants.LOG_TYPES.INFO);
   }
-
+  }
   await appeal.save();
 
   websocketHandler.sendLog(req, `Appeal update completed for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
