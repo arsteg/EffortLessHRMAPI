@@ -1047,7 +1047,8 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
           || attachment.attachmentType === null || attachment.attachmentName === null || attachment.attachmentSize === null || attachment.extention === null || attachment.file === null) {
           return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
         }
-        attachment.filePath = attachment.attachmentName + "_" + uuidv1() + attachment.extention;
+        const id = Date.now().toString(36);
+        attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
         documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, attachment);
       }
     }
