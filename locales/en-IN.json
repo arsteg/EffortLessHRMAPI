@@ -1,5 +1,6 @@
 {
   "common": {
+    "fileSizeExceedsLimit": "The file size exceeds the maximum limit of 5MB.",
     "success": "The operation was completed successfully.",
     "failure": "The operation failed.",
     "missingParams": "Required parameters are missing.",
@@ -418,6 +419,7 @@
     "'RecordCreatedSuccessfully'": "The record was created successfully."
   },
   "leave": {
+    
     "companyInfoMissing": "Company information is missing from cookies.",
     "generalSettingNotFound": "The general setting was not found.",
     "leaveCategoryNotFound": "The leave category was not found.",
