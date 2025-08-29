@@ -243,7 +243,16 @@ exports.addTermination = catchAsync(async (req, res, next) => {
    return next(new AppError(req.t('separation.companyIdNotFound'), 400));
  }
   websocketHandler.sendLog(req, `Using company ID from cookies: ${company}`, constants.LOG_TYPES.DEBUG);
+  const existingTermination = await Termination.findOne({
+    user: req.body.user,
+    company,
+    termination_status: constants.Termination_status.Pending
+  });
 
+  if (existingTermination) {
+    websocketHandler.sendLog(req, `Pending termination already exists for user ${req.body.user}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('separation.terminationAlreadyExists'), 400)); // Add this key in your translation file
+  }
   
   websocketHandler.sendLog(req, `Creating termination for user ${req.body.user}`, constants.LOG_TYPES.TRACE);
 
@@ -304,7 +313,8 @@ exports.getTerminationByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getTerminationByUser for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
  
   websocketHandler.sendLog(req, `Querying termination for user ${req.params.userId} in company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  const termination = await Termination.find({ user: req.params.userId, company: req.cookies.companyId });
+  const termination = await Termination.find({ user: req.params.userId, company: req.cookies.companyId ,
+    termination_status: { $ne: constants.Termination_status.Deleted } });
  
   if (!termination) {
   websocketHandler.sendLog(req, `No termination found for user ${req.params.userId}`, constants.LOG_TYPES.WARN);

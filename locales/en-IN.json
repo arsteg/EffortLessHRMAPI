@@ -674,6 +674,7 @@
     "separationTypeInUse": "The separation type is currently in use. Please delete related records before deleting the separation type.",
     "ExitInterviewQuestionAlreadyInUse": "The exit interview question is currently in use. Please delete related records before deleting the exit interview question.",
     "addTerminationNotificationTitle": "Your termination has been processed",
+    "terminationAlreadyExists": "A termination request with pending status already exists for this user.",
     "addTerminationNotificationMessage": "Your termination has been processed successfully.",
     "updateTerminationNotificationTitle": "Your termination has been updated",
     "updateTerminationNotificationMessage": "Your termination has been updated.",
