@@ -2973,7 +2973,7 @@ router.post('/ctc-templates', authController.protect, payrollController.createCT
  *       500:
  *         description: Internal server error
  */
-router.post('/ctc-templates-by-name', authController.protect, payrollController.checkCTCTemplateDuplicate);
+router.post('/ctc-templates-by-name', authController.protect, payrollController.checkCTCTemplateDuplicateV1);
 
 /**
  * @swagger
