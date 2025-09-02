@@ -85,11 +85,17 @@ exports.updateCompanyLogo = catchAsync(async (req, res, next) => {
       });
     }
     
+    let extension = req.body.companyLogo[i].extention.toLowerCase();
+    if (!extension.startsWith('.')) {
+      extension = `.${extension}`; // Add leading dot if missing
+    }
+
     const attachmentName = company.companyName;
-    req.body.companyLogo[i].filePath = attachmentName + "_" + company._id + req.body.companyLogo[i].extention;
+    //req.body.companyLogo[i].filePath = attachmentName + "_" + company._id + req.body.companyLogo[i].extention;
+    req.body.companyLogo[i].filePath = `${attachmentName}_${company._id}_${i}${extension}`;
     websocketHandler.sendLog(req, `Uploading Company Logo ${req.body.companyLogo[i].filePath}`, constants.LOG_TYPES.DEBUG);
     
-    const url = await StorageController.createContainerInContainer(
+    const url = await StorageController.createContainerInContainerSAS(
       req.cookies.companyId,
       constants.SubContainers.Company,
       req.body.companyLogo[i]

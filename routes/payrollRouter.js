@@ -2948,6 +2948,35 @@ router.post('/ctc-templates', authController.protect, payrollController.createCT
 
 /**
  * @swagger
+ * /api/v1/payroll/ctc-templates-by-name:
+ *   post:
+ *     summary: Verify CTC CTCTemplate
+ *     tags: [Payroll Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       description: New CTCTemplate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: CTCTemplate successfully created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/ctc-templates-by-name', authController.protect, payrollController.checkCTCTemplateDuplicateV1);
+
+/**
+ * @swagger
  * /api/v1/payroll/ctc-templates-by-company:
  *   post:
  *     summary: Get all CTCTemplates by company

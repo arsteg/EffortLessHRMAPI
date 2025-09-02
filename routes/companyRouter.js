@@ -412,11 +412,6 @@ router.delete('/zones/:id',authController.protect, companyController.deleteZone)
  *               lwfRegistrationCode:
  *                 type: string
  *                 description: The LWF registration code of the location
- *               taxDeclarationApprovers:
- *                 type: array
- *                 description: The IDs of users who can approve tax declarations
- *                 items:
- *                   type: string
  *     responses:
  *       201:
  *         description: Location successfully added
@@ -507,11 +502,6 @@ router.get('/locations/:id', authController.protect, companyController.getLocati
  *               lwfRegistrationCode:
  *                 type: string
  *                 description: The LWF registration code of the location
- *               taxDeclarationApprovers:
- *                 type: array
- *                 description: The IDs of users who can approve tax declarations
- *                 items:
- *                   type: string
  *     responses:
  *       200:
  *         description: Successful response with the updated location

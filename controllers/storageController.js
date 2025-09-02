@@ -3,7 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 
 const { v1: uuidv1} = require('uuid');
 
-const { BlobServiceClient } = require('@azure/storage-blob');
+const { BlobServiceClient, StorageSharedKeyCredential,  generateBlobSASQueryParameters,  BlobSASPermissions,  SASProtocol } = require('@azure/storage-blob');
 const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
 // AZURE STORAGE CONNECTION DETAILS
@@ -52,6 +52,68 @@ async function createContainerInContainer(parentContainerName, childContainerNam
   const profileImageUrl = process.env.CONTAINER_URL_BASE_URL + parentContainerName+"/"+profileBlobName;
 return profileImageUrl;
 }
+
+async function createContainerInContainerSAS(parentContainerName, childContainerName, document) {
+  // Get the reference to the parent container
+  const parentContainerClient = blobServiceClient.getContainerClient(parentContainerName);
+
+  // Check if the parent container exists
+  const parentExists = await parentContainerClient.exists();
+  if (!parentExists) {
+    // Create parent container if it doesn't exist
+    await parentContainerClient.create();
+    await parentContainerClient.setAccessPolicy('container');
+    console.log(`Parent container "${parentContainerName}" created successfully`);
+  } else {
+    console.log(`Parent container "${parentContainerName}" already exists`);
+  }
+
+  if (!document.filePath) {
+    console.log(`File Path Not Exists`);
+  }
+
+  // Create a unique blob name for the profile image
+  const profileBlobName = childContainerName + "/"  + uuidv1() + document.filePath;
+  const blockBlobClientProfile = parentContainerClient.getBlockBlobClient(profileBlobName);
+
+  console.log("Uploading profile image to Azure storage...");
+
+  // Convert the base64 image to a buffer for uploading
+  const buffer = Buffer.from(document.file, 'base64');
+
+  // Upload the image to Azure Blob Storage
+  const uploadBlobResponse = await blockBlobClientProfile.upload(buffer, buffer.length);
+  console.log("Profile image uploaded successfully. RequestId:", uploadBlobResponse.requestId);
+
+  const connStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
+
+  // Parse account name and key from connection string
+  const accountName = connStr.match(/AccountName=([^;]+)/)[1];
+  const accountKey = connStr.match(/AccountKey=([^;]+)/)[1];
+  const sharedKeyCredential = new StorageSharedKeyCredential(
+    accountName,
+    accountKey
+  );
+
+    // ✅ Define SAS options
+    const expiresOn = new Date();
+    expiresOn.setFullYear(expiresOn.getFullYear() + 100);
+    const sasOptions = {
+      containerName: parentContainerName,
+      blobName: profileBlobName,
+      permissions: BlobSASPermissions.parse("r"),
+      startsOn: new Date(),
+      expiresOn: expiresOn,
+      protocol: SASProtocol.Https
+    };
+
+    const sasToken = generateBlobSASQueryParameters(sasOptions, sharedKeyCredential).toString();
+
+    const profileImageUrl = `${blockBlobClientProfile.url}?${sasToken}`;
+
+return profileImageUrl;
+}
+
 async function deleteBlobFromContainer(containerName, blobUrl) {
   try {
     // Step 1: Extract the relative blob path from the full URL
@@ -84,6 +146,7 @@ async function deleteBlobFromContainer(containerName, blobUrl) {
   
   module.exports = {
     createContainerInContainer,
+    createContainerInContainerSAS,
     deleteBlobFromContainer
     // other methods...
 };

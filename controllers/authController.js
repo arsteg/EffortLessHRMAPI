@@ -93,6 +93,44 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
   }
 };
 
+// const checkCompanySubscription = async (user, req) => {
+//   const subscriptions = await Subscription.find({
+//     companyId: user.company.id,
+//     "razorpaySubscription.status": { $in: constants.Active_Subscription }
+//   }).populate("currentPlanId");
+
+//   const activeSubscription = subscriptions.find((item) =>
+//     item.razorpaySubscription.status === 'active'
+//   );
+
+//   if (activeSubscription) {
+//     const companySubscription = activeSubscription.razorpaySubscription;
+//     const addOns = await razorpay.addons.all({
+//       subscription_id: companySubscription.id
+//     });
+//     companySubscription.addOns = addOns.items;
+//     return companySubscription;
+//   } else if (subscriptions.length > 0) {
+//     const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
+//     return fallback;
+//   } else {
+//     return {
+//         id: null,
+//         companyId: user.company.id,
+//         status: "",
+//         currentPlanId: null,
+//         addOns: [],
+//         pendingUpdates: [],
+//         scheduledChanges: null,
+//       };
+//     // const message = typeof req?.t === 'function'
+//     //   ? req.t('auth.noSubscription')
+//     //   : 'Your company does not have a valid subscription.';
+
+//     // throw new AppError(message, 403);
+//   }
+// };
+
 const checkCompanySubscription = async (user, req) => {
   const subscriptions = await Subscription.find({
     companyId: user.company.id,
@@ -105,29 +143,37 @@ const checkCompanySubscription = async (user, req) => {
 
   if (activeSubscription) {
     const companySubscription = activeSubscription.razorpaySubscription;
-    const addOns = await razorpay.addons.all({
-      subscription_id: companySubscription.id
-    });
-    companySubscription.addOns = addOns.items;
-    return companySubscription;
+    if (!companySubscription?.id) {
+      console.error('Error: companySubscription.id is undefined or null');
+      return {
+        ...companySubscription,
+        addOns: [],
+      };
+    }
+    
+    try {
+      const addOns = await razorpay.addons.all({
+        subscription_id: companySubscription.id
+      });
+      companySubscription.addOns = addOns.items || [];
+      return companySubscription;
+    } catch (error) {
+      companySubscription.addOns = [];
+      return companySubscription;
+    }
   } else if (subscriptions.length > 0) {
     const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
     return fallback;
   } else {
     return {
-        id: null,
-        companyId: user.company.id,
-        status: "",
-        currentPlanId: null,
-        addOns: [],
-        pendingUpdates: [],
-        scheduledChanges: null,
-      };
-    // const message = typeof req?.t === 'function'
-    //   ? req.t('auth.noSubscription')
-    //   : 'Your company does not have a valid subscription.';
-
-    // throw new AppError(message, 403);
+      id: null,
+      companyId: user.company.id,
+      status: "",
+      currentPlanId: null,
+      addOns: [],
+      pendingUpdates: [],
+      scheduledChanges: null,
+    };
   }
 };
 
@@ -422,6 +468,15 @@ exports.CreateUser = catchAsync(async (req, res, next) => {
     if (subscription?.currentPlanId?.users <= activeUsers) {
       return next(new AppError(req.t('auth.userLimitReached', { userLimit: subscription?.currentPlanId?.users }), 500))
     }
+    //Trial user limit
+    const companyDetails = await Company.findById(req.cookies.companyId);
+
+    if (companyDetails?.isTrial) {
+      if (companyDetails?.trialUserLimit <= activeUsers) {
+        return next(new AppError(req.t('auth.trialUserLimitReached', { userLimit: companyDetails?.trialUserLimit }), 500))   
+      }
+    }
+
     const newUser = await User.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -507,7 +562,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const user = await User.findOne({
     email,
-    status: { $ne: constants.User_Status.Deleted }
+    status: constants.User_Status.Active 
   }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
@@ -523,19 +578,22 @@ const userObj = user.toObject();
     const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
     const now = new Date();
 
-    if (now > trialEnd) {
+    const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (nowDate > trialEndDate) {
       company.isTrial = false;
       await company.save();
       userObj.trialInfo = {
         isTrial: false,
-        trialEndsOn: trialEnd,
+        trialEndsOn: trialEndDate,
         daysLeft: 0
       };
     } else {
       userObj.trialInfo = {
         isTrial: true,
-        trialEndsOn: trialEnd,
-        daysLeft: Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24))
+        trialEndsOn: trialEndDate,
+        daysLeft: Math.ceil((trialEndDate - nowDate) / (1000 * 60 * 60 * 24))
       };
     }
   } else if (company) {
@@ -609,8 +667,10 @@ exports.protect = catchAsync(async (req, res, next) => {
       const trialDays = companyDetails.trialPeriodDays || 30;
       const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
       const now = new Date();
+      const trialEndDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+      const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      if (now <= trialEnd) {
+      if (nowDate <= trialEndDate) {
         req.user = currentUser;
         return next();
       } else {

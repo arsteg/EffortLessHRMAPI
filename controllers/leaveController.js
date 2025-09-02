@@ -99,8 +99,9 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
   }
 
   const { label } = req.body;
-  const existingLeaveCategory = await LeaveCategory.findOne({ 
-   label : { $regex: new RegExp(`^${label}$`, 'i') }, company: companyId, isDelete: { $ne: true } });
+  const existingLeaveCategory = await LeaveCategory.findOne({
+    label: { $regex: new RegExp(`^${label}$`, 'i') }, company: companyId, isDelete: { $ne: true }
+  });
   if (existingLeaveCategory) {
     websocketHandler.sendLog(req, `Leave category with label "${label}" already exists for company ${req.cookies.companyName}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
@@ -802,8 +803,8 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 exports.getEmployeeLeaveGrantByUser = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10; 
-  const status = req.body.status; 
+  const limit = parseInt(req.body.next) || 10;
+  const status = req.body.status;
 
   let query = { employee: userId };
   if (status) {
@@ -835,7 +836,7 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
   if (subordinateIds.length > 0) {
     teamIdsArray = subordinateIds;
   }
- const currentUserObjectId = new ObjectId(req.cookies.userId);
+  const currentUserObjectId = new ObjectId(req.cookies.userId);
   teamIdsArray = teamIdsArray.filter(id => !id.equals(currentUserObjectId));
 
 
@@ -854,8 +855,8 @@ exports.getEmployeeLeaveGrantByTeam = catchAsync(async (req, res, next) => {
 
   const totalCount = await LeaveGrant.countDocuments({ employee: { $in: objectIdArray }, status: req.body.status });
   const leaveGrants = await LeaveGrant.find({ employee: { $in: objectIdArray }, status: req.body.status })
-                                     .skip(parseInt(skip))
-                                     .limit(parseInt(limit));
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -998,6 +999,123 @@ const countWeeklyOffDays = (startDate, endDate, weeklyOffDays = []) => {
   return count;
 };
 
+// exports.createEmployeeLeaveApplication = async (req, res, next) => {
+//   try {
+//     const companyId = req.cookies.companyId;
+//     if (!companyId) {
+//       return next(new AppError(req.t('leave.companyIdNotFound'), 400));
+//     }
+
+//     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
+
+//     const cycle = await scheduleController.createFiscalCycle();
+//     const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
+
+//     if (!assignmentExists) {
+//       return res.status(400).json({
+//         status: constants.APIResponseStatus.Failure,
+//         data: null,
+//         message: req.t('leave.leaveAssignmentNotExist')
+//       });
+//     }
+
+//     const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+//     const leaveCat = await LeaveCategory.findById(leaveCategory);
+//     if (!leaveCat) {
+//       return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
+//     }
+
+//     const attendanceTemplate = await AttendanceTemplate.findOne({ company: companyId });
+//     const weeklyOffDays = attendanceTemplate ? attendanceTemplate.weeklyOfDays : [];
+
+//     const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
+
+//     const leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
+//     const numberOfWeeklyOffDays = countWeeklyOffDays(startDate, endDate, weeklyOffDays);
+
+//     if (leaveAssigned?.leaveRemaining < leaveDays) {
+//       return res.status(400).json({
+//         status: constants.APIResponseStatus.Failure,
+//         data: null,
+//         message: req.t('leave.insufficientLeaveBalance')
+//       });
+//     }
+
+//     let documentLink;
+//     if (leaveApplicationAttachments && leaveApplicationAttachments.length > 0) { 
+//       for (const attachment of leaveApplicationAttachments) { 
+//         if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || !attachment.extention || !attachment.file
+//           || attachment.attachmentType === null || attachment.attachmentName === null || attachment.attachmentSize === null || attachment.extention === null || attachment.file === null) {
+//           return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
+//         }
+//         const id = Date.now().toString(36);
+//         attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
+//         documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, attachment);
+//       }
+//     }
+
+//     const newLeaveApplication = await LeaveApplication.create({
+//       employee,
+//       leaveCategory,
+//       level1Reason,
+//       level2Reason,
+//       startDate,
+//       endDate,
+//       comment,
+//       isHalfDayOption,
+//       status,
+//       company: req.cookies.companyId,
+//       documentLink,
+//       calculatedLeaveDays: leaveDays,
+//       weeklyOffDaysIncluded: includeWeeklyOffsInLeaveDays,
+//       numberOfWeeklyOffDays: numberOfWeeklyOffDays
+//     });
+
+//     let createdHalfDays = null;
+//     if (Array.isArray(haldDays) && haldDays.length > 0) { // Check for empty array too
+//       createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
+//         leaveApplication: newLeaveApplication._id,
+//         date: haldDay.date,
+//         dayHalf: haldDay.dayHalf
+//       })));
+//       newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id); // Store only IDs
+//       await newLeaveApplication.save(); // Save to link half-days
+//     }
+
+//     try {
+//       leaveAssigned.leaveRemaining -= leaveDays;
+//       leaveAssigned.leaveTaken += leaveDays;
+//       await leaveAssigned.save();
+
+
+//       const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
+//       if (managerTeamsIds && managerTeamsIds.length > 0) {
+//         const user = await User.findById(req.body.employee);
+//         const userName = `${user?.firstName} ${user?.lastName}`;
+//         SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
+//           constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+
+//         for (const managerId of managerTeamsIds) { 
+//           const manager = await User.findById(managerId); 
+//           const companyDetails = await Company.findById(req.cookies.companyId);
+//           sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
+
+//           SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
+//             constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error applying for leave and updating assigned leave:", error);
+//     }
+
+//     res.status(201).json({
+//       status: constants.APIResponseStatus.Success,
+//       data: newLeaveApplication 
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 exports.createEmployeeLeaveApplication = async (req, res, next) => {
   try {
     const companyId = req.cookies.companyId;
@@ -1040,15 +1158,31 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       });
     }
 
-    let documentLink;
-    if (leaveApplicationAttachments && leaveApplicationAttachments.length > 0) { 
-      for (const attachment of leaveApplicationAttachments) { 
-        if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || !attachment.extention || !attachment.file
-          || attachment.attachmentType === null || attachment.attachmentName === null || attachment.attachmentSize === null || attachment.extention === null || attachment.file === null) {
+    // Use an array to store all document links
+    const documentLinks = [];
+    const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB limit
+
+    if (leaveApplicationAttachments && leaveApplicationAttachments.length > 0) {
+      for (const attachment of leaveApplicationAttachments) {
+        // Validate required attachment properties
+        if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || !attachment.extention || !attachment.file) {
           return res.status(400).json({ error: req.t('leave.AttachmentPropertiesMustBeProvided') });
         }
-        attachment.filePath = attachment.attachmentName + "_" + uuidv1() + attachment.extention;
-        documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, attachment);
+
+        // Check for file size limit
+        if (attachment.attachmentSize > MAX_FILE_SIZE_BYTES) {
+          return res.status(500).json({
+            status: constants.APIResponseStatus.Failure,
+            message: req.t('common.fileSizeExceedsLimit') // Customize your translation key
+          });
+        }
+
+        const id = Date.now().toString(36);
+        attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
+
+        // Await the file upload and push the returned link to the array
+        const documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.LeaveAttachment, attachment);
+        documentLinks.push(documentLink);
       }
     }
 
@@ -1063,28 +1197,27 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       isHalfDayOption,
       status,
       company: req.cookies.companyId,
-      documentLink,
+      documentLinks: documentLinks, // Save the array of links
       calculatedLeaveDays: leaveDays,
       weeklyOffDaysIncluded: includeWeeklyOffsInLeaveDays,
       numberOfWeeklyOffDays: numberOfWeeklyOffDays
     });
 
     let createdHalfDays = null;
-    if (Array.isArray(haldDays) && haldDays.length > 0) { // Check for empty array too
+    if (Array.isArray(haldDays) && haldDays.length > 0) {
       createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
         leaveApplication: newLeaveApplication._id,
         date: haldDay.date,
         dayHalf: haldDay.dayHalf
       })));
-      newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id); // Store only IDs
-      await newLeaveApplication.save(); // Save to link half-days
+      newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id);
+      await newLeaveApplication.save();
     }
 
     try {
       leaveAssigned.leaveRemaining -= leaveDays;
       leaveAssigned.leaveTaken += leaveDays;
       await leaveAssigned.save();
-
 
       const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
       if (managerTeamsIds && managerTeamsIds.length > 0) {
@@ -1093,8 +1226,8 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
           constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
 
-        for (const managerId of managerTeamsIds) { 
-          const manager = await User.findById(managerId); 
+        for (const managerId of managerTeamsIds) {
+          const manager = await User.findById(managerId);
           const companyDetails = await Company.findById(req.cookies.companyId);
           sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
 
@@ -1108,7 +1241,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
     res.status(201).json({
       status: constants.APIResponseStatus.Success,
-      data: newLeaveApplication 
+      data: newLeaveApplication
     });
   } catch (error) {
     next(error);
@@ -1427,7 +1560,7 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
       const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
       const cycle = await scheduleController.createFiscalCycle();
       const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
-      
+
       leaveAssigned.leaveRemaining += leaveDays;
       leaveAssigned.leaveTaken -= leaveDays;
       await leaveAssigned.save();

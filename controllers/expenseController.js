@@ -1010,21 +1010,23 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
   if(req.body.status === 'Approved' || req.body.status === 'Rejected' || req.body.status === 'Cancelled') {
     const expenseTemplate = await EmployeeExpenseAssignment.findOne({user : req.body.employee});
     const expenseReport = await ExpenseReport.findById(mongoose.Types.ObjectId(req.params.id));
-    if(expenseTemplate && expenseTemplate.primaryApprover  && expenseTemplate.secondaryApprover) {
+
+    if(expenseTemplate && expenseTemplate.primaryApprover) {
       if(expenseReport.status === constants.Leave_Application_Constant.Level_1_Approval_Pending && expenseTemplate.primaryApprover.toString() !== req.cookies.userId) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
           message: req.t('Only the designated approver can approve or reject this expense.')
         });
-      } else {
-        req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
-      }
-      if(expenseReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && expenseTemplate.secondaryApprover.toString() !== req.cookies.userId) {
-        return res.status(400).json({
-          status: constants.APIResponseStatus.Failure,
-          message: req.t('Only the designated approver can approve or reject this expense.')
-        });
-      }
+      } 
+      // else {
+      //   req.body.status = req.body.status === 'Approved' ? constants.Leave_Application_Constant.Level_2_Approval_Pending : req.body.status;
+      // }
+      // if(expenseReport.status === constants.Leave_Application_Constant.Level_2_Approval_Pending && expenseTemplate.secondaryApprover.toString() !== req.cookies.userId) {
+      //   return res.status(400).json({
+      //     status: constants.APIResponseStatus.Failure,
+      //     message: req.t('Only the designated approver can approve or reject this expense.')
+      //   });
+      // }
     }
   }
   const expenseReport = await ExpenseReport.findByIdAndUpdate(req.params.id, req.body, {

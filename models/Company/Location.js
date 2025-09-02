@@ -34,10 +34,6 @@ const locationSchema = new Schema({
   lwfRegistrationCode: {
     type: String
   },
-  taxDeclarationApprovers: [{
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'  // Assuming reference to a User schema
-  }],
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company', // Assuming the reference is to a Company schema

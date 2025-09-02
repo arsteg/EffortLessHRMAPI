@@ -2107,6 +2107,12 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     ctcTemplateEmployeeDeduction,
     ...ctcTemplateData
   } = req.body;
+ const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId});
+ if (existingCTCTemplate) {
+   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${ctcTemplateData.name}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+ }
+ 
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
@@ -2185,6 +2191,34 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
+  });
+});
+exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  const name  = req.body.name;
+
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+console.log(req.body);
+  if (!name) {
+    return next(new AppError(req.t('payroll.template_name_required'), 400));
+  }
+
+  const existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
+
+  if (existingCTCTemplate) {
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      isDuplicate: true,
+      message: req.t('payroll.duplicate_ctc_template_name_error'),
+    });
+  }
+
+  return res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    isDuplicate: false,
+    message: req.t('payroll.template_name_available'),
   });
 });
 
@@ -2652,10 +2686,18 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   }
 
   // Check if policyLabel already exists
-  const existingTemplate = await CTCTemplate.findOne({
-    name: ctcTemplateData.name,
-    _id: { $ne: req.params.id },
-  });
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+ 
+  const { name } = req.body;
+ const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId , _id: { $ne: req.params.id },});
+ if (existingCTCTemplate) {
+   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
+   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+ }
 
   if (
     !Array.isArray(ctcTemplateFixedAllowance) ||
