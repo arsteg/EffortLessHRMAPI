@@ -66,4 +66,15 @@ var attendanceRecordsSchema = new Schema({
   }
 }, { collection: 'AttendanceRecords' });
 
+attendanceRecordsSchema.pre(/^find/, async function(next) {
+  try {
+    this.populate({
+      path: 'user',
+      select: '_id firstName lastName'
+    });
+  } catch (error) {
+    console.error("Error populating user name:", error);
+  }
+  next();
+});
 module.exports = mongoose.model('AttendanceRecords', attendanceRecordsSchema);
