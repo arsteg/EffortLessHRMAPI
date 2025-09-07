@@ -2965,6 +2965,8 @@ router.post('/ctc-templates', authController.protect, payrollController.createCT
  *             properties:
  *               name:
  *                 type: string
+ *               id:
+ *                 type: string
  *     responses:
  *       201:
  *         description: CTCTemplate successfully created

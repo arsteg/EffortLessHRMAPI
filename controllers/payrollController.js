@@ -2193,20 +2193,31 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     data: ctcTemplate,
   });
 });
-exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-  const name  = req.body.name;
+exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => { 
 
+  const { name, id } = req.body;
+
+  let existingCTCTemplate;
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
-console.log(req.body);
   if (!name) {
     return next(new AppError(req.t('payroll.template_name_required'), 400));
   }
-
-  const existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
-
+  if (id) {
+    // ✅ Edit mode: Exclude current ID
+    existingCTCTemplate = await CTCTemplate.findOne({
+      name,
+      company: companyId,
+      _id: { $ne: id } // Exclude current record
+    });
+  } else {
+    // ✅ Create mode
+    existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
+  }  
+  
   if (existingCTCTemplate) {
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
