@@ -33,10 +33,12 @@ assignLeavesByJobs = async (req, res, next) => {
             if(employeeLeaveAssignment) {
                 websocketHandler.sendLog(req, `Found leave assignment for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
                 
-                const leaveTemplateCategory = await LeaveTemplateCategory.findOne({})
+                //const leaveTemplateCategory = await LeaveTemplateCategory.findOne({})
+                const leaveTemplateCategories = await LeaveTemplateCategory.find({})
                     .where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate._id.toString());
                 
-                if (leaveTemplateCategory) {           
+                if (leaveTemplateCategories.length > 0) { 
+                  for (const leaveTemplateCategory of leaveTemplateCategories) {          
                     const leaveCategory = await LeaveCategory.findById(leaveTemplateCategory.leaveCategory); 
                     websocketHandler.sendLog(req, `Processing leave category: ${leaveCategory._id} for user: ${user._id}`, constants.LOG_TYPES.TRACE);
                     
@@ -44,6 +46,7 @@ assignLeavesByJobs = async (req, res, next) => {
                     const employee = user._id.toString();
                     const category = leaveCategory._id;
                     const type = leaveCategory.leaveAccrualPeriod;
+                    //Need to verify start and end month because get month is starting from 0 not 1 Jan 0, feb 1...
                     const createdOn = new Date();
                     var startMonth = createdOn.getMonth();               
                     var openingBalance = 0;
@@ -217,6 +220,7 @@ assignLeavesByJobs = async (req, res, next) => {
                             websocketHandler.sendLog(req, `Error creating quarterly assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
                         }
                     }
+                  }
                 } else {
                     websocketHandler.sendLog(req, `No leave template category found for user: ${user._id}`, constants.LOG_TYPES.WARN);
                 }

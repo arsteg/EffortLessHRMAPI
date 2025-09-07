@@ -1219,21 +1219,23 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       leaveAssigned.leaveTaken += leaveDays;
       await leaveAssigned.save();
 
-      const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
-      if (managerTeamsIds && managerTeamsIds.length > 0) {
-        const user = await User.findById(req.body.employee);
+      //const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
+      const user = await User.findById(req.body.employee);
         const userName = `${user?.firstName} ${user?.lastName}`;
-        SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
-          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+      SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
+        constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
 
-        for (const managerId of managerTeamsIds) {
-          const manager = await User.findById(managerId);
+      const LeaveApproval = await EmployeeLeaveAssignment.findOne({ user: employee })
+        .select('primaryApprover');
+      if (LeaveApproval) {
+        //for (const managerId of managerTeamsIds) {
+          const manager = await User.findById(LeaveApproval?.primaryApprover);
           const companyDetails = await Company.findById(req.cookies.companyId);
           sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
 
           SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
             constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
-        }
+        //}
       }
     } catch (error) {
       console.error("Error applying for leave and updating assigned leave:", error);
@@ -1269,10 +1271,10 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
         .replace("{company}", company.companyName)
         .replace("{company}", company.companyName)
         .replace("{lastName}", manager.lastName);
-      if (attendanceUser.email == "hrmeffortless@gmail.com") {
+      //if (attendanceUser.email == "hrmeffortless@gmail.com") {
         try {
           await sendEmail({
-            email: attendanceUser.email,
+            email: manager.email,
             subject: emailTemplate.subject,
             message
           });
@@ -1280,7 +1282,7 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
         } catch (err) {
           console.error(`Error sending email to user ${user}:`, err);
         }
-      }
+      //}
     }
   }
 };
