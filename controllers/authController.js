@@ -1063,6 +1063,7 @@ exports.getManagers = catchAsync(async (req, res, next) => {
   const activeUsers = await User.find({
     _id: { $in: ids },
     active: true,
+    status: 'Active' || 'Resigned' || 'Terminated',
     company: companyId // <-- Add this to filter users by company too
   }).select('_id firstName lastName');
 
