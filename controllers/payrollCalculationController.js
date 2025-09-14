@@ -78,7 +78,7 @@ const isLwfEnabledForUser = async (userId, req) => {
 };
 
 const processLwfForMonth = async ({ req, companyId, userId, amount, month, year, model, modelData }) => {
-  // Check if LWF is applicable for the given month/year
+ // Check if LWF is applicable for the given month/year
   const applicable = await isLwfApplicableThisMonth(req, companyId, month, year);
   if (!applicable.status) {
     websocketHandler.sendLog(req, `⚠️ LWF not applicable for ${month + 1}/${year}`, constants.LOG_TYPES.INFO);
@@ -152,9 +152,9 @@ const calculateLWF = async (req, res, next) => {
             });
           } catch (err) {
             const errorMsg = `❌ Failed to process LWF for month ${m + 1}/${year}: ${err.message}`;
+            console.log(errorMsg);
             websocketHandler.sendLog(req, errorMsg, constants.LOG_TYPES.ERROR);
           }
-          
         }
       }
     } else {

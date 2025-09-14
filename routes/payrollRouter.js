@@ -3409,10 +3409,6 @@ router.post('/payroll-by-company', authController.protect, payrollController.get
  *               totalTakeHome:
  *                 type: number
  *                 required: true
- *               status:
- *                 type: string
- *                 enum: [Active, OnHold, Processed]
- *                 required: true
  *     responses:
  *       201:
  *         description: PayrollUser successfully added

@@ -7,6 +7,9 @@ const constants = require('../constants');
 const VariableAllowance = require("../models/Payroll/variableAllowanceModel");
 const EmployeeSalaryDetails = require("../models/Employment/EmployeeSalaryDetailsModel.js");
 const VariableDeduction = require("../models/Payroll/variableDeductionModel");
+
+const Payroll = require('../models/Payroll/Payroll');
+const PayrollUsers = require('../models/Payroll/PayrollUsers');
 const monthOrder = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -62,9 +65,26 @@ const storeInPayrollVariableAllowances = async ({
     const stopYear = parseInt(allowanceStopYear || new Date().getFullYear());
     const stopMonthIndex = isEndingPeriod ? monthOrder.indexOf(allowanceStopMonth) : 11;
 
+   let payrollMonthIndex, payrollYear;
+
+  const payrollUser = await PayrollUsers.findById(payrollUserId).select('payroll');  
+if (!payrollUser) {
+    websocketHandler.sendLog(req, `❌ PayrollUser not found for id: ${payrollUserId}`, constants.LOG_TYPES.ERROR);
+    return [];
+  }
+  // 2. Find the Payroll document by the payroll ID from payrollUser
+  const payroll = await Payroll.findById(payrollUser.payroll).select('month year');
+
+  if (!payroll) {
+    websocketHandler.sendLog(req, `❌ Payroll not found for id: ${payrollUser.payroll}`, constants.LOG_TYPES.ERROR);
+    return [];
+  }
+  payrollMonthIndex = monthOrder.indexOf(payroll.month);
+  payrollYear = payroll.year;
+  const lastDayOfPayrollMonth = new Date(payrollYear, payrollMonthIndex + 1, 0).getDate();
     // Determine the start and end dates for the loop based on FNF status
-    const loopStart = isFNF ? new Date(fnfStartDate) : new Date();
-    const loopEnd = isFNF ? new Date(fnfEndDate) : new Date();
+    const loopStart = isFNF ? new Date(fnfStartDate) : new Date(payrollYear, payrollMonthIndex, lastDayOfPayrollMonth);
+    const loopEnd = isFNF ? new Date(fnfEndDate) :  new Date(payrollYear, payrollMonthIndex, lastDayOfPayrollMonth);
 
     // Loop through each year and month between start and end
     for (let year = loopStart.getFullYear(); year <= loopEnd.getFullYear(); year++) {
@@ -185,10 +205,26 @@ const storeInPayrollVariableDeductions = async ({
     const startMonthIndex = monthOrder.indexOf(deductionEffectiveFromMonth);
     const stopYear = parseInt(deductionStopYear || new Date().getFullYear());
     const stopMonthIndex = isEndingPeriod ? monthOrder.indexOf(deductionStopMonth) : 11;
+let payrollMonthIndex, payrollYear;
 
+  const payrollUser = await PayrollUsers.findById(payrollUserId).select('payroll');  
+if (!payrollUser) {
+    websocketHandler.sendLog(req, `❌ PayrollUser not found for id: ${payrollUserId}`, constants.LOG_TYPES.ERROR);
+    return [];
+  }
+  // 2. Find the Payroll document by the payroll ID from payrollUser
+  const payroll = await Payroll.findById(payrollUser.payroll).select('month year');
+
+  if (!payroll) {
+    websocketHandler.sendLog(req, `❌ Payroll not found for id: ${payrollUser.payroll}`, constants.LOG_TYPES.ERROR);
+    return [];
+  }
+  payrollMonthIndex = monthOrder.indexOf(payroll.month);
+  payrollYear = payroll.year;
+  const lastDayOfPayrollMonth = new Date(payrollYear, payrollMonthIndex + 1, 0).getDate();
     // Determine the start and end dates for the loop based on FNF status
-    const loopStart = isFNF ? new Date(fnfStartDate) : new Date();
-    const loopEnd = isFNF ? new Date(fnfEndDate) : new Date();
+    const loopStart = isFNF ? new Date(fnfStartDate) : new Date(payrollYear, payrollMonthIndex, lastDayOfPayrollMonth);
+    const loopEnd = isFNF ? new Date(fnfEndDate) :  new Date(payrollYear, payrollMonthIndex, lastDayOfPayrollMonth);
 
     // Loop through each year and month between start and end
     for (let year = loopStart.getFullYear(); year <= loopEnd.getFullYear(); year++) {
