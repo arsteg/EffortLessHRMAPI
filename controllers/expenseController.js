@@ -1792,10 +1792,18 @@ exports.getAdvanceTemplate = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.updateAdvanceTemplate = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const company = req.cookies.companyId;
+
+    // Validate if company value exists in cookies
+    if (!company) {
+      return res.status(500).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('expense.companyInfoMissing'),
+      });
+    }
 
     // Find the AdvanceTemplate by ID
     const advanceTemplate = await AdvanceTemplate.findById(id);
@@ -1807,7 +1815,6 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
       });
     }
 
-    // Extract updated data from the request body
     const {
       policyLabel,
       approvalLevel,
@@ -1817,21 +1824,34 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
       advanceCategories,
     } = req.body;
 
+    // Duplicacy check for policyLabel during update
+    if (policyLabel && policyLabel !== advanceTemplate.policyLabel) {
+      const existingTemplate = await AdvanceTemplate.findOne({
+        policyLabel: policyLabel,
+        company: company
+      });
+      if (existingTemplate) {
+        return res.status(409).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t('expense.labelInUse')
+        });
+      }
+    }
+
     // Update AdvanceTemplate fields
     advanceTemplate.policyLabel = policyLabel || advanceTemplate.policyLabel;
     advanceTemplate.approvalLevel = approvalLevel || advanceTemplate.approvalLevel;
-    advanceTemplate.firstApprovalEmployee =
-      firstApprovalEmployee || advanceTemplate.firstApprovalEmployee;
-    advanceTemplate.secondApprovalEmployee =
-      secondApprovalEmployee || advanceTemplate.secondApprovalEmployee;
+    advanceTemplate.firstApprovalEmployee = firstApprovalEmployee || advanceTemplate.firstApprovalEmployee;
+    advanceTemplate.secondApprovalEmployee = secondApprovalEmployee || advanceTemplate.secondApprovalEmployee;
     advanceTemplate.approvalType = approvalType || advanceTemplate.approvalType;
 
     // Save the updated AdvanceTemplate
     await advanceTemplate.save();
+
     if (!Array.isArray(advanceCategories) || advanceCategories.length === 0) {
-      return next(new AppError(req.t('expense.advanceCategoryNotInRequest'), 400)
-    );
+      return next(new AppError(req.t('expense.advanceCategoryNotInRequest'), 400));
     }
+
     for (const category of advanceCategories) {
       const result = await AdvanceCategory.findById(category.advanceCategory);
       if (!result) {
@@ -1841,12 +1861,11 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
         });
       }
     }
-    // Update expense categories
-    if (advanceCategories && advanceCategories.length > 0) {
-      // Delete old expense categories for this template
-      await AdvanceTemplateCategories.deleteMany({ advanceTemplate: advanceTemplate._id });
 
-      // Create and add new expense categories for this template
+    // Update advance categories
+    await AdvanceTemplateCategories.deleteMany({ advanceTemplate: advanceTemplate._id });
+
+    if (advanceCategories && advanceCategories.length > 0) {
       const createdCategories = await AdvanceTemplateCategories.insertMany(
         advanceCategories.map(category => ({
           advanceTemplate: advanceTemplate._id,
@@ -1856,20 +1875,20 @@ exports.updateAdvanceTemplate = async (req, res, next) => {
       advanceTemplate.advanceCategories = createdCategories.map(category => category._id);
       await advanceTemplate.save();
     }
-        // Send a success response
-        res.status(200).json({
-          status: constants.APIResponseStatus.Success,
-          data: advanceTemplate,
-        });
-      } catch (error) {
-        // Handle errors and send an error response
-        console.error(error);
-        res.status(500).json({
-          status: constants.APIResponseStatus.Error,
-          message: req.t('expense.internalServerError')
-        });
-      };
-    };
+
+    // Send a success response
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: advanceTemplate,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Error,
+      message: req.t('expense.internalServerError')
+    });
+  }
+};
 
 exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => { 
   
