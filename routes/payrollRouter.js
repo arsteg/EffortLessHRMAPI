@@ -2965,6 +2965,8 @@ router.post('/ctc-templates', authController.protect, payrollController.createCT
  *             properties:
  *               name:
  *                 type: string
+ *               id:
+ *                 type: string
  *     responses:
  *       201:
  *         description: CTCTemplate successfully created
@@ -3406,10 +3408,6 @@ router.post('/payroll-by-company', authController.protect, payrollController.get
  *                 required: true
  *               totalTakeHome:
  *                 type: number
- *                 required: true
- *               status:
- *                 type: string
- *                 enum: [Active, OnHold, Processed]
  *                 required: true
  *     responses:
  *       201:

@@ -2193,20 +2193,31 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     data: ctcTemplate,
   });
 });
-exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId;
-  const name  = req.body.name;
+exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => { 
 
+  const { name, id } = req.body;
+
+  let existingCTCTemplate;
+  const companyId = req.cookies.companyId;
+  // Check if companyId exists in cookies
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
-console.log(req.body);
   if (!name) {
     return next(new AppError(req.t('payroll.template_name_required'), 400));
   }
-
-  const existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
-
+  if (id) {
+    // ✅ Edit mode: Exclude current ID
+    existingCTCTemplate = await CTCTemplate.findOne({
+      name,
+      company: companyId,
+      _id: { $ne: id } // Exclude current record
+    });
+  } else {
+    // ✅ Create mode
+    existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
+  }  
+  
   if (existingCTCTemplate) {
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -2828,6 +2839,21 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
+  const { month, year } = req.body;
+
+  if (month === undefined || year === undefined) {
+    websocketHandler.sendLog(req, 'Month or year not provided in request body', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.missingMonthOrYear'), 400));
+  }
+
+  // Check for existing payroll for the same month, year, and company
+  const existingPayroll = await Payroll.findOne({ company: companyId, month, year });
+
+  if (existingPayroll) {
+    websocketHandler.sendLog(req, `Payroll already exists for ${month}/${year}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.alreadyExists'), 400));
+  }
+
   req.body.company = companyId;
   req.body.status = constants.Payroll_Status.InProgress;
   websocketHandler.sendLog(req, 'Assigned companyId to request body', constants.LOG_TYPES.DEBUG);
@@ -2955,6 +2981,7 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   }
 
   req.body.company = companyId;
+   req.body.status = 'Active';
 
   websocketHandler.sendLog(req, `Creating PayrollUser for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
 
@@ -2969,15 +2996,36 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
     req.year =payroll.year; // Current year (e.g., 2025)
     req.month = moment().month(payroll.month).month() + 1; // 1-based month
   websocketHandler.sendLog(req, 'Starting payroll calculations for new user', constants.LOG_TYPES.TRACE);
-  await payrollCalculationController.CalculateOvertime(req, res);
-  await payrollCalculationController.StoreAttendanceSummary(req, res);
-  await payrollCalculationController.calculateAndStoreIncomeTax(req, res);
-  await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
-  await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
-  await payrollCalculationController.calculateProfessionalTax(req, res);
-  await payrollCalculationController.calculateLWF(req, res);
-  await payrollCalculationController.calculatePF(req, res);
-  await payrollCalculationController.calculateESIC(req, res);   
+
+    try { await payrollCalculationController.StoreInPayrollVariableAllowances(req, res); } 
+  catch (err) { console.log('Error in StoreInPayrollVariableAllowances:', err.message); }
+  
+  try { await payrollCalculationController.StoreInPayrollVariableDeductions(req, res); } 
+  catch (err) { console.log('Error in StoreInPayrollVariableDeductions:', err.message); }
+  
+  try { await payrollCalculationController.CalculateOvertime(req, res); } 
+  catch (err) { console.log('Error in CalculateOvertime:', err.message); }
+  
+  try { await payrollCalculationController.StoreAttendanceSummary(req, res); } 
+  catch (err) { console.log('Error in StoreAttendanceSummary:', err.message); }
+  
+  try { await payrollCalculationController.calculateAndStoreIncomeTax(req, res); } 
+  catch (err) { console.log('Error in calculateAndStoreIncomeTax:', err.message); }
+  
+
+  
+  try { await payrollCalculationController.calculateProfessionalTax(req, res); } 
+  catch (err) { console.log('Error in calculateProfessionalTax:', err.message); }
+  
+  try { await payrollCalculationController.calculateLWF(req, res); } 
+  catch (err) { console.log('Error in calculateLWF:', err.message); }
+  
+  try { await payrollCalculationController.calculatePF(req, res); } 
+  catch (err) { console.log('Error in calculatePF:', err.message); }
+  
+  try { await payrollCalculationController.calculateESIC(req, res); } 
+  catch (err) { console.log('Error in calculateESIC:', err.message); }
+  
 
   websocketHandler.sendLog(req, 'Completed all payroll calculations and storage for new PayrollUser', constants.LOG_TYPES.INFO);
 
