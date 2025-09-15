@@ -153,8 +153,8 @@ await expenseCategoryInstance.remove();
 });
 
 exports.getAllExpenseCategories = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip);
+  const limit = parseInt(req.body.next);
   // Extract companyId from req.cookies
   const company = req.cookies.companyId;
   // Check if companyId exists in cookies
