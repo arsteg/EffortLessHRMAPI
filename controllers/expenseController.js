@@ -1345,6 +1345,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
           //req.body.attachment.file = req.body.taskAttachments[i].file;
        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);  
+       var documentName = expenseAttachments[i].attachmentName;
+       req.body.documentName = documentName
        req.body.documentLink=documentLink;
   }
   // Update ExpenseReportExpense
@@ -1683,8 +1685,8 @@ return res.status(204).json({
 });
 
 exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip);
+  const limit = parseInt(req.body.next);
   const query = { company: req.cookies.companyId };
   const totalCount = await AdvanceCategory.countDocuments(query); 
   const advanceCategories = await AdvanceCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))

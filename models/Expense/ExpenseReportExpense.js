@@ -22,7 +22,8 @@ var expenseReportExpenseSchema = new Schema({
     required: true
   },
   type: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'ExpenseTemplateCategoryFieldValues',
     required: true
   },
   quantity: {
@@ -63,5 +64,17 @@ expenseReportExpenseSchema.pre('remove', async function(next) {
   await ExpenseReportExpenseFields.deleteMany({ expenseReportExpense: this._id });
 
   next(); // Continue with the delete operation
+});
+
+expenseReportExpenseSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'type',
+      select: '_id label rate'
+    })
+  } catch (error) {
+    console.error("Error populating applicationFielValue:", error);
+  }
+  next();
 });
 module.exports = mongoose.model('ExpenseReportExpense', expenseReportExpenseSchema);
