@@ -1685,8 +1685,8 @@ return res.status(204).json({
 });
 
 exports.getAllAdvanceCategories = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip);
+  const limit = parseInt(req.body.next);
   const query = { company: req.cookies.companyId };
   const totalCount = await AdvanceCategory.countDocuments(query); 
   const advanceCategories = await AdvanceCategory.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
