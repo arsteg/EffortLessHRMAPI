@@ -132,50 +132,66 @@ const createAndSendToken = async (user, statusCode, res, req, next) => {
 // };
 
 const checkCompanySubscription = async (user, req) => {
-  const subscriptions = await Subscription.find({
-    companyId: user.company.id,
-    "razorpaySubscription.status": { $in: constants.Active_Subscription }
-  }).populate("currentPlanId");
-
-  const activeSubscription = subscriptions.find((item) =>
-    item.razorpaySubscription.status === 'active'
-  );
-
-  if (activeSubscription) {
-    const companySubscription = activeSubscription.razorpaySubscription;
-    if (!companySubscription?.id) {
-      console.error('Error: companySubscription.id is undefined or null');
-      return {
-        ...companySubscription,
-        addOns: [],
-      };
+  try {
+    if (!user?.company?.id) {
+      return getSafeSubscription(user); // helper for null response
     }
-    
-    try {
-      const addOns = await razorpay.addons.all({
-        subscription_id: companySubscription.id
-      });
-      companySubscription.addOns = addOns.items || [];
-      return companySubscription;
-    } catch (error) {
-      companySubscription.addOns = [];
-      return companySubscription;
-    }
-  } else if (subscriptions.length > 0) {
-    const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
-    return fallback;
-  } else {
-    return {
-      id: null,
+    const subscriptions = await Subscription.find({
       companyId: user.company.id,
-      status: "",
-      currentPlanId: null,
-      addOns: [],
-      pendingUpdates: [],
-      scheduledChanges: null,
-    };
+      "razorpaySubscription.status": { $in: constants.Active_Subscription }
+    }).populate("currentPlanId");
+
+    if (!subscriptions || subscriptions.length === 0) {
+      return getSafeSubscription(user);
+    }
+
+    const activeSubscription = subscriptions.find((item) =>
+      item.razorpaySubscription.status === 'active'
+    );
+
+    if (activeSubscription) {
+      const companySubscription = activeSubscription.razorpaySubscription;
+      if (!companySubscription?.id) {
+        console.error('Error: companySubscription.id is undefined or null');
+        return {
+          ...companySubscription,
+          addOns: [],
+        };
+      }
+      
+      try {
+        const addOns = await razorpay.addons.all({
+          subscription_id: companySubscription.id
+        });
+        companySubscription.addOns = addOns.items || [];
+        return companySubscription;
+      } catch (error) {
+        companySubscription.addOns = [];
+        return companySubscription;
+      }
+    } else if (subscriptions.length > 0) {
+      const fallback = await razorpay.subscriptions.fetch(subscriptions[0].subscriptionId);
+      return fallback;
+    } else {
+      return getSafeSubscription(user);
+    }
+  } catch (error) {
+    console.error("checkCompanySubscription error:", error);
+    return getSafeSubscription(user);
   }
 };
+
+const getSafeSubscription = (user) => {
+  return {
+    id: null,
+    companyId: user?.company?.id || null,
+    status: "",
+    currentPlanId: null,
+    addOns: [],
+    pendingUpdates: [],
+    scheduledChanges: null,
+  };
+}
 
 exports.signup = catchAsync(async (req, res, next) => {
 
