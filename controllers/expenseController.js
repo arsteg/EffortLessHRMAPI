@@ -1345,6 +1345,8 @@ exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
           expenseAttachments[i].filePath = expenseAttachments[i].attachmentName +"_" + id + expenseAttachments[i].extention; 
           //req.body.attachment.file = req.body.taskAttachments[i].file;
        var documentLink = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.ExpenseAttachment, expenseAttachments[i]);  
+       var documentName = expenseAttachments[i].attachmentName;
+       req.body.documentName = documentName
        req.body.documentLink=documentLink;
   }
   // Update ExpenseReportExpense
