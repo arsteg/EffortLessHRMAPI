@@ -591,7 +591,7 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -623,7 +623,7 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
   const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-  
+
     return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
@@ -641,7 +641,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -664,7 +664,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   });
 
   if (!attendanceTemplate) {
-    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
@@ -699,7 +699,7 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 
   const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ employee: req.params.userId });
   console.log('attendance template assignment:', attendanceTemplateAssignments);
-  const totalCount = await AttendanceTemplate.countDocuments({employee: req.params.userId });
+  const totalCount = await AttendanceTemplate.countDocuments({ employee: req.params.userId });
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1188,7 +1188,7 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
- 
+
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1656,7 +1656,7 @@ exports.createShift = catchAsync(async (req, res, next) => {
   const { name } = req.body;
 
   // Check for duplicate shift label in same company
-  const existingShift = await Shift.findOne({ name:name, company: companyId, isDelete: { $ne: true } });
+  const existingShift = await Shift.findOne({ name: name, company: companyId, isDelete: { $ne: true } });
 
   if (existingShift) {
     websocketHandler.sendLog(req, `Shift with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
@@ -1675,7 +1675,7 @@ exports.getShift = catchAsync(async (req, res, next) => {
 
   const shift = await Shift.findById(req.params.id);
   if (!shift) {
-    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
 
@@ -1692,7 +1692,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -1716,7 +1716,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
 
   websocketHandler.sendLog(req, `Successfully updated shift: ${shift._id}`, constants.LOG_TYPES.INFO);
@@ -1739,9 +1739,9 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -2860,10 +2860,10 @@ async function validateCompleteAttendanceMonth(user, month, year, companyId) {
   const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
   if (!assignment) return false;
- 
+
   const attendanceTemplate = await AttendanceTemplate.findById(assignment.attendanceTemplate);
   if (!attendanceTemplate) return false;
- 
+
   const attendanceRecords = await AttendanceRecords.find({
     user, company: companyId,
     date: { $gte: startOfMonth, $lte: endOfMonth },
@@ -3125,10 +3125,9 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
     const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear } = req.body;
 
     let attendanceProcess = await AttendanceProcess.findOne({
-      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
-      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+      attandanaceProcessPeroidMonth: attendanceProcessPeriodMonth,
+      attandanaceProcessPeroidYear: attendanceProcessPeriodYear,
     });
-
     if (!attendanceProcess) {
       websocketHandler.sendLog(req, `Attendance process not found for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.ERROR);
       return res.status(404).json({
