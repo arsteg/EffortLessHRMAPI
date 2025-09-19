@@ -2635,9 +2635,9 @@ exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+  const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit, req.cookies.companyId);
 
-  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0, req.cookies.companyId);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -2656,7 +2656,7 @@ exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
   });
 
 });
-async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0, companyId) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -2673,7 +2673,8 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
         date: {
           $gte: startDate,
           $lt: endDate
-        }
+        },
+        company: companyId
       }).exec();
       return { count };
     } else {
@@ -2681,7 +2682,8 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
         date: {
           $gte: startDate,
           $lt: endDate
-        }
+        },
+        company: companyId
       }).skip(skip).limit(limit).exec();
       return records;
     }
@@ -3165,8 +3167,7 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month);
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, req.cookies.companyId);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -3175,7 +3176,7 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
 
 });
 
-async function getOvertimeRecordsByYearAndMonth(year, month) {
+async function getOvertimeRecordsByYearAndMonth(year, month, companyId) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -3197,7 +3198,8 @@ async function getOvertimeRecordsByYearAndMonth(year, month) {
       CheckInDate: {
         $gte: startDate,
         $lt: endDate
-      }
+      },
+      company: companyId
     }).exec();
     return records; // Return the actual records
   } catch (error) {
