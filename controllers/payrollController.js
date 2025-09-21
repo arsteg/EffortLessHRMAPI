@@ -2982,7 +2982,16 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
 
   req.body.company = companyId;
    req.body.status = 'Active';
+  const existingPayrollUser = await PayrollUsers.findOne({
+    user: req.body.user,
+    payroll: req.body.payroll,
+    company: companyId
+  });
 
+  if (existingPayrollUser) {
+    websocketHandler.sendLog(req, 'PayrollUser already exists for this user and payroll', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.userAlreadyExists'), 400));
+  }
   websocketHandler.sendLog(req, `Creating PayrollUser for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
 
   const payrollUser = await PayrollUsers.create(req.body);
@@ -4464,7 +4473,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   const payrollId = req.params.payroll; // Get payroll ID from URL
 
   websocketHandler.sendLog(req, 'Starting getAllGeneratedPayrollByPayrollId process', constants.LOG_TYPES.INFO);
-
+ console.log("hello3");
   // Validate payrollId
   if (!payrollId || !mongoose.isValidObjectId(payrollId)) {
     websocketHandler.sendLog(req, `Invalid payrollId: ${payrollId}`, constants.LOG_TYPES.WARN);
@@ -4475,7 +4484,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   }
 
   websocketHandler.sendLog(req, `Fetching payroll users for payrollId: ${payrollId}`, constants.LOG_TYPES.TRACE);
-
+ console.log("helllo2");
   // Step 1: Fetch PayrollUsers for the given payroll ID
   const payrollUsers = await PayrollUsers.find({ payroll: payrollId })
     .populate({
@@ -4516,8 +4525,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   const salaryDetailsList = await EmployeeSalaryDetails.find({ user: { $in: userIds } })
     .sort({ createdAt: -1 }) // Changed from length to createdAt for consistency
     .populate({ path: 'user', select: 'firstName lastName email' });
-
-  // Step 2: Process each PayrollUser and save calculated values
+   // Step 2: Process each PayrollUser and save calculated values
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
       websocketHandler.sendLog(req, `Processing payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
@@ -4541,16 +4549,14 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         PayrollVariablePay.find({ payrollUser: payrollUser._id }),     
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }),
-        PayrollOvertime.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
-        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
+        PayrollOvertime.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
+        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
         PayrollStatutory.find({ payrollUser: payrollUser._id }),
-        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }).sort({ _id: -1 }),,
+        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }).sort({ _id: -1 }),
         PayrollManualArrears.find({ payrollUser: payrollUser._id })     
       ]);
-    console.log(fixedAllowances);
       // Store fixed allowances in PayrollVariablePay
-      const allowancePromises = fixedAllowances.map(async (allowance) => {
-        console.log(allowance.fixedAllowance);
+      const allowancePromises = fixedAllowances.map(async (allowance) => {      
         return PayrollFixedPay.findOneAndUpdate(
           {
             payrollUser: payrollUser._id,
@@ -4621,11 +4627,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
         const totalManualArrears = manualArrears
         .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);    
-      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
-      console.log('Total Overtime:', totalOvertime);
-      console.log('Income Tax:', incomeTax);
-      const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;
-      console.log('Total Income Tax:', totalIncomeTax);
+      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;    
+      const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;     
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance)*12;
       const totalGrossSalary = totalFixedAllowance;
