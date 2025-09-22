@@ -2518,7 +2518,8 @@ async function processAttendanceRecord(user, startTime, endTime, date, req) {
     }
   }
   else {
-    throw new AppError(req.t('attendance.shiftNotAssigned'), 400); //throw error so that parent function can catch it
+    const usename = `${user?.firstName} ${user?.lastName}`;
+    throw new AppError(req.t('attendance.shiftNotAssigned', { usename }), 400); //throw error so that parent function can catch it
     //return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
   }
 }

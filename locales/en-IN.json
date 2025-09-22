@@ -183,7 +183,7 @@
     "uploadAttendanceJSONSuccess": "Attendance records were processed successfully.",
     "uploadAttendanceJSONFailure": "Failed to process attendance records.",
     "empCodeNotValid": "Emp Code Not Valid",
-    "shiftNotAssigned": "Shift Not Assigned",
+    "shiftNotAssigned": "Shift not assigned to {{usename}}",
     "uploadAttendanceJSONNoData": "No Records uploaded , Please validate your Emp Code and other Details.", 
     "invalidAttendanceJSONFormat": "Invalid format: Data must be an array of objects.",
     "processAttendanceAndLOPSuccess": "Attendance and loss of pay (LOP) were processed successfully for user {userId}.",
