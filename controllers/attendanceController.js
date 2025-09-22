@@ -2410,8 +2410,7 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
         return next(new AppError(req.t('attendance.empCodeNotValid'), 400));
       }
-
-      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
+      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req);
       if (attendanceRecord) {
         attendanceRecords.push(attendanceRecord);
         websocketHandler.sendLog(req, `Processed attendance record for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
@@ -2435,6 +2434,9 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       data: attendanceRecords,
     });
   } catch (error) {
+    if (error instanceof AppError) {
+      return next(error);
+    }
     websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
   }
@@ -2460,12 +2462,11 @@ async function getUserByEmpCode(empCode, company) {
 
 // Helper function to process each individual attendance record
 
-async function processAttendanceRecord(user, startTime, endTime, date, companyId) {
+async function processAttendanceRecord(user, startTime, endTime, date, req) {
+  const companyId = req.cookies.companyId;
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
-
   if (shiftAssignment) {
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
-
     if (shift) {
       let deviationMinutes = 0;
       let isOvertime = false;
@@ -2517,7 +2518,8 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
     }
   }
   else {
-    return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
+    throw new AppError(req.t('attendance.shiftNotAssigned'), 400); //throw error so that parent function can catch it
+    //return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
   }
 }
 
