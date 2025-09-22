@@ -2635,8 +2635,8 @@ function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
 }
 
 exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip);
+  const limit = parseInt(req.body.next);
 
   const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit, req.cookies.companyId);
 
