@@ -3118,6 +3118,7 @@ exports.ProcessAttendance = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 // Controller to delete attendance process and associated users
 exports.deleteAttendance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteAttendance', constants.LOG_TYPES.INFO);
@@ -3146,9 +3147,17 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
       });
     }
 
-    await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
-    await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
-    websocketHandler.sendLog(req, `Deleted attendance process and associated users: ${attendanceProcess._id}`, constants.LOG_TYPES.INFO);
+    const deleteResult = await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
+    if (!deleteResult) {
+      websocketHandler.sendLog(req, `Failed to delete attendance process: ${attendanceProcess._id}`, constants.LOG_TYPES.ERROR);
+      return res.status(500).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('attendance.deleteAttendanceFailure'),
+      });
+    }
+
+    const deleteUsersResult = await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
+    websocketHandler.sendLog(req, `Deleted attendance process: ${attendanceProcess._id}, removed ${deleteUsersResult.deletedCount} associated users`, constants.LOG_TYPES.INFO);
 
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
