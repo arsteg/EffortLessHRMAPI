@@ -4604,11 +4604,11 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
 
       const totalVariableAllowance = variablePays
-        .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
+        .filter(vp => vp.variableAllowance)
         .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
       const totalVariableDeduction = variablePays
-        .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
+        .filter(vp => vp.variableDeduction)
         .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
       monthlySalary = totalFixedAllowance + totalVariableAllowance;
@@ -4633,7 +4633,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
       const totalManualArrears = manualArrears
         .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);
-      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
+      const totalOvertime = overtime && overtime.OvertimeAmount ? overtime.OvertimeAmount : 0;
       const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance) * 12;
