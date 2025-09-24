@@ -1126,9 +1126,28 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
 
     const cycle = await scheduleController.createFiscalCycle();
-    const assignmentExists = await scheduleController.doesLeaveAssignmentExist(employee, cycle, leaveCategory);
+    const createdOn = new Date();
+    var currentMonth = createdOn.getMonth();
+    const leaveCat = await LeaveCategory.findById(leaveCategory);
+    const { startMonth, endMonth } = await scheduleController.getPeriodRange(currentMonth, leaveCat.leaveAccrualPeriod);  
 
-    if (!assignmentExists) {
+    const assignmentExists = await scheduleController.doesLeaveAssignmentExistV1({
+                              employee,
+                              category: leaveCat?._id,
+                              cycle,
+                              startMonth,
+                              endMonth
+                            });
+
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    const startMonthOfLeave = startDateObj.getMonth() + 1;
+    const endMonthOfLeave = endDateObj.getMonth() + 1;
+
+    const isWithinRange = (startMonthOfLeave >= startMonth && startMonthOfLeave <= endMonth) &&
+      (endMonthOfLeave >= startMonth && endMonthOfLeave <= endMonth);  //check if both leave start and end ate are within the range of the leave assignment leave balance
+
+    if (!assignmentExists || !isWithinRange) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
@@ -1137,7 +1156,6 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
-    const leaveCat = await LeaveCategory.findById(leaveCategory);
     if (!leaveCat) {
       return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
     }

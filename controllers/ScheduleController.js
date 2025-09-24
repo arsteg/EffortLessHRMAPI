@@ -17,7 +17,7 @@ const Company = require("../models/companyModel.js");
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const sendEmail = require('../utils/email');
 
-assignLeavesByJobs = async (req, res, next) => { 
+assignLeavesByJobsBackup = async (req, res, next) => { 
     websocketHandler.sendLog(req, 'Starting leave assignment process', constants.LOG_TYPES.INFO);
    
     const users = await User.find({}); 
@@ -234,6 +234,301 @@ assignLeavesByJobs = async (req, res, next) => {
     
     websocketHandler.sendLog(req, 'Completed leave assignment process', constants.LOG_TYPES.INFO);
 };
+
+assignLeavesByJobs = async (req, res, next) => { 
+    websocketHandler.sendLog(req, 'Starting leave assignment process', constants.LOG_TYPES.INFO);
+   
+    const users = await User.find({}); 
+    websocketHandler.sendLog(req, `Found ${users.length} users to process`, constants.LOG_TYPES.DEBUG);
+    
+    if(users.length > 0) {
+        for (const user of users) {  
+          try {
+            websocketHandler.sendLog(req, `Processing leave assignment for user: ${user._id}`, constants.LOG_TYPES.TRACE);
+            
+            const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({})
+                .where('user').equals(user._id.toString());    
+            
+            if(employeeLeaveAssignment) {
+                websocketHandler.sendLog(req, `Found leave assignment for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+                
+                //const leaveTemplateCategory = await LeaveTemplateCategory.findOne({})
+                const leaveTemplateCategories = await LeaveTemplateCategory.find({})
+                    .where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate._id.toString());
+                
+                if (leaveTemplateCategories.length > 0) { 
+                  for (const leaveTemplateCategory of leaveTemplateCategories) {  
+                    try {        
+                      const leaveCategory = await LeaveCategory.findById(leaveTemplateCategory.leaveCategory); 
+                      websocketHandler.sendLog(req, `Processing leave category: ${leaveCategory._id} for user: ${user._id}`, constants.LOG_TYPES.TRACE);
+                      
+                      const cycle = await createFiscalCycle();           
+                      const employee = user._id.toString();
+                      const category = leaveCategory._id;
+                      const type = leaveCategory.leaveAccrualPeriod;
+                      //Need to verify start and end month because get month is starting from 0 not 1 Jan 0, feb 1...
+                      const createdOn = new Date();
+                      var currentMonth = createdOn.getMonth();
+                      //var startMonth = currentMonth + 1;
+                      var openingBalance = 0;
+                      const leaveApplied = 0;      
+                      var leaveRemaining = 0;
+                      var closingBalance = 0;
+                      const leaveTaken = 0;
+                      
+                      const { startMonth, endMonth } = await getPeriodRange(currentMonth, leaveCategory.leaveAccrualPeriod);
+                      console.log(`Determined period range for ${leaveCategory.leaveAccrualPeriod}, user: ${user._id} - startMonth: ${startMonth}, endMonth: ${endMonth}`);
+
+                      if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Monthly) {
+                        var accruedBalance = 0;      
+                        accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
+                        websocketHandler.sendLog(req, `Creating monthly leave assignment - accruedBalance: ${accruedBalance}`, constants.LOG_TYPES.DEBUG);
+                        openingBalance = accruedBalance;
+                        leaveRemaining = accruedBalance;
+
+                        const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
+                          employee,
+                          category,
+                          cycle,
+                          startMonth,
+                          endMonth
+                        });
+
+                        if (existingLeaveAssignment) {
+                            websocketHandler.sendLog(req, `Monthly leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                        } else {
+                          try {
+                              const leaveAssigned = await LeaveAssigned.create({
+                                  cycle,
+                                  employee,
+                                  category,
+                                  type,
+                                  createdOn,
+                                  startMonth,
+                                  endMonth,
+                                  openingBalance,
+                                  leaveApplied,
+                                  accruedBalance,
+                                  leaveRemaining,
+                                  closingBalance,
+                                  leaveTaken,
+                                  company: user.company._id.toString()
+                              });
+                              websocketHandler.sendLog(req, `Successfully created monthly leave assignment for user: ${user._id}`, constants.LOG_TYPES.INFO);
+                          } catch (error) {
+                              websocketHandler.sendLog(req, `Failed to create monthly leave assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
+                          }
+                        }
+                      }
+                      
+                      if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Annually) {     
+                          //const assignmentExists = await doesLeaveAssignmentExist(employee, cycle, category);   
+                          //websocketHandler.sendLog(req, `Checking existing annual assignment for user: ${user._id} - exists: ${assignmentExists}`, constants.LOG_TYPES.TRACE);
+                          const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
+                            employee,
+                            category,
+                            cycle,
+                            startMonth,
+                            endMonth
+                          });
+                          if (existingLeaveAssignment) {
+                              websocketHandler.sendLog(req, `Annually leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                          } else {
+                              var ratePerPeriod = leaveTemplateCategory.accrualRatePerPeriod;    
+                              var balPerMonth = ratePerPeriod/12;   
+                              var accruedBalance = 0;             
+                              var rawBalance = (((12-currentMonth))*balPerMonth);  
+                              accruedBalance = Number(rawBalance.toFixed(1));                    
+                              openingBalance = accruedBalance;
+                              leaveRemaining = accruedBalance;
+                              
+                              try {
+                                  const leaveAssigned = await LeaveAssigned.create({
+                                      cycle,
+                                      employee,
+                                      category,
+                                      type,
+                                      createdOn,
+                                      startMonth,
+                                      endMonth,
+                                      openingBalance,
+                                      leaveApplied,
+                                      accruedBalance,
+                                      leaveRemaining,
+                                      closingBalance,
+                                      leaveTaken,
+                                      company: user.company._id.toString()
+                                  });
+                                  websocketHandler.sendLog(req, `Created annual leave assignment for user: ${user._id} with balance: ${accruedBalance}`, constants.LOG_TYPES.INFO);
+                              } catch (error) {
+                                  websocketHandler.sendLog(req, `Error creating annual leave assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
+                              }
+                          }
+                      }
+                      
+                      if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Semi_Annually) {
+                          const periodLength = 6;
+                          var accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
+                          websocketHandler.sendLog(req, `Processing semi-annual leave for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+                          const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
+                            employee,
+                            category,
+                            cycle,
+                            startMonth,
+                            endMonth
+                          });
+                          
+                          if (existingLeaveAssignment) {
+                              websocketHandler.sendLog(req, `Semi-annual leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                          } else {
+                              const remainingMonths = endMonth - currentMonth;
+                              const rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+                              const accruedBalance = Number(rawBalance.toFixed(1));
+                              openingBalance = accruedBalance;
+                              leaveRemaining = accruedBalance;
+                              try {
+                                  const leaveAssigned = await LeaveAssigned.create({
+                                      cycle,
+                                      employee,
+                                      category,
+                                      type,
+                                      createdOn,
+                                      startMonth,
+                                      endMonth,
+                                      openingBalance,
+                                      leaveApplied,
+                                      accruedBalance,
+                                      leaveRemaining,
+                                      closingBalance,
+                                      leaveTaken,
+                                      company: leaveCategory.company.toString()
+                                  });
+                                  websocketHandler.sendLog(req, `Created semi-annual leave assignment for user: ${user._id}`, constants.LOG_TYPES.INFO);
+                              } catch (error) {
+                                  websocketHandler.sendLog(req, `Error creating semi-annual assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
+                              }
+                          }
+                      }
+                      
+                      if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Bi_Monthly) {
+                        const periodLength = 2;
+                        const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
+                            employee,
+                            category,
+                            cycle,
+                            startMonth,
+                            endMonth
+                          });
+                        if (existingLeaveAssignment) {
+                              websocketHandler.sendLog(req, `Bi-monthly leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                        } 
+                        else {
+                          var remainingMonths = endMonth - currentMonth;
+                          var rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+                          var accruedBalance = Number(rawBalance.toFixed(1));
+                          openingBalance = accruedBalance;
+                          leaveRemaining = accruedBalance;
+                          websocketHandler.sendLog(req, `Processing bi-monthly leave for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+                          try {
+                              const leaveAssigned = await LeaveAssigned.create({
+                                  cycle,
+                                  employee,
+                                  category,
+                                  type,
+                                  createdOn,
+                                  startMonth,
+                                  endMonth,
+                                  openingBalance,
+                                  leaveApplied,
+                                  accruedBalance,
+                                  leaveRemaining,
+                                  closingBalance,
+                                  leaveTaken,
+                                  company: user.company._id.toString()
+                              });
+                              websocketHandler.sendLog(req, `Created bi-monthly leave assignment for user: ${user._id}`, constants.LOG_TYPES.INFO);
+                          } catch (error) {
+                              websocketHandler.sendLog(req, `Error creating bi-monthly assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
+                          }
+                        }
+                      }
+                      
+                      if(leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Quarterly) {
+                        const periodLength = 3;
+                        const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
+                            employee,
+                            category,
+                            cycle,
+                            startMonth,
+                            endMonth
+                          });
+                          
+                        if (existingLeaveAssignment) {
+                            websocketHandler.sendLog(req, `Quarterly leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                        } else {
+                          var remainingMonths = endMonth - currentMonth;
+                          var rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+                          var accruedBalance = Number(rawBalance.toFixed(1));
+                          openingBalance = accruedBalance;
+                          leaveRemaining = accruedBalance;
+                          websocketHandler.sendLog(req, `Processing quarterly leave for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+                          
+                          try {
+                              const leaveAssigned = await LeaveAssigned.create({
+                                  cycle,
+                                  employee,
+                                  category,
+                                  type,
+                                  createdOn,
+                                  startMonth,
+                                  endMonth,
+                                  openingBalance,
+                                  leaveApplied,
+                                  accruedBalance,
+                                  leaveRemaining,
+                                  closingBalance,
+                                  leaveTaken,
+                                  company: user.company._id.toString()
+                              });
+                              websocketHandler.sendLog(req, `Created quarterly leave assignment for user: ${user._id}`, constants.LOG_TYPES.INFO);
+                          } catch (error) {
+                              websocketHandler.sendLog(req, `Error creating quarterly assignment: ${error.message}`, constants.LOG_TYPES.ERROR);
+                          }
+                        }
+                      }
+                    }
+                    catch (error) {
+                      websocketHandler.sendLog(req, `Error processing leave category ${category} for user ${user._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
+                    }
+                  }
+                } else {
+                    websocketHandler.sendLog(req, `No leave template category found for user: ${user._id}`, constants.LOG_TYPES.WARN);
+                }
+            } else {
+                websocketHandler.sendLog(req, `No employee leave assignment found for user: ${user._id}`, constants.LOG_TYPES.WARN);
+            }
+          } catch (error) {
+            websocketHandler.sendLog(req, `Error processing user ${user._id}: ${error.message}`, constants.LOG_TYPES.ERROR);
+          }
+        }
+    } else {
+        websocketHandler.sendLog(req, 'No users found for leave assignment', constants.LOG_TYPES.WARN);
+    }
+    
+    websocketHandler.sendLog(req, 'Completed leave assignment process', constants.LOG_TYPES.INFO);
+};
+
+async function doesLeaveAssignmentExistV1({ employee, category, cycle, startMonth, endMonth }) {
+  websocketHandler.sendLog(null, `Checking existing assignment v1 - employee: ${employee}, cycle: ${cycle}`, constants.LOG_TYPES.TRACE);
+  //console.log('doesLeaveAssignmentExistV1', { employee, category, cycle, startMonth, endMonth });  
+  return await LeaveAssigned.findOne({
+      employee,
+      category,
+      startMonth,
+      endMonth,
+      cycle
+    });
+}
 
 const doesLeaveAssignmentExist = async (employeeId, cycle, categoryId) => {
     websocketHandler.sendLog(null, `Checking existing assignment - employee: ${employeeId}, cycle: ${cycle}`, constants.LOG_TYPES.TRACE);
@@ -690,9 +985,45 @@ const replaceTemplateVariables = (template, variables) => {
   return result;
 };
 
+async function getPeriodRange(currentMonth, accrualPeriod) {
+  var startMonth, endMonth, periodLength;
+  switch (accrualPeriod) {
+    case constants.Leave_Accrual_Period.Monthly:
+      startMonth = currentMonth + 1; 
+      endMonth = startMonth;
+      break;
+
+    case constants.Leave_Accrual_Period.Annually:
+      startMonth = 1;
+      endMonth = 12;
+      break;
+
+    case constants.Leave_Accrual_Period.Semi_Annually:
+      periodLength = 6;
+      break;
+
+    case constants.Leave_Accrual_Period.Quarterly:
+      periodLength = 3;
+      break;
+
+    case constants.Leave_Accrual_Period.Bi_Monthly:
+      periodLength = 2;
+      break;
+  }
+
+  if (periodLength) {
+    const period = Math.ceil((currentMonth + 1) / periodLength);
+    startMonth = (period - 1) * periodLength + 1;
+    endMonth = Math.min(startMonth + periodLength - 1, 12);
+  }
+  return { startMonth, endMonth };
+}
+
 module.exports = {
     doesLeaveAssignmentExist,
+    doesLeaveAssignmentExistV1,
     createFiscalCycle,
     assignLeavesByJobs,
-    runRecuringNotifications
+    runRecuringNotifications,
+    getPeriodRange
 };
