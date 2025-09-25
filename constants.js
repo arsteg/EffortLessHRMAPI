@@ -101,9 +101,9 @@ const Email_template_constant = {
     Closed: "Closed"
   };
   const Payroll_User_Status = {   
-    InProgress: "Active",
+    Closed: "Closed",
     OnHold: "OnHold",
-    Processed: "Processed"
+    InProgress: "InProgress"
   };
   const Payroll_FNF_Status = {   
     InProgress: "InProgress",
