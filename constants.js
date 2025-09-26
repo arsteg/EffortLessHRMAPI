@@ -101,7 +101,7 @@ const Email_template_constant = {
     Closed: "Closed"
   };
   const Payroll_User_Status = {   
-    Closed: "Closed",
+    Active: "Active",
     OnHold: "OnHold",
     InProgress: "InProgress"
   };
