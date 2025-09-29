@@ -3702,7 +3702,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
       const userEmployment = await UserEmployment.findOne({ user: payrollUser.user });
-      const appointmentDetails = await Appointment.findOne({ user: userId });
+      const appointmentDetails = await Appointment.findOne({ user: payrollUser.user });
 
       // Get latest PayrollOvertime and PayrollIncomeTax records
       const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
