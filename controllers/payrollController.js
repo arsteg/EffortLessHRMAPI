@@ -74,7 +74,7 @@ const LOP = require('../models/attendance/lop.js');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
 const Appointment = require("../models/permissions/appointmentModel");
 const moment = require("moment");
-
+const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
   getTotalTDSEligibleAmount,
@@ -2861,6 +2861,38 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
 
   const payroll = await Payroll.create(req.body);
   websocketHandler.sendLog(req, `Payroll record created with ID: ${payroll._id}`, constants.LOG_TYPES.INFO);
+const yearStr = year.toString();
+
+const monthStr = constants.monthMap[month];
+
+if (!monthStr) {
+  console.error(`❌ Invalid month name provided: ${month}`);
+  return next(new AppError('Invalid month name', 400));
+}
+console.log('🔄 Starting AttendanceProcess update...');
+console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+console.log(`🏢 companyId: ${companyId}`);
+console.log(`🧾 isFNF: false`);
+console.log(`✅ Setting exportToPayroll: true`);
+
+const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+  {
+    attendanceProcessPeriodYear: yearStr,
+    attendanceProcessPeriodMonth: monthStr,
+    company: companyId,
+    isFNF: false
+  },
+  { exportToPayroll: true },
+  { new: true }
+);
+
+console.log(updatedAttendance);
+  if (!updatedAttendance) {
+    websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
+  } else {
+    websocketHandler.sendLog(req, `Updated AttendanceProcess exportToPayroll for ${month}/${year}`, constants.LOG_TYPES.INFO);
+  }
 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -5111,11 +5143,57 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
+ const { month, year } = req.body;
+
+  if (month === undefined || year === undefined) {
+    websocketHandler.sendLog(req, 'Month or year not provided in request body', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.missingMonthOrYear'), 400));
+  }
+
+  // Check for existing payroll for the same month, year, and company
+  const existingPayroll = await PayrollFNF.findOne({ company: companyId, month, year });
+
+  if (existingPayroll) {
+    websocketHandler.sendLog(req, `Payroll FNF already exists for ${month}/${year}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.alreadyExists'), 400));
+  }
 
   // Add companyId to the request body
   req.body.company = companyId;
   req.body.status = constants.Payroll_FNF_Status.InProgress;
   const payrollFNF = await PayrollFNF.create(req.body);
+  const yearStr = year.toString();
+
+const monthStr = constants.monthMap[month];
+
+if (!monthStr) {
+  console.error(`❌ Invalid month name provided: ${month}`);
+  return next(new AppError('Invalid month name', 400));
+}
+console.log('🔄 Starting AttendanceProcess update...');
+console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+console.log(`🏢 companyId: ${companyId}`);
+console.log(`🧾 isFNF: false`);
+console.log(`✅ Setting exportToPayroll: true`);
+
+const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+  {
+    attendanceProcessPeriodYear: yearStr,
+    attendanceProcessPeriodMonth: monthStr,
+    company: companyId,
+    isFNF: true
+  },
+  { exportToPayroll: true },
+  { new: true }
+);
+
+console.log(updatedAttendance);
+  if (!updatedAttendance) {
+    websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
+  } else {
+    websocketHandler.sendLog(req, `Updated AttendanceProcess exportToPayroll for ${month}/${year}`, constants.LOG_TYPES.INFO);
+  }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNF

@@ -3367,3 +3367,31 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
     data: overtimeRecords,
   });
 });
+
+exports.validateAttendanceProcess = catchAsync(async (req, res, next) => {
+  const { year, month } = req.body;
+  const companyId = req.cookies.companyId;
+
+  if (!year || !month || !companyId) {
+    return next(new AppError("Year, month, and company ID are required.", 400));
+  }
+console.log({ year, month, companyId, isFNF: false });
+  const attendance = await AttendanceProcess.findOne({
+    attendanceProcessPeriodYear: year.toString(),
+    attendanceProcessPeriodMonth: month.toString(),
+    company: companyId,
+    isFNF: false
+  });
+  console.log(attendance);
+  if (!attendance) {
+    return res.status(200).json({
+      exists: false,
+      message: `Attendance process not completed for ${month}/${year}`
+    });
+  }
+
+  res.status(200).json({
+    exists: true,
+    message: `Attendance process exists for ${month}/${year}`
+  });
+});
