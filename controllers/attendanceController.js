@@ -591,7 +591,7 @@ exports.createAttendanceTemplate = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -623,7 +623,7 @@ exports.getAttendanceTemplate = catchAsync(async (req, res, next) => {
   const attendanceTemplate = await AttendanceTemplate.findById(req.params.id);
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-  
+
     return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
@@ -641,7 +641,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -664,7 +664,7 @@ exports.updateAttendanceTemplate = catchAsync(async (req, res, next) => {
   });
 
   if (!attendanceTemplate) {
-    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    websocketHandler.sendLog(req, `Attendance template not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.attendanceTemplateNotFound'), 400));
   }
 
@@ -699,7 +699,7 @@ exports.getAttendanceTemplateByUser = catchAsync(async (req, res, next) => {
 
   const attendanceTemplateAssignments = await AttendanceTemplateAssignments.find({ employee: req.params.userId });
   console.log('attendance template assignment:', attendanceTemplateAssignments);
-  const totalCount = await AttendanceTemplate.countDocuments({employee: req.params.userId });
+  const totalCount = await AttendanceTemplate.countDocuments({ employee: req.params.userId });
   websocketHandler.sendLog(req, `Successfully retrieved attendance template for user: ${req.params.userId}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1188,7 +1188,7 @@ exports.updateAttendanceAssignment = catchAsync(async (req, res, next) => {
 // Delete an Attendance Template Assignment by ID
 exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting attendance assignment with ID: ${req.params.id}`, constants.LOG_TYPES.INFO);
- 
+
   const attendanceAssignment = await AttendanceTemplateAssignments.findByIdAndDelete(req.params.id);
   if (!attendanceAssignment) {
     websocketHandler.sendLog(req, `Attendance assignment not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
@@ -1656,7 +1656,7 @@ exports.createShift = catchAsync(async (req, res, next) => {
   const { name } = req.body;
 
   // Check for duplicate shift label in same company
-  const existingShift = await Shift.findOne({ name:name, company: companyId, isDelete: { $ne: true } });
+  const existingShift = await Shift.findOne({ name: name, company: companyId, isDelete: { $ne: true } });
 
   if (existingShift) {
     websocketHandler.sendLog(req, `Shift with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
@@ -1675,7 +1675,7 @@ exports.getShift = catchAsync(async (req, res, next) => {
 
   const shift = await Shift.findById(req.params.id);
   if (!shift) {
-    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);  
+    websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
     return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
 
@@ -1692,7 +1692,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.missingParams'), 400));
   }
 
@@ -1716,7 +1716,7 @@ exports.updateShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
 
   websocketHandler.sendLog(req, `Successfully updated shift: ${shift._id}`, constants.LOG_TYPES.INFO);
@@ -1739,9 +1739,9 @@ exports.deleteShift = catchAsync(async (req, res, next) => {
 
   if (!shift) {
     websocketHandler.sendLog(req, `Shift not found for ID: ${req.params.id}`, constants.LOG_TYPES.WARNING);
-    return next(new AppError(req.t('attendance.shiftNotFound'), 400)); 
+    return next(new AppError(req.t('attendance.shiftNotFound'), 400));
   }
-  
+
   websocketHandler.sendLog(req, `Successfully deleted shift: ${req.params.id}`, constants.LOG_TYPES.INFO);
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -2410,8 +2410,7 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
         return next(new AppError(req.t('attendance.empCodeNotValid'), 400));
       }
-
-      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req.cookies.companyId);
+      const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req);
       if (attendanceRecord) {
         attendanceRecords.push(attendanceRecord);
         websocketHandler.sendLog(req, `Processed attendance record for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
@@ -2435,6 +2434,9 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
       data: attendanceRecords,
     });
   } catch (error) {
+    if (error instanceof AppError) {
+      return next(error);
+    }
     websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
   }
@@ -2460,12 +2462,11 @@ async function getUserByEmpCode(empCode, company) {
 
 // Helper function to process each individual attendance record
 
-async function processAttendanceRecord(user, startTime, endTime, date, companyId) {
+async function processAttendanceRecord(user, startTime, endTime, date, req) {
+  const companyId = req.cookies.companyId;
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
-
   if (shiftAssignment) {
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
-
     if (shift) {
       let deviationMinutes = 0;
       let isOvertime = false;
@@ -2517,7 +2518,9 @@ async function processAttendanceRecord(user, startTime, endTime, date, companyId
     }
   }
   else {
-    return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
+    const usename = `${user?.firstName} ${user?.lastName}`;
+    throw new AppError(req.t('attendance.shiftNotAssigned', { usename }), 400); //throw error so that parent function can catch it
+    //return next(new AppError(req.t('attendance.shiftNotAssigned'), 400));
   }
 }
 
@@ -2632,12 +2635,12 @@ function getTimeDifference(minHoursPerDayToGetCreditForFullDay) {
 }
 
 exports.GetAttendanceByMonth = catchAsync(async (req, res, next) => {
-  const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const skip = parseInt(req.body.skip);
+  const limit = parseInt(req.body.next);
 
-  const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+  const totalCount = await getRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit, req.cookies.companyId);
 
-  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+  const attendanceRecords = await getRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0, req.cookies.companyId);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -2656,7 +2659,7 @@ exports.GetAttendanceByMonthAndUser = catchAsync(async (req, res, next) => {
   });
 
 });
-async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0, companyId) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -2673,7 +2676,8 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
         date: {
           $gte: startDate,
           $lt: endDate
-        }
+        },
+        company: companyId
       }).exec();
       return { count };
     } else {
@@ -2681,7 +2685,8 @@ async function getRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
         date: {
           $gte: startDate,
           $lt: endDate
-        }
+        },
+        company: companyId
       }).skip(skip).limit(limit).exec();
       return records;
     }
@@ -2860,10 +2865,10 @@ async function validateCompleteAttendanceMonth(user, month, year, companyId) {
   const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
   if (!assignment) return false;
- 
+
   const attendanceTemplate = await AttendanceTemplate.findById(assignment.attendanceTemplate);
   if (!attendanceTemplate) return false;
- 
+
   const attendanceRecords = await AttendanceRecords.find({
     user, company: companyId,
     date: { $gte: startOfMonth, $lte: endOfMonth },
@@ -3116,6 +3121,7 @@ exports.ProcessAttendance = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 // Controller to delete attendance process and associated users
 exports.deleteAttendance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteAttendance', constants.LOG_TYPES.INFO);
@@ -3125,10 +3131,9 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
     const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear } = req.body;
 
     let attendanceProcess = await AttendanceProcess.findOne({
-      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
-      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+      attandanaceProcessPeroidMonth: attendanceProcessPeriodMonth,
+      attandanaceProcessPeroidYear: attendanceProcessPeriodYear,
     });
-
     if (!attendanceProcess) {
       websocketHandler.sendLog(req, `Attendance process not found for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.ERROR);
       return res.status(404).json({
@@ -3145,9 +3150,17 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
       });
     }
 
-    await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
-    await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
-    websocketHandler.sendLog(req, `Deleted attendance process and associated users: ${attendanceProcess._id}`, constants.LOG_TYPES.INFO);
+    const deleteResult = await AttendanceProcess.findByIdAndDelete(attendanceProcess._id);
+    if (!deleteResult) {
+      websocketHandler.sendLog(req, `Failed to delete attendance process: ${attendanceProcess._id}`, constants.LOG_TYPES.ERROR);
+      return res.status(500).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('attendance.deleteAttendanceFailure'),
+      });
+    }
+
+    const deleteUsersResult = await AttendanceProcessUsers.deleteMany({ attendanceProcess: attendanceProcess._id });
+    websocketHandler.sendLog(req, `Deleted attendance process: ${attendanceProcess._id}, removed ${deleteUsersResult.deletedCount} associated users`, constants.LOG_TYPES.INFO);
 
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -3166,8 +3179,7 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
 exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-
-  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month);
+  const attendanceRecords = await getOvertimeRecordsByYearAndMonth(req.body.year, req.body.month, req.cookies.companyId);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -3176,7 +3188,7 @@ exports.GetOvertimeByMonth = catchAsync(async (req, res, next) => {
 
 });
 
-async function getOvertimeRecordsByYearAndMonth(year, month) {
+async function getOvertimeRecordsByYearAndMonth(year, month, companyId) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -3198,7 +3210,8 @@ async function getOvertimeRecordsByYearAndMonth(year, month) {
       CheckInDate: {
         $gte: startDate,
         $lt: endDate
-      }
+      },
+      company: companyId
     }).exec();
     return records; // Return the actual records
   } catch (error) {
@@ -3352,5 +3365,33 @@ exports.getOvertimeByUser = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     message: req.t('attendance.getOvertimeByUserSuccess', { userId: user }),
     data: overtimeRecords,
+  });
+});
+
+exports.validateAttendanceProcess = catchAsync(async (req, res, next) => {
+  const { year, month } = req.body;
+  const companyId = req.cookies.companyId;
+
+  if (!year || !month || !companyId) {
+    return next(new AppError("Year, month, and company ID are required.", 400));
+  }
+console.log({ year, month, companyId, isFNF: false });
+  const attendance = await AttendanceProcess.findOne({
+    attendanceProcessPeriodYear: year.toString(),
+    attendanceProcessPeriodMonth: month.toString(),
+    company: companyId,
+    isFNF: false
+  });
+  console.log(attendance);
+  if (!attendance) {
+    return res.status(200).json({
+      exists: false,
+      message: `Attendance process not completed for ${month}/${year}`
+    });
+  }
+
+  res.status(200).json({
+    exists: true,
+    message: `Attendance process exists for ${month}/${year}`
   });
 });

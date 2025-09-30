@@ -3636,5 +3636,9 @@ attendanceRouter.post('/process-attendance-fnf-by-month', authController.protect
  *         description: Internal server error
  */
 attendanceRouter.post('/overtime-by-user', authController.protect, attendanceController.getOvertimeByUser);
-
+attendanceRouter.post(
+  '/validate-attendance-process',
+  authController.protect,
+  attendanceController.validateAttendanceProcess
+);
 module.exports = attendanceRouter;

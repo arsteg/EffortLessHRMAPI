@@ -53,4 +53,21 @@ var userEmploymentSchema = new Schema({
     required: true
   }
 }, { collection: 'UserEmployment' });
+
+userEmploymentSchema.pre(/^find/, async function (next) {
+  try {
+    this.populate({
+      path: 'designation',
+      select: 'id designation'
+    }),
+    this.populate({
+      path: 'department',
+      select: 'id departmentName'
+    })
+  } catch (error) {
+    console.error("Error populating designation:", error);
+  }
+  next();
+});
+
 module.exports = mongoose.model('UserEmployment', userEmploymentSchema);

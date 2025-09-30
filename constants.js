@@ -101,9 +101,9 @@ const Email_template_constant = {
     Closed: "Closed"
   };
   const Payroll_User_Status = {   
-    InProgress: "Active",
+    Active: "Active",
     OnHold: "OnHold",
-    Processed: "Processed"
+    InProgress: "InProgress"
   };
   const Payroll_FNF_Status = {   
     InProgress: "InProgress",
@@ -204,11 +204,25 @@ const Email_template_constant = {
     Expense: "expense",
     task_delete: "task_delete",
   }
+  const monthMap = {
+  January: "1",
+  February: "2",
+  March: "3",
+  April: "4",
+  May: "5",
+  June: "6",
+  July: "7",
+  August: "8",
+  September: "9",
+  October: "10",
+  November: "11",
+  December: "12"
+};
   module.exports = { Email_template_constant, Leave_Accrual_Period,Leave_Application_Constant,User_Status,Payroll_Status,
     Payroll_User_Status,Payroll_FNF_Status,Salaray_Default_Fixed_Allowance,
     Payroll_User_FNF_Status,payroll_LoanAdvance_Status,Payroll_LoanAdvance_Type, Active_Statuses,APIResponseStatus,SubContainers, 
     Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType,LOG_TYPES,
-    Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status,Payroll_FNF_Loan_Advance_status,Event_Notification_Type_Status};
+    Resignation_Status,Termination_status ,Termination_Appealed_status,Employee_Loan_Advance_status,Payroll_Loan_Advance_status,Payroll_FNF_Loan_Advance_status,Event_Notification_Type_Status,monthMap};
   
 
 

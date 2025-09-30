@@ -72,11 +72,12 @@ const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
 const LOP = require('../models/attendance/lop.js');
 const UserEmployment = require("../models/Employment/UserEmploymentModel");
+const Appointment = require("../models/permissions/appointmentModel");
 const moment = require("moment");
-
+const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
-  getTotalTDSEligibleAmount, 
+  getTotalTDSEligibleAmount,
   getTotalMonthlyAllownaceAmount,       // Finds the correct LWF slab and calculates employee/employer contributions
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
@@ -371,7 +372,7 @@ exports.createFixedAllowances = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
-const { label } = req.body;
+  const { label } = req.body;
 
   // Check if a template with the same label already exists for the company
   const existingFixedAllowances = await FixedAllowances.findOne({ label, company: companyId });
@@ -401,15 +402,15 @@ exports.getFixedAllowancesById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateFixedAllowances = catchAsync(async (req, res, next) => {
-   // Extract companyId from req.cookies
-   const companyId = req.cookies.companyId;
+  // Extract companyId from req.cookies
+  const companyId = req.cookies.companyId;
 
-   // Check if companyId exists in cookies
-   if (!companyId) {
-     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
-   }
-   const { label } = req.body;
-  const existingFixedAllowances = await FixedAllowances.findOne({ label, company: companyId , _id: { $ne: req.params.id },});
+  // Check if companyId exists in cookies
+  if (!companyId) {
+    return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
+  }
+  const { label } = req.body;
+  const existingFixedAllowances = await FixedAllowances.findOne({ label, company: companyId, _id: { $ne: req.params.id }, });
   if (existingFixedAllowances) {
     websocketHandler.sendLog(req, `Fixed Allowances with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('payroll.duplicate_fixed_allowance_label_error'), 400));
@@ -442,14 +443,14 @@ exports.deleteFixedAllowances = catchAsync(async (req, res, next) => {
   if (!fixedAllowance) {
     return next(new AppError(req.t('payroll.fixedAllowancesNotFound'), 404));
   }
-  const isUsedInSalaryStructure  = await SalaryComponentFixedAllowance.findOne({
+  const isUsedInSalaryStructure = await SalaryComponentFixedAllowance.findOne({
     fixedAllowance: req.params.id
   });
   const isUsedInCTCTemplate = await CTCTemplateFixedAllowance.findOne({
     fixedAllowance: req.params.id
   });
   if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
-    return next(new AppError(req.t('payroll.fixedAllowancesAlreadyExistsinUse'), 404));   
+    return next(new AppError(req.t('payroll.fixedAllowancesAlreadyExistsinUse'), 404));
   }
 
   // Step 3: Check if deletion is allowed
@@ -1340,13 +1341,13 @@ exports.createVariableAllowance = catchAsync(async (req, res, next) => {
   }
 
   // Add companyId to the request body
-  req.body.company = companyId;  
+  req.body.company = companyId;
   const { label } = req.body;
- const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId});
- if (existinVariableAllowance) {
-   websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
- }
+  const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId });
+  if (existinVariableAllowance) {
+    websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
+  }
   const variableAllowance = await VariableAllowance.create(req.body);
   if (
     req.body.variableAllowanceApplicableEmployee &&
@@ -1437,13 +1438,13 @@ exports.updateVariableAllowance = catchAsync(async (req, res, next) => {
   }
 
   // Add companyId to the request body
-  req.body.company = companyId;  
+  req.body.company = companyId;
   const { label } = req.body;
- const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId , _id: { $ne: req.params.id }});
- if (existinVariableAllowance) {
-   websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
- }
+  const existinVariableAllowance = await VariableAllowance.findOne({ label, company: companyId, _id: { $ne: req.params.id } });
+  if (existinVariableAllowance) {
+    websocketHandler.sendLog(req, `Variable Allowance with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_variable_Allownace_label_error'), 400));
+  }
   const variableAllowance = await VariableAllowance.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -1483,16 +1484,16 @@ exports.deleteVariableAllowance = catchAsync(async (req, res, next) => {
   if (!variableAllowanceExists) {
     return next(new AppError(req.t('payroll.variableAllowanceNotFound'), 404));
   }
-  const isUsedInSalaryStructure  = await SalaryComponentVariableAllowance.findOne({
+  const isUsedInSalaryStructure = await SalaryComponentVariableAllowance.findOne({
     variableAllowance: req.params.id
   });
   const isUsedInCTCTemplate = await CTCTemplateVariableAllowance.findOne({
     variableAllowance: req.params.id
   });
   if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
-    return next(new AppError(req.t('payroll.variableAllowancesAlreadyExistsinUse'), 404));   
+    return next(new AppError(req.t('payroll.variableAllowancesAlreadyExistsinUse'), 404));
   }
-  
+
   const variableAllowance = await VariableAllowance.findByIdAndDelete(
     req.params.id
   );
@@ -1514,11 +1515,11 @@ exports.createFixedDeduction = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
 
- const existingFixedDeduction = await FixedDeduction.findOne({ label, company: companyId});
- if (existingFixedDeduction) {
-   websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
- }
+  const existingFixedDeduction = await FixedDeduction.findOne({ label, company: companyId });
+  if (existingFixedDeduction) {
+    websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
+  }
 
   // Add companyId to the request body
   req.body.company = companyId;
@@ -1583,11 +1584,11 @@ exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
   const { label } = req.body;
- const existingeFixedDeduction = await FixedDeduction.findOne({ label, company: companyId , _id: { $ne: req.params.id }});
- if (existingeFixedDeduction) {
-   websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
- }
+  const existingeFixedDeduction = await FixedDeduction.findOne({ label, company: companyId, _id: { $ne: req.params.id } });
+  if (existingeFixedDeduction) {
+    websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_fixed_Deduction_label_error'), 400));
+  }
   const fixedDeduction = await FixedDeduction.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
@@ -1606,14 +1607,14 @@ exports.updateFixedDeduction = catchAsync(async (req, res, next) => {
 // Delete Fixed Deduction
 exports.deleteFixedDeduction = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const isUsedInSalaryStructure  = await SalaryComponentFixedDeduction.findOne({
+  const isUsedInSalaryStructure = await SalaryComponentFixedDeduction.findOne({
     fixedDeduction: req.params.id
   });
   const isUsedInCTCTemplate = await SalaryComponentFixedDeduction.findOne({
     fixedDeduction: req.params.id
   });
   if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
-    return next(new AppError(req.t('payroll.fixedDeductionAlreadyExistsinUse'), 404));   
+    return next(new AppError(req.t('payroll.fixedDeductionAlreadyExistsinUse'), 404));
   }
   const fixedDeduction = await FixedDeduction.findByIdAndDelete(id);
 
@@ -1638,7 +1639,7 @@ exports.createVariableDeduction = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   const { label } = req.body;
-  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId});
+  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId });
   if (existingVariableDeduction) {
     websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('payroll.duplicate_variable_Deduction_label_error'), 400));
@@ -1735,7 +1736,7 @@ exports.updateVariableDeduction = catchAsync(async (req, res, next) => {
   // Add companyId to the request body
   req.body.company = companyId;
   const { label } = req.body;
-  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId,_id: { $ne: req.params.id }});
+  const existingVariableDeduction = await VariableDeduction.findOne({ label, company: companyId, _id: { $ne: req.params.id } });
   if (existingVariableDeduction) {
     websocketHandler.sendLog(req, `Fixed Deduction with label "${label}" already exists`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('payroll.duplicate_variable_Deduction_label_error'), 400));
@@ -1778,16 +1779,16 @@ exports.deleteVariableDeduction = catchAsync(async (req, res, next) => {
   if (!variableDeductionExists) {
     return next(new AppError(req.t('payroll.variableDeductionNotFound'), 404));
   }
-  const isUsedInSalaryStructure  = await SalaryComponentVariableDeduction.findOne({
+  const isUsedInSalaryStructure = await SalaryComponentVariableDeduction.findOne({
     variableDeduction: req.params.id
   });
   const isUsedInCTCTemplate = await ctcTemplateVariableDeductionModel.findOne({
     variableDeduction: req.params.id
   });
   if (isUsedInSalaryStructure || isUsedInCTCTemplate) {
-    return next(new AppError(req.t('payroll.variableDeductionAlreadyExistsinUse'), 404));   
+    return next(new AppError(req.t('payroll.variableDeductionAlreadyExistsinUse'), 404));
   }
-  
+
   const variableDeduction = await VariableDeduction.findByIdAndDelete(
     req.params.id
   );
@@ -1837,8 +1838,8 @@ exports.getAllLoanAdvancesCategoriesByCompany = catchAsync(
     // Return all if next is null, undefined, or 0
     const limit =
       req.body.next === null ||
-      req.body.next === undefined ||
-      parseInt(req.body.next) === 0
+        req.body.next === undefined ||
+        parseInt(req.body.next) === 0
         ? totalCount
         : parseInt(req.body.next);
 
@@ -1963,8 +1964,8 @@ exports.getAllFlexiBenefitsCategoryByCompany = catchAsync(
     // If 'next' is null, undefined, or 0, fetch all
     const limit =
       req.body.next === null ||
-      req.body.next === undefined ||
-      parseInt(req.body.next) === 0
+        req.body.next === undefined ||
+        parseInt(req.body.next) === 0
         ? totalCount
         : parseInt(req.body.next);
 
@@ -2107,12 +2108,12 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
     ctcTemplateEmployeeDeduction,
     ...ctcTemplateData
   } = req.body;
- const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId});
- if (existingCTCTemplate) {
-   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${ctcTemplateData.name}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
- }
- 
+  const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId });
+  if (existingCTCTemplate) {
+    websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${ctcTemplateData.name}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+  }
+
   ctcTemplateData.company = companyId;
 
   for (const allowance of ctcTemplateFixedAllowance) {
@@ -2187,13 +2188,13 @@ exports.createCTCTemplate = catchAsync(async (req, res, next) => {
         ctcTemplate._id,
         ctcTemplateVariableDeduction
       );
-  } 
+  }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
   });
 });
-exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => { 
+exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => {
 
   const { name, id } = req.body;
 
@@ -2216,8 +2217,8 @@ exports.checkCTCTemplateDuplicateV1 = catchAsync(async (req, res, next) => {
   } else {
     // ✅ Create mode
     existingCTCTemplate = await CTCTemplate.findOne({ name, company: companyId });
-  }  
-  
+  }
+
   if (existingCTCTemplate) {
     return res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -2702,13 +2703,13 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
- 
+
   const { name } = req.body;
- const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId , _id: { $ne: req.params.id },});
- if (existingCTCTemplate) {
-   websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
-   return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
- }
+  const existingCTCTemplate = await CTCTemplate.findOne({ name: ctcTemplateData.name, company: companyId, _id: { $ne: req.params.id }, });
+  if (existingCTCTemplate) {
+    websocketHandler.sendLog(req, `CTCTemplate Allowances with label "${name}" already exists`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('payroll.duplicate_ctc_template_name_error'), 400));
+  }
 
   if (
     !Array.isArray(ctcTemplateFixedAllowance) ||
@@ -2747,11 +2748,11 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       }
     }
   }
-    ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(
-      req.params.id,
-      req.body.ctcTemplateFixedDeduction
-    );
-  
+  ctcTemplate.ctcTemplateFixedDeductions = await updateOrCreateFixedDeduction(
+    req.params.id,
+    req.body.ctcTemplateFixedDeduction
+  );
+
   if (ctcTemplateVariableAllowance.length > 0) {
     for (const allowance of ctcTemplateVariableAllowance) {
       const result = await VariableAllowance.findById(
@@ -2766,12 +2767,12 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       }
     }
   }
-    ctcTemplate.ctcTemplateVariableAllowances =
-      await updateOrCreateVariableAllownace(
-        req.params.id,
-        ctcTemplateVariableAllowance
-      );
-  
+  ctcTemplate.ctcTemplateVariableAllowances =
+    await updateOrCreateVariableAllownace(
+      req.params.id,
+      ctcTemplateVariableAllowance
+    );
+
 
   if (ctcTemplateVariableDeduction.length > 0) {
     for (const allowance of ctcTemplateVariableDeduction) {
@@ -2787,12 +2788,12 @@ exports.updateCTCTemplateById = catchAsync(async (req, res, next) => {
       }
     }
   }
-    ctcTemplate.ctcTemplateVariableDeductions =
-      await updateOrCreateVariableDeduction(
-        req.params.id,
-        ctcTemplateVariableDeduction
-      );
-  
+  ctcTemplate.ctcTemplateVariableDeductions =
+    await updateOrCreateVariableDeduction(
+      req.params.id,
+      ctcTemplateVariableDeduction
+    );
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: ctcTemplate,
@@ -2860,6 +2861,38 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
 
   const payroll = await Payroll.create(req.body);
   websocketHandler.sendLog(req, `Payroll record created with ID: ${payroll._id}`, constants.LOG_TYPES.INFO);
+const yearStr = year.toString();
+
+const monthStr = constants.monthMap[month];
+
+if (!monthStr) {
+  console.error(`❌ Invalid month name provided: ${month}`);
+  return next(new AppError('Invalid month name', 400));
+}
+console.log('🔄 Starting AttendanceProcess update...');
+console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+console.log(`🏢 companyId: ${companyId}`);
+console.log(`🧾 isFNF: false`);
+console.log(`✅ Setting exportToPayroll: true`);
+
+const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+  {
+    attendanceProcessPeriodYear: yearStr,
+    attendanceProcessPeriodMonth: monthStr,
+    company: companyId,
+    isFNF: false
+  },
+  { exportToPayroll: true },
+  { new: true }
+);
+
+console.log(updatedAttendance);
+  if (!updatedAttendance) {
+    websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
+  } else {
+    websocketHandler.sendLog(req, `Updated AttendanceProcess exportToPayroll for ${month}/${year}`, constants.LOG_TYPES.INFO);
+  }
 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -2981,8 +3014,17 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   }
 
   req.body.company = companyId;
-   req.body.status = 'Active';
+  req.body.status = 'Active';
+  const existingPayrollUser = await PayrollUsers.findOne({
+    user: req.body.user,
+    payroll: req.body.payroll,
+    company: companyId
+  });
 
+  if (existingPayrollUser) {
+    websocketHandler.sendLog(req, 'PayrollUser already exists for this user and payroll', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.userAlreadyExists'), 400));
+  }
   websocketHandler.sendLog(req, `Creating PayrollUser for companyId: ${companyId}`, constants.LOG_TYPES.TRACE);
 
   const payrollUser = await PayrollUsers.create(req.body);
@@ -2992,40 +3034,40 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   req.payrollUser = payrollUser._id;
   req.isFNF = false;
   const payroll = await Payroll.findById(req.body.payroll);
-   req.month =payroll.month; // 1-based month (1-12)
-    req.year =payroll.year; // Current year (e.g., 2025)
-    req.month = moment().month(payroll.month).month() + 1; // 1-based month
+  req.month = payroll.month; // 1-based month (1-12)
+  req.year = payroll.year; // Current year (e.g., 2025)
+  req.month = moment().month(payroll.month).month() + 1; // 1-based month
   websocketHandler.sendLog(req, 'Starting payroll calculations for new user', constants.LOG_TYPES.TRACE);
 
-    try { await payrollCalculationController.StoreInPayrollVariableAllowances(req, res); } 
+  try { await payrollCalculationController.StoreInPayrollVariableAllowances(req, res); }
   catch (err) { console.log('Error in StoreInPayrollVariableAllowances:', err.message); }
-  
-  try { await payrollCalculationController.StoreInPayrollVariableDeductions(req, res); } 
-  catch (err) { console.log('Error in StoreInPayrollVariableDeductions:', err.message); }
-  
-  try { await payrollCalculationController.CalculateOvertime(req, res); } 
-  catch (err) { console.log('Error in CalculateOvertime:', err.message); }
-  
-  try { await payrollCalculationController.StoreAttendanceSummary(req, res); } 
-  catch (err) { console.log('Error in StoreAttendanceSummary:', err.message); }
-  
-  try { await payrollCalculationController.calculateAndStoreIncomeTax(req, res); } 
-  catch (err) { console.log('Error in calculateAndStoreIncomeTax:', err.message); }
-  
 
-  
-  try { await payrollCalculationController.calculateProfessionalTax(req, res); } 
+  try { await payrollCalculationController.StoreInPayrollVariableDeductions(req, res); }
+  catch (err) { console.log('Error in StoreInPayrollVariableDeductions:', err.message); }
+
+  try { await payrollCalculationController.CalculateOvertime(req, res); }
+  catch (err) { console.log('Error in CalculateOvertime:', err.message); }
+
+  try { await payrollCalculationController.StoreAttendanceSummary(req, res); }
+  catch (err) { console.log('Error in StoreAttendanceSummary:', err.message); }
+
+  try { await payrollCalculationController.calculateAndStoreIncomeTax(req, res); }
+  catch (err) { console.log('Error in calculateAndStoreIncomeTax:', err.message); }
+
+
+
+  try { await payrollCalculationController.calculateProfessionalTax(req, res); }
   catch (err) { console.log('Error in calculateProfessionalTax:', err.message); }
-  
-  try { await payrollCalculationController.calculateLWF(req, res); } 
+
+  try { await payrollCalculationController.calculateLWF(req, res); }
   catch (err) { console.log('Error in calculateLWF:', err.message); }
-  
-  try { await payrollCalculationController.calculatePF(req, res); } 
+
+  try { await payrollCalculationController.calculatePF(req, res); }
   catch (err) { console.log('Error in calculatePF:', err.message); }
-  
-  try { await payrollCalculationController.calculateESIC(req, res); } 
+
+  try { await payrollCalculationController.calculateESIC(req, res); }
   catch (err) { console.log('Error in calculateESIC:', err.message); }
-  
+
 
   websocketHandler.sendLog(req, 'Completed all payroll calculations and storage for new PayrollUser', constants.LOG_TYPES.INFO);
 
@@ -3692,8 +3734,10 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollStatutory.find({ payrollUser: payrollUser._id, company: companyId })
       ]);
       const userEmployment = await UserEmployment.findOne({ user: payrollUser.user });
+      const appointmentDetails = await Appointment.findOne({ user: payrollUser.user });
+
       // Get latest PayrollOvertime and PayrollIncomeTax records
-      const [latestOvertime, latestIncomeTax,latestAttendanceSummary,variablePays,fixedPays] = await Promise.all([
+      const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
         PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
@@ -3703,84 +3747,84 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         PayrollVariablePay.find({ payrollUser: payrollUser._id }),
         PayrollFixedPay.find({ payrollUser: payrollUser._id })
       ]);
-      const [allLoanAdvances, flexiBenefits,manualArrears] = await Promise.all([        
+      const [allLoanAdvances, flexiBenefits, manualArrears] = await Promise.all([
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
-        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })    
+        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })
       ]);
       const fixedAllowancesList = fixedPays
-      .filter(vp => vp.fixedAllowance)
-      .map(vp => ({
-        id: vp._id,
-        fixedAllowance: {
-          id: vp.fixedAllowance?._id,
-          label: vp.fixedAllowance?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+        .filter(vp => vp.fixedAllowance)
+        .map(vp => ({
+          id: vp._id,
+          fixedAllowance: {
+            id: vp.fixedAllowance?._id,
+            label: vp.fixedAllowance?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const fixedDeductionsList = fixedPays
-      .filter(vp => vp.fixedDeduction)
-      .map(vp => ({
-        id: vp._id,
-        fixedDeduction: {
-          id: vp.fixedDeduction?._id,
-          label: vp.fixedDeduction?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const fixedDeductionsList = fixedPays
+        .filter(vp => vp.fixedDeduction)
+        .map(vp => ({
+          id: vp._id,
+          fixedDeduction: {
+            id: vp.fixedDeduction?._id,
+            label: vp.fixedDeduction?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const variableAllowancesList = variablePays
-      .filter(vp => vp.variableAllowance)
-      .map(vp => ({
-        id: vp._id,
-        variableAllowance: {
-          id: vp.variableAllowance?._id,
-          label: vp.variableAllowance?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const variableAllowancesList = variablePays
+        .filter(vp => vp.variableAllowance)
+        .map(vp => ({
+          id: vp._id,
+          variableAllowance: {
+            id: vp.variableAllowance?._id,
+            label: vp.variableAllowance?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const variableDeductionsList = variablePays
-      .filter(vp => vp.variableDeduction)
-      .map(vp => ({
-        id: vp._id,
-        variableDeduction: {
-          id: vp.variableDeduction?._id,
-          label: vp.variableDeduction?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const variableDeductionsList = variablePays
+        .filter(vp => vp.variableDeduction)
+        .map(vp => ({
+          id: vp._id,
+          variableDeduction: {
+            id: vp.variableDeduction?._id,
+            label: vp.variableDeduction?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
       // Extract required fields with fallback values
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
-          // Calculate totals
-          const totalFixedAllowance = fixedPays
-          .filter(vp => vp.fixedAllowance) // Only include entries with variableAllowance
-          .reduce((sum, vp) => sum + (vp.amount || 0), 0);
-    
-           const totalFixedDeduction = fixedPays
-          .filter(vp => vp.fixedDeduction) // Only include entries with variableDeduction
-          .reduce((sum, vp) => sum + (vp.amount || 0), 0);
-      const totalVariableAllowance = variablePays
-      .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      // Calculate totals
+      const totalFixedAllowance = fixedPays
+        .filter(vp => vp.fixedAllowance) // Only include entries with variableAllowance
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
-    const totalVariableDeduction = variablePays
-      .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      const totalFixedDeduction = fixedPays
+        .filter(vp => vp.fixedDeduction) // Only include entries with variableDeduction
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      const totalVariableAllowance = variablePays
+        .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+
+      const totalVariableDeduction = variablePays
+        .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
       // Return the full PayrollUsers document with related data
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
@@ -3796,7 +3840,8 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         variableAllowancesList,
         variableDeductionsList,
         userEmployment,
-        allLoanAdvances, flexiBenefits,manualArrears,latestOvertime
+        appointmentDetails,
+        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime
       };
     })
   );
@@ -3851,7 +3896,8 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, `Found ${payrollUsers.length} payroll users for userId: ${userId}`, constants.LOG_TYPES.INFO);
   const userEmployment = await UserEmployment.findOne({ user: userId });
-   // Step 2: Fetch related data and construct response
+  const appointmentDetails = await Appointment.findOne({ user: userId });
+  // Step 2: Fetch related data and construct response
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
       websocketHandler.sendLog(req, `Fetching statutory details for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
@@ -3862,97 +3908,97 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         company: payrollUser.company
       });
       // Get latest PayrollOvertime and PayrollIncomeTax records
-      const [latestOvertime, latestIncomeTax,latestAttendanceSummary,variablePays,fixedPays] = await Promise.all([
+      const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
         PayrollOvertime.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest
         PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest
-          PayrollVariablePay.find({ payrollUser: payrollUser._id }),
-          PayrollFixedPay.find({ payrollUser: payrollUser._id }),
+        PayrollVariablePay.find({ payrollUser: payrollUser._id }),
+        PayrollFixedPay.find({ payrollUser: payrollUser._id }),
       ]);
-      const [allLoanAdvances, flexiBenefits,manualArrears] = await Promise.all([        
+      const [allLoanAdvances, flexiBenefits, manualArrears] = await Promise.all([
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
-        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })    
+        PayrollManualArrears.find({ payrollUser: payrollUser._id }).sort({ _id: -1 })
       ]);
       // Extract required fields with fallback values
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
       console.log(fixedPays);
       const fixedAllowancesList = fixedPays
-      .filter(vp => vp.fixedAllowance)
-      .map(vp => ({
-        id: vp._id,
-        fixedAllowance: {
-          id: vp.fixedAllowance?._id,
-          label: vp.fixedAllowance?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+        .filter(vp => vp.fixedAllowance)
+        .map(vp => ({
+          id: vp._id,
+          fixedAllowance: {
+            id: vp.fixedAllowance?._id,
+            label: vp.fixedAllowance?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const fixedDeductionsList = fixedPays
-      .filter(vp => vp.fixedDeduction)
-      .map(vp => ({
-        id: vp._id,
-        fixedDeduction: {
-          id: vp.fixedDeduction?._id,
-          label: vp.fixedDeduction?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const fixedDeductionsList = fixedPays
+        .filter(vp => vp.fixedDeduction)
+        .map(vp => ({
+          id: vp._id,
+          fixedDeduction: {
+            id: vp.fixedDeduction?._id,
+            label: vp.fixedDeduction?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const variableAllowancesList = variablePays
-      .filter(vp => vp.variableAllowance)
-      .map(vp => ({
-        id: vp._id,
-        variableAllowance: {
-          id: vp.variableAllowance?._id,
-          label: vp.variableAllowance?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const variableAllowancesList = variablePays
+        .filter(vp => vp.variableAllowance)
+        .map(vp => ({
+          id: vp._id,
+          variableAllowance: {
+            id: vp.variableAllowance?._id,
+            label: vp.variableAllowance?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
 
-    const variableDeductionsList = variablePays
-      .filter(vp => vp.variableDeduction)
-      .map(vp => ({
-        id: vp._id,
-        variableDeduction: {
-          id: vp.variableDeduction?._id,
-          label: vp.variableDeduction?.label
-        },
-        amount: vp.amount || 0,
-        month: vp.month,
-        year: vp.year,
-        company: vp.company
-      }));
+      const variableDeductionsList = variablePays
+        .filter(vp => vp.variableDeduction)
+        .map(vp => ({
+          id: vp._id,
+          variableDeduction: {
+            id: vp.variableDeduction?._id,
+            label: vp.variableDeduction?.label
+          },
+          amount: vp.amount || 0,
+          month: vp.month,
+          year: vp.year,
+          company: vp.company
+        }));
       const totalFixedAllowance = fixedPays
-      .filter(vp => vp.fixedAllowance) // Only include entries with variableAllowance
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+        .filter(vp => vp.fixedAllowance) // Only include entries with variableAllowance
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
-       const totalFixedDeduction = fixedPays
-      .filter(vp => vp.fixedDeduction) // Only include entries with variableDeduction
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      const totalFixedDeduction = fixedPays
+        .filter(vp => vp.fixedDeduction) // Only include entries with variableDeduction
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
       const totalVariableAllowance = variablePays
-      .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+        .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
-       const totalVariableDeduction = variablePays
-      .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      const totalVariableDeduction = variablePays
+        .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
       PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
-      .sort({ _id: -1 })  // sort by newest
+        .sort({ _id: -1 })  // sort by newest
       // Return the full PayrollUsers document with populated fields
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
@@ -3968,7 +4014,8 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         totalVariableDeduction,
         totalVariableAllowance,
         userEmployment,
-        allLoanAdvances, flexiBenefits,manualArrears,latestOvertime
+        appointmentDetails,
+        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime
       };
     })
   );
@@ -4011,7 +4058,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
     path: 'user',
     select: 'id firstName lastName email'
   })
-  ;
+    ;
   websocketHandler.sendLog(req, `Found ${payrollUsers.length} PayrollFNFUsers`, constants.LOG_TYPES.INFO);
 
   if (!payrollUsers.length) {
@@ -4057,7 +4104,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
 
       // Fetch related data
       websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
-      const [allLoanAdvances, flexiBenefits, latestOvertime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays,manualArrears,compensation,statutoryBenefis] =
+      const [allLoanAdvances, flexiBenefits, latestOvertime, incomeTax, statutoryDetails, attendanceSummary, variablePays, fixedPays, manualArrears, compensation, statutoryBenefis] =
         await Promise.all([
           PayrollFNFLoanAdvance.find({
             payrollFNFUser: payrollUser._id,
@@ -4094,10 +4141,10 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(
         req,
         `Fetched data for payrollUser: ${payrollUser._id} - ` +
-          `LoanAdvances: ${allLoanAdvances.length}, FlexiBenefits: ${flexiBenefits}, ` +
-          `Overtime: ${latestOvertime}, IncomeTax: ${incomeTax}, ` +
-          `StatutoryDetails: ${statutoryDetails}, AttendanceSummary: ${attendanceSummary}, ` +
-          `VariablePays: ${variablePays.length}, FixedPays: ${fixedPays}`,
+        `LoanAdvances: ${allLoanAdvances.length}, FlexiBenefits: ${flexiBenefits}, ` +
+        `Overtime: ${latestOvertime}, IncomeTax: ${incomeTax}, ` +
+        `StatutoryDetails: ${statutoryDetails}, AttendanceSummary: ${attendanceSummary}, ` +
+        `VariablePays: ${variablePays.length}, FixedPays: ${fixedPays}`,
         constants.LOG_TYPES.INFO
       );
 
@@ -4116,7 +4163,7 @@ exports.getAllGeneratedFNFPayroll = catchAsync(async (req, res, next) => {
         `Calculated salary for payrollUser: ${payrollUser._id} - Monthly: ${monthlySalary}, Yearly: ${yearlySalary}`,
         constants.LOG_TYPES.TRACE
       );
-console.log(incomeTax);
+      console.log(incomeTax);
       // Create allowance and deduction lists
       websocketHandler.sendLog(req, `Creating lists for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
       const fixedAllowancesList = fixedPays
@@ -4146,7 +4193,7 @@ console.log(incomeTax);
           year: vp.year || 0,
           company: vp.company
         }));
-console.log(variablePays);
+      console.log(variablePays);
       const variableAllowancesList = variablePays
         .filter(vp => vp.variableAllowance)
         .map(vp => ({
@@ -4181,15 +4228,15 @@ console.log(variablePays);
       const totalVariableAllowance = variableAllowancesList.reduce((sum, vp) => sum + (vp.amount || 0), 0);
       const totalVariableDeduction = variableDeductionsList.reduce((sum, vp) => sum + (vp.amount || 0), 0);
       const userLoanAdvances = allLoanAdvances.reduce((sum, loan) => sum + (loan?.disbursementAmount || 0), 0);
-     
+
       websocketHandler.sendLog(
         req,
         `Generated lists and totals for payrollUser: ${payrollUser._id} - ` +
-          `Fixed Allowances: ${fixedAllowancesList.length}, Fixed Deductions: ${fixedDeductionsList.length}, ` +
-          `Variable Allowances: ${variableAllowancesList.length}, Variable Deductions: ${variableDeductionsList.length}, ` +
-          `Total Fixed Allowance: ${totalFixedAllowance}, Total Fixed Deduction: ${totalFixedDeduction}, ` +
-          `Total Variable Allowance: ${totalVariableAllowance}, Total Variable Deduction: ${totalVariableDeduction}, ` +
-          `Total Loan Advances: ${userLoanAdvances}`,
+        `Fixed Allowances: ${fixedAllowancesList.length}, Fixed Deductions: ${fixedDeductionsList.length}, ` +
+        `Variable Allowances: ${variableAllowancesList.length}, Variable Deductions: ${variableDeductionsList.length}, ` +
+        `Total Fixed Allowance: ${totalFixedAllowance}, Total Fixed Deduction: ${totalFixedDeduction}, ` +
+        `Total Variable Allowance: ${totalVariableAllowance}, Total Variable Deduction: ${totalVariableDeduction}, ` +
+        `Total Loan Advances: ${userLoanAdvances}`,
         constants.LOG_TYPES.INFO
       );
       // Return the processed data
@@ -4201,7 +4248,7 @@ console.log(variablePays);
             id: payrollUser?.user?._id
           }
         },
-        attendanceSummary,latestOvertime,
+        attendanceSummary, latestOvertime,
         fixedAllowancesList,
         fixedDeductionsList,
         variableAllowancesList,
@@ -4214,7 +4261,7 @@ console.log(variablePays);
         yearlySalary: yearlySalary || 0,
         monthlySalary: monthlySalary || 0,
         payroll: payrolls.find(p => p._id.equals(payrollUser.payrollFNF)),
-        manualArrears,compensation,statutoryBenefis,
+        manualArrears, compensation, statutoryBenefis,
         statutoryDetails,
         userEmployment,
         incomeTax
@@ -4308,10 +4355,10 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
 
       // Calculate monthly and yearly salary
       let monthlySalary = 0;
-      let yearlySalary = 0;   
+      let yearlySalary = 0;
       websocketHandler.sendLog(req, `Fetching related data for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
-        // Fetch related data
-      const [fixedAllowances,fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary,manualArrears,compensation,statutoryBenefis] = await Promise.all([
+      // Fetch related data
+      const [fixedAllowances, fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary, manualArrears, compensation, statutoryBenefis] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
         PayrollFNFVariablePay.find({ payrollFNFUser: payrollFNFUser._id }),
@@ -4324,7 +4371,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         PayrollFNFManualArrears.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
         PayrollFNFTerminationCompensation.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
         PayrollFNFStatutoryBenefits.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 })
-      ]);     
+      ]);
       console.log(fixedAllowances);
       const allowancePromises = fixedAllowances.map(async (allowance) => {
         console.log(allowance.fixedAllowance);
@@ -4366,31 +4413,31 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       // Calculate totals
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (Number(fa.monthlyAmount) || 0), 0);
       const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (Number(fd.monthlyAmount) || 0), 0);
-         const totalVariableAllowance = variablePays
+      const totalVariableAllowance = variablePays
         .filter(vp => vp.variableAllowance)
         .reduce((sum, vp) => sum + (Number(vp.amount) || 0), 0);
       const totalVariableDeduction = variablePays
         .filter(vp => vp.variableDeduction)
         .reduce((sum, vp) => sum + (Number(vp.amount) || 0), 0);
       monthlySalary = Number(totalFixedAllowance) + Number(totalVariableAllowance);
-      
-       yearlySalary = monthlySalary * 12;
-     const totalEmployerStatutoryContribution = statutoryDetails
+
+      yearlySalary = monthlySalary * 12;
+      const totalEmployerStatutoryContribution = statutoryDetails
         .filter(item => item.ContributorType === 'Employer')
         .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
       const totalEmployeeStatutoryDeduction = statutoryDetails
         .filter(item => item.ContributorType === 'Employee')
         .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-     const totalLoanRepayment = allLoanAdvances
+      const totalLoanRepayment = allLoanAdvances
         .filter(loan => loan.type === 'Repayment')
         .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
       const totalFlexiBenefits = Number(flexiBenefits?.TotalFlexiBenefitAmount) || 0;
-     const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
-     const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;
-     // Calculate total CTC, gross salary, and take-home
+      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
+      const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
+      // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
       const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits);
-     
+
       const totalTakeHome = totalGrossSalary - (
         Number(totalFixedDeduction) +
         Number(totalVariableDeduction) +
@@ -4399,7 +4446,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         Number(totalLoanRepayment) +
         Number(totalIncomeTax)
       );
-     websocketHandler.sendLog(req, `Updating PayrollFNFUsers document for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
+      websocketHandler.sendLog(req, `Updating PayrollFNFUsers document for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Update PayrollFNFUsers document with calculated values
       await PayrollFNFUsers.updateOne(
@@ -4464,7 +4511,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   const payrollId = req.params.payroll; // Get payroll ID from URL
 
   websocketHandler.sendLog(req, 'Starting getAllGeneratedPayrollByPayrollId process', constants.LOG_TYPES.INFO);
-
+  console.log("hello3");
   // Validate payrollId
   if (!payrollId || !mongoose.isValidObjectId(payrollId)) {
     websocketHandler.sendLog(req, `Invalid payrollId: ${payrollId}`, constants.LOG_TYPES.WARN);
@@ -4475,7 +4522,7 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   }
 
   websocketHandler.sendLog(req, `Fetching payroll users for payrollId: ${payrollId}`, constants.LOG_TYPES.TRACE);
-
+  console.log("helllo2");
   // Step 1: Fetch PayrollUsers for the given payroll ID
   const payrollUsers = await PayrollUsers.find({ payroll: payrollId })
     .populate({
@@ -4516,7 +4563,6 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
   const salaryDetailsList = await EmployeeSalaryDetails.find({ user: { $in: userIds } })
     .sort({ createdAt: -1 }) // Changed from length to createdAt for consistency
     .populate({ path: 'user', select: 'firstName lastName email' });
-
   // Step 2: Process each PayrollUser and save calculated values
   const generatedPayrollList = await Promise.all(
     payrollUsers.map(async (payrollUser) => {
@@ -4530,27 +4576,25 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       }
 
       // Calculate monthly and yearly salary
-    
 
-           websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
+
+      websocketHandler.sendLog(req, `Fetching related data for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
       // Fetch related data
-      const [fixedAllowances, fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary,manualArrears] = await Promise.all([
+      const [fixedAllowances, fixedDeductions, variablePays, allLoanAdvances, flexiBenefits, overtime, incomeTax, statutoryDetails, attendanceSummary, manualArrears] = await Promise.all([
         SalaryComponentFixedAllowance.find({ employeeSalaryDetails: userSalary._id }),
         SalaryComponentFixedDeduction.find({ employeeSalaryDetails: userSalary._id }),
-        PayrollVariablePay.find({ payrollUser: payrollUser._id }),     
+        PayrollVariablePay.find({ payrollUser: payrollUser._id }),
         PayrollLoanAdvance.find({ payrollUser: payrollUser._id }),
         PayrollFlexiBenefitsPFTax.find({ PayrollUser: payrollUser._id }),
-        PayrollOvertime.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
-        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),,
+        PayrollOvertime.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
+        PayrollIncomeTax.find({ PayrollUser: payrollUser._id }).sort({ _id: -1 }),
         PayrollStatutory.find({ payrollUser: payrollUser._id }),
-        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }).sort({ _id: -1 }),,
-        PayrollManualArrears.find({ payrollUser: payrollUser._id })     
+        PayrollAttendanceSummary.find({ payrollUser: payrollUser._id }).sort({ _id: -1 }),
+        PayrollManualArrears.find({ payrollUser: payrollUser._id })
       ]);
-    console.log(fixedAllowances);
       // Store fixed allowances in PayrollVariablePay
       const allowancePromises = fixedAllowances.map(async (allowance) => {
-        console.log(allowance.fixedAllowance);
         return PayrollFixedPay.findOneAndUpdate(
           {
             payrollUser: payrollUser._id,
@@ -4587,17 +4631,17 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       // Execute all storage operations
       await Promise.all([...allowancePromises, ...deductionPromises]);
-        // Calculate totals
+      // Calculate totals
       const totalFixedAllowance = fixedAllowances.reduce((sum, fa) => sum + (fa.monthlyAmount || 0), 0);
       const totalFixedDeduction = fixedDeductions.reduce((sum, fd) => sum + (fd.monthlyAmount || 0), 0);
-       
-      const totalVariableAllowance = variablePays
-      .filter(vp => vp.variableAllowance) // Only include entries with variableAllowance
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
-    const totalVariableDeduction = variablePays
-      .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
-      .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      const totalVariableAllowance = variablePays
+        .filter(vp => vp.variableAllowance)
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+
+      const totalVariableDeduction = variablePays
+        .filter(vp => vp.variableDeduction)
+        .reduce((sum, vp) => sum + (vp.amount || 0), 0);
 
       monthlySalary = totalFixedAllowance + totalVariableAllowance;
       yearlySalary = monthlySalary * 12;
@@ -4619,17 +4663,14 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
 
       const totalFlexiBenefits = flexiBenefits
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
-        const totalManualArrears = manualArrears
-        .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);    
-      const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
-      console.log('Total Overtime:', totalOvertime);
-      console.log('Income Tax:', incomeTax);
-      const totalIncomeTax =  incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated): 0;
-      console.log('Total Income Tax:', totalIncomeTax);
+      const totalManualArrears = manualArrears
+        .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);
+      const totalOvertime = overtime && overtime.OvertimeAmount ? overtime.OvertimeAmount : 0;
+      const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
       // Calculate total CTC, gross salary, and take-home
-      const totalCTC = (totalFixedAllowance)*12;
+      const totalCTC = (totalFixedAllowance) * 12;
       const totalGrossSalary = totalFixedAllowance;
-      const totalTakeHome = (totalGrossSalary + totalLoanDisbursed+totalOvertime+totalVariableAllowance+totalFlexiBenefits+totalManualArrears) - (totalFixedDeduction +totalVariableDeduction+ totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
+      const totalTakeHome = (totalGrossSalary + totalLoanDisbursed + totalOvertime + totalVariableAllowance + totalFlexiBenefits + totalManualArrears) - (totalFixedDeduction + totalVariableDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -5102,11 +5143,57 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
+ const { month, year } = req.body;
+
+  if (month === undefined || year === undefined) {
+    websocketHandler.sendLog(req, 'Month or year not provided in request body', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.missingMonthOrYear'), 400));
+  }
+
+  // Check for existing payroll for the same month, year, and company
+  const existingPayroll = await PayrollFNF.findOne({ company: companyId, month, year });
+
+  if (existingPayroll) {
+    websocketHandler.sendLog(req, `Payroll FNF already exists for ${month}/${year}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('payroll.alreadyExists'), 400));
+  }
 
   // Add companyId to the request body
   req.body.company = companyId;
   req.body.status = constants.Payroll_FNF_Status.InProgress;
   const payrollFNF = await PayrollFNF.create(req.body);
+  const yearStr = year.toString();
+
+const monthStr = constants.monthMap[month];
+
+if (!monthStr) {
+  console.error(`❌ Invalid month name provided: ${month}`);
+  return next(new AppError('Invalid month name', 400));
+}
+console.log('🔄 Starting AttendanceProcess update...');
+console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+console.log(`🏢 companyId: ${companyId}`);
+console.log(`🧾 isFNF: false`);
+console.log(`✅ Setting exportToPayroll: true`);
+
+const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+  {
+    attendanceProcessPeriodYear: yearStr,
+    attendanceProcessPeriodMonth: monthStr,
+    company: companyId,
+    isFNF: true
+  },
+  { exportToPayroll: true },
+  { new: true }
+);
+
+console.log(updatedAttendance);
+  if (!updatedAttendance) {
+    websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
+  } else {
+    websocketHandler.sendLog(req, `Updated AttendanceProcess exportToPayroll for ${month}/${year}`, constants.LOG_TYPES.INFO);
+  }
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNF

@@ -17,5 +17,13 @@ var attendanceProcessUersSchema = new Schema({
     required: true
   }
   }, { collection: 'AttendanceProcessUsers' });
+
+ attendanceProcessUersSchema.pre(/^find/,async function(next) {
+    this.populate({
+      path: 'user',
+      select: 'id firstName lastName'
+    })
+    next();
+  });
   module.exports = mongoose.model('AttendanceProcessUsers', attendanceProcessUersSchema);
 
