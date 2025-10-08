@@ -1234,7 +1234,8 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
     try {
       leaveAssigned.leaveRemaining -= leaveDays;
-      leaveAssigned.leaveTaken += leaveDays;
+      //leaveAssigned.leaveTaken += leaveDays;
+      leaveAssigned.leaveApplied += leaveDays;
       await leaveAssigned.save();
 
       //const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
@@ -1358,28 +1359,33 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     }
     else {
       try {
-
-        console.log("company id." + req.cookies.companyId);
-        console.log("employee id." + updatedLeaveApplication.user._id?.toString());
-        // Check if the status is 'Cancelled' or 'Rejected'
+        const leaveDays = calculateLeaveDays(startDate, endDate);
+        const cycle = await scheduleController.createFiscalCycle();
+        const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
+        
         if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
-          const leaveDays = calculateLeaveDays(startDate, endDate);
-          const cycle = await scheduleController.createFiscalCycle();
-          const leaveAssigned = await LeaveAssigned.findOne({ employee: req.body.employee, cycle: cycle, category: req.body.leaveCategory });
-
+          //const leaveDays = calculateLeaveDays(startDate, endDate);
+          //const cycle = await scheduleController.createFiscalCycle();
+          //const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
           // Deduct the applied leave days from the leave remaining
           leaveAssigned.leaveRemaining += leaveDays;
-          leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count
+          //leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count)
+          leaveAssigned.leaveApplied -= leaveDays; // Update the leave applied count
 
           // Save the updated leave assigned record
           await leaveAssigned.save();
-          sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
-          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
+          //sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
+          sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
+          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
-          sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
-          SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.user._id?.toString(), req.cookies.companyId, req);
-
+          console.log(`Leave approved, updating leave balance... ${startDate} # ${endDate} # ${leaveDays}`);
+          leaveAssigned.leaveTaken += leaveDays;
+          leaveAssigned.leaveApplied -= leaveDays;
+          await leaveAssigned.save();
+          //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
+          sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
+          SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
         }
       }
       catch (error) {
@@ -1582,7 +1588,7 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
       const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
 
       leaveAssigned.leaveRemaining += leaveDays;
-      leaveAssigned.leaveTaken -= leaveDays;
+      leaveAssigned.leaveApplied -= leaveDays;
       await leaveAssigned.save();
     }
 
