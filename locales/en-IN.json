@@ -445,7 +445,7 @@
     "invalidUser": "The user provided is invalid.",
     "leaveGrantDateExists": "A leave grant for the same user and date already exists.",
     "leaveApplicationNotFound": "The employee leave application was not found.",
-    "leaveAssignmentNotExist": "The leave assignment does not exist. You cannot apply for a leave.",
+    "leaveAssignmentNotExist": "The leave is not assigned for this category or is not within the valid range. Please check leave balance.",
     "insufficientLeaveBalance": "There is insufficient leave balance to apply for this leave.",
     "shortLeaveNotFound": "The short leave was not found.",
     "AttachmentPropertiesMustBeProvided": "All attachment properties must be provided.",
