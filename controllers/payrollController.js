@@ -4368,13 +4368,11 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         PayrollFNFIncomeTax.findOne({ PayrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
         PayrollFNFStatutory.find({ payrollFNFUser: payrollFNFUser._id }),
         PayrollFNFAttendanceSummary.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
-        PayrollFNFManualArrears.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
+        PayrollFNFManualArrears.findOne({ payrollFNFUser: payrollFNFUser._id }),
         PayrollFNFTerminationCompensation.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 }),
         PayrollFNFStatutoryBenefits.findOne({ payrollFNFUser: payrollFNFUser._id }).sort({ _id: -1 })
       ]);
-      console.log(fixedAllowances);
       const allowancePromises = fixedAllowances.map(async (allowance) => {
-        console.log(allowance.fixedAllowance);
         return PayrollFNFFixedPay.findOneAndUpdate(
           {
             payrollFNFUser: payrollFNFUser._id,
@@ -4434,10 +4432,10 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       const totalFlexiBenefits = Number(flexiBenefits?.TotalFlexiBenefitAmount) || 0;
       const totalOvertime = overtime && overtime.OvertimeAmount ? Number(overtime.OvertimeAmount) : 0;
       const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
+      const totalManualArrears = (manualArrears && manualArrears.totalArrears) ? Number(manualArrears.totalArrears) : 0;
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
       const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits);
-
       const totalTakeHome = totalGrossSalary - (
         Number(totalFixedDeduction) +
         Number(totalVariableDeduction) +
@@ -4448,7 +4446,6 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       );
       websocketHandler.sendLog(req, `Updating PayrollFNFUsers document for payrollFNFUser: ${payrollFNFUser._id}`, constants.LOG_TYPES.TRACE);
 
-      // Update PayrollFNFUsers document with calculated values
       await PayrollFNFUsers.updateOne(
         { _id: payrollFNFUser._id },
         {
@@ -4461,6 +4458,7 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
             totalEmployeeStatutoryDeduction,
             totalLoanRepayment,
             totalFlexiBenefits,
+            totalManualArrears,
             totalCTC,
             totalGrossSalary,
             totalTakeHome
