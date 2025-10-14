@@ -1233,7 +1233,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     try {
-      leaveAssigned.leaveRemaining -= leaveDays;
+      leaveAssigned.leaveRemaining = Math.max(leaveAssigned.leaveRemaining - leaveDays);
       //leaveAssigned.leaveTaken += leaveDays;
       leaveAssigned.leaveApplied += leaveDays;
       await leaveAssigned.save();
@@ -1369,8 +1369,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           //const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
           // Deduct the applied leave days from the leave remaining
           leaveAssigned.leaveRemaining += leaveDays;
-          //leaveAssigned.leaveTaken -= leaveDays; // Update the leave taken count)
-          leaveAssigned.leaveApplied -= leaveDays; // Update the leave applied count
+          leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays); // Update the leave applied count
 
           // Save the updated leave assigned record
           await leaveAssigned.save();
@@ -1381,7 +1380,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
           console.log(`Leave approved, updating leave balance... ${startDate} # ${endDate} # ${leaveDays}`);
           leaveAssigned.leaveTaken += leaveDays;
-          leaveAssigned.leaveApplied -= leaveDays;
+          leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
           await leaveAssigned.save();
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
           sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
@@ -1588,7 +1587,7 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
       const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
 
       leaveAssigned.leaveRemaining += leaveDays;
-      leaveAssigned.leaveApplied -= leaveDays;
+      leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
       await leaveAssigned.save();
     }
 
