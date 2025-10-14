@@ -2384,8 +2384,228 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
   }
 };
 
-// Controller function to handle the upload and processing of attendance JSON data
+const cornMappedTimlogToAttendance = async (company) => {
+  const month =new Date().getMonth(); // +1 since getMonth is 0-based
+  const year = new Date().getFullYear();
+  const companyId = company.companyId;
+
+  if (!companyId) {
+    const errorMessage = 'Company ID not found';
+    throw new Error(errorMessage);
+  }
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+  const filter = { status: 'Active', company: companyId };
+
+  const users = await User.find(filter);
+
+  await Promise.all(users.map(async (user) => {
+    const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
+    if (!shiftAssignment) {
+      return;
+    }
+
+    const shift = await Shift.findOne({ _id: shiftAssignment.template });
+    if (!shift) {
+      return;
+    }
+
+    const timeLogs = await TimeLog.aggregate([
+      { $match: { user: user._id, date: { $gte: startDate, $lte: endDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+          startTime: { $min: '$startTime' },
+          lastTimeLog: { $max: '$endTime' },
+        },
+      },
+    ]);
+
+    if (!timeLogs.length) {
+      return;
+    }
+
+    const attendanceRecords = await Promise.all(timeLogs.map(async (log) => {
+      const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
+      if (attendanceCount > 0) {
+        return null;
+      }
+      const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
+      let shiftTiming = '';
+      let deviationHour = '0';
+      let isOvertime = false;
+      if (shift.startTime && shift.endTime && shift.minHoursPerDayToGetCreditForFullDay) {
+        const [hours, minutes] = shift.minHoursPerDayToGetCreditForFullDay.split(':').map(Number);
+        const timeDifference = hours * 60;
+        const timeWorked = timeLogCount * 10;
+        if (timeWorked < timeDifference) {
+          deviationHour = (timeDifference - timeWorked).toString();
+        } else if (timeWorked > timeDifference) {
+          deviationHour = (timeWorked - timeDifference).toString();
+          isOvertime = true;
+        }
+      }
+      const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+      return {
+        date: new Date(log._id),
+        checkIn: log.startTime,
+        checkOut: log.lastTimeLog,
+        user: user._id,
+        duration: timeLogCount * 10,
+        ODHours: 0,
+        SSLHours: 0,
+        beforeProcessing: 'N/A',
+        afterProcessing: 'N/A',
+        earlyLateStatus: 'N/A',
+        deviationHour,
+        shiftTiming: `${shift.startTime} - ${shift.endTime}`,
+        attendanceShift: shift._id,
+        lateComingRemarks,
+        company: companyId,
+        isOvertime,
+      };
+    }));
+
+    const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
+
+    if (attendanceRecordsFiltered.length > 0) {
+      console.log(`Inserting ${attendanceRecordsFiltered.length} attendance records for user: ${user._id}`);
+      await insertAttendanceRecords(attendanceRecordsFiltered);
+      await insertOvertimeRecords(attendanceRecordsFiltered, companyId);
+    }
+  }));
+};
+
+// Controller function to handle the upload and processing of attendance single record.
 exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting single attendance upload', constants.LOG_TYPES.INFO);
+
+  const { EmpCode, StartTime, EndTime, Date } = req.body;
+
+  // Validate input
+  if (!EmpCode || !StartTime || !EndTime || !Date) {
+    websocketHandler.sendLog(req, 'Invalid input: missing required fields', constants.LOG_TYPES.ERROR);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('attendance.invalidAttendanceJSONFormat'),
+    });
+  }
+
+  try {
+    websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
+
+    const user = await getUserByEmpCode(EmpCode, req.cookies.companyId);
+    if (!user) {
+      websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode,
+        message: req.t('attendance.empCodeNotValid'),
+      });
+    }
+
+    const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req);
+
+    if (!attendanceRecord) {
+      websocketHandler.sendLog(req, `Failed to process record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.ERROR);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode,
+        message: req.t('attendance.recordProcessingFailed'),
+      });
+    }
+
+    await insertAttendanceRecords([attendanceRecord]);
+    await insertOvertimeRecords([attendanceRecord], req.cookies.companyId);
+
+    websocketHandler.sendLog(req, `Successfully processed attendance for EmpCode: ${EmpCode}`, constants.LOG_TYPES.INFO);
+
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      EmpCode,
+      message: req.t('attendance.uploadAttendanceJSONSuccess'),
+    });
+
+  } catch (error) {
+    websocketHandler.sendLog(req, `Error processing attendance record: ${error.message}`, constants.LOG_TYPES.ERROR);
+    return res.status(200).json({
+      status: constants.APIResponseStatus.Failure,
+      EmpCode: req.body.EmpCode,
+      message: error.message || req.t('attendance.uploadAttendanceJSONFailure'),
+    });
+  }
+});
+// exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
+//   websocketHandler.sendLog(req, 'Starting uploadAttendanceJSON', constants.LOG_TYPES.INFO);
+
+//   const attendanceData = req.body;
+//   websocketHandler.sendLog(req, `Received attendance data with ${attendanceData.length} records`, constants.LOG_TYPES.TRACE);
+
+//   if (!Array.isArray(attendanceData)) {
+//     websocketHandler.sendLog(req, 'Invalid format: Data is not an array', constants.LOG_TYPES.ERROR);
+//     return res.status(400).json({
+//       status: constants.APIResponseStatus.Failure,
+//       message: req.t('attendance.invalidAttendanceJSONFormat'),
+//     });
+//   }
+
+//   try {
+//     const results = [];
+//     const attendanceRecords = [];
+
+//     for (let i = 0; i < attendanceData.length; i++) {
+//       const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
+//       websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
+//       try {
+//         const user = await getUserByEmpCode(EmpCode, req.cookies.companyId);
+//         if (!user) {
+//           websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
+//           return next(new AppError(req.t('attendance.empCodeNotValid'), 400));
+//         }
+//         const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req);
+//         if (attendanceRecord) {
+//           attendanceRecords.push(attendanceRecord);
+//           websocketHandler.sendLog(req, `Processed attendance record for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
+//         }
+//       } catch (err) {
+//         websocketHandler.sendLog(req, `Error processing record for EmpCode ${EmpCode}: ${err.message}`, constants.LOG_TYPES.ERROR);
+//         results.push({EmpCode, status: 'failure', message: err.message || 'Unknown error'});
+//       }
+//     }
+
+//     if (attendanceRecords.length > 0) {
+//       try {
+//         await insertAttendanceRecords(attendanceRecords);
+//         await insertOvertimeRecords(attendanceRecords, req.cookies.companyId);
+//         websocketHandler.sendLog(req, `Inserted ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.INFO);
+//       } catch (insertErr) {
+//         websocketHandler.sendLog(req, `Database insert error: ${insertErr.message}`, constants.LOG_TYPES.ERROR);
+//         results.push({ EmpCode: 'ALL', status: 'failure', message: `Database insert error: ${insertErr.message}`});
+//       }
+//     }
+//     // else {
+//     //   return next(new AppError(req.t('attendance.uploadAttendanceJSONNoData'), 400));
+//     // }
+
+//     websocketHandler.sendLog(req, 'Successfully processed attendance records', constants.LOG_TYPES.INFO);
+
+//     res.status(200).json({
+//       status: constants.APIResponseStatus.Success,
+//       message: req.t('attendance.uploadAttendanceJSONSuccess'),
+//       data: attendanceRecords,
+//     });
+//   } catch (error) {
+//     if (error instanceof AppError) {
+//       return next(error);
+//     }
+//     websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
+//   }
+// });
+
+// Controller function to handle the upload and processing of attendance JSON data.
+exports.uploadAttendanceJSONBackup = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting uploadAttendanceJSON', constants.LOG_TYPES.INFO);
 
   const attendanceData = req.body;
@@ -2535,7 +2755,7 @@ async function getLateComingRemarks(userId, logId) {
 }
 async function insertOvertimeRecords(attendanceRecords, companyId) {
   const overtimeRecords = attendanceRecords
-    .filter(record => record.isOvertime)
+    //.filter(record => record.isOvertime)
     .map(record => ({
       User: record.user, // Replace with appropriate user name
       attendanceShift: record.attendanceShift,
@@ -2547,6 +2767,7 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
       CheckInTime: record.checkIn,
       CheckOutTime: record.checkOut,
       company: companyId,
+      isOvertime: record.isOvertime
     }));
 
   // Remove duplicates within the array based on Date, User, and AttendanceShift
@@ -2556,30 +2777,109 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
     )).values()
   );
 
-  // Check for existing records in the database to avoid duplicates
-  if (uniqueOvertimeRecords.length) {
-    // Fetch existing records from the database that match the User, AttendanceShift, and Date
-    const existingRecords = await OvertimeInformation.find({
-      User: { $in: uniqueOvertimeRecords.map(record => record.User) },
-      attendanceShift: { $in: uniqueOvertimeRecords.map(record => record.attendanceShift) },
-      Date: { $in: uniqueOvertimeRecords.map(record => record.Date) },
-    });
+  if (!uniqueOvertimeRecords.length) return;
 
-    // Filter out records that already exist in the database
-    const newRecords = uniqueOvertimeRecords.filter(record =>
-      !existingRecords.some(existing =>
-        existing.User.toString() === record.User.toString() &&
-        existing.attendanceShift.toString() === record.attendanceShift.toString() &&
-        existing.Date === record.Date
-      )
-    );
+  try {
+    for (const record of uniqueOvertimeRecords) {
+      const startOfDay = new Date(record.Date);
+      startOfDay.setHours(0, 0, 0, 0);
+      // Find an existing record for same user, shift, and date
+      const existingRecord = await OvertimeInformation.findOne({
+        User: record.User,
+        attendanceShift: record.attendanceShift,
+        CheckInDate: startOfDay
+      });
 
-    // Insert only new records
-    if (newRecords.length) {
-      await OvertimeInformation.insertMany(newRecords);
+      const isInvalid = (time) => !time || time === '0:00' || time === '00:00';
+      if (isInvalid(record.CheckInTime) && isInvalid(record.CheckOutTime)) {
+        // Case 1: Both times missing or invalid → use "10:00"
+        record.CheckInTime = '10:00';
+        record.CheckOutTime = '10:00';
+        record.OverTime = '0';
+        record.isOvertime = false;
+      } else if (isInvalid(record.CheckInTime)) {
+        // Case 2: Only CheckInTime invalid → use CheckOutTime
+        record.CheckInTime = record.CheckOutTime;
+        record.OverTime = '0';
+        record.isOvertime = false;
+      } else if (isInvalid(record.CheckOutTime)) {
+        // Case 3: Only CheckOutTime invalid → use CheckInTime
+        record.CheckOutTime = record.CheckInTime;
+        record.OverTime = '0';
+        record.isOvertime = false;
+      }
+
+      if (!existingRecord) {
+        await OvertimeInformation.create(record);
+      } else {
+          existingRecord.CheckInTime = record.CheckInTime;
+          existingRecord.CheckOutTime = record.CheckOutTime;
+          existingRecord.ShiftTime = record.ShiftTime;
+          existingRecord.CheckInDate = record.CheckInDate;
+          existingRecord.CheckOutDate = record.CheckOutDate;
+          existingRecord.company = record.company;
+
+          if(record.isOvertime) {
+            existingRecord.OverTime = record.OverTime;
+          }
+          else{
+            existingRecord.OverTime = '0';
+          }
+          await existingRecord.save();
+      }
     }
-  }
+  } catch (error) {
+    console.error('Error inserting or updating overtime records:', error);
+  } 
 }
+
+// async function insertOvertimeRecordsBackup(attendanceRecords, companyId) {
+//   const overtimeRecords = attendanceRecords
+//     .filter(record => record.isOvertime)
+//     .map(record => ({
+//       User: record.user, // Replace with appropriate user name
+//       attendanceShift: record.attendanceShift,
+//       OverTime: record.deviationHour,
+//       ShiftTime: record.shiftTiming,
+//       Date: record.date,
+//       CheckInDate: record.date,
+//       CheckOutDate: record.date,
+//       CheckInTime: record.checkIn,
+//       CheckOutTime: record.checkOut,
+//       company: companyId,
+//     }));
+
+//   // Remove duplicates within the array based on Date, User, and AttendanceShift
+//   const uniqueOvertimeRecords = Array.from(
+//     new Map(overtimeRecords.map(record =>
+//       [`${record.User}-${record.attendanceShift}-${record.Date}`, record]
+//     )).values()
+//   );
+
+//   // Check for existing records in the database to avoid duplicates
+//   if (uniqueOvertimeRecords.length) {
+//     // Fetch existing records from the database that match the User, AttendanceShift, and Date
+//     const existingRecords = await OvertimeInformation.find({
+//       User: { $in: uniqueOvertimeRecords.map(record => record.User) },
+//       attendanceShift: { $in: uniqueOvertimeRecords.map(record => record.attendanceShift) },
+//       Date: { $in: uniqueOvertimeRecords.map(record => record.Date) },
+//     });
+
+//     // Filter out records that already exist in the database
+//     const newRecords = uniqueOvertimeRecords.filter(record =>
+//       !existingRecords.some(existing =>
+//         existing.User.toString() === record.User.toString() &&
+//         existing.attendanceShift.toString() === record.attendanceShift.toString() &&
+//         existing.Date === record.Date
+//       )
+//     );
+
+//     // Insert only new records
+//     if (newRecords.length) {
+//       await OvertimeInformation.insertMany(newRecords);
+//     }
+//   }
+// }
 
 // Insert attendanceRecords
 async function insertAttendanceRecords(attendanceRecords) {
@@ -2591,31 +2891,93 @@ async function insertAttendanceRecords(attendanceRecords) {
 
   // Insert records into the database, avoiding duplicates
   try {
-    // Assuming each attendance record has a unique combination of employeeId and date
-    const insertPromises = attendanceRecords.map(async (record) => {
-      // Check if the record already exists based on unique fields (e.g., employeeId, date)
+    for (const record of attendanceRecords) {
       const existingRecord = await AttendanceRecords.findOne({
         user: record.user,
         date: record.date
       });
 
-      // If no record exists, insert it
+      const isInvalid = (time) => !time || time === '0:00' || time === '00:00';
+      if (isInvalid(record.checkIn) && isInvalid(record.checkOut)) {
+        // Case 1: Both times missing or invalid → use "10:00"
+        record.checkIn = '10:00';
+        record.checkOut = '10:00';
+        record.isOvertime = false;
+        record.deviationHour = '0';
+        record.duration = 0;
+      } else if (isInvalid(record.checkIn)) {
+        // Case 2: Only checkIn invalid → use checkOut
+        record.checkIn = record.checkOut;
+        record.isOvertime = false;
+        record.deviationHour = '0';
+        record.duration = 0;
+      } else if (isInvalid(record.checkOut)) {
+        // Case 3: Only checkOut invalid → use checkIn
+        record.checkOut = record.checkIn;
+        record.isOvertime = false;
+        record.deviationHour = '0';
+        record.duration = 0;
+      }
+
       if (!existingRecord) {
         await AttendanceRecords.create(record);
-
       } else {
-        console.log('Duplicate found for record:', record);
+          existingRecord.checkIn = record.checkIn;
+          existingRecord.checkOut = record.checkOut;
+          existingRecord.duration = record.duration;
+          existingRecord.deviationHour = record.deviationHour;
+          existingRecord.isOvertime = record.isOvertime;
+          existingRecord.attendanceShift = record.attendanceShift;
+          existingRecord.shiftTiming = record.shiftTiming;
+          existingRecord.lateComingRemarks = record.lateComingRemarks;
+          existingRecord.company = record.company;
+          existingRecord.beforeProcessing = record.beforeProcessing;
+          existingRecord.afterProcessing = record.afterProcessing;
+          existingRecord.earlyLateStatus = record.earlyLateStatus;
+
+          await existingRecord.save();
       }
-    });
-
-    // Wait for all insertions to complete
-    await Promise.all(insertPromises);
-
-
+    }
   } catch (error) {
     console.error('Error inserting records:', error);
   }
 }
+
+// // Insert attendanceRecords
+// async function insertAttendanceRecords(attendanceRecords) {
+//   // Check if attendanceRecords is null or undefined and handle accordingly
+//   if (!attendanceRecords) {
+//     console.warn('No attendance records provided');
+//     return;
+//   }
+
+//   // Insert records into the database, avoiding duplicates
+//   try {
+//     // Assuming each attendance record has a unique combination of employeeId and date
+//     const insertPromises = attendanceRecords.map(async (record) => {
+//       // Check if the record already exists based on unique fields (e.g., employeeId, date)
+//       const existingRecord = await AttendanceRecords.findOne({
+//         user: record.user,
+//         date: record.date
+//       });
+
+//       // If no record exists, insert it
+//       if (!existingRecord) {
+//         await AttendanceRecords.create(record);
+
+//       } else {
+//         console.log('Duplicate found for record:', record);
+//       }
+//     });
+
+//     // Wait for all insertions to complete
+//     await Promise.all(insertPromises);
+
+
+//   } catch (error) {
+//     console.error('Error inserting records:', error);
+//   }
+// }
 
 function parseTime(timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
@@ -3203,7 +3565,12 @@ async function getOvertimeRecordsByYearAndMonth(year, month, companyId) {
     // Check if skip and limit are provided
 
     // Convert start and end date based on the year and month
-    const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
+
+    // const formattedMonth = String(month).padStart(2, '0');
+    // const startDate = moment(`${year}-${formattedMonth}-01`, 'YYYY-MM-DD').startOf('month').toDate();
+
+    const startDate = moment(`${year}-${month}-01`, 'YYYY-M-D').startOf('month').toDate();
+    // const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
     const endDate = moment(startDate).endOf('month').toDate();
     // Get all records for the month, applying skip and limit for pagination
     const records = await OvertimeInformation.find({
@@ -3395,3 +3762,13 @@ console.log({ year, month, companyId, isFNF: false });
     message: `Attendance process exists for ${month}/${year}`
   });
 });
+
+exports.MappedTimlogToAttendanceHelper = async () => {
+  let companies = await Company.find({}).select('_id');
+  for (let company of companies) {
+    console.log(`Processing company ID: ${company._id}`);
+    await cornMappedTimlogToAttendance({
+      companyId: company._id
+    });
+  }
+};

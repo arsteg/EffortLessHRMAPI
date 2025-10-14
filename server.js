@@ -64,7 +64,7 @@ cron.schedule('0 0 1 * *', async () => {
 cron.schedule('0 0 1 * *', async () => {
   try {
     await scheduleController.assignLeavesByJobs();
-    await attendanceController.MappedTimlogToAttendance();
+    await attendanceController.MappedTimlogToAttendanceHelper();
     console.log(`${currentTime}: This Job ran successfully.`);
 } catch (error) {
     console.error('Error occurred:', error);
