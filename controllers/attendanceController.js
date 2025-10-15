@@ -2334,11 +2334,12 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
                   }
                 }
                 const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
-
+                const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+                const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
                 return {
                   date: new Date(log._id),
-                  checkIn: log.startTime,
-                  checkOut: log.lastTimeLog,
+                  checkIn: checkInTime,
+                  checkOut: checkOutTime,
                   user: user._id,
                   duration: timeLogCount * 10,
                   ODHours: 0,
@@ -2428,9 +2429,9 @@ const cornMappedTimlogToAttendance = async (company) => {
 
     const attendanceRecords = await Promise.all(timeLogs.map(async (log) => {
       const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
-      if (attendanceCount > 0) {
-        return null;
-      }
+      // if (attendanceCount > 0) {
+      //   return null;
+      // }
       const timeLogCount = await TimeLog.countDocuments({ user: user._id, date: new Date(log._id) });
       let shiftTiming = '';
       let deviationHour = '0';
@@ -2447,10 +2448,12 @@ const cornMappedTimlogToAttendance = async (company) => {
         }
       }
       const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+      const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+      const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       return {
         date: new Date(log._id),
-        checkIn: log.startTime,
-        checkOut: log.lastTimeLog,
+        checkIn: checkInTime,
+        checkOut: checkOutTime,
         user: user._id,
         duration: timeLogCount * 10,
         ODHours: 0,
@@ -2781,13 +2784,11 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
 
   try {
     for (const record of uniqueOvertimeRecords) {
-      const startOfDay = new Date(record.Date);
-      startOfDay.setHours(0, 0, 0, 0);
       // Find an existing record for same user, shift, and date
       const existingRecord = await OvertimeInformation.findOne({
         User: record.User,
         attendanceShift: record.attendanceShift,
-        CheckInDate: startOfDay
+        CheckInDate: record.Date
       });
 
       const isInvalid = (time) => !time || time === '0:00' || time === '00:00';

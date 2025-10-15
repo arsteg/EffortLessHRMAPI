@@ -2861,33 +2861,33 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
 
   const payroll = await Payroll.create(req.body);
   websocketHandler.sendLog(req, `Payroll record created with ID: ${payroll._id}`, constants.LOG_TYPES.INFO);
-const yearStr = year.toString();
+  const yearStr = year.toString();
 
-const monthStr = constants.monthMap[month];
+  const monthStr = constants.monthMap[month];
 
-if (!monthStr) {
-  console.error(`❌ Invalid month name provided: ${month}`);
-  return next(new AppError('Invalid month name', 400));
-}
-console.log('🔄 Starting AttendanceProcess update...');
-console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
-console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
-console.log(`🏢 companyId: ${companyId}`);
-console.log(`🧾 isFNF: false`);
-console.log(`✅ Setting exportToPayroll: true`);
+  if (!monthStr) {
+    console.error(`❌ Invalid month name provided: ${month}`);
+    return next(new AppError('Invalid month name', 400));
+  }
+  console.log('🔄 Starting AttendanceProcess update...');
+  console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+  console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+  console.log(`🏢 companyId: ${companyId}`);
+  console.log(`🧾 isFNF: false`);
+  console.log(`✅ Setting exportToPayroll: true`);
 
-const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
-  {
-    attendanceProcessPeriodYear: yearStr,
-    attendanceProcessPeriodMonth: monthStr,
-    company: companyId,
-    isFNF: false
-  },
-  { exportToPayroll: true },
-  { new: true }
-);
+  const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+    {
+      attendanceProcessPeriodYear: yearStr,
+      attendanceProcessPeriodMonth: monthStr,
+      company: companyId,
+      isFNF: false
+    },
+    { exportToPayroll: true },
+    { new: true }
+  );
 
-console.log(updatedAttendance);
+  console.log(updatedAttendance);
   if (!updatedAttendance) {
     websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
   } else {
@@ -5141,7 +5141,7 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
   if (!companyId) {
     return next(new AppError(req.t('payroll.companyIdNotFound'), 400));
   }
- const { month, year } = req.body;
+  const { month, year } = req.body;
 
   if (month === undefined || year === undefined) {
     websocketHandler.sendLog(req, 'Month or year not provided in request body', constants.LOG_TYPES.WARN);
@@ -5162,31 +5162,31 @@ exports.addPayrollFNF = catchAsync(async (req, res, next) => {
   const payrollFNF = await PayrollFNF.create(req.body);
   const yearStr = year.toString();
 
-const monthStr = constants.monthMap[month];
+  const monthStr = constants.monthMap[month];
 
-if (!monthStr) {
-  console.error(`❌ Invalid month name provided: ${month}`);
-  return next(new AppError('Invalid month name', 400));
-}
-console.log('🔄 Starting AttendanceProcess update...');
-console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
-console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
-console.log(`🏢 companyId: ${companyId}`);
-console.log(`🧾 isFNF: false`);
-console.log(`✅ Setting exportToPayroll: true`);
+  if (!monthStr) {
+    console.error(`❌ Invalid month name provided: ${month}`);
+    return next(new AppError('Invalid month name', 400));
+  }
+  console.log('🔄 Starting AttendanceProcess update...');
+  console.log(`📅 attendanceProcessPeriodYear: ${yearStr}`);
+  console.log(`📅 attendanceProcessPeriodMonth: ${monthStr}`);
+  console.log(`🏢 companyId: ${companyId}`);
+  console.log(`🧾 isFNF: false`);
+  console.log(`✅ Setting exportToPayroll: true`);
 
-const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
-  {
-    attendanceProcessPeriodYear: yearStr,
-    attendanceProcessPeriodMonth: monthStr,
-    company: companyId,
-    isFNF: true
-  },
-  { exportToPayroll: true },
-  { new: true }
-);
+  const updatedAttendance = await AttendanceProcess.findOneAndUpdate(
+    {
+      attendanceProcessPeriodYear: yearStr,
+      attendanceProcessPeriodMonth: monthStr,
+      company: companyId,
+      isFNF: true
+    },
+    { exportToPayroll: true },
+    { new: true }
+  );
 
-console.log(updatedAttendance);
+  console.log(updatedAttendance);
   if (!updatedAttendance) {
     websocketHandler.sendLog(req, `No matching attendance process found for ${month}/${year} to update exportToPayroll`, constants.LOG_TYPES.WARN);
   } else {
@@ -5501,16 +5501,14 @@ exports.getAllPayrollFNFUsersByPayrollFNF = catchAsync(async (req, res, next) =>
   const payrollFNFUsers = await PayrollFNFUsers.find({ company: companyId, payrollFNF: req.body.payrollFNF })
     .skip(skip)
     .limit(limit);
-
   websocketHandler.sendLog(req, `Retrieved ${payrollFNFUsers.length} FNF users out of ${totalCount} total`, constants.LOG_TYPES.DEBUG);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFUsers,
-    total: totalCount,
+    total: totalCount
   });
 });
-
 
 // Fetch related records of user for attendance summary
 exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, next) => {
@@ -5632,12 +5630,11 @@ exports.getPayrollFNFAttendanceSummaryByUser = catchAsync(async (req, res, next)
 });
 // Get PayrollAttendanceSummary by payrollUser
 exports.getPayrollFNFAttendanceSummaryByPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
   // Extract _id values from payrollUsers payrollUserIds
   const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
   const payrollFNFAttendanceSummaries = await PayrollFNFAttendanceSummary.find({ payrollFNFUser: { $in: payrollFNFUserIds } });
-
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: payrollFNFAttendanceSummaries
