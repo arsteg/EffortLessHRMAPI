@@ -2811,7 +2811,9 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
       }
 
       if (!existingRecord) {
-        await OvertimeInformation.create(record);
+        if(record.isOvertime) {
+          await OvertimeInformation.create(record);
+        }
       } else {
           existingRecord.CheckInTime = record.CheckInTime;
           existingRecord.CheckOutTime = record.CheckOutTime;
