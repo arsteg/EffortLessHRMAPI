@@ -3209,6 +3209,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
     const isOnLeave = approvedLeaveDays.includes(dateStr);
     let wasUserPresent = false;
+    let wasHalfday = false;
 
     if(wasPresent){
       if (wasPresent.duration == 0) {
@@ -3219,15 +3220,18 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       } 
       else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
         wasUserPresent = true;
+        wasHalfday = true;
       } else {
         wasUserPresent = false;
       }
     }
 
-    if (!wasUserPresent && !isOnLeave) {
+    const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+
+    if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId }).save();
+        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
         websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${dateStr}`, constants.LOG_TYPES.INFO);
       } else {
         websocketHandler.sendLog(req, `LOP already exists for ${user} on ${dateStr}`, constants.LOG_TYPES.WARN);
