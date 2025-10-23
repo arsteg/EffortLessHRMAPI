@@ -934,8 +934,12 @@ const StoreAttendanceSummary = async (req, res) => {
         },
         user:req.user
       });
-     let lopDays=lopList.length;
-    if (!Number.isInteger(lopDays) || lopDays < 0 || lopDays > totalDays) {
+     //let lopDays=lopList.length;
+     let lopDays = lopList.reduce((total, lop) => {
+        return total + (lop.isHalfDay ? 0.5 : 1);
+      }, 0);
+    //if (!Number.isInteger(lopDays) || lopDays < 0 || lopDays > totalDays) {
+    if (lopDays < 0 || lopDays > totalDays) {
       throw new Error('Invalid LOP days returned');    }
     // Calculate payable days
     const payableDays = totalDays - lopDays;

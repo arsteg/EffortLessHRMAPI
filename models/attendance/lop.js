@@ -14,6 +14,10 @@ const lopSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company', // Assuming you have a Company model
         required: true,
+    },
+    isHalfDay: {
+        type: Boolean,
+        default: false // Optional: default value
     }
 }, {
     timestamps: true, // This adds createdAt and updatedAt fields

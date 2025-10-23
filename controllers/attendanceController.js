@@ -2811,7 +2811,9 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
       }
 
       if (!existingRecord) {
-        await OvertimeInformation.create(record);
+        if(record.isOvertime) {
+          await OvertimeInformation.create(record);
+        }
       } else {
           existingRecord.CheckInTime = record.CheckInTime;
           existingRecord.CheckOutTime = record.CheckOutTime;
@@ -3092,7 +3094,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const { user, month, year } = req.body;
     const companyId = req.cookies.companyId;
 
-    const { startOfMonth, endOfMonth } = getStartAndEndDates(year, month);
+    const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
 
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
       await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
@@ -3180,6 +3182,15 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }); 
+  let fullDayDuration = null;
+  let halfDayDuration = null;
+  let isHalfDayApplicable = false;
+  if (shiftAssignment?.template) {
+    fullDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditForFullDay * 60;
+    halfDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditforHalfDay * 60;
+    isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
+  }
   for (let day = 1; day <= daysInMonth; day++) {
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' });
@@ -3197,11 +3208,30 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const dateStr = currentDate.toISOString().split('T')[0];
     const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
     const isOnLeave = approvedLeaveDays.includes(dateStr);
+    let wasUserPresent = false;
+    let wasHalfday = false;
 
-    if (!wasPresent && !isOnLeave) {
+    if(wasPresent){
+      if (wasPresent.duration == 0) {
+        wasUserPresent = false;
+      }
+      else if (wasPresent.duration >= fullDayDuration) {
+        wasUserPresent = true;
+      } 
+      else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
+        wasUserPresent = true;
+        wasHalfday = true;
+      } else {
+        wasUserPresent = false;
+      }
+    }
+
+    const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+
+    if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId }).save();
+        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
         websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${dateStr}`, constants.LOG_TYPES.INFO);
       } else {
         websocketHandler.sendLog(req, `LOP already exists for ${user} on ${dateStr}`, constants.LOG_TYPES.WARN);
@@ -3357,9 +3387,9 @@ exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
 
-  const totalCount = await getLOPRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit);
+  const totalCount = await getLOPRecordsByYearAndMonth(req.cookies.companyId, req.body.year, req.body.month, skip, limit);
 
-  const attendanceRecords = await getLOPRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0);
+  const attendanceRecords = await getLOPRecordsByYearAndMonth(req.cookies.companyId, req.body.year, req.body.month, 0, 0);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -3369,7 +3399,7 @@ exports.GetProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
 });
 
-async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
+async function getLOPRecordsByYearAndMonth(companyId, year, month, skip = 0, limit = 0) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -3381,23 +3411,43 @@ async function getLOPRecordsByYearAndMonth(year, month, skip = 0, limit = 0) {
   // Fetch records from the database
   try {
     // Check if skip and limit are provided
+    const filter = {
+      date: { $gte: startDate, $lt: endDate },
+      company: new mongoose.Types.ObjectId(companyId)
+    };
+
+    // If skip or limit is provided, return count instead of full records
     if (skip > 0 || limit > 0) {
-      const count = await LOP.countDocuments({
-        date: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      }).exec();
+      const count = await LOP.countDocuments(filter).exec();
       return { count };
-    } else {
-      const records = await LOP.find({
-        date: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      }).skip(skip).limit(limit).exec();
-      return records;
     }
+
+    // Fetch records with optional pagination
+    const records = await LOP.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    return records;
+    // if (skip > 0 || limit > 0) {
+    //   const count = await LOP.countDocuments({
+    //     date: {
+    //       $gte: startDate,
+    //       $lt: endDate
+    //     },
+    //     company: companyId
+    //   }).exec();
+    //   return { count };
+    // } else {
+    //   const records = await LOP.find({
+    //     date: {
+    //       $gte: startDate,
+    //       $lt: endDate
+    //     },
+    //     company: companyId
+    //   }).skip(skip).limit(limit).exec();
+    //   return records;
+    // }
   } catch (error) {
     console.error('Error fetching records:', error);
     throw error; // Rethrow or handle error as needed
@@ -3594,9 +3644,9 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
   if (req.body.isFNF) {
     isFNF = req.body.isFNF;
   }
-  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.body.year, req.body.month, skip, limit, isFNF);
+  const totalCount = await getAttendanceProcessRecordsByYearAndMonth(req.cookies.companyId, req.body.year, req.body.month, skip, limit, isFNF);
 
-  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.body.year, req.body.month, 0, 0, isFNF);
+  const attendanceRecords = await getAttendanceProcessRecordsByYearAndMonth(req.cookies.companyId, req.body.year, req.body.month, 0, 0, isFNF);
   if (attendanceRecords) {
     for (var i = 0; i < attendanceRecords.length; i++) {
       const user = await AttendanceProcessUsers.find({}).where('attendanceProcess').equals(attendanceRecords[i]._id).select('user');
@@ -3616,7 +3666,7 @@ exports.GetProcessAttendance = catchAsync(async (req, res, next) => {
 
 });
 
-async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, limit = 0, isFNF = false) {
+async function getAttendanceProcessRecordsByYearAndMonth(companyId, year, month, skip = 0, limit = 0, isFNF = false) {
   // Validate input
   if (!year || !month) {
     throw new Error('Year and month are required');
@@ -3626,24 +3676,39 @@ async function getAttendanceProcessRecordsByYearAndMonth(year, month, skip = 0, 
   const endDate = new Date(year, month, 1); // Start of the next month
   // Fetch records from the database
   try {
+    const query = {
+      runDate: {
+        $gte: startDate,
+        $lt: endDate
+      },
+      isFNF: isFNF,
+      company: companyId // <-- Add company check here
+    };
     // Check if skip and limit are provided
     if (skip > 0 || limit > 0) {
-      const count = await AttendanceProcess.countDocuments({
-        runDate: {
-          $gte: startDate,
-          $lt: endDate
-        },
-        "isFNF": isFNF
-      }).exec();
+      const count = await AttendanceProcess.countDocuments(query).exec();
       return { count };
+      // const count = await AttendanceProcess.countDocuments({
+      //   runDate: {
+      //     $gte: startDate,
+      //     $lt: endDate
+      //   },
+      //   "isFNF": isFNF
+      // }).exec();
+      // return { count };
     } else {
-      const records = await AttendanceProcess.find({
-        runDate: {
-          $gte: startDate,
-          $lt: endDate
-        },
-        "isFNF": isFNF
-      }).skip(skip).limit(limit).exec();
+      // const records = await AttendanceProcess.find({
+      //   runDate: {
+      //     $gte: startDate,
+      //     $lt: endDate
+      //   },
+      //   "isFNF": isFNF
+      // }).skip(skip).limit(limit).exec();
+      // return records;
+      const records = await AttendanceProcess.find(query)
+        .skip(skip)
+        .limit(limit)
+        .exec();
       return records;
     }
   } catch (error) {
