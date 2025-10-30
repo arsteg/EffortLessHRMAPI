@@ -1123,7 +1123,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       return next(new AppError(req.t('leave.companyIdNotFound'), 400));
     }
 
-    const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, halfDays, leaveApplicationAttachments } = req.body;
+    const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
 
     const cycle = await scheduleController.createFiscalCycle();
     const createdOn = new Date();
@@ -1165,17 +1165,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
     const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
 
-    let leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
-
-    // Adjust leave days for half-day options
-    if (isHalfDayOption && Array.isArray(halfDays) && halfDays.length > 0) {
-        const totalHalfDaysCount = halfDays.length;
-        
-        if(leaveDays > 0) {
-          leaveDays = leaveDays - (totalHalfDaysCount / 2);
-        }
-    }
-
+    const leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
     const numberOfWeeklyOffDays = countWeeklyOffDays(startDate, endDate, weeklyOffDays);
 
     if (leaveAssigned?.leaveRemaining < leaveDays) {
@@ -1232,11 +1222,11 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     });
 
     let createdHalfDays = null;
-    if (Array.isArray(halfDays) && halfDays.length > 0) {
-      createdHalfDays = await LeaveApplicationHalfDay.insertMany(halfDays.map(halfDay => ({
+    if (Array.isArray(haldDays) && haldDays.length > 0) {
+      createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
         leaveApplication: newLeaveApplication._id,
-        date: halfDay.date,
-        dayHalf: halfDay.dayHalf
+        date: haldDay.date,
+        dayHalf: haldDay.dayHalf
       })));
       newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id);
       await newLeaveApplication.save();
@@ -1343,8 +1333,8 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
 exports.updateEmployeeLeaveApplication = async (req, res, next) => {
   try {
     const { id } = req.params;
-    // const { halfDays, ...leaveApplicationData } = req.body;
-    const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, halfDays, leaveApplicationAttachments } = req.body;
+    // const { haldDays, ...leaveApplicationData } = req.body;
+    const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, haldDays, leaveApplicationAttachments } = req.body;
 
     const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -1354,13 +1344,13 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
       leaveCategory: updatedLeaveApplication._id,
     });
     var createdHalfDays = null;
-    // Check if halfDays is provided and valid
-    if (Array.isArray(halfDays)) {
-      // Create halfDays instances
-      createdHalfDays = await LeaveApplicationHalfDay.insertMany(halfDays.map(halfDay => ({
+    // Check if haldDays is provided and valid
+    if (Array.isArray(haldDays)) {
+      // Create haldDays instances
+      createdHalfDays = await LeaveApplicationHalfDay.insertMany(haldDays.map(haldDay => ({
         leaveApplication: updatedLeaveApplication._id,
-        date: halfDay.date,
-        dayHalf: halfDay.dayHalf
+        date: haldDay.date,
+        dayHalf: haldDay.dayHalf
       })));
     }
     updatedLeaveApplication.halfDays = createdHalfDays;
