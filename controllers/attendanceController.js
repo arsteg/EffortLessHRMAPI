@@ -3095,10 +3095,11 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const companyId = req.cookies.companyId;
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
-    //const utcstartOfMonth = formatToUTCDate(startOfMonth);
-    //const utcendOfMonth = formatToUTCDate(endOfMonth); //no need to use utcendOfMonth to find attendance records as endOfMonth is already at 00:00:00 UTC of next day
+    const utcstartOfMonth = formatToUTCDate(startOfMonth);
+    const utcendOfMonth = formatToUTCDate(endOfMonth); //no need to use utcendOfMonth to find attendance records as endOfMonth is already at 00:00:00 UTC of next day
+    //console.log('UTC Start of Month:', startOfMonth, utcstartOfMonth, 'UTC End of Month:',endOfMonth, utcendOfMonth);
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
-    await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
+    await getAttendanceAndLeaveData(user, utcstartOfMonth, endOfMonth, companyId, req);
 
     await processLOPForMonth({
       user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
@@ -3178,17 +3179,17 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   return { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates };
 }
 
-// const formatToUTCDate = (date) => {
-//   return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
-//     .toISOString()
-//     .split('T')[0];
-// };
+const formatToUTCDate = (date) => {
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    .toISOString()
+    .split('T')[0];
+};
 
-// const formatToLocalDate = (date) => {
-//   return date.toLocaleDateString('en-CA', { // gives YYYY-MM-DD
-//     timeZone: 'Asia/Kolkata'
-//   });
-// };
+const formatToLocalDate = (date) => {
+  return date.toLocaleDateString('en-CA', { // gives YYYY-MM-DD
+    timeZone: 'Asia/Kolkata'
+  });
+};
 
 async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -3220,14 +3221,14 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
 
     if (isWeeklyOff) continue;
     const dateStr = currentDate.toISOString().split('T')[0];
-    const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
+    //const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
 
-    // const wasPresent = attendanceRecords.find(r => {
-    //   const recordDateStr = formatToLocalDate(r.date);
-    //   const currentDateStr = formatToLocalDate(currentDate);
-    //   //console.log('r.duration', r.duration, 'attendance record raw date:, formatted date, and ', r.date, recordDateStr, 'date to be process dateStr:', currentDate, currentDateStr, 'is equal:', recordDateStr === currentDateStr);
-    //   return recordDateStr === currentDateStr
-    // });
+    const wasPresent = attendanceRecords.find(r => {
+      const recordDateStr = formatToLocalDate(r.date);
+      const currentDateStr = formatToLocalDate(currentDate);
+      //console.log('r.duration', r.duration, 'attendance record raw date:, formatted date, and ', r.date, recordDateStr, 'date to be process dateStr:', currentDate, currentDateStr, 'is equal:', recordDateStr === currentDateStr);
+      return recordDateStr === currentDateStr
+    });
     const isOnLeave = approvedLeaveDays.includes(dateStr);
     let wasUserPresent = false;
     let wasHalfday = false;
