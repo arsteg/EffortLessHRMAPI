@@ -2687,6 +2687,20 @@ async function getUserByEmpCode(empCode, company) {
 
 async function processAttendanceRecord(user, startTime, endTime, date, req) {
   const companyId = req.cookies.companyId;
+
+  const isInvalid = (time) => !time || time === '0:00' || time === '00:00';
+  if (isInvalid(startTime) && isInvalid(endTime)) {
+    // Case 1: Both times missing or invalid → default to "10:00"
+    startTime = '10:00';
+    endTime = '10:00';
+  } else if (isInvalid(startTime)) {
+    // Case 2: Only startTime invalid → use endTime
+    startTime = endTime;
+  } else if (isInvalid(endTime)) {
+    // Case 3: Only endTime invalid → use startTime
+    endTime = startTime;
+  }
+
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
   if (shiftAssignment) {
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
