@@ -2687,6 +2687,20 @@ async function getUserByEmpCode(empCode, company) {
 
 async function processAttendanceRecord(user, startTime, endTime, date, req) {
   const companyId = req.cookies.companyId;
+
+  const isInvalid = (time) => !time || time === '0:00' || time === '00:00';
+  if (isInvalid(startTime) && isInvalid(endTime)) {
+    // Case 1: Both times missing or invalid → default to "10:00"
+    startTime = '10:00';
+    endTime = '10:00';
+  } else if (isInvalid(startTime)) {
+    // Case 2: Only startTime invalid → use endTime
+    startTime = endTime;
+  } else if (isInvalid(endTime)) {
+    // Case 3: Only endTime invalid → use startTime
+    endTime = startTime;
+  }
+
   const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
   if (shiftAssignment) {
     const shift = await Shift.findOne({ _id: shiftAssignment.template });
@@ -3095,11 +3109,8 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const companyId = req.cookies.companyId;
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
-    const utcstartOfMonth = formatToUTCDate(startOfMonth);
-    const utcendOfMonth = formatToUTCDate(endOfMonth); //no need to use utcendOfMonth to find attendance records as endOfMonth is already at 00:00:00 UTC of next day
-    //console.log('UTC Start of Month:', startOfMonth, utcstartOfMonth, 'UTC End of Month:',endOfMonth, utcendOfMonth);
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
-    await getAttendanceAndLeaveData(user, utcstartOfMonth, endOfMonth, companyId, req);
+    await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
 
     await processLOPForMonth({
       user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
@@ -3130,12 +3141,16 @@ async function getStartAndEndDates(year, month) {
     throw new Error('Invalid year or month');
   }
 
-  // Start of the month (1st day)
-  const startOfMonth = new Date(Date.UTC(year, month - 1, 1));
+  const timeZone = 'Asia/Kolkata';
+  const startDateStr = new Date(Date.UTC(year, month - 1, 1))
+    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+  const endDateStr = new Date(Date.UTC(year, month, 0))
+    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
 
-  // End of the month (last day)
-  const endOfMonth = new Date(Date.UTC(year, month, 0));
-  return { startOfMonth, endOfMonth };
+  // Convert these back into UTC-based JS Dates for MongoDB range queries
+  const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
+  const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
+  return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
 }
 async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
@@ -3161,7 +3176,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const end = new Date(leave.endDate);
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        days.push(d.toISOString().split('T')[0]);
+        days.push(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
       }
       d.setDate(d.getDate() + 1);
     }
@@ -3171,8 +3186,10 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   const holidays = await HolidayCalendar.find({ company: companyId });
 
   const holidayDates = holidays.map(h => {
-    const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
-    return parts.join('-');
+    // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
+    // return parts.join('-');
+    const parts = h.date.toISOString().split('T')[0];
+    return parts;
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
 
@@ -3192,6 +3209,7 @@ const formatToLocalDate = (date) => {
 };
 
 async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
+  const timeZone = 'Asia/Kolkata';
   const daysInMonth = new Date(year, month, 0).getDate();
   const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
@@ -3207,8 +3225,14 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
   }
   for (let day = 1; day <= daysInMonth; day++) {
-    const currentDate = new Date(Date.UTC(year, month - 1, day));
-    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' });
+    const localDateStr = new Date(Date.UTC(year, month - 1, day))
+      .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+    // Create UTC equivalent of that local day
+    const currentDate = new Date(`${localDateStr}T00:00:00+05:30`);
+    const dateStr = currentDate.toISOString().split('T')[0]; // use "YYYY-MM-DD" string consistently
+    // Get weekday name in IST
+    const dayName = new Date(`${localDateStr}T00:00:00+05:30`)
+      .toLocaleDateString('en-US', { weekday: 'short', timeZone });
     const currentWeekNumber = getWeekNumber(currentDate);
     const isOddWeek = currentWeekNumber % 2 !== 0;
 
@@ -3216,19 +3240,11 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     if ((isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)) {
       isAlternateOff = alternateSet.has(dayName);
     }
-    const isHoliday = holidayDates.includes(currentDate.toISOString().split('T')[0]);
+    const isHoliday = holidayDates.includes(dateStr);
     const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff || isHoliday;
 
     if (isWeeklyOff) continue;
-    const dateStr = currentDate.toISOString().split('T')[0];
-    //const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
-
-    const wasPresent = attendanceRecords.find(r => {
-      const recordDateStr = formatToLocalDate(r.date);
-      const currentDateStr = formatToLocalDate(currentDate);
-      //console.log('r.duration', r.duration, 'attendance record raw date:, formatted date, and ', r.date, recordDateStr, 'date to be process dateStr:', currentDate, currentDateStr, 'is equal:', recordDateStr === currentDateStr);
-      return recordDateStr === currentDateStr
-    });
+    const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
     const isOnLeave = approvedLeaveDays.includes(dateStr);
     let wasUserPresent = false;
     let wasHalfday = false;
@@ -3242,6 +3258,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       } 
       else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
         wasUserPresent = true;
+        //if(isOnLeave.)
         wasHalfday = true;
       } else {
         wasUserPresent = false;
@@ -3251,9 +3268,9 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
 
     if (shouldInsertLOP) {
-      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
+      const existingLOP = await LOP.findOne({ user, date: dateStr, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
+        await new LOP({ user, date: dateStr, company: companyId, isHalfDay: wasHalfday }).save();
         websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${dateStr}`, constants.LOG_TYPES.INFO);
       } else {
         websocketHandler.sendLog(req, `LOP already exists for ${user} on ${dateStr}`, constants.LOG_TYPES.WARN);
@@ -3301,21 +3318,23 @@ async function validateCompleteAttendanceMonth(user, month, year, companyId) {
     company: companyId,
     date: { $gte: startOfMonth, $lte: endOfMonth },
   });
+  const timeZone = 'Asia/Kolkata'; // ✅ Added for consistent local date handling
   // Convert to date strings for easy matching
   const attendanceDates = new Set(attendanceRecords.map(r => r.date.toISOString().split('T')[0]));
   const lopDates = new Set(lopRecords.map(r => r.date.toISOString().split('T')[0]));
   const holidayDates = new Set(holidays.map(h => {
-    const parts = h.date.toLocaleDateString('en-CA').split('/'); // YYYY/MM/DD
-    return parts.join('-'); // YYYY-MM-DD
+    // const parts = h.date.toLocaleDateString('en-CA').split('/'); // YYYY/MM/DD
+    // return parts.join('-'); // YYYY-MM-DD
+    const parts = h.date.toISOString().split('T')[0];
+    return parts;
   }));
   const leaveDates = new Set();
   for (const leave of leaves) {
     let d = new Date(leave.startDate);
     const end = new Date(leave.endDate);
     while (d <= end) {
-      if (d >= startOfMonth && d <= endOfMonth) {
-        leaveDates.add(d.toISOString().split('T')[0]);
-      }
+      const localDateStr = d.toISOString().split('T')[0]; //d.toLocaleDateString('en-CA', { timeZone });
+      leaveDates.add(localDateStr);
       d.setDate(d.getDate() + 1);
     }
   }
@@ -3326,9 +3345,14 @@ async function validateCompleteAttendanceMonth(user, month, year, companyId) {
 
   const daysInMonth = new Date(year, month, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
-    const currentDate = new Date(Date.UTC(year, month - 1, day));
-    const dateStr = currentDate.toISOString().split('T')[0];
-    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' });
+    const localDateStr = new Date(Date.UTC(year, month - 1, day))
+      .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+    // Create UTC equivalent of that local day
+    const currentDate = new Date(`${localDateStr}T00:00:00+05:30`);
+    const dateStr = currentDate.toISOString().split('T')[0]; // use "YYYY-MM-DD" string consistently
+    // Get weekday name in IST
+    const dayName = new Date(`${localDateStr}T00:00:00+05:30`)
+      .toLocaleDateString('en-US', { weekday: 'short', timeZone });    
 
     // Check alternate week offs
     const weekNumber = getWeekNumber(currentDate);
@@ -3567,8 +3591,9 @@ exports.deleteAttendance = catchAsync(async (req, res, next) => {
     const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear } = req.body;
 
     let attendanceProcess = await AttendanceProcess.findOne({
-      attandanaceProcessPeroidMonth: attendanceProcessPeriodMonth,
-      attandanaceProcessPeroidYear: attendanceProcessPeriodYear,
+      attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
+      attendanceProcessPeriodYear: attendanceProcessPeriodYear,
+      company: req.cookies.companyId
     });
     if (!attendanceProcess) {
       websocketHandler.sendLog(req, `Attendance process not found for period: ${attendanceProcessPeriodMonth}-${attendanceProcessPeriodYear}`, constants.LOG_TYPES.ERROR);
