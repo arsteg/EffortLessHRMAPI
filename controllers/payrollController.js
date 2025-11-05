@@ -4663,12 +4663,27 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         .reduce((sum, flexi) => sum + (flexi.TotalFlexiBenefitAmount || 0), 0);
       const totalManualArrears = manualArrears
         .reduce((sum, flexi) => sum + (flexi.totalArrears || 0), 0);
-      const totalOvertime = overtime && overtime.OvertimeAmount ? overtime.OvertimeAmount : 0;
+      //const totalOvertime = overtime && overtime.OvertimeAmount ? overtime.OvertimeAmount : 0;
+      const totalOvertime = Array.isArray(overtime)
+        ? overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0)
+        : 0;
+      
       const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance) * 12;
       const totalGrossSalary = totalFixedAllowance;
-      const totalTakeHome = (totalGrossSalary + totalLoanDisbursed + totalOvertime + totalVariableAllowance + totalFlexiBenefits + totalManualArrears) - (totalFixedDeduction + totalVariableDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax);
+      
+      //LOP calculation can be added here
+      const salaryPerDay = totalFixedAllowance / 30; //reference from overtime calculation per day salary
+      const payrollAttendanceSummary = await PayrollAttendanceSummary.findOne({
+        payrollUser: payrollUser._id
+      });
+
+      const totallopDaysAmount = payrollAttendanceSummary && payrollAttendanceSummary.lopDays
+        ? Number((payrollAttendanceSummary.lopDays * salaryPerDay).toFixed(2))
+        : 0;
+
+      const totalTakeHome = (totalGrossSalary + totalLoanDisbursed + totalOvertime + totalVariableAllowance + totalFlexiBenefits + totalManualArrears) - (totalFixedDeduction + totalVariableDeduction + totalEmployeeStatutoryDeduction + totalLoanRepayment + totalIncomeTax + totallopDaysAmount);
 
       websocketHandler.sendLog(req, `Updating PayrollUsers document for payrollUser: ${payrollUser._id}`, constants.LOG_TYPES.TRACE);
 
@@ -4688,7 +4703,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
             totalFlexiBenefits,
             totalCTC,
             totalGrossSalary,
-            totalTakeHome
+            totalTakeHome,
+            totallopDaysAmount
             // Add totalOvertime, totalPfTax, totalIncomeTax if in schema
           }
         }
@@ -4717,7 +4733,10 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         totalCTC,
         totalGrossSalary,
         totalTakeHome,
-        payroll
+        payroll,
+        totalVariableAllowance,
+        totalVariableDeduction,
+        totallopDaysAmount
       };
     })
   );

@@ -63,6 +63,10 @@ var payrollUsersSchema = new Schema({
       type: mongoose.Schema.ObjectId,
       ref: 'Company',
       required: true
+    },
+    totallopDaysAmount: {
+      type: Number,
+      default: 0
     }
   }, { collection: 'PayrollUsers' });
    
