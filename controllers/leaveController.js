@@ -1504,8 +1504,8 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
 exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;
+    const skip = parseInt(req.body.skip);
+    const limit = parseInt(req.body.next);
     const totalCount = await LeaveApplication.countDocuments({ employee: userId });
 
     const leaveApplications = await LeaveApplication.find({ employee: userId }).skip(parseInt(skip))
