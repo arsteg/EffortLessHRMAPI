@@ -3268,12 +3268,12 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
 
     if (shouldInsertLOP) {
-      const existingLOP = await LOP.findOne({ user, date: dateStr, company: companyId });
+      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: dateStr, company: companyId, isHalfDay: wasHalfday }).save();
-        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${dateStr}`, constants.LOG_TYPES.INFO);
+        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}`, constants.LOG_TYPES.INFO);
       } else {
-        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${dateStr}`, constants.LOG_TYPES.WARN);
+        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
       }
     }
   }
