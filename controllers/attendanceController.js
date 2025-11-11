@@ -3108,7 +3108,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const { user, month, year } = req.body;
     const companyId = req.cookies.companyId;
 
-    const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
+    const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
     websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
     await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
@@ -3136,7 +3136,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     });
   }
 });
-async function getStartAndEndDates(year, month) {
+async function getStartAndEndDates(req, year, month) {
   // Ensure inputs are integers
   year = parseInt(year, 10);
   month = parseInt(month, 10);
@@ -3147,12 +3147,16 @@ async function getStartAndEndDates(year, month) {
   const timeZone = 'Asia/Kolkata';
   const startDateStr = new Date(Date.UTC(year, month - 1, 1))
     .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+  websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
   const endDateStr = new Date(Date.UTC(year, month, 0))
     .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
+    websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
 
   // Convert these back into UTC-based JS Dates for MongoDB range queries
   const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
+  websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
   const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
+  websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
 }
 async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
@@ -3288,7 +3292,7 @@ function getWeekNumber(date) {
 }
 exports.validateCompleteAttendanceMonthByUser = catchAsync(async (req, res, next) => {
   const { user, month, year } = req.body;
-  const isMonthComplete = await validateCompleteAttendanceMonth(user, month, year, req.cookies.companyId);
+  const isMonthComplete = await validateCompleteAttendanceMonth(req, user, month, year, req.cookies.companyId);
 
   res.status(200).json({
     status: isMonthComplete,
@@ -3296,8 +3300,8 @@ exports.validateCompleteAttendanceMonthByUser = catchAsync(async (req, res, next
   });
 
 });
-async function validateCompleteAttendanceMonth(user, month, year, companyId) {
-  const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
+async function validateCompleteAttendanceMonth(req, user, month, year, companyId) {
+  const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
   if (!assignment) return false;
 
