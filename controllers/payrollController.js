@@ -4668,7 +4668,8 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
         ? overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0)
         : 0;
       
-      const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
+      //const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
+      const totalIncomeTax = Number(incomeTax?.[0]?.TDSCalculated || 0);
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance) * 12;
       const totalGrossSalary = totalFixedAllowance;

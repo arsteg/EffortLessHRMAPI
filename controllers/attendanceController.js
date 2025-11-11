@@ -3109,12 +3109,15 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const companyId = req.cookies.companyId;
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(year, month);
+    websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
     await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
+    websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
     await processLOPForMonth({
       user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
     });
+    websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
 
     websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${user}`, constants.LOG_TYPES.INFO);
 
