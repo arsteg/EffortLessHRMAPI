@@ -3145,18 +3145,24 @@ async function getStartAndEndDates(req, year, month) {
   }
 
   const timeZone = 'Asia/Kolkata';
-  const startDateStr = new Date(Date.UTC(year, month - 1, 1))
-    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
-  websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
-  const endDateStr = new Date(Date.UTC(year, month, 0))
-    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
-    websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
+  // const startDateStr = new Date(Date.UTC(year, month - 1, 1))
+  //   .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+  // websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
+  // const endDateStr = new Date(Date.UTC(year, month, 0))
+  //   .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
+  //   websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
 
-  // Convert these back into UTC-based JS Dates for MongoDB range queries
-  const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
-  websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
-  const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
-  websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  // // Convert these back into UTC-based JS Dates for MongoDB range queries
+  // const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
+  // websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  // const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
+  // websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  const start = new Date(Date.UTC(year, month - 1, 1, -5, -30)); // midnight IST
+  const end = new Date(Date.UTC(year, month, 0, 18, 29, 59, 999)); // end of day IST
+  const utcstartOfMonth = start;
+  const utcendOfMonth = end;
+  websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}, ${utcstartOfMonth}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}, ${utcendOfMonth}`, constants.LOG_TYPES.DEBUG);
   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
 }
 async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
