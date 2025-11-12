@@ -3145,16 +3145,15 @@ async function getStartAndEndDates(req, year, month) {
   }
 
   const timeZone = 'Asia/Kolkata';
-  const start = new Date(Date.UTC(year, month - 1, 1));  // first of month UTC
-  const end = new Date(Date.UTC(year, month, 0));        // last day UTC
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  const startDateStr = fmt.format(start);
-  const endDateStr = fmt.format(end);
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 0));
+
+  // Manually format YYYY-MM-DD (zero-padded)
+  const pad = (n) => n.toString().padStart(2, '0');
+
+  const startDateStr = `${year}-${pad(month)}-01`;  // Always 1st day
+  const endDateStr = `${year}-${pad(month)}-${pad(end.getUTCDate())}`; // last day
+
   console.log(`Start date string in IST: ${startDateStr}`);
   console.log(`End date string in IST: ${endDateStr}`);
   websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
