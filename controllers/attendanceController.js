@@ -3266,8 +3266,10 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
   }
   for (let day = 1; day <= daysInMonth; day++) {
-    const localDateStr = new Date(Date.UTC(year, month - 1, day))
-      .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+    const pad = (n) => n.toString().padStart(2, '0');
+    const localDateStr = `${year}-${pad(month)}-${pad(day)}`; // always YYYY-MM-DD
+    // const localDateStr = new Date(Date.UTC(year, month - 1, day))
+    //   .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
     // Create UTC equivalent of that local day
     const currentDate = new Date(`${localDateStr}T00:00:00+05:30`);
     const dateStr = currentDate.toISOString().split('T')[0]; // use "YYYY-MM-DD" string consistently
