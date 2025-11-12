@@ -3145,14 +3145,20 @@ async function getStartAndEndDates(req, year, month) {
   }
 
   const timeZone = 'Asia/Kolkata';
-  const startDateStr = new Date(Date.UTC(year, month - 1, 1))
-    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
-  const endDateStr = new Date(Date.UTC(year, month, 0))
-    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
-    console.log(`Start date string in IST: ${startDateStr}`);
-    console.log(`End date string in IST: ${endDateStr}`);
-    websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
-    websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
+  const start = new Date(Date.UTC(year, month - 1, 1));  // first of month UTC
+  const end = new Date(Date.UTC(year, month, 0));        // last day UTC
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const startDateStr = fmt.format(start);
+  const endDateStr = fmt.format(end);
+  console.log(`Start date string in IST: ${startDateStr}`);
+  console.log(`End date string in IST: ${endDateStr}`);
+  websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
 
   // Convert these back into UTC-based JS Dates for MongoDB range queries
   const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
