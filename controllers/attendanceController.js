@@ -3110,16 +3110,16 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
     websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
-    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
-    await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
-    websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
+    // const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
+    // await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
+    // websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
-    await processLOPForMonth({
-      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
-    });
-    websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
+    // await processLOPForMonth({
+    //   user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
+    // });
+    // websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
 
-    websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${user}`, constants.LOG_TYPES.INFO);
+    // websocketHandler.sendLog(req, `Successfully processed attendance and LOP for user: ${user}`, constants.LOG_TYPES.INFO);
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -3145,26 +3145,49 @@ async function getStartAndEndDates(req, year, month) {
   }
 
   const timeZone = 'Asia/Kolkata';
-  // const startDateStr = new Date(Date.UTC(year, month - 1, 1))
-  //   .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
-  // websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
-  // const endDateStr = new Date(Date.UTC(year, month, 0))
-  //   .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
-  //   websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
+  const startDateStr = new Date(Date.UTC(year, month - 1, 1))
+    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+  const endDateStr = new Date(Date.UTC(year, month, 0))
+    .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
+    console.log(`Start date string in IST: ${startDateStr}`);
+    console.log(`End date string in IST: ${endDateStr}`);
+    websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
+    websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
 
-  // // Convert these back into UTC-based JS Dates for MongoDB range queries
-  // const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
-  // websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
-  // const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
-  // websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
-  const start = new Date(Date.UTC(year, month - 1, 1, -5, -30)); // midnight IST
-  const end = new Date(Date.UTC(year, month, 0, 18, 29, 59, 999)); // end of day IST
-  const utcstartOfMonth = start;
-  const utcendOfMonth = end;
-  websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}, ${utcstartOfMonth}`, constants.LOG_TYPES.DEBUG);
-  websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}, ${utcendOfMonth}`, constants.LOG_TYPES.DEBUG);
+  // Convert these back into UTC-based JS Dates for MongoDB range queries
+  const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
+  const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
+  console.log(utcstartOfMonth);
+  console.log(utcendOfMonth);
+  websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth}`, constants.LOG_TYPES.DEBUG);
   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
 }
+// async function getStartAndEndDates(req, year, month) {
+//   // Ensure inputs are integers
+//   year = parseInt(year, 10);
+//   month = parseInt(month, 10);
+//   if (isNaN(year) || isNaN(month) || month < 1 || month > 12 || year < 1900 || year > 9999) {
+//     throw new Error('Invalid year or month');
+//   }
+
+//   const timeZone = 'Asia/Kolkata';
+//   const startDateStr = new Date(Date.UTC(year, month - 1, 1))
+//     .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
+//   websocketHandler.sendLog(req, `Start date string in IST: ${startDateStr}`, constants.LOG_TYPES.DEBUG);
+//   const endDateStr = new Date(Date.UTC(year, month, 0))
+//     .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-30"
+//     websocketHandler.sendLog(req, `End date string in IST: ${endDateStr}`, constants.LOG_TYPES.DEBUG);
+
+//   // Convert these back into UTC-based JS Dates for MongoDB range queries
+//   const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
+//   websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+//   const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
+//   console.log(utcstartOfMonth);
+//   console.log(utcendOfMonth);
+//   websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+//   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
+// }
 async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
   if (!assignment) throw new Error("Attendance template assignment not found");
