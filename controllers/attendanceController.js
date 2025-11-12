@@ -3225,6 +3225,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     status: constants.Leave_Application_Constant.Approved,
     startDate: { $lte: endOfMonth },
     endDate: { $gte: startOfMonth },
+    company: companyId
   });
 
   const approvedLeaveDays = approvedLeaves.flatMap(leave => {
