@@ -3137,6 +3137,23 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
   }
 });
 async function getStartAndEndDates(req, year, month) {
+  year = parseInt(year, 10);
+  month = parseInt(month, 10);
+  if (isNaN(year) || isNaN(month) || month < 1 || month > 12 || year < 1900 || year > 9999) {
+    throw new Error('Invalid year or month');
+  }
+
+  const IST_OFFSET_HOURS = 5;
+  const IST_OFFSET_MINUTES = 30;
+  const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
+  const endOfMonthLocal = new Date(Date.UTC(year, month, 0, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
+  const utcEndOfMonth = new Date(endOfMonthLocal.getTime()); // 1 sec before midnight next UTC day
+
+  websocketHandler.sendLog(req, `UTC Start of month: ${utcStartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `UTC End of month: ${utcEndOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+  return { startOfMonth: utcStartOfMonth, endOfMonth: utcEndOfMonth };
+}
+async function getStartAndEndDatesV1(req, year, month) {
   // Ensure inputs are integers
   year = parseInt(year, 10);
   month = parseInt(month, 10);
@@ -3162,8 +3179,7 @@ async function getStartAndEndDates(req, year, month) {
   // Convert these back into UTC-based JS Dates for MongoDB range queries
   const utcstartOfMonth = new Date(`${startDateStr}T00:00:00+05:30`);
   const utcendOfMonth = new Date(`${endDateStr}T23:59:59+05:30`);
-  console.log(utcstartOfMonth);
-  console.log(utcendOfMonth);
+
   websocketHandler.sendLog(req, `UTC Start of month: ${utcstartOfMonth}`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, `UTC End of month: ${utcendOfMonth}`, constants.LOG_TYPES.DEBUG);
   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
@@ -3293,13 +3309,13 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     let wasHalfday = false;
 
     if(wasPresent){
-      if (wasPresent.duration == 0) {
+      if (wasPresent?.duration == 0) {
         wasUserPresent = false;
       }
-      else if (wasPresent.duration >= fullDayDuration) {
+      else if (wasPresent?.duration >= fullDayDuration) {
         wasUserPresent = true;
       } 
-      else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
+      else if (isHalfDayApplicable && wasPresent?.duration >= halfDayDuration) {
         wasUserPresent = true;
         //if(isOnLeave.)
         wasHalfday = true;
