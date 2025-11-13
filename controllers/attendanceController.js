@@ -3243,7 +3243,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const end = new Date(leave.endDate);
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        days.push(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
       }
       d.setDate(d.getDate() + 1);
     }
@@ -3255,7 +3255,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   const holidayDates = holidays.map(h => {
     // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
     // return parts.join('-');
-    const parts = h.date.toISOString().split('T')[0];
+    const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
     return parts;
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
@@ -3263,17 +3263,16 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   return { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates };
 }
 
-const formatToUTCDate = (date) => {
-  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
-    .toISOString()
-    .split('T')[0];
-};
-
-const formatToLocalDate = (date) => {
-  return date.toLocaleDateString('en-CA', { // gives YYYY-MM-DD
-    timeZone: 'Asia/Kolkata'
-  });
-};
+function toISTDateString(dateInput) {
+  const timeZone = 'Asia/Kolkata';
+  const date = new Date(dateInput);
+  // Convert to same calendar day in IST
+  const local = new Date(date.toLocaleString('en-US', { timeZone }));
+  const year = local.getFullYear();
+  const month = String(local.getMonth() + 1).padStart(2, '0');
+  const day = String(local.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
   const timeZone = 'Asia/Kolkata';
@@ -3313,13 +3312,13 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     if ((isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)) {
       isAlternateOff = alternateSet.has(dayName);
     }
-    const isHoliday = holidayDates.includes(dateStr);
+    const isHoliday = holidayDates.some(d => toISTDateString(d) === dateStr);//holidayDates.includes(dateStr);
     const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff || isHoliday;
 
     if (isWeeklyOff) continue;
-    const wasPresent = attendanceRecords.find(r => r.date.toISOString().split('T')[0] === dateStr);
-    const isOnLeave = approvedLeaveDays.includes(dateStr);
-    console.log('approvedLeaveDays', approvedLeaveDays);
+    const wasPresent = attendanceRecords.find(r => toISTDateString(r.date) === dateStr);
+    const isOnLeave = approvedLeaveDays.some(d => toISTDateString(d) === dateStr);//approvedLeaveDays.includes(dateStr);
+
     let wasUserPresent = false;
     let wasHalfday = false;
 
@@ -3340,7 +3339,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     }
 
     const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
-
+websocketHandler.sendLog(req, `Date: ${currentDate}, dateStr: ${dateStr}, wasUserPresent: ${wasUserPresent}, wasHalfday: ${wasHalfday}, isOnLeave: ${isOnLeave}, shouldInsertLOP: ${shouldInsertLOP}`, constants.LOG_TYPES.DEBUG);
     if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
