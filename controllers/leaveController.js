@@ -25,6 +25,7 @@ const StorageController = require('./storageController');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const websocketHandler = require('../utils/websocketHandler');
 const AttendanceTemplate = require('../models/attendance/attendanceTemplate');
+const { toUTCDate } = require('../utils/utcConverter');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
   // Retrieve companyId from cookies
@@ -1124,6 +1125,8 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, halfDays, leaveApplicationAttachments } = req.body;
+    const utcStartDate = toUTCDate(startDate);
+    const utcEndDate = toUTCDate(endDate);
 
     const cycle = await scheduleController.createFiscalCycle();
     const createdOn = new Date();
@@ -1139,10 +1142,10 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
                               endMonth
                             });
 
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
-    const startMonthOfLeave = startDateObj.getMonth() + 1;
-    const endMonthOfLeave = endDateObj.getMonth() + 1;
+    // const startDateObj = new Date(startDate);
+    // const endDateObj = new Date(endDate);
+    const startMonthOfLeave = utcStartDate.getMonth() + 1;
+    const endMonthOfLeave = utcEndDate.getMonth() + 1;
 
     const isWithinRange = (startMonthOfLeave >= startMonth && startMonthOfLeave <= endMonth) &&
       (endMonthOfLeave >= startMonth && endMonthOfLeave <= endMonth);  //check if both leave start and end ate are within the range of the leave assignment leave balance
@@ -1165,7 +1168,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
     const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
 
-    let leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
+    let leaveDays = calculateLeaveDays(utcStartDate, utcEndDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
 
     // Adjust leave days for half-day options
     if (isHalfDayOption && Array.isArray(halfDays) && halfDays.length > 0) {
@@ -1176,7 +1179,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         }
     }
 
-    const numberOfWeeklyOffDays = countWeeklyOffDays(startDate, endDate, weeklyOffDays);
+    const numberOfWeeklyOffDays = countWeeklyOffDays(utcStartDate, utcEndDate, weeklyOffDays);
 
     if (leaveAssigned?.leaveRemaining < leaveDays) {
       return res.status(400).json({
@@ -1219,8 +1222,8 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       leaveCategory,
       level1Reason,
       level2Reason,
-      startDate,
-      endDate,
+      startDate: utcStartDate,
+      endDate: utcEndDate,
       comment,
       isHalfDayOption,
       status,
