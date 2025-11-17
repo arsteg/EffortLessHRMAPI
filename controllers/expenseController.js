@@ -41,7 +41,7 @@ exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     }
     else
     {
-      const expenseCategoryExists = await ExpenseCategory.findOne({ label: label });
+      const expenseCategoryExists = await ExpenseCategory.findOne({ label: label, company: company });
       if(expenseCategoryExists)
       {
         res.status(500).json({
@@ -459,14 +459,14 @@ exports.getExpenseApplicationFieldValuesByFieldId = catchAsync(async (req, res, 
 
 exports.createExpenseTemplate = catchAsync(async (req, res, next) => {
   const { expenseCategories, ...expenseTemplateData } = req.body;
-
+const company = req.cookies.companyId;
   // Check if policyLabel is provided
   if (!expenseTemplateData.policyLabel) {
     return next(new AppError(req.t('expense.policyLabelRequired'), 400) );
   }
 
   // Check if policyLabel already exists
-  const existingTemplate = await ExpenseTemplate.findOne({ 'policyLabel': expenseTemplateData.policyLabel });
+  const existingTemplate = await ExpenseTemplate.findOne({ 'policyLabel': expenseTemplateData.policyLabel, company: company });
 
   if (existingTemplate) {
     return res.status(400).json({
