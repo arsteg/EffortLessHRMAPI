@@ -41,6 +41,7 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
+const { toUTCDate } = require('../utils/utcConverter');
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -2286,6 +2287,8 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
   let filter = { status: 'Active', company: req.cookies.companyId };
+  console.log('startDate:', startDate, 'endDate:', endDate);
+  websocketHandler.sendLog(req, `start date: ${startDate} end date ${endDate}`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, `Preparing user query with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
   try {
@@ -2386,7 +2389,11 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
 };
 
 const cornMappedTimlogToAttendance = async (company) => {
-  const month =new Date().getMonth(); // +1 since getMonth is 0-based
+  if (company.companyId.toString() !== '68a579feda9656f78e4f84d7') {
+    return;
+  }
+
+  const month = 7;// new Date().getMonth(); // +1 since getMonth is 0-based
   const year = new Date().getFullYear();
   const companyId = company.companyId;
 
@@ -2398,6 +2405,7 @@ const cornMappedTimlogToAttendance = async (company) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
   const filter = { status: 'Active', company: companyId };
+  console.log('start date:', startDate, 'end date:', endDate);
 
   const users = await User.find(filter);
 
@@ -2426,7 +2434,10 @@ const cornMappedTimlogToAttendance = async (company) => {
     if (!timeLogs.length) {
       return;
     }
-
+//     if(user._id == '68a57a00da9656f78e4f857d'){
+//       console.log('timeLogs length:', timeLogs);
+//     }
+// return;
     const attendanceRecords = await Promise.all(timeLogs.map(async (log) => {
       const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
       // if (attendanceCount > 0) {
@@ -2471,7 +2482,8 @@ const cornMappedTimlogToAttendance = async (company) => {
     }));
 
     const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
-
+//console.log('attendanceRecordsFiltered length:', attendanceRecordsFiltered);
+//return;
     if (attendanceRecordsFiltered.length > 0) {
       console.log(`Inserting ${attendanceRecordsFiltered.length} attendance records for user: ${user._id}`);
       await insertAttendanceRecords(attendanceRecordsFiltered);
@@ -2737,12 +2749,14 @@ async function processAttendanceRecord(user, startTime, endTime, date, req) {
       // Fetch manual entry comment if any
       const lateComingRemarks = await getLateComingRemarks(user._id, date);
 
-      const formattedDate = new Date(Date.UTC(
-        new Date(date).getFullYear(),
-        new Date(date).getMonth(),
-        new Date(date).getDate(),
-        0, 0, 0, 0
-      ));
+      // const formattedDate = new Date(Date.UTC(
+      //   new Date(date).getFullYear(),
+      //   new Date(date).getMonth(),
+      //   new Date(date).getDate(),
+      //   0, 0, 0, 0
+      // ));
+      const formattedDate = toUTCDate(date);
+      console.log('Formatted Date:', formattedDate);
 
       // Create an attendance record
       return {
@@ -4026,7 +4040,7 @@ console.log({ year, month, companyId, isFNF: false });
 exports.MappedTimlogToAttendanceHelper = async () => {
   let companies = await Company.find({}).select('_id');
   for (let company of companies) {
-    console.log(`Processing company ID: ${company._id}`);
+    //console.log(`Processing company ID: ${company._id}`);
     await cornMappedTimlogToAttendance({
       companyId: company._id
     });
