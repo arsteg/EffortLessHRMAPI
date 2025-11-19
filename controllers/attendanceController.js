@@ -2285,10 +2285,11 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
   }
   req.body.company = companyId;
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  //const endDate = new Date(year, month, 0);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
   let filter = { status: 'Active', company: req.cookies.companyId };
-  console.log('startDate:', startDate, 'endDate:', endDate);
-  websocketHandler.sendLog(req, `start date: ${startDate} end date ${endDate}`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, `Preparing user query with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
   try {
@@ -2337,12 +2338,13 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
                   }
                 }
                 const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
-                const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
-                const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+                const timelogDateTime = combineDateAndTime(log._id, log.startTime);
+                //const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+                //const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
                 return {
-                  date: new Date(log._id),
-                  checkIn: checkInTime,
-                  checkOut: checkOutTime,
+                  date: toUTCDate(timelogDateTime),
+                  checkIn: toUTCDate(log.startTime),
+                  checkOut: toUTCDate(log.lastTimeLog),
                   user: user._id,
                   duration: timeLogCount * 10,
                   ODHours: 0,
@@ -2757,7 +2759,7 @@ async function processAttendanceRecord(user, startTime, endTime, date, req) {
       //   0, 0, 0, 0
       // ));
       const formattedDate = toUTCDate(date);
-      console.log('Formatted Date:', formattedDate);
+      //console.log('Formatted Date:', formattedDate);
 
       // Create an attendance record
       return {
