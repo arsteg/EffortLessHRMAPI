@@ -41,7 +41,7 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
-const { toUTCDate } = require('../utils/utcConverter');
+const { toUTCDate, combineDateAndTime } = require('../utils/utcConverter');
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -2403,7 +2403,11 @@ const cornMappedTimlogToAttendance = async (company) => {
   }
 
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  //const endDate = new Date(year, month, 0);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
+
   const filter = { status: 'Active', company: companyId };
   console.log('start date:', startDate, 'end date:', endDate);
 
@@ -2434,10 +2438,6 @@ const cornMappedTimlogToAttendance = async (company) => {
     if (!timeLogs.length) {
       return;
     }
-//     if(user._id == '68a57a00da9656f78e4f857d'){
-//       console.log('timeLogs length:', timeLogs);
-//     }
-// return;
     const attendanceRecords = await Promise.all(timeLogs.map(async (log) => {
       const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
       // if (attendanceCount > 0) {
@@ -2459,10 +2459,11 @@ const cornMappedTimlogToAttendance = async (company) => {
         }
       }
       const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
+      const timelogDateTime = combineDateAndTime(log._id, log.startTime);
       const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       return {
-        date: new Date(log._id),
+        date: toUTCDate(timelogDateTime),
         checkIn: checkInTime,
         checkOut: checkOutTime,
         user: user._id,

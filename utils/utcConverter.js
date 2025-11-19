@@ -61,6 +61,22 @@ function toUTCDate(input) {
   ));
 }
 
+const combineDateAndTime = (dateString, timeDateObj) => {
+  if (!timeDateObj) return new Date(dateString);
+
+  const base = new Date(dateString);
+  const time = new Date(timeDateObj);
+
+  base.setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds()
+  );
+
+  return base;
+};
+
 // async function toUTC(dateString) {
 //     const date = new Date(dateString);
 
@@ -78,5 +94,6 @@ function toUTCDate(input) {
 //   }
 
 module.exports = {
-    toUTCDate
+    toUTCDate,
+    combineDateAndTime
 };
