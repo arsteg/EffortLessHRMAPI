@@ -3167,13 +3167,15 @@ async function getStartAndEndDates(req, year, month) {
     throw new Error('Invalid year or month');
   }
 
-  // const IST_OFFSET_HOURS = 5;
-  // const IST_OFFSET_MINUTES = 30;
-  // const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
-  // const endOfMonthLocal = new Date(Date.UTC(year, month, 0, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
-  // const utcEndOfMonth = new Date(endOfMonthLocal.getTime()); // 1 sec before midnight next UTC day
-  const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
-  const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 0, 0, 0, 0));
+
+  // const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  // const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 0, 0, 0, 0));
+  const utcStartOfMonth = new Date(year, month - 1, 1);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const utcEndOfMonth = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
+  console.log('startOfMonth:', utcStartOfMonth, 'endOfMonth:', utcEndOfMonth);
+  console.log('startOfMonth:', utcStartOfMonth.toISOString(), 'endOfMonth:', utcEndOfMonth.toISOString());
 
   websocketHandler.sendLog(req, `UTC Start of month: ${utcStartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, `UTC End of month: ${utcEndOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
@@ -3260,7 +3262,8 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const end = new Date(leave.endDate);
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        //days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        days.push(d.toISOString());
       }
       d.setDate(d.getDate() + 1);
     }
@@ -3272,7 +3275,8 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   const holidayDates = holidays.map(h => {
     // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
     // return parts.join('-');
-    const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
+    //const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
+    const parts = h.date.toISOString();
     return parts;
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
