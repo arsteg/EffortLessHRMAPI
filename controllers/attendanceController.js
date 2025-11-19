@@ -2460,12 +2460,12 @@ const cornMappedTimlogToAttendance = async (company) => {
       }
       const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
       const timelogDateTime = combineDateAndTime(log._id, log.startTime);
-      const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
-      const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+      //const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+      //const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       return {
         date: toUTCDate(timelogDateTime),
-        checkIn: checkInTime,
-        checkOut: checkOutTime,
+        checkIn: toUTCDate(new Date(log.startTime)),
+        checkOut: toUTCDate(new Date(log.lastTimeLog)),
         user: user._id,
         duration: timeLogCount * 10,
         ODHours: 0,
