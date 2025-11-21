@@ -41,6 +41,7 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
+const { toUTCDate, combineDateAndTime } = require('../utils/utcConverter');
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -2284,7 +2285,10 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
   }
   req.body.company = companyId;
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  //const endDate = new Date(year, month, 0);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
   let filter = { status: 'Active', company: req.cookies.companyId };
   websocketHandler.sendLog(req, `Preparing user query with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
@@ -2334,12 +2338,13 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
                   }
                 }
                 const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
-                const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
-                const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+                //const timelogDateTime = combineDateAndTime(log._id, log.startTime);
+                //const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+                //const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
                 return {
-                  date: new Date(log._id),
-                  checkIn: checkInTime,
-                  checkOut: checkOutTime,
+                  date: toUTCDate(log._id),
+                  checkIn: toUTCDate(log.startTime),
+                  checkOut: toUTCDate(log.lastTimeLog),
                   user: user._id,
                   duration: timeLogCount * 10,
                   ODHours: 0,
@@ -2386,7 +2391,11 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
 };
 
 const cornMappedTimlogToAttendance = async (company) => {
-  const month =new Date().getMonth(); // +1 since getMonth is 0-based
+  if (company.companyId.toString() !== '68a579feda9656f78e4f84d7') {
+    return;
+  }
+
+  const month = 7;// new Date().getMonth(); // +1 since getMonth is 0-based
   const year = new Date().getFullYear();
   const companyId = company.companyId;
 
@@ -2396,8 +2405,13 @@ const cornMappedTimlogToAttendance = async (company) => {
   }
 
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  //const endDate = new Date(year, month, 0);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
+
   const filter = { status: 'Active', company: companyId };
+  console.log('start date:', startDate, 'end date:', endDate);
 
   const users = await User.find(filter);
 
@@ -2426,7 +2440,6 @@ const cornMappedTimlogToAttendance = async (company) => {
     if (!timeLogs.length) {
       return;
     }
-
     const attendanceRecords = await Promise.all(timeLogs.map(async (log) => {
       const attendanceCount = await AttendanceRecords.countDocuments({ user: user._id, date: new Date(log._id) });
       // if (attendanceCount > 0) {
@@ -2448,12 +2461,13 @@ const cornMappedTimlogToAttendance = async (company) => {
         }
       }
       const lateComingRemarks = await getLateComingRemarks(user._id, log._id);
-      const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
-      const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+      //const timelogDateTime = combineDateAndTime(log._id, log.startTime);
+      //const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
+      //const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       return {
-        date: new Date(log._id),
-        checkIn: checkInTime,
-        checkOut: checkOutTime,
+        date: toUTCDate(log._id),
+        checkIn: toUTCDate(log.startTime),
+        checkOut: toUTCDate(log.lastTimeLog),
         user: user._id,
         duration: timeLogCount * 10,
         ODHours: 0,
@@ -2471,7 +2485,8 @@ const cornMappedTimlogToAttendance = async (company) => {
     }));
 
     const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
-
+//console.log('attendanceRecordsFiltered length:', attendanceRecordsFiltered);
+//return;
     if (attendanceRecordsFiltered.length > 0) {
       console.log(`Inserting ${attendanceRecordsFiltered.length} attendance records for user: ${user._id}`);
       await insertAttendanceRecords(attendanceRecordsFiltered);
@@ -2737,12 +2752,14 @@ async function processAttendanceRecord(user, startTime, endTime, date, req) {
       // Fetch manual entry comment if any
       const lateComingRemarks = await getLateComingRemarks(user._id, date);
 
-      const formattedDate = new Date(Date.UTC(
-        new Date(date).getFullYear(),
-        new Date(date).getMonth(),
-        new Date(date).getDate(),
-        0, 0, 0, 0
-      ));
+      // const formattedDate = new Date(Date.UTC(
+      //   new Date(date).getFullYear(),
+      //   new Date(date).getMonth(),
+      //   new Date(date).getDate(),
+      //   0, 0, 0, 0
+      // ));
+      const formattedDate = toUTCDate(date);
+      //console.log('Formatted Date:', formattedDate);
 
       // Create an attendance record
       return {
@@ -3150,13 +3167,15 @@ async function getStartAndEndDates(req, year, month) {
     throw new Error('Invalid year or month');
   }
 
-  // const IST_OFFSET_HOURS = 5;
-  // const IST_OFFSET_MINUTES = 30;
-  // const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
-  // const endOfMonthLocal = new Date(Date.UTC(year, month, 0, -IST_OFFSET_HOURS, -IST_OFFSET_MINUTES, 0));
-  // const utcEndOfMonth = new Date(endOfMonthLocal.getTime()); // 1 sec before midnight next UTC day
-  const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
-  const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 0, 0, 0, 0));
+
+  // const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  // const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 0, 0, 0, 0));
+  const utcStartOfMonth = new Date(year, month - 1, 1);
+  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const utcEndOfMonth = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
+  console.log('startOfMonth:', utcStartOfMonth, 'endOfMonth:', utcEndOfMonth);
+  console.log('startOfMonth:', utcStartOfMonth.toISOString(), 'endOfMonth:', utcEndOfMonth.toISOString());
 
   websocketHandler.sendLog(req, `UTC Start of month: ${utcStartOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
   websocketHandler.sendLog(req, `UTC End of month: ${utcEndOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
@@ -3243,7 +3262,8 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const end = new Date(leave.endDate);
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        //days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        days.push(d.toISOString());
       }
       d.setDate(d.getDate() + 1);
     }
@@ -3255,7 +3275,8 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   const holidayDates = holidays.map(h => {
     // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
     // return parts.join('-');
-    const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
+    //const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
+    const parts = h.date.toISOString();
     return parts;
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
@@ -4026,7 +4047,7 @@ console.log({ year, month, companyId, isFNF: false });
 exports.MappedTimlogToAttendanceHelper = async () => {
   let companies = await Company.find({}).select('_id');
   for (let company of companies) {
-    console.log(`Processing company ID: ${company._id}`);
+    //console.log(`Processing company ID: ${company._id}`);
     await cornMappedTimlogToAttendance({
       companyId: company._id
     });

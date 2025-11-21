@@ -2,7 +2,7 @@ const Company = require('../models/companyModel');
 const Role = require('../models/permissions/roleModel');
 const catchAsync = require('../utils/catchAsync');
 const HolidayCalendar = require('../models/Company/holidayCalendar');
-const HolidayapplicableEmployee=require('../models/Company/HolidayApplicableEmployee');
+const HolidayapplicableEmployee = require('../models/Company/HolidayApplicableEmployee');
 const Zone = require('../models/Company/Zone');
 const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
@@ -13,7 +13,7 @@ const Band = require("../models/Company/Band");
 const Signatory = require("../models/Company/Signatory");
 const TaxSlab = require('../models/Company/TaxSlab');
 const constants = require('../constants');
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler = require('../utils/websocketHandler');
 const StorageController = require('./storageController');
 
 exports.getAllCompanies = catchAsync(async (req, res, next) => {
@@ -41,14 +41,14 @@ exports.deleteCompany = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateCompany =  catchAsync(async (req, res, next) => {
+exports.updateCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating company with ID: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-    // ✅ Check if state is missing or empty
- if (!req.body.state || req.body.state.trim() === '') {
-      websocketHandler.sendLog(req, 'State value missing in update request', constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('common.stateNotFound'), 404)); // You can add this key in i18n if not already there
-    }
+  // ✅ Check if state is missing or empty
+  if (!req.body.state || req.body.state.trim() === '') {
+    websocketHandler.sendLog(req, 'State value missing in update request', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.stateNotFound'), 404)); // You can add this key in i18n if not already there
+  }
   const document = await Company.findByIdAndUpdate(req.cookies.companyId, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data
@@ -67,24 +67,25 @@ exports.updateCompany =  catchAsync(async (req, res, next) => {
 });
 exports.updateCompanyLogo = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating Company Logo for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   const company = await Company.findById(req.cookies.companyId);
   if (!company) {
     websocketHandler.sendLog(req, `Company ${req.cookies.companyId} not found`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('company.notFound')
 
-    , 404));
+      , 404));
   }
-  
+
   for (let i = 0; i < req.body.companyLogo.length; i++) {
     if (!req.body.companyLogo[i].attachmentSize || !req.body.companyLogo[i].extention || !req.body.companyLogo[i].file ||
-        req.body.companyLogo[i].attachmentSize === null || req.body.companyLogo[i].extention === null || req.body.companyLogo[i].file === null) {
+      req.body.companyLogo[i].attachmentSize === null || req.body.companyLogo[i].extention === null || req.body.companyLogo[i].file === null) {
       websocketHandler.sendLog(req, 'Missing company logo properties', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ error: req.t('company.missingcompanyLogoProperties')
+      return res.status(400).json({
+        error: req.t('company.missingcompanyLogoProperties')
 
       });
     }
-    
+
     let extension = req.body.companyLogo[i].extention.toLowerCase();
     if (!extension.startsWith('.')) {
       extension = `.${extension}`; // Add leading dot if missing
@@ -94,103 +95,184 @@ exports.updateCompanyLogo = catchAsync(async (req, res, next) => {
     //req.body.companyLogo[i].filePath = attachmentName + "_" + company._id + req.body.companyLogo[i].extention;
     req.body.companyLogo[i].filePath = `${attachmentName}_${company._id}_${i}${extension}`;
     websocketHandler.sendLog(req, `Uploading Company Logo ${req.body.companyLogo[i].filePath}`, constants.LOG_TYPES.DEBUG);
-    
+
     const url = await StorageController.createContainerInContainerSAS(
       req.cookies.companyId,
       constants.SubContainers.Company,
       req.body.companyLogo[i]
     );
-    
+
     company.logo = url;
     await company.save();
     websocketHandler.sendLog(req, `Company Logo updated with URL ${url}`, constants.LOG_TYPES.INFO);
   }
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: company
   });
 });
-exports.getCompany  = catchAsync(async (req, res, next) => {    
+exports.getCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching company with ID: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-const company = await Company.findById(req.cookies.companyId);  
-websocketHandler.sendLog(req, `Company retrieved: ${company?._id || 'none'}`, constants.LOG_TYPES.INFO);
-res.status(200).json({
-  status: constants.APIResponseStatus.Success,
-  data: {
-    company: company
-  }
-});  
-});
- // Get Country List
- exports.getCompanyList = catchAsync(async (req, res, next) => {    
-    websocketHandler.sendLog(req, 'Starting getCompanyList', constants.LOG_TYPES.INFO);
-    const companyList = await Company.find({}).all();  
-    websocketHandler.sendLog(req, `Retrieved ${companyList.length} companies`, constants.LOG_TYPES.INFO);
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: {
-        companyList: companyList
-      }
-    });  
-});
-exports.createHoliday = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting createHoliday', constants.LOG_TYPES.INFO);
-  const company = req.cookies.companyId; // Get company from cookies
-  const holidayDate = req.body.date; 
-  // Validate if company value exists in cookies
-  if (!company) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);   
-    return next(new AppError(req.t('company.companyIdMissing'), 400));
-  }
-  req.body.company = company; // Set company in the request body
-  websocketHandler.sendLog(req, `Creating holiday for company: ${company}`, constants.LOG_TYPES.TRACE);
-  if (!holidayDate) {
-    websocketHandler.sendLog(req, 'Holiday date missing in request body', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('common.dateMissing'), 400));
-  }
-
-  // ✅ Check for existing holiday on the same date
-  const existingHoliday = await HolidayCalendar.findOne({
-    company,
-    date: new Date(holidayDate),
-  });
-
-  if (existingHoliday) {
-    websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
-  }
-  const holidayCalendar = await HolidayCalendar.create(req.body);
-  const users = req.body.users;
- 
-  // Iterate through the users array and add unique user IDs to uniqueUsers array
-  const uniqueUsers = new Set(); // Using a Set to store unique user IDs
-
-  // Iterate through the users array and add unique user IDs to uniqueUsers set
-  for (const val of users) {
-    const userId = val.user; // Get the user ID from the object
-    if (!uniqueUsers.has(userId)) { // Check if user ID already exists
-      uniqueUsers.add(userId);
-    }
-  }
-  // Iterate through the users array and create UserRegularizationReason for each user
-  const holidayapplicableEmployees = [];
-  for (const user of uniqueUsers) {
-    const holidayapplicableEmployee = await HolidayapplicableEmployee.create({
-      user: user,
-      holiday: holidayCalendar._id // Assuming regularizationReason is the newly created document
-    });
-    holidayapplicableEmployees.push(holidayapplicableEmployee);
-  }
-  holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
-  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
-  res.status(201).json({
+  const company = await Company.findById(req.cookies.companyId);
+  websocketHandler.sendLog(req, `Company retrieved: ${company?._id || 'none'}`, constants.LOG_TYPES.INFO);
+  res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: holidayCalendar
+    data: {
+      company: company
+    }
   });
 });
+// Get Country List
+exports.getCompanyList = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getCompanyList', constants.LOG_TYPES.INFO);
+  const companyList = await Company.find({}).all();
+  websocketHandler.sendLog(req, `Retrieved ${companyList.length} companies`, constants.LOG_TYPES.INFO);
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: {
+      companyList: companyList
+    }
+  });
+});
+// exports.createHoliday = catchAsync(async (req, res, next) => {
+//   websocketHandler.sendLog(req, 'Starting createHoliday', constants.LOG_TYPES.INFO);
+//   const company = req.cookies.companyId; // Get company from cookies
+//   const holidayDate = req.body.date;
+//   // Validate if company value exists in cookies
+//   if (!company) {
+//     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('company.companyIdMissing'), 400));
+//   }
+//   req.body.company = company; // Set company in the request body
+//   websocketHandler.sendLog(req, `Creating holiday for company: ${company}`, constants.LOG_TYPES.TRACE);
+//   if (!holidayDate) {
+//     websocketHandler.sendLog(req, 'Holiday date missing in request body', constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('common.dateMissing'), 400));
+//   }
 
+//   // ✅ Check for existing holiday on the same date
+//   const existingHoliday = await HolidayCalendar.findOne({
+//     company,
+//     date: new Date(holidayDate),
+//   });
+
+//   if (existingHoliday) {
+//     websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
+//   }
+//   const holidayCalendar = await HolidayCalendar.create(req.body);
+//   const users = req.body.users;
+
+//   // Iterate through the users array and add unique user IDs to uniqueUsers array
+//   const uniqueUsers = new Set(); // Using a Set to store unique user IDs
+
+//   // Iterate through the users array and add unique user IDs to uniqueUsers set
+//   for (const val of users) {
+//     const userId = val.user; // Get the user ID from the object
+//     if (!uniqueUsers.has(userId)) { // Check if user ID already exists
+//       uniqueUsers.add(userId);
+//     }
+//   }
+//   // Iterate through the users array and create UserRegularizationReason for each user
+//   const holidayapplicableEmployees = [];
+//   for (const user of uniqueUsers) {
+//     const holidayapplicableEmployee = await HolidayapplicableEmployee.create({
+//       user: user,
+//       holiday: holidayCalendar._id // Assuming regularizationReason is the newly created document
+//     });
+//     holidayapplicableEmployees.push(holidayapplicableEmployee);
+//   }
+//   holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
+//   websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
+//   res.status(201).json({
+//     status: constants.APIResponseStatus.Success,
+//     data: holidayCalendar
+//   });
+// });
+exports.createHoliday = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting createHoliday', constants.LOG_TYPES.INFO);
+  const company = req.cookies.companyId; // Get company from cookies
+  const holidayDate = req.body.date;
+  const holidayName = req.body.label; // Assuming the name/description is in req.body.name
+  const isRecurring = req.body.isHolidayOccurEveryYearOnSameDay; // Assuming this flag is in req.body
+
+  // 1. Validate if company value exists in cookies
+  if (!company) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.companyIdMissing'), 400));
+  }
+  req.body.company = company; // Set company in the request body
+  websocketHandler.sendLog(req, `Creating holiday for company: ${company}`, constants.LOG_TYPES.TRACE);
+  if (!holidayDate) {
+    websocketHandler.sendLog(req, 'Holiday date missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.dateMissing'), 400));
+  }
+  if (!holidayName) {
+    websocketHandler.sendLog(req, 'Holiday name missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('holiday.nameMissing'), 400)); // Add appropriate i18n
+  }
+
+  const dateObj = new Date(holidayDate);
+  const year = dateObj.getFullYear();
+
+  // 2. ✅ Check for existing holiday on the exact same date
+  const existingHolidayOnDate = await HolidayCalendar.findOne({
+    company,
+    date: dateObj,
+  });
+
+  if (existingHolidayOnDate) {
+    websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
+  }
+  
+  // 3. 🚨 NEW: Check for duplicate holiday in the same year if it's NOT a recurring holiday
+  if (isRecurring === false || isRecurring === 'false' || isRecurring === true || isRecurring === 'true') {
+    // Get the start and end of the specified year
+    const startOfYear = new Date(year, 0, 1); // January 1st of the year
+    const endOfYear = new Date(year, 11, 31, 23, 59, 59); // December 31st of the year
+
+    const existingHolidayInYear = await HolidayCalendar.findOne({
+      company,
+      label: holidayName,
+      date: {
+        $gte: startOfYear, // Date is greater than or equal to start of year
+        $lte: endOfYear    // Date is less than or equal to end of year
+      }
+    });
+    if (existingHolidayInYear) {
+      websocketHandler.sendLog(req, `Duplicate holiday name found in ${year} for company ${company}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('company.duplicateHolidayInYear'), 400)); // i18n: 'This holiday already exists in the current year.'
+    }
+  }
+
+  // --- Execution continues if checks pass ---
+  const holidayCalendar = await HolidayCalendar.create(req.body);
+  const users = req.body.users || []; // Handle case where users might be missing or null
+
+  // Iterate through the users array and add unique user IDs to uniqueUsers set
+  const uniqueUsers = new Set(users.map(val => val.user));
+
+  // Iterate through the unique user IDs and create HolidayapplicableEmployee for each
+  const holidayapplicableEmployees = [];
+  for (const user of uniqueUsers) {
+    const holidayapplicableEmployee = await HolidayapplicableEmployee.create({
+      user: user,
+      holiday: holidayCalendar._id
+    });
+    holidayapplicableEmployees.push(holidayapplicableEmployee);
+  }
+
+  holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
+  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: holidayCalendar
+  });
+});
 exports.getHoliday = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getHoliday', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching holiday with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -200,20 +282,18 @@ exports.getHoliday = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Holiday not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.holidayNotFound'), 404));
   }
-  if(holidayCalendar) 
-      {
-        
-         
-          const holidayapplicableEmployees = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);  
-          if(holidayapplicableEmployees) 
-            {
-              holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
-            }
-            else{
-              holidayCalendar.holidayapplicableEmployee=null;
-            }
-          
-      }
+  if (holidayCalendar) {
+
+
+    const holidayapplicableEmployees = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);
+    if (holidayapplicableEmployees) {
+      holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
+    }
+    else {
+      holidayCalendar.holidayapplicableEmployee = null;
+    }
+
+  }
   websocketHandler.sendLog(req, `Holiday retrieved: ${holidayCalendar._id}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -221,7 +301,7 @@ exports.getHoliday = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateHoliday = catchAsync(async (req, res, next) => { 
+exports.updateHoliday = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateHoliday', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating holiday with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const isHolidayCalendar = await HolidayCalendar.findById(req.params.id);
@@ -231,17 +311,17 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('company.holidayNotFound'), 404));
   }
   const company = req.cookies.companyId; // Get company from cookies
-  const holidayDate = req.body.date; 
+  const holidayDate = req.body.date;
   // Validate if company value exists in cookies
   if (!company) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.companyIdMissing'), 400));
   }
   const existingHoliday = await HolidayCalendar.findOne({
     _id: { $ne: req.params.id },
     company,
     date: new Date(holidayDate),
-  }); 
+  });
   if (existingHoliday) {
     websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
@@ -257,7 +337,7 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
   }
   // Retrieve the existing users associated with the regularization reason
   const existingUsers = await HolidayapplicableEmployee.find({ holiday: isHolidayCalendar._id });
- 
+
   // Extract the existing user IDs
   const existingUserIds = existingUsers.map(user => user.user.toString());
 
@@ -277,7 +357,7 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
       holiday: isHolidayCalendar._id
     });
   }));
-  
+
   const holidayCalendar = await HolidayCalendar.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -288,7 +368,7 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('company.holidayNotFound'), 404));
   }
 
-  holidayCalendar.holidayapplicableEmployee =  await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);;
+  holidayCalendar.holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);;
   websocketHandler.sendLog(req, `Holiday updated: ${holidayCalendar._id} with ${holidayCalendar.holidayapplicableEmployee.length} applicable employees`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -335,52 +415,50 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getAllHolidaysByYear', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching holidays for company: ${req.cookies.companyId}, years: ${req.body.years}`, constants.LOG_TYPES.TRACE);
   const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;   
-    const year = req.body.year || null;
-    console.log(year);
-    //const totalCount = await HolidayCalendar.countDocuments({  company: req.cookies.companyId, status : req.body.status });     
-    
-    const query = {
-      company: req.cookies.companyId,
-      status: req.body.status
+  const limit = parseInt(req.body.next) || 10;
+  const year = req.body.year || null;
+  console.log(year);
+  //const totalCount = await HolidayCalendar.countDocuments({  company: req.cookies.companyId, status : req.body.status });     
+
+  const query = {
+    company: req.cookies.companyId,
+    status: req.body.status
+  };
+
+  // // If years are provided, add them to the query
+  // if (years && years.length > 0) {
+  //   query.year = { $in: years };
+  // }
+  // If years are provided, add them to the query
+  if (year) {
+    const startDate = new Date(year, 0, 1); // Jan 1 of the year
+    const endDate = new Date(year, 11, 31, 23, 59, 59); // Dec 31 end of day
+
+    query.date = {
+      $gte: startDate,
+      $lte: endDate
     };
+  }
 
-    // // If years are provided, add them to the query
-    // if (years && years.length > 0) {
-    //   query.year = { $in: years };
-    // }
-    // If years are provided, add them to the query
-    if (year) {
-      const startDate = new Date(year, 0, 1); // Jan 1 of the year
-      const endDate = new Date(year, 11, 31, 23, 59, 59); // Dec 31 end of day
-    
-      query.date = {
-        $gte: startDate,
-        $lte: endDate
-      };
-    }
-    
-    // Get the total count of documents that match the query
-    const totalCount = await HolidayCalendar.countDocuments(query);
+  // Get the total count of documents that match the query
+  const totalCount = await HolidayCalendar.countDocuments(query);
 
-    // Fetch the holiday calendars that match the query with pagination
-    const holidayCalendars = await HolidayCalendar.find(query).skip(skip).limit(limit);
+  // Fetch the holiday calendars that match the query with pagination
+  const holidayCalendars = await HolidayCalendar.find(query).skip(skip).limit(limit);
 
-    //const holidayCalendars = await HolidayCalendar.find({}).where('status').equals(req.body.status).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year).skip(parseInt(skip)).limit(parseInt(limit));
+  //const holidayCalendars = await HolidayCalendar.find({}).where('status').equals(req.body.status).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year).skip(parseInt(skip)).limit(parseInt(limit));
 
-    if(holidayCalendars)
-      {        
-          for(var i = 0; i < holidayCalendars.length; i++) {     
-          const holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendars[i]._id);  
-          if(holidayapplicableEmployee) 
-            {
-              holidayCalendars[i].holidayapplicableEmployee = holidayapplicableEmployee;
-            }
-            else{
-              holidayCalendars[i].holidayapplicableEmployee=null;
-            }
-          }
+  if (holidayCalendars) {
+    for (var i = 0; i < holidayCalendars.length; i++) {
+      const holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendars[i]._id);
+      if (holidayapplicableEmployee) {
+        holidayCalendars[i].holidayapplicableEmployee = holidayapplicableEmployee;
       }
+      else {
+        holidayCalendars[i].holidayapplicableEmployee = null;
+      }
+    }
+  }
   websocketHandler.sendLog(req, `Retrieved ${holidayCalendars.length} holidays, total: ${totalCount}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -392,17 +470,23 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
 exports.createZone = async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createZone', constants.LOG_TYPES.INFO);
   try {
-    const company = req.cookies.companyId; // Get company from cookies
-  
-  // Validate if company value exists in cookies
-  if (!company) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-   
-    return next(new AppError(req.t('company.companyIdMissing'), 400));
-  }
-  req.body.company = company; // Set company in the request body
-  websocketHandler.sendLog(req, `Creating zone for company: ${company}`, constants.LOG_TYPES.TRACE);
-  
+    const company = req.cookies.companyId; 
+    if (!company) {
+      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('company.companyIdMissing'), 400));
+    }
+
+    const { zoneName } = req.body;
+    const existingShift = await Zone.findOne({ zoneName: zoneName, company: company, isDelete: { $ne: true } });
+
+    if (existingShift) {
+      websocketHandler.sendLog(req, `Zone with name "${name}" already exists for company ${company}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('company.duplicate_zone_record'), 400));
+    }
+
+    req.body.company = company;
+    websocketHandler.sendLog(req, `Creating zone for company: ${company}`, constants.LOG_TYPES.TRACE);
+
     const zone = await Zone.create(req.body);
     websocketHandler.sendLog(req, `Zone created: ${zone._id}`, constants.LOG_TYPES.INFO);
     res.status(201).json({
@@ -411,7 +495,7 @@ exports.createZone = async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error creating zone: ${error.message}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.serverError'), 400));
+    return next(new AppError(req.t('company.duplicate_zone_record'), 400));
   }
 };
 
@@ -449,7 +533,7 @@ exports.updateZone = async (req, res, next) => {
 
     if (!zone) {
       websocketHandler.sendLog(req, `Zone not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-     
+
       return next(new AppError(req.t('company.zoneNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Zone updated: ${zone._id}`, constants.LOG_TYPES.INFO);
@@ -486,7 +570,7 @@ exports.deleteZone = async (req, res, next) => {
   try {
     const zone = await Zone.findByIdAndDelete(req.params.id);
     if (!zone) {
-      websocketHandler.sendLog(req, `Zone not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);    
+      websocketHandler.sendLog(req, `Zone not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.zoneNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Zone deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -503,7 +587,7 @@ exports.deleteZone = async (req, res, next) => {
 exports.addLocation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addLocation', constants.LOG_TYPES.INFO);
   const company = req.cookies.companyId; // Get company from cookies
-  
+
   // Validate if company value exists in cookies
   if (!company) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -511,12 +595,12 @@ exports.addLocation = catchAsync(async (req, res, next) => {
   }
   req.body.company = company; // Set company in the request body
   websocketHandler.sendLog(req, `Adding location for company: ${company}`, constants.LOG_TYPES.TRACE);
-  const { locationCode} = req.body;
+  const { locationCode } = req.body;
   const existing = await Location.findOne({ locationCode: locationCode, company });
 
   if (existing) {
     websocketHandler.sendLog(req, `Location already exists: ${locationCode}`, constants.LOG_TYPES.WARN);
-     return next(new AppError(req.t('company.locationExists'), 400));
+    return next(new AppError(req.t('company.locationExists'), 400));
   }
   const location = await Location.create(req.body);
   websocketHandler.sendLog(req, `Location created: ${location._id}`, constants.LOG_TYPES.INFO);
@@ -547,19 +631,19 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateLocation', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating location with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const company = req.cookies.companyId; // Get company from cookies
-  
+
   // Validate if company value exists in cookies
   if (!company) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.companyIdMissing'), 400));
   }
   req.body.company = company; // Set company in the request body
-  const { locationCode} = req.body;
-  const existing = await Location.findOne({  _id: { $ne: req.params.id }, locationCode: locationCode, company });
+  const { locationCode } = req.body;
+  const existing = await Location.findOne({ _id: { $ne: req.params.id }, locationCode: locationCode, company });
 
   if (existing) {
     websocketHandler.sendLog(req, `Location already exists: ${locationCode}`, constants.LOG_TYPES.WARN);
-     return next(new AppError(req.t('company.locationExists'), 400));
+    return next(new AppError(req.t('company.locationExists'), 400));
   }
   const location = await Location.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -577,7 +661,7 @@ exports.updateLocation = catchAsync(async (req, res, next) => {
 });
 
 // Get All Locations by companyId
-exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => { 
+exports.getAllLocationsByCompanyId = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getAllLocationsByCompanyId', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching locations for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
   const locations = await Location.find({ company: req.cookies.companyId });
@@ -608,7 +692,7 @@ exports.deleteLocation = catchAsync(async (req, res, next) => {
 exports.createDepartment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createDepartment', constants.LOG_TYPES.INFO);
   const company = req.cookies.companyId; // Get company from cookies
-  
+
   // Validate if company value exists in cookies
   if (!company) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -624,13 +708,13 @@ exports.createDepartment = catchAsync(async (req, res, next) => {
   });
   if (existing) {
     websocketHandler.sendLog(req, `Duplicate department found: Name "${departmentName}", Code "${departmentCode}"`, constants.LOG_TYPES.WARN);
-   
+
     return next(new AppError(req.t('company.departmentExists'), 400));
 
   }
   req.body.company = company; // Set company in the request body
   websocketHandler.sendLog(req, `Creating department for company: ${company}`, constants.LOG_TYPES.TRACE);
- 
+
   const department = await Department.create({ departmentName, departmentCode, company });
   websocketHandler.sendLog(req, `Department created: ${department._id}`, constants.LOG_TYPES.INFO);
   res.status(201).json({
@@ -661,7 +745,7 @@ exports.updateDepartment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating department with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const { departmentName, departmentCode } = req.body;
   const company = req.cookies.companyId; // Get company from cookies
-  
+
   // Validate if company value exists in cookies
   if (!company) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -677,7 +761,7 @@ exports.updateDepartment = catchAsync(async (req, res, next) => {
   });
   if (existing) {
     websocketHandler.sendLog(req, `Duplicate department found: Name "${departmentName}", Code "${departmentCode}"`, constants.LOG_TYPES.WARN);
-   
+
     return next(new AppError(req.t('company.departmentExists'), 400));
 
   }
@@ -734,7 +818,7 @@ exports.createSubDepartment = async (req, res, next) => {
     const company = req.cookies.companyId;
 
     if (!company) {
-      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);      
+      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.companyIdMissing'), 400));
     }
 
@@ -775,30 +859,30 @@ exports.createSubDepartment = async (req, res, next) => {
 
 
 exports.getSubDepartment = async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getSubDepartment', constants.LOG_TYPES.INFO);
-    websocketHandler.sendLog(req, `Fetching sub-department with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-    try {
-        const subDepartment = await SubDepartment.findById(req.params.id);
-        if (!subDepartment) {
-            websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-            res.status(404).json({
-                status: constants.APIResponseStatus.Failure,
-                message: req.t('company.subDepartmentNotFound')
-            });
-        } else {
-            websocketHandler.sendLog(req, `Sub-department retrieved: ${subDepartment._id}`, constants.LOG_TYPES.INFO);
-            res.status(200).json({
-                status: constants.APIResponseStatus.Success,
-                data: subDepartment
-            });
-        }
-    } catch (err) {
-        websocketHandler.sendLog(req, `Error fetching sub-department: ${err.message}`, constants.LOG_TYPES.ERROR);
-        res.status(500).json({
-            status: constants.APIResponseStatus.Failure,
-            message: req.t('company.serverError')
-        });
+  websocketHandler.sendLog(req, 'Starting getSubDepartment', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching sub-department with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  try {
+    const subDepartment = await SubDepartment.findById(req.params.id);
+    if (!subDepartment) {
+      websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+      res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('company.subDepartmentNotFound')
+      });
+    } else {
+      websocketHandler.sendLog(req, `Sub-department retrieved: ${subDepartment._id}`, constants.LOG_TYPES.INFO);
+      res.status(200).json({
+        status: constants.APIResponseStatus.Success,
+        data: subDepartment
+      });
     }
+  } catch (err) {
+    websocketHandler.sendLog(req, `Error fetching sub-department: ${err.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('company.serverError')
+    });
+  }
 };
 
 exports.updateSubDepartment = async (req, res, next) => {
@@ -809,15 +893,15 @@ exports.updateSubDepartment = async (req, res, next) => {
     const company = req.cookies.companyId;
 
     if (!company) {
-      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);     
+      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.companyIdMissing'), 400));
- 
+
     }
 
     const { subDepartmentName, subDepartmentCode } = req.body;
 
     // ✅ Check if another sub-department with same name & code exists (excluding current one)
-  
+
     const existing = await SubDepartment.findOne({
       _id: { $ne: req.params.id },
       company, // Match within the same company
@@ -828,9 +912,9 @@ exports.updateSubDepartment = async (req, res, next) => {
     });
     if (existing) {
       websocketHandler.sendLog(req, `Duplicate sub-department found: Name "${subDepartmentName}", Code "${subDepartmentCode}"`, constants.LOG_TYPES.WARN);
-     
+
       return next(new AppError(req.t('company.subDepartmentExists'), 400));
- 
+
     }
 
     // ✅ Proceed with update
@@ -840,7 +924,7 @@ exports.updateSubDepartment = async (req, res, next) => {
     });
 
     if (!subDepartment) {
-      websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);     
+      websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.subDepartmentNotFound'), 400));
     }
 
@@ -857,49 +941,49 @@ exports.updateSubDepartment = async (req, res, next) => {
 };
 
 exports.getAllSubDepartmentsByCompanyId = async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting getAllSubDepartmentsByCompanyId', constants.LOG_TYPES.INFO);
-    websocketHandler.sendLog(req, `Fetching sub-departments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-    try {
-        const subDepartments = await SubDepartment.find({}).where('company').equals(req.cookies.companyId);
-        websocketHandler.sendLog(req, `Retrieved ${subDepartments.length} sub-departments`, constants.LOG_TYPES.INFO);
-        res.status(200).json({
-            status: constants.APIResponseStatus.Success,
-            data: subDepartments
-        });
-    } catch (err) {
-        websocketHandler.sendLog(req, `Error fetching sub-departments: ${err.message}`, constants.LOG_TYPES.ERROR);
-        res.status(500).json({
-            status: constants.APIResponseStatus.Failure,
-            message: req.t('company.serverError')
-        });
-    }
+  websocketHandler.sendLog(req, 'Starting getAllSubDepartmentsByCompanyId', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Fetching sub-departments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+  try {
+    const subDepartments = await SubDepartment.find({}).where('company').equals(req.cookies.companyId);
+    websocketHandler.sendLog(req, `Retrieved ${subDepartments.length} sub-departments`, constants.LOG_TYPES.INFO);
+    res.status(200).json({
+      status: constants.APIResponseStatus.Success,
+      data: subDepartments
+    });
+  } catch (err) {
+    websocketHandler.sendLog(req, `Error fetching sub-departments: ${err.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('company.serverError')
+    });
+  }
 };
 
 exports.deleteSubDepartment = async (req, res, next) => {
-    websocketHandler.sendLog(req, 'Starting deleteSubDepartment', constants.LOG_TYPES.INFO);
-    websocketHandler.sendLog(req, `Deleting sub-department with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-    try {
-        const subDepartment = await SubDepartment.findByIdAndDelete(req.params.id);
-        if (!subDepartment) {
-            websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-            res.status(404).json({
-                status: constants.APIResponseStatus.Failure,
-                message: req.t('company.subDepartmentNotFound')
-            });
-        } else {
-            websocketHandler.sendLog(req, `Sub-department deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
-            res.status(204).json({
-                status: constants.APIResponseStatus.Success,
-                data: null
-            });
-        }
-    } catch (err) {
-        websocketHandler.sendLog(req, `Error deleting sub-department: ${err.message}`, constants.LOG_TYPES.ERROR);
-        res.status(500).json({
-            status:constants.APIResponseStatus.Failure,
-            message: req.t('company.serverError')
-        });
+  websocketHandler.sendLog(req, 'Starting deleteSubDepartment', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Deleting sub-department with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
+  try {
+    const subDepartment = await SubDepartment.findByIdAndDelete(req.params.id);
+    if (!subDepartment) {
+      websocketHandler.sendLog(req, `Sub-department not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+      res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('company.subDepartmentNotFound')
+      });
+    } else {
+      websocketHandler.sendLog(req, `Sub-department deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
+      res.status(204).json({
+        status: constants.APIResponseStatus.Success,
+        data: null
+      });
     }
+  } catch (err) {
+    websocketHandler.sendLog(req, `Error deleting sub-department: ${err.message}`, constants.LOG_TYPES.ERROR);
+    res.status(500).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('company.serverError')
+    });
+  }
 };
 exports.createDesignation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createDesignation', constants.LOG_TYPES.INFO);
@@ -923,7 +1007,7 @@ exports.createDesignation = catchAsync(async (req, res, next) => {
 
   if (existing) {
     websocketHandler.sendLog(req, `Designation already exists: ${designation}`, constants.LOG_TYPES.WARN);
-     return next(new AppError(req.t('company.designationExists'), 400));
+    return next(new AppError(req.t('company.designationExists'), 400));
   }
 
   // Proceed to create
@@ -1013,13 +1097,13 @@ exports.deleteDesignation = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting deleteDesignation', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Deleting designation with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
   const designation = await Designation.findByIdAndDelete(req.params.id);
-  
+
   if (!designation) {
     websocketHandler.sendLog(req, `Designation not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.designationNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Designation deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
@@ -1030,7 +1114,7 @@ exports.createBand = async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createBand', constants.LOG_TYPES.INFO);
   try {
     const company = req.cookies.companyId; // Get company from cookies
-  
+
     // Validate if company value exists in cookies
     if (!company) {
       websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -1043,7 +1127,7 @@ exports.createBand = async (req, res, next) => {
 
     if (existing) {
       websocketHandler.sendLog(req, `band already exists: ${band}`, constants.LOG_TYPES.WARN);
-       return next(new AppError(req.t('company.bandExists'), 400));
+      return next(new AppError(req.t('company.bandExists'), 400));
     }
     const bandCreated = await Band.create(req.body);
     websocketHandler.sendLog(req, `Band created: ${band._id}`, constants.LOG_TYPES.INFO);
@@ -1053,7 +1137,7 @@ exports.createBand = async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error creating band: ${error.message}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.serverError'), 400));   
+    return next(new AppError(req.t('company.serverError'), 400));
   }
 };
 
@@ -1091,7 +1175,7 @@ exports.updateBand = async (req, res, next) => {
   try {
     const { band } = req.body;
     const company = req.cookies.companyId; // Get company from cookies
-  
+
     // Validate if company value exists in cookies
     if (!company) {
       websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -1099,16 +1183,16 @@ exports.updateBand = async (req, res, next) => {
     }
     req.body.company = company; // Set company in the request body
     websocketHandler.sendLog(req, `Creating band for company: ${company}`, constants.LOG_TYPES.TRACE);
-    const existing = await Band.findOne({  _id: { $ne: req.params.id }, band: band, company });
+    const existing = await Band.findOne({ _id: { $ne: req.params.id }, band: band, company });
 
     if (existing) {
       websocketHandler.sendLog(req, `Band already exists: ${band}`, constants.LOG_TYPES.WARN);
-       return next(new AppError(req.t('company.bandExists'), 400));
+      return next(new AppError(req.t('company.bandExists'), 400));
     }
     const bandUpdated = await Band.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!bandUpdated) {
       websocketHandler.sendLog(req, `Band not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('company.bandNotFound'), 400));     
+      return next(new AppError(req.t('company.bandNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Band updated: ${bandUpdated._id}`, constants.LOG_TYPES.INFO);
     res.status(200).json({
@@ -1116,7 +1200,7 @@ exports.updateBand = async (req, res, next) => {
       data: bandUpdated
     });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error updating band: ${error.message}`, constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, `Error updating band: ${error.message}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.serverError'), 400));
   }
 };
@@ -1148,7 +1232,7 @@ exports.deleteBand = async (req, res, next) => {
   try {
     const band = await Band.findByIdAndDelete(req.params.id);
     if (!band) {
-      websocketHandler.sendLog(req, `Band not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);   
+      websocketHandler.sendLog(req, `Band not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.bandNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Band deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
@@ -1157,7 +1241,7 @@ exports.deleteBand = async (req, res, next) => {
       data: null
     });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error deleting band: ${error.message}`, constants.LOG_TYPES.ERROR);   
+    websocketHandler.sendLog(req, `Error deleting band: ${error.message}`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('company.serverError'), 400));
   }
 };
@@ -1167,11 +1251,11 @@ exports.createSignatory = async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createSignatory', constants.LOG_TYPES.INFO);
   try {
     const company = req.cookies.companyId; // Get company from cookies
-  
+
     // Validate if company value exists in cookies
     if (!company) {
       websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('company.companyIdMissing'), 400));     
+      return next(new AppError(req.t('company.companyIdMissing'), 400));
     }
     req.body.company = company; // Set company in the request body
     websocketHandler.sendLog(req, `Creating signatory for company: ${company}`, constants.LOG_TYPES.TRACE);
@@ -1182,8 +1266,8 @@ exports.createSignatory = async (req, res, next) => {
       data: signatory
     });
   } catch (err) {
-    websocketHandler.sendLog(req, `Error creating signatory: ${err.message}`, constants.LOG_TYPES.ERROR);   
-    return next(new AppError(req.t('company.serverError'), 400));     
+    websocketHandler.sendLog(req, `Error creating signatory: ${err.message}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.serverError'), 400));
   }
 };
 
@@ -1196,7 +1280,7 @@ exports.getSignatory = async (req, res, next) => {
     if (!signatory) {
       websocketHandler.sendLog(req, `Signatory not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
       return res.status(404).json({
-        status:constants.APIResponseStatus.Failure,
+        status: constants.APIResponseStatus.Failure,
         message: req.t('company.signatoryNotFound')
       });
     }
@@ -1225,7 +1309,7 @@ exports.updateSignatory = async (req, res, next) => {
     });
     if (!signatory) {
       websocketHandler.sendLog(req, `Signatory not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('company.signatoryNotFound'), 400));          
+      return next(new AppError(req.t('company.signatoryNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Signatory updated: ${signatory._id}`, constants.LOG_TYPES.INFO);
     res.status(200).json({
@@ -1233,8 +1317,8 @@ exports.updateSignatory = async (req, res, next) => {
       data: signatory
     });
   } catch (err) {
-    websocketHandler.sendLog(req, `Error updating signatory: ${err.message}`, constants.LOG_TYPES.ERROR);   
-    return next(new AppError(req.t('company.serverError'), 400));    
+    websocketHandler.sendLog(req, `Error updating signatory: ${err.message}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.serverError'), 400));
   }
 };
 
@@ -1265,8 +1349,8 @@ exports.deleteSignatory = async (req, res, next) => {
   try {
     const signatory = await Signatory.findByIdAndDelete(req.params.id);
     if (!signatory) {
-      websocketHandler.sendLog(req, `Signatory not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);    
-      return next(new AppError(req.t('company.signatoryNotFound'), 400)); 
+      websocketHandler.sendLog(req, `Signatory not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('company.signatoryNotFound'), 400));
     }
     websocketHandler.sendLog(req, `Signatory deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
     res.status(204).json({
@@ -1275,54 +1359,121 @@ exports.deleteSignatory = async (req, res, next) => {
     });
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting signatory: ${err.message}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.serverError'), 400)); 
+    return next(new AppError(req.t('company.serverError'), 400));
   }
 };
 
 // Add a new tax slab
+// exports.createTaxSlab = catchAsync(async (req, res, next) => {
+//   websocketHandler.sendLog(req, 'Starting createTaxSlab', constants.LOG_TYPES.INFO);
+//   const companyId = req.cookies.companyId; // Get company from cookies
+
+//   // Validate if company value exists in cookies
+//   if (!companyId) {
+//     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+
+//     return next(new AppError(req.t('company.companyIdMissing'), 400));
+
+//   }
+//   req.body.company = companyId; // Set company in the request body
+//   websocketHandler.sendLog(req, `Creating tax slab for company: ${companyId}`, constants.LOG_TYPES.TRACE);
+
+//   const { IncomeTaxSlabs, minAmount, maxAmount, taxPercentage, regime, cycle, company, holidayapplicableEmployee } = req.body;
+
+//   const taxSlab = await TaxSlab.create({
+//     IncomeTaxSlabs,
+//     minAmount,
+//     maxAmount,
+//     taxPercentage,
+//     regime,
+//     cycle,
+//     company,
+//     holidayapplicableEmployee,
+//   });
+//   websocketHandler.sendLog(req, `Tax slab created: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
+
+//   res.status(201).json({
+//     status: constants.APIResponseStatus.Success,
+//     data: taxSlab,
+//   });
+// });
 exports.createTaxSlab = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting createTaxSlab', constants.LOG_TYPES.INFO);
-  const companyId = req.cookies.companyId; // Get company from cookies
-  
-  // Validate if company value exists in cookies
-  if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-   
-    return next(new AppError(req.t('company.companyIdMissing'), 400)); 
+  websocketHandler.sendLog(req, 'Starting createTaxSlab', constants.LOG_TYPES.INFO);
 
-  }
-  req.body.company = companyId; // Set company in the request body
-  websocketHandler.sendLog(req, `Creating tax slab for company: ${companyId}`, constants.LOG_TYPES.TRACE);
+  const companyId = req.cookies.companyId; // Get company from cookies
 
-  const { IncomeTaxSlabs, minAmount, maxAmount, taxPercentage,regime, cycle, company, holidayapplicableEmployee } = req.body;
+  // 1. Validate if company value exists in cookies
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.companyIdMissing'), 400));
+  }
 
-  const taxSlab = await TaxSlab.create({
-    IncomeTaxSlabs,
-    minAmount,
-    maxAmount,
-    taxPercentage,
-    regime,
-    cycle,
-    company,
-    holidayapplicableEmployee,
-  });
-  websocketHandler.sendLog(req, `Tax slab created: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
+  req.body.company = companyId; // Set company in the request body
+  // Add Financial Year and other destructured variables
+  const { 
+    IncomeTaxSlabs, 
+    minAmount, 
+    maxAmount, 
+    taxPercentage, 
+    regime, 
+    cycle, 
+    company, 
+    holidayapplicableEmployee,
+//     financialYear // ✨ NEW: Destructure financialYear
+  } = req.body;
 
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: taxSlab,
-  });
+const financialYear = req.body.cycle; // ✨ NEW: Assign financialYear from req.body
+  websocketHandler.sendLog(req, `Creating tax slab for company: ${companyId}, regime: ${regime}, financialYear: ${financialYear}`, constants.LOG_TYPES.TRACE);
+
+  // 2. NEW: Validate if financialYear is present
+  if (!financialYear) {
+    websocketHandler.sendLog(req, 'Financial Year missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('taxslab.financialYearMissing'), 400));
+  }
+
+  // 3. NEW: Check for existing tax slab for the unique combination
+  const existingTaxSlab = await TaxSlab.findOne({
+    company: companyId,
+    financialYear: financialYear, // Unique constraint 1
+    regime: regime,               // Unique constraint 2
+  });
+
+  if (existingTaxSlab) {
+    websocketHandler.sendLog(req, `Tax slab already exists for company ${companyId}, regime ${regime}, and financial year ${financialYear}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.duplicateEntry'), 409)); // Use 409 Conflict status
+  }
+
+  const taxSlab = await TaxSlab.create({
+    IncomeTaxSlabs,
+    minAmount,
+    maxAmount,
+    taxPercentage,
+    regime,
+    cycle,
+    company,
+    holidayapplicableEmployee,
+    financialYear, // ✨ NEW: Include financialYear in creation
+  });
+
+  websocketHandler.sendLog(req, `Tax slab created: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: taxSlab,
+  });
 });
+
 exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaxSlabsByCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching tax slabs for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
   const skip = parseInt(req.body.skip) || 0;
-    const limit = parseInt(req.body.next) || 10;  
-    const query = {
-      company: req.cookies.companyId };   
-    // Get the total count of documents that match the query
-    const totalCount = await TaxSlab.countDocuments(query);
-    const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
+  const limit = parseInt(req.body.next) || 10;
+  const query = {
+    company: req.cookies.companyId
+  };
+  // Get the total count of documents that match the query
+  const totalCount = await TaxSlab.countDocuments(query);
+  const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
   websocketHandler.sendLog(req, `Retrieved ${taxSlabs.length} tax slabs, total: ${totalCount}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1337,7 +1488,8 @@ exports.getTaxSlabsByCycle = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching tax slabs for cycle: ${req.params.cycle}`, constants.LOG_TYPES.TRACE);
   const { cycle } = req.params;
   const query = {
-    cycle: cycle };
+    cycle: cycle
+  };
   const taxSlabs = await TaxSlab.find(query);
   websocketHandler.sendLog(req, `Retrieved ${taxSlabs.length} tax slabs`, constants.LOG_TYPES.INFO);
 
@@ -1358,8 +1510,8 @@ exports.updateTaxSlab = catchAsync(async (req, res, next) => {
 
   if (!taxSlab) {
     websocketHandler.sendLog(req, `Tax slab not found: ${id}`, constants.LOG_TYPES.ERROR);
-   
-    return next(new AppError(req.t('company.taxSlabNotFound'), 400)); 
+
+    return next(new AppError(req.t('company.taxSlabNotFound'), 400));
 
   }
   websocketHandler.sendLog(req, `Tax slab updated: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
@@ -1403,8 +1555,8 @@ exports.deleteTaxSlab = catchAsync(async (req, res, next) => {
 
   if (!taxSlab) {
     websocketHandler.sendLog(req, `Tax slab not found: ${id}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.taxSlabNotFound'), 400)); 
-    
+    return next(new AppError(req.t('company.taxSlabNotFound'), 400));
+
   }
   websocketHandler.sendLog(req, `Tax slab deleted: ${id}`, constants.LOG_TYPES.INFO);
 
