@@ -3295,7 +3295,90 @@ function toISTDateString(dateInput) {
   return `${year}-${month}-${day}`;
 }
 
+function toUTCDateString(d) {
+  return new Date(d).toISOString().substring(0, 10);
+}
+
+function toLocalDateStringFromUTC(dateInput) {
+  const d = new Date(dateInput);
+  return d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, '0') + "-" +
+    String(d.getDate()).padStart(2, '0');
+}
+
+// full utc based
 async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
+  const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
+  const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
+  const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }); 
+  let fullDayDuration = null;
+  let halfDayDuration = null;
+  let isHalfDayApplicable = false;
+  if (shiftAssignment?.template) {
+    fullDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditForFullDay * 60;
+    halfDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditforHalfDay * 60;
+    isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
+  }
+  
+  // Normalize attendance dates
+  const attendMap = new Map();
+  for (const r of attendanceRecords) {
+    attendMap.set(toLocalDateStringFromUTC(r.date), r);
+  }
+  const leaveSet = new Set(approvedLeaveDays.map(toLocalDateStringFromUTC));
+  const holidaySet = new Set(holidayDates.map(toLocalDateStringFromUTC));
+
+  for (let day = 1; day <= daysInMonth; day++) {
+
+    const currentDate = new Date(Date.UTC(year, month - 1, day));
+    const dateStr = toUTCDateString(currentDate);
+
+    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+
+    // Week number (UTC)
+    const weekNumber = getWeekNumber(currentDate);
+    const isOddWeek = weekNumber % 2 !== 0;
+
+    const isAlternateOff =
+      ((isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)) &&
+      alternateSet.has(dayName);
+
+    const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff;
+    if (isWeeklyOff) continue;
+
+    const wasPresent = attendMap.get(dateStr);
+    const isOnLeave = leaveSet.has(dateStr);
+    const isHoliday = holidaySet.has(dateStr);
+
+    let wasUserPresent = false;
+    let wasHalfday = false;
+
+    if (wasPresent) {
+      if (wasPresent.duration >= fullDayDuration) {
+        wasUserPresent = true;
+      } else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
+        wasUserPresent = true;
+        wasHalfday = true;
+      }
+    }
+
+    const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+    if (shouldInsertLOP) {
+      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
+      if (!existingLOP) {
+        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}`, constants.LOG_TYPES.INFO);
+      } else {
+        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
+      }
+    }
+  }
+}
+
+async function processLOPForMonthBackup({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
   const timeZone = 'Asia/Kolkata';
   const daysInMonth = new Date(year, month, 0).getDate();
   const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
