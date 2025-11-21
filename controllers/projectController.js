@@ -152,33 +152,6 @@ exports.getProjectListByUser = catchAsync(async (req, res, next) => {
     });
 });
 
-// exports.addProject = catchAsync(async (req, res, next) => {  
-//   websocketHandler.sendLog(req, 'Starting addProject process', constants.LOG_TYPES.INFO);
-//   websocketHandler.sendLog(req, `Creating new project with data: ${JSON.stringify(req.body)}`, constants.LOG_TYPES.TRACE);
-
-//   const newProject = await Project.create({
-//       projectName: req.body.projectName,
-//       startDate: req.body.startDate,
-//       endDate: req.body.endDate,
-//       notes: req.body.notes,
-//       estimatedTime: req.body.estimatedTime,
-//       createdOn: new Date(Date.now()),
-//       updatedOn: new Date(Date.now()),
-//       company: req.cookies.companyId,
-//       createdBy: req.cookies.userId,
-//       updatedBy: req.cookies.userId,
-//       status: "Active"
-//   });  
-
-//   websocketHandler.sendLog(req, `Successfully created project with ID: ${newProject._id}`, constants.LOG_TYPES.INFO);
-//   res.status(200).json({
-//       status: constants.APIResponseStatus.Success,
-//       data: {
-//           newProject: newProject
-//       }
-//   });  
-// });
-
 exports.addProject = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Starting addProject process', constants.LOG_TYPES.INFO);
 
