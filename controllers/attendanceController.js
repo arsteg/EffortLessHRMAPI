@@ -3337,7 +3337,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   for (let day = 1; day <= daysInMonth; day++) {
 
     const currentDate = new Date(Date.UTC(year, month - 1, day));
-    const dateStr = toUTCDateString(currentDate);
+    const dateStr = toLocalDateStringFromUTC(currentDate);
 
     const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
 
