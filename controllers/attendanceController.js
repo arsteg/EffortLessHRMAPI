@@ -3328,11 +3328,11 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   for (const r of attendanceRecords) {
     attendMap.set(toLocalDateStringFromUTC(r.date), r);
   }
-  websocketHandler.sendLog(req, `Attendance map created with: ${attendMap}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `Attendance map created with: ${JSON.stringify([...attendMap.entries()])}`, constants.LOG_TYPES.DEBUG);
   const leaveSet = new Set(approvedLeaveDays.map(toLocalDateStringFromUTC));
-  websocketHandler.sendLog(req, `Leave set created with: ${leaveSet}`, constants.LOG_TYPES.DEBUG);
-  websocketHandler.sendLog(req, `Holiday dates set created with: ${holidayDates}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);  
   const holidaySet = new Set(holidayDates.map(toLocalDateStringFromUTC));
+  websocketHandler.sendLog(req, `Holiday set created with: ${JSON.stringify([...holidaySet])}`, constants.LOG_TYPES.DEBUG);
 
   for (let day = 1; day <= daysInMonth; day++) {
 
