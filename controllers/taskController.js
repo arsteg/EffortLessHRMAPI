@@ -6,8 +6,8 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Tag = require('../models/Task/tagModel');
 const TaskTag = require('../models/Task/taskTagModel');
-const Comment  = require('../models/Task/taskCommentModel');
-const CommonController  = require('../controllers/commonController');
+const Comment = require('../models/Task/taskCommentModel');
+const CommonController = require('../controllers/commonController');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const userSubordinate = require('../models/userSubordinateModel');
 const sendEmail = require('../utils/email');
@@ -19,7 +19,7 @@ const ManualTimeRequest = require('../models/manualTime/manualTimeRequestModel')
 const Project = require('../models/projectModel');
 const constants = require('../constants');
 const StorageController = require('./storageController');
-const  websocketHandler  = require('../utils/websocketHandler');
+const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 
 function formatDateToDDMMYY(date) {
@@ -31,12 +31,12 @@ function formatDateToDDMMYY(date) {
 }
 exports.deleteTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting task deletion process', constants.LOG_TYPES.TRACE);
-  
+
   const timeLogExists = await timeLog.find({}).where('task').equals(req.params.id);
   const manualTimeRequest = await ManualTimeRequest.find({}).where('task').equals(req.params.id);
-  
+
   websocketHandler.sendLog(req, `Found ${timeLogExists.length} time logs and ${manualTimeRequest.length} manual time requests`, constants.LOG_TYPES.DEBUG);
-  
+
   if (timeLogExists.length > 0 || manualTimeRequest.length > 0) {
     websocketHandler.sendLog(req, 'Task deletion prevented due to existing time logs', constants.LOG_TYPES.WARN);
     return res.status(400).json({
@@ -49,20 +49,20 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.DELETE_TASK)
     .where('company').equals(req.cookies.companyId);
-  
+
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
   const task = await Task.findById(req.params.id);
   let isUINotificationSentToReporter = false;
 
-  if (newTaskUserList && newTaskUserList.length > 0) {    
+  if (newTaskUserList && newTaskUserList.length > 0) {
     websocketHandler.sendLog(req, `Found ${newTaskUserList.length} task users for task ${req.params.id}`, constants.LOG_TYPES.INFO);
 
     for (let j = 0; j < newTaskUserList.length; j++) {
       const user = await User.findOne({ _id: newTaskUserList[j].user });
       websocketHandler.sendLog(req, `Processing user ${user?._id} for task deletion notification`, constants.LOG_TYPES.TRACE);
-     
+
       if (user) {
         if (emailTemplate) {
           const contentNewUser = emailTemplate.contentData;
@@ -73,12 +73,12 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
             .replace("{company}", req.cookies.companyName)
             .replace("{projectName}", task.project.projectName)
             .replace("{lastName}", user.lastName);
-          
+
           const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
           if (!document) {
             websocketHandler.sendLog(req, `TaskUser ${newTaskUserList[j]._id} not found for deletion`, constants.LOG_TYPES.ERROR);
             return next(new AppError(req.t('task.documentNotFound')
-            , 404));
+              , 404));
           } else {
             try {
               await sendEmail({
@@ -97,12 +97,12 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
         SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
           constants.Event_Notification_Type_Status.task_delete, user?._id?.toString(), req.cookies.companyId, req);
 
-          if (user._id.toString() === task?.createdBy?._id?.toString()){
-            isUINotificationSentToReporter = true;
-          }
+        if (user._id.toString() === task?.createdBy?._id?.toString()) {
+          isUINotificationSentToReporter = true;
+        }
       }
     }
-    if(!isUINotificationSentToReporter){
+    if (!isUINotificationSentToReporter) {
       //Add Event Notification for delete task to reporter
       SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
         constants.Event_Notification_Type_Status.task_delete, task?.createdBy?._id?.toString(), req.cookies.companyId, req);
@@ -110,7 +110,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   }
 
   const document = await Task.findById(req.params.id);
-  if(document){
+  if (document) {
     await document.remove();
     websocketHandler.sendLog(req, `Task ${req.params.id} successfully deleted`, constants.LOG_TYPES.INFO);
   }
@@ -123,7 +123,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 
 exports.updateTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting task update for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const existingProject = await Project.findById(req.body.project);
   if (!existingProject) {
     websocketHandler.sendLog(req, `Invalid project ${req.body.project} for task update`, constants.LOG_TYPES.WARN);
@@ -138,7 +138,7 @@ exports.updateTask = catchAsync(async (req, res, next) => {
   Object.keys(req.body).forEach((key) => {
     updates[key] = req.body[key];
   });
-  
+
   websocketHandler.sendLog(req, `Applying updates: ${JSON.stringify(updates)}`, constants.LOG_TYPES.DEBUG);
 
   const task = await Task.findByIdAndUpdate(
@@ -149,7 +149,8 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
   if (!task) {
     websocketHandler.sendLog(req, `Task ${req.params.id} not found for update`, constants.LOG_TYPES.ERROR);
-    return res.status(404).send({ error: req.t('task.taskNotFound')
+    return res.status(404).send({
+      error: req.t('task.taskNotFound')
     });
   }
 
@@ -157,46 +158,46 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     .where('Name').equals(constants.Email_template_constant.Update_Task_Notification)
     .where('company').equals(req.cookies.companyId);
 
-    const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
-    const updatedTask = await Task.findById(req.params.id);
-    
-    if (updatedTask && newTaskUserList.length > 0) {
-      const user = await User.findOne({ _id: newTaskUserList[0].user });
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
-      if (emailTemplate) {        
-        const emailTemplateNewUser = emailTemplate.contentData
-          .replace("{firstName}", user.firstName)
-          .replace("{taskName}", updatedTask.taskName)
-          .replace("{date}", formatDateToDDMMYY(new Date()))
-          .replace("{company}", req.cookies.companyName)
-          .replace("{projectName}", updatedTask.project.projectName)
-          .replace("{description}", updatedTask.description)
-          .replace("{priority}", updatedTask.priority)
-          .replace("{taskURL}", taskURL)
-          .replace("{lastName}", user.lastName);
+  const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
+  const updatedTask = await Task.findById(req.params.id);
 
-        try {
-          await sendEmail({
-            email: user.email,
-            subject: emailTemplate.Name,
-            message: emailTemplateNewUser
-          });
-          websocketHandler.sendLog(req, `Update notification sent to ${user.email}`, constants.LOG_TYPES.INFO);
-        } catch (error) {
-          websocketHandler.sendLog(req, `Failed to send update notification: ${error.message}`, constants.LOG_TYPES.ERROR);
-        }
-      }
+  if (updatedTask && newTaskUserList.length > 0) {
+    const user = await User.findOne({ _id: newTaskUserList[0].user });
+    const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
+    if (emailTemplate) {
+      const emailTemplateNewUser = emailTemplate.contentData
+        .replace("{firstName}", user.firstName)
+        .replace("{taskName}", updatedTask.taskName)
+        .replace("{date}", formatDateToDDMMYY(new Date()))
+        .replace("{company}", req.cookies.companyName)
+        .replace("{projectName}", updatedTask.project.projectName)
+        .replace("{description}", updatedTask.description)
+        .replace("{priority}", updatedTask.priority)
+        .replace("{taskURL}", taskURL)
+        .replace("{lastName}", user.lastName);
 
-      // Add Event Notification for the assigned user
-      SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-        constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
-
-      if (user?._id?.toString() !== updatedTask?.createdBy?.toString()){
-        // Add Event Notification for the reporter user
-        SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-          constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req);
+      try {
+        await sendEmail({
+          email: user.email,
+          subject: emailTemplate.Name,
+          message: emailTemplateNewUser
+        });
+        websocketHandler.sendLog(req, `Update notification sent to ${user.email}`, constants.LOG_TYPES.INFO);
+      } catch (error) {
+        websocketHandler.sendLog(req, `Failed to send update notification: ${error.message}`, constants.LOG_TYPES.ERROR);
       }
     }
+
+    // Add Event Notification for the assigned user
+    SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
+      constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
+
+    if (user?._id?.toString() !== updatedTask?.createdBy?.toString()) {
+      // Add Event Notification for the reporter user
+      SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
+        constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req);
+    }
+  }
 
   const getTask = await Task.findById(req.params.id);
   websocketHandler.sendLog(req, `Task ${req.params.id} successfully updated`, constants.LOG_TYPES.INFO);
@@ -212,11 +213,11 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
 exports.getTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching task ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const task = await Task.findById(req.params.id);
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);
-  
+
   websocketHandler.sendLog(req, `Retrieved task with ${newTaskUserList.length} users and ${newTaskAttachmentList.length} attachments`, constants.LOG_TYPES.INFO);
 
   res.status(200).json({
@@ -231,7 +232,7 @@ exports.getTask = catchAsync(async (req, res, next) => {
 
 exports.getTaskUsers = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching task users for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
   websocketHandler.sendLog(req, `Found ${newTaskUserList.length} task users`, constants.LOG_TYPES.INFO);
 
@@ -245,7 +246,7 @@ exports.getTaskUsers = catchAsync(async (req, res, next) => {
 
 exports.getTaskAttachments = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching attachments for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);
   websocketHandler.sendLog(req, `Found ${newTaskAttachmentList.length} attachments`, constants.LOG_TYPES.INFO);
 
@@ -265,7 +266,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   const subordinateIds = await userSubordinate
     .find({ userId: req.cookies.userId })
     .distinct('subordinateUserId');
-  
+
   const teamIdsArray = [...subordinateIds, req.cookies.userId];
   websocketHandler.sendLog(req, `Processing ${teamIdsArray.length} team members`, constants.LOG_TYPES.DEBUG);
 
@@ -356,8 +357,8 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
           TaskUsers: '$TaskUsers',
           createdBy: {
             _id: '$taskCreatedBy._id',
-           firstName: '$taskCreatedBy.firstName',
-           lastName: '$taskCreatedBy.lastName'
+            firstName: '$taskCreatedBy.firstName',
+            lastName: '$taskCreatedBy.lastName'
           }
         }
       }
@@ -395,7 +396,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   const userId = new ObjectId(req.body.userId);
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   websocketHandler.sendLog(req, `Processing task list for user ${req.body.userId}, skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
 
   const aggregationPipeline = [
@@ -511,8 +512,8 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     data: { taskList, taskCount }
   });
 });
-   
-  
+
+
 
 exports.getTaskUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getTaskUser for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -544,7 +545,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid user ${req.body.user} or task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('task.invalidUserOrTask') ,
+      message: req.t('task.invalidUserOrTask'),
     });
   }
   websocketHandler.sendLog(req, 'User and task validated successfully', constants.LOG_TYPES.DEBUG);
@@ -556,7 +557,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
 
   if (taskUsersexists.length > 0) {
     websocketHandler.sendLog(req, `TaskUser already exists for ID ${req.params.id}`, constants.LOG_TYPES.WARN);
-    return next(new AppError(req.t('task.taskUserAlreadyExists')    , 403));
+    return next(new AppError(req.t('task.taskUserAlreadyExists'), 403));
   }
 
   websocketHandler.sendLog(req, `Updating TaskUser ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -569,7 +570,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `TaskUser ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('task.documentNotFound')
 
-    , 404));
+      , 404));
   }
 
   const emailTemplate = await EmailTemplate.findOne({})
@@ -617,17 +618,17 @@ exports.getTaskAttachment = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateTaskAttachments =  catchAsync(async (req, res, next) => {
+exports.updateTaskAttachments = catchAsync(async (req, res, next) => {
   const document = await TaskAttachments.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // If not found - add new
     runValidators: true // Validate data
   });
   if (!document) {
     return next(new AppError(req.t('task.documentNotFound')
-    , 404));
+      , 404));
   }
   res.status(201).json({
-    status:constants.APIResponseStatus.Success,
+    status: constants.APIResponseStatus.Success,
     data: {
       data: document
     }
@@ -679,7 +680,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
-      message: req.t('task.invalidUserOrTask')  ,
+      message: req.t('task.invalidUserOrTask'),
     });
   }
   websocketHandler.sendLog(req, 'User and project validated', constants.LOG_TYPES.DEBUG);
@@ -762,11 +763,12 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   if (req.body.taskAttachments != null) {
     for (let i = 0; i < req.body.taskAttachments.length; i++) {
-      if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || 
-          !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
-          !req.body.taskAttachments[i].file) {
+      if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName ||
+        !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention ||
+        !req.body.taskAttachments[i].file) {
         websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-        return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+        return res.status(400).json({
+          error: req.t('task.invalidAttachmentProperties')
 
         });
       }
@@ -795,9 +797,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newTask._id);
   websocketHandler.sendLog(req, `Task created with ${newTaskUserList.length} users and ${newTaskAttachmentList.length} attachments`, constants.LOG_TYPES.INFO);
 
-   // Add Event Notification for the assigned user
-     SendUINotification(`Task Assigned: ${newTask.taskName}`, newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
-        constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req);
+  // Add Event Notification for the assigned user
+  SendUINotification(`Task Assigned: ${newTask.taskName}`, newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
+    constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -818,7 +820,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid user ${req.body.user} or task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('task.invalidUserOrTask')      ,
+      message: req.t('task.invalidUserOrTask'),
     });
   }
   websocketHandler.sendLog(req, 'User and task validated', constants.LOG_TYPES.DEBUG);
@@ -834,7 +836,8 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `User ${req.body.user} already assigned to task ${req.body.task}`, constants.LOG_TYPES.WARN);
       return res.status(200).json({
         status: constants.APIResponseStatus.Failure,
-        data: { Error: req.t('task.sameUserAlreadyAssigned')
+        data: {
+          Error: req.t('task.sameUserAlreadyAssigned')
 
         }
       });
@@ -946,7 +949,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
   const document = await TaskUser.findByIdAndDelete(req.params.id);
   if (!document) {
     websocketHandler.sendLog(req, `TaskUser ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('task.documentNotFound')    , 404));
+    return next(new AppError(req.t('task.documentNotFound'), 404));
   }
   websocketHandler.sendLog(req, `Deleted TaskUser ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -987,17 +990,18 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.taskId}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('task.invalidUserOrTask')      ,
+      message: req.t('task.invalidUserOrTask'),
     });
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.taskId}`, constants.LOG_TYPES.DEBUG);
 
   for (let i = 0; i < req.body.taskAttachments.length; i++) {
-    if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || 
-        !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
-        !req.body.taskAttachments[i].file) {
+    if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName ||
+      !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention ||
+      !req.body.taskAttachments[i].file) {
       websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-      return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+      return res.status(400).json({
+        error: req.t('task.invalidAttachmentProperties')
 
       });
     }
@@ -1045,7 +1049,7 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `TaskAttachment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('task.documentNotFound')
 
-    , 404));
+      , 404));
   }
   websocketHandler.sendLog(req, `Deleted TaskAttachment ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -1055,8 +1059,8 @@ exports.deleteTaskAttachment = catchAsync(async (req, res, next) => {
   });
 });
 
- // Get Country List
- exports.getTaskList = catchAsync(async (req, res, next) => {
+// Get Country List
+exports.getTaskList = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaskList execution', constants.LOG_TYPES.TRACE);
 
   const skip = req.body.skip || 0;
@@ -1142,86 +1146,252 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
     data: { taskList }
   });
 });
+//old
+// exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
+//   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
+//   const { skip, next: limit, projectId, userId } = req.body;
+//   websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
+
+//   // Determine if pagination should be applied
+//   const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
+//   const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0;
+//   const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER;
+//   websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
+
+//   const aggregationPipeline = [
+//     { $match: { user: new mongoose.Types.ObjectId(userId) } },
+//     {
+//       $lookup: {
+//         from: 'tasks',
+//         let: { taskId: '$task' },
+//         pipeline: [
+//           { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', new mongoose.Types.ObjectId(projectId)] }] } } },
+//         ],
+//         as: 'taskDetails'
+//       }
+//     },
+//     { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
+//     { $match: { 'taskDetails': { $ne: null } } },
+//     {
+//       $lookup: {
+//         from: 'taskusers',
+//         let: { taskId: '$taskDetails._id' },
+//         pipeline: [
+//           { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
+//           {
+//             $lookup: {
+//               from: 'users',
+//               localField: 'createdBy',
+//               foreignField: '_id',
+//               as: 'createdBy'
+//             }
+//           },
+//           { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+//           {
+//             $lookup: {
+//               from: 'users',
+//               localField: 'user',
+//               foreignField: '_id',
+//               as: 'user'
+//             }
+//           },
+//           { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+//           {
+//             $project: {
+//               _id: 1,
+//               task: 1,
+//               createdBy: {
+//                 _id: '$createdBy._id',
+//                 firstName: '$createdBy.firstName',
+//                 lastName: '$createdBy.lastName'
+//               },
+//               user: {
+//                 _id: '$user._id',
+//                 firstName: '$user.firstName',
+//                 lastName: '$user.lastName'
+//               }
+//             }
+//           }
+//         ],
+//         as: 'TaskUsers'
+//       }
+//     },
+//     {
+//       $lookup: {
+//         from: 'users',
+//         localField: 'taskDetails.createdBy',
+//         foreignField: '_id',
+//         as: 'taskCreatedBy'
+//       }
+//     },
+//     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+//     {
+//       $project: {
+//         _id: 0,
+//         task: {
+//           _id: '$taskDetails._id',
+//           id: '$taskDetails._id',
+//           taskName: '$taskDetails.taskName',
+//           startDate: '$taskDetails.startDate',
+//           endDate: '$taskDetails.endDate',
+//           description: '$taskDetails.description',
+//           comment: '$taskDetails.comment',
+//           priority: '$taskDetails.priority',
+//           status: '$taskDetails.status',
+//           taskNumber: '$taskDetails.taskNumber',
+//           parentTask: '$taskDetails.parentTask',
+//           project: '$taskDetails.project',
+//           TaskUsers: '$TaskUsers',
+//           createdBy: {
+//             _id: '$taskCreatedBy._id',
+//             firstName: '$taskCreatedBy.firstName',
+//             lastName: '$taskCreatedBy.lastName'
+//           }
+//         }
+//       }
+//     },
+//     {
+//       $facet: {
+//         taskList: applyPagination ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }] : [],
+//         taskCount: [{ $count: 'count' }]
+//       }
+//     }
+//   ];
+
+//   websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
+//   const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
+//   if (!result || !result.taskList || !result.taskCount) {
+//     websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
+//   }
+
+//   const taskList = result.taskList.map(item => item.task);
+//   const taskCount = result.taskCount[0]?.count || 0;
+
+
+//   websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
+
+//   res.status(200).json({
+//     status: constants.APIResponseStatus.Success,
+//     taskList,
+//     taskCount
+//   });
+// });
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
-
+  websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution (Optimized)', constants.LOG_TYPES.TRACE);
+  
   const { skip, next: limit, projectId, userId } = req.body;
   websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
 
   // Determine if pagination should be applied
   const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
   const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0;
-  const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER;
+  // Maximum limit is 100 as per your original logic
+  const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER; 
+  
   websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
-  const aggregationPipeline = [
+  // --- PHASE 1: FIND TASK IDs AND COUNT (LIGHTWEIGHT) ---
+  const initialPipeline = [
+    // 1. Filter TaskUser documents by the user ID
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    
+    // 2. Look up the task details and filter by project ID
     {
       $lookup: {
         from: 'tasks',
-        let: { taskId: '$task' },
-        pipeline: [
-          { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', new mongoose.Types.ObjectId(projectId)] }] } } },
-        ],
+        localField: 'task',
+        foreignField: '_id',
         as: 'taskDetails'
       }
     },
-    { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
-    { $match: { 'taskDetails': { $ne: null } } },
+    // 3. Only keep results where a task was found and belongs to the specified project
+    { $unwind: '$taskDetails' }, 
+    { $match: { 'taskDetails.project': new mongoose.Types.ObjectId(projectId) } },
+    
+    // 4. Project only the Task ID
+    { $project: { _id: 0, taskId: '$taskDetails._id' } } 
+  ];
+
+  websocketHandler.sendLog(req, 'Executing Phase 1: ID and Count aggregation', constants.LOG_TYPES.TRACE);
+  
+  const [initialResult] = await TaskUser.aggregate([
+      ...initialPipeline,
+      {
+        $facet: {
+          // Task IDs for the current page (Groups all, then we get the array)
+          taskIds: applyPagination 
+            ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }, { $group: { _id: null, ids: { $push: '$taskId' } } }]
+            : [{ $group: { _id: null, ids: { $push: '$taskId' } } }], 
+          // Total count
+          taskCount: [{ $count: 'count' }]
+        }
+      }
+  ], { allowDiskUse: true }).exec(); // **Crucial for large queries**
+
+  // --- Error Handling and ID Extraction ---
+  if (!initialResult || !initialResult.taskCount) {
+      websocketHandler.sendLog(req, 'Initial query failed to execute or returned an invalid structure.', constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
+  }
+
+  const taskCount = initialResult.taskCount[0]?.count || 0;
+  const taskIdsToLookup = initialResult.taskIds[0]?.ids || [];
+
+  if (taskIdsToLookup.length === 0) {
+      websocketHandler.sendLog(req, `Count: ${taskCount}, but 0 tasks to lookup. Returning empty list.`, constants.LOG_TYPES.INFO);
+      return res.status(200).json({ status: constants.APIResponseStatus.Success, taskList: [], taskCount });
+  }
+
+  // --- PHASE 2: HYDRATE LIMITED TASKS (HEAVY LOOKUPS) ---
+  // We perform the lookups only on the small, paginated subset of Task IDs.
+  const finalLookupPipeline = [
+    // 1. Match only the TaskUser documents for the *limited* set of task IDs
+    { $match: { task: { $in: taskIdsToLookup } } },
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    
+    // 2. Look up Task Details (must be done again to get full details)
+    {
+      $lookup: {
+        from: 'tasks',
+        localField: 'task',
+        foreignField: '_id',
+        as: 'taskDetails'
+      }
+    },
+    { $unwind: '$taskDetails' }, 
+    
+    // 3. Lookup Task Users/Assignees/Creators (The heavy nested lookups)
     {
       $lookup: {
         from: 'taskusers',
         let: { taskId: '$taskDetails._id' },
         pipeline: [
           { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'createdBy',
-              foreignField: '_id',
-              as: 'createdBy'
-            }
-          },
+          // Nested lookups for createdBy and user details
+          { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'createdBy' } },
           { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'user',
-              foreignField: '_id',
-              as: 'user'
-            }
-          },
+          { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
           { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+          // Project TaskUser details
           {
             $project: {
-              _id: 1,
-              task: 1,
-              createdBy: {
-                _id: '$createdBy._id',
-                firstName: '$createdBy.firstName',
-                lastName: '$createdBy.lastName'
-              },
-              user: {
-                _id: '$user._id',
-                firstName: '$user.firstName',
-                lastName: '$user.lastName'
-              }
+              _id: 1, task: 1,
+              createdBy: { _id: '$createdBy._id', firstName: '$createdBy.firstName', lastName: '$createdBy.lastName' },
+              user: { _id: '$user._id', firstName: '$user.firstName', lastName: '$user.lastName' }
             }
           }
         ],
         as: 'TaskUsers'
       }
     },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'taskDetails.createdBy',
-        foreignField: '_id',
-        as: 'taskCreatedBy'
-      }
-    },
+    
+    // 4. Lookup Task Created By User details
+    { $lookup: { from: 'users', localField: 'taskDetails.createdBy', foreignField: '_id', as: 'taskCreatedBy' } },
     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+    
+    // 5. Final Projection (Structuring the final output)
     {
       $project: {
         _id: 0,
@@ -1246,25 +1416,14 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
           }
         }
       }
-    },
-    {
-      $facet: {
-        taskList: applyPagination ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }] : [],
-        taskCount: [{ $count: 'count' }]
-      }
     }
   ];
 
-  websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
-  const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
+  websocketHandler.sendLog(req, `Executing Phase 2: Final lookup query for ${taskIdsToLookup.length} tasks`, constants.LOG_TYPES.TRACE);
+  // Execute the final query on the limited set
+  const finalResult = await TaskUser.aggregate(finalLookupPipeline, { allowDiskUse: true }).exec();
 
-  if (!result || !result.taskList || !result.taskCount) {
-    websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
-  }
-
-  const taskList = result.taskList.map(item => item.task);
-  const taskCount = result.taskCount[0]?.count || 0;
+  const taskList = finalResult.map(item => item.task);
 
   websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
 
@@ -1275,20 +1434,18 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   });
 });
 
-
 //this method will be removed later
-exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
+exports.getUserTaskListByProject1 = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
-
   try {
     const { skip = 0, next: limit = 10, projectId, userId } = req.body;
     const adjustedLimit = Math.min(Number(limit), 100);
-    
+
     websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
     // Fetch TaskUser records in one go, populating necessary fields
-    const taskUsers = await TaskUser.find({ 
-      user: userId 
+    const taskUsers = await TaskUser.find({
+      user: userId
     })
       .populate({
         path: 'task',
@@ -1303,9 +1460,9 @@ exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
 
     websocketHandler.sendLog(req, `Fetched ${validTaskUsers.length} TaskUser records`, constants.LOG_TYPES.INFO);
 
-    const taskCount = await TaskUser.countDocuments({ 
+    const taskCount = await TaskUser.countDocuments({
       user: userId,
-      task: { $in: validTaskUsers.map(tu => tu.task._id) } 
+      task: { $in: validTaskUsers.map(tu => tu.task._id) }
     });
 
     websocketHandler.sendLog(req, `Total task count: ${taskCount}`, constants.LOG_TYPES.DEBUG);
@@ -1314,7 +1471,7 @@ exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
     const taskList = validTaskUsers.map(taskUser => taskUser.task);
 
     websocketHandler.sendLog(req, `Returning ${taskList.length} tasks`, constants.LOG_TYPES.INFO);
-    
+
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       taskList,
@@ -1331,14 +1488,15 @@ exports.getUserTaskListByProject1= catchAsync(async (req, res, next) => {
 exports.addTag = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addTag execution', constants.LOG_TYPES.TRACE);
 
-  const tagExists = await Tag.find({ 
-    "title": { $regex: new RegExp("^" + req.body.title.toLowerCase(), "i") } 
+  const tagExists = await Tag.find({
+    "title": { $regex: new RegExp("^" + req.body.title.toLowerCase(), "i") }
   }).where('company').equals(req.cookies.companyId);
   websocketHandler.sendLog(req, `Checked for existing tag, found ${tagExists.length}`, constants.LOG_TYPES.DEBUG);
 
   if (tagExists.length > 0) {
     websocketHandler.sendLog(req, `Tag ${req.body.title} already exists`, constants.LOG_TYPES.WARN);
-    res.status(403).send({ error: (req.t('task.tagAlreadyExists'), 403)
+    res.status(403).send({
+      error: (req.t('task.tagAlreadyExists'), 403)
 
     });
   } else {
@@ -1375,7 +1533,8 @@ exports.updateTag = catchAsync(async (req, res, next) => {
 
   if (tagExists.length === 0) {
     websocketHandler.sendLog(req, `Tag ${req.body.id} does not exist`, constants.LOG_TYPES.ERROR);
-    res.status(403).send({ error: req.t('task.documentNotFound')
+    res.status(403).send({
+      error: req.t('task.documentNotFound')
 
     });
   } else {
@@ -1389,7 +1548,7 @@ exports.updateTag = catchAsync(async (req, res, next) => {
     });
   }
 });
-  
+
 exports.deleteTagById = async (req, res) => {
   websocketHandler.sendLog(req, `Starting deleteTagById for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
@@ -1400,7 +1559,7 @@ exports.deleteTagById = async (req, res) => {
     websocketHandler.sendLog(req, `Cannot delete tag ${req.params.id} due to existing task associations`, constants.LOG_TYPES.WARN);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('task.tagInUse')      ,
+      message: req.t('task.tagInUse'),
     });
   }
 
@@ -1414,7 +1573,8 @@ exports.deleteTagById = async (req, res) => {
     res.send(tag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting tag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1433,7 +1593,8 @@ exports.getTagById = async (req, res) => {
     res.send(tag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching tag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1474,7 +1635,8 @@ exports.getTags = async (req, res) => {
     res.send(tags);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching tags: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1568,7 +1730,8 @@ exports.getTaskTagById = async (req, res) => {
     res.send(taskTag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching TaskTag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1583,7 +1746,7 @@ exports.updateTaskTagById = async (req, res) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task} or tag ${req.body.tag}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message: req.t('task.invalidTaskOrTag')  ,
+      message: req.t('task.invalidTaskOrTag'),
     });
   }
   websocketHandler.sendLog(req, 'Task and tag validated', constants.LOG_TYPES.DEBUG);
@@ -1618,7 +1781,8 @@ exports.deleteTaskTagById = async (req, res) => {
     res.send(taskTag);
   } catch (err) {
     websocketHandler.sendLog(req, `Error deleting TaskTag ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1656,11 +1820,12 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
   if (req.body.taskAttachments != null) {
     for (let i = 0; i < req.body.taskAttachments.length; i++) {
-      if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName || 
-          !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention || 
-          !req.body.taskAttachments[i].file) {
+      if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName ||
+        !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention ||
+        !req.body.taskAttachments[i].file) {
         websocketHandler.sendLog(req, `Invalid attachment properties at index ${i}`, constants.LOG_TYPES.ERROR);
-        return res.status(400).json({ error: req.t('task.invalidAttachmentProperties')
+        return res.status(400).json({
+          error: req.t('task.invalidAttachmentProperties')
 
         });
       }
@@ -1751,7 +1916,8 @@ exports.getCommentById = async (req, res) => {
     res.send(comment);
   } catch (err) {
     websocketHandler.sendLog(req, `Error fetching comment ${req.params.id}: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: req.t('task.serverError')
+    res.status(500).send({
+      error: req.t('task.serverError')
 
     });
   }
@@ -1765,7 +1931,7 @@ exports.updateComment = async (req, res) => {
     websocketHandler.sendLog(req, `Invalid task ${req.body.task}`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
-      message:req.t('task.invalidUserOrTask')      ,
+      message: req.t('task.invalidUserOrTask'),
     });
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.task}`, constants.LOG_TYPES.DEBUG);
@@ -1778,7 +1944,7 @@ exports.updateComment = async (req, res) => {
     websocketHandler.sendLog(req, `Comment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('task.documentNotFound')
 
-    , 404));
+      , 404));
   }
   websocketHandler.sendLog(req, `Updated comment ${req.params.id}`, constants.LOG_TYPES.INFO);
 
@@ -1837,7 +2003,8 @@ exports.deleteComment = async (req, res) => {
       res.status(200).json({ message: 'Comment deleted successfully' });
     } else {
       websocketHandler.sendLog(req, `Comment ${req.params.id} not found`, constants.LOG_TYPES.ERROR);
-      res.status(404).json({ message: req.t('task.documentNotFound')
+      res.status(404).json({
+        message: req.t('task.documentNotFound')
 
       });
     }
@@ -1858,5 +2025,5 @@ exports.getAllComments = catchAsync(async (req, res, next) => {
     data: comments
   });
 });
-  
+
 //END Task Tags
