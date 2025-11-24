@@ -77,23 +77,44 @@ const combineDateAndTime = (dateString, timeDateObj) => {
   return base;
 };
 
-// async function toUTC(dateString) {
-//     const date = new Date(dateString);
 
-//     // If only a date is sent (YYYY-MM-DD), time becomes 00:00:00 local.
-//     // Convert it to true UTC.
-//     return new Date(Date.UTC(
-//       date.getFullYear(),
-//       date.getMonth(),
-//       date.getDate(),
-//       date.getHours(),
-//       date.getMinutes(),
-//       date.getSeconds(),
-//       date.getMilliseconds()
-//     ));
-//   }
+// Convert ANY input date to a pure UTC date-only (00:00:00.000Z)
+function toUtcDateOnly(dateInput) {
+  const d = new Date(dateInput);
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0));
+}
+
+// Create a UTC date-only from Y-M-D
+function toUtcDateOnlyFromYMD(year, month, day) {
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+}
+
+// Current UTC timestamp
+function nowUtc() {
+  return new Date();   // JS always stores dates internally in UTC
+}
+
+// Get month start/end in pure UTC (perfect for Mongo range queries)
+function getMonthRangeUtc(year, month) {
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999)); // last day of month
+  return { startDate, endDate };
+}
+
+//Search for a full day (date-only) how to use
+// const start = toUtcDateOnly(req.query.date);
+// const end = new Date(start);
+// end.setUTCHours(23, 59, 59, 999);
+
+// Model.find({
+//   attendanceDate: { $gte: start, $lte: end }
+// });
 
 module.exports = {
     toUTCDate,
-    combineDateAndTime
+    combineDateAndTime,
+    toUtcDateOnly,
+    nowUtc,
+    getMonthRangeUtc,
+    toUtcDateOnlyFromYMD 
 };
