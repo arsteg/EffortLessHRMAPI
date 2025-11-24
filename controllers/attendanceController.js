@@ -2758,7 +2758,7 @@ async function processAttendanceRecord(user, startTime, endTime, date, req) {
       //   new Date(date).getDate(),
       //   0, 0, 0, 0
       // ));
-      const formattedDate = toUTCDate(date);
+      const formattedDate = toUtcDateOnly(date);
       //console.log('Formatted Date:', formattedDate);
 
       // Create an attendance record
