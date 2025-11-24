@@ -2554,73 +2554,6 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
     });
   }
 });
-// exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
-//   websocketHandler.sendLog(req, 'Starting uploadAttendanceJSON', constants.LOG_TYPES.INFO);
-
-//   const attendanceData = req.body;
-//   websocketHandler.sendLog(req, `Received attendance data with ${attendanceData.length} records`, constants.LOG_TYPES.TRACE);
-
-//   if (!Array.isArray(attendanceData)) {
-//     websocketHandler.sendLog(req, 'Invalid format: Data is not an array', constants.LOG_TYPES.ERROR);
-//     return res.status(400).json({
-//       status: constants.APIResponseStatus.Failure,
-//       message: req.t('attendance.invalidAttendanceJSONFormat'),
-//     });
-//   }
-
-//   try {
-//     const results = [];
-//     const attendanceRecords = [];
-
-//     for (let i = 0; i < attendanceData.length; i++) {
-//       const { EmpCode, StartTime, EndTime, Date } = attendanceData[i];
-//       websocketHandler.sendLog(req, `Processing attendance record for EmpCode: ${EmpCode}`, constants.LOG_TYPES.TRACE);
-//       try {
-//         const user = await getUserByEmpCode(EmpCode, req.cookies.companyId);
-//         if (!user) {
-//           websocketHandler.sendLog(req, `User with EmpCode ${EmpCode} not found`, constants.LOG_TYPES.ERROR);
-//           return next(new AppError(req.t('attendance.empCodeNotValid'), 400));
-//         }
-//         const attendanceRecord = await processAttendanceRecord(user, StartTime, EndTime, Date, req);
-//         if (attendanceRecord) {
-//           attendanceRecords.push(attendanceRecord);
-//           websocketHandler.sendLog(req, `Processed attendance record for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
-//         }
-//       } catch (err) {
-//         websocketHandler.sendLog(req, `Error processing record for EmpCode ${EmpCode}: ${err.message}`, constants.LOG_TYPES.ERROR);
-//         results.push({EmpCode, status: 'failure', message: err.message || 'Unknown error'});
-//       }
-//     }
-
-//     if (attendanceRecords.length > 0) {
-//       try {
-//         await insertAttendanceRecords(attendanceRecords);
-//         await insertOvertimeRecords(attendanceRecords, req.cookies.companyId);
-//         websocketHandler.sendLog(req, `Inserted ${attendanceRecords.length} attendance records`, constants.LOG_TYPES.INFO);
-//       } catch (insertErr) {
-//         websocketHandler.sendLog(req, `Database insert error: ${insertErr.message}`, constants.LOG_TYPES.ERROR);
-//         results.push({ EmpCode: 'ALL', status: 'failure', message: `Database insert error: ${insertErr.message}`});
-//       }
-//     }
-//     // else {
-//     //   return next(new AppError(req.t('attendance.uploadAttendanceJSONNoData'), 400));
-//     // }
-
-//     websocketHandler.sendLog(req, 'Successfully processed attendance records', constants.LOG_TYPES.INFO);
-
-//     res.status(200).json({
-//       status: constants.APIResponseStatus.Success,
-//       message: req.t('attendance.uploadAttendanceJSONSuccess'),
-//       data: attendanceRecords,
-//     });
-//   } catch (error) {
-//     if (error instanceof AppError) {
-//       return next(error);
-//     }
-//     websocketHandler.sendLog(req, `Error processing attendance records: ${error.message}`, constants.LOG_TYPES.ERROR);
-//     return next(new AppError(req.t('attendance.uploadAttendanceJSONFailure'), 400));
-//   }
-// });
 
 // Controller function to handle the upload and processing of attendance JSON data.
 exports.uploadAttendanceJSONBackup = catchAsync(async (req, res, next) => {
@@ -3160,7 +3093,24 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 async function getStartAndEndDates(req, year, month) {
+  year = parseInt(year, 10);
+  month = parseInt(month, 10);
+  if (isNaN(year) || isNaN(month) || month < 1 || month > 12 || year < 1900 || year > 9999) {
+    throw new Error('Invalid year or month');
+  }
+  //Start of month in UTC → YYYY-MM-01 00:00:00.000Z
+  const utcStartOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  // End of month in UTC → last day 23:59:59.999Z
+  const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+  websocketHandler.sendLog(req, `UTC Start of month: ${utcStartOfMonth.toISOString()}, UTC End of month: ${utcEndOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
+
+  return { startOfMonth: utcStartOfMonth, endOfMonth: utcEndOfMonth };
+}
+
+async function getStartAndEndDatesWithFixedTime(req, year, month) {
   year = parseInt(year, 10);
   month = parseInt(month, 10);
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12 || year < 1900 || year > 9999) {
@@ -3181,7 +3131,7 @@ async function getStartAndEndDates(req, year, month) {
   websocketHandler.sendLog(req, `UTC End of month: ${utcEndOfMonth.toISOString()}`, constants.LOG_TYPES.DEBUG);
   return { startOfMonth: utcStartOfMonth, endOfMonth: utcEndOfMonth };
 }
-async function getStartAndEndDatesV1(req, year, month) {
+async function getStartAndEndDatesWithHardcodedLocation(req, year, month) {
   // Ensure inputs are integers
   year = parseInt(year, 10);
   month = parseInt(month, 10);
@@ -3249,7 +3199,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   });
 
   const approvedLeaves = await LeaveApplication.find({
-    user,
+    employee: user,
     status: constants.Leave_Application_Constant.Approved,
     startDate: { $lte: endOfMonth },
     endDate: { $gte: startOfMonth },
@@ -3262,8 +3212,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const end = new Date(leave.endDate);
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        //days.push(toISTDateString(d)); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
-        days.push(d.toISOString());
+        days.push(d.toISOString().split('T')[0]); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
       }
       d.setDate(d.getDate() + 1);
     }
@@ -3275,28 +3224,12 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   const holidayDates = holidays.map(h => {
     // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
     // return parts.join('-');
-    //const parts = toISTDateString(h.date);//h.date.toISOString().split('T')[0];
-    const parts = h.date.toISOString();
+    const parts = h.date.toISOString().split('T')[0];
     return parts;
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
 
   return { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates };
-}
-
-function toISTDateString(dateInput) {
-  const timeZone = 'Asia/Kolkata';
-  const date = new Date(dateInput);
-  // Convert to same calendar day in IST
-  const local = new Date(date.toLocaleString('en-US', { timeZone }));
-  const year = local.getFullYear();
-  const month = String(local.getMonth() + 1).padStart(2, '0');
-  const day = String(local.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function toUTCDateString(d) {
-  return new Date(d).toISOString().substring(0, 10);
 }
 
 function toLocalDateStringFromUTC(dateInput) {
@@ -3339,7 +3272,10 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const dateStr = toLocalDateStringFromUTC(currentDate);
 
-    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+    const dayName = currentDate.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      timeZone: 'UTC' 
+    });
 
     // Week number (UTC)
     const weekNumber = getWeekNumber(currentDate);
@@ -3369,84 +3305,6 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     }
 
     const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
-    if (shouldInsertLOP) {
-      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
-      if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
-        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}`, constants.LOG_TYPES.INFO);
-      } else {
-        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
-      }
-    }
-  }
-}
-
-async function processLOPForMonthBackup({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
-  const timeZone = 'Asia/Kolkata';
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
-  const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
-  const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
-  const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
-  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }); 
-  let fullDayDuration = null;
-  let halfDayDuration = null;
-  let isHalfDayApplicable = false;
-  if (shiftAssignment?.template) {
-    fullDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditForFullDay * 60;
-    halfDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditforHalfDay * 60;
-    isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    const pad = (n) => n.toString().padStart(2, '0');
-    const localDateStr = `${year}-${pad(month)}-${pad(day)}`; // always YYYY-MM-DD
-    const d = new Date(localDateStr);
-    const currentDate = new Date(Date.UTC(
-      d.getFullYear(),
-      d.getMonth(),
-      d.getDate(),
-      0, 0, 0, 0
-    ));
-    const dateStr = currentDate.toISOString().split('T')[0]; // use "YYYY-MM-DD" string consistently
-    // Get weekday name in IST
-    const dayName = new Date(currentDate)
-      .toLocaleDateString('en-US', { weekday: 'short', timeZone });
-    
-    const currentWeekNumber = getWeekNumber(currentDate);
-    const isOddWeek = currentWeekNumber % 2 !== 0;
-
-    let isAlternateOff = false;
-    if ((isAlternateOdd && isOddWeek) || (isAlternateEven && !isOddWeek)) {
-      isAlternateOff = alternateSet.has(dayName);
-    }
-    const isHoliday = holidayDates.some(d => toISTDateString(d) === dateStr);//holidayDates.includes(dateStr);
-    const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff || isHoliday;
-
-    if (isWeeklyOff) continue;
-    const wasPresent = attendanceRecords.find(r => toISTDateString(r.date) === dateStr);
-    const isOnLeave = approvedLeaveDays.some(d => toISTDateString(d) === dateStr);//approvedLeaveDays.includes(dateStr);
-
-    let wasUserPresent = false;
-    let wasHalfday = false;
-
-    if(wasPresent){
-      if (wasPresent?.duration == 0) {
-        wasUserPresent = false;
-      }
-      else if (wasPresent?.duration >= fullDayDuration) {
-        wasUserPresent = true;
-      } 
-      else if (isHalfDayApplicable && wasPresent?.duration >= halfDayDuration) {
-        wasUserPresent = true;
-        //if(isOnLeave.)
-        wasHalfday = true;
-      } else {
-        wasUserPresent = false;
-      }
-    }
-
-    const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
-websocketHandler.sendLog(req, `Date: ${currentDate}, dateStr: ${dateStr}, wasUserPresent: ${wasUserPresent}, wasHalfday: ${wasHalfday}, isOnLeave: ${isOnLeave}, shouldInsertLOP: ${shouldInsertLOP}`, constants.LOG_TYPES.DEBUG);
     if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
@@ -3560,7 +3418,7 @@ async function validateCompleteAttendanceMonth(req, user, month, year, companyId
   });
 
   const leaves = await LeaveApplication.find({
-    user,
+    employee: user,
     status: constants.Leave_Application_Constant.Approved,
     startDate: { $lte: endOfMonth },
     endDate: { $gte: startOfMonth },
@@ -3571,13 +3429,10 @@ async function validateCompleteAttendanceMonth(req, user, month, year, companyId
     company: companyId,
     date: { $gte: startOfMonth, $lte: endOfMonth },
   });
-  const timeZone = 'Asia/Kolkata'; // ✅ Added for consistent local date handling
   // Convert to date strings for easy matching
   const attendanceDates = new Set(attendanceRecords.map(r => r.date.toISOString().split('T')[0]));
   const lopDates = new Set(lopRecords.map(r => r.date.toISOString().split('T')[0]));
   const holidayDates = new Set(holidays.map(h => {
-    // const parts = h.date.toLocaleDateString('en-CA').split('/'); // YYYY/MM/DD
-    // return parts.join('-'); // YYYY-MM-DD
     const parts = h.date.toISOString().split('T')[0];
     return parts;
   }));
@@ -3586,7 +3441,7 @@ async function validateCompleteAttendanceMonth(req, user, month, year, companyId
     let d = new Date(leave.startDate);
     const end = new Date(leave.endDate);
     while (d <= end) {
-      const localDateStr = d.toISOString().split('T')[0]; //d.toLocaleDateString('en-CA', { timeZone });
+      const localDateStr = d.toISOString().split('T')[0];
       leaveDates.add(localDateStr);
       d.setDate(d.getDate() + 1);
     }
@@ -3596,16 +3451,15 @@ async function validateCompleteAttendanceMonth(req, user, month, year, companyId
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
 
-  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   for (let day = 1; day <= daysInMonth; day++) {
-    const localDateStr = new Date(Date.UTC(year, month - 1, day))
-      .toLocaleDateString('en-CA', { timeZone }); // e.g. "2025-06-01"
-    // Create UTC equivalent of that local day
-    const currentDate = new Date(`${localDateStr}T00:00:00+05:30`);
-    const dateStr = currentDate.toISOString().split('T')[0]; // use "YYYY-MM-DD" string consistently
+    const currentDate = new Date(Date.UTC(year, month - 1, day));
+    const dateStr = currentDate.toISOString().split("T")[0];
     // Get weekday name in IST
-    const dayName = new Date(`${localDateStr}T00:00:00+05:30`)
-      .toLocaleDateString('en-US', { weekday: 'short', timeZone });    
+    const dayName = currentDate.toLocaleDateString("en-US", {
+      weekday: "short",
+      timeZone: "UTC",
+    });
 
     // Check alternate week offs
     const weekNumber = getWeekNumber(currentDate);
