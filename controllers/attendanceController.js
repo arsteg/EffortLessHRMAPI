@@ -2392,11 +2392,11 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
 };
 
 const cornMappedTimlogToAttendance = async (company) => {
-  if (company.companyId.toString() !== '68a579feda9656f78e4f84d7') {
-    return;
-  }
+  // if (company.companyId.toString() !== '68a579feda9656f78e4f84d7') {
+  //   return;
+  // }
 
-  const month = 7; //new Date().getMonth(); // +1 since getMonth is 0-based  to test 7 month
+  const month = new Date().getMonth(); // +1 since getMonth is 0-based  to test 7 month
   const year = new Date().getFullYear();
   const companyId = company.companyId;
 
