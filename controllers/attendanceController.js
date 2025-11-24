@@ -41,7 +41,7 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
-const { toUTCDate, combineDateAndTime } = require('../utils/utcConverter');
+const { toUTCDate, toUtcDateOnly, getMonthRangeUtc  } = require('../utils/utcConverter');
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -2404,11 +2404,12 @@ const cornMappedTimlogToAttendance = async (company) => {
     throw new Error(errorMessage);
   }
 
-  const startDate = new Date(year, month - 1, 1);
-  //const endDate = new Date(year, month, 0);
-  //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
-  const lastDay = new Date(Date.UTC(year, month, 0));  
-  const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
+  // const startDate = new Date(year, month - 1, 1);
+  // //const endDate = new Date(year, month, 0);
+  // //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
+  // //const lastDay = new Date(Date.UTC(year, month, 0));
+  // const endDate = getEndOfMonthUTC(year, month);
+  const { startDate, endDate } = getMonthRangeUtc(year, month);
 
   const filter = { status: 'Active', company: companyId };
   console.log('start date:', startDate, 'end date:', endDate);
@@ -2465,7 +2466,7 @@ const cornMappedTimlogToAttendance = async (company) => {
       //const checkInTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       //const checkOutTime = log.lastTimeLog ? new Date(log.lastTimeLog).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "0:00";
       return {
-        date: toUTCDate(log._id),
+        date: toUtcDateOnly(log._id),
         checkIn: toUTCDate(log.startTime),
         checkOut: toUTCDate(log.lastTimeLog),
         user: user._id,
@@ -2485,8 +2486,6 @@ const cornMappedTimlogToAttendance = async (company) => {
     }));
 
     const attendanceRecordsFiltered = attendanceRecords.filter(record => record);
-//console.log('attendanceRecordsFiltered length:', attendanceRecordsFiltered);
-//return;
     if (attendanceRecordsFiltered.length > 0) {
       console.log(`Inserting ${attendanceRecordsFiltered.length} attendance records for user: ${user._id}`);
       await insertAttendanceRecords(attendanceRecordsFiltered);

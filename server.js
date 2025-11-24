@@ -61,8 +61,8 @@ cron.schedule('0 0 1 * *', async () => {
   //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
 //execute on 1st day of each month
-cron.schedule('0 0 1 * *', async () => {
-//cron.schedule('*/5 * * * *', async () => {
+//cron.schedule('0 0 1 * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   try {
     await scheduleController.assignLeavesByJobs();
     await attendanceController.MappedTimlogToAttendanceHelper();
