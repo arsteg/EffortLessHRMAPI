@@ -718,6 +718,9 @@
     "tagInUse": "The tag is already added to the task and cannot be deleted.",
     "serverError": "A server error occurred."
   },
+  "project": {
+    "duplicateProjectName": "A project with this name already exists."
+  } ,
   "timeLog": {
     "deviceMismatch": "The user is logged in on another device. Would you like to make this device active?",
     "userIdRequired": "The user ID is required.",
