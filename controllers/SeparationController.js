@@ -279,11 +279,11 @@ exports.addTermination = catchAsync(async (req, res, next) => {
       .replace("{firstName}", user.firstName)
       .replace("{lastName}", user.lastName)
       .replace("{company}", req.cookies.companyName)
-      .replace("{terminationDate}", termination.termination_date.toDateString())
+      .replace("{terminationDate}", termination.termination_date?.toDateString())
       .replace("{terminationReason}", termination.termination_reason)
       .replace("{noticeGiven}", termination.notice_given ? 'Yes' : 'No')
       .replace("{PerformanceWarningIssued}", termination.performance_warnings)
-      .replace("{exitInterview}", termination.exit_interview_date.toDateString());
+      .replace("{exitInterview}", termination.exit_interview_date?.toDateString());
     
       try {
       await sendEmail({
