@@ -47,7 +47,7 @@ payrollVariablePaySchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'variableAllowance',
-      select: '_id label'
+      select: '_id label isPayrollEditable'
     }),
     this.populate({
       path: 'variableDeduction',
