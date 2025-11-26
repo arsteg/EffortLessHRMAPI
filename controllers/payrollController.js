@@ -6439,7 +6439,7 @@ exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
 
 
 exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
   // Extract _id values from payrollUsers payrollUserIds
   const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
@@ -6609,7 +6609,7 @@ exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
 };
 
 exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
   // Extract _id values from payrollUsers payrollUserIds
   const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
