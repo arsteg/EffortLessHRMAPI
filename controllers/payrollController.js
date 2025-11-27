@@ -4435,11 +4435,11 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       const totalManualArrears = (manualArrears && manualArrears.totalArrears) ? Number(manualArrears.totalArrears) : 0;
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
-      const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits);
+      const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits) + Number(totalManualArrears);
       const totalTakeHome = totalGrossSalary - (
         Number(totalFixedDeduction) +
         Number(totalVariableDeduction) +
-        Number(totalEmployerStatutoryContribution) +
+        //Number(totalEmployerStatutoryContribution) + // Employer contribution is not deducted from take-home
         Number(totalEmployeeStatutoryDeduction) +
         Number(totalLoanRepayment) +
         Number(totalIncomeTax)
@@ -4490,7 +4490,9 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         totalCTC,
         totalGrossSalary,
         totalTakeHome,
-        payrollFNF
+        payrollFNF,
+        totalVariableAllowance,
+        totalVariableDeduction
       };
     })
   );
