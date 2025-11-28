@@ -1431,17 +1431,18 @@ const financialYear = req.body.cycle; // ✨ NEW: Assign financialYear from req.
     return next(new AppError(req.t('taxslab.financialYearMissing'), 400));
   }
 
-  // 3. NEW: Check for existing tax slab for the unique combination
-  const existingTaxSlab = await TaxSlab.findOne({
-    company: companyId,
-    financialYear: financialYear, // Unique constraint 1
-    regime: regime,               // Unique constraint 2
-  });
+//   // 3. NEW: Check for existing tax slab for the unique combination
+//   const existingTaxSlab = await TaxSlab.findOne({
+//     company: companyId,
+//     financialYear: financialYear, // Unique constraint 1
+//     regime: regime,               // Unique constraint 2
+//     IncomeTaxSlabs: IncomeTaxSlabs 
+//   });
 
-  if (existingTaxSlab) {
-    websocketHandler.sendLog(req, `Tax slab already exists for company ${companyId}, regime ${regime}, and financial year ${financialYear}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.duplicateEntry'), 409)); // Use 409 Conflict status
-  }
+//   if (existingTaxSlab) {
+//     websocketHandler.sendLog(req, `Tax slab already exists for company ${companyId}, regime ${regime}, and financial year ${financialYear}`, constants.LOG_TYPES.ERROR);
+//     return next(new AppError(req.t('company.duplicateEntry'), 409)); // Use 409 Conflict status
+//   }
 
   const taxSlab = await TaxSlab.create({
     IncomeTaxSlabs,
@@ -1488,7 +1489,8 @@ exports.getTaxSlabsByCycle = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching tax slabs for cycle: ${req.params.cycle}`, constants.LOG_TYPES.TRACE);
   const { cycle } = req.params;
   const query = {
-    cycle: cycle
+    cycle: cycle,
+    company: req.cookies.companyId,
   };
   const taxSlabs = await TaxSlab.find(query);
   websocketHandler.sendLog(req, `Retrieved ${taxSlabs.length} tax slabs`, constants.LOG_TYPES.INFO);
