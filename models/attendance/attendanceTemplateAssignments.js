@@ -31,7 +31,7 @@ attendanceTemplateAssignmentsSchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'attendanceTemplate',
-      select: 'id label approversType weeklyOfDays weklyofHalfDay'
+      select: 'id label approversType weeklyOfDays weklyofHalfDay attendanceMode'
     }),
       this.populate({
         path: 'employee',

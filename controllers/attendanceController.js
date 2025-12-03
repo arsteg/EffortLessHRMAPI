@@ -2302,6 +2302,25 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
     const document = await features.query;
 
     await Promise.all(document.map(async user => {
+      const attendanceTemplateAssignment = await AttendanceTemplateAssignments.findOne({ employee: user._id });
+      if (!attendanceTemplateAssignment) {
+        console.log(`Attendance template not assigned for user: ${user._id}`);
+        return res.status(200).json({
+          status: constants.APIResponseStatus.Failure,
+          EmpCode: req.body.EmpCode,
+          message: `Attendance template not assigned for this user.`
+        });
+      }
+      const modes = attendanceTemplateAssignment?.attendanceTemplate?.attendanceMode || [];
+      if (!modes.includes('Tracker')) {
+        console.log("User not allowed for Tracker mode attendance:", user._id);
+        return res.status(200).json({
+          status: constants.APIResponseStatus.Failure,
+          EmpCode: req.body.EmpCode,
+          message: `Tracker is not allowed for the attendance template assigned to this user.`,
+        });
+      }
+
       const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
       if (shiftAssignment) {
         const shift = await Shift.findOne({ _id: shiftAssignment.template });
@@ -2418,6 +2437,25 @@ const cornMappedTimlogToAttendance = async (company) => {
   const users = await User.find(filter);
 
   await Promise.all(users.map(async (user) => {
+    const attendanceTemplateAssignment = await AttendanceTemplateAssignments.findOne({ employee: user._id });
+    if (!attendanceTemplateAssignment) {
+      console.log(`Attendance template not assigned for user: ${user._id}`);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode: req.body.EmpCode,
+        message: `Attendance template not assigned for this user.`
+      });
+    }
+    const modes = attendanceTemplateAssignment?.attendanceTemplate?.attendanceMode || [];
+    if (!modes.includes('Tracker')) {
+      console.log("User not allowed for Tracker mode attendance:", user._id);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode: req.body.EmpCode,
+        message: `Tracker is not allowed for the attendance template assigned to this user.`,
+      });
+    }
+
     const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
     if (!shiftAssignment) {
       return;
@@ -2520,6 +2558,27 @@ exports.uploadAttendanceJSON = catchAsync(async (req, res, next) => {
         status: constants.APIResponseStatus.Failure,
         EmpCode,
         message: req.t('attendance.empCodeNotValid'),
+      });
+    }
+
+    const attendanceTemplateAssignment = await AttendanceTemplateAssignments.findOne({ employee: user._id });
+    if (!attendanceTemplateAssignment) {
+      websocketHandler.sendLog(req, `Attendance template not assigned for user ${EmpCode}`, constants.LOG_TYPES.ERROR);
+      console.log(`Attendance template not assigned for user: ${user._id}`);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode: req.body.EmpCode,
+        message: `Attendance template not assigned for this user.`
+      });
+    }
+    const modes = attendanceTemplateAssignment?.attendanceTemplate?.attendanceMode || [];
+    if (!modes.includes('Manually Upload')) {
+      websocketHandler.sendLog(req, `Manual upload is not allowed for the attendance template assigned to ${EmpCode} user.`, constants.LOG_TYPES.ERROR);
+      console.log("User not allowed for Manul upload mode attendance:", user._id);
+      return res.status(200).json({
+        status: constants.APIResponseStatus.Failure,
+        EmpCode: req.body.EmpCode,
+        message: `Manual upload is not allowed for the attendance template assigned to this user.`,
       });
     }
 
