@@ -3127,9 +3127,9 @@ exports.updatePayrollUserStatus = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting updatePayrollUserStatus process for ID: ${id}`, constants.LOG_TYPES.INFO);
 
   const validStatuses = [
-    constants.Payroll_User_Status.OnHold,
-    constants.Payroll_User_Status.Closed,
-    constants.Payroll_User_Status.InProgress
+    constants.Payroll_Status.OnHold,
+    constants.Payroll_Status.Closed,
+    constants.Payroll_Status.InProgress
   ];
 
   if (!validStatuses.includes(status)) {
