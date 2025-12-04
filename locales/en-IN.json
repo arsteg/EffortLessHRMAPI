@@ -786,7 +786,8 @@
     "AppraisalNotificationForManagerTitle": "Appraisal Notification Sent",
     "AppraisalNotificationForManagerMessage": "The appraisal results for {{userName}} have been shared with them.",
      "EmailANdCompanyRequired": "Email and companyId are required",
-     "serverError": "A server error occurred."
+     "serverError": "A server error occurred.",
+     "duplicateDeclarationExists": "A declaration already exists for this user in the specified financial year."
   },
   "userPreferences": {
     "getAllSuccess": "Data fetched successfully.",
