@@ -1220,7 +1220,7 @@ exports.getPayrollUserStatusList = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getFNFUserStatusList', constants.LOG_TYPES.INFO);
 
   try {
-    const payrollUserStatusList = Object.values(constants.Payroll_User_Status);
+    const payrollUserStatusList = Object.values(constants.Payroll_User_Status_New);
 
     websocketHandler.sendLog(req, `Retrieved ${payrollUserStatusList.length} FNFUser statuses`, constants.LOG_TYPES.INFO);
 

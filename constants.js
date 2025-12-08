@@ -105,6 +105,11 @@ const Payroll_User_Status = {
   OnHold: "OnHold",
   InProgress: "InProgress"
 };
+const Payroll_User_Status_New = {
+  Active: "Active",
+  OnHold: "OnHold",
+  Processed: "Processed"
+};
 const Payroll_FNF_Status = {
   InProgress: "InProgress",
   OnHold: "OnHold",
@@ -231,7 +236,7 @@ module.exports = {
   Payroll_User_Status, Payroll_FNF_Status, Salaray_Default_Fixed_Allowance,
   Payroll_User_FNF_Status, payroll_LoanAdvance_Status, Payroll_LoanAdvance_Type, Active_Statuses, APIResponseStatus, SubContainers,
   Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType, LOG_TYPES,
-  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap
+  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap, Payroll_User_Status_New
 };
 
 
