@@ -1180,7 +1180,7 @@ exports.getPayrollFNFStatusList = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getPayrollFNFStatusList', constants.LOG_TYPES.INFO);
 
   try {
-    const payrollFNFStatusList = constants.Payroll_FNF_Status;
+    const payrollFNFStatusList = constants.Payroll_FNF_Status_New;
     console.log('status list: ', payrollFNFStatusList);
     websocketHandler.sendLog(req, `Retrieved ${payrollFNFStatusList.length} payroll statuses`, constants.LOG_TYPES.INFO);
 
