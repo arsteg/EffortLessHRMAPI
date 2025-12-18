@@ -1038,92 +1038,110 @@ exports.testLog = catchAsync(
     }
   });
 
-exports.updateOnlineStatus = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting updateOnlineStatus', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Updating online status for user: ${req.body.userId}, machine: ${req.body.machineId}`, constants.LOG_TYPES.TRACE);
-  try {
-    console.log(`[${new Date().toISOString()}] Starting updateOnlineStatus for request:`, {
-      method: req.method,
-      url: req.url,
-      body: req.body,
-      cookies: req.cookies
+exports.updateOnlineStatus = catchAsync(async (req, res) => {
+  const startTime = new Date().toISOString();
+
+  websocketHandler.sendLog(
+    req,
+    'Starting updateOnlineStatus',
+    constants.LOG_TYPES.INFO
+  );
+
+  const { userId, machineId, isOnline, project, task } = req.body;
+  const companyId = req.cookies.companyId;
+
+  // ------------------ VALIDATION ------------------
+  if (!userId || !machineId || typeof isOnline !== 'boolean') {
+    websocketHandler.sendLog(
+      req,
+      'Validation failed: missing or invalid fields',
+      constants.LOG_TYPES.ERROR
+    );
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      data: 'userId, machineId and isOnline are required'
     });
+  }
 
-    const { userId, machineId, isOnline, project, task } = req.body;
-    const companyId = req.cookies.companyId;
+  if (!companyId) {
+    websocketHandler.sendLog(
+      req,
+      'Company ID missing in cookies',
+      constants.LOG_TYPES.ERROR
+    );
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      data: 'Company ID is required'
+    });
+  }
 
-    console.log(`[${new Date().toISOString()}] Extracted values - userId: ${userId}, machineId: ${machineId}, isOnline: ${isOnline}, project: ${project}, task: ${task}, companyId: ${companyId}`);
-
-    if (!userId || !machineId || typeof isOnline !== 'boolean') {
-      console.log(`[${new Date().toISOString()}] Validation failed: Missing or invalid required fields`);
-      websocketHandler.sendLog(req, 'Validation failed: missing or invalid fields', constants.LOG_TYPES.ERROR);
-      throw new Error(req.t('common.requiredFieldsMissing'));
-    }
-
-    if (!companyId) {
-      console.log(`[${new Date().toISOString()}] Validation failed: companyId missing in cookies`);
-      websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-      throw new Error(req.t('common.companyIdMissing'));
-    }
-
-    console.log(`[${new Date().toISOString()}] Querying database for userId: ${userId}, machineId: ${machineId}`);
-    const updateData = {
+  // ------------------ UPDATE PAYLOAD ------------------
+  const updateData = {
+    $set: {
       isOnline,
-      $setOnInsert: { company: companyId }
-    };
+      ...(project && { project }),
+      ...(task && { task })
+    },
+    $setOnInsert: {
+      company: companyId
+    }
+  };
 
-    // Include project and task if provided in the request
-    if (project) updateData.project = project;
-    if (task) updateData.task = task;
-
-    const userDevice = await UserDevice.findOneAndUpdate(
+  // ------------------ DB OPERATION ------------------
+  let userDevice;
+  try {
+    userDevice = await UserDevice.findOneAndUpdate(
       { userId, machineId },
       updateData,
-      { upsert: true, new: true }
+      {
+        upsert: true,
+        new: true
+      }
     );
-
-    console.log(`[${new Date().toISOString()}] Database operation completed. Result:`, {
-      userId: userDevice.userId,
-      machineId: userDevice.machineId,
-      isOnline: userDevice.isOnline,
-      project: userDevice.project?.toString(),
-      task: userDevice.task?.toString(),
-      company: userDevice.company?.toString(),
-      wasInserted: !userDevice.__v
-    });
-    websocketHandler.sendLog(req, `Online status updated for user: ${userId}, machine: ${machineId}`, constants.LOG_TYPES.INFO);
-
-    // Send WebSocket message only to the affected user
-    const messageContent = JSON.stringify({ userId, isOnline, project, task });
-    websocketHandler.sendAlert(
-      [userId], // Only send to this user
-      messageContent
-    );
-    console.log(`[${new Date().toISOString()}] WebSocket message sent to user ${userId}`);
-
-    const response = {
-      status: constants.APIResponseStatus.Success,
-      data: { userDevice }
-    };
-    console.log(`[${new Date().toISOString()}] Sending success response:`, response);
-
-    return res.status(200).json(response);
   } catch (error) {
-    console.log(`[${new Date().toISOString()}] Error occurred in updateOnlineStatus:`, {
-      message: error.message,
-      stack: error.stack
-    });
-    websocketHandler.sendLog(req, `Error updating online status: ${error.message}`, constants.LOG_TYPES.ERROR);
-
-    const errorResponse = {
-      status: constants.APIResponseStatus.Failure,
-      data: error.message
-    };
-    console.log(`[${new Date().toISOString()}] Sending failure response:`, errorResponse);
-
-    return res.status(200).json(errorResponse);
+    /**
+     * Handle duplicate key error (race condition safe)
+     */
+    if (error.code === 11000) {
+      userDevice = await UserDevice.findOneAndUpdate(
+        { userId, machineId },
+        updateData,
+        { new: true }
+      );
+    } else {
+      throw error;
+    }
   }
+
+  // ------------------ LOG SUCCESS ------------------
+  websocketHandler.sendLog(
+    req,
+    `Online status updated for user ${userId} on machine ${machineId}`,
+    constants.LOG_TYPES.INFO
+  );
+
+  // ------------------ WEBSOCKET ALERT ------------------
+  websocketHandler.sendAlert(
+    [userId],
+    JSON.stringify({
+      userId,
+      machineId,
+      isOnline,
+      project,
+      task
+    })
+  );
+
+  // ------------------ RESPONSE ------------------
+  return res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: { userDevice },
+    meta: {
+      timestamp: startTime
+    }
+  });
 });
+
 
 exports.getOnlineUsersByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getOnlineUsersByCompany', constants.LOG_TYPES.INFO);
