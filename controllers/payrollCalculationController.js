@@ -52,7 +52,7 @@ const User = require('../models/permissions/userModel');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
 const { getMonthRangeUtc  } = require('../utils/utcConverter');
-const financialYearConfig = require('../config/financialyear.json');
+// const financialYearConfig = require('../config/financialyear.json');
 const isLwfEnabledForUser = async (userId, req) => {
   // Check if statutory settings allow LWF deduction from payslip
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
@@ -1073,10 +1073,11 @@ const StoreAttendanceSummary = async (req, res) => {
 function getTaxConfig(finYear, regime) {
   const year = finYear.toLowerCase();
   const reg = regime.toLowerCase();
-  const fyData = financialYearConfig.find(
-    fy => fy.financialYear.toLowerCase() === year
-  );
-  if (!fyData) return null;
+  // const fyData = financialYearConfig.find(
+  //   fy => fy.financialYear.toLowerCase() === year
+  // );
+  //if (!fyData) return null;
+  return null;
 
   // Find regime record (only one)
   const regimeData = fyData.data.find(
