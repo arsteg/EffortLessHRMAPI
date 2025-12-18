@@ -73,5 +73,20 @@
         "regime": "Old Regime"
       }
     ]
+  },
+  {
+    "financialYear": "2030-2031",
+    "data": [
+      {
+        "standardDeduction": 100000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "Old Regime"
+      }
+    ]
   }
 ]
