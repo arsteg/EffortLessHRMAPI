@@ -1,0 +1,77 @@
+[
+  {
+    "financialYear": "2025-2026",
+    "data": [
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 50000,
+        "cessRate": 4,
+        "regime": "Old Regime"
+      }
+    ]
+  },
+  {
+    "financialYear": "2026-2027",
+    "data": [
+      {
+        "standardDeduction": 100000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "Old Regime"
+      }
+    ]
+  },
+  {
+    "financialYear": "2027-2028",
+    "data": [
+      {
+        "standardDeduction": 100000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "Old Regime"
+      }
+    ]
+  },
+  {
+    "financialYear": "2028-2029",
+    "data": [
+      {
+        "standardDeduction": 100000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "old Regime"
+      }
+    ]
+  },
+  {
+    "financialYear": "2029-2030",
+    "data": [
+      {
+        "standardDeduction": 100000,
+        "cessRate": 4,
+        "regime": "New Regime"
+      },
+      {
+        "standardDeduction": 75000,
+        "cessRate": 4,
+        "regime": "Old Regime"
+      }
+    ]
+  }
+]

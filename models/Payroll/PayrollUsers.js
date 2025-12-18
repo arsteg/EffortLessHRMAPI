@@ -56,7 +56,7 @@ var payrollUsersSchema = new Schema({
     },
     status: {
       type: String,
-      enum: ['OnHold', 'InProgress', 'Active'],
+      enum: ['OnHold', 'Processed', 'Active'],
       required: true
     },
     company: {

@@ -30,6 +30,10 @@ class WebSocketManager {
         this.connectedUsers.set(data.userId, ws);
         ws.userId = data.userId;
         console.log(`User ${data.userId} authenticated. Total users: ${this.connectedUsers.size}`);
+        
+        // Broadcast online status to all connected users
+        const allUsers = Array.from(this.connectedUsers.keys());
+        this.sendAlert(allUsers, JSON.stringify({ userId: data.userId, isOnline: true }));
       } else {
         console.log(`Received message from ${ws.userId || 'unknown'}: ${message}`);
       }
@@ -43,6 +47,10 @@ class WebSocketManager {
     if (ws.userId) {
       this.connectedUsers.delete(ws.userId);
       console.log(`User ${ws.userId} disconnected. Total users: ${this.connectedUsers.size}`);
+
+      // Broadcast offline status to all connected users
+      const allUsers = Array.from(this.connectedUsers.keys());
+      this.sendAlert(allUsers, JSON.stringify({ userId: ws.userId, isOnline: false }));
     }
   }
 

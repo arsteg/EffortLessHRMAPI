@@ -51,6 +51,8 @@ const User = require('../models/permissions/userModel');
 // 👉 Utilities and constants
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
+const { getMonthRangeUtc  } = require('../utils/utcConverter');
+const financialYearConfig = require('../config/financialyear.json');
 const isLwfEnabledForUser = async (userId, req) => {
   // Check if statutory settings allow LWF deduction from payslip
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
@@ -739,18 +741,34 @@ const calculateTDS = async (req, res) => {
     let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
  
     // 5️⃣ Calculate applicable amount after declaration if old regime
+    const financialYear = generateFinancialYearString();
     if(statutoryDetails?.taxRegime === 'Old Regime') {
-      const financialYear = generateFinancialYearString();
       const hraReceived = await getTotalHRAAmount(req, salaryDetails);
-      const totalDeclaredAmount = await GetTDSAppicableAmountAfterDeclartion(
+      const totalDeclaredAmount = await GetTDSAppicableAmountAfterDeclartion({
         req,
         userId,
         companyId,
         financialYear,
         totalTDSAppicableAmount,
         hraReceived
-      );
+      });
      totalTDSAppicableAmount -= totalDeclaredAmount.totalDeduction;
+    }
+
+    if(totalTDSAppicableAmount <= 0){
+      return { contributionData: 0, regime: '', days: 0 };
+    }
+
+    //fetch standard deduction and cess from financial year config json
+    const financialYearConfig = getTaxConfig(financialYear, statutoryDetails?.taxRegime);
+    let cesstax = 0;
+    if (financialYearConfig) {
+      totalTDSAppicableAmount -= financialYearConfig?.standardDeduction;
+      cesstax = financialYearConfig?.cessRate;
+    }
+    
+    if(totalTDSAppicableAmount <= 0){
+      return { contributionData: 0, regime: '', days: 0 };
     }
 
     // 6️⃣ Calculate final TDS using slab
@@ -761,7 +779,12 @@ const calculateTDS = async (req, res) => {
       statutoryDetails?.taxRegime
     );
     let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
-    return { contributionData: contributionData.toFixed(0), regime: statutoryDetails?.taxRegime, days: daysinPayrollCycle };
+    let finalContributionData = contributionData;
+    if(cesstax && cesstax > 0){
+      const cessAmount = (contributionData * cesstax) / 100;
+      finalContributionData += cessAmount;
+    }
+    return { contributionData: finalContributionData.toFixed(0), regime: statutoryDetails?.taxRegime, days: daysinPayrollCycle };
 
   } catch (err) {
     const errorMsg = `❌ Error in calculateTDS: ${err.message}`;
@@ -818,11 +841,24 @@ const calculateAndStoreIncomeTax = async (req, res) => {
       await payrollIncomeTax.save();
       } else {
       // Non-FNF Payroll
+      let TOTAL_FY_MONTHS = 12;
+      const userEmployment = await UserEmployment.findOne({ user: req.user });
+      if (!userEmployment) {
+        return;
+      }
+      const effectiveFrom = new Date(userEmployment.effectiveFrom);
+      const financialYearStart = getCurrentFinancialYearStart();
+      if (effectiveFrom >= financialYearStart) {
+        const joiningMonthIndex = effectiveFrom.getMonth() + 1;
+        const FY_START_MONTH_INDEX = 4; // April
+        const monthsElapsed = joiningMonthIndex - FY_START_MONTH_INDEX; 
+        TOTAL_FY_MONTHS = 12 - monthsElapsed;
+      }
       const payrollIncomeTaxData = {
         PayrollUser: req.payrollUser,
         TaxCalculatedMethod: tdsResult.regime,
         TaxCalculated: taxAmount,
-        TDSCalculated: (taxAmount / 12).toFixed(2)
+        TDSCalculated: (taxAmount / TOTAL_FY_MONTHS).toFixed(2)
       };
       const payrollIncomeTax = new PayrollIncomeTax(payrollIncomeTaxData);
       await payrollIncomeTax.save();
@@ -841,7 +877,41 @@ function getCurrentFinancialYearStart() {
   return new Date(year, 3, 1); // April 1st
 }
 
+/** 
+ * Commented because Prorated calculation is not correct for TDS because returing only partial month gross will not give correct TDS
+*/
+// function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmount) {
+//   const effectiveFrom = new Date(userEmployment.effectiveFrom);
+//   const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
+//   const financialYearStart = getCurrentFinancialYearStart();
+// console.log('Effective From:', effectiveFrom, 'Payroll Effective From:', payrollEffectiveFrom, 'Financial Year Start:', financialYearStart);
+//   // Case 1: Full year TDS if FY start falls between effective and payroll dates
+//   if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {
+//     const annualTDS = totalTDSApplicableAmount * 12;
+//     return annualTDS;
+//   }
+
+//   // Case 2: Prorated TDS calculation
+//   const msPerDay = 1000 * 60 * 60 * 24;
+//   const days = Math.floor((payrollEffectiveFrom - effectiveFrom) / msPerDay) + 1;
+// console.log('Prorated Days for TDS:', days);
+//   const dailyTDS = totalTDSApplicableAmount / 30; // Assuming average 30-day month
+//   console.log('Daily TDS Amount:', dailyTDS);
+//   const proratedTDS = dailyTDS * days;
+//   return proratedTDS;
+// }
+
+/** Revised function for calculating TDS Amount with prorated annualization
+* based on joining date within the financial year
+* and considering partial month salary if joined mid-month
+* to estimate annual gross income for TDS calculation
+* This approach provides a more accurate annualized income figure for TDS slabs
+* and avoids underestimation of tax liability.
+*/
 function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmount) {
+  if (totalTDSApplicableAmount <= 0) {
+    return 0;
+  }
   const effectiveFrom = new Date(userEmployment.effectiveFrom);
   const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
   const financialYearStart = getCurrentFinancialYearStart();
@@ -851,14 +921,41 @@ function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmo
     const annualTDS = totalTDSApplicableAmount * 12;
     return annualTDS;
   }
+  // Case B: Joined AFTER FY start (Mid-year joiner)
+  const joiningMonthIndex = effectiveFrom.getMonth(); 
+  const TOTAL_FY_MONTHS = 12;
 
-  // Case 2: Prorated TDS calculation
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const days = Math.floor((payrollEffectiveFrom - effectiveFrom) / msPerDay) + 1;
+  const FY_START_MONTH_INDEX = 3; // April
+  const monthsElapsed = joiningMonthIndex - FY_START_MONTH_INDEX; 
+  const totalWorkingMonths = TOTAL_FY_MONTHS - monthsElapsed;
+  let partialMonthGross = 0;
+  let monthsToWorkFullSalary = 0;
+  // CALCULATE PRORATED INCOME FOR THE FIRST MONTH
+  // Check if joining was mid-month
+  if (effectiveFrom.getDate() !== 1) {
+    // a) Find the last day of the first payroll month (e.g., June 30)
+    //const endOfFirstMonth = new Date(effectiveFrom.getFullYear(), effectiveFrom.getMonth() + 1, 0); 
+    const { startDate, endDate } = getMonthRangeUtc(effectiveFrom.getFullYear(), effectiveFrom.getMonth() + 1);
+    const endOfFirstMonth = endDate;
+    // b) Calculate days worked from joining date to month end
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysWorked = Math.floor((endOfFirstMonth - effectiveFrom) / msPerDay) + 1;
+    // c) Calculate prorated gross salary for the first month
+    const dailyGross = totalTDSApplicableAmount / 30; 
+    partialMonthGross = dailyGross * daysWorked;
+    // The remaining months of full salary are totalWorkingMonths - 1
+    monthsToWorkFullSalary = totalWorkingMonths - 1; 
 
-  const dailyTDS = totalTDSApplicableAmount / 30; // Assuming average 30-day month
-  const proratedTDS = dailyTDS * days;
-  return proratedTDS;
+  } else {
+    // Joined on the 1st of the month
+    partialMonthGross = totalTDSApplicableAmount; // Full salary for the first month
+    monthsToWorkFullSalary = totalWorkingMonths - 1; 
+  }
+  // 3. CALCULATE ESTIMATED ANNUAL GROSS INCOME
+  const subsequentFullSalary = totalTDSApplicableAmount * monthsToWorkFullSalary;
+  const estimatedAnnualGrossIncome = partialMonthGross + subsequentFullSalary;
+  // RETURN the Estimated Annual Gross Income
+  return Math.round(estimatedAnnualGrossIncome);
 }
 
 function calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSApplicableAmount) {
@@ -971,6 +1068,21 @@ const StoreAttendanceSummary = async (req, res) => {
     console.error('Error in calculateAndStoreAttendanceSummary:', error.message);
     throw error;
   }
+}
+
+function getTaxConfig(finYear, regime) {
+  const year = finYear.toLowerCase();
+  const reg = regime.toLowerCase();
+  const fyData = financialYearConfig.find(
+    fy => fy.financialYear.toLowerCase() === year
+  );
+  if (!fyData) return null;
+
+  // Find regime record (only one)
+  const regimeData = fyData.data.find(
+    item => item.regime.toLowerCase() === reg
+  );
+  return regimeData || null;
 }
 
 module.exports = {

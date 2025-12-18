@@ -154,7 +154,8 @@
     "deleteAttendanceModeFailure": "The attendance mode was not found.",
     "getAllAttendanceModesSuccess": "All attendance modes were retrieved successfully.",
     "createAttendanceTemplateSuccess": "The attendance template was created successfully for company {companyId}.",
-     "shiftAlreadyExists": "A shift with this label already exists",
+    "shiftAlreadyExists": "A shift with this label already exists",
+    "shiftNotFound": "Shift not found.",
     "deleteRestricted": "This shift cannot be deleted because it is assigned to employees.",
     "attendanceTemplateNotFound": "The attendance template was not found.",  
     "invalidAttendanceTemplate": "The attendance template is invalid.",
@@ -786,7 +787,8 @@
     "AppraisalNotificationForManagerTitle": "Appraisal Notification Sent",
     "AppraisalNotificationForManagerMessage": "The appraisal results for {{userName}} have been shared with them.",
      "EmailANdCompanyRequired": "Email and companyId are required",
-     "serverError": "A server error occurred."
+     "serverError": "A server error occurred.",
+     "duplicateDeclarationExists": "A declaration already exists for this user in the specified financial year."
   },
   "userPreferences": {
     "getAllSuccess": "Data fetched successfully.",

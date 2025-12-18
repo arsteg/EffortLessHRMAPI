@@ -1912,6 +1912,28 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating declaration for company ${companyId}`, constants.LOG_TYPES.DEBUG);
   
+ // --- START: DUPLICATE RECORD CHECK ---
+    // Destructure 'financialYear' as per your schema
+    const user = await User.findById(req.body.user);
+    const { financialYear } = req.body; 
+    
+    if (!user || !financialYear) {
+        websocketHandler.sendLog(req, 'Missing user or financialYear for duplicate check', constants.LOG_TYPES.WARN);
+        return next(new AppError(req.t('user.userAndYearRequired'), 400));
+    }
+
+    const existingDeclaration = await EmployeeIncomeTaxDeclaration.findOne({
+        user: user,
+        financialYear: financialYear, // Query using the correct schema field name
+        company: companyId
+    });
+
+    if (existingDeclaration) {
+        websocketHandler.sendLog(req, `Duplicate declaration found for user ${user} in financialYear ${financialYear}`, constants.LOG_TYPES.WARN);
+        return next(new AppError(req.t('user.duplicateDeclarationExists'), 409)); 
+    }
+    // --- END: DUPLICATE RECORD CHECK ---
+
   const incomeTaxComponents = await IncomeTaxComponant.find().select("_id").exec();
   const validIncomeTaxComponent = incomeTaxComponents.map((fa) => fa._id.toString());
   
@@ -2003,7 +2025,7 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
   websocketHandler.sendLog(req, `Created ${employeeHRA.length} HRA records`, constants.LOG_TYPES.INFO);
   
-  const user = await User.findById(req.body.user);
+  
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name')
     .equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee)

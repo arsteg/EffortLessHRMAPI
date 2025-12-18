@@ -105,6 +105,16 @@ const Payroll_User_Status = {
   OnHold: "OnHold",
   InProgress: "InProgress"
 };
+const Payroll_User_Status_New = {
+  Active: "Active",
+  OnHold: "OnHold",
+  Processed: "Processed"
+};
+const Payroll_FNF_Status_New = {
+  InProgress: "InProgress",
+  OnHold: "OnHold",
+  Closed: "Closed"
+};
 const Payroll_FNF_Status = {
   InProgress: "InProgress",
   OnHold: "OnHold",
@@ -112,11 +122,11 @@ const Payroll_FNF_Status = {
   Pending: "Pending",
   Processed: "Processed",
   Approved: "Approved",
-  Paid: "Paid",
-  Cleared: "Cleared",
+  //Paid: "Paid",
+  //Cleared: "Cleared",
   Rejected: "Rejected",
-  Finalized: "Finalized",
-  Exit_Interview_Completed: "Exit Interview Completed"
+  //Finalized: "Finalized",
+  //Exit_Interview_Completed: "Exit Interview Completed"
   };
 const Payroll_User_FNF_Status = {
   InProgress: "InProgress",
@@ -124,11 +134,11 @@ const Payroll_User_FNF_Status = {
   OnHold: "OnHold",
   Processed: "Processed",
   Approved: "Approved",
-  Paid: "Paid",
-  Cleared: "Cleared",
+  //Paid: "Paid",
+  //Cleared: "Cleared",
   Rejected: "Rejected",
-  Finilized: "Finilized",
-  Exit_Interview_Completed: "Exit Interview Completed"
+  //Finilized: "Finilized",
+  //Exit_Interview_Completed: "Exit Interview Completed"
 };
 const COMPANIES = {
   // Define company-specific constants if needed
@@ -231,7 +241,7 @@ module.exports = {
   Payroll_User_Status, Payroll_FNF_Status, Salaray_Default_Fixed_Allowance,
   Payroll_User_FNF_Status, payroll_LoanAdvance_Status, Payroll_LoanAdvance_Type, Active_Statuses, APIResponseStatus, SubContainers,
   Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType, LOG_TYPES,
-  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap
+  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap, Payroll_User_Status_New, Payroll_FNF_Status_New
 };
 
 

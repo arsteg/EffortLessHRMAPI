@@ -7064,7 +7064,7 @@ router.get('/payroll-fnf-income-tax-by-payroll-fnf-user/:payrollFNFUser', authCo
  *       500:
  *         description: Internal server error
  */
-router.get('/payroll-fnf-income-tax-by-payroll-fnf/:payroll', authController.protect, payrollController.getAllPayrollFNFIncomeTaxByPayrollFNF);
+router.get('/payroll-fnf-income-tax-by-payroll-fnf/:payrollFNF', authController.protect, payrollController.getAllPayrollFNFIncomeTaxByPayrollFNF);
 
 /**
  * @swagger

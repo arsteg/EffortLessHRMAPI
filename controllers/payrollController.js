@@ -3127,9 +3127,9 @@ exports.updatePayrollUserStatus = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting updatePayrollUserStatus process for ID: ${id}`, constants.LOG_TYPES.INFO);
 
   const validStatuses = [
-    constants.Payroll_User_Status.OnHold,
-    constants.Payroll_User_Status.Closed,
-    constants.Payroll_User_Status.InProgress
+    constants.Payroll_User_Status_New.OnHold,
+    constants.Payroll_User_Status_New.Closed,
+    constants.Payroll_User_Status_New.Processed
   ];
 
   if (!validStatuses.includes(status)) {
@@ -4435,11 +4435,11 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
       const totalManualArrears = (manualArrears && manualArrears.totalArrears) ? Number(manualArrears.totalArrears) : 0;
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = yearlySalary;
-      const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits);
+      const totalGrossSalary = Number(monthlySalary) + Number(totalOvertime) + Number(totalFlexiBenefits) + Number(totalManualArrears);
       const totalTakeHome = totalGrossSalary - (
         Number(totalFixedDeduction) +
         Number(totalVariableDeduction) +
-        Number(totalEmployerStatutoryContribution) +
+        //Number(totalEmployerStatutoryContribution) + // Employer contribution is not deducted from take-home
         Number(totalEmployeeStatutoryDeduction) +
         Number(totalLoanRepayment) +
         Number(totalIncomeTax)
@@ -4490,7 +4490,9 @@ exports.getAllGeneratedFNFPayrollByFNFPayrollId = catchAsync(async (req, res, ne
         totalCTC,
         totalGrossSalary,
         totalTakeHome,
-        payrollFNF
+        payrollFNF,
+        totalVariableAllowance,
+        totalVariableDeduction
       };
     })
   );
@@ -5455,7 +5457,8 @@ exports.updatePayrollFNFUserStatus = catchAsync(async (req, res, next) => {
     constants.Payroll_User_FNF_Status.OnHold,
     constants.Payroll_User_FNF_Status.Closed,
     constants.Payroll_User_FNF_Status.Pending,
-    constants.Payroll_User_FNF_Status.InProgress
+    constants.Payroll_User_FNF_Status.InProgress,
+    constants.Payroll_User_FNF_Status.Processed
   ];
 
   if (!validStatuses.includes(status)) {
@@ -6439,7 +6442,7 @@ exports.getAllPayrollFNFIncomeTaxByPayrollFNFUser = async (req, res) => {
 
 
 exports.getAllPayrollFNFIncomeTaxByPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
   // Extract _id values from payrollUsers payrollUserIds
   const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records
@@ -6609,7 +6612,7 @@ exports.getAllPayrollFNFOvertimeByPayrollFNFUser = async (req, res) => {
 };
 
 exports.getAllPayrollFNFOvertimeByPayrollFNF = catchAsync(async (req, res, next) => {
-  const payrollFNFUsers = await PayrollFNFUsers.find({ payroll: req.params.payrollFNF });
+  const payrollFNFUsers = await PayrollFNFUsers.find({ payrollFNF: req.params.payrollFNF });
   // Extract _id values from payrollUsers payrollUserIds
   const payrollFNFUserIds = payrollFNFUsers.map(user => user._id);
   // Use the array of IDs to fetch related PayrollAttendanceSummary records

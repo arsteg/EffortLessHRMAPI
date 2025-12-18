@@ -5,8 +5,7 @@ const projectUser = require('./projectUserModel');
 var projectModelSchema = new Schema({ 
   projectName: {
     type: String,
-    required: true,
-    unique: true
+    required: true
    },
    startDate: {
     type: Date 
