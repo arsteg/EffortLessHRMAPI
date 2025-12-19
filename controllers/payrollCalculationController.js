@@ -764,6 +764,7 @@ const calculateTDS = async (req, res) => {
 
     //fetch standard deduction and cess from financial year config json
     const financialYearConfig = getTaxConfig(financialYear, statutoryDetails?.taxRegime);
+    console.log('financialYearConfig?.standardDeduction', financialYearConfig?.standardDeduction);
     let cesstax = 0;
     if (financialYearConfig) {
       totalTDSAppicableAmount -= financialYearConfig?.standardDeduction;
@@ -1085,6 +1086,7 @@ function getTaxConfig(finYear, regime) {
       console.error("Failed to load financialYear.json:", error.message);
       financialYearConfig = []; // Fallback to empty array to prevent crashes
   }
+  console.log('financialYearConfig loaded:', financialYearConfig);
 
   const year = finYear.toLowerCase();
   const reg = regime.toLowerCase();
