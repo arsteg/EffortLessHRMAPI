@@ -740,7 +740,7 @@ const calculateTDS = async (req, res) => {
     if (!userEmployment) {
       return { contributionData: 0, regime: '', days: 0 };
     }
-
+console.log('totalTDSAppicablearlyAmount', totalTDSAppicablearlyAmount);
     let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
  
     // 5️⃣ Calculate applicable amount after declaration if old regime
@@ -922,6 +922,7 @@ function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmo
   const effectiveFrom = new Date(userEmployment.effectiveFrom);
   const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
   const financialYearStart = getCurrentFinancialYearStart();
+  console.log('Effective From:', effectiveFrom, 'Payroll Effective From:', payrollEffectiveFrom, 'Financial Year Start:', financialYearStart);
 
   // Case 1: Full year TDS if FY start falls between effective and payroll dates
   if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {
