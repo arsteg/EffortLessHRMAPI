@@ -766,11 +766,12 @@ const calculateTDS = async (req, res) => {
     const financialYearConfig = getTaxConfig(financialYear, statutoryDetails?.taxRegime);
     console.log('financialYearConfig?.standardDeduction', financialYearConfig?.standardDeduction);
     let cesstax = 0;
+    console.log('totalTDSAppicableAmount before standard deduction', totalTDSAppicableAmount);
     if (financialYearConfig) {
       totalTDSAppicableAmount -= financialYearConfig?.standardDeduction;
       cesstax = financialYearConfig?.cessRate;
     }
-    
+    console.log('totalTDSAppicableAmount after standard deduction', totalTDSAppicableAmount);
     if(totalTDSAppicableAmount <= 0){
       return { contributionData: 0, regime: '', days: 0 };
     }
@@ -784,10 +785,12 @@ const calculateTDS = async (req, res) => {
     );
     let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
     let finalContributionData = contributionData;
+    console.log('contributionData before cess', finalContributionData);
     if(cesstax && cesstax > 0){
       const cessAmount = (contributionData * cesstax) / 100;
       finalContributionData += cessAmount;
     }
+    console.log('finalContributionData after cess', finalContributionData);
     return { contributionData: finalContributionData.toFixed(0), regime: statutoryDetails?.taxRegime, days: daysinPayrollCycle };
 
   } catch (err) {
@@ -1086,8 +1089,7 @@ function getTaxConfig(finYear, regime) {
       console.error("Failed to load financialYear.json:", error.message);
       financialYearConfig = []; // Fallback to empty array to prevent crashes
   }
-  console.log('financialYearConfig loaded:', financialYearConfig);
-
+  
   const year = finYear.toLowerCase();
   const reg = regime.toLowerCase();
   const fyData = financialYearConfig.find(
