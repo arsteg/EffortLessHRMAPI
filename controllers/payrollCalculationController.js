@@ -52,7 +52,10 @@ const User = require('../models/permissions/userModel');
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
 const { getMonthRangeUtc  } = require('../utils/utcConverter');
-// const financialYearConfig = require('../config/financialyear.json');
+//const financialYearConfig = require('../config/financialyear.json');
+const path = require('path');
+const fs = require('fs');
+
 const isLwfEnabledForUser = async (userId, req) => {
   // Check if statutory settings allow LWF deduction from payslip
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
@@ -737,7 +740,7 @@ const calculateTDS = async (req, res) => {
     if (!userEmployment) {
       return { contributionData: 0, regime: '', days: 0 };
     }
-
+console.log('totalTDSAppicablearlyAmount', totalTDSAppicablearlyAmount);
     let totalTDSAppicableAmount = calculateTDSAmount(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
  
     // 5️⃣ Calculate applicable amount after declaration if old regime
@@ -761,12 +764,14 @@ const calculateTDS = async (req, res) => {
 
     //fetch standard deduction and cess from financial year config json
     const financialYearConfig = getTaxConfig(financialYear, statutoryDetails?.taxRegime);
+    console.log('financialYearConfig?.standardDeduction', financialYearConfig?.standardDeduction);
     let cesstax = 0;
+    console.log('totalTDSAppicableAmount before standard deduction', totalTDSAppicableAmount);
     if (financialYearConfig) {
       totalTDSAppicableAmount -= financialYearConfig?.standardDeduction;
       cesstax = financialYearConfig?.cessRate;
     }
-    
+    console.log('totalTDSAppicableAmount after standard deduction', totalTDSAppicableAmount);
     if(totalTDSAppicableAmount <= 0){
       return { contributionData: 0, regime: '', days: 0 };
     }
@@ -780,10 +785,12 @@ const calculateTDS = async (req, res) => {
     );
     let daysinPayrollCycle = calculateDaysinPayroll(userEmployment, salaryDetails, totalTDSAppicablearlyAmount);
     let finalContributionData = contributionData;
+    console.log('contributionData before cess', finalContributionData);
     if(cesstax && cesstax > 0){
       const cessAmount = (contributionData * cesstax) / 100;
       finalContributionData += cessAmount;
     }
+    console.log('finalContributionData after cess', finalContributionData);
     return { contributionData: finalContributionData.toFixed(0), regime: statutoryDetails?.taxRegime, days: daysinPayrollCycle };
 
   } catch (err) {
@@ -915,6 +922,7 @@ function calculateTDSAmount(userEmployment, salaryDetails, totalTDSApplicableAmo
   const effectiveFrom = new Date(userEmployment.effectiveFrom);
   const payrollEffectiveFrom = new Date(salaryDetails.payrollEffectiveFrom);
   const financialYearStart = getCurrentFinancialYearStart();
+  console.log('Effective From:', effectiveFrom, 'Payroll Effective From:', payrollEffectiveFrom, 'Financial Year Start:', financialYearStart);
 
   // Case 1: Full year TDS if FY start falls between effective and payroll dates
   if (effectiveFrom <= financialYearStart && payrollEffectiveFrom <= financialYearStart) {
@@ -1071,13 +1079,24 @@ const StoreAttendanceSummary = async (req, res) => {
 }
 
 function getTaxConfig(finYear, regime) {
+  //const configPath = path.join(__dirname, '../config/financialYear.json');
+  const configPath = path.join(__dirname, '..', 'config', 'financialYear.json');
+  // Read and parse the file
+  let financialYearConfig;
+  try {
+      const rawData = fs.readFileSync(configPath, 'utf8');
+      financialYearConfig = JSON.parse(rawData);
+  } catch (error) {
+      console.error("Failed to load financialYear.json:", error.message);
+      financialYearConfig = []; // Fallback to empty array to prevent crashes
+  }
+  
   const year = finYear.toLowerCase();
   const reg = regime.toLowerCase();
-  // const fyData = financialYearConfig.find(
-  //   fy => fy.financialYear.toLowerCase() === year
-  // );
-  //if (!fyData) return null;
-  return null;
+  const fyData = financialYearConfig.find(
+    fy => fy.financialYear.toLowerCase() === year
+  );
+  if (!fyData) return null;
 
   // Find regime record (only one)
   const regimeData = fyData.data.find(
