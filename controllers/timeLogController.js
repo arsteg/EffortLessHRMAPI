@@ -210,54 +210,50 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     ? teamIdsArray.filter(id => requestedUsers.includes(id.toString()))
     : teamIdsArray;
 
-  const query = {
-    userId: { $in: userFilter.map(id => id.toString()) },
-    isOnline: true
-  };
-
-  if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
-  if (requestedTasks && requestedTasks.length > 0) query.task = { $in: requestedTasks };
-  websocketHandler.sendLog(req, `Query: ${JSON.stringify(query)}`, constants.LOG_TYPES.DEBUG);
-
-  // Fetch online users from userDevice with populated project and task
-  const onlineDevices = await UserDevice.find(query)
+  // Fetch current device status for all team members
+  const allDevices = await UserDevice.find({
+    userId: { $in: teamIdsArray.map(id => id.toString()) },
+    company: companyId
+  })
     .populate('project', 'projectName')
     .populate('task', 'taskName');
 
-  websocketHandler.sendLog(req, `Found ${onlineDevices.length} online users`, constants.LOG_TYPES.INFO);
+  const deviceMap = new Map(allDevices.map(d => [d.userId, d]));
 
   // Fetch all relevant user details at once
-  const userIds = onlineDevices.map(device => device.userId);
-  const users = await User.find({ _id: { $in: userIds } }).select('firstName lastName');
+  const users = await User.find({ _id: { $in: teamIdsArray } }).select('firstName lastName');
   const userMap = new Map(users.map(user => [user._id.toString(), user]));
 
-  // Format the results
-  for (let i = 0; i < onlineDevices.length; i++) {
-    websocketHandler.sendLog(req, `Processing device for user ${onlineDevices[i].userId}`, constants.LOG_TYPES.TRACE);
+  // Format the results for ALL team members
+  for (const userId of teamIdsArray) {
+    const userIdStr = userId.toString();
+    const userData = userMap.get(userIdStr);
+    const device = deviceMap.get(userIdStr);
 
-    const device = onlineDevices[i];
-    const userData = userMap.get(device.userId);
+    // Apply filters if provided
+    if (requestedProjects && device?.project?._id && !requestedProjects.includes(device.project._id.toString())) continue;
+    if (requestedTasks && device?.task?._id && !requestedTasks.includes(device.task._id.toString())) continue;
+    if (requestedUsers && !requestedUsers.includes(userIdStr)) continue;
 
     const newLogInUser = {
       user: {
-        _id: device.userId,
+        _id: userIdStr,
         firstName: userData?.firstName || 'N/A',
         lastName: userData?.lastName || 'N/A',
-        id: device.userId
+        id: userIdStr
       },
-      project: device.project?.projectName || 'N/A',
-      task: device.task?.taskName || 'N/A',
-      isOnline: device.isOnline || false
+      project: device?.project?.projectName || 'N/A',
+      task: device?.task?.taskName || 'N/A',
+      isOnline: device?.isOnline || false
     };
 
     timeLogsAll.push(newLogInUser);
-    websocketHandler.sendLog(req, `Added log for user ${device.userId}`, constants.LOG_TYPES.DEBUG);
   }
 
   logs.onlineUsers = timeLogsAll;
   logs.totalMember = teamIdsArray.length;
-  logs.activeMember = timeLogsAll.length;
-  logs.totalNonProductiveMember = 0;
+  logs.activeMember = timeLogsAll.filter(u => u.isOnline).length;
+  logs.totalNonProductiveMember = logs.totalMember - logs.activeMember;
   realtime.push(logs);
 
   websocketHandler.sendLog(req, 'Completed getLogInUser operation', constants.LOG_TYPES.INFO);
