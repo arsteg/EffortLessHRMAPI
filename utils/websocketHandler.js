@@ -53,14 +53,18 @@ class WebSocketManager {
   handleDisconnect(ws) {
     if (ws.userIds) {
       ws.userIds.forEach(userId => {
-        this.connectedUsers.delete(userId);
+        // Only delete the mapping if this socket is the one currently registered for the userId
+        if (this.connectedUsers.get(userId) === ws) {
+          this.connectedUsers.delete(userId);
+        }
       });
-      console.log(`Socket disconnected. Removed ${ws.userIds.size} mappings. Total mappings: ${this.connectedUsers.size}`);
+      console.log(`Socket disconnected. Checked ${ws.userIds.size} mappings. Total mappings: ${this.connectedUsers.size}`);
     } else if (ws.userId) {
-      this.connectedUsers.delete(ws.userId);
+      if (this.connectedUsers.get(ws.userId) === ws) {
+        this.connectedUsers.delete(ws.userId);
+      }
       console.log(`User ${ws.userId} disconnected. Total mappings: ${this.connectedUsers.size}`);
     }
-
     // Broadcast offline status would need more logic if we want to be accurate about WHO is offline
     // but the existing logic is already a bit broad.
   }

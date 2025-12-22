@@ -20,10 +20,13 @@ const UserPreference = require('../models/userPreferences/userPreferenceModel.js
 exports.addLog = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addLog operation', constants.LOG_TYPES.TRACE);
 
-  websocketHandler.sendLog(req, `Checking active device for user ${req.cookies.userId}`, constants.LOG_TYPES.DEBUG);
+  const userId = req.cookies.userId || req.user?._id;
+  const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company;
+
+  websocketHandler.sendLog(req, `Checking active device for user ${userId}`, constants.LOG_TYPES.DEBUG);
   const currentUserActive = await CurrentUserDevice.findOne({})
-    .where('userId').equals(req.cookies.userId)
-    .where('companyId').equals(req.cookies.companyId);
+    .where('userId').equals(userId)
+    .where('companyId').equals(companyId);
 
   if (currentUserActive) {
     websocketHandler.sendLog(req, `Found active device: ${currentUserActive.machineId}`, constants.LOG_TYPES.DEBUG);
@@ -48,10 +51,10 @@ exports.addLog = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'No active device found, creating new', constants.LOG_TYPES.DEBUG);
     const newCurrentUserDevice = await CurrentUserDevice.create({
       machineId: req.body.machineId,
-      company: req.cookies.companyId,
+      company: companyId,
       status: "Active",
       createdOn: new Date(),
-      userId: req.cookies.userId
+      userId: userId
     });
     websocketHandler.sendLog(req, `Created new device with ID ${newCurrentUserDevice._id}`, constants.LOG_TYPES.INFO);
   }
@@ -68,7 +71,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
   });
 
   websocketHandler.sendLog(req, 'Uploading document to storage', constants.LOG_TYPES.TRACE);
-  const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.Timelog, req.body.document[0]);
+  const url = await StorageController.createContainerInContainer(companyId, constants.SubContainers.Timelog, req.body.document[0]);
   websocketHandler.sendLog(req, `Document uploaded with URL: ${url}`, constants.LOG_TYPES.INFO);
 
   websocketHandler.sendLog(req, 'Creating new time log', constants.LOG_TYPES.TRACE);
@@ -88,8 +91,8 @@ exports.addLog = catchAsync(async (req, res, next) => {
 
   // Step 3: Get total logs in current week & month
   const [weekLogs, monthLogs] = await Promise.all([
-    TimeLog.find({ user: req.cookies.userId, date: { $gte: startOfWeek, $lte: endOfWeek } }),
-    TimeLog.find({ user: req.cookies.userId, date: { $gte: startOfMonth, $lte: endOfMonth } })
+    TimeLog.find({ user: userId, date: { $gte: startOfWeek, $lte: endOfWeek } }),
+    TimeLog.find({ user: userId, date: { $gte: startOfMonth, $lte: endOfMonth } })
   ]);
 
   // Convert to total hours
@@ -97,7 +100,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
   const totalMonthHours = (monthLogs.length * MINUTES_PER_LOG);
 
   // Step 4: Get user limits (in hours)
-  const preferences = await UserPreference.find({ userId: req.cookies.userId }).populate('preferenceOptionId');
+  const preferences = await UserPreference.find({ userId: userId }).populate('preferenceOptionId');
   const weeklyLimitPref = preferences?.find(p => p.preferenceOptionId.preferenceKey === 'Tracker.WeeklyHoursLimit_explicit');
   const monthlyLimitPref = preferences?.find(p => p.preferenceOptionId.preferenceKey === 'Tracker.MonthlyHoursLimit_explicit');
   const weeklyLimit = weeklyLimitPref ? parseFloat(weeklyLimitPref.preferenceOptionId.preferenceValue) * 60 : 0;
@@ -168,7 +171,8 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getLogInUser operation', constants.LOG_TYPES.TRACE);
 
   const teamIdsArray = [];
-  const userId = req.cookies.userId || req.user._id;
+  const userId = req.cookies.userId || req.user?._id;
+  const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company;
   websocketHandler.sendLog(req, `Fetching subordinates for user ${userId}`, constants.LOG_TYPES.DEBUG);
 
   const ids = await userSubordinate.find({})
@@ -207,7 +211,8 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     : teamIdsArray;
 
   const query = {
-    userId: { $in: userFilter.map(id => id.toString()) }
+    userId: { $in: userFilter.map(id => id.toString()) },
+    isOnline: true
   };
 
   if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
@@ -241,7 +246,8 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
         id: device.userId
       },
       project: device.project?.projectName || 'N/A',
-      task: device.task?.taskName || 'N/A'
+      task: device.task?.taskName || 'N/A',
+      isOnline: device.isOnline || false
     };
 
     timeLogsAll.push(newLogInUser);

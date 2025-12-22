@@ -435,7 +435,7 @@ exports.saveCountry = catchAsync(async (req, res, next) => {
 exports.addEmailTemplate = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting addEmailTemplate', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Adding email template for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  const companyId = req.cookies.companyId; 
+  const companyId = req.cookies.companyId;
   // Validate company ID
   if (!companyId) {
     websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
@@ -471,10 +471,10 @@ exports.changeEmailTemplatesStatus = catchAsync(async (req, res, next) => {
     })
     .catch((error) => {
       websocketHandler.sendLog(req, `Error updating email template status: ${error.message}`, constants.LOG_TYPES.ERROR);
-     
-     return next(new AppError(
-              req.t('common.serverError')
-            ));
+
+      return next(new AppError(
+        req.t('common.serverError')
+      ));
     });
 });
 
@@ -817,7 +817,7 @@ exports.updateIncomeTaxComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting updateIncomeTaxComponant', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Updating income tax component with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
-  const companyId = req.cookies.companyId;
+  const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company;
   const { componantName, section } = req.body;
 
   // Validate company ID
@@ -888,18 +888,19 @@ exports.deleteIncomeTaxComponant = catchAsync(async (req, res, next) => {
 });
 
 exports.getIncomeTaxComponantsByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company;
   websocketHandler.sendLog(req, 'Starting getIncomeTaxComponantsByCompany', constants.LOG_TYPES.INFO);
-  websocketHandler.sendLog(req, `Fetching income tax components for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+  websocketHandler.sendLog(req, `Fetching income tax components for company: ${companyId}`, constants.LOG_TYPES.TRACE);
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 0;
-  const totalCount = await IncomeTaxComponant.countDocuments({ company: req.cookies.companyId });
+  const totalCount = await IncomeTaxComponant.countDocuments({ company: companyId });
   let incomeTaxComponants;
   if (limit > 0) {
-    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId })
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: companyId })
       .skip(skip)
       .limit(limit);
   } else {
-    incomeTaxComponants = await IncomeTaxComponant.find({ company: req.cookies.companyId });
+    incomeTaxComponants = await IncomeTaxComponant.find({ company: companyId });
   }
   websocketHandler.sendLog(req, `Retrieved ${incomeTaxComponants.length} income tax components, total: ${totalCount}`, constants.LOG_TYPES.INFO);
 
@@ -1047,8 +1048,15 @@ exports.updateOnlineStatus = catchAsync(async (req, res) => {
     constants.LOG_TYPES.INFO
   );
 
-  const { userId, machineId, isOnline, project, task } = req.body;
-  const companyId = req.cookies.companyId;
+  let { userId, machineId, isOnline, project, task, companyId: bodyCompanyId } = req.body;
+
+  // ------------------ DATA PARSING ------------------
+  // Tracker might send boolean as string
+  if (typeof isOnline === 'string') {
+    isOnline = isOnline.toLowerCase() === 'true';
+  }
+
+  const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company || bodyCompanyId;
 
   // ------------------ VALIDATION ------------------
   if (!userId || !machineId || typeof isOnline !== 'boolean') {
@@ -1147,7 +1155,7 @@ exports.getOnlineUsersByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getOnlineUsersByCompany', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching online users for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
   try {
-    const companyId = req.cookies.companyId;
+    const companyId = req.cookies.companyId || req.user?.company?.id || req.user?.company;
 
     if (!companyId) {
       websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);

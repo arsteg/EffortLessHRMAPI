@@ -5,20 +5,20 @@ const userController = require('../controllers/userController');
 const router = express.Router();
 
 // Country Router
-router.get('/countrylist',commonController.getCountryList);
-router.post('/savecountry',commonController.saveCoutry);
+router.get('/countrylist', commonController.getCountryList);
+router.post('/savecountry', commonController.saveCoutry);
 
 // Role Router
-router.get('/getrolebyname',commonController.getRoleByName);
+router.get('/getrolebyname', commonController.getRoleByName);
 
 // Permission Router
-router.get('/permissionlist',commonController.getPermissionList);
-router.post('/savepermission',commonController.savePermission);
+router.get('/permissionlist', commonController.getPermissionList);
+router.post('/savepermission', commonController.savePermission);
 
 // RolePermission Router
-router.get('/rolepermissionlist',commonController.getRolePermsList);
-router.post('/saverolepermission',commonController.saveRolePermission);
-router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
+router.get('/rolepermissionlist', commonController.getRolePermsList);
+router.post('/saverolepermission', commonController.saveRolePermission);
+router.get('/getrolepermsbyrole', commonController.getRolePermsByRole);
 
 /**
  * @swagger
@@ -56,7 +56,7 @@ router.get('/getrolepermsbyrole',commonController.getRolePermsByRole);
  *       500:
  *         description: Server error
  */
-router.post('/emailTemplate',  authController.protect, commonController.addEmailTemplate);
+router.post('/emailTemplate', authController.protect, commonController.addEmailTemplate);
 
 /**
  * @swagger
@@ -92,7 +92,7 @@ router.post('/emailTemplate',  authController.protect, commonController.addEmail
  *             schema:
  *               $ref: '#/components/schemas/EmailTemplate'
  */
-router.put('/emailTemplates/changestatus/:id',  authController.protect, commonController.changeEmailTemplatesStatus)
+router.put('/emailTemplates/changestatus/:id', authController.protect, commonController.changeEmailTemplatesStatus)
 
 /**
  * @swagger
@@ -137,7 +137,7 @@ router.put('/emailTemplates/changestatus/:id',  authController.protect, commonCo
  *             schema:
  *               $ref: '#/components/schemas/EmailTemplate'
  */
-router.put('/emailTemplates/:id',  authController.protect, commonController.changeEmailTemplatesStatus)
+router.put('/emailTemplates/:id', authController.protect, commonController.changeEmailTemplatesStatus)
 
 /**
  * @swagger
@@ -234,7 +234,7 @@ router.get('/emailTemplates', authController.protect, commonController.getAllEma
  *       500:
  *         description: Server error
  */
-router.post('/taskstatus',  authController.protect, commonController.saveTaskStatus);
+router.post('/taskstatus', authController.protect, commonController.saveTaskStatus);
 
 /**
   * @swagger
@@ -255,7 +255,7 @@ router.post('/taskstatus',  authController.protect, commonController.saveTaskSta
   *                      schema:
   *                          type: object
   *
-  */ 
+  */
 router.get('/taskstatuslist/', authController.protect, commonController.getTaskStatusList);
 
 /**
@@ -290,7 +290,7 @@ router.get('/taskstatuslist/', authController.protect, commonController.getTaskS
  *             schema:
  *               $ref: '#/components/schemas/TaskStatus'
  */
-router.put('/taskstatus/:id',  authController.protect, commonController.updateTaskStatus)
+router.put('/taskstatus/:id', authController.protect, commonController.updateTaskStatus)
 
 /**
  * @swagger
@@ -367,7 +367,7 @@ router.get('/taskstatus/:id', authController.protect, commonController.getTaskSt
  *       500:
  *         description: Server error
  */
-router.post('/taskpriority',  authController.protect, commonController.saveTaskPriority);
+router.post('/taskpriority', authController.protect, commonController.saveTaskPriority);
 
 /**
   * @swagger
@@ -388,7 +388,7 @@ router.post('/taskpriority',  authController.protect, commonController.saveTaskP
   *                      schema:
   *                          type: object
   *
-  */ 
+  */
 router.get('/taskprioritylist/', authController.protect, commonController.getTaskPriorityList);
 
 /**
@@ -423,7 +423,7 @@ router.get('/taskprioritylist/', authController.protect, commonController.getTas
  *             schema:
  *               $ref: '#/components/schemas/TaskPriority'
  */
-router.put('/taskpriority/:id',  authController.protect, commonController.updateTaskPriority)
+router.put('/taskpriority/:id', authController.protect, commonController.updateTaskPriority)
 
 /**
  * @swagger
@@ -505,8 +505,8 @@ router.get('/taskpriority/:id', authController.protect, commonController.getTask
  *       500:
  *         description: Server error
  */
-router.post('/UserUIState',  commonController.saveUserUiState);
- 
+router.post('/UserUIState', commonController.saveUserUiState);
+
 /**
  * @swagger
  * /api/v1/common/UserUIState/{key}:
@@ -532,7 +532,7 @@ router.post('/UserUIState',  commonController.saveUserUiState);
  *         description: UserUIState not found
  *       500:
  *         description: Server error
- */ 
+ */
 router.get('/UserUIState/:key', commonController.getUserUiState);
 
 /**
@@ -570,7 +570,7 @@ router.get('/UserUIState/:key', commonController.getUserUiState);
  *       500:
  *         description: Internal server error
  */
-router.post('/income-tax-sections', authController.protect,commonController.createIncomeTaxSection);
+router.post('/income-tax-sections', authController.protect, commonController.createIncomeTaxSection);
 
 /**
  * @swagger
@@ -632,7 +632,7 @@ router.get('/income-tax-sections-by-company', authController.protect, commonCont
  *       500:
  *         description: Internal server error
  */
-router.put('/income-tax-sections/:id',authController.protect, commonController.updateIncomeTaxSection);
+router.put('/income-tax-sections/:id', authController.protect, commonController.updateIncomeTaxSection);
 
 /**
  * @swagger
@@ -658,7 +658,7 @@ router.put('/income-tax-sections/:id',authController.protect, commonController.u
  *       500:
  *         description: Internal server error
  */
-router.get('/income-tax-sections/:id',authController.protect, commonController.getIncomeTaxSectionById);
+router.get('/income-tax-sections/:id', authController.protect, commonController.getIncomeTaxSectionById);
 
 /**
  * @swagger
@@ -684,7 +684,7 @@ router.get('/income-tax-sections/:id',authController.protect, commonController.g
  *       500:
  *         description: Internal server error
  */
-router.delete('/income-tax-sections/:id',authController.protect, commonController.deleteIncomeTaxSection);
+router.delete('/income-tax-sections/:id', authController.protect, commonController.deleteIncomeTaxSection);
 
 /**
  * @swagger
@@ -863,7 +863,7 @@ router.post('/income-tax-componants-list', authController.protect, commonControl
  *       500:
  *         description: Server error
  */
-router.post('/generate-otp',  userController.generateOTP);
+router.post('/generate-otp', userController.generateOTP);
 
 
 /**
@@ -1085,7 +1085,7 @@ router.get("/getSelectedUser", authController.protect, commonController.getSelec
  *       500:
  *         description: Server error
  */
-router.get("/testLog",  commonController.testLog);
+router.get("/testLog", commonController.testLog);
 
 /**
  * @swagger
@@ -1155,7 +1155,7 @@ router.get("/testLog",  commonController.testLog);
  *       500:
  *         description: Server error
  */
-router.post('/onlineStatus', authController.protect, commonController.updateOnlineStatus);
+router.post('/onlineStatus', commonController.updateOnlineStatus);
 /**
  * @swagger
  * /api/v1/common/getOnlineUsersByCompany:
