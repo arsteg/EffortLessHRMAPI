@@ -102,7 +102,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
   const monthlyLimitPref = preferences?.find(p => p.preferenceOptionId.preferenceKey === 'Tracker.MonthlyHoursLimit_explicit');
   const weeklyLimit = weeklyLimitPref ? parseFloat(weeklyLimitPref.preferenceOptionId.preferenceValue) * 60 : 0;
   const monthlyLimit = monthlyLimitPref ? parseFloat(monthlyLimitPref.preferenceOptionId.preferenceValue) * 60 : 0;
-  
+
   // Perform weekly check only if weeklyLimit is a positive number
   if (weeklyLimit && weeklyLimit > 0 && totalWeekHours >= weeklyLimit) {
     websocketHandler.sendLog(req, 'Weekly time limit exceeded', constants.LOG_TYPES.WARN);
@@ -119,7 +119,7 @@ exports.addLog = catchAsync(async (req, res, next) => {
     return res.status(406).json({
       status: constants.APIResponseStatus.Info,
       message: req.t('timeLog.monthlyLimitExceeded'),
-      data: {  },
+      data: {},
       statusCode: 406
     });
   }
@@ -168,17 +168,21 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getLogInUser operation', constants.LOG_TYPES.TRACE);
 
   const teamIdsArray = [];
-  websocketHandler.sendLog(req, `Fetching subordinates for user ${req.cookies.userId}`, constants.LOG_TYPES.DEBUG);
+  const userId = req.cookies.userId || req.user._id;
+  websocketHandler.sendLog(req, `Fetching subordinates for user ${userId}`, constants.LOG_TYPES.DEBUG);
+
   const ids = await userSubordinate.find({})
     .distinct('subordinateUserId')
     .where('userId')
-    .equals(req.cookies.userId);
+    .equals(userId);
+
 
   if (ids.length > 0) {
     teamIdsArray.push(...ids);
     websocketHandler.sendLog(req, `Found ${ids.length} subordinates`, constants.LOG_TYPES.DEBUG);
   }
-  teamIdsArray.push(req.cookies.userId);
+  teamIdsArray.push(userId);
+
   websocketHandler.sendLog(req, `Team IDs: ${teamIdsArray}`, constants.LOG_TYPES.DEBUG);
 
   const timeLogsAll = [];
@@ -202,10 +206,10 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     ? teamIdsArray.filter(id => requestedUsers.includes(id))
     : teamIdsArray;
 
-  const query = { 
-    userId: { $in: userFilter }    
+  const query = {
+    userId: { $in: userFilter }
   };
-  
+
   if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
   if (requestedTasks && requestedTasks.length > 0) query.task = { $in: requestedTasks };
   websocketHandler.sendLog(req, `Query: ${JSON.stringify(query)}`, constants.LOG_TYPES.DEBUG);
@@ -225,7 +229,7 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
   // Format the results
   for (let i = 0; i < onlineDevices.length; i++) {
     websocketHandler.sendLog(req, `Processing device for user ${onlineDevices[i].userId}`, constants.LOG_TYPES.TRACE);
-    
+
     const device = onlineDevices[i];
     const userData = userMap.get(device.userId);
 
@@ -239,7 +243,7 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
       project: device.project?.projectName || 'N/A',
       task: device.task?.taskName || 'N/A'
     };
-    
+
     timeLogsAll.push(newLogInUser);
     websocketHandler.sendLog(req, `Added log for user ${device.userId}`, constants.LOG_TYPES.DEBUG);
   }
@@ -261,17 +265,21 @@ exports.getLogInUser1 = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getLogInUser operation', constants.LOG_TYPES.TRACE);
 
   const teamIdsArray = [];
-  websocketHandler.sendLog(req, `Fetching subordinates for user ${req.cookies.userId}`, constants.LOG_TYPES.DEBUG);
+  const userId = req.cookies.userId || req.user._id;
+  websocketHandler.sendLog(req, `Fetching subordinates for user ${userId}`, constants.LOG_TYPES.DEBUG);
+
   const ids = await userSubordinate.find({})
     .distinct('subordinateUserId')
     .where('userId')
-    .equals(req.cookies.userId);
+    .equals(userId);
+
 
   if (ids.length > 0) {
     teamIdsArray.push(...ids);
     websocketHandler.sendLog(req, `Found ${ids.length} subordinates`, constants.LOG_TYPES.DEBUG);
   }
-  teamIdsArray.push(req.cookies.userId);
+  teamIdsArray.push(userId);
+
   websocketHandler.sendLog(req, `Team IDs: ${teamIdsArray}`, constants.LOG_TYPES.DEBUG);
 
   const timeLogsAll = [];
@@ -377,7 +385,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   try {
     startDate = new Date(req.body.startDate);
     endDate = new Date(req.body.endDate);
-    
+
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       throw new Error('Invalid date format');
     }
@@ -394,7 +402,7 @@ exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   }
 
   websocketHandler.sendLog(req, `Fetching logs for user ${req.body.user} from ${startDate.toISOString()} to ${endDate.toISOString()}`, constants.LOG_TYPES.DEBUG);
-  
+
   const timeLogs = await TimeLog.find({
     user: req.body.user,
     date: { $gte: startDate, $lte: endDate }
@@ -497,9 +505,9 @@ exports.deleteLog = catchAsync(async (req, res, next) => {
         websocketHandler.sendLog(req, `No document found with ID ${req.body.logs[i].logId}`, constants.LOG_TYPES.WARN);
       } else {
         websocketHandler.sendLog(req, `Deleted log ${req.body.logs[i].logId}`, constants.LOG_TYPES.INFO);
-        
-          SendUINotification(req.t('timeLog.timeLogNotificationTitle'), req.t('timeLog.timeLogNotificationMessage'),
-            constants.Event_Notification_Type_Status.timelog_delete, userId?.toString(), companyId, req);
+
+        SendUINotification(req.t('timeLog.timeLogNotificationTitle'), req.t('timeLog.timeLogNotificationMessage'),
+          constants.Event_Notification_Type_Status.timelog_delete, userId?.toString(), companyId, req);
       }
     } else {
       websocketHandler.sendLog(req, `No document found with ID ${req.body.logs[i].logId}`, constants.LOG_TYPES.WARN);
@@ -602,7 +610,8 @@ exports.getTimesheet = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error in timesheet generation: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({ error: req.t('timeLog.serverError')
+    res.status(500).json({
+      error: req.t('timeLog.serverError')
     });
   }
 });
@@ -667,7 +676,8 @@ exports.getTimesheetByUserIds = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error in timesheet generation: ${error.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).json({ error: req.t('timeLog.serverError')
+    res.status(500).json({
+      error: req.t('timeLog.serverError')
     });
   }
 });
@@ -681,25 +691,29 @@ exports.userCheckIn = catchAsync(async (req, res, next) => {
 
     if (!userId) {
       websocketHandler.sendLog(req, 'Missing user ID', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.userIdRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.userIdRequired')
 
       });
     }
     if (!latitude || !longitude) {
       websocketHandler.sendLog(req, 'Missing coordinates', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.coordinatesRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.coordinatesRequired')
 
       });
     }
     if (!checkInTime) {
       websocketHandler.sendLog(req, 'Missing check-in time', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.checkInTimeRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.checkInTimeRequired')
 
       });
     }
     if (!project || !task) {
       websocketHandler.sendLog(req, 'Missing project or task', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.projectTaskRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.projectTaskRequired')
 
       });
     }
@@ -734,25 +748,29 @@ exports.userCheckOut = catchAsync(async (req, res, next) => {
 
     if (!userId) {
       websocketHandler.sendLog(req, 'Missing user ID', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.userIdRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.userIdRequired')
 
       });
     }
     if (!latitude || !longitude) {
       websocketHandler.sendLog(req, 'Missing coordinates', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message:req.t('timeLog.coordinatesRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.coordinatesRequired')
 
       });
     }
     if (!checkOutTime) {
       websocketHandler.sendLog(req, 'Missing check-out time', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.checkOutTimeRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.checkOutTimeRequired')
 
       });
     }
     if (!project || !task) {
       websocketHandler.sendLog(req, 'Missing project or task', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.projectTaskRequired')
+      return res.status(400).json({
+        message: req.t('timeLog.projectTaskRequired')
 
       });
     }
@@ -762,7 +780,8 @@ exports.userCheckOut = catchAsync(async (req, res, next) => {
 
     if (!checkIn) {
       websocketHandler.sendLog(req, 'No open check-in found', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('timeLog.noOpenCheckIn')
+      return res.status(400).json({
+        message: req.t('timeLog.noOpenCheckIn')
 
       });
     }
