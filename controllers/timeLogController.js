@@ -180,39 +180,37 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     .where('userId')
     .equals(userId);
 
-
   if (ids.length > 0) {
     teamIdsArray.push(...ids);
     websocketHandler.sendLog(req, `Found ${ids.length} subordinates`, constants.LOG_TYPES.DEBUG);
   }
   teamIdsArray.push(userId);
 
-  websocketHandler.sendLog(req, `Team IDs: ${teamIdsArray}`, constants.LOG_TYPES.DEBUG);
+  // Normalize and deduplicate all IDs to strings
+  const uniqueTeamIds = [...new Set(teamIdsArray.map(id => id.toString()))];
+  const userIdStr = userId.toString();
 
   const timeLogsAll = [];
   const realtime = [];
   const logs = {};
 
   const requestedUsers = req.body.users && req.body.users !== ''
-    ? (Array.isArray(req.body.users) ? req.body.users : req.body.users.split(',')).filter(u => u && u !== '')
-    : teamIdsArray;
-  websocketHandler.sendLog(req, `Requested users: ${requestedUsers}`, constants.LOG_TYPES.DEBUG);
+    ? (Array.isArray(req.body.users) ? req.body.users : req.body.users.split(',')).filter(u => u && u !== '').map(u => u.toString())
+    : uniqueTeamIds;
+
+  websocketHandler.sendLog(req, `Requested users: ${requestedUsers.length}`, constants.LOG_TYPES.DEBUG);
 
   const isValidObjectId = (id) => id && id !== '' && mongoose.Types.ObjectId.isValid(id);
   const requestedProjects = req.body.projects && req.body.projects !== ''
-    ? (Array.isArray(req.body.projects) ? req.body.projects : req.body.projects.split(',')).filter(isValidObjectId)
+    ? (Array.isArray(req.body.projects) ? req.body.projects : req.body.projects.split(',')).filter(isValidObjectId).map(id => id.toString())
     : null;
   const requestedTasks = req.body.tasks && req.body.tasks !== ''
-    ? (Array.isArray(req.body.tasks) ? req.body.tasks : req.body.tasks.split(',')).filter(isValidObjectId)
+    ? (Array.isArray(req.body.tasks) ? req.body.tasks : req.body.tasks.split(',')).filter(isValidObjectId).map(id => id.toString())
     : null;
-
-  const userFilter = requestedUsers.length > 0
-    ? teamIdsArray.filter(id => requestedUsers.includes(id.toString()))
-    : teamIdsArray;
 
   // Fetch current device status for all team members
   const allDevices = await UserDevice.find({
-    userId: { $in: teamIdsArray.map(id => id.toString()) },
+    userId: { $in: uniqueTeamIds },
     company: companyId
   })
     .populate('project', 'projectName')
@@ -221,26 +219,25 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
   const deviceMap = new Map(allDevices.map(d => [d.userId, d]));
 
   // Fetch all relevant user details at once
-  const users = await User.find({ _id: { $in: teamIdsArray } }).select('firstName lastName');
+  const users = await User.find({ _id: { $in: uniqueTeamIds } }).select('firstName lastName');
   const userMap = new Map(users.map(user => [user._id.toString(), user]));
 
   // Format the results for ALL team members
-  for (const userId of teamIdsArray) {
-    const userIdStr = userId.toString();
-    const userData = userMap.get(userIdStr);
-    const device = deviceMap.get(userIdStr);
+  for (const currentIdStr of uniqueTeamIds) {
+    const userData = userMap.get(currentIdStr);
+    const device = deviceMap.get(currentIdStr);
 
     // Apply filters if provided
     if (requestedProjects && device?.project?._id && !requestedProjects.includes(device.project._id.toString())) continue;
     if (requestedTasks && device?.task?._id && !requestedTasks.includes(device.task._id.toString())) continue;
-    if (requestedUsers && !requestedUsers.includes(userIdStr)) continue;
+    if (requestedUsers && !requestedUsers.includes(currentIdStr)) continue;
 
     const newLogInUser = {
       user: {
-        _id: userIdStr,
+        _id: currentIdStr,
         firstName: userData?.firstName || 'N/A',
         lastName: userData?.lastName || 'N/A',
-        id: userIdStr
+        id: currentIdStr
       },
       project: device?.project?.projectName || 'N/A',
       task: device?.task?.taskName || 'N/A',
@@ -251,7 +248,7 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
   }
 
   logs.onlineUsers = timeLogsAll;
-  logs.totalMember = teamIdsArray.length;
+  logs.totalMember = uniqueTeamIds.length;
   logs.activeMember = timeLogsAll.filter(u => u.isOnline).length;
   logs.totalNonProductiveMember = logs.totalMember - logs.activeMember;
   realtime.push(logs);
@@ -262,104 +259,6 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     data: realtime
   });
 });
-
-exports.getLogInUser1 = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting getLogInUser operation', constants.LOG_TYPES.TRACE);
-
-  const teamIdsArray = [];
-  const userId = req.cookies.userId || req.user._id;
-  websocketHandler.sendLog(req, `Fetching subordinates for user ${userId}`, constants.LOG_TYPES.DEBUG);
-
-  const ids = await userSubordinate.find({})
-    .distinct('subordinateUserId')
-    .where('userId')
-    .equals(userId);
-
-
-  if (ids.length > 0) {
-    teamIdsArray.push(...ids);
-    websocketHandler.sendLog(req, `Found ${ids.length} subordinates`, constants.LOG_TYPES.DEBUG);
-  }
-  teamIdsArray.push(userId);
-
-  websocketHandler.sendLog(req, `Team IDs: ${teamIdsArray}`, constants.LOG_TYPES.DEBUG);
-
-  const timeLogsAll = [];
-  const realtime = [];
-  const logs = {};
-  const today = moment().endOf('day');
-  const date = today.toDate().toISOString().slice(0, 10);
-  const tomorrow = new Date(new Date(date).setDate(new Date(date).getDate() - 7));
-  const end = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
-
-  const requestedUsers = req.body.users && req.body.users !== ''
-    ? (Array.isArray(req.body.users) ? req.body.users : req.body.users.split(',')).filter(u => u && u !== '')
-    : teamIdsArray;
-  websocketHandler.sendLog(req, `Requested users: ${requestedUsers}`, constants.LOG_TYPES.DEBUG);
-
-  const isValidObjectId = (id) => id && id !== '' && mongoose.Types.ObjectId.isValid(id);
-  const requestedProjects = req.body.projects && req.body.projects !== ''
-    ? (Array.isArray(req.body.projects) ? req.body.projects : req.body.projects.split(',')).filter(isValidObjectId)
-    : null;
-  const requestedTasks = req.body.tasks && req.body.tasks !== ''
-    ? (Array.isArray(req.body.tasks) ? req.body.tasks : req.body.tasks.split(',')).filter(isValidObjectId)
-    : null;
-
-  const userFilter = requestedUsers.length > 0
-    ? teamIdsArray.filter(id => requestedUsers.includes(id.toString()))
-    : teamIdsArray;
-
-  const query = { 'user': { $in: userFilter.map(id => id.toString()) }, 'date': { '$gte': tomorrow, '$lte': end } };
-  if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
-  if (requestedTasks && requestedTasks.length > 0) query.task = { $in: requestedTasks };
-  websocketHandler.sendLog(req, `Query: ${JSON.stringify(query)}`, constants.LOG_TYPES.DEBUG);
-
-  const currentDate = new Date();
-  const timeLogs = await TimeLog.find({
-    ...query,
-    date: {
-      $gte: new Date(currentDate.setHours(0, 0, 0, 0)),
-      $lte: new Date(currentDate.setHours(23, 59, 59, 999))
-    }
-  }).distinct('user');
-  websocketHandler.sendLog(req, `Found ${timeLogs.length} unique users with logs`, constants.LOG_TYPES.INFO);
-
-  for (let i = 0; i < timeLogs.length; i++) {
-    websocketHandler.sendLog(req, `Processing log for user ${timeLogs[i]}`, constants.LOG_TYPES.TRACE);
-    const timeLog = await TimeLog.findOne({
-      'user': timeLogs[i],
-      'date': { '$gte': tomorrow, '$lte': end }
-    });
-
-    if (timeLog) {
-      const newLogInUser = {
-        user: {
-          _id: timeLog.user._id,
-          firstName: timeLog.user?.firstName || 'N/A',
-          lastName: timeLog.user?.lastName || 'N/A',
-          id: timeLog.user?._id || 'N/A'
-        },
-        project: timeLog.project?.projectName || 'N/A',
-        task: timeLog.task?.taskName || 'N/A'
-      };
-      timeLogsAll.push(newLogInUser);
-      websocketHandler.sendLog(req, `Added log for user ${timeLogs[i]}`, constants.LOG_TYPES.DEBUG);
-    }
-  }
-
-  logs.onlineUsers = timeLogsAll;
-  logs.totalMember = teamIdsArray.length;
-  logs.activeMember = timeLogsAll.length;
-  logs.totalNonProductiveMember = 0;
-  realtime.push(logs);
-
-  websocketHandler.sendLog(req, 'Completed getLogInUser operation', constants.LOG_TYPES.INFO);
-  res.status(200).json({
-    status: constants.APIResponseStatus.Success,
-    data: realtime
-  });
-});
-
 
 exports.getCurrentWeekTotalTime = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getCurrentWeekTotalTime operation', constants.LOG_TYPES.TRACE);
