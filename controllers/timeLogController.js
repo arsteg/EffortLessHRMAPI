@@ -203,11 +203,11 @@ exports.getLogInUser = catchAsync(async (req, res, next) => {
     : null;
 
   const userFilter = requestedUsers.length > 0
-    ? teamIdsArray.filter(id => requestedUsers.includes(id))
+    ? teamIdsArray.filter(id => requestedUsers.includes(id.toString()))
     : teamIdsArray;
 
   const query = {
-    userId: { $in: userFilter }
+    userId: { $in: userFilter.map(id => id.toString()) }
   };
 
   if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
@@ -304,10 +304,10 @@ exports.getLogInUser1 = catchAsync(async (req, res, next) => {
     : null;
 
   const userFilter = requestedUsers.length > 0
-    ? teamIdsArray.filter(id => requestedUsers.includes(id))
+    ? teamIdsArray.filter(id => requestedUsers.includes(id.toString()))
     : teamIdsArray;
 
-  const query = { 'user': { $in: userFilter }, 'date': { '$gte': tomorrow, '$lte': end } };
+  const query = { 'user': { $in: userFilter.map(id => id.toString()) }, 'date': { '$gte': tomorrow, '$lte': end } };
   if (requestedProjects && requestedProjects.length > 0) query.project = { $in: requestedProjects };
   if (requestedTasks && requestedTasks.length > 0) query.task = { $in: requestedTasks };
   websocketHandler.sendLog(req, `Query: ${JSON.stringify(query)}`, constants.LOG_TYPES.DEBUG);
