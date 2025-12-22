@@ -881,7 +881,7 @@ const calculateAndStoreIncomeTax = async (req, res) => {
 function getCurrentFinancialYearStart() {
   const now = new Date();
   const year = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
-  return new Date(year, 3, 1); // April 1st
+  return new Date(Date.UTC(year, 3, 1, 0, 0, 0, 0)); //new Date(year, 3, 1); // April 1st
 }
 
 /** 

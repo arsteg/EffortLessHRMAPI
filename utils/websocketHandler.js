@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 const constants = require('../constants'); // Assuming this has content types and notification types
-const {globalStore} = require('./globalStore'); 
+const { globalStore } = require('./globalStore');
 
 class WebSocketManager {
   constructor() {
@@ -28,14 +28,21 @@ class WebSocketManager {
       const data = JSON.parse(message);
       if (data.type === 'auth' && data.userId) {
         this.connectedUsers.set(data.userId, ws);
+
+        // Support multiple user mappings per socket
+        if (!ws.userIds) ws.userIds = new Set();
+        ws.userIds.add(data.userId);
+
+        // For backwards compatibility
         ws.userId = data.userId;
-        console.log(`User ${data.userId} authenticated. Total users: ${this.connectedUsers.size}`);
-        
+
+        console.log(`User ${data.userId} authenticated. Total mappings: ${this.connectedUsers.size}`);
+
         // Broadcast online status to all connected users
         const allUsers = Array.from(this.connectedUsers.keys());
         this.sendAlert(allUsers, JSON.stringify({ userId: data.userId, isOnline: true }));
       } else {
-        console.log(`Received message from ${ws.userId || 'unknown'}: ${message}`);
+        console.log(`Received message from ${Array.from(ws.userIds || [ws.userId || 'unknown']).join(', ')}: ${message}`);
       }
     } catch (error) {
       console.error('Invalid message format:', error);
@@ -44,22 +51,27 @@ class WebSocketManager {
 
   // Handle client disconnection
   handleDisconnect(ws) {
-    if (ws.userId) {
+    if (ws.userIds) {
+      ws.userIds.forEach(userId => {
+        this.connectedUsers.delete(userId);
+      });
+      console.log(`Socket disconnected. Removed ${ws.userIds.size} mappings. Total mappings: ${this.connectedUsers.size}`);
+    } else if (ws.userId) {
       this.connectedUsers.delete(ws.userId);
-      console.log(`User ${ws.userId} disconnected. Total users: ${this.connectedUsers.size}`);
-
-      // Broadcast offline status to all connected users
-      const allUsers = Array.from(this.connectedUsers.keys());
-      this.sendAlert(allUsers, JSON.stringify({ userId: ws.userId, isOnline: false }));
+      console.log(`User ${ws.userId} disconnected. Total mappings: ${this.connectedUsers.size}`);
     }
+
+    // Broadcast offline status would need more logic if we want to be accurate about WHO is offline
+    // but the existing logic is already a bit broad.
   }
 
   // Generic message sender
-  sendMessage(userIds, notificationType, content, contentType = constants.webSocketContentType.TEXT) {
+  sendMessage(userIds, notificationType, content, contentType = constants.webSocketContentType.TEXT, sourceUserId = null) {
     const message = {
       notificationType,
       contentType,
       content,
+      sourceUserId, // Include source if provided
       timestamp: new Date().toISOString(),
     };
 
@@ -83,23 +95,23 @@ class WebSocketManager {
       console.warn('sendLog: No userId found in request');
       return; // Exit if no userId
     }
-  
+
     if (!this.connectedUsers.has(userId)) {
       console.warn(`sendLog: User ${userId} is not connected via WebSocket`);
       return; // Exit if user isn’t connected
     }
-  
+
     console.log(`sendLog: Sending log type ${logType}`);
     // Check if the logType is in globalStore.logLevels
     if (globalStore?.logLevels.length > 0 && !globalStore?.logLevels?.includes(logType)) {
       return; // Exit if logType isn’t in the allowed levels
     }
-  
+
     // Check if the user matches the selectedUserForLogging (if set)
     if (globalStore?.selectedUserForLogging && req.cookies?.userId !== globalStore?.selectedUserForLogging) {
       return; // Exit if user doesn’t match the selected user
     }
-  
+
     // Send the log message via WebSocket
     this.sendMessage(
       [userId],
@@ -123,10 +135,10 @@ class WebSocketManager {
     this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.CHAT, content, constants.webSocketContentType.TEXT);
   }
 
-  sendScreenshot(userIds, base64Image) {
+  sendScreenshot(userIds, base64Image, sourceUserId = null) {
     // Fixed typo: constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT instead of NOTIFICATION.SCREENSHOT
-    console.log("Sending screenshot to users:", userIds);
-    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT, base64Image, constants.webSocketContentType.IMAGE);
+    console.log("Sending screenshot to users:", userIds, "from:", sourceUserId);
+    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.SCREENSHOT, base64Image, constants.webSocketContentType.IMAGE, sourceUserId);
     console.log("Screenshot sent to users:", userIds);
   }
 
@@ -141,7 +153,7 @@ const wsManager = new WebSocketManager();
 
 module.exports = {
   initWebSocket: (server) => wsManager.initialize(server),
-  sendLog: (req, message,logType) => wsManager.sendLog(req, message,logType),
+  sendLog: (req, message, logType) => wsManager.sendLog(req, message, logType),
   sendNotification: (userId, content) => wsManager.sendNotification(userId, content),
   sendAlert: (userIds, content) => wsManager.sendAlert(userIds, content),
   sendChat: (userIds, content) => wsManager.sendChat(userIds, content),
