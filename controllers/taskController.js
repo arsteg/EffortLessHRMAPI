@@ -673,10 +673,21 @@ exports.addTask = catchAsync(async (req, res, next) => {
     });
   }
 
-  const existingUser = await User.findById(req.body.user);
+  if (req.body.user) {
+    const existingUser = await User.findById(req.body.user);
+    if (!existingUser) {
+      websocketHandler.sendLog(req, `Invalid user ${req.body.user} for task creation`, constants.LOG_TYPES.ERROR);
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        data: null,
+        message: req.t('task.invalidUserOrTask'),
+      });
+    }
+  }
+
   const existingProject = await Project.findById(req.body.project);
-  if (!existingUser || !existingProject) {
-    websocketHandler.sendLog(req, `Invalid user ${req.body.user} or project ${req.body.project}`, constants.LOG_TYPES.ERROR);
+  if (!existingProject) {
+    websocketHandler.sendLog(req, `Invalid project ${req.body.project} for task creation`, constants.LOG_TYPES.ERROR);
     return res.status(400).json({
       status: constants.APIResponseStatus.Failure,
       data: null,
@@ -1280,7 +1291,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution (Optimized)', constants.LOG_TYPES.TRACE);
-  
+
   const { skip, next: limit, projectId, userId } = req.body;
   websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
 
@@ -1288,15 +1299,15 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
   const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0;
   // Maximum limit is 100 as per your original logic
-  const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER; 
-  
+  const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER;
+
   websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
   // --- PHASE 1: FIND TASK IDs AND COUNT (LIGHTWEIGHT) ---
   const initialPipeline = [
     // 1. Filter TaskUser documents by the user ID
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
-    
+
     // 2. Look up the task details and filter by project ID
     {
       $lookup: {
@@ -1307,41 +1318,41 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
       }
     },
     // 3. Only keep results where a task was found and belongs to the specified project
-    { $unwind: '$taskDetails' }, 
+    { $unwind: '$taskDetails' },
     { $match: { 'taskDetails.project': new mongoose.Types.ObjectId(projectId) } },
-    
+
     // 4. Project only the Task ID
-    { $project: { _id: 0, taskId: '$taskDetails._id' } } 
+    { $project: { _id: 0, taskId: '$taskDetails._id' } }
   ];
 
   websocketHandler.sendLog(req, 'Executing Phase 1: ID and Count aggregation', constants.LOG_TYPES.TRACE);
-  
+
   const [initialResult] = await TaskUser.aggregate([
-      ...initialPipeline,
-      {
-        $facet: {
-          // Task IDs for the current page (Groups all, then we get the array)
-          taskIds: applyPagination 
-            ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }, { $group: { _id: null, ids: { $push: '$taskId' } } }]
-            : [{ $group: { _id: null, ids: { $push: '$taskId' } } }], 
-          // Total count
-          taskCount: [{ $count: 'count' }]
-        }
+    ...initialPipeline,
+    {
+      $facet: {
+        // Task IDs for the current page (Groups all, then we get the array)
+        taskIds: applyPagination
+          ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }, { $group: { _id: null, ids: { $push: '$taskId' } } }]
+          : [{ $group: { _id: null, ids: { $push: '$taskId' } } }],
+        // Total count
+        taskCount: [{ $count: 'count' }]
       }
+    }
   ], { allowDiskUse: true }).exec(); // **Crucial for large queries**
 
   // --- Error Handling and ID Extraction ---
   if (!initialResult || !initialResult.taskCount) {
-      websocketHandler.sendLog(req, 'Initial query failed to execute or returned an invalid structure.', constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
+    websocketHandler.sendLog(req, 'Initial query failed to execute or returned an invalid structure.', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
   }
 
   const taskCount = initialResult.taskCount[0]?.count || 0;
   const taskIdsToLookup = initialResult.taskIds[0]?.ids || [];
 
   if (taskIdsToLookup.length === 0) {
-      websocketHandler.sendLog(req, `Count: ${taskCount}, but 0 tasks to lookup. Returning empty list.`, constants.LOG_TYPES.INFO);
-      return res.status(200).json({ status: constants.APIResponseStatus.Success, taskList: [], taskCount });
+    websocketHandler.sendLog(req, `Count: ${taskCount}, but 0 tasks to lookup. Returning empty list.`, constants.LOG_TYPES.INFO);
+    return res.status(200).json({ status: constants.APIResponseStatus.Success, taskList: [], taskCount });
   }
 
   // --- PHASE 2: HYDRATE LIMITED TASKS (HEAVY LOOKUPS) ---
@@ -1350,7 +1361,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     // 1. Match only the TaskUser documents for the *limited* set of task IDs
     { $match: { task: { $in: taskIdsToLookup } } },
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
-    
+
     // 2. Look up Task Details (must be done again to get full details)
     {
       $lookup: {
@@ -1360,8 +1371,8 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
         as: 'taskDetails'
       }
     },
-    { $unwind: '$taskDetails' }, 
-    
+    { $unwind: '$taskDetails' },
+
     // 3. Lookup Task Users/Assignees/Creators (The heavy nested lookups)
     {
       $lookup: {
@@ -1386,11 +1397,11 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
         as: 'TaskUsers'
       }
     },
-    
+
     // 4. Lookup Task Created By User details
     { $lookup: { from: 'users', localField: 'taskDetails.createdBy', foreignField: '_id', as: 'taskCreatedBy' } },
     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
-    
+
     // 5. Final Projection (Structuring the final output)
     {
       $project: {
