@@ -3678,8 +3678,13 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
-  const companyId = req.cookies.companyId; // Get companyId from cookies
+  const companyId = req.cookies?.companyId || req.body?.companyId;
 
+if (!companyId) {
+  return res.status(400).json({
+    message: 'companyId is required either in cookies or request body',
+  });
+}
   websocketHandler.sendLog(req, 'Starting getAllGeneratedPayroll process', constants.LOG_TYPES.INFO);
 
   // Validate companyId
