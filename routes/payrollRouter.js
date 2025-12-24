@@ -4766,20 +4766,34 @@ router.delete('/incomeTax/:id', authController.protect, payrollController.delete
  * @swagger
  * /api/v1/payroll/generatedPayroll-by-company:
  *   post:
- *     summary: Get a generatedPayroll by company
- *     tags:  [Payroll Management]
- *     security: [{
- *         bearerAuth: []
- *     }]
+ *     summary: Get a generated payroll by company
+ *     tags: [Payroll Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyId:
+ *                 type: string
+ *                 example: "64f1c2a9e1234567890abcd"
  *     responses:
  *       200:
- *         description: Successful response with the generatedPayroll
+ *         description: Successful response with the generated payroll
  *       404:
- *         description: generatedPayroll not found
+ *         description: Generated payroll not found
  *       500:
  *         description: Internal server error
  */
-router.post('/generatedPayroll-by-company', authController.protect, payrollController.getAllGeneratedPayroll);
+router.post(
+  '/generatedPayroll-by-company',
+  authController.protect,
+  payrollController.getAllGeneratedPayroll
+);
+
 
 /**
  * @swagger
