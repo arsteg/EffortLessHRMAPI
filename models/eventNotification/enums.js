@@ -9,7 +9,8 @@ const RecurringFrequency = {
     EMAIL: 'email',
     SMS: 'sms',
     UI: 'ui',
-    APP: 'app'
+    APP: 'app',
+    WHATSAPP: 'whatsapp'
   };  
   
   const NotificationStatus = { // Corrected typo
