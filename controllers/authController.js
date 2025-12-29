@@ -158,7 +158,7 @@ const checkCompanySubscription = async (user, req) => {
           addOns: [],
         };
       }
-      
+
       try {
         const addOns = await razorpay.addons.all({
           subscription_id: companySubscription.id
@@ -489,7 +489,7 @@ exports.CreateUser = catchAsync(async (req, res, next) => {
 
     if (companyDetails?.isTrial) {
       if (companyDetails?.trialUserLimit <= activeUsers) {
-        return next(new AppError(req.t('auth.trialUserLimitReached', { userLimit: companyDetails?.trialUserLimit }), 500))   
+        return next(new AppError(req.t('auth.trialUserLimitReached', { userLimit: companyDetails?.trialUserLimit }), 500))
       }
     }
 
@@ -578,7 +578,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const user = await User.findOne({
     email,
-    status: constants.User_Status.Active 
+    status: constants.User_Status.Active
   }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
@@ -586,7 +586,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   const appointments = await Appointment.find({ user: user._id });
   user.appointment = appointments;
-const userObj = user.toObject();
+  const userObj = user.toObject();
   const company = await Company.findById(user.company.id);
   if (company && company.isTrial) {
     const trialStart = company.createdOn;
@@ -749,6 +749,22 @@ exports.protectUnsubscribed = catchAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // roles ['Admin', 'Super Admin']. 
+    // The role might be a string or an object with a Name property depending on population
+    const userRole = req.user.role?.Name || req.user.role;
+
+    if (!roles.includes(userRole)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+
+    next();
+  };
+};
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
@@ -1065,8 +1081,8 @@ exports.getSubordinates = catchAsync(async (req, res, next) => {
     status: constants.APIResponseStatus.Success,
     data: activeUsers
   });
- });
-exports.getManagers = catchAsync(async (req, res, next) => {  
+});
+exports.getManagers = catchAsync(async (req, res, next) => {
   const companyId = req.cookies.companyId;
 
   if (!companyId) {
@@ -1075,7 +1091,7 @@ exports.getManagers = catchAsync(async (req, res, next) => {
 
   const ids = await userSubordinate
     .find({ company: companyId })
-    .distinct("userId");  
+    .distinct("userId");
   const activeUsers = await User.find({
     _id: { $in: ids },
     active: true,
