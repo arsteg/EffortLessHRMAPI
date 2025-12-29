@@ -41,7 +41,16 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
-const { toUTCDate, toUtcDateOnly, getMonthRangeUtc  } = require('../utils/utcConverter');
+const { toUTCDate, toUtcDateOnly, getMonthRangeUtc } = require('../utils/utcConverter');
+
+// New Attendance Models
+const AttendanceOffice = require('../models/attendance/attendanceOffice');
+const AttendanceLog = require('../models/attendance/attendanceLog');
+const AttendanceRules = require('../models/attendance/attendanceRules');
+const ManualAttendanceRequest = require('../models/attendance/manualAttendanceRequest');
+const UserActionLog = require("../models/Logging/userActionModel");
+const attendanceService = require('../Services/attendance.service');
+
 // General Settings Controllers
 exports.createGeneralSettings = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createGeneralSettings', constants.LOG_TYPES.INFO);
@@ -2841,29 +2850,29 @@ async function insertOvertimeRecords(attendanceRecords, companyId) {
       }
 
       if (!existingRecord) {
-        if(record.isOvertime) {
+        if (record.isOvertime) {
           await OvertimeInformation.create(record);
         }
       } else {
-          existingRecord.CheckInTime = record.CheckInTime;
-          existingRecord.CheckOutTime = record.CheckOutTime;
-          existingRecord.ShiftTime = record.ShiftTime;
-          existingRecord.CheckInDate = record.CheckInDate;
-          existingRecord.CheckOutDate = record.CheckOutDate;
-          existingRecord.company = record.company;
+        existingRecord.CheckInTime = record.CheckInTime;
+        existingRecord.CheckOutTime = record.CheckOutTime;
+        existingRecord.ShiftTime = record.ShiftTime;
+        existingRecord.CheckInDate = record.CheckInDate;
+        existingRecord.CheckOutDate = record.CheckOutDate;
+        existingRecord.company = record.company;
 
-          if(record.isOvertime) {
-            existingRecord.OverTime = record.OverTime;
-          }
-          else{
-            existingRecord.OverTime = '0';
-          }
-          await existingRecord.save();
+        if (record.isOvertime) {
+          existingRecord.OverTime = record.OverTime;
+        }
+        else {
+          existingRecord.OverTime = '0';
+        }
+        await existingRecord.save();
       }
     }
   } catch (error) {
     console.error('Error inserting or updating overtime records:', error);
-  } 
+  }
 }
 
 // async function insertOvertimeRecordsBackup(attendanceRecords, companyId) {
@@ -2955,20 +2964,20 @@ async function insertAttendanceRecords(attendanceRecords) {
       if (!existingRecord) {
         await AttendanceRecords.create(record);
       } else {
-          existingRecord.checkIn = record.checkIn;
-          existingRecord.checkOut = record.checkOut;
-          existingRecord.duration = record.duration;
-          existingRecord.deviationHour = record.deviationHour;
-          existingRecord.isOvertime = record.isOvertime;
-          existingRecord.attendanceShift = record.attendanceShift;
-          existingRecord.shiftTiming = record.shiftTiming;
-          existingRecord.lateComingRemarks = record.lateComingRemarks;
-          existingRecord.company = record.company;
-          existingRecord.beforeProcessing = record.beforeProcessing;
-          existingRecord.afterProcessing = record.afterProcessing;
-          existingRecord.earlyLateStatus = record.earlyLateStatus;
+        existingRecord.checkIn = record.checkIn;
+        existingRecord.checkOut = record.checkOut;
+        existingRecord.duration = record.duration;
+        existingRecord.deviationHour = record.deviationHour;
+        existingRecord.isOvertime = record.isOvertime;
+        existingRecord.attendanceShift = record.attendanceShift;
+        existingRecord.shiftTiming = record.shiftTiming;
+        existingRecord.lateComingRemarks = record.lateComingRemarks;
+        existingRecord.company = record.company;
+        existingRecord.beforeProcessing = record.beforeProcessing;
+        existingRecord.afterProcessing = record.afterProcessing;
+        existingRecord.earlyLateStatus = record.earlyLateStatus;
 
-          await existingRecord.save();
+        await existingRecord.save();
       }
     }
   } catch (error) {
@@ -3127,7 +3136,7 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
     websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
-    await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
+      await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
     websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
     await processLOPForMonth({
@@ -3181,7 +3190,7 @@ async function getStartAndEndDatesWithFixedTime(req, year, month) {
   // const utcEndOfMonth = new Date(Date.UTC(year, month, 0, 0, 0, 0, 0));
   const utcStartOfMonth = new Date(year, month - 1, 1);
   //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
-  const lastDay = new Date(Date.UTC(year, month, 0));  
+  const lastDay = new Date(Date.UTC(year, month, 0));
   const utcEndOfMonth = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
   console.log('startOfMonth:', utcStartOfMonth, 'endOfMonth:', utcEndOfMonth);
   console.log('startOfMonth:', utcStartOfMonth.toISOString(), 'endOfMonth:', utcEndOfMonth.toISOString());
@@ -3305,7 +3314,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
-  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }); 
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user });
   let fullDayDuration = null;
   let halfDayDuration = null;
   let isHalfDayApplicable = false;
@@ -3314,7 +3323,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     halfDayDuration = shiftAssignment.template.minHoursPerDayToGetCreditforHalfDay * 60;
     isHalfDayApplicable = !!shiftAssignment.template.isHalfDayApplicable;
   }
-  
+
   // Normalize attendance dates
   const attendMap = new Map();
   for (const r of attendanceRecords) {
@@ -3322,7 +3331,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   }
   websocketHandler.sendLog(req, `Attendance map created with: ${JSON.stringify([...attendMap.entries()])}`, constants.LOG_TYPES.DEBUG);
   const leaveSet = new Set(approvedLeaveDays.map(toLocalDateStringFromUTC));
-  websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);  
+  websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);
   const holidaySet = new Set(holidayDates.map(toLocalDateStringFromUTC));
   websocketHandler.sendLog(req, `Holiday set created with: ${JSON.stringify([...holidaySet])}`, constants.LOG_TYPES.DEBUG);
 
@@ -3331,9 +3340,9 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const dateStr = toLocalDateStringFromUTC(currentDate);
 
-    const dayName = currentDate.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      timeZone: 'UTC' 
+    const dayName = currentDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      timeZone: 'UTC'
     });
 
     // Week number (UTC)
@@ -3383,7 +3392,7 @@ async function processLOPForMonthv1({ user, month, year, attendanceTemplate, att
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
-  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }); 
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user });
   let fullDayDuration = null;
   let halfDayDuration = null;
   let isHalfDayApplicable = false;
@@ -3419,13 +3428,13 @@ async function processLOPForMonthv1({ user, month, year, attendanceTemplate, att
     let wasUserPresent = false;
     let wasHalfday = false;
 
-    if(wasPresent){
+    if (wasPresent) {
       if (wasPresent?.duration == 0) {
         wasUserPresent = false;
       }
       else if (wasPresent?.duration >= fullDayDuration) {
         wasUserPresent = true;
-      } 
+      }
       else if (isHalfDayApplicable && wasPresent?.duration >= halfDayDuration) {
         wasUserPresent = true;
         //if(isOnLeave.)
@@ -4022,7 +4031,7 @@ exports.validateAttendanceProcess = catchAsync(async (req, res, next) => {
   if (!year || !month || !companyId) {
     return next(new AppError("Year, month, and company ID are required.", 400));
   }
-console.log({ year, month, companyId, isFNF: false });
+  console.log({ year, month, companyId, isFNF: false });
   const attendance = await AttendanceProcess.findOne({
     attendanceProcessPeriodYear: year.toString(),
     attendanceProcessPeriodMonth: month.toString(),
@@ -4052,3 +4061,438 @@ exports.MappedTimlogToAttendanceHelper = async () => {
     });
   }
 };
+
+
+exports.createOffice = catchAsync(async (req, res, next) => {
+  const { name, latitude, longitude, geofence_radius } = req.body;
+  const companyId = req.body.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const office = await AttendanceOffice.create({
+    company: companyId,
+    name,
+    location: {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    },
+    radius: geofence_radius
+  });
+
+  // Create default rules for the new office
+  await AttendanceRules.create({
+    office: office._id,
+    company: companyId,
+    selfieRequired: true,
+    faceRecognitionEnabled: true
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { office }
+  });
+});
+
+exports.getOfficeById = catchAsync(async (req, res, next) => {
+  const office = await AttendanceOffice.findById(req.params.id);
+  if (!office) {
+    return next(new AppError('Office not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { office }
+  });
+});
+
+exports.updateOffice = catchAsync(async (req, res, next) => {
+  const office = await AttendanceOffice.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!office) {
+    return next(new AppError('Office not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { office }
+  });
+});
+
+exports.deleteOffice = catchAsync(async (req, res, next) => {
+  const office = await AttendanceOffice.findByIdAndDelete(req.params.id);
+  if (!office) {
+    return next(new AppError('Office not found', 404));
+  }
+  // Also delete associated rules
+  await AttendanceRules.deleteMany({ office: req.params.id });
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+exports.getOffices = catchAsync(async (req, res, next) => {
+  const companyId = req.query.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const offices = await AttendanceOffice.find({ company: companyId });
+
+  res.status(200).json({
+    status: 'success',
+    data: { offices }
+  });
+});
+
+exports.updateAttendanceRules = catchAsync(async (req, res, next) => {
+  const { officeId, selfie_required, face_recognition_enabled, face_match_threshold, company } = req.body;
+  const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const rules = await AttendanceRules.findOneAndUpdate(
+    {
+      office: officeId,
+      company: companyId
+    },
+    {
+      selfieRequired: selfie_required,
+      faceRecognitionEnabled: face_recognition_enabled,
+      faceMatchThreshold: face_match_threshold,
+      updatedAt: new Date()
+    },
+    { new: true, upsert: true }
+  );
+
+  if (!rules) {
+    return next(new AppError('Rules could not be updated or office not found.', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { rules }
+  });
+});
+
+exports.getAttendanceRulesByOffice = catchAsync(async (req, res, next) => {
+  const rules = await AttendanceRules.findOne({ office: req.params.officeId });
+  if (!rules) {
+    return next(new AppError('Rules not found for this office', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { rules }
+  });
+});
+
+
+exports.checkIn = catchAsync(async (req, res, next) => {
+  const { latitude, longitude, officeId, selfieUrl, deviceId, company } = req.body;
+  const userId = req.user._id;
+  const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  websocketHandler.sendLog(req, `Processing check-in for user ${userId} at office ${officeId}`, constants.LOG_TYPES.INFO);
+
+  // 1. Fetch Office and Rules
+  const office = await AttendanceOffice.findById(officeId);
+  if (!office) {
+    return next(new AppError('Office not found.', 404));
+  }
+
+  const rules = await AttendanceRules.findOne({ office: officeId });
+  // If no specific rules, we can use defaults or reject
+  const selfieRequired = rules ? rules.selfieRequired : true;
+  const faceRecognitionEnabled = rules ? rules.faceRecognitionEnabled : true;
+
+  // 2. Validate Geofence
+  const isWithinGeofence = attendanceService.validateGeofence(
+    latitude, longitude,
+    office.location.coordinates[1], office.location.coordinates[0],
+    office.radius
+  );
+
+  if (!isWithinGeofence) {
+    return next(new AppError('User is outside the permitted geofence.', 400));
+  }
+
+  // 3. Face Verification (if enabled)
+  let faceMatchScore = null;
+  if (faceRecognitionEnabled && selfieUrl) {
+    const verification = await attendanceService.verifyFace(selfieUrl, req.user.photo);
+    if (!verification.match) {
+      return next(new AppError('Face verification failed.', 401));
+    }
+    faceMatchScore = verification.score;
+  } else if (selfieRequired && !selfieUrl) {
+    return next(new AppError('Selfie is required for check-in.', 400));
+  }
+
+  // 4. Anomaly Detection
+  const anomaly = await attendanceService.detectAnomaly(userId, { latitude, longitude, timestamp: new Date() });
+
+  // 5. Create Record
+  const record = await AttendanceLog.create({
+    user: userId,
+    company: companyId,
+    office: officeId,
+    type: 'check_in',
+    timestamp: new Date(),
+    location: {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    },
+    photoUrl: selfieUrl,
+    faceMatchScore,
+    deviceId,
+    status: 'success',
+    anomaly: anomaly ? { type: anomaly, isResolved: false } : undefined
+  });
+
+  // 6. Audit Log
+  await UserActionLog.create({
+    userId,
+    companyId,
+    oldStatus: 'unknown', // or actual last status if tracked
+    newStatus: 'checked_in',
+    action: 'check_in',
+    timestamp: new Date()
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { record }
+  });
+});
+
+exports.checkOut = catchAsync(async (req, res, next) => {
+  const { latitude, longitude, officeId, company } = req.body;
+  const userId = req.user._id;
+  const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  websocketHandler.sendLog(req, `Processing check-out for user ${userId}`, constants.LOG_TYPES.INFO);
+
+  const record = await AttendanceLog.create({
+    user: userId,
+    company: companyId,
+    office: officeId,
+    type: 'check_out',
+    timestamp: new Date(),
+    location: {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    },
+    status: 'success'
+  });
+
+  // Audit Log
+  await UserActionLog.create({
+    userId,
+    companyId,
+    oldStatus: 'checked_in',
+    newStatus: 'checked_out',
+    action: 'check_out',
+    timestamp: new Date()
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { record }
+  });
+});
+
+exports.getAttendanceHistory = catchAsync(async (req, res, next) => {
+  const companyId = req.query.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+  const userId = req.user._id;
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const history = await AttendanceLog.find({
+    user: userId,
+    company: companyId
+  })
+    .sort({ timestamp: -1 })
+    .limit(50);
+
+  res.status(200).json({
+    status: 'success',
+    data: { history }
+  });
+});
+
+exports.getAllAttendanceLogs = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(AttendanceLog.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const logs = await features.query;
+  res.status(200).json({
+    status: 'success',
+    results: logs.length,
+    data: { logs }
+  });
+});
+
+exports.getAttendanceLogById = catchAsync(async (req, res, next) => {
+  const log = await AttendanceLog.findById(req.params.id);
+  if (!log) {
+    return next(new AppError('Attendance log not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { log }
+  });
+});
+
+exports.deleteAttendanceLog = catchAsync(async (req, res, next) => {
+  const log = await AttendanceLog.findByIdAndDelete(req.params.id);
+  if (!log) {
+    return next(new AppError('Attendance log not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
+exports.requestManualAttendance = catchAsync(async (req, res, next) => {
+  const { date, reason, photoUrl, company } = req.body;
+  const userId = req.user._id;
+  const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const request = await ManualAttendanceRequest.create({
+    user: userId,
+    company: companyId,
+    date,
+    reason,
+    photoUrl,
+    status: 'pending'
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { request }
+  });
+});
+
+exports.approveManualAttendance = catchAsync(async (req, res, next) => {
+  const { requestId, status } = req.body; // status: 'approved' or 'rejected'
+  const adminId = req.user._id;
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return next(new AppError('Invalid status.', 400));
+  }
+
+  const companyId = req.user.company._id;
+  const request = await ManualAttendanceRequest.findOne({
+    _id: requestId,
+    company: companyId
+  });
+
+  if (!request) {
+    return next(new AppError('Manual attendance request not found for your company.', 404));
+  }
+
+  request.status = status;
+  request.reviewedBy = adminId;
+  request.reviewedAt = new Date();
+  await request.save();
+
+  // If approved, create corresponding attendance logs (check-in and check-out)
+  if (status === 'approved') {
+    const checkInTime = new Date(request.date);
+    checkInTime.setHours(9, 0, 0); // Default 9 AM
+
+    const checkOutTime = new Date(request.date);
+    checkOutTime.setHours(18, 0, 0); // Default 6 PM
+
+    await AttendanceLog.create([
+      {
+        user: request.user,
+        company: request.company,
+        type: 'check_in',
+        timestamp: checkInTime,
+        status: 'success',
+        photoUrl: request.photoUrl
+      },
+      {
+        user: request.user,
+        company: request.company,
+        type: 'check_out',
+        timestamp: checkOutTime,
+        status: 'success'
+      }
+    ]);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { request }
+  });
+});
+
+exports.getAllManualAttendanceRequests = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(ManualAttendanceRequest.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const requests = await features.query;
+  res.status(200).json({
+    status: 'success',
+    results: requests.length,
+    data: { requests }
+  });
+});
+
+exports.getManualAttendanceRequestById = catchAsync(async (req, res, next) => {
+  const request = await ManualAttendanceRequest.findById(req.params.id);
+  if (!request) {
+    return next(new AppError('Manual attendance request not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { request }
+  });
+});
+
+exports.updateManualAttendanceRequest = catchAsync(async (req, res, next) => {
+  const request = await ManualAttendanceRequest.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!request) {
+    return next(new AppError('Manual attendance request not found', 404));
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { request }
+  });
+});
+
+exports.deleteManualAttendanceRequest = catchAsync(async (req, res, next) => {
+  const request = await ManualAttendanceRequest.findByIdAndDelete(req.params.id);
+  if (!request) {
+    return next(new AppError('Manual attendance request not found', 404));
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+

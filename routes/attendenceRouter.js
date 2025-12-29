@@ -37,7 +37,7 @@ const attendanceRouter = express.Router();
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/general-settings',authController.protect,attendanceController.createGeneralSettings);
+attendanceRouter.post('/general-settings', authController.protect, attendanceController.createGeneralSettings);
 
 /**
  * @swagger
@@ -56,7 +56,7 @@ attendanceRouter.post('/general-settings',authController.protect,attendanceContr
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/general-settings-by-company',authController.protect, attendanceController.getGeneralSettings);
+attendanceRouter.get('/general-settings-by-company', authController.protect, attendanceController.getGeneralSettings);
 
 /**
  * @swagger
@@ -933,7 +933,7 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *       500:
  *         description: Internal server error
  */
- attendanceRouter.get('/attendance-templates-by-user/:userId', authController.protect, attendanceController.getAttendanceTemplateByUser);
+attendanceRouter.get('/attendance-templates-by-user/:userId', authController.protect, attendanceController.getAttendanceTemplateByUser);
 
 //Attdance Template Regulrization
 /**
@@ -1011,7 +1011,7 @@ attendanceRouter.get('/attendance-templates/:id', authController.protect, attend
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/regularization',authController.protect, attendanceController.addAttendanceRegularization);
+attendanceRouter.post('/regularization', authController.protect, attendanceController.addAttendanceRegularization);
 
 /**
  * @swagger
@@ -1037,7 +1037,7 @@ attendanceRouter.post('/regularization',authController.protect, attendanceContro
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularization/:id',authController.protect, attendanceController.getAttendanceRegularization);
+attendanceRouter.get('/regularization/:id', authController.protect, attendanceController.getAttendanceRegularization);
 
 /**
  * @swagger
@@ -1063,7 +1063,7 @@ attendanceRouter.get('/regularization/:id',authController.protect, attendanceCon
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/regularization-by-template/:templateId',authController.protect, attendanceController.getAttendanceRegularizationByTemplate);
+attendanceRouter.get('/regularization-by-template/:templateId', authController.protect, attendanceController.getAttendanceRegularizationByTemplate);
 
 /**
  * @swagger
@@ -1147,7 +1147,7 @@ attendanceRouter.get('/regularization-by-template/:templateId',authController.pr
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/regularization/:id',authController.protect, attendanceController.updateAttendanceRegularization);
+attendanceRouter.put('/regularization/:id', authController.protect, attendanceController.updateAttendanceRegularization);
 
 /**
  * @swagger
@@ -1174,7 +1174,7 @@ attendanceRouter.put('/regularization/:id',authController.protect, attendanceCon
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/regularization-by-company',authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
+attendanceRouter.post('/regularization-by-company', authController.protect, attendanceController.getAllAttendanceRegularizationsByCompany);
 
 /**
  * @swagger
@@ -1200,7 +1200,7 @@ attendanceRouter.post('/regularization-by-company',authController.protect, atten
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/regularization/:id',authController.protect, attendanceController.deleteAttendanceRegularization);
+attendanceRouter.delete('/regularization/:id', authController.protect, attendanceController.deleteAttendanceRegularization);
 
 // Swagger annotations
 /**
@@ -1243,7 +1243,7 @@ attendanceRouter.delete('/regularization/:id',authController.protect, attendance
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/attendanceRegularizationRestrictedLocations',authController.protect, attendanceController.addAttendanceRegularizationRestrictedLocation);
+attendanceRouter.post('/attendanceRegularizationRestrictedLocations', authController.protect, attendanceController.addAttendanceRegularizationRestrictedLocation);
 
 /**
  * @swagger
@@ -1269,7 +1269,7 @@ attendanceRouter.post('/attendanceRegularizationRestrictedLocations',authControl
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:attendanceRegularization',authController.protect, attendanceController.getAllAttendanceRegularizationRestrictedLocations);
+attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:attendanceRegularization', authController.protect, attendanceController.getAllAttendanceRegularizationRestrictedLocations);
 
 /**
  * @swagger
@@ -1311,7 +1311,7 @@ attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:attendanceRe
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.updateAttendanceRegularizationRestrictedLocation);
+attendanceRouter.put('/attendanceRegularizationRestrictedLocations/:id', authController.protect, attendanceController.updateAttendanceRegularizationRestrictedLocation);
 
 /**
  * @swagger
@@ -1337,7 +1337,7 @@ attendanceRouter.put('/attendanceRegularizationRestrictedLocations/:id',authCont
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.getAttendanceRegularizationRestrictedLocationById);
+attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:id', authController.protect, attendanceController.getAttendanceRegularizationRestrictedLocationById);
 
 /**
  * @swagger
@@ -1363,7 +1363,7 @@ attendanceRouter.get('/attendanceRegularizationRestrictedLocations/:id',authCont
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/attendanceRegularizationRestrictedLocations/:id',authController.protect, attendanceController.deleteAttendanceRegularizationRestrictedLocation);
+attendanceRouter.delete('/attendanceRegularizationRestrictedLocations/:id', authController.protect, attendanceController.deleteAttendanceRegularizationRestrictedLocation);
 
 
 //Attandance Assignment
@@ -1589,7 +1589,7 @@ attendanceRouter.post('/attendance-assignments-by-company', authController.prote
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/rounding-information',authController.protect,attendanceController.createRoundingInformation);
+attendanceRouter.post('/rounding-information', authController.protect, attendanceController.createRoundingInformation);
 
 /**
  * @swagger
@@ -1615,7 +1615,7 @@ attendanceRouter.post('/rounding-information',authController.protect,attendanceC
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.get('/rounding-information/:id',authController.protect,attendanceController.getRoundingInformation);
+attendanceRouter.get('/rounding-information/:id', authController.protect, attendanceController.getRoundingInformation);
 
 /**
  * @swagger
@@ -1680,7 +1680,7 @@ attendanceRouter.get('/rounding-information/:id',authController.protect,attendan
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.put('/rounding-information/:id',authController.protect,attendanceController.updateRoundingInformation);
+attendanceRouter.put('/rounding-information/:id', authController.protect, attendanceController.updateRoundingInformation);
 
 /**
  * @swagger
@@ -1706,7 +1706,7 @@ attendanceRouter.put('/rounding-information/:id',authController.protect,attendan
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.delete('/rounding-information/:id',authController.protect,attendanceController.deleteRoundingInformation);
+attendanceRouter.delete('/rounding-information/:id', authController.protect, attendanceController.deleteRoundingInformation);
 /**
  * @swagger
  * /api/v1/attendance/rounding-information-by-company:
@@ -2189,7 +2189,7 @@ attendanceRouter.delete('/user-on-duty-templates/:id', authController.protect, a
 attendanceRouter.post('/user-on-duty-templates-by-company', authController.protect, attendanceController.getAllUserOnDutyTemplates);
 
 //Shift routes
-    
+
 /**
  * @swagger
  * /api/v1/attendance/shifts:
@@ -2517,19 +2517,89 @@ attendanceRouter.get('/shifts-by-user/:userId', authController.protect, attendan
  */
 attendanceRouter.post('/shifts-by-company', authController.protect, attendanceController.getAllShifts);
 
- // Shift Template Assignment
+// Shift Template Assignment
 
- /**
+/**
+* @swagger
+* /api/v1/attendance/shift-template-assignments:
+*   post:
+*     summary: Create a new ShiftTemplateAssignment
+*     tags: [Attendance Management]
+*     security: [{
+*         bearerAuth: []
+*     }]
+*     requestBody:
+*       description: ShiftTemplateAssignment details
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               template:
+*                 type: string
+*                 required: true
+*               user:
+*                 type: string
+*                 required: true
+*               startDate:
+*                 type: string
+*                 format: date
+*                 required: true
+*     responses:
+*       201:
+*         description: ShiftTemplateAssignment successfully created
+*       400:
+*         description: Bad request
+*       500:
+*         description: Internal server error
+*/
+attendanceRouter.post('/shift-template-assignments', authController.protect, attendanceController.createShiftTemplateAssignment);
+
+/**
  * @swagger
- * /api/v1/attendance/shift-template-assignments:
- *   post:
- *     summary: Create a new ShiftTemplateAssignment
+ * /api/v1/attendance/shift-template-assignments/{id}:
+ *   get:
+ *     summary: Get a ShiftTemplateAssignment by ID
  *     tags: [Attendance Management]
  *     security: [{
  *         bearerAuth: []
  *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShiftTemplateAssignment
+ *     responses:
+ *       200:
+ *         description: Successful response with the ShiftTemplateAssignment
+ *       404:
+ *         description: ShiftTemplateAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.get('/shift-template-assignments/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shift-template-assignments/{id}:
+ *   put:
+ *     summary: Update a ShiftTemplateAssignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShiftTemplateAssignment
  *     requestBody:
- *       description: ShiftTemplateAssignment details
+ *       description: New ShiftTemplateAssignment details
  *       required: true
  *       content:
  *         application/json:
@@ -2538,117 +2608,47 @@ attendanceRouter.post('/shifts-by-company', authController.protect, attendanceCo
  *             properties:
  *               template:
  *                 type: string
- *                 required: true
  *               user:
  *                 type: string
- *                 required: true
  *               startDate:
  *                 type: string
  *                 format: date
- *                 required: true
  *     responses:
- *       201:
- *         description: ShiftTemplateAssignment successfully created
- *       400:
- *         description: Bad request
+ *       200:
+ *         description: Successful response with the updated ShiftTemplateAssignment
+ *       404:
+ *         description: ShiftTemplateAssignment not found
  *       500:
  *         description: Internal server error
  */
- attendanceRouter.post('/shift-template-assignments',authController.protect,attendanceController.createShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   get:
-   *     summary: Get a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     responses:
-   *       200:
-   *         description: Successful response with the ShiftTemplateAssignment
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.get('/shift-template-assignments/:id', authController.protect, attendanceController.getShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   put:
-   *     summary: Update a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *         bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     requestBody:
-   *       description: New ShiftTemplateAssignment details
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               template:
-   *                 type: string
-   *               user:
-   *                 type: string
-   *               startDate:
-   *                 type: string
-   *                 format: date
-   *     responses:
-   *       200:
-   *         description: Successful response with the updated ShiftTemplateAssignment
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.put('/shift-template-assignments/:id', authController.protect, attendanceController.updateShiftTemplateAssignment);
-  
-  /**
-   * @swagger
-   * /api/v1/attendance/shift-template-assignments/{id}:
-   *   delete:
-   *     summary: Delete a ShiftTemplateAssignment by ID
-   *     tags: [Attendance Management]
-   *     security: [{
-   *          bearerAuth: []
-   *     }]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: ID of the ShiftTemplateAssignment
-   *     responses:
-   *       204:
-   *         description: ShiftTemplateAssignment successfully deleted
-   *       404:
-   *         description: ShiftTemplateAssignment not found
-   *       500:
-   *         description: Internal server error
-   */
-  attendanceRouter.delete('/shift-template-assignments/:id', authController.protect, attendanceController.deleteShiftTemplateAssignment);
-  
+attendanceRouter.put('/shift-template-assignments/:id', authController.protect, attendanceController.updateShiftTemplateAssignment);
+
+/**
+ * @swagger
+ * /api/v1/attendance/shift-template-assignments/{id}:
+ *   delete:
+ *     summary: Delete a ShiftTemplateAssignment by ID
+ *     tags: [Attendance Management]
+ *     security: [{
+ *          bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the ShiftTemplateAssignment
+ *     responses:
+ *       204:
+ *         description: ShiftTemplateAssignment successfully deleted
+ *       404:
+ *         description: ShiftTemplateAssignment not found
+ *       500:
+ *         description: Internal server error
+ */
+attendanceRouter.delete('/shift-template-assignments/:id', authController.protect, attendanceController.deleteShiftTemplateAssignment);
+
 /**
    * @swagger
    * /api/v1/attendance/shift-template-assignments-by-company:
@@ -2674,9 +2674,9 @@ attendanceRouter.post('/shifts-by-company', authController.protect, attendanceCo
    *       500:
    *         description: Internal server error
    */
-  attendanceRouter.post('/shift-template-assignments-by-company', authController.protect, attendanceController.getAllShiftTemplateAssignments);
+attendanceRouter.post('/shift-template-assignments-by-company', authController.protect, attendanceController.getAllShiftTemplateAssignments);
 
-  // Roster Shift Assignment routes
+// Roster Shift Assignment routes
 
 /**
  * @swagger
@@ -3151,7 +3151,7 @@ attendanceRouter.delete('/employee-duty-requests/:id', authController.protect, a
  *       500:
  *         description: Internal server error
  */
-attendanceRouter.post('/employee-duty-requests-by-company', authController.protect, attendanceController.getAllEmployeeDutyRequests);  
+attendanceRouter.post('/employee-duty-requests-by-company', authController.protect, attendanceController.getAllEmployeeDutyRequests);
 
 /**
  * @swagger
@@ -3641,4 +3641,321 @@ attendanceRouter.post(
   authController.protect,
   attendanceController.validateAttendanceProcess
 );
+
+
+// Attendance Office CRUD Routes
+/**
+ * @swagger
+ * /api/v1/attendance/offices:
+ *   post:
+ *     summary: Create a new office
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               geofence_radius:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Office created
+ */
+attendanceRouter.post('/offices', authController.protect,  attendanceController.createOffice);
+
+/**
+ * @swagger
+ * /api/v1/attendance/offices:
+ *   get:
+ *     summary: Get all offices for the company
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of offices
+ */
+attendanceRouter.get('/offices', authController.protect, attendanceController.getOffices);
+
+/**
+ * @swagger
+ * /api/v1/attendance/offices/{id}:
+ *   get:
+ *     summary: Get office by ID
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Office details
+ */
+attendanceRouter.get('/offices/:id', authController.protect, attendanceController.getOfficeById);
+
+/**
+ * @swagger
+ * /api/v1/attendance/offices/{id}:
+ *   put:
+ *     summary: Update office
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Office updated
+ */
+attendanceRouter.put('/offices/:id', authController.protect,  attendanceController.updateOffice);
+
+/**
+ * @swagger
+ * /api/v1/attendance/offices/{id}:
+ *   delete:
+ *     summary: Delete office
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Office deleted
+ */
+attendanceRouter.delete('/offices/:id', authController.protect,  attendanceController.deleteOffice);
+
+// Attendance Rules Routes
+/**
+ * @swagger
+ * /api/v1/attendance/rules:
+ *   put:
+ *     summary: Update attendance rules for an office
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               officeId:
+ *                 type: string
+ *               selfie_required:
+ *                 type: boolean
+ *               face_recognition_enabled:
+ *                 type: boolean
+ *               face_match_threshold:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Rules updated
+ */
+attendanceRouter.put('/rules', authController.protect,  attendanceController.updateAttendanceRules);
+
+/**
+ * @swagger
+ * /api/v1/attendance/rules/{officeId}:
+ *   get:
+ *     summary: Get attendance rules by office ID
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: officeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Attendance rules
+ */
+attendanceRouter.get('/rules/:officeId', authController.protect, attendanceController.getAttendanceRulesByOffice);
+
+// Attendance Log Routes
+/**
+ * @swagger
+ * /api/v1/attendance/check-in:
+ *   post:
+ *     summary: User check-in
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               officeId:
+ *                 type: string
+ *               selfieUrl:
+ *                 type: string
+ *               deviceId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Checked in successfully
+ */
+attendanceRouter.post('/check-in', authController.protect, attendanceController.checkIn);
+
+/**
+ * @swagger
+ * /api/v1/attendance/check-out:
+ *   post:
+ *     summary: User check-out
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               officeId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Checked out successfully
+ */
+attendanceRouter.post('/check-out', authController.protect, attendanceController.checkOut);
+
+/**
+ * @swagger
+ * /api/v1/attendance/history:
+ *   get:
+ *     summary: Get user attendance history
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Attendance history
+ */
+attendanceRouter.get('/history', authController.protect, attendanceController.getAttendanceHistory);
+
+/**
+ * @swagger
+ * /api/v1/attendance/logs:
+ *   get:
+ *     summary: Get all attendance logs (Admin)
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of logs
+ */
+attendanceRouter.get('/logs', authController.protect,  attendanceController.getAllAttendanceLogs);
+
+// Manual Attendance Request Routes
+/**
+ * @swagger
+ * /api/v1/attendance/manual-request:
+ *   post:
+ *     summary: Request manual attendance
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               reason:
+ *                 type: string
+ *               photoUrl:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Request submitted
+ */
+attendanceRouter.post('/manual-request', authController.protect, attendanceController.requestManualAttendance);
+
+/**
+ * @swagger
+ * /api/v1/attendance/manual-requests:
+ *   get:
+ *     summary: Get all manual attendance requests (Admin)
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of requests
+ */
+attendanceRouter.get('/manual-requests', authController.protect, attendanceController.getAllManualAttendanceRequests);
+
+/**
+ * @swagger
+ * /api/v1/attendance/manual-requests/{id}:
+ *   get:
+ *     summary: Get manual attendance request by ID
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Request details
+ */
+attendanceRouter.get('/manual-requests/:id', authController.protect, attendanceController.getManualAttendanceRequestById);
+
+/**
+ * @swagger
+ * /api/v1/attendance/manual-requests/approve:
+ *   post:
+ *     summary: Approve or reject manual attendance request
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               requestId:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected]
+ *     responses:
+ *       200:
+ *         description: Request status updated
+ */
+attendanceRouter.post('/manual-requests/approve', authController.protect, attendanceController.approveManualAttendance);
+
 module.exports = attendanceRouter;
