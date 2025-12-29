@@ -266,7 +266,10 @@ assignLeavesByJobs = async (req, res, next) => {
                 const cycle = await createFiscalCycle();
                 const employee = user._id.toString();
                 const category = leaveCategory._id;
-                const type = leaveCategory.leaveAccrualPeriod;
+                // Fix: Default to Annually if leaveAccrualPeriod is missing
+                const accrualPeriod = leaveCategory.leaveAccrualPeriod || constants.Leave_Accrual_Period.Annually;
+                const type = accrualPeriod;
+
                 //Need to verify start and end month because get month is starting from 0 not 1 Jan 0, feb 1...
                 const createdOn = new Date();
                 var currentMonth = createdOn.getMonth();
@@ -277,10 +280,9 @@ assignLeavesByJobs = async (req, res, next) => {
                 var closingBalance = 0;
                 const leaveTaken = 0;
 
-                const { startMonth, endMonth } = await getPeriodRange(currentMonth, leaveCategory.leaveAccrualPeriod);
-                console.log(`Determined period range for ${leaveCategory.leaveAccrualPeriod}, user: ${user._id} - startMonth: ${startMonth}, endMonth: ${endMonth}`);
-
-                if (leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Monthly) {
+                const { startMonth, endMonth } = await getPeriodRange(currentMonth, accrualPeriod);
+                console.log(`Determined period range for ${accrualPeriod}, user: ${user._id} - startMonth: ${startMonth}, endMonth: ${endMonth}`);
+                if (accrualPeriod === constants.Leave_Accrual_Period.Monthly) {
                   var accruedBalance = 0;
                   accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
                   websocketHandler.sendLog(req, `Creating monthly leave assignment - accruedBalance: ${accruedBalance}`, constants.LOG_TYPES.DEBUG);
@@ -322,7 +324,7 @@ assignLeavesByJobs = async (req, res, next) => {
                   }
                 }
 
-                if (leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Annually) {
+                if (accrualPeriod === constants.Leave_Accrual_Period.Annually) {
                   //const assignmentExists = await doesLeaveAssignmentExist(employee, cycle, category);   
                   //websocketHandler.sendLog(req, `Checking existing annual assignment for user: ${user._id} - exists: ${assignmentExists}`, constants.LOG_TYPES.TRACE);
                   const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
@@ -367,7 +369,7 @@ assignLeavesByJobs = async (req, res, next) => {
                   }
                 }
 
-                if (leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Semi_Annually) {
+                if (accrualPeriod === constants.Leave_Accrual_Period.Semi_Annually) {
                   const periodLength = 6;
                   var accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
                   websocketHandler.sendLog(req, `Processing semi-annual leave for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
@@ -411,7 +413,7 @@ assignLeavesByJobs = async (req, res, next) => {
                   }
                 }
 
-                if (leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Bi_Monthly) {
+                if (accrualPeriod === constants.Leave_Accrual_Period.Bi_Monthly) {
                   const periodLength = 2;
                   const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
                     employee,
@@ -454,7 +456,7 @@ assignLeavesByJobs = async (req, res, next) => {
                   }
                 }
 
-                if (leaveCategory.leaveAccrualPeriod === constants.Leave_Accrual_Period.Quarterly) {
+                if (accrualPeriod === constants.Leave_Accrual_Period.Quarterly) {
                   const periodLength = 3;
                   const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
                     employee,
@@ -579,7 +581,7 @@ const runRecuringNotifications = async (req, res, next) => {
       // Fetch associated users
       const userLinks = await UserNotification.find({ notification: notification._id });
       if (!userLinks?.length) continue;
-      
+
       for (const userLink of userLinks) {
         const userId = userLink.user;
 
