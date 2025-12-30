@@ -2449,20 +2449,20 @@ const cornMappedTimlogToAttendance = async (company) => {
     const attendanceTemplateAssignment = await AttendanceTemplateAssignments.findOne({ employee: user._id });
     if (!attendanceTemplateAssignment) {
       console.log(`Attendance template not assigned for user: ${user._id}`);
-      return res.status(200).json({
-        status: constants.APIResponseStatus.Failure,
-        EmpCode: req.body.EmpCode,
-        message: `Attendance template not assigned for this user.`
-      });
+      // return res.status(200).json({
+      //   status: constants.APIResponseStatus.Failure,
+      //   EmpCode: req.body.EmpCode,
+      //   message: `Attendance template not assigned for this user.`
+      // });
     }
     const modes = attendanceTemplateAssignment?.attendanceTemplate?.attendanceMode || [];
     if (!modes.includes('Tracker')) {
       console.log("User not allowed for Tracker mode attendance:", user._id);
-      return res.status(200).json({
-        status: constants.APIResponseStatus.Failure,
-        EmpCode: req.body.EmpCode,
-        message: `Tracker is not allowed for the attendance template assigned to this user.`,
-      });
+      // return res.status(200).json({
+      //   status: constants.APIResponseStatus.Failure,
+      //   EmpCode: req.body.EmpCode,
+      //   message: `Tracker is not allowed for the attendance template assigned to this user.`,
+      // });
     }
 
     const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user._id });
@@ -3135,12 +3135,12 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
     websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
-    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates } =
+    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates } =
       await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
     websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
     await processLOPForMonth({
-      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req
+      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays: notPaidLeaveDays, holidayDates, companyId, req
     });
     websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
 
@@ -3274,17 +3274,24 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     company: companyId
   });
 
-  const approvedLeaveDays = approvedLeaves.flatMap(leave => {
-    const days = [];
+  const approvedLeaveDays = [];
+  const notPaidLeaveDays = [];
+
+  approvedLeaves.forEach(leave => {
     let d = new Date(leave.startDate);
     const end = new Date(leave.endDate);
+    const isPaid = leave.leaveCategory && leave.leaveCategory.isPaidLeave; //isPaidLeave field in leave category true means paid leave, false means unpaid leave
+
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
-        days.push(d.toISOString().split('T')[0]); //(d.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        const dateStr = d.toISOString().split('T')[0];
+        approvedLeaveDays.push(dateStr);
+        if (!isPaid) {
+          notPaidLeaveDays.push(dateStr);
+        }
       }
       d.setDate(d.getDate() + 1);
     }
-    return days;
   });
 
   const holidays = await HolidayCalendar.find({ company: companyId });
@@ -3297,7 +3304,7 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
   });
   websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
 
-  return { attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates };
+  return { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates };
 }
 
 function toLocalDateStringFromUTC(dateInput) {
@@ -3308,7 +3315,7 @@ function toLocalDateStringFromUTC(dateInput) {
 }
 
 // full utc based
-async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
+async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, companyId, req }) {
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
@@ -3334,7 +3341,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);
   const holidaySet = new Set(holidayDates.map(toLocalDateStringFromUTC));
   websocketHandler.sendLog(req, `Holiday set created with: ${JSON.stringify([...holidaySet])}`, constants.LOG_TYPES.DEBUG);
-
+  const notPaidLeaveSet = new Set(notPaidLeaveDays.map(toLocalDateStringFromUTC));
   for (let day = 1; day <= daysInMonth; day++) {
 
     const currentDate = new Date(Date.UTC(year, month - 1, day));
@@ -3359,6 +3366,7 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const wasPresent = attendMap.get(dateStr);
     const isOnLeave = leaveSet.has(dateStr);
     const isHoliday = holidaySet.has(dateStr);
+    const isOnNotPaidLeave = notPaidLeaveSet.has(dateStr);
 
     let wasUserPresent = false;
     let wasHalfday = false;
@@ -3372,7 +3380,11 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       }
     }
 
-    const shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+    let shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+    if(isOnNotPaidLeave) {
+      shouldInsertLOP= true;
+    }
+
     if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
