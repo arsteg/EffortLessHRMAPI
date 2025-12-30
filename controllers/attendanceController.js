@@ -3381,8 +3381,8 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     }
 
     let shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
-    if(isOnNotPaidLeave) {
-      shouldInsertLOP= true;
+    if (isOnNotPaidLeave) {
+      shouldInsertLOP = true;
     }
 
     if (shouldInsertLOP) {
@@ -4119,7 +4119,22 @@ exports.getOfficeById = catchAsync(async (req, res, next) => {
 });
 
 exports.updateOffice = catchAsync(async (req, res, next) => {
-  const office = await AttendanceOffice.findByIdAndUpdate(req.params.id, req.body, {
+  const { latitude, longitude, geofence_radius, ...otherData } = req.body;
+
+  const updateData = { ...otherData };
+
+  if (latitude !== undefined && longitude !== undefined) {
+    updateData.location = {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    };
+  }
+
+  if (geofence_radius !== undefined) {
+    updateData.radius = geofence_radius;
+  }
+
+  const office = await AttendanceOffice.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
     runValidators: true
   });
