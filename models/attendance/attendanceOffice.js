@@ -40,6 +40,21 @@ const attendanceOfficeSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// Virtual for latitude
+attendanceOfficeSchema.virtual('latitude').get(function () {
+    return this.location?.coordinates?.[1];
+});
+
+// Virtual for longitude
+attendanceOfficeSchema.virtual('longitude').get(function () {
+    return this.location?.coordinates?.[0];
+});
+
+// Virtual for geofence_radius (mapping from radius)
+attendanceOfficeSchema.virtual('geofence_radius').get(function () {
+    return this.radius;
+});
+
 // Index for geospatial queries
 attendanceOfficeSchema.index({ location: '2dsphere' });
 
