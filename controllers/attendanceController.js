@@ -4270,7 +4270,7 @@ exports.checkIn = catchAsync(async (req, res, next) => {
     user: userId,
     company: companyId,
     office: officeId,
-    type: 'check_in',
+    type: 'check-in',
     timestamp: new Date(),
     location: {
       type: 'Point',
@@ -4289,7 +4289,7 @@ exports.checkIn = catchAsync(async (req, res, next) => {
     companyId,
     oldStatus: 'unknown', // or actual last status if tracked
     newStatus: 'checked_in',
-    action: 'check_in',
+    action: 'check-in',
     timestamp: new Date()
   });
 
@@ -4310,7 +4310,7 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     user: userId,
     company: companyId,
     office: officeId,
-    type: 'check_out',
+    type: 'check-out',
     timestamp: new Date(),
     location: {
       type: 'Point',
@@ -4325,7 +4325,7 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     companyId,
     oldStatus: 'checked_in',
     newStatus: 'checked_out',
-    action: 'check_out',
+    action: 'check-out',
     timestamp: new Date()
   });
 
