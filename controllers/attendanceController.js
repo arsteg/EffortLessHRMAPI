@@ -4278,8 +4278,7 @@ exports.checkIn = catchAsync(async (req, res, next) => {
     },
     photoUrl: selfieUrl,
     faceMatchScore,
-    deviceId,
-    status: 'success',
+    deviceId,    
     anomaly: anomaly ? { type: anomaly, isResolved: false } : undefined
   });
 
@@ -4315,8 +4314,7 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     location: {
       type: 'Point',
       coordinates: [longitude, latitude]
-    },
-    status: 'success'
+    },    
   });
 
   // Audit Log
