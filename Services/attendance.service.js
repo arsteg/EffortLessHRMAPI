@@ -31,11 +31,21 @@ exports.validateGeofence = (userLat, userLong, officeLat, officeLong, radius) =>
  * Stub for Facial Recognition Service
  */
 exports.verifyFace = async (selfieUrl, profilePhotoUrl) => {
-    // Integrate with AWS Rekognition or similar here
-    // Mocking 95% match for now
+    // Enhanced mock logic for face verification
+    if (!selfieUrl || !profilePhotoUrl) {
+        return {
+            match: false,
+            score: 0,
+            message: !selfieUrl ? 'Selfie is missing.' : 'Profile photo is missing.'
+        };
+    }
+
+    // In a real implementation, we would call Azure Face API or AWS Rekognition
+    // For now, we simulate a successful match if both photos are present
     return {
         match: true,
-        score: 95.5
+        score: 0.95,
+        message: 'Face verified successfully (Mock).'
     };
 };
 

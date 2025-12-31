@@ -3879,27 +3879,99 @@ attendanceRouter.get('/logs', authController.protect,  attendanceController.getA
  * /api/v1/attendance/manual-request:
  *   post:
  *     summary: Request manual attendance
+ *     description: Submit a manual attendance request for a specific date. Only one request per date is allowed.
  *     tags: [Attendance Management]
- *     security: [{ bearerAuth: [] }]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - date
+ *               - reason
+ *               - managerId
  *             properties:
  *               date:
  *                 type: string
  *                 format: date
+ *                 example: "2025-01-15"
  *               reason:
  *                 type: string
+ *                 example: "Forgot to check in due to meeting outside office"
+ *               checkInTime:
+ *                 type: string
+ *                 format: time
+ *                 example: "09:00"
+ *                 default: "09:00"
+ *               checkOutTime:
+ *                 type: string
+ *                 format: time
+ *                 example: "18:00"
+ *                 default: "18:00"
  *               photoUrl:
  *                 type: string
+ *                 example: "https://example.com/photo.jpg"
+ *               managerId:
+ *                 type: string
+ *                 description: Manager responsible for reviewing the request
+ *                 example: "65b12f9d8c4e9a0012abc123"
+ *               userId:
+ *                 type: string
+ *                 description: User ID (optional, defaults to authenticated user)
+ *                 example: "65b12f9d8c4e9a0012abc456"
+ *               company:
+ *                 type: string
+ *                 description: Company ID (optional, defaults to user's company)
+ *                 example: "65b12f9d8c4e9a0012abc789"
  *     responses:
  *       201:
- *         description: Request submitted
+ *         description: Manual attendance request submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     request:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         user:
+ *                           type: string
+ *                         company:
+ *                           type: string
+ *                         date:
+ *                           type: string
+ *                           format: date
+ *                         reason:
+ *                           type: string
+ *                         checkInTime:
+ *                           type: string
+ *                         checkOutTime:
+ *                           type: string
+ *                         photoUrl:
+ *                           type: string
+ *                         status:
+ *                           type: string
+ *                           example: pending
+ *                         reviewedBy:
+ *                           type: string
+ *       400:
+ *         description: Validation error or duplicate request
+ *       401:
+ *         description: Unauthorized
  */
-attendanceRouter.post('/manual-request', authController.protect, attendanceController.requestManualAttendance);
+attendanceRouter.post(  '/manual-request',  authController.protect,   attendanceController.requestManualAttendance);
+
 
 /**
  * @swagger

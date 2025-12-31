@@ -15,11 +15,17 @@ const manualAttendanceRequestSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    checkInTime: String,
-    checkOutTime: String,
+    checkInTime: {
+        type: String,
+        default: '09:00'
+    },
+    checkOutTime: {
+        type: String,
+        default: '18:00'
+    },
     reason: {
         type: String,
-        required: true
+        required: [true, 'Reason is required.']
     },
     photoUrl: String,
     status: {

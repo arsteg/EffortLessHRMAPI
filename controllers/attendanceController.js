@@ -4394,21 +4394,40 @@ exports.deleteAttendanceLog = catchAsync(async (req, res, next) => {
 
 
 exports.requestManualAttendance = catchAsync(async (req, res, next) => {
-  const { date, reason, photoUrl, company } = req.body;
-  const userId = req.user._id;
+  const { date, reason, photoUrl, checkInTime, checkOutTime, userId, company, managerId } = req.body;
+
   const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+  const requestUserId = userId || req.user._id;
 
   if (!companyId) {
     return next(new AppError('Company ID is required.', 400));
   }
 
+  if (!managerId) {
+    return next(new AppError('Manager selection is required.', 400));
+  }
+
+  // Check for duplicate request on the same date
+  const existingRequest = await ManualAttendanceRequest.findOne({
+    user: requestUserId,
+    company: companyId,
+    date: new Date(date)
+  });
+
+  if (existingRequest) {
+    return next(new AppError('A manual attendance request already exists for this date.', 400));
+  }
+
   const request = await ManualAttendanceRequest.create({
-    user: userId,
+    user: requestUserId,
     company: companyId,
     date,
     reason,
+    checkInTime: checkInTime || '09:00',
+    checkOutTime: checkOutTime || '18:00',
     photoUrl,
-    status: 'pending'
+    status: 'pending',
+    reviewedBy: managerId
   });
 
   res.status(201).json({
@@ -4440,31 +4459,37 @@ exports.approveManualAttendance = catchAsync(async (req, res, next) => {
   request.reviewedAt = new Date();
   await request.save();
 
-  // If approved, create corresponding attendance logs (check-in and check-out)
+  // Create attendance logs if approved
   if (status === 'approved') {
-    const checkInTime = new Date(request.date);
-    checkInTime.setHours(9, 0, 0); // Default 9 AM
+    const attendanceDate = new Date(request.date);
+    const checkInTimeStr = request.checkInTime || '09:00';
+    const checkOutTimeStr = request.checkOutTime || '18:00';
 
-    const checkOutTime = new Date(request.date);
-    checkOutTime.setHours(18, 0, 0); // Default 6 PM
+    const [inHours, inMinutes] = checkInTimeStr.split(':').map(Number);
+    const [outHours, outMinutes] = checkOutTimeStr.split(':').map(Number);
 
-    await AttendanceLog.create([
-      {
-        user: request.user,
-        company: request.company,
-        type: 'check_in',
-        timestamp: checkInTime,
-        status: 'success',
-        photoUrl: request.photoUrl
-      },
-      {
-        user: request.user,
-        company: request.company,
-        type: 'check_out',
-        timestamp: checkOutTime,
-        status: 'success'
-      }
-    ]);
+    const checkInTimestamp = new Date(attendanceDate);
+    checkInTimestamp.setHours(inHours, inMinutes, 0, 0);
+
+    const checkOutTimestamp = new Date(attendanceDate);
+    checkOutTimestamp.setHours(outHours, outMinutes, 0, 0);
+
+    await AttendanceLog.create({
+      user: request.user,
+      company: request.company,
+      timestamp: checkInTimestamp,
+      type: 'check-in',
+      source: 'manual',
+      photoUrl: request.photoUrl
+    });
+
+    await AttendanceLog.create({
+      user: request.user,
+      company: request.company,
+      timestamp: checkOutTimestamp,
+      type: 'check-out',
+      source: 'manual'
+    });
   }
 
   res.status(200).json({
@@ -4474,12 +4499,26 @@ exports.approveManualAttendance = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllManualAttendanceRequests = catchAsync(async (req, res, next) => {
-  const features = new APIFeatures(ManualAttendanceRequest.find(), req.query)
-    .filter()
+  const queryObj = { ...req.query };
+  const excludedFields = ['page', 'sort', 'limit', 'fields', 'fromDate', 'toDate'];
+  excludedFields.forEach(el => delete queryObj[el]);
+
+  // Date range filtering
+  if (req.query.fromDate || req.query.toDate) {
+    queryObj.date = {};
+    if (req.query.fromDate) queryObj.date.$gte = new Date(req.query.fromDate);
+    if (req.query.toDate) queryObj.date.$lte = new Date(req.query.toDate);
+  }
+
+  // Support for subordinate filtering (userId passed in query)
+  // If no specific userId but role is limited, we could auto-filter here
+  // For now, let APIFeatures handle the rest or manual filter if needed
+
+  const features = new APIFeatures(ManualAttendanceRequest.find(queryObj), req.query)
     .sort()
     .limitFields()
     .paginate();
-  const requests = await features.query;
+  const requests = await features.query.populate('user', 'firstName lastName email photo');
   res.status(200).json({
     status: 'success',
     results: requests.length,
