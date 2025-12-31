@@ -4163,7 +4163,7 @@ exports.deleteOffice = catchAsync(async (req, res, next) => {
 
 
 exports.getOffices = catchAsync(async (req, res, next) => {
-  const companyId = req.query.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+  const companyId = req.query.company || req.cookies.companyId || (req.user && req.user.company && (req.user.company._id || req.user.company)) || (req.user && req.user.companyId);
 
   if (!companyId) {
     return next(new AppError('Company ID is required.', 400));
