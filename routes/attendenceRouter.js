@@ -3670,7 +3670,7 @@ attendanceRouter.post(
  *       201:
  *         description: Office created
  */
-attendanceRouter.post('/offices', authController.protect,  attendanceController.createOffice);
+attendanceRouter.post('/offices', authController.protect, attendanceController.createOffice);
 
 /**
  * @swagger
@@ -3721,7 +3721,7 @@ attendanceRouter.get('/offices/:id', authController.protect, attendanceControlle
  *       200:
  *         description: Office updated
  */
-attendanceRouter.put('/offices/:id', authController.protect,  attendanceController.updateOffice);
+attendanceRouter.put('/offices/:id', authController.protect, attendanceController.updateOffice);
 
 /**
  * @swagger
@@ -3740,7 +3740,7 @@ attendanceRouter.put('/offices/:id', authController.protect,  attendanceControll
  *       204:
  *         description: Office deleted
  */
-attendanceRouter.delete('/offices/:id', authController.protect,  attendanceController.deleteOffice);
+attendanceRouter.delete('/offices/:id', authController.protect, attendanceController.deleteOffice);
 
 // Attendance Rules Routes
 /**
@@ -3769,7 +3769,7 @@ attendanceRouter.delete('/offices/:id', authController.protect,  attendanceContr
  *       200:
  *         description: Rules updated
  */
-attendanceRouter.put('/rules', authController.protect,  attendanceController.updateAttendanceRules);
+attendanceRouter.put('/rules', authController.protect, attendanceController.updateAttendanceRules);
 
 /**
  * @swagger
@@ -3871,7 +3871,7 @@ attendanceRouter.get('/history', authController.protect, attendanceController.ge
  *       200:
  *         description: List of logs
  */
-attendanceRouter.get('/logs', authController.protect,  attendanceController.getAllAttendanceLogs);
+attendanceRouter.get('/logs', authController.protect, attendanceController.getAllAttendanceLogs);
 
 // Manual Attendance Request Routes
 /**
@@ -3970,7 +3970,7 @@ attendanceRouter.get('/logs', authController.protect,  attendanceController.getA
  *       401:
  *         description: Unauthorized
  */
-attendanceRouter.post(  '/manual-request',  authController.protect,   attendanceController.requestManualAttendance);
+attendanceRouter.post('/manual-request', authController.protect, attendanceController.requestManualAttendance);
 
 
 /**
@@ -4029,5 +4029,35 @@ attendanceRouter.get('/manual-requests/:id', authController.protect, attendanceC
  *         description: Request status updated
  */
 attendanceRouter.post('/manual-requests/approve', authController.protect, attendanceController.approveManualAttendance);
+
+/**
+ * @swagger
+ * /api/v1/attendance/reports:
+ *   post:
+ *     summary: Get attendance report
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               officeId:
+ *                 type: string
+ *               fromDate:
+ *                 type: string
+ *                 format: date
+ *               toDate:
+ *                 type: string
+ *                 format: date
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Attendance report data
+ */
+attendanceRouter.post('/reports', authController.protect, attendanceController.getAttendanceReport);
 
 module.exports = attendanceRouter;

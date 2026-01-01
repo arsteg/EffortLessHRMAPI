@@ -4278,7 +4278,7 @@ exports.checkIn = catchAsync(async (req, res, next) => {
     },
     photoUrl: selfieUrl,
     faceMatchScore,
-    deviceId,    
+    deviceId,
     anomaly: anomaly ? { type: anomaly, isResolved: false } : undefined
   });
 
@@ -4314,7 +4314,7 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     location: {
       type: 'Point',
       coordinates: [longitude, latitude]
-    },    
+    },
   });
 
   // Audit Log
@@ -4557,6 +4557,93 @@ exports.deleteManualAttendanceRequest = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: 'success',
     data: null
+  });
+});
+
+exports.getAttendanceReport = catchAsync(async (req, res, next) => {
+  const { officeId, fromDate, toDate, userId, company } = req.body;
+  const companyId = company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const matchStage = {
+    company: mongoose.Types.ObjectId(companyId),
+    timestamp: {}
+  };
+
+  if (officeId) {
+    matchStage.office = mongoose.Types.ObjectId(officeId);
+  }
+
+  if (userId) {
+    matchStage.user = mongoose.Types.ObjectId(userId);
+  }
+
+  // Parse dates correctly
+  if (fromDate) {
+    matchStage.timestamp.$gte = new Date(fromDate);
+  }
+
+  if (toDate) {
+    const endOfDay = new Date(toDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    // If only date is provided, make sure we cover the whole day
+    matchStage.timestamp.$lte = endOfDay;
+  } else if (fromDate) {
+    // If only fromDate, assume single day report? Or open ended?
+    // Let's default to end of fromDate's day if toDate missing, or maybe not.
+    // Requirement says "by default the from date and to date will be current date" 
+    // which implies the client sends it.
+  }
+
+  // Remove timestamp filter if empty
+  if (Object.keys(matchStage.timestamp).length === 0) {
+    delete matchStage.timestamp;
+  }
+
+  const report = await AttendanceLog.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: {
+          user: "$user",
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } }
+        },
+        inTime: { $min: "$timestamp" },
+        outTime: { $max: "$timestamp" },
+        logs: { $push: "$$ROOT" }
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id.user",
+        foreignField: "_id",
+        as: "userDetails"
+      }
+    },
+    { $unwind: "$userDetails" },
+    {
+      $project: {
+        _id: 0,
+        userId: "$_id.user",
+        date: "$_id.date",
+        firstName: "$userDetails.firstName",
+        lastName: "$userDetails.lastName",
+        inTime: 1,
+        outTime: 1,
+        totalTimeMs: { $subtract: ["$outTime", "$inTime"] }
+      }
+    },
+    { $sort: { date: -1, firstName: 1 } }
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    results: report.length,
+    data: { report }
   });
 });
 
