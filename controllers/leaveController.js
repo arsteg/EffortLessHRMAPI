@@ -6,6 +6,7 @@ const LeaveTemplateCategory = require('../models/Leave/LeaveTemplateCategoryMode
 const TemplateCubbingRestriction = require('../models/Leave/TemplateCubbingRestrictionModel');
 const EmployeeLeaveAssignment = require('../models/Leave/EmployeeLeaveAssignmentModel');
 const LeaveGrant = require('../models/Leave/LeaveGrantModel');
+const HolidayCalendar = require('../models/Company/holidayCalendar');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const ShortLeave = require("../models/Leave/ShortLeaveModel");
@@ -25,6 +26,7 @@ const StorageController = require('./storageController');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const websocketHandler = require('../utils/websocketHandler');
 const AttendanceTemplate = require('../models/attendance/attendanceTemplate');
+const AttendanceTemplateAssignments = require('../models/attendance/attendanceTemplateAssignments');
 const { toUTCDate } = require('../utils/utcConverter');
 
 exports.createGeneralSetting = catchAsync(async (req, res, next) => {
@@ -957,21 +959,33 @@ exports.getEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 });
 
 // Helper function to calculate leave days, now considering weekly offs
-const calculateLeaveDays = (startDate, endDate, weeklyOffDays = [], includeWeeklyOffs = false) => {
+// Helper function to calculate leave days, now considering weekly offs and holidays
+const calculateLeaveDays = (startDate, endDate, weeklyOffDays = [], includeWeeklyOffs = false, holidays = [], includeHolidays = false) => {
   let count = 0;
   let currentDate = new Date(startDate);
   const end = new Date(endDate);
 
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // New array for abbreviations
+  const abbreviatedDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Create a Set of holiday time strings for O(1) lookup
+  const holidaySet = new Set(holidays.map(h => new Date(h.date).toDateString()));
 
   while (currentDate <= end) {
-    const dayIndex = currentDate.getDay(); // Get the numeric day (0 for Sunday, 1 for Monday, etc.)
-    const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex]; // Get the abbreviated name
+    const dayIndex = currentDate.getDay();
+    const dayOfWeekAbbreviated = abbreviatedDayNames[dayIndex];
+    const currentDateString = currentDate.toDateString();
+    const isHoliday = holidaySet.has(currentDateString);
+    const isWeeklyOff = weeklyOffDays.includes(dayOfWeekAbbreviated);
+    let isCountable = true;
 
-    if (weeklyOffDays.includes(dayOfWeekAbbreviated) && !includeWeeklyOffs) {
-      // If it's a weekly off and we don't include weekly offs, skip this day
-    } else {
+    if (isWeeklyOff && !includeWeeklyOffs) {
+      isCountable = false;
+    }
+
+    if (isHoliday && !includeHolidays) {
+      isCountable = false;
+    }
+    if (isCountable) {
       count++;
     }
     currentDate.setDate(currentDate.getDate() + 1);
@@ -1132,15 +1146,15 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const createdOn = new Date();
     var currentMonth = createdOn.getMonth();
     const leaveCat = await LeaveCategory.findById(leaveCategory);
-    const { startMonth, endMonth } = await scheduleController.getPeriodRange(currentMonth, leaveCat.leaveAccrualPeriod);  
+    const { startMonth, endMonth } = await scheduleController.getPeriodRange(currentMonth, leaveCat.leaveAccrualPeriod);
 
     const assignmentExists = await scheduleController.doesLeaveAssignmentExistV1({
-                              employee,
-                              category: leaveCat?._id,
-                              cycle,
-                              startMonth,
-                              endMonth
-                            });
+      employee,
+      category: leaveCat?._id,
+      cycle,
+      startMonth,
+      endMonth
+    });
 
     // const startDateObj = new Date(startDate);
     // const endDateObj = new Date(endDate);
@@ -1163,25 +1177,45 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
     }
 
-    const attendanceTemplate = await AttendanceTemplate.findOne({ company: companyId });
-    const weeklyOffDays = attendanceTemplate ? attendanceTemplate.weeklyOfDays : [];
+    const assignment = await AttendanceTemplateAssignments
+      .findOne({ employee: employee, company: companyId })
+      .populate({
+        path: 'attendanceTemplate',
+        select: 'weeklyOfDays weklyofHalfDay attendanceMode'
+      });
+    const weeklyOffDays = assignment?.attendanceTemplate?.weeklyOfDays || [];
+    // const attendanceTemplate = await AttendanceTemplate.findOne({ company: companyId });
+    // const weeklyOffDays = attendanceTemplate ? attendanceTemplate.weeklyOfDays : [];
 
     const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
+    const includeHolidaysInLeaveDays = leaveCat.isAnnualHolidayLeavePartOfNumberOfDaysTaken;
 
-    let leaveDays = calculateLeaveDays(utcStartDate, utcEndDate, weeklyOffDays, includeWeeklyOffsInLeaveDays);
+    // Fetch Holidays between startDate and endDate
+    const holidays = await HolidayCalendar.find({
+      company: companyId,
+      date: {
+        $gte: utcStartDate,
+        $lte: utcEndDate
+      }
+    });
+
+    let leaveDays = calculateLeaveDays(utcStartDate, utcEndDate, weeklyOffDays, includeWeeklyOffsInLeaveDays, holidays, includeHolidaysInLeaveDays);
 
     // Adjust leave days for half-day options
     if (isHalfDayOption && Array.isArray(halfDays) && halfDays.length > 0) {
-        const totalHalfDaysCount = halfDays.length;
-        
-        if(leaveDays > 0) {
-          leaveDays = leaveDays - (totalHalfDaysCount / 2);
-        }
+      const totalHalfDaysCount = halfDays.length;
+
+      if (leaveDays > 0) {
+        leaveDays = leaveDays - (totalHalfDaysCount / 2);
+      }
     }
 
     const numberOfWeeklyOffDays = countWeeklyOffDays(utcStartDate, utcEndDate, weeklyOffDays);
 
-    if (leaveAssigned?.leaveRemaining < leaveDays) {
+    // Negative Balance Check
+    const allowNegativeBalance = leaveCat.isEmployeesAllowedToNegativeLeaveBalance;
+
+    if (!allowNegativeBalance && leaveAssigned?.leaveRemaining < leaveDays) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
@@ -1253,7 +1287,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
 
       //const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
       const user = await User.findById(req.body.employee);
-        const userName = `${user?.firstName} ${user?.lastName}`;
+      const userName = `${user?.firstName} ${user?.lastName}`;
       SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
         constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
 
@@ -1261,12 +1295,12 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         .select('primaryApprover');
       if (LeaveApproval) {
         //for (const managerId of managerTeamsIds) {
-          const manager = await User.findById(LeaveApproval?.primaryApprover);
-          const companyDetails = await Company.findById(req.cookies.companyId);
-          sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
+        const manager = await User.findById(LeaveApproval?.primaryApprover);
+        const companyDetails = await Company.findById(req.cookies.companyId);
+        sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
 
-          SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
-            constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
+        SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
+          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
         //}
       }
     } catch (error) {
@@ -1304,16 +1338,16 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
         .replace("{company}", company.companyName)
         .replace("{lastName}", manager.lastName);
       //if (attendanceUser.email == "hrmeffortless@gmail.com") {
-        try {
-          await sendEmail({
-            email: manager.email,
-            subject: emailTemplate.subject,
-            message
-          });
+      try {
+        await sendEmail({
+          email: manager.email,
+          subject: emailTemplate.subject,
+          message
+        });
 
-        } catch (err) {
-          console.error(`Error sending email to user ${user}:`, err);
-        }
+      } catch (err) {
+        console.error(`Error sending email to user ${user}:`, err);
+      }
       //}
     }
   }
@@ -1372,10 +1406,28 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     }
     else {
       try {
-        const leaveDays = calculateLeaveDays(startDate, endDate);
+        const companyId = req.cookies.companyId;
+        const assignment = await AttendanceTemplateAssignments
+          .findOne({ employee: updatedLeaveApplication.employee?._id, company: companyId })
+          .populate({
+            path: 'attendanceTemplate',
+            select: 'weeklyOfDays weklyofHalfDay attendanceMode'
+          });
+        const weeklyOffDays = assignment?.attendanceTemplate?.weeklyOfDays || [];
+        const includeWeeklyOffsInLeaveDays = updatedLeaveApplication?.leaveCategory?.isWeeklyOffLeavePartOfNumberOfDaysTaken;
+        const includeHolidaysInLeaveDays = updatedLeaveApplication?.leaveCategory?.isAnnualHolidayLeavePartOfNumberOfDaysTaken;
+        const holidays = await HolidayCalendar.find({
+          company: companyId,
+          date: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        });
+        let leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays, holidays, includeHolidaysInLeaveDays);
+        //const leaveDays = calculateLeaveDays(startDate, endDate);
         const cycle = await scheduleController.createFiscalCycle();
         const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
-        
+
         if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
           //const leaveDays = calculateLeaveDays(startDate, endDate);
           //const cycle = await scheduleController.createFiscalCycle();
