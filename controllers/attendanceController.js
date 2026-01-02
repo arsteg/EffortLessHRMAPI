@@ -1218,14 +1218,23 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, `Fetching all attendance assignments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });
+  const limit = parseInt(req.body.next);
 
-  const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const query = { company: req.cookies.companyId };
+
+  const totalCount = await AttendanceTemplateAssignments.countDocuments(query);
+
+  let attendanceAssignmentsQuery =
+    AttendanceTemplateAssignments.find(query).skip(skip);
+
+  // Apply limit only if valid
+  if (!isNaN(limit) && limit > 0) {
+    attendanceAssignmentsQuery = attendanceAssignmentsQuery.limit(limit);
+  }
+
+  const attendanceAssignments = await attendanceAssignmentsQuery;
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: attendanceAssignments,
@@ -1880,11 +1889,22 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 // Get all ShiftTemplateAssignments
 exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await ShiftTemplateAssignment.countDocuments({ company: req.cookies.companyId });
+  const limit = parseInt(req.body.next);
 
-  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const query = { company: req.cookies.companyId };
+
+  const totalCount = await ShiftTemplateAssignment.countDocuments(query);
+
+  let shiftTemplateAssignmentsQuery =
+    ShiftTemplateAssignment.find(query).skip(skip);
+
+  // Apply limit ONLY if it is a valid number
+  if (!isNaN(limit) && limit > 0) {
+    shiftTemplateAssignmentsQuery = shiftTemplateAssignmentsQuery.limit(limit);
+  }
+
+  const shiftTemplateAssignments = await shiftTemplateAssignmentsQuery;
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignments,
