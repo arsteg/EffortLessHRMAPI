@@ -1213,15 +1213,24 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const numberOfWeeklyOffDays = countWeeklyOffDays(utcStartDate, utcEndDate, weeklyOffDays);
 
     // Negative Balance Check
-    const allowNegativeBalance = leaveCat.isEmployeesAllowedToNegativeLeaveBalance;
+    const negativePolicy = leaveCat.negativeLeaveBalancePolicy || 'none';
+    let isNegativeAllowed = leaveCat.isEmployeesAllowedToNegativeLeaveBalance;
 
-    if (!allowNegativeBalance && leaveAssigned?.leaveRemaining < leaveDays) {
+    // Override old toggle if new policy is explicitly set
+    if (negativePolicy !== 'none') {
+      isNegativeAllowed = true;
+    }
+
+    if (!isNegativeAllowed && leaveAssigned?.leaveRemaining < leaveDays) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
         message: req.t('leave.insufficientLeaveBalance')
       });
     }
+
+    // Additional policy checks could go here (e.g. Accrual period end check)
+    // For now, we allow the application if policy is NOT 'none'.
 
     // Use an array to store all document links
     const documentLinks = [];
