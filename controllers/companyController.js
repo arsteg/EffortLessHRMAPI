@@ -192,86 +192,86 @@ exports.getCompanyList = catchAsync(async (req, res, next) => {
 //   });
 // });
 exports.createHoliday = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting createHoliday', constants.LOG_TYPES.INFO);
-  const company = req.cookies.companyId; // Get company from cookies
-  const holidayDate = req.body.date;
-  const holidayName = req.body.label; // Assuming the name/description is in req.body.name
-  const isRecurring = req.body.isHolidayOccurEveryYearOnSameDay; // Assuming this flag is in req.body
+  websocketHandler.sendLog(req, 'Starting createHoliday', constants.LOG_TYPES.INFO);
+  const company = req.cookies.companyId; // Get company from cookies
+  const holidayDate = req.body.date;
+  const holidayName = req.body.label; // Assuming the name/description is in req.body.name
+  const isRecurring = req.body.isHolidayOccurEveryYearOnSameDay; // Assuming this flag is in req.body
 
-  // 1. Validate if company value exists in cookies
-  if (!company) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.companyIdMissing'), 400));
-  }
-  req.body.company = company; // Set company in the request body
-  websocketHandler.sendLog(req, `Creating holiday for company: ${company}`, constants.LOG_TYPES.TRACE);
-  if (!holidayDate) {
-    websocketHandler.sendLog(req, 'Holiday date missing in request body', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('common.dateMissing'), 400));
-  }
-  if (!holidayName) {
-    websocketHandler.sendLog(req, 'Holiday name missing in request body', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('holiday.nameMissing'), 400)); // Add appropriate i18n
-  }
+  // 1. Validate if company value exists in cookies
+  if (!company) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.companyIdMissing'), 400));
+  }
+  req.body.company = company; // Set company in the request body
+  websocketHandler.sendLog(req, `Creating holiday for company: ${company}`, constants.LOG_TYPES.TRACE);
+  if (!holidayDate) {
+    websocketHandler.sendLog(req, 'Holiday date missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.dateMissing'), 400));
+  }
+  if (!holidayName) {
+    websocketHandler.sendLog(req, 'Holiday name missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('holiday.nameMissing'), 400)); // Add appropriate i18n
+  }
 
-  const dateObj = new Date(holidayDate);
-  const year = dateObj.getFullYear();
+  const dateObj = new Date(holidayDate);
+  const year = dateObj.getFullYear();
 
-  // 2. ✅ Check for existing holiday on the exact same date
-  const existingHolidayOnDate = await HolidayCalendar.findOne({
-    company,
-    date: dateObj,
-  });
+  // 2. ✅ Check for existing holiday on the exact same date
+  const existingHolidayOnDate = await HolidayCalendar.findOne({
+    company,
+    date: dateObj,
+  });
 
-  if (existingHolidayOnDate) {
-    websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
-  }
-  
-  // 3. 🚨 NEW: Check for duplicate holiday in the same year if it's NOT a recurring holiday
-  if (isRecurring === false || isRecurring === 'false' || isRecurring === true || isRecurring === 'true') {
-    // Get the start and end of the specified year
-    const startOfYear = new Date(year, 0, 1); // January 1st of the year
-    const endOfYear = new Date(year, 11, 31, 23, 59, 59); // December 31st of the year
+  if (existingHolidayOnDate) {
+    websocketHandler.sendLog(req, `Holiday already exists on ${holidayDate} for company ${company}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.duplicateDate'), 400)); // i18n: 'Holiday already exists on this date'
+  }
 
-    const existingHolidayInYear = await HolidayCalendar.findOne({
-      company,
-      label: holidayName,
-      date: {
-        $gte: startOfYear, // Date is greater than or equal to start of year
-        $lte: endOfYear    // Date is less than or equal to end of year
-      }
-    });
-    if (existingHolidayInYear) {
-      websocketHandler.sendLog(req, `Duplicate holiday name found in ${year} for company ${company}`, constants.LOG_TYPES.ERROR);
-      return next(new AppError(req.t('company.duplicateHolidayInYear'), 400)); // i18n: 'This holiday already exists in the current year.'
-    }
-  }
+  // 3. 🚨 NEW: Check for duplicate holiday in the same year if it's NOT a recurring holiday
+  if (isRecurring === false || isRecurring === 'false' || isRecurring === true || isRecurring === 'true') {
+    // Get the start and end of the specified year
+    const startOfYear = new Date(year, 0, 1); // January 1st of the year
+    const endOfYear = new Date(year, 11, 31, 23, 59, 59); // December 31st of the year
 
-  // --- Execution continues if checks pass ---
-  const holidayCalendar = await HolidayCalendar.create(req.body);
-  const users = req.body.users || []; // Handle case where users might be missing or null
+    const existingHolidayInYear = await HolidayCalendar.findOne({
+      company,
+      label: holidayName,
+      date: {
+        $gte: startOfYear, // Date is greater than or equal to start of year
+        $lte: endOfYear    // Date is less than or equal to end of year
+      }
+    });
+    if (existingHolidayInYear) {
+      websocketHandler.sendLog(req, `Duplicate holiday name found in ${year} for company ${company}`, constants.LOG_TYPES.ERROR);
+      return next(new AppError(req.t('company.duplicateHolidayInYear'), 400)); // i18n: 'This holiday already exists in the current year.'
+    }
+  }
 
-  // Iterate through the users array and add unique user IDs to uniqueUsers set
-  const uniqueUsers = new Set(users.map(val => val.user));
+  // --- Execution continues if checks pass ---
+  const holidayCalendar = await HolidayCalendar.create(req.body);
+  const users = req.body.users || []; // Handle case where users might be missing or null
 
-  // Iterate through the unique user IDs and create HolidayapplicableEmployee for each
-  const holidayapplicableEmployees = [];
-  for (const user of uniqueUsers) {
-    const holidayapplicableEmployee = await HolidayapplicableEmployee.create({
-      user: user,
-      holiday: holidayCalendar._id
-    });
-    holidayapplicableEmployees.push(holidayapplicableEmployee);
-  }
+  // Iterate through the users array and add unique user IDs to uniqueUsers set
+  const uniqueUsers = new Set(users.map(val => val.user));
 
-  holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
-  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
+  // Iterate through the unique user IDs and create HolidayapplicableEmployee for each
+  const holidayapplicableEmployees = [];
+  for (const user of uniqueUsers) {
+    const holidayapplicableEmployee = await HolidayapplicableEmployee.create({
+      user: user,
+      holiday: holidayCalendar._id
+    });
+    holidayapplicableEmployees.push(holidayapplicableEmployee);
+  }
 
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: holidayCalendar
-  });
+  holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
+  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
+
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: holidayCalendar
+  });
 });
 exports.getHoliday = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getHoliday', constants.LOG_TYPES.INFO);
@@ -402,6 +402,7 @@ exports.deleteHoliday = catchAsync(async (req, res, next) => {
   }
 
   await HolidayCalendar.findByIdAndDelete(req.params.id);
+  await HolidayapplicableEmployee.deleteMany({ holiday: req.params.id });
   websocketHandler.sendLog(req, `Holiday deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
@@ -470,7 +471,7 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
 exports.createZone = async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting createZone', constants.LOG_TYPES.INFO);
   try {
-    const company = req.cookies.companyId; 
+    const company = req.cookies.companyId;
     if (!company) {
       websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.companyIdMissing'), 400));
@@ -1398,70 +1399,70 @@ exports.deleteSignatory = async (req, res, next) => {
 //   });
 // });
 exports.createTaxSlab = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, 'Starting createTaxSlab', constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, 'Starting createTaxSlab', constants.LOG_TYPES.INFO);
 
-  const companyId = req.cookies.companyId; // Get company from cookies
+  const companyId = req.cookies.companyId; // Get company from cookies
 
-  // 1. Validate if company value exists in cookies
-  if (!companyId) {
-    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('company.companyIdMissing'), 400));
-  }
+  // 1. Validate if company value exists in cookies
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID missing in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('company.companyIdMissing'), 400));
+  }
 
-  req.body.company = companyId; // Set company in the request body
-  // Add Financial Year and other destructured variables
-  const { 
-    IncomeTaxSlabs, 
-    minAmount, 
-    maxAmount, 
-    taxPercentage, 
-    regime, 
-    cycle, 
-    company, 
-    holidayapplicableEmployee,
-//     financialYear // ✨ NEW: Destructure financialYear
-  } = req.body;
+  req.body.company = companyId; // Set company in the request body
+  // Add Financial Year and other destructured variables
+  const {
+    IncomeTaxSlabs,
+    minAmount,
+    maxAmount,
+    taxPercentage,
+    regime,
+    cycle,
+    company,
+    holidayapplicableEmployee,
+    //     financialYear // ✨ NEW: Destructure financialYear
+  } = req.body;
 
-const financialYear = req.body.cycle; // ✨ NEW: Assign financialYear from req.body
-  websocketHandler.sendLog(req, `Creating tax slab for company: ${companyId}, regime: ${regime}, financialYear: ${financialYear}`, constants.LOG_TYPES.TRACE);
+  const financialYear = req.body.cycle; // ✨ NEW: Assign financialYear from req.body
+  websocketHandler.sendLog(req, `Creating tax slab for company: ${companyId}, regime: ${regime}, financialYear: ${financialYear}`, constants.LOG_TYPES.TRACE);
 
-  // 2. NEW: Validate if financialYear is present
-  if (!financialYear) {
-    websocketHandler.sendLog(req, 'Financial Year missing in request body', constants.LOG_TYPES.ERROR);
-    return next(new AppError(req.t('taxslab.financialYearMissing'), 400));
-  }
+  // 2. NEW: Validate if financialYear is present
+  if (!financialYear) {
+    websocketHandler.sendLog(req, 'Financial Year missing in request body', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('taxslab.financialYearMissing'), 400));
+  }
 
-//   // 3. NEW: Check for existing tax slab for the unique combination
-//   const existingTaxSlab = await TaxSlab.findOne({
-//     company: companyId,
-//     financialYear: financialYear, // Unique constraint 1
-//     regime: regime,               // Unique constraint 2
-//     IncomeTaxSlabs: IncomeTaxSlabs 
-//   });
+  //   // 3. NEW: Check for existing tax slab for the unique combination
+  //   const existingTaxSlab = await TaxSlab.findOne({
+  //     company: companyId,
+  //     financialYear: financialYear, // Unique constraint 1
+  //     regime: regime,               // Unique constraint 2
+  //     IncomeTaxSlabs: IncomeTaxSlabs 
+  //   });
 
-//   if (existingTaxSlab) {
-//     websocketHandler.sendLog(req, `Tax slab already exists for company ${companyId}, regime ${regime}, and financial year ${financialYear}`, constants.LOG_TYPES.ERROR);
-//     return next(new AppError(req.t('company.duplicateEntry'), 409)); // Use 409 Conflict status
-//   }
+  //   if (existingTaxSlab) {
+  //     websocketHandler.sendLog(req, `Tax slab already exists for company ${companyId}, regime ${regime}, and financial year ${financialYear}`, constants.LOG_TYPES.ERROR);
+  //     return next(new AppError(req.t('company.duplicateEntry'), 409)); // Use 409 Conflict status
+  //   }
 
-  const taxSlab = await TaxSlab.create({
-    IncomeTaxSlabs,
-    minAmount,
-    maxAmount,
-    taxPercentage,
-    regime,
-    cycle,
-    company,
-    holidayapplicableEmployee,
-    financialYear, // ✨ NEW: Include financialYear in creation
-  });
+  const taxSlab = await TaxSlab.create({
+    IncomeTaxSlabs,
+    minAmount,
+    maxAmount,
+    taxPercentage,
+    regime,
+    cycle,
+    company,
+    holidayapplicableEmployee,
+    financialYear, // ✨ NEW: Include financialYear in creation
+  });
 
-  websocketHandler.sendLog(req, `Tax slab created: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
+  websocketHandler.sendLog(req, `Tax slab created: ${taxSlab._id}`, constants.LOG_TYPES.INFO);
 
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: taxSlab,
-  });
+  res.status(201).json({
+    status: constants.APIResponseStatus.Success,
+    data: taxSlab,
+  });
 });
 
 exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {

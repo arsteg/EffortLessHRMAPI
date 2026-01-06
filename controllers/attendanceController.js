@@ -1218,14 +1218,23 @@ exports.deleteAttendanceAssignment = catchAsync(async (req, res, next) => {
 
 // Get all Attendance Template Assignments
 exports.getAllAttendanceAssignments = catchAsync(async (req, res, next) => {
-  websocketHandler.sendLog(req, `Fetching all attendance assignments for company: ${req.cookies.companyId}`, constants.LOG_TYPES.INFO);
-
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await AttendanceTemplateAssignments.countDocuments({ company: req.cookies.companyId });
+  const limit = parseInt(req.body.next);
 
-  const attendanceAssignments = await AttendanceTemplateAssignments.where('company').equals(req.cookies.companyId).skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const query = { company: req.cookies.companyId };
+
+  const totalCount = await AttendanceTemplateAssignments.countDocuments(query);
+
+  let attendanceAssignmentsQuery =
+    AttendanceTemplateAssignments.find(query).skip(skip);
+
+  // Apply limit only if valid
+  if (!isNaN(limit) && limit > 0) {
+    attendanceAssignmentsQuery = attendanceAssignmentsQuery.limit(limit);
+  }
+
+  const attendanceAssignments = await attendanceAssignmentsQuery;
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: attendanceAssignments,
@@ -1880,11 +1889,22 @@ exports.deleteShiftTemplateAssignment = catchAsync(async (req, res, next) => {
 // Get all ShiftTemplateAssignments
 exports.getAllShiftTemplateAssignments = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
-  const totalCount = await ShiftTemplateAssignment.countDocuments({ company: req.cookies.companyId });
+  const limit = parseInt(req.body.next);
 
-  const shiftTemplateAssignments = await ShiftTemplateAssignment.find({ company: req.cookies.companyId }).skip(parseInt(skip))
-    .limit(parseInt(limit));
+  const query = { company: req.cookies.companyId };
+
+  const totalCount = await ShiftTemplateAssignment.countDocuments(query);
+
+  let shiftTemplateAssignmentsQuery =
+    ShiftTemplateAssignment.find(query).skip(skip);
+
+  // Apply limit ONLY if it is a valid number
+  if (!isNaN(limit) && limit > 0) {
+    shiftTemplateAssignmentsQuery = shiftTemplateAssignmentsQuery.limit(limit);
+  }
+
+  const shiftTemplateAssignments = await shiftTemplateAssignmentsQuery;
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: shiftTemplateAssignments,
@@ -4076,7 +4096,7 @@ exports.MappedTimlogToAttendanceHelper = async () => {
 
 
 exports.createOffice = catchAsync(async (req, res, next) => {
-  const { name, latitude, longitude, geofence_radius } = req.body;
+  const { name, latitude, longitude, geofence_radius, country, state, city, organization, providentFundRegistrationCode, esicRegistrationCode, professionalTaxRegistrationCode, lwfRegistrationCode } = req.body;
   const companyId = req.body.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
 
   if (!companyId) {
@@ -4088,9 +4108,17 @@ exports.createOffice = catchAsync(async (req, res, next) => {
     name,
     location: {
       type: 'Point',
-      coordinates: [longitude, latitude]
+      coordinates: [longitude || 0, latitude || 0] // Default to 0 if not provided
     },
-    radius: geofence_radius
+    radius: geofence_radius || 100, // Default to 100 if not provided
+    country,
+    state,
+    city,
+    organization,
+    providentFundRegistrationCode,
+    esicRegistrationCode,
+    professionalTaxRegistrationCode,
+    lwfRegistrationCode
   });
 
   // Create default rules for the new office

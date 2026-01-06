@@ -65,9 +65,17 @@ const leaveCategorySchema = new Schema({
     type: String,
     default: null
   },
+  carryoverMaxDaysLimit: {
+    type: Number,
+    default: 0
+  },
   isEmployeesAllowedToNegativeLeaveBalance: {
     type: Boolean,
     default: false
+  },
+  negativeLeaveBalancePolicy: {
+    type: String,
+    default: 'none'
   },
   isRoundOffLeaveAccrualNearestPointFiveUnit: {
     type: Boolean,
@@ -92,6 +100,18 @@ const leaveCategorySchema = new Schema({
   isPaidLeave: {
     type: Boolean,
     default: false
+  },
+  dayOfTheMonthEmployeeNeedJoinToGetCreditForThatMonth: {
+    type: Number,
+    default: 0
+  },
+  encashmentMaxDaysLimit: {
+    type: Number,
+    default: 0
+  },
+  fnfMaxDaysLimit: {
+    type: Number,
+    default: 0
   },
   company: {
     type: mongoose.Schema.Types.ObjectId,
