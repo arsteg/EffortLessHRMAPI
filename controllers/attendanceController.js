@@ -4096,7 +4096,7 @@ exports.MappedTimlogToAttendanceHelper = async () => {
 
 
 exports.createOffice = catchAsync(async (req, res, next) => {
-  const { name, latitude, longitude, geofence_radius } = req.body;
+  const { name, latitude, longitude, geofence_radius, country, state, city, organization, providentFundRegistrationCode, esicRegistrationCode, professionalTaxRegistrationCode, lwfRegistrationCode } = req.body;
   const companyId = req.body.company || req.cookies.companyId || (req.user && req.user.company && req.user.company._id);
 
   if (!companyId) {
@@ -4108,9 +4108,17 @@ exports.createOffice = catchAsync(async (req, res, next) => {
     name,
     location: {
       type: 'Point',
-      coordinates: [longitude, latitude]
+      coordinates: [longitude || 0, latitude || 0] // Default to 0 if not provided
     },
-    radius: geofence_radius
+    radius: geofence_radius || 100, // Default to 100 if not provided
+    country,
+    state,
+    city,
+    organization,
+    providentFundRegistrationCode,
+    esicRegistrationCode,
+    professionalTaxRegistrationCode,
+    lwfRegistrationCode
   });
 
   // Create default rules for the new office

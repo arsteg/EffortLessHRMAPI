@@ -31,6 +31,30 @@ const attendanceOfficeSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    country: {
+        type: String
+    },
+    state: {
+        type: String
+    },
+    city: {
+        type: String
+    },
+    organization: {
+        type: String
+    },
+    providentFundRegistrationCode: {
+        type: String
+    },
+    esicRegistrationCode: {
+        type: String
+    },
+    professionalTaxRegistrationCode: {
+        type: String
+    },
+    lwfRegistrationCode: {
+        type: String
+    },
     createdAt: {
         type: Date,
         default: Date.now
