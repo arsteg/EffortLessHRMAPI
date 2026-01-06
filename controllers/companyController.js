@@ -3,6 +3,7 @@ const Role = require('../models/permissions/roleModel');
 const catchAsync = require('../utils/catchAsync');
 const HolidayCalendar = require('../models/Company/holidayCalendar');
 const HolidayapplicableEmployee = require('../models/Company/HolidayApplicableEmployee');
+const HolidayApplicableOffice = require('../models/Company/HolidayApplicableOffice');
 const Zone = require('../models/Company/Zone');
 const Location = require('../models/Company/Location');
 const AppError = require('../utils/appError');
@@ -266,7 +267,20 @@ exports.createHoliday = catchAsync(async (req, res, next) => {
   }
 
   holidayCalendar.holidayapplicableEmployee = holidayapplicableEmployees;
-  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees`, constants.LOG_TYPES.INFO);
+
+  const offices = req.body.offices || [];
+  const uniqueOffices = new Set(offices.map(val => val.office || val));
+  const holidayapplicableOffices = [];
+  for (const officeId of uniqueOffices) {
+    const holidayapplicableOffice = await HolidayApplicableOffice.create({
+      office: officeId,
+      holiday: holidayCalendar._id
+    });
+    holidayapplicableOffices.push(holidayapplicableOffice);
+  }
+  holidayCalendar.holidayapplicableOffice = holidayapplicableOffices;
+
+  websocketHandler.sendLog(req, `Holiday created: ${holidayCalendar._id} with ${holidayapplicableEmployees.length} applicable employees and ${holidayapplicableOffices.length} applicable offices`, constants.LOG_TYPES.INFO);
 
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -276,7 +290,7 @@ exports.createHoliday = catchAsync(async (req, res, next) => {
 exports.getHoliday = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getHoliday', constants.LOG_TYPES.INFO);
   websocketHandler.sendLog(req, `Fetching holiday with ID: ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  const holidayCalendar = await HolidayCalendar.findById(req.params.id);
+  const holidayCalendar = await HolidayCalendar.findById(req.params.id).lean();
 
   if (!holidayCalendar) {
     websocketHandler.sendLog(req, `Holiday not found: ${req.params.id}`, constants.LOG_TYPES.ERROR);
@@ -292,6 +306,9 @@ exports.getHoliday = catchAsync(async (req, res, next) => {
     else {
       holidayCalendar.holidayapplicableEmployee = null;
     }
+
+    const holidayapplicableOffices = await HolidayApplicableOffice.find({ holiday: holidayCalendar._id }).populate('office');
+    holidayCalendar.holidayapplicableOffice = holidayapplicableOffices || [];
 
   }
   websocketHandler.sendLog(req, `Holiday retrieved: ${holidayCalendar._id}`, constants.LOG_TYPES.INFO);
@@ -368,8 +385,28 @@ exports.updateHoliday = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('company.holidayNotFound'), 404));
   }
 
-  holidayCalendar.holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);;
-  websocketHandler.sendLog(req, `Holiday updated: ${holidayCalendar._id} with ${holidayCalendar.holidayapplicableEmployee.length} applicable employees`, constants.LOG_TYPES.INFO);
+  holidayCalendar.holidayapplicableEmployee = await HolidayapplicableEmployee.find({}).where('holiday').equals(holidayCalendar._id);
+
+  // Sync Offices
+  const { offices: allOffices = [] } = req.body;
+  const newOffices = new Set(allOffices.map(val => (val.office || val).toString()));
+  const existingOffices = await HolidayApplicableOffice.find({ holiday: holidayCalendar._id });
+  const existingOfficeIds = existingOffices.map(o => o.office.toString());
+
+  const officesToRemove = existingOffices.filter(o => !newOffices.has(o.office.toString()));
+  await Promise.all(officesToRemove.map(async o => await o.remove()));
+
+  const newOfficesToAdd = Array.from(newOffices).filter(id => !existingOfficeIds.includes(id));
+  await Promise.all(newOfficesToAdd.map(async id => {
+    return await HolidayApplicableOffice.create({
+      office: id,
+      holiday: holidayCalendar._id
+    });
+  }));
+
+  holidayCalendar.holidayapplicableOffice = await HolidayApplicableOffice.find({ holiday: holidayCalendar._id }).populate('office');
+
+  websocketHandler.sendLog(req, `Holiday updated: ${holidayCalendar._id} with ${holidayCalendar.holidayapplicableEmployee.length} applicable employees and ${holidayCalendar.holidayapplicableOffice.length} applicable offices`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: holidayCalendar
@@ -403,6 +440,7 @@ exports.deleteHoliday = catchAsync(async (req, res, next) => {
 
   await HolidayCalendar.findByIdAndDelete(req.params.id);
   await HolidayapplicableEmployee.deleteMany({ holiday: req.params.id });
+  await HolidayApplicableOffice.deleteMany({ holiday: req.params.id });
   websocketHandler.sendLog(req, `Holiday deleted: ${req.params.id}`, constants.LOG_TYPES.INFO);
 
   res.status(204).json({
@@ -445,7 +483,7 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
   const totalCount = await HolidayCalendar.countDocuments(query);
 
   // Fetch the holiday calendars that match the query with pagination
-  const holidayCalendars = await HolidayCalendar.find(query).skip(skip).limit(limit);
+  const holidayCalendars = await HolidayCalendar.find(query).skip(skip).limit(limit).lean();
 
   //const holidayCalendars = await HolidayCalendar.find({}).where('status').equals(req.body.status).where('company').equals(req.cookies.companyId).where('year').equals(req.params.year).skip(parseInt(skip)).limit(parseInt(limit));
 
@@ -458,6 +496,9 @@ exports.getAllHolidaysByYear = catchAsync(async (req, res, next) => {
       else {
         holidayCalendars[i].holidayapplicableEmployee = null;
       }
+
+      const holidayapplicableOffice = await HolidayApplicableOffice.find({ holiday: holidayCalendars[i]._id }).populate('office');
+      holidayCalendars[i].holidayapplicableOffice = holidayapplicableOffice || [];
     }
   }
   websocketHandler.sendLog(req, `Retrieved ${holidayCalendars.length} holidays, total: ${totalCount}`, constants.LOG_TYPES.INFO);

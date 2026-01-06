@@ -22,6 +22,10 @@ var holidayCalendarSchema = new Schema({
     type: String,
     required: true
   },
+  locationAppliesTo: {
+    type: String,
+    default: 'All-Locations'
+  },
   year: {
     type: String,
     required: true
@@ -31,7 +35,8 @@ var holidayCalendarSchema = new Schema({
     ref: 'Company', // Assuming the reference is to a Company schema
     required: true
   },
-  holidayapplicableEmployee: []
+  holidayapplicableEmployee: [],
+  holidayapplicableOffice: []
 }, { collection: 'HolidayCalendar' });
 
 module.exports = mongoose.model('HolidayCalendar', holidayCalendarSchema);
