@@ -1213,12 +1213,15 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const numberOfWeeklyOffDays = countWeeklyOffDays(utcStartDate, utcEndDate, weeklyOffDays);
 
     // Negative Balance Check
-    const negativePolicy = leaveCat.negativeLeaveBalancePolicy || 'none';
+    const negativePolicy = (leaveCat.negativeLeaveBalancePolicy || constants.Negative_Balance_Policy.None).toString().trim().toLowerCase();
     let isNegativeAllowed = leaveCat.isEmployeesAllowedToNegativeLeaveBalance;
 
     // Override old toggle if new policy is explicitly set
-    if (negativePolicy !== 'none') {
+    if (negativePolicy === constants.Negative_Balance_Policy.No_Limit.toLowerCase() ||
+      negativePolicy === constants.Negative_Balance_Policy.Mark_As_LOP.toLowerCase()) {
       isNegativeAllowed = true;
+    } else if (negativePolicy === constants.Negative_Balance_Policy.None.toLowerCase()) {
+      isNegativeAllowed = false;
     }
 
     if (!isNegativeAllowed && leaveAssigned?.leaveRemaining < leaveDays) {
@@ -1228,6 +1231,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         message: req.t('leave.insufficientLeaveBalance')
       });
     }
+
 
     // Additional policy checks could go here (e.g. Accrual period end check)
     // For now, we allow the application if policy is NOT 'none'.
@@ -1289,10 +1293,11 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     }
 
     try {
-      leaveAssigned.leaveRemaining = Math.max(leaveAssigned.leaveRemaining - leaveDays);
+      leaveAssigned.leaveRemaining -= leaveDays;
       //leaveAssigned.leaveTaken += leaveDays;
       leaveAssigned.leaveApplied += leaveDays;
       await leaveAssigned.save();
+
 
       //const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
       const user = await User.findById(req.body.employee);
@@ -1397,7 +1402,7 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
       runValidators: true
     });
     await LeaveApplicationHalfDay.deleteMany({
-      leaveCategory: updatedLeaveApplication._id,
+      leaveApplication: updatedLeaveApplication._id,
     });
     var createdHalfDays = null;
     // Check if halfDays is provided and valid
@@ -1432,16 +1437,12 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
             $lte: endDate
           }
         });
-        let leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays, holidays, includeHolidaysInLeaveDays);
-        //const leaveDays = calculateLeaveDays(startDate, endDate);
+
+        let leaveDays = updatedLeaveApplication.calculatedLeaveDays;
         const cycle = await scheduleController.createFiscalCycle();
         const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
 
         if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
-          //const leaveDays = calculateLeaveDays(startDate, endDate);
-          //const cycle = await scheduleController.createFiscalCycle();
-          //const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
-          // Deduct the applied leave days from the leave remaining
           leaveAssigned.leaveRemaining += leaveDays;
           leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays); // Update the leave applied count
 
@@ -1460,6 +1461,39 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
           SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
         }
+
+        //Currently do not have the option for edit leave application so commented out the below code
+        
+        // let leaveDays = calculateLeaveDays(startDate, endDate, weeklyOffDays, includeWeeklyOffsInLeaveDays, holidays, includeHolidaysInLeaveDays);
+        // const cycle = await scheduleController.createFiscalCycle();
+        // const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
+
+        // if (req.body.status === constants.Leave_Application_Constant.Cancelled || req.body.status === constants.Leave_Application_Constant.Rejected) {
+        //   //const leaveDays = calculateLeaveDays(startDate, endDate);
+        //   //const cycle = await scheduleController.createFiscalCycle();
+        //   //const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
+        //   // Deduct the applied leave days from the leave remaining
+        //   leaveAssigned.leaveRemaining += leaveDays;
+        //   leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays); // Update the leave applied count
+
+        //   // Save the updated leave assigned record
+        //   await leaveAssigned.save();
+        //   //sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
+        //   sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
+        //   SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
+        // }
+        // if (req.body.status === constants.Leave_Application_Constant.Approved) {
+        //   console.log(`Leave approved, updating leave balance... ${startDate} # ${endDate} # ${leaveDays}`);
+        //   leaveAssigned.leaveTaken += leaveDays;
+        //   leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
+        //   await leaveAssigned.save();
+        //   //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
+        //   sendEmailToUsers(updatedLeaveApplication.employee, updatedLeaveApplication.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
+        //   SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
+        // }
+
+        //END Currently do not have the option for edit leave application so commented out the below code
+
       }
       catch (error) {
         console.error("Error updating leave balance:", error);
@@ -1655,15 +1689,24 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
     const { id } = req.params;
     const leaveApplication = await LeaveApplication.findById(id);
     if (leaveApplication) {
-      const deletedLeaveApplication = await LeaveApplication.findByIdAndDelete(id);
-      const leaveDays = calculateLeaveDays(leaveApplication.startDate, leaveApplication.endDate);
-      const cycle = await scheduleController.createFiscalCycle();
-      const leaveAssigned = await LeaveAssigned.findOne({ employee: leaveApplication.employee, cycle: cycle, category: leaveApplication.leaveCategory });
+      const { status, calculatedLeaveDays: leaveDays, employee, leaveCategory } = leaveApplication;
+      await LeaveApplication.findByIdAndDelete(id);
 
-      leaveAssigned.leaveRemaining += leaveDays;
-      leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
-      await leaveAssigned.save();
+      const cycle = await scheduleController.createFiscalCycle();
+      const leaveAssigned = await LeaveAssigned.findOne({ employee, cycle, category: leaveCategory });
+
+      if (leaveAssigned) {
+        if (status === constants.Leave_Application_Constant.Approved) {
+          leaveAssigned.leaveTaken -= leaveDays;
+          leaveAssigned.leaveRemaining += leaveDays;
+        } else if (status === constants.Leave_Application_Constant.Level_1_Approval_Pending || status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+          leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
+          leaveAssigned.leaveRemaining += leaveDays;
+        }
+        await leaveAssigned.save();
+      }
     }
+
 
     res.status(204).json({
       status: constants.APIResponseStatus.Success,
