@@ -33,7 +33,7 @@ var leaveApplicationSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Level 1 Approval Pending','Level 2 Approval Pending','Approved', 'Cancelled', 'Rejected'],
+    enum: ['Level 1 Approval Pending', 'Level 2 Approval Pending', 'Approved', 'Cancelled', 'Rejected'],
     default: 'Level 1 Approval Pending'
   },
   level1Reason: {
@@ -45,25 +45,25 @@ var leaveApplicationSchema = new Schema({
   company: {
     type: String,
     required: true
-  },    
+  },
   documentLink: {
     type: String
   },
-  halfDays:[],
+  halfDays: [],
   calculatedLeaveDays: {
-        type: Number,
-        min: 0,
-        default: 0 // Default to 0, will be updated on creation
-    },
-    weeklyOffDaysIncluded: {
-        type: Boolean,
-        default: false // Default to false, will be updated on creation
-    },
-    numberOfWeeklyOffDays: {
-        type: Number,
-        min: 0,
-        default: 0 // Default to 0, will be updated on creation
-    }
+    type: Number,
+    min: 0,
+    default: 0 // Default to 0, will be updated on creation
+  },
+  weeklyOffDaysIncluded: {
+    type: Boolean,
+    default: false // Default to false, will be updated on creation
+  },
+  numberOfWeeklyOffDays: {
+    type: Number,
+    min: 0,
+    default: 0 // Default to 0, will be updated on creation
+  }
 }, { collection: 'LeaveApplication' });
 
 leaveApplicationSchema.pre(/^find/, async function (next) {
@@ -72,10 +72,10 @@ leaveApplicationSchema.pre(/^find/, async function (next) {
       path: 'employee',
       select: '_id firstName lastName'
     }),
-    this.populate({
-      path: 'leaveCategory',
-      select: 'id label'
-    });
+      this.populate({
+        path: 'leaveCategory',
+        select: 'id label isWeeklyOffLeavePartOfNumberOfDaysTaken isAnnualHolidayLeavePartOfNumberOfDaysTaken'
+      });
   } catch (error) {
     console.error("Error populating employee", error);
   }

@@ -37,6 +37,8 @@ const AttendanceProcess = require('../models/attendance/AttendanceProcess');
 const AttendanceProcessUsers = require('../models/attendance/AttendanceProcessUsers.js');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
 const Appointment = require("../models/permissions/appointmentModel");
+const UserEmployment = require("../models/Employment/UserEmploymentModel");
+const HolidayApplicableOffice = require('../models/Company/HolidayApplicableOffice');
 const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
@@ -3155,12 +3157,12 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
 
     const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
     websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
-    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates } =
+    const { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap } =
       await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
     websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
     await processLOPForMonth({
-      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays: notPaidLeaveDays, holidayDates, companyId, req
+      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req
     });
     websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
 
@@ -3276,6 +3278,14 @@ async function getStartAndEndDatesWithHardcodedLocation(req, year, month) {
 //   return { startOfMonth: utcstartOfMonth, endOfMonth: utcendOfMonth };
 // }
 async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req) {
+  // 1. Get user location and find matching office
+  const userEmployment = await UserEmployment.findOne({ user: user });
+  let userOfficeId = null;
+  if (userEmployment && userEmployment.location) {
+    const office = await AttendanceOffice.findOne({ name: userEmployment.location, company: companyId });
+    if (office) userOfficeId = office._id;
+  }
+
   const assignment = await AttendanceTemplateAssignments.findOne({ employee: user });
   if (!assignment) throw new Error("Attendance template assignment not found");
 
@@ -3292,39 +3302,61 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     startDate: { $lte: endOfMonth },
     endDate: { $gte: startOfMonth },
     company: companyId
-  });
+  }).populate('leaveCategory');
 
   const approvedLeaveDays = [];
   const notPaidLeaveDays = [];
+  const leaveInfoMap = new Map();
 
   approvedLeaves.forEach(leave => {
     let d = new Date(leave.startDate);
     const end = new Date(leave.endDate);
-    const isPaid = leave.leaveCategory && leave.leaveCategory.isPaidLeave; //isPaidLeave field in leave category true means paid leave, false means unpaid leave
+
+    const isPaid = leave.leaveCategory ? leave.leaveCategory.isPaidLeave : true;
+    const isAnnualHolidayPart = leave.leaveCategory ? leave.leaveCategory.isAnnualHolidayLeavePartOfNumberOfDaysTaken : false;
+    const isWeeklyOffPart = leave.leaveCategory ? leave.leaveCategory.isWeeklyOffLeavePartOfNumberOfDaysTaken : false;
 
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
         const dateStr = d.toISOString().split('T')[0];
+        const isHalfDayLeave = leave.isHalfDayOption && leave.halfDays && leave.halfDays.includes(dateStr);
         approvedLeaveDays.push(dateStr);
         if (!isPaid) {
           notPaidLeaveDays.push(dateStr);
         }
+        leaveInfoMap.set(dateStr, {
+          isPaid,
+          isAnnualHolidayPart,
+          isWeeklyOffPart,
+          isHalfDayLeave
+        });
       }
       d.setDate(d.getDate() + 1);
     }
   });
 
   const holidays = await HolidayCalendar.find({ company: companyId });
+  const holidayIds = holidays.map(h => h._id);
+  const holidayApplicableOffices = await HolidayApplicableOffice.find({ holiday: { $in: holidayIds } });
 
-  const holidayDates = holidays.map(h => {
-    // const parts = h.date.toLocaleDateString('en-CA').split('/'); // 'YYYY-MM-DD'
-    // return parts.join('-');
+  const filteredHolidays = holidays.filter(h => {
+    if (h.locationAppliesTo === 'All-Locations') return true;
+    if (h.locationAppliesTo === 'Selected-Locations' && userOfficeId) {
+      return holidayApplicableOffices.some(hao =>
+        hao.holiday.toString() === h._id.toString() &&
+        hao.office.toString() === userOfficeId.toString()
+      );
+    }
+    return false;
+  });
+
+  const holidayDates = filteredHolidays.map(h => {
     const parts = h.date.toISOString().split('T')[0];
     return parts;
   });
-  websocketHandler.sendLog(req, `Attendance and leave data fetched`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `Attendance and leave data fetched with location filtering`, constants.LOG_TYPES.DEBUG);
 
-  return { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates };
+  return { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap };
 }
 
 function toLocalDateStringFromUTC(dateInput) {
@@ -3335,7 +3367,7 @@ function toLocalDateStringFromUTC(dateInput) {
 }
 
 // full utc based
-async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, companyId, req }) {
+async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req }) {
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
@@ -3354,18 +3386,18 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   // Normalize attendance dates
   const attendMap = new Map();
   for (const r of attendanceRecords) {
-    attendMap.set(toLocalDateStringFromUTC(r.date), r);
+    const dateStr = r.date.toISOString().split('T')[0];
+    attendMap.set(dateStr, r);
   }
   websocketHandler.sendLog(req, `Attendance map created with: ${JSON.stringify([...attendMap.entries()])}`, constants.LOG_TYPES.DEBUG);
-  const leaveSet = new Set(approvedLeaveDays.map(toLocalDateStringFromUTC));
+  const leaveSet = new Set(approvedLeaveDays);
   websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);
-  const holidaySet = new Set(holidayDates.map(toLocalDateStringFromUTC));
+  const holidaySet = new Set(holidayDates);
   websocketHandler.sendLog(req, `Holiday set created with: ${JSON.stringify([...holidaySet])}`, constants.LOG_TYPES.DEBUG);
-  const notPaidLeaveSet = new Set(notPaidLeaveDays.map(toLocalDateStringFromUTC));
   for (let day = 1; day <= daysInMonth; day++) {
 
     const currentDate = new Date(Date.UTC(year, month - 1, day));
-    const dateStr = toLocalDateStringFromUTC(currentDate);
+    const dateStr = currentDate.toISOString().split('T')[0];
 
     const dayName = currentDate.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -3381,12 +3413,11 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       alternateSet.has(dayName);
 
     const isWeeklyOff = weeklyOffSet.has(dayName) || isAlternateOff;
-    if (isWeeklyOff) continue;
-
     const wasPresent = attendMap.get(dateStr);
     const isOnLeave = leaveSet.has(dateStr);
     const isHoliday = holidaySet.has(dateStr);
-    const isOnNotPaidLeave = notPaidLeaveSet.has(dateStr);
+    const leaveInfo = leaveInfoMap.get(dateStr);
+    const isOnNotPaidLeave = leaveInfo && !leaveInfo.isPaid && isOnLeave;
 
     let wasUserPresent = false;
     let wasHalfday = false;
@@ -3400,16 +3431,43 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       }
     }
 
-    let shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+    let shouldInsertLOP = false;
+    let lopIsHalfDay = wasHalfday;
+
     if (isOnNotPaidLeave) {
-      shouldInsertLOP = true;
+      if (isWeeklyOff) {
+        if (leaveInfo.isWeeklyOffPart) {
+          shouldInsertLOP = true;
+          if (leaveInfo.isHalfDayLeave) lopIsHalfDay = true;
+        } else {
+          continue;
+        }
+      } else if (isHoliday) {
+        if (leaveInfo.isAnnualHolidayPart) {
+          shouldInsertLOP = true;
+          if (leaveInfo.isHalfDayLeave) lopIsHalfDay = true;
+        } else {
+          continue;
+        }
+      } else {
+        // Working Day
+        shouldInsertLOP = true;
+        // If it's a half-day unpaid leave, and user was present enough for half day credit,
+        // wasHalfday will already be true. If they were absent, it stays false (full day LOP).
+      }
+    } else if (!isWeeklyOff && !isHoliday) {
+      // Working day, not on unpaid leave
+      shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+    } else {
+      // Weekly off or Holiday, not on unpaid leave
+      continue;
     }
 
     if (shouldInsertLOP) {
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: wasHalfday }).save();
-        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}`, constants.LOG_TYPES.INFO);
+        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: lopIsHalfDay }).save();
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}, isHalfDay: ${lopIsHalfDay}`, constants.LOG_TYPES.INFO);
       } else {
         websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
       }

@@ -38,11 +38,11 @@ const websocketHandler = require('../utils/websocketHandler');
 const eventNotificationController = require('./eventNotificationController.js');
 const eventNotificationType = require('../models/eventNotification/eventNotificationType.js');
 const { RecurringFrequency, NotificationStatus, NotificationChannel } = require('../models/eventNotification/enums.js');
-const UserNotification   = require('../models/eventNotification/userNotification');
-const EventNotification= require('../models/eventNotification/eventNotification');
+const UserNotification = require('../models/eventNotification/userNotification');
+const EventNotification = require('../models/eventNotification/eventNotification');
 const {
   calculateIncomeTax,       // Checks if LWF is applicable for the current month
-  getTotalTDSEligibleAmount, 
+  getTotalTDSEligibleAmount,
   getTotalMonthlyAllownaceAmount,       // Finds the correct LWF slab and calculates employee/employer contributions
   GetTDSAppicableAmountAfterDeclartion,
   getTotalHRAAmount
@@ -72,9 +72,9 @@ exports.logUserAction = catchAsync(async (req, action, next) => {
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Fetching all users', constants.LOG_TYPES.TRACE);
-  let filter = { 
-    status: { $ne: 'Deleted' }, 
-    company: req.cookies.companyId 
+  let filter = {
+    status: { $ne: 'Deleted' },
+    company: req.cookies.companyId
   };
   websocketHandler.sendLog(req, `Applying filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
@@ -83,12 +83,12 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     .sort()
     .limitFields()
     .paginate();
-  
+
   websocketHandler.sendLog(req, 'Executing user query', constants.LOG_TYPES.TRACE);
   const users = await features.query;
-  
+
   websocketHandler.sendLog(req, `Found ${users.length} active users`, constants.LOG_TYPES.INFO);
-  
+
   for (let user of users) {
     websocketHandler.sendLog(req, `Fetching appointments for user ${user._id}`, constants.LOG_TYPES.TRACE);
     const appointments = await Appointment.find({ user: user._id });
@@ -109,18 +109,18 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Attempting to delete user ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const document = await User.findByIdAndUpdate(req.params.id, { status: "Deleted" });
-  
+
   if (!document) {
     websocketHandler.sendLog(req, `No user found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noDocumentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `User ${req.params.id} status updated to Deleted`, constants.LOG_TYPES.INFO);
-  
+
   const userAction = {
     userId: document._id,
     companyId: req.cookies.companyId,
@@ -132,15 +132,15 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   await exports.logUserAction(req, userAction, next);
 
   const notificationTypeIds = await eventNotificationType.find({
-      name: {
-        $in: [
-          constants.Event_Notification_Type_Status.Birthday,
-          constants.Event_Notification_Type_Status.WorkAnniversary,
-          constants.Event_Notification_Type_Status.Appraisal
-        ]
-      },
-      company: req.cookies.companyId
-    }).then(types => types.map(t => t._id));
+    name: {
+      $in: [
+        constants.Event_Notification_Type_Status.Birthday,
+        constants.Event_Notification_Type_Status.WorkAnniversary,
+        constants.Event_Notification_Type_Status.Appraisal
+      ]
+    },
+    company: req.cookies.companyId
+  }).then(types => types.map(t => t._id));
 
   deleteInvalidRecurringNotifications(req, req.params.id, req.cookies.companyId, notificationTypeIds);
 
@@ -153,20 +153,20 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 
 exports.getUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching user with ID ${req.body.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const users = await User.findById(req.body.id)
     .where("status")
     .equals("Active");
-  
+
   if (!users) {
     websocketHandler.sendLog(req, `No active user found with ID ${req.body.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUserFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `User ${req.body.id} found`, constants.LOG_TYPES.INFO);
-  
+
   let companySubscription = { status: 'new' };
   if (users) {
     websocketHandler.sendLog(req, `Fetching subscription for company ${users.company.id}`, constants.LOG_TYPES.TRACE);
@@ -188,19 +188,20 @@ exports.getUser = catchAsync(async (req, res, next) => {
 exports.getUsersByStatus = catchAsync(async (req, res, next) => {
   const { status } = req.params;
   websocketHandler.sendLog(req, `Fetching users with status ${status}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!Object.values(constants.User_Status).includes(status)) {
     websocketHandler.sendLog(req, `Invalid status value: ${status}`, constants.LOG_TYPES.WARN);
-    return res.status(400).json({ message: req.t('user.invalidStatus')
+    return res.status(400).json({
+      message: req.t('user.invalidStatus')
     });
-  }  
+  }
   websocketHandler.sendLog(req, `Querying users with status ${status} for company ${req.cookies.companyId}`, constants.LOG_TYPES.DEBUG);
   const users = await User.find({
     status: { $ne: constants.User_Status.Deleted },  // Exclude 'Deleted' users
     company: req.cookies.companyId,                            // Match users by companyId
     status: status                                 // Match users by provided status
-  });  
-  websocketHandler.sendLog(req, `Found ${users.length} users with status ${status}`, constants.LOG_TYPES.INFO);  
+  });
+  websocketHandler.sendLog(req, `Found ${users.length} users with status ${status}`, constants.LOG_TYPES.INFO);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
@@ -212,11 +213,11 @@ exports.getUsersByStatus = catchAsync(async (req, res, next) => {
 exports.CheckEmailExists = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.params;
-   
+
     const companyId = req.cookies.companyId;
 
     if (!email || !companyId) {
-    
+
       return next(new AppError(req.t('user.EmailANdCompanyRequired'), 400));
     }
 
@@ -233,7 +234,7 @@ exports.CheckEmailExists = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     websocketHandler.sendLog(req, `Error checking email: ${error.message}`, constants.LOG_TYPES.ERROR);
-   
+
     return next(new AppError(req.t('user.serverError'), 400));
   }
 });
@@ -242,14 +243,14 @@ exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
   const { empCode } = req.params;
   const companyId = req.cookies.companyId;
   websocketHandler.sendLog(req, `Fetching users by empCode ${empCode}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
-  
+
   websocketHandler.sendLog(req, `Querying appointments for empCode ${empCode}`, constants.LOG_TYPES.DEBUG);
   const appointments = await Appointment.find({ empCode })
     .populate('user')  // Populate the user field with user details
@@ -265,11 +266,11 @@ exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `No users found for empCode ${empCode} in company ${companyId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUsersForEmpCode')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Found ${filteredAppointments.length} users for empCode ${empCode}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: filteredAppointments.map(appointment => appointment.user)
@@ -278,14 +279,14 @@ exports.getUsersByEmpCode = catchAsync(async (req, res, next) => {
 
 exports.getUsersByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching users for company ${req.params.companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   const users = await User.find({
     status: { $ne: constants.User_Status.Deleted },
     company: req.params.companyId,
   });
-  
+
   websocketHandler.sendLog(req, `Found ${users.length} users for company ${req.params.companyId}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
@@ -304,16 +305,16 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Missing company ID in cookies for appointment creation', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
 
   // Add companyId to the request body
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating appointment for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
+
   const appointment = await Appointment.create(req.body);
   websocketHandler.sendLog(req, `Appointment created with ID ${appointment._id}`, constants.LOG_TYPES.INFO);
-  
+
   createAnniversaryAndAppraisalNotificationData(req, companyId, appointment);
 
   res.status(201).json({
@@ -324,16 +325,16 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
 
 exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching appointment for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const appointment = await Appointment.findOne({ user: req.params.userId })
     .populate('company', 'name');
-  
-  websocketHandler.sendLog(req, appointment ? 
-    `Appointment found for user ${req.params.userId}` : 
-    `No appointment found for user ${req.params.userId}`, 
+
+  websocketHandler.sendLog(req, appointment ?
+    `Appointment found for user ${req.params.userId}` :
+    `No appointment found for user ${req.params.userId}`,
     constants.LOG_TYPES.INFO
   );
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: appointment
@@ -342,21 +343,21 @@ exports.getAppointmentByUser = catchAsync(async (req, res, next) => {
 
 exports.updateAppointment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating appointment ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
-  
+
   if (!appointment) {
     websocketHandler.sendLog(req, `No appointment found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noAppointmentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Appointment ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
-  
+
   createAnniversaryAndAppraisalNotificationData(req, req.cookies.companyId, appointment);
 
   res.status(200).json({
@@ -367,18 +368,18 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
 
 exports.deleteAppointment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting appointment ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
-  
+
   if (!appointment) {
     websocketHandler.sendLog(req, `No appointment found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noAppointmentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Appointment ${req.params.id} deleted successfully`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null
@@ -416,7 +417,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     "Pancard", "AadharNumber", "Disability", "FatherHusbandName", "NoOfChildren", "BankName", "BankAccountNumber",
     "BankIFSCCode", "BankBranch", "BankAddress");
   websocketHandler.sendLog(req, `Filtered update body: ${JSON.stringify(filteredBody)}`, constants.LOG_TYPES.DEBUG);
-  
+
   const updatedUser = await User.findByIdAndUpdate(req.params.id, filteredBody, {
     new: true,
     runValidators: true,
@@ -425,7 +426,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   if (!updatedUser) {
     websocketHandler.sendLog(req, `No user found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUserFound')
-    , 404));
+      , 404));
   }
   websocketHandler.sendLog(req, `User ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
   //send notification for birthday
@@ -440,8 +441,8 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     }
     // Fetch the notification type once
     const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.Birthday, company: req.cookies.companyId });
-    if (!notificationType) { 
-        websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.Birthday} not found`, constants.LOG_TYPES.WARN); 
+    if (!notificationType) {
+      websocketHandler.sendLog(req, `Notification type ${constants.Event_Notification_Type_Status.Birthday} not found`, constants.LOG_TYPES.WARN);
     }
 
     try {
@@ -466,29 +467,29 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
       if (matchingNotification) {
         matchingNotification.date = adjustedDate;
-        matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`});
+        matchingNotification.description = req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}` });
         await matchingNotification.save();
         websocketHandler.sendLog(req, `Updated DOB for existing birthday notification`, constants.LOG_TYPES.INFO);
-      } 
+      }
       else {
         const notificationBody = {
-            name: req.t('user.BirthdayNotificationTitle'),
-            description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}`}),
-            eventNotificationType: notificationType?._id?.toString() || null,
-            date: adjustedDate, 
-            navigationUrl: '',
-            isRecurring: true, 
-            recurringFrequency: RecurringFrequency.ANNUALLY, 
-            leadTime: 0, 
-            status: NotificationStatus.SCHEDULED,
-            company: req.cookies.companyId,
-            notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI] 
+          name: req.t('user.BirthdayNotificationTitle'),
+          description: req.t('user.BirthdayNotificationMessage', { userName: `${updatedUser.firstName} ${updatedUser.lastName}` }),
+          eventNotificationType: notificationType?._id?.toString() || null,
+          date: adjustedDate,
+          navigationUrl: '',
+          isRecurring: true,
+          recurringFrequency: RecurringFrequency.ANNUALLY,
+          leadTime: 0,
+          status: NotificationStatus.SCHEDULED,
+          company: req.cookies.companyId,
+          notificationChannel: [NotificationChannel.EMAIL, NotificationChannel.UI]
         };
         // Simulate the req object for addNotificationForUser
         const notificationReq = {
           ...req,
           body: notificationBody,
-          cookies: 
+          cookies:
           {
             ...req.cookies,
             userId: updatedUser?._id?.toString() // Set the userId to the assigned user
@@ -515,51 +516,51 @@ exports.updateUser = catchAsync(async (req, res, next) => {
         //       };
         //     }
         //   };
-          
+
         //   await eventNotificationController.createEventNotification(notificationReq, notificationRes, () => {});
         // });
         const eventNotification = await EventNotification.create(notificationReq.body);
         if (eventNotification) {
-            const userNotificationBody = {
-                user: updatedUser?._id?.toString(), // or any relevant user
-                notification: eventNotification?._id
-            };
+          const userNotificationBody = {
+            user: updatedUser?._id?.toString(), // or any relevant user
+            notification: eventNotification?._id
+          };
 
-            const userNotificationReq = {
-                ...req,
-                body: userNotificationBody,
-                cookies: {
-                    ...req.cookies,
-                    userId: updatedUser?._id?.toString()
-                }
-            };
+          const userNotificationReq = {
+            ...req,
+            body: userNotificationBody,
+            cookies: {
+              ...req.cookies,
+              userId: updatedUser?._id?.toString()
+            }
+          };
 
-            const userNotificationRes = {
-                status: () => ({
-                    json: () => {}
-                })
-            };
-            await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
+          const userNotificationRes = {
+            status: () => ({
+              json: () => { }
+            })
+          };
+          await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => { });
         }
         else {
-            websocketHandler.sendLog(req, `Failed to extract EventNotification ID.`, constants.LOG_TYPES.ERROR);
+          websocketHandler.sendLog(req, `Failed to extract EventNotification ID.`, constants.LOG_TYPES.ERROR);
         }
       }
     }
-    catch (error) { 
+    catch (error) {
       websocketHandler.sendLog(req, `Failed to create event notification for task`, constants.LOG_TYPES.ERROR);
       // Don't fail the task creation if notification fails
     }
   }
   else {
     const notificationTypeIds = await eventNotificationType.find({
-            name: {
-              $in: [
-                constants.Event_Notification_Type_Status.Birthday
-              ]
-            },
-            company: req.cookies.companyId
-          }).then(types => types.map(t => t._id));
+      name: {
+        $in: [
+          constants.Event_Notification_Type_Status.Birthday
+        ]
+      },
+      company: req.cookies.companyId
+    }).then(types => types.map(t => t._id));
     deleteInvalidRecurringNotifications(req, updatedUser, req.cookies.companyId, notificationTypeIds);
   }
   res.status(200).json({
@@ -572,16 +573,16 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting user ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const user = await User.findByIdAndUpdate(req.params.id, { status: "Deleted" });
-  
+
   if (!user) {
     websocketHandler.sendLog(req, `No user found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUserFound')
 
-    , 404));
+      , 404));
   }
-  
+
   const userAction = {
     userId: user._id,
     companyId: req.cookies.companyId,
@@ -592,7 +593,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   }
   await exports.logUserAction(req, userAction, next);
   websocketHandler.sendLog(req, `User ${req.params.id} marked as deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -601,7 +602,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 
 exports.createUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Attempt to create user through undefined route', constants.LOG_TYPES.WARN);
-  
+
   res.status(500).json({
     status: constants.APIResponseStatus.Error,
     message: "This route is not defined! Please use /signup instead",
@@ -618,14 +619,14 @@ exports.getMe = (req, res, next) => {
 
 exports.getUsers = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching users with IDs: ${req.body.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   var users = await User.find({
     _id: { $in: req.body.userId },
     status: { $ne: constants.User_Status.Deleted },
   });
-  
+
   websocketHandler.sendLog(req, `Found ${users.length} users`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: users,
@@ -634,14 +635,14 @@ exports.getUsers = catchAsync(async (req, res, next) => {
 
 exports.getUserManagers = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching managers for user ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   let managers = [];
   let list = await userSubordinate
     .distinct("userId")
     .find({ subordinateUserId: { $in: req.params.id } });
-  
+
   websocketHandler.sendLog(req, `Found ${list.length} potential managers`, constants.LOG_TYPES.DEBUG);
-  
+
   for (let i = 0; i < list.length; i++) {
     let manager = await User.findOne({
       _id: { $in: list[i].userId },
@@ -655,9 +656,9 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Added manager ${manager.id} to list`, constants.LOG_TYPES.DEBUG);
     }
   }
-  
+
   websocketHandler.sendLog(req, `Returning ${managers.length} managers`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: managers,
@@ -666,14 +667,14 @@ exports.getUserManagers = catchAsync(async (req, res, next) => {
 
 exports.getUserProjects = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching projects for user ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   let projects = [];
   let projectUsers = await ProjectUsers.find({})
     .where("user")
     .equals(req.params.id);
-  
+
   websocketHandler.sendLog(req, `Found ${projectUsers.length} project associations`, constants.LOG_TYPES.DEBUG);
-  
+
   for (let i = 0; i < projectUsers.length; i++) {
     let user = await User.findOne({
       _id: { $in: projectUsers[i].user },
@@ -684,9 +685,9 @@ exports.getUserProjects = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Added project ${projectUsers[i].project} to list`, constants.LOG_TYPES.DEBUG);
     }
   }
-  
+
   websocketHandler.sendLog(req, `Returning ${projects.length} projects`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: projects,
@@ -700,15 +701,15 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
 
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating employment for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
+
   const userEmployment = await UserEmployment.create(req.body);
   websocketHandler.sendLog(req, `User employment created with ID ${userEmployment._id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: userEmployment,
@@ -717,7 +718,7 @@ exports.createUserEmployment = catchAsync(async (req, res, next) => {
 
 exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching employment records for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const userEmployment = await UserEmployment.find({})
     .where("user")
     .equals(req.params.userId);
@@ -725,11 +726,11 @@ exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `No employment records found for user ${req.params.userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noEmploymentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Found ${userEmployment.length} employment records`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: userEmployment,
@@ -738,17 +739,17 @@ exports.getUserEmploymentByUser = catchAsync(async (req, res, next) => {
 
 exports.getUserEmployment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching employment record ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const userEmployment = await UserEmployment.findById(req.params.id);
   if (!userEmployment) {
     websocketHandler.sendLog(req, `No employment record found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noEmploymentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Employment record ${req.params.id} retrieved`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: userEmployment,
@@ -757,7 +758,7 @@ exports.getUserEmployment = catchAsync(async (req, res, next) => {
 
 exports.updateUserEmployment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating employment record ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const userEmployment = await UserEmployment.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -771,11 +772,11 @@ exports.updateUserEmployment = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `No employment record found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noEmploymentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Employment record ${req.params.id} updated`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: userEmployment,
@@ -784,18 +785,18 @@ exports.updateUserEmployment = catchAsync(async (req, res, next) => {
 
 exports.deleteUserEmployment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting employment record ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const userEmployment = await UserEmployment.findByIdAndDelete(req.params.id);
 
   if (!userEmployment) {
     websocketHandler.sendLog(req, `No employment record found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noEmploymentFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Employment record ${req.params.id} deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -821,12 +822,12 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-, 400));
+      , 400));
   }
   const criterion = { _id: req.body.user }; // You can also use { email: 'example@example.com' }
   if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
     websocketHandler.sendLog(req, `Invalid ObjectId: ${req.body.user}`, constants.LOG_TYPES.WARN);
-    return res.status(400).json({ error: `${req.body.user}` + req.t('user.invalidObjectId')    });
+    return res.status(400).json({ error: `${req.body.user}` + req.t('user.invalidObjectId') });
   }
   checkUserExistence(criterion)
     .then((userExists) => {
@@ -851,7 +852,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
 
     }
-  } 
+  }
 
   const variableAllowance = await VariableAllowance.find({ company: companyId })
     .select("_id")
@@ -926,7 +927,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     await SalaryComponentFixedAllowance.create(
       employeesalaryComponentFixedAllowance
     );
-  employeeSalaryDetails.fixedAllowanceList = salaryComponentFixedAllowance;  
+  employeeSalaryDetails.fixedAllowanceList = salaryComponentFixedAllowance;
 
   const employeesalaryComponentFixedDeduction =
     req.body.salaryComponentFixedDeduction.map((item) => {
@@ -948,7 +949,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     );
   employeeSalaryDetails.variableDeductionList =
     salaryComponentVariableDeduction;
-  
+
 
   const employeeSalaryComponentVariableAllowance =
     req.body.salaryComponentVariableAllowance.map((item) => {
@@ -969,7 +970,7 @@ exports.createEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
 exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salary details for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalaryDetails = await EmployeeSalaryDetails.find({})
     .where("user")
     .equals(req.params.userId);
@@ -978,11 +979,11 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, `No salary details found for user ${req.params.userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalaryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Found ${employeeSalaryDetails.length} salary detail records`, constants.LOG_TYPES.INFO);
-  
+
   for (let i = 0; i < employeeSalaryDetails.length; i++) {
     websocketHandler.sendLog(req, `Fetching related data for salary detail ${employeeSalaryDetails[i]._id}`, constants.LOG_TYPES.TRACE);
     employeeSalaryDetails[i].taxAndSalutaorySetting = await EmployeeTaxAndSalutaorySetting.find({})
@@ -990,7 +991,7 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
       .equals(employeeSalaryDetails[i]._id);
     employeeSalaryDetails[i].fixedAllowanceList = await SalaryComponentFixedAllowance.find({})
       .where("employeeSalaryDetails")
-      .equals(employeeSalaryDetails[i]._id);  
+      .equals(employeeSalaryDetails[i]._id);
     employeeSalaryDetails[i].employerContributionList = await SalaryComponentEmployerContribution.find({})
       .where("employeeSalaryDetails")
       .equals(employeeSalaryDetails[i]._id);
@@ -1018,16 +1019,16 @@ exports.getEmployeeSalaryDetailsByUser = catchAsync(async (req, res, next) => {
 // controllers/employeeSalaryDetailsController.js
 exports.getEmployeeBasicSalaryByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalaryDetails = await EmployeeSalaryDetails.findOne(({ user: req.params.userId })).sort({ payrollEffectiveFrom: -1 });;
-  
+
   if (!employeeSalaryDetails) {
     websocketHandler.sendLog(req, `No salary details found with ID ${req.params.userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalaryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, 'Fetching related salary components', constants.LOG_TYPES.TRACE);
 
   const fixedAllowances = await SalaryComponentFixedAllowance.find({
@@ -1047,9 +1048,8 @@ exports.getEmployeeBasicSalaryByUser = catchAsync(async (req, res, next) => {
   if (!employeeSalaryDetails.fixedAllowanceList.length > 0) {
     return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
   }
-  else
-  {
-  basicSalary = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
+  else {
+    basicSalary = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1060,16 +1060,16 @@ exports.getEmployeeBasicSalaryByUser = catchAsync(async (req, res, next) => {
 // controllers/employeeSalaryDetailsController.js
 exports.getEmployeeHRAByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalaryDetails = await EmployeeSalaryDetails.findOne(({ user: req.params.userId })).sort({ payrollEffectiveFrom: -1 });;
-  
+
   if (!employeeSalaryDetails) {
     websocketHandler.sendLog(req, `No salary details found with ID ${req.params.userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalaryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, 'Fetching related salary components', constants.LOG_TYPES.TRACE);
 
   const fixedAllowances = await SalaryComponentFixedAllowance.find({
@@ -1089,9 +1089,8 @@ exports.getEmployeeHRAByUser = catchAsync(async (req, res, next) => {
   if (!employeeSalaryDetails.fixedAllowanceList.length > 0) {
     return next(new AppError(req.t('user.noSalaryDetailsFound'), 404));
   }
-  else
-  {
-  hra = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
+  else {
+    hra = employeeSalaryDetails.fixedAllowanceList[0].monthlyAmount;
   }
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1101,16 +1100,16 @@ exports.getEmployeeHRAByUser = catchAsync(async (req, res, next) => {
 // controllers/employeeSalaryDetailsController.js
 exports.getEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salary details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalaryDetails = await EmployeeSalaryDetails.findById(req.params.id);
-  
+
   if (!employeeSalaryDetails) {
     websocketHandler.sendLog(req, `No salary details found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalaryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, 'Fetching related salary components', constants.LOG_TYPES.TRACE);
   employeeSalaryDetails.taxAndSalutaorySetting = await EmployeeTaxAndSalutaorySetting.find({})
     .where("employeeSalaryDetails")
@@ -1152,7 +1151,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
-    , 400));
+      , 400));
   }
 
   const employeeSalaryDetailsExists = await EmployeeSalaryDetails.findById(
@@ -1162,9 +1161,9 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   if (!employeeSalaryDetailsExists) {
     websocketHandler.sendLog(req, `No salary details found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalaryDetailsFound')
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, 'Validating salary components', constants.LOG_TYPES.TRACE);
   const fixedAllowances = await FixedAllowance.find({ company: companyId }).select("_id").exec();
   const validAllowances = fixedAllowances.map((fa) => fa._id.toString());
@@ -1288,7 +1287,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
 
   // Handle SalaryComponentPFCharge
   if (req.body.salaryComponentFixedAllowance.length > 0) {
-  
+
     await updateOrCreateRecords(
       SalaryComponentFixedAllowance,
       req.body.salaryComponentFixedAllowance,
@@ -1296,7 +1295,7 @@ exports.updateEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
     );
   }
 
-  if (req.body.salaryComponentPFCharge.length > 0) {   
+  if (req.body.salaryComponentPFCharge.length > 0) {
     await updateOrCreateRecords(
       SalaryComponentPFCharge,
       req.body.salaryComponentPFCharge,
@@ -1419,7 +1418,7 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
   // Finally, delete the EmployeeSalaryDetails record itself
   await EmployeeSalaryDetails.findByIdAndDelete(employeeSalaryDetailsId);
   websocketHandler.sendLog(req, `Salary details ${req.params.id} and related components deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -1431,7 +1430,7 @@ exports.deleteEmployeeSalaryDetails = catchAsync(async (req, res, next) => {
  */
 exports.createEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Creating employee tax and statutory settings', constants.LOG_TYPES.TRACE);
-  
+
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
@@ -1439,13 +1438,13 @@ exports.createEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next)
 
 
   }
-  
+
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating settings for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeSettings = await EmployeeTaxAndSalutaorySetting.create(req.body);
   websocketHandler.sendLog(req, `Settings created with ID ${employeeSettings._id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSettings,
@@ -1457,18 +1456,18 @@ exports.createEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next)
  */
 exports.getEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching tax and statutory settings ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSettings = await EmployeeTaxAndSalutaorySetting.findById(req.params.id);
-  
+
   if (!employeeSettings) {
     websocketHandler.sendLog(req, `No settings found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSettingsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Settings ${req.params.id} retrieved`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSettings,
@@ -1480,22 +1479,22 @@ exports.getEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) =>
  */
 exports.updateEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating tax and statutory settings ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSettings = await EmployeeTaxAndSalutaorySetting.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true, runValidators: true }
   );
-  
+
   if (!employeeSettings) {
     websocketHandler.sendLog(req, `No settings found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSettingsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Settings ${req.params.id} updated`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSettings,
@@ -1507,18 +1506,18 @@ exports.updateEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next)
  */
 exports.deleteEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting tax and statutory settings ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSettings = await EmployeeTaxAndSalutaorySetting.findByIdAndDelete(req.params.id);
-  
+
   if (!employeeSettings) {
     websocketHandler.sendLog(req, `No settings found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSettingsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Settings ${req.params.id} deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -1527,21 +1526,21 @@ exports.deleteEmployeeTaxAndSalutaorySetting = catchAsync(async (req, res, next)
 
 exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Creating employee salutatory details', constants.LOG_TYPES.TRACE);
-  
+
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
-  
+
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating salutatory details for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.create(req.body);
   websocketHandler.sendLog(req, `Salutatory details created with ID ${employeeSalutatoryDetails._id}`, constants.LOG_TYPES.INFO);
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
@@ -1550,10 +1549,10 @@ exports.createEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
 
 exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salutatory details for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findOne({ user: req.params.userId });
   websocketHandler.sendLog(req, `Found salutatory details`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
@@ -1562,18 +1561,18 @@ exports.getEmployeeSalutatoryDetailsByUser = catchAsync(async (req, res, next) =
 
 exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching salutatory details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findById(req.params.id);
-  
+
   if (!employeeSalutatoryDetails) {
     websocketHandler.sendLog(req, `No salutatory details found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalutatoryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Salutatory details ${req.params.id} retrieved`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
@@ -1582,22 +1581,22 @@ exports.getEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
 
 exports.updateEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating salutatory details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true, runValidators: true }
   );
-  
+
   if (!employeeSalutatoryDetails) {
     websocketHandler.sendLog(req, `No salutatory details found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalutatoryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Salutatory details ${req.params.id} updated`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeSalutatoryDetails,
@@ -1606,18 +1605,18 @@ exports.updateEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
 
 exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting salutatory details ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeSalutatoryDetails = await EmployeeSalutatoryDetails.findByIdAndDelete(req.params.id);
-  
+
   if (!employeeSalutatoryDetails) {
     websocketHandler.sendLog(req, `No salutatory details found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noSalutatoryDetailsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Salutatory details ${req.params.id} deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -1626,27 +1625,27 @@ exports.deleteEmployeeSalutatoryDetails = catchAsync(async (req, res, next) => {
 
 exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Creating employee loan advance', constants.LOG_TYPES.TRACE);
-  
+
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
-  
+
   req.body.company = companyId;
-  req.body.remainingInstallment =  req.body.noOfInstallment;
-  req.body.status=constants.Employee_Loan_Advance_status.Requested;
+  req.body.remainingInstallment = req.body.noOfInstallment;
+  req.body.status = constants.Employee_Loan_Advance_status.Requested;
   websocketHandler.sendLog(req, `Creating loan advance for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
+
   if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
     websocketHandler.sendLog(req, `Invalid user ObjectId: ${req.body.user}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.invalidObjectId', { id: req.body.user }), 400))
 
 
   }
-  
+
   const criterion = { _id: req.body.user };
   await checkUserExistence(criterion)
     .then((userExists) => {
@@ -1655,14 +1654,14 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     .catch((error) => {
       websocketHandler.sendLog(req, `Error checking user existence: ${error.message}`, constants.LOG_TYPES.ERROR);
     });
-  
+
   if (!mongoose.Types.ObjectId.isValid(req.body.loanAdvancesCategory)) {
     websocketHandler.sendLog(req, `Invalid loan category ObjectId: ${req.body.loanAdvancesCategory}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.invalidObjectId', { id: req.body.loanAdvancesCategory }), 400))
 
 
   }
-  
+
   const criterionCategory = { _id: req.body.loanAdvancesCategory };
   await checkUserExistence(criterionCategory)
     .then((categoryExists) => {
@@ -1671,17 +1670,17 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     .catch((error) => {
       websocketHandler.sendLog(req, `Error checking category existence: ${error.message}`, constants.LOG_TYPES.ERROR);
     });
-  
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.create(req.body);
   websocketHandler.sendLog(req, `Loan advance created with ID ${employeeLoanAdvances._id}`, constants.LOG_TYPES.INFO);
-  
+
   const user = await User.findById(req.body.user);
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name')
     .equals(constants.Email_template_constant.LoanAdvance_Disbursement_Notification)
     .where('company')
     .equals(companyId);
-  
+
   if (emailTemplate) {
     websocketHandler.sendLog(req, `Preparing notification email for ${user.email}`, constants.LOG_TYPES.TRACE);
     const template = emailTemplate.contentData;
@@ -1690,7 +1689,7 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
       .replace("{company}", req.cookies.companyName)
       .replace("{company}", req.cookies.companyName)
       .replace("{lastName}", user.lastName);
-    
+
     try {
       await sendEmail({
         email: user.email,
@@ -1702,10 +1701,10 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Error sending email: ${err.message}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('user.emailError')
 
-      , 500));
+        , 500));
     }
   }
-  
+
   const notificationType = await eventNotificationType.findOne({ name: constants.Event_Notification_Type_Status.loan_advance, company: companyId });
   if (!notificationType) {
     console.warn(`Notification type ${constants.Event_Notification_Type_Status.loan_advance} not found.`);
@@ -1739,7 +1738,7 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
       //Fire and forget
       (async () => {
         try {
-          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => {});
+          await eventNotificationController.addNotificationForUser(notificationReq, {}, () => { });
         } catch (err) {
           console.error('Error calling addNotificationForUser:', err.message);
         }
@@ -1758,18 +1757,18 @@ exports.createEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
 
 exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching loan advance ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.findById(req.params.id);
-  
+
   if (!employeeLoanAdvances) {
     websocketHandler.sendLog(req, `No loan advance found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noLoanAdvanceFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Loan advance ${req.params.id} retrieved`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
@@ -1779,14 +1778,14 @@ exports.getEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
 
 exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating loan advance ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   if (!mongoose.Types.ObjectId.isValid(req.body.loanAdvancesCategory)) {
     websocketHandler.sendLog(req, `Invalid loan category ObjectId: ${req.body.loanAdvancesCategory}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.invalidObjectId', { id: req.body.loanAdvancesCategory }), 400))
 
 
   }
-  
+
   const criterionCategory = { _id: req.body.loanAdvancesCategory };
   await checkUserExistence(criterionCategory)
     .then((categoryExists) => {
@@ -1795,7 +1794,7 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     .catch((error) => {
       websocketHandler.sendLog(req, `Error checking category: ${error.message}`, constants.LOG_TYPES.ERROR);
     });
-  
+
   // ✅ Fetch the existing loan advance
   const existingLoanAdvance = await EmployeeLoanAdvance.findById(req.params.id);
   if (!existingLoanAdvance) {
@@ -1814,16 +1813,16 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
     req.body,
     { new: true, runValidators: true }
   );
-  
+
   if (!employeeLoanAdvances) {
     websocketHandler.sendLog(req, `No loan advance found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noLoanAdvanceFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Loan advance ${req.params.id} updated`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
@@ -1833,18 +1832,18 @@ exports.updateEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
 
 exports.deleteEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting loan advance ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.findByIdAndDelete(req.params.id);
-  
+
   if (!employeeLoanAdvances) {
     websocketHandler.sendLog(req, `No loan advance found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noLoanAdvanceFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Loan advance ${req.params.id} deleted`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -1854,20 +1853,20 @@ exports.deleteEmployeeLoanAdvance = catchAsync(async (req, res, next) => {
 
 exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all loan advances for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   const companyId = req.cookies.companyId;
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const totalCount = await EmployeeLoanAdvance.countDocuments({ company: companyId });
   websocketHandler.sendLog(req, `Total loan advances count: ${totalCount}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.find({ company: companyId })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
-  
+
   websocketHandler.sendLog(req, `Retrieved ${employeeLoanAdvances.length} loan advances`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
@@ -1877,19 +1876,19 @@ exports.getAllEmployeeLoanAdvancesByCompany = catchAsync(async (req, res, next) 
 
 exports.getAllEmployeeLoanAdvancesByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all loan advances for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const totalCount = await EmployeeLoanAdvance.countDocuments({ user: req.params.userId });
   websocketHandler.sendLog(req, `Total loan advances count: ${totalCount}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeLoanAdvances = await EmployeeLoanAdvance.find({ user: req.params.userId })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
-  
+
   websocketHandler.sendLog(req, `Retrieved ${employeeLoanAdvances.length} loan advances`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeLoanAdvances,
@@ -1900,43 +1899,43 @@ exports.getAllEmployeeLoanAdvancesByUser = catchAsync(async (req, res, next) => 
 // Add Employee Income Tax Declaration
 exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Creating employee income tax declaration', constants.LOG_TYPES.TRACE);
-  
+
   const companyId = req.cookies.companyId;
   if (!companyId) {
     websocketHandler.sendLog(req, 'Missing company ID in cookies', constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.companyIdRequired')
 
-    , 400));
+      , 400));
   }
-  
+
   req.body.company = companyId;
   websocketHandler.sendLog(req, `Creating declaration for company ${companyId}`, constants.LOG_TYPES.DEBUG);
-  
- // --- START: DUPLICATE RECORD CHECK ---
-    // Destructure 'financialYear' as per your schema
-    const user = await User.findById(req.body.user);
-    const { financialYear } = req.body; 
-    
-    if (!user || !financialYear) {
-        websocketHandler.sendLog(req, 'Missing user or financialYear for duplicate check', constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('user.userAndYearRequired'), 400));
-    }
 
-    const existingDeclaration = await EmployeeIncomeTaxDeclaration.findOne({
-        user: user,
-        financialYear: financialYear, // Query using the correct schema field name
-        company: companyId
-    });
+  // --- START: DUPLICATE RECORD CHECK ---
+  // Destructure 'financialYear' as per your schema
+  const user = await User.findById(req.body.user);
+  const { financialYear } = req.body;
 
-    if (existingDeclaration) {
-        websocketHandler.sendLog(req, `Duplicate declaration found for user ${user} in financialYear ${financialYear}`, constants.LOG_TYPES.WARN);
-        return next(new AppError(req.t('user.duplicateDeclarationExists'), 409)); 
-    }
-    // --- END: DUPLICATE RECORD CHECK ---
+  if (!user || !financialYear) {
+    websocketHandler.sendLog(req, 'Missing user or financialYear for duplicate check', constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.userAndYearRequired'), 400));
+  }
+
+  const existingDeclaration = await EmployeeIncomeTaxDeclaration.findOne({
+    user: user,
+    financialYear: financialYear, // Query using the correct schema field name
+    company: companyId
+  });
+
+  if (existingDeclaration) {
+    websocketHandler.sendLog(req, `Duplicate declaration found for user ${user} in financialYear ${financialYear}`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('user.duplicateDeclarationExists'), 409));
+  }
+  // --- END: DUPLICATE RECORD CHECK ---
 
   const incomeTaxComponents = await IncomeTaxComponant.find().select("_id").exec();
   const validIncomeTaxComponent = incomeTaxComponents.map((fa) => fa._id.toString());
-  
+
   for (const item of req.body.employeeIncomeTaxDeclarationComponent) {
     if (!validIncomeTaxComponent.includes(item.incomeTaxComponent)) {
       websocketHandler.sendLog(req, `Invalid income tax component: ${item.incomeTaxComponent}`, constants.LOG_TYPES.WARN);
@@ -1945,31 +1944,32 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
 
     }
   }
-  
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.create(req.body);
   websocketHandler.sendLog(req, `Declaration created with ID ${employeeIncomeTaxDeclaration._id}`, constants.LOG_TYPES.INFO);
-  
+
   const employeeIncomeTaxDeclarationComponent = await Promise.all(
     req.body.employeeIncomeTaxDeclarationComponent.map(async (item) => {
       if (item.employeeIncomeTaxDeclarationAttachments != null) {
         websocketHandler.sendLog(req, `Processing ${item.employeeIncomeTaxDeclarationAttachments.length} attachments`, constants.LOG_TYPES.TRACE);
         for (let i = 0; i < item.employeeIncomeTaxDeclarationAttachments.length; i++) {
           const attachment = item.employeeIncomeTaxDeclarationAttachments[i];
-          
-          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || 
-              !attachment.extention || !attachment.file || attachment.attachmentType === null ||
-              attachment.attachmentName === null || attachment.attachmentSize === null ||
-              attachment.extention === null || attachment.file === null) {
+
+          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize ||
+            !attachment.extention || !attachment.file || attachment.attachmentType === null ||
+            attachment.attachmentName === null || attachment.attachmentSize === null ||
+            attachment.extention === null || attachment.file === null) {
             websocketHandler.sendLog(req, 'Missing attachment properties', constants.LOG_TYPES.WARN);
-            return res.status(400).json({ error: req.t('user.missingAttachmentProperties')
+            return res.status(400).json({
+              error: req.t('user.missingAttachmentProperties')
 
             });
           }
-          
+
           const id = new Date().getTime();
           attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
           websocketHandler.sendLog(req, `Uploading attachment ${attachment.filePath}`, constants.LOG_TYPES.DEBUG);
-          
+
           const documentLink = await StorageController.createContainerInContainer(
             req.cookies.companyId,
             constants.SubContainers.TaxDeclarionAttachment,
@@ -1982,32 +1982,32 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       return { ...item, employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id };
     })
   );
-  
+
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclarationComponent.create(employeeIncomeTaxDeclarationComponent);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = employeeIncomeTaxDeclarations;
   websocketHandler.sendLog(req, `Created ${employeeIncomeTaxDeclarations.length} components`, constants.LOG_TYPES.INFO);
-  
+
   const employeeIncomeTaxDeclarationHRA = await Promise.all(
     req.body.employeeIncomeTaxDeclarationHRA.map(async (item) => {
       if (item.employeeIncomeTaxDeclarationHRAAttachments != null) {
         websocketHandler.sendLog(req, `Processing ${item.employeeIncomeTaxDeclarationHRAAttachments.length} HRA attachments`, constants.LOG_TYPES.TRACE);
         for (let i = 0; i < item.employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
           const attachment = item.employeeIncomeTaxDeclarationHRAAttachments[i];
-          
-          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || 
-              !attachment.extention || !attachment.file || attachment.attachmentType === null ||
-              attachment.attachmentName === null || attachment.attachmentSize === null ||
-              attachment.extention === null || attachment.file === null) {
+
+          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize ||
+            !attachment.extention || !attachment.file || attachment.attachmentType === null ||
+            attachment.attachmentName === null || attachment.attachmentSize === null ||
+            attachment.extention === null || attachment.file === null) {
             websocketHandler.sendLog(req, 'Missing HRA attachment properties', constants.LOG_TYPES.WARN);
             return next(new AppError(req.t('user.missingAttachmentProperties'), 400))
 
 
           }
-          
+
           const id = new Date().getTime();
           attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
           websocketHandler.sendLog(req, `Uploading HRA attachment ${attachment.filePath}`, constants.LOG_TYPES.DEBUG);
-          
+
           const documentLink = await StorageController.createContainerInContainer(
             req.cookies.companyId,
             constants.SubContainers.TaxDeclarionAttachment,
@@ -2020,18 +2020,18 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       return { ...item, employeeIncomeTaxDeclaration: employeeIncomeTaxDeclaration._id };
     })
   );
-  
+
   const employeeHRA = await EmployeeIncomeTaxDeclarationHRA.create(employeeIncomeTaxDeclarationHRA);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = employeeHRA;
   websocketHandler.sendLog(req, `Created ${employeeHRA.length} HRA records`, constants.LOG_TYPES.INFO);
-  
-  
+
+
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name')
     .equals(constants.Email_template_constant.Employee_Tax_Declaration_Submission_Notification_For_Employee)
     .where('company')
     .equals(companyId);
-  
+
   if (emailTemplate) {
     websocketHandler.sendLog(req, `Preparing notification email for ${user.email}`, constants.LOG_TYPES.TRACE);
     const template = emailTemplate.contentData;
@@ -2040,7 +2040,7 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       .replace("{company}", req.cookies.companyName)
       .replace("{company}", req.cookies.companyName)
       .replace("{lastName}", user.lastName);
-    
+
     try {
       await sendEmail({
         email: user.email,
@@ -2052,10 +2052,10 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       websocketHandler.sendLog(req, `Error sending email: ${err.message}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('user.emailError')
 
-      , 500));
+        , 500));
     }
   }
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclaration
@@ -2065,17 +2065,17 @@ exports.createEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
 // Get All Employee Income Tax Declarations by Company
 exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all tax declarations for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ company: req.cookies.companyId });
   websocketHandler.sendLog(req, `Total declarations count: ${totalCount}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ company: req.cookies.companyId })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
-  
+
   for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
     websocketHandler.sendLog(req, `Fetching components for declaration ${employeeIncomeTaxDeclarations[i]._id}`, constants.LOG_TYPES.TRACE);
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({})
@@ -2086,16 +2086,16 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
       .equals(employeeIncomeTaxDeclarations[i]._id);
     websocketHandler.sendLog(req, `Loaded components for declaration ${employeeIncomeTaxDeclarations[i]._id}`, constants.LOG_TYPES.DEBUG);
   }
-  
+
   if (!employeeIncomeTaxDeclarations) {
     websocketHandler.sendLog(req, `No declarations found for company ${req.cookies.companyId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noDeclarationsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Retrieved ${employeeIncomeTaxDeclarations.length} declarations`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarations,
@@ -2107,29 +2107,29 @@ exports.getAllEmployeeIncomeTaxDeclarationsByCompany = catchAsync(async (req, re
 // Get All Employee Income Tax Declarations by Company
 exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching all tax declarations for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  
+
   const totalCount = await EmployeeIncomeTaxDeclaration.countDocuments({ user: req.params.userId });
   websocketHandler.sendLog(req, `Total declarations count: ${totalCount}`, constants.LOG_TYPES.DEBUG);
-  
+
   const employeeIncomeTaxDeclarations = await EmployeeIncomeTaxDeclaration.find({ user: req.params.userId })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
-  
+
   for (let i = 0; i < employeeIncomeTaxDeclarations.length; i++) {
     websocketHandler.sendLog(req, `Fetching components for declaration ${employeeIncomeTaxDeclarations[i]._id}`, constants.LOG_TYPES.TRACE);
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({})
       .where('employeeIncomeTaxDeclaration')
       .equals(employeeIncomeTaxDeclarations[i]._id);
-    
+
     if (employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length > 0) {
       for (let j = 0; j < employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent.length; j++) {
         const incomeTaxComponent = await IncomeTaxComponant.findById(employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].incomeTaxComponent);
         if (incomeTaxComponent?.section != null) {
           employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j].section = incomeTaxComponent.section;
-        
+
           websocketHandler.sendLog(
             req,
             `Added section to component ${employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j]._id}`,
@@ -2141,23 +2141,24 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
             `Section not found for component ${employeeIncomeTaxDeclarations[i].incomeTaxDeclarationComponent[j]._id}`,
             constants.LOG_TYPES.WARN
           );
-        }}
+        }
+      }
     }
-    
+
     employeeIncomeTaxDeclarations[i].incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({})
       .where('employeeIncomeTaxDeclaration')
       .equals(employeeIncomeTaxDeclarations[i]._id);
   }
-  
+
   if (!employeeIncomeTaxDeclarations) {
     websocketHandler.sendLog(req, `No declarations found for user ${req.params.userId}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noDeclarationsFound')
 
-    , 404));
+      , 404));
   }
-  
+
   websocketHandler.sendLog(req, `Retrieved ${employeeIncomeTaxDeclarations.length} declarations`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarations,
@@ -2168,31 +2169,31 @@ exports.getAllEmployeeIncomeTaxDeclarationsByUser = catchAsync(async (req, res, 
 // Update Employee Income Tax Declaration
 exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating income tax declaration ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeIncomeTaxDeclarationId = req.params.id;
-  
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true, runValidators: true }
   );
-  
+
   if (!employeeIncomeTaxDeclaration) {
     websocketHandler.sendLog(req, `No declaration found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noTaxDeclarationFound')
 
-    , 404));
+      , 404));
   }
-  
+
   const updateOrCreateRecords = async (model, requestData, idField) => {
     websocketHandler.sendLog(req, `Updating/creating records for ${idField}`, constants.LOG_TYPES.TRACE);
     const requestIds = requestData
       .filter(item => item._id)
       .map(item => item._id.toString());
-    
+
     const existingRecords = await model.find({ employeeIncomeTaxDeclaration: employeeIncomeTaxDeclarationId }).select('_id').exec();
     const existingIds = existingRecords.map(record => record._id.toString());
-    
+
     for (const item of requestData) {
       if (item._id && existingIds.includes(item._id.toString())) {
         await model.findByIdAndUpdate(item._id, item, { new: true, runValidators: true });
@@ -2202,7 +2203,7 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
         websocketHandler.sendLog(req, `Created new ${idField} record`, constants.LOG_TYPES.DEBUG);
       }
     }
-    
+
     for (const id of existingIds) {
       if (!requestIds.includes(id)) {
         await model.findByIdAndDelete(id);
@@ -2210,28 +2211,29 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       }
     }
   };
-  
+
   if (req.body.employeeIncomeTaxDeclarationHRA.length > 0) {
     websocketHandler.sendLog(req, `Processing ${req.body.employeeIncomeTaxDeclarationHRA.length} HRA records`, constants.LOG_TYPES.TRACE);
     for (let j = 0; j < req.body.employeeIncomeTaxDeclarationHRA.length; j++) {
       if (req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments != null) {
         for (let i = 0; i < req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments.length; i++) {
           const attachment = req.body.employeeIncomeTaxDeclarationHRA[j].employeeIncomeTaxDeclarationHRAAttachments[i];
-          
-          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || 
-              !attachment.extention || !attachment.file || attachment.attachmentType === null ||
-              attachment.attachmentName === null || attachment.attachmentSize === null ||
-              attachment.extention === null || attachment.file === null) {
+
+          if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize ||
+            !attachment.extention || !attachment.file || attachment.attachmentType === null ||
+            attachment.attachmentName === null || attachment.attachmentSize === null ||
+            attachment.extention === null || attachment.file === null) {
             websocketHandler.sendLog(req, 'Missing HRA attachment properties', constants.LOG_TYPES.WARN);
-            return res.status(400).json({ error: req.t('user.missingAttachmentProperties')
+            return res.status(400).json({
+              error: req.t('user.missingAttachmentProperties')
 
             });
           }
-          
+
           const id = new Date().getTime();
           attachment.filePath = attachment.attachmentName + "_" + id + attachment.extention;
           websocketHandler.sendLog(req, `Uploading HRA attachment ${attachment.filePath}`, constants.LOG_TYPES.DEBUG);
-          
+
           const documentLink = await StorageController.createContainerInContainer(
             req.cookies.companyId,
             constants.SubContainers.TaxDeclarionAttachment,
@@ -2258,16 +2260,16 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
       websocketHandler.sendLog(req, 'HRA records deleted', constants.LOG_TYPES.INFO);
     }
   }
-  
+
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({})
     .where('employeeIncomeTaxDeclaration')
     .equals(req.params.id);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({})
     .where('employeeIncomeTaxDeclaration')
     .equals(req.params.id);
-  
+
   websocketHandler.sendLog(req, `Declaration ${req.params.id} updated successfully`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclaration,
@@ -2277,25 +2279,25 @@ exports.updateEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
 // Get Employee Income Tax Declaration by ID
 exports.getEmployeeIncomeTaxDeclarationById = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching income tax declaration ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.params.id);
-  
+
   if (!employeeIncomeTaxDeclaration) {
     websocketHandler.sendLog(req, `No declaration found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noTaxDeclarationFound')
 
-    , 404));
+      , 404));
   }
-  
+
   employeeIncomeTaxDeclaration.incomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.find({})
     .where("employeeIncomeTaxDeclaration")
     .equals(req.params.id);
   employeeIncomeTaxDeclaration.incomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.find({})
     .where("employeeIncomeTaxDeclaration")
     .equals(req.params.id);
-  
+
   websocketHandler.sendLog(req, `Declaration ${req.params.id} retrieved with components`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclaration,
@@ -2305,15 +2307,15 @@ exports.getEmployeeIncomeTaxDeclarationById = catchAsync(async (req, res, next) 
 // Delete Employee Income Tax Declaration
 exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Deleting income tax declaration ${req.params.id}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findByIdAndDelete(req.params.id);
   if (!employeeIncomeTaxDeclaration) {
     websocketHandler.sendLog(req, `No declaration found with ID ${req.params.id}`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noTaxDeclarationFound')
 
-    , 404));
+      , 404));
   }
-  
+
   const taxDeclarationComponents = await EmployeeIncomeTaxDeclarationComponent.find({ employeeIncomeTaxDeclaration: req.params.id });
   if (taxDeclarationComponents) {
     websocketHandler.sendLog(req, `Deleting ${taxDeclarationComponents.length} components`, constants.LOG_TYPES.DEBUG);
@@ -2326,7 +2328,7 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     await EmployeeIncomeTaxDeclarationComponent.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
     websocketHandler.sendLog(req, 'Components deleted', constants.LOG_TYPES.INFO);
   }
-  
+
   const taxDeclarationHRAs = await EmployeeIncomeTaxDeclarationHRA.find({ employeeIncomeTaxDeclaration: req.params.id });
   if (taxDeclarationHRAs) {
     websocketHandler.sendLog(req, `Deleting ${taxDeclarationHRAs.length} HRA records`, constants.LOG_TYPES.DEBUG);
@@ -2339,9 +2341,9 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
     await EmployeeIncomeTaxDeclarationHRA.deleteMany({ employeeIncomeTaxDeclaration: req.params.id });
     websocketHandler.sendLog(req, 'HRA records deleted', constants.LOG_TYPES.INFO);
   }
-  
+
   websocketHandler.sendLog(req, `Declaration ${req.params.id} deleted successfully`, constants.LOG_TYPES.INFO);
-  
+
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
     data: null,
@@ -2350,43 +2352,44 @@ exports.deleteEmployeeIncomeTaxDeclaration = catchAsync(async (req, res, next) =
 
 exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Updating income tax declaration component', constants.LOG_TYPES.TRACE);
-  
+
   try {
     const incomeTaxComponents = await IncomeTaxComponant.find().select("_id").exec();
     const validIncomeTaxComponent = incomeTaxComponents.map((fa) => fa._id.toString());
-    
+
     if (!validIncomeTaxComponent.includes(req.body.incomeTaxComponent)) {
       websocketHandler.sendLog(req, `Invalid income tax component: ${req.body.incomeTaxComponent}`, constants.LOG_TYPES.WARN);
       return next(new AppError(req.t('user.invalidComponent', { id: req.body.incomeTaxComponent, type: 'income tax component' }), 400))
 
 
     }
-    
+
     const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
     if (!employeeIncomeTaxDeclaration) {
       websocketHandler.sendLog(req, `Declaration ${req.body.employeeIncomeTaxDeclaration} not found`, constants.LOG_TYPES.WARN);
-      return res.status(404).json({ error: req.t('user.noTaxDeclarationFound')
+      return res.status(404).json({
+        error: req.t('user.noTaxDeclarationFound')
 
       });
     }
-    
+
     if (req.body.employeeIncomeTaxDeclarationAttachments) {
       websocketHandler.sendLog(req, `Processing ${req.body.employeeIncomeTaxDeclarationAttachments.length} attachments`, constants.LOG_TYPES.TRACE);
       for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {
         let attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
-        
-        if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || 
-            !attachment.extention || !attachment.file) {
+
+        if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize ||
+          !attachment.extention || !attachment.file) {
           websocketHandler.sendLog(req, 'Missing attachment properties', constants.LOG_TYPES.WARN);
           return next(new AppError(req.t('user.missingAttachmentProperties'), 400))
 
 
         }
-        
+
         const id = new Date().getTime();
         attachment.filePath = `${attachment.attachmentName}_${id}${attachment.extention}`;
         websocketHandler.sendLog(req, `Uploading attachment ${attachment.filePath}`, constants.LOG_TYPES.DEBUG);
-        
+
         const documentLink = await StorageController.createContainerInContainer(
           req.cookies.companyId,
           constants.SubContainers.TaxDeclarionAttachment,
@@ -2396,7 +2399,7 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res
         websocketHandler.sendLog(req, `Attachment uploaded: ${documentLink}`, constants.LOG_TYPES.DEBUG);
       }
     }
-    
+
     const employeeIncomeTaxDeclarationComponent = await EmployeeIncomeTaxDeclarationComponent.findOneAndUpdate(
       {
         employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
@@ -2405,9 +2408,9 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res
       req.body,
       { new: true, upsert: true, runValidators: true }
     );
-    
+
     websocketHandler.sendLog(req, `Component updated/created with ID ${employeeIncomeTaxDeclarationComponent._id}`, constants.LOG_TYPES.INFO);
-    
+
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: employeeIncomeTaxDeclarationComponent,
@@ -2420,7 +2423,7 @@ exports.updateEmployeeIncomeTaxDeclarationComponant = catchAsync(async (req, res
 
 exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating HRA for declaration ${req.body.employeeIncomeTaxDeclaration}`, constants.LOG_TYPES.TRACE);
-  
+
   const employeeIncomeTaxDeclaration = await EmployeeIncomeTaxDeclaration.findById(req.body.employeeIncomeTaxDeclaration);
   if (!employeeIncomeTaxDeclaration) {
     websocketHandler.sendLog(req, `Declaration ${req.body.employeeIncomeTaxDeclaration} not found`, constants.LOG_TYPES.WARN);
@@ -2428,24 +2431,24 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next
 
 
   }
-  
+
   if (req.body.employeeIncomeTaxDeclarationAttachments) {
     websocketHandler.sendLog(req, `Processing ${req.body.employeeIncomeTaxDeclarationAttachments.length} HRA attachments`, constants.LOG_TYPES.TRACE);
     for (let i = 0; i < req.body.employeeIncomeTaxDeclarationAttachments.length; i++) {
       let attachment = req.body.employeeIncomeTaxDeclarationAttachments[i];
-      
-      if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize || 
-          !attachment.extention || !attachment.file) {
+
+      if (!attachment.attachmentType || !attachment.attachmentName || !attachment.attachmentSize ||
+        !attachment.extention || !attachment.file) {
         websocketHandler.sendLog(req, 'Missing HRA attachment properties', constants.LOG_TYPES.WARN);
         return next(new AppError(req.t('user.missingAttachmentProperties'), 400))
 
 
       }
-      
+
       const id = new Date().getTime();
       attachment.filePath = `${attachment.attachmentName}_${id}${attachment.extention}`;
       websocketHandler.sendLog(req, `Uploading HRA attachment ${attachment.filePath}`, constants.LOG_TYPES.DEBUG);
-      
+
       const documentLink = await StorageController.createContainerInContainer(
         req.cookies.companyId,
         constants.SubContainers.TaxDeclarionAttachment,
@@ -2455,12 +2458,12 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next
       websocketHandler.sendLog(req, `HRA attachment uploaded: ${documentLink}`, constants.LOG_TYPES.DEBUG);
     }
   }
-  
+
   const existingRecord = await EmployeeIncomeTaxDeclarationHRA.findOne({
     employeeIncomeTaxDeclaration: req.body.employeeIncomeTaxDeclaration,
     month: req.body.month,
   });
-  
+
   let employeeIncomeTaxDeclarationHRA;
   if (existingRecord) {
     websocketHandler.sendLog(req, `Updating existing HRA record ${existingRecord._id}`, constants.LOG_TYPES.DEBUG);
@@ -2473,9 +2476,9 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next
     websocketHandler.sendLog(req, 'Creating new HRA record', constants.LOG_TYPES.DEBUG);
     employeeIncomeTaxDeclarationHRA = await EmployeeIncomeTaxDeclarationHRA.create(req.body);
   }
-  
+
   websocketHandler.sendLog(req, `HRA record ${employeeIncomeTaxDeclarationHRA._id} processed`, constants.LOG_TYPES.INFO);
-  
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: employeeIncomeTaxDeclarationHRA,
@@ -2484,21 +2487,21 @@ exports.updateEmployeeIncomeTaxDeclarationHRA = catchAsync(async (req, res, next
 
 exports.generateOTP = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Generating OTP for ${req.body.email}`, constants.LOG_TYPES.TRACE);
-  
+
   try {
     const otp = Math.floor(1000 + Math.random() * 9000);
     websocketHandler.sendLog(req, `Generated OTP: ${otp}`, constants.LOG_TYPES.DEBUG);
-    
+
     const newOTP = new OTP({
       otp: otp,
       email: req.body.email,
       createdAt: new Date(),
       status: 'active'
     });
-    
+
     await newOTP.save();
     websocketHandler.sendLog(req, 'OTP saved to database', constants.LOG_TYPES.DEBUG);
-    
+
     const message = `
     <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
       <h2 style="color: #2E86C1;">Effortless HRM - OTP Verification</h2>
@@ -2523,61 +2526,62 @@ exports.generateOTP = catchAsync(async (req, res, next) => {
       websocketHandler.sendLog(req, `Error sending OTP email: ${err.message}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('user.emailError')
 
-      , 404));
+        , 404));
     }
-    
+
     res.status(200).json({ message: 'OTP generated and emailed successfully.' });
   } catch (error) {
-    websocketHandler.sendLog(req, `Error generating OTP: ${error.message}`, constants.LOG_TYPES.ERROR)    
+    websocketHandler.sendLog(req, `Error generating OTP: ${error.message}`, constants.LOG_TYPES.ERROR)
     return next(new AppError('Error generating OTP' + error), 404);
   }
 });
 
 exports.verifyOTP = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Verifying OTP ${req.body.otp} for ${req.body.email}`, constants.LOG_TYPES.TRACE);
-  
+
   try {
     const { email, otp } = req.body;
     const existingOTP = await OTP.findOne({ email, otp });
-    
+
     if (!existingOTP || existingOTP.status !== 'active') {
-      websocketHandler.sendLog(req, 'Invalid or expired OTP', constants.LOG_TYPES.WARN);     
+      websocketHandler.sendLog(req, 'Invalid or expired OTP', constants.LOG_TYPES.WARN);
       return next(new AppError(req.t('user.invalidOtp'), 400));
-      };
-   
-    
+    };
+
+
     existingOTP.status = 'verified';
     await existingOTP.save();
     websocketHandler.sendLog(req, 'OTP verified and status updated', constants.LOG_TYPES.INFO);
-    
+
     res.status(200).json({ message: req.t('user.otpVerifiedSuccessfully') });
   } catch (error) {
     websocketHandler.sendLog(req, `Error verifying OTP: ${error.message}`, constants.LOG_TYPES.ERROR);
-  
-    return next(new AppError(req.t('user.ErrorVerifyingOTP')+ error ), 400);
+
+    return next(new AppError(req.t('user.ErrorVerifyingOTP') + error), 400);
   }
 });
 
 exports.cancelOTP = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Canceling OTP ${req.body.otp} for ${req.body.email}`, constants.LOG_TYPES.TRACE);
-  
+
   try {
     const { email, otp } = req.body;
     const existingOTP = await OTP.findOne({ email, otp });
-    
+
     if (!existingOTP) {
       websocketHandler.sendLog(req, req.t('user.otpNotFound')
 
-      , constants.LOG_TYPES.WARN);
-      return res.status(400).json({ message: req.t('user.otpNotFound')
+        , constants.LOG_TYPES.WARN);
+      return res.status(400).json({
+        message: req.t('user.otpNotFound')
 
       });
     }
-    
+
     existingOTP.status = 'cancelled';
     await existingOTP.save();
     websocketHandler.sendLog(req, 'OTP cancelled', constants.LOG_TYPES.INFO);
-    
+
     res.status(200).json({ message: req.t('user.OTPCancelledSuccessfully') });
   } catch (error) {
     websocketHandler.sendLog(req, `Error cancelling OTP: ${error.message}`, constants.LOG_TYPES.ERROR);
@@ -2587,39 +2591,40 @@ exports.cancelOTP = catchAsync(async (req, res, next) => {
 
 exports.updateUserProfilePicture = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Updating profile picture for user ${req.params.userId}`, constants.LOG_TYPES.TRACE);
-  
+
   const user = await User.findById(req.params.userId);
   if (!user) {
     websocketHandler.sendLog(req, `User ${req.params.userId} not found`, constants.LOG_TYPES.WARN);
     return next(new AppError(req.t('user.noUser')
 
-    , 404));
+      , 404));
   }
-  
+
   for (let i = 0; i < req.body.profileImage.length; i++) {
     if (!req.body.profileImage[i].attachmentSize || !req.body.profileImage[i].extention || !req.body.profileImage[i].file ||
-        req.body.profileImage[i].attachmentSize === null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file === null) {
+      req.body.profileImage[i].attachmentSize === null || req.body.profileImage[i].extention === null || req.body.profileImage[i].file === null) {
       websocketHandler.sendLog(req, 'Missing profile image properties', constants.LOG_TYPES.WARN);
-      return res.status(400).json({ error: req.t('user.missingProfileImageProperties')
+      return res.status(400).json({
+        error: req.t('user.missingProfileImageProperties')
 
       });
     }
-    
+
     const attachmentName = user.firstName;
     req.body.profileImage[i].filePath = attachmentName + "_" + user._id + req.body.profileImage[i].extention;
     websocketHandler.sendLog(req, `Uploading profile image ${req.body.profileImage[i].filePath}`, constants.LOG_TYPES.DEBUG);
-    
+
     const url = await StorageController.createContainerInContainer(
       req.cookies.companyId,
       constants.SubContainers.Profile,
       req.body.profileImage[i]
     );
-    
+
     user.photo = url;
     await user.save();
     websocketHandler.sendLog(req, `Profile picture updated with URL ${url}`, constants.LOG_TYPES.INFO);
   }
-  
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: user
@@ -2640,7 +2645,7 @@ exports.getDailySalaryFromSalaryStructureByUser = catchAsync(async (req, res, ne
 
   // 4️⃣ Calculate eligible salary amount
   let totalMonthlyAllownaceAmount = await getTotalMonthlyAllownaceAmount(req, salaryDetails);
-let dailySalaryAmount = totalMonthlyAllownaceAmount/30;
+  let dailySalaryAmount = totalMonthlyAllownaceAmount / 30;
   // 5. Final response
   res.status(200).json({
     status: 'success',
@@ -2683,13 +2688,13 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
       if (!rawDate || !(date instanceof Date) || isNaN(date.getTime())) {
         websocketHandler.sendLog(req, `Invalid or missing date for ${event.key}: ${rawDate}`, constants.LOG_TYPES.ERROR);
         const notificationTypeIds = await eventNotificationType.find({
-            name: {
-              $in: [
-                event.typeKey
-              ]
-            },
-            company: companyId
-          }).then(types => types.map(t => t._id));
+          name: {
+            $in: [
+              event.typeKey
+            ]
+          },
+          company: companyId
+        }).then(types => types.map(t => t._id));
         deleteInvalidRecurringNotifications(req, updatedUser, companyId, notificationTypeIds);
         continue;
       }
@@ -2709,13 +2714,13 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
 
       const description = event.typeKey === constants.Event_Notification_Type_Status.WorkAnniversary
         ? req.t(event.messageKey, {
-            userName: `${user.firstName} ${user.lastName}`,
-            years: (new Date()).getFullYear() - (new Date(appointment.joiningDate)).getFullYear(),
-            companyName: req.cookies.companyName
-          })
+          userName: `${user.firstName} ${user.lastName}`,
+          years: (new Date()).getFullYear() - (new Date(appointment.joiningDate)).getFullYear(),
+          companyName: req.cookies.companyName
+        })
         : req.t('user.AppraisalNotificationMessage', {
-            userName: `${user.firstName} ${user.lastName}`
-          });
+          userName: `${user.firstName} ${user.lastName}`
+        });
 
       const existingNotification = await EventNotification.findOne({
         _id: { $in: notificationIds },
@@ -2725,16 +2730,16 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
       });
 
       const today = new Date();
-        const currentYear = today.getFullYear();
+      const currentYear = today.getFullYear();
 
-        // Set the joining's year to the current year
-        let adjustedDate = new Date(date);
-        adjustedDate.setFullYear(currentYear);
+      // Set the joining's year to the current year
+      let adjustedDate = new Date(date);
+      adjustedDate.setFullYear(currentYear);
 
-        // If the adjusted date is in the past, set the year to next year
-        if (adjustedDate < today) {
-          adjustedDate.setFullYear(currentYear + 1);
-        }
+      // If the adjusted date is in the past, set the year to next year
+      if (adjustedDate < today) {
+        adjustedDate.setFullYear(currentYear + 1);
+      }
 
       if (existingNotification) {
         const existingDate = new Date(existingNotification.date);
@@ -2802,11 +2807,11 @@ async function createAnniversaryAndAppraisalNotificationData(req, companyId, app
 
           const userNotificationRes = {
             status: () => ({
-              json: () => {}
+              json: () => { }
             })
           };
 
-          await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => {});
+          await eventNotificationController.createUserNotification(userNotificationReq, userNotificationRes, () => { });
         } else {
           websocketHandler.sendLog(req, `Failed to extract EventNotification ID`, constants.LOG_TYPES.ERROR);
         }
@@ -2859,3 +2864,17 @@ async function deleteInvalidRecurringNotifications(req, userId, companyId, event
     websocketHandler.sendLog(req, `Error deleting invalid recurring notifications: ${error.message}`, constants.LOG_TYPES.ERROR);
   }
 }
+
+exports.getUserEmploymentByCompany = catchAsync(async (req, res, next) => {
+  const companyId = req.cookies.companyId;
+  websocketHandler.sendLog(req, `Fetching employment records for company ${companyId}`, constants.LOG_TYPES.TRACE);
+
+  const userEmployment = await UserEmployment.find({ company: companyId });
+
+  websocketHandler.sendLog(req, `Found ${userEmployment.length} employment records`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: userEmployment,
+  });
+});
