@@ -74,7 +74,7 @@ leaveApplicationSchema.pre(/^find/, async function (next) {
     }),
       this.populate({
         path: 'leaveCategory',
-        select: 'id label'
+        select: 'id label isWeeklyOffLeavePartOfNumberOfDaysTaken isAnnualHolidayLeavePartOfNumberOfDaysTaken'
       });
   } catch (error) {
     console.error("Error populating employee", error);

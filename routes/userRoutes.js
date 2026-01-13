@@ -183,7 +183,7 @@ router.post('/login', authController.login);
  *                          type: object
  *
  */
-router.get('/getUsersByCompany/:companyId',authController.protect,userController.getUsersByCompany);
+router.get('/getUsersByCompany/:companyId', authController.protect, userController.getUsersByCompany);
 
 
 /**
@@ -215,7 +215,7 @@ router.get('/getUsersByCompany/:companyId',authController.protect,userController
  *                          type: object
  *
  */
-router.get('/getUsersByStatus/:status',authController.protect,userController.getUsersByStatus);
+router.get('/getUsersByStatus/:status', authController.protect, userController.getUsersByStatus);
 
 /**
  * @swagger
@@ -243,7 +243,7 @@ router.get('/getUsersByStatus/:status',authController.protect,userController.get
  *                          type: object
  *
  */
-router.get('/checkemailexists/:email',authController.protect,userController.CheckEmailExists);
+router.get('/checkemailexists/:email', authController.protect, userController.CheckEmailExists);
 
 // Route to get users by empCode
 /**
@@ -274,7 +274,7 @@ router.get('/checkemailexists/:email',authController.protect,userController.Chec
  *                          type: object
  *
  */
-router.get('/getUsersByEmpCode/:empCode',authController.protect,userController.getUsersByEmpCode);
+router.get('/getUsersByEmpCode/:empCode', authController.protect, userController.getUsersByEmpCode);
 
 
 
@@ -307,7 +307,7 @@ router.get('/getUsersByEmpCode/:empCode',authController.protect,userController.g
  *                          type: object
  *
  */
-router.post('/getusers',userController.getUsers);
+router.post('/getusers', userController.getUsers);
 /**
  * @swagger
  * /api/v1/users/forgotPassword:
@@ -416,11 +416,11 @@ router.patch('/resetPassword/:token', authController.resetPassword);
  */
 router.post('/inviteUser', authController.CreateUser);
 router.patch(
-  '/updateMyPassword',  
+  '/updateMyPassword',
   authController.updatePassword
 );
 router.patch(
-  '/updateUserbyinvitation',  
+  '/updateUserbyinvitation',
   authController.updateUserbyinvitation
 );
 
@@ -455,7 +455,7 @@ router.patch(
  *                          type: object
  *
  */
-router.post('/me',authController.protect,userController.getUser);
+router.post('/me', authController.protect, userController.getUser);
 /**
  * @swagger
  * /api/v1/users/updateuser/{id}:
@@ -550,7 +550,7 @@ router.post('/me',authController.protect,userController.getUser);
  *                          type: object
  *
  */
-router.patch('/updateuser/:id',authController.protect, userController.updateUser);
+router.patch('/updateuser/:id', authController.protect, userController.updateUser);
 
 /**
  * @swagger
@@ -581,7 +581,7 @@ router.patch('/updateuser/:id',authController.protect, userController.updateUser
  *                          type: object
  *
  */
-router.delete('/deleteuser/:id',userController.deleteUser);
+router.delete('/deleteuser/:id', userController.deleteUser);
 
 // Only admins are able to use routes below
 //router.use(authController.restrictTo('admin'));
@@ -606,7 +606,7 @@ router.delete('/deleteuser/:id',userController.deleteUser);
  *                          type: object
  *
  */
-router.get('/',authController.protect, userController.getAllUsers);
+router.get('/', authController.protect, userController.getAllUsers);
 
 /**
  * @swagger
@@ -663,7 +663,7 @@ router.route('/getUserManagers/:id').get(userController.getUserManagers);
  *                          type: object
  *
  */
- router.get('/getUserProjects/:id',authController.protect,userController.getUserProjects);
+router.get('/getUserProjects/:id', authController.protect, userController.getUserProjects);
 
 /**
  * @swagger
@@ -733,7 +733,7 @@ router.route('/getUserManagers/:id').get(userController.getUserManagers);
  *       500:
  *         description: Internal server error
  */
-router.post('/user-employment',authController.protect, userController.createUserEmployment);
+router.post('/user-employment', authController.protect, userController.createUserEmployment);
 
 /**
  * @swagger
@@ -760,7 +760,7 @@ router.post('/user-employment',authController.protect, userController.createUser
  *       500:
  *         description: Internal server error
  */
-router.get('/user-employment/:id',authController.protect, userController.getUserEmployment);
+router.get('/user-employment/:id', authController.protect, userController.getUserEmployment);
 
 /**
  * @swagger
@@ -833,7 +833,7 @@ router.get('/user-employment/:id',authController.protect, userController.getUser
  *       500:
  *         description: Internal server error
  */
-router.put('/user-employment/:id',authController.protect, userController.updateUserEmployment);
+router.put('/user-employment/:id', authController.protect, userController.updateUserEmployment);
 
 /**
  * @swagger
@@ -860,7 +860,7 @@ router.put('/user-employment/:id',authController.protect, userController.updateU
  *       500:
  *         description: Internal server error
  */
-router.delete('/user-employment/:id',authController.protect, userController.deleteUserEmployment);
+router.delete('/user-employment/:id', authController.protect, userController.deleteUserEmployment);
 
 /**
  * @swagger
@@ -887,7 +887,27 @@ router.delete('/user-employment/:id',authController.protect, userController.dele
  *       500:
  *         description: Internal server error
  */
-router.get('/user-employment-by-userId/:userId',authController.protect, userController.getUserEmploymentByUser);
+router.get('/user-employment-by-userId/:userId', authController.protect, userController.getUserEmploymentByUser);
+
+/**
+ * @swagger
+ * /api/v1/users/user-employment-by-company:
+ *   get:
+ *     summary: Get all user employment records by company
+ *     tags: 
+ *          - User Management
+ *     security: [{
+ *        bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Successful response with the user employment records
+ *       404:
+ *         description: User employment records not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/user-employment-by-company', authController.protect, userController.getUserEmploymentByCompany);
 
 /**
  * @swagger
@@ -2441,7 +2461,7 @@ router.put('/employee-income-tax-declarations-hra', authController.protect, user
  *       500:
  *         description: Internal server error
  */
-router.post('/appointments',  authController.protect, userController.createAppointment);
+router.post('/appointments', authController.protect, userController.createAppointment);
 
 /**
  * @swagger
@@ -2466,7 +2486,7 @@ router.post('/appointments',  authController.protect, userController.createAppoi
  *       500:
  *         description: Internal server error
  */
-router.get('/appointments/:userId',  authController.protect, userController.getAppointmentByUser);
+router.get('/appointments/:userId', authController.protect, userController.getAppointmentByUser);
 
 /**
  * @swagger
@@ -2505,7 +2525,7 @@ router.get('/appointments/:userId',  authController.protect, userController.getA
  *       500:
  *         description: Internal server error
  */
-router.put('/appointments/:id',  authController.protect, userController.updateAppointment);
+router.put('/appointments/:id', authController.protect, userController.updateAppointment);
 
 /**
  * @swagger
@@ -2530,7 +2550,7 @@ router.put('/appointments/:id',  authController.protect, userController.updateAp
  *       500:
  *         description: Internal server error
  */
-router.delete('/appointments/:id',  authController.protect, userController.deleteAppointment);
+router.delete('/appointments/:id', authController.protect, userController.deleteAppointment);
 
 /**
  * @swagger
@@ -2568,12 +2588,12 @@ router.delete('/appointments/:id',  authController.protect, userController.delet
  *       500:
  *         description: Internal server error
  */
-router.put('/update-profile-picture/:userId',  authController.protect, userController.updateUserProfilePicture);
+router.put('/update-profile-picture/:userId', authController.protect, userController.updateUserProfilePicture);
 
 router
   .route('/:id')
   .get(userController.getUser)
   .patch(userController.updateUser)
-  .delete(userController.deleteUser);   
+  .delete(userController.deleteUser);
 
 module.exports = router;
