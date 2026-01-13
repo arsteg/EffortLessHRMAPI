@@ -89,5 +89,19 @@
     "templateType": 10,
     "contentData": "<p>Dear {firstName} {lastName},</p><p>The appraisal results for {employeeFirstName} {employeeLastName} have been shared. Please follow up if needed.</p><p>Best regards,</p><p>{company}</p>",
     "isDelete": true
+  },
+  {
+    "Name": "Your Leave Application Has Been Approved",
+    "subject": "Your Leave Application Has Been Approved",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Your leave application has been approved.</p><p><br></p><p>Leave Application Details:</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Leave Application Rejected or Canceled",
+    "subject": "Your Leave Application Status Update",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Your leave application has been rejected or canceled.</p><p>Leave Application Details:</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p>If you believe this is a mistake or need clarification, please contact your manager or HR.</p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
   }
 ]
