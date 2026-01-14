@@ -1511,9 +1511,13 @@ exports.getTaxSlabsByCompany = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching tax slabs for company: ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const cycle = req.body.cycle;
   const query = {
     company: req.cookies.companyId
   };
+  if (cycle) {
+    query.cycle = cycle;
+  }
   // Get the total count of documents that match the query
   const totalCount = await TaxSlab.countDocuments(query);
   const taxSlabs = await TaxSlab.find(query).skip(skip).limit(limit);
