@@ -779,7 +779,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       }
     });
   }
-  console.log('user :', user);
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
 
@@ -790,9 +789,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 3) Send it to user's email
   const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;
   var companyId = user?.company;//process.env.DEFAULT_COMPANY_Id;
-  console.log('companyId :', companyId);
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Forgot_Password).where('company').equals(companyId);
-  console.log('emailTemplate :', emailTemplate);
   if (emailTemplate) {
     const template = emailTemplate.contentData;
 
