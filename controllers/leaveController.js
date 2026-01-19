@@ -11,6 +11,8 @@ const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveApplicationHalfDay = require('../models/Leave/LeaveApplicationHalfDayModel');
 const ShortLeave = require("../models/Leave/ShortLeaveModel");
 const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+const UserEmployment = require('../models/Employment/UserEmploymentModel');
+const HolidayApplicableOffice = require('../models/Company/HolidayApplicableOffice');
 const { ObjectId } = require('mongodb');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
@@ -110,6 +112,11 @@ exports.createLeaveCategory = catchAsync(async (req, res, next) => {
     return next(new AppError(req.t('leave.categoryAlreadyExists'), 400));
   }
   req.body.company = companyId;
+
+  if (req.body.leaveType === 'annual-non-accrual-leave') {
+    req.body.leaveAccrualPeriod = 'Annually';
+  }
+
   const leaveCategory = await LeaveCategory.create(req.body);
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
@@ -161,6 +168,10 @@ exports.updateLeaveCategory = catchAsync(async (req, res, next) => {
   if (duplicate) {
     websocketHandler.sendLog(req, `Duplicate label "${label}" found for another leave category`, constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('leave.labelExists'), 400));
+  }
+
+  if (req.body.leaveType === 'annual-non-accrual-leave') {
+    req.body.leaveAccrualPeriod = 'Annually';
   }
 
   const leaveCategory = await LeaveCategory.findByIdAndUpdate(req.params.id, req.body, {
@@ -1190,14 +1201,37 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
     const includeWeeklyOffsInLeaveDays = leaveCat.isWeeklyOffLeavePartOfNumberOfDaysTaken;
     const includeHolidaysInLeaveDays = leaveCat.isAnnualHolidayLeavePartOfNumberOfDaysTaken;
 
+    // Fetch employee location
+    const userEmployment = await UserEmployment.findOne({ user: employee });
+    const employeeLocation = userEmployment?.location;
+
     // Fetch Holidays between startDate and endDate
-    const holidays = await HolidayCalendar.find({
+    let holidays = await HolidayCalendar.find({
       company: companyId,
       date: {
         $gte: utcStartDate,
         $lte: utcEndDate
       }
     });
+
+    // Filter holidays based on employee location
+    if (employeeLocation && holidays.length > 0) {
+      const filteredHolidays = [];
+      for (const holiday of holidays) {
+        if (holiday.locationAppliesTo === 'All-Locations') {
+          filteredHolidays.push(holiday);
+        } else if (holiday.locationAppliesTo === 'Selected-Locations') {
+          const isApplicable = await HolidayApplicableOffice.findOne({
+            holiday: holiday._id,
+            office: employeeLocation
+          });
+          if (isApplicable) {
+            filteredHolidays.push(holiday);
+          }
+        }
+      }
+      holidays = filteredHolidays;
+    }
 
     let leaveDays = calculateLeaveDays(utcStartDate, utcEndDate, weeklyOffDays, includeWeeklyOffsInLeaveDays, holidays, includeHolidaysInLeaveDays);
 
@@ -1224,7 +1258,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       isNegativeAllowed = false;
     }
 
-    if (!isNegativeAllowed && leaveAssigned?.leaveRemaining < leaveDays) {
+    if (!isNegativeAllowed && (leaveAssigned?.leaveRemaining || 0) < leaveDays) {
       return res.status(400).json({
         status: constants.APIResponseStatus.Failure,
         data: null,
@@ -1337,45 +1371,44 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
 
   if (emailTemplate) {
     //if (email_template_constant == constants.Email_template_constant.Leave_Application_Approval_Request) {
-      console.log('Sending Leave Application Approval Request Email');
-      const template = emailTemplate.contentData;
-      //const totalDays = leaveApplication.endDate - leaveApplication.startDate;
-      const start = new Date(leaveApplication.startDate);
-      const end = new Date(leaveApplication.endDate);
-      const diffMs = end - start;
-      const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    const template = emailTemplate.contentData;
+    //const totalDays = leaveApplication.endDate - leaveApplication.startDate;
+    const start = new Date(leaveApplication.startDate);
+    const end = new Date(leaveApplication.endDate);
+    const diffMs = end - start;
+    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
 
-      const formatDate = (d) =>
-        new Date(d).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        });
+    const formatDate = (d) =>
+      new Date(d).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
 
-      const message = template
-        .replace("{firstName}", manager.firstName)
-        .replace("{employeeName}", user.firstName + " " + user.lastName)
-        .replace("{employeeName}", user.firstName + " " + user.lastName)
-        .replace("{leaveType}", leaveApplication.leaveCategory)
-        .replace("{startDate}", formatDate(start))
-        .replace("{endDate}", formatDate(end))
-        .replace("{totalDays}", totalDays)
-        .replace("{reason}", leaveApplication.comment || "-")
-        .replace("{company}", company.companyName)
-        .replace("{company}", company.companyName)
-        .replace("{lastName}", manager.lastName);
-      //if (attendanceUser.email == "hrmeffortless@gmail.com") {
-      try {
-        await sendEmail({
-          email: manager.email,
-          subject: emailTemplate.subject,
-          message
-        });
+    const message = template
+      .replace("{firstName}", manager.firstName)
+      .replace("{employeeName}", user.firstName + " " + user.lastName)
+      .replace("{employeeName}", user.firstName + " " + user.lastName)
+      .replace("{leaveType}", leaveApplication.leaveCategory)
+      .replace("{startDate}", formatDate(start))
+      .replace("{endDate}", formatDate(end))
+      .replace("{totalDays}", totalDays)
+      .replace("{reason}", leaveApplication.comment || "-")
+      .replace("{company}", company.companyName)
+      .replace("{company}", company.companyName)
+      .replace("{lastName}", manager.lastName);
+    //if (attendanceUser.email == "hrmeffortless@gmail.com") {
+    try {
+      await sendEmail({
+        email: manager.email,
+        subject: emailTemplate.subject,
+        message
+      });
 
-      } catch (err) {
-        console.error(`Error sending email to user ${user}:`, err);
-      }
-      //}
+    } catch (err) {
+      console.error(`Error sending email to user ${user}:`, err);
+    }
+    //}
     //}
   }
 };
