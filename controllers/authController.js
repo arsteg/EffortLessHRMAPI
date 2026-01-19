@@ -768,9 +768,10 @@ exports.restrictTo = (...roles) => {
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
-  const user = await User.findOne({ email: req.body.email });
+  const email = req.body.email ? req.body.email.toLowerCase() : '';
+  const user = await User.findOne({ email });
   if (!user) {
-    res.status(200).json({
+    return res.status(200).json({
       status: constants.APIResponseStatus.Failure,
       message: req.t('auth.noAccountFound'),
       data: {
@@ -778,6 +779,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       }
     });
   }
+  console.log('user :', user);
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
 
@@ -788,7 +790,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 3) Send it to user's email
   const resetURL = `${process.env.WEBSITE_DOMAIN}/#/resetPassword/${resetToken}`;
   var companyId = process.env.DEFAULT_COMPANY_Id;
+  console.log('companyId :', companyId);
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(constants.Email_template_constant.Forgot_Password).where('company').equals(companyId);
+  console.log('emailTemplate :', emailTemplate);
   if (emailTemplate) {
     const template = emailTemplate.contentData;
 
