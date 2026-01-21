@@ -11,6 +11,7 @@ const RoundingInformation = require('../models/attendance/roundingInformation');
 const Shift = require('../models/attendance/shift');
 const RosterShiftAssignment = require('../models/attendance/rosterShiftAssignment');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
+const LeaveAssigned = require('../models/Leave/LeaveAssignedModel');
 const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssignment');
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
@@ -3302,13 +3303,16 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     startDate: { $lte: endOfMonth },
     endDate: { $gte: startOfMonth },
     company: companyId
-  }).populate('leaveCategory');
-
+  }).populate({
+    path: 'leaveCategory',
+    select: 'label isPaidLeave isWeeklyOffLeavePartOfNumberOfDaysTaken isAnnualHolidayLeavePartOfNumberOfDaysTaken negativeLeaveBalancePolicy'
+  });
   const approvedLeaveDays = [];
   const notPaidLeaveDays = [];
   const leaveInfoMap = new Map();
 
-  approvedLeaves.forEach(leave => {
+  // Process approved leaves with negative balance handling
+  for (const leave of approvedLeaves) {
     let d = new Date(leave.startDate);
     const end = new Date(leave.endDate);
 
@@ -3316,26 +3320,66 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     const isAnnualHolidayPart = leave.leaveCategory ? leave.leaveCategory.isAnnualHolidayLeavePartOfNumberOfDaysTaken : false;
     const isWeeklyOffPart = leave.leaveCategory ? leave.leaveCategory.isWeeklyOffLeavePartOfNumberOfDaysTaken : false;
 
+    const negativePolicy = leave.leaveCategory?.negativeLeaveBalancePolicy || 'none';
+    // Check for negative leave balance with mark-as-lop policy
+    let negativeLOPDays = 0;
+    if (negativePolicy.toLowerCase() === constants.Negative_Balance_Policy.Mark_As_LOP.toLowerCase() && leave.leaveCategory) {
+      // Get the leave balance for this category
+      const leaveAssigned = await LeaveAssigned.findOne({
+        employee: user,
+        category: leave.leaveCategory._id,
+        company: companyId
+      });
+      if (leaveAssigned && leaveAssigned.leaveRemaining < 0) {
+        // The negative balance represents days that should be LOP
+        negativeLOPDays = Math.abs(leaveAssigned.leaveRemaining);
+        console.log(`Negative leave balance detected: ${leaveAssigned.leaveRemaining} days for category ${leave.leaveCategory.label}`);
+      }
+    }
+
+    // Collect all leave dates first to determine which ones should be LOP
+    const leaveDates = [];
     while (d <= end) {
       if (d >= startOfMonth && d <= endOfMonth) {
         const dateStr = d.toISOString().split('T')[0];
         const isHalfDayLeave = leave.isHalfDayOption && leave.halfDays && leave.halfDays.includes(dateStr);
-        approvedLeaveDays.push(dateStr);
-        if (!isPaid) {
-          notPaidLeaveDays.push(dateStr);
-        }
-        leaveInfoMap.set(dateStr, {
-          isPaid,
-          isAnnualHolidayPart,
-          isWeeklyOffPart,
-          isHalfDayLeave
-        });
+        leaveDates.push({ dateStr, isHalfDayLeave });
       }
       d.setDate(d.getDate() + 1);
     }
+
+    // Process each leave date
+    let remainingNegativeDays = negativeLOPDays;
+    // Process from end to mark negative days as LOP (last N days are negative)
+    for (let i = leaveDates.length - 1; i >= 0; i--) {
+      const { dateStr, isHalfDayLeave } = leaveDates[i];
+      let isNegativeLOP = false;
+
+      if (remainingNegativeDays > 0) {
+        isNegativeLOP = true;
+        remainingNegativeDays -= isHalfDayLeave ? 0.5 : 1;
+      }
+
+      approvedLeaveDays.push(dateStr);
+      // If it's negative LOP or unpaid leave, add to notPaidLeaveDays
+      if (!isPaid || isNegativeLOP) {
+        notPaidLeaveDays.push(dateStr);
+      }
+      leaveInfoMap.set(dateStr, {
+        isPaid: isPaid && !isNegativeLOP, // Override isPaid if it's negative LOP
+        isAnnualHolidayPart,
+        isWeeklyOffPart,
+        isHalfDayLeave,
+        isNegativeLOP
+      });
+    }
+  }
+  // Filter holidays by the month being processed
+  const holidays = await HolidayCalendar.find({
+    company: companyId,
+    date: { $gte: startOfMonth, $lte: endOfMonth }
   });
 
-  const holidays = await HolidayCalendar.find({ company: companyId });
   const holidayIds = holidays.map(h => h._id);
   const holidayApplicableOffices = await HolidayApplicableOffice.find({ holiday: { $in: holidayIds } });
 
@@ -3368,12 +3412,16 @@ function toLocalDateStringFromUTC(dateInput) {
 
 // full utc based
 async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req }) {
+  if (!attendanceTemplate) {
+    websocketHandler.sendLog(req, `❌ Attendance template not found for user ${user}, skipping LOP processing`, constants.LOG_TYPES.ERROR);
+    return;
+  }
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
+  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays || []);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
-  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user });
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }).populate('template');
   let fullDayDuration = null;
   let halfDayDuration = null;
   let isHalfDayApplicable = false;
@@ -3418,46 +3466,99 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     const isHoliday = holidaySet.has(dateStr);
     const leaveInfo = leaveInfoMap.get(dateStr);
     const isOnNotPaidLeave = leaveInfo && !leaveInfo.isPaid && isOnLeave;
-
+    const isNegativeLOP = leaveInfo?.isNegativeLOP || false;
     let wasUserPresent = false;
     let wasHalfday = false;
 
     if (wasPresent) {
-      if (wasPresent.duration >= fullDayDuration) {
-        wasUserPresent = true;
-      } else if (isHalfDayApplicable && wasPresent.duration >= halfDayDuration) {
-        wasUserPresent = true;
-        wasHalfday = true;
+      // If shift template is configured, use duration thresholds
+      if (fullDayDuration !== null) {
+        if (wasPresent.duration >= fullDayDuration) {
+          wasUserPresent = true;
+        } else if (isHalfDayApplicable && halfDayDuration !== null && wasPresent.duration >= halfDayDuration) {
+          wasUserPresent = true;
+          wasHalfday = true;
+        }
+      } else {
+        // No shift template configured - consider present if duration > 0
+        wasUserPresent = wasPresent.duration > 0;
       }
     }
 
     let shouldInsertLOP = false;
-    let lopIsHalfDay = wasHalfday;
+    let lopIsHalfDay = false;
 
     if (isOnNotPaidLeave) {
       if (isWeeklyOff) {
         if (leaveInfo.isWeeklyOffPart) {
           shouldInsertLOP = true;
-          if (leaveInfo.isHalfDayLeave) lopIsHalfDay = true;
+          lopIsHalfDay = leaveInfo.isHalfDayLeave;
         } else {
           continue;
         }
       } else if (isHoliday) {
         if (leaveInfo.isAnnualHolidayPart) {
           shouldInsertLOP = true;
-          if (leaveInfo.isHalfDayLeave) lopIsHalfDay = true;
+          lopIsHalfDay = leaveInfo.isHalfDayLeave;
         } else {
           continue;
         }
       } else {
-        // Working Day
+        // Working Day with unpaid leave
         shouldInsertLOP = true;
-        // If it's a half-day unpaid leave, and user was present enough for half day credit,
-        // wasHalfday will already be true. If they were absent, it stays false (full day LOP).
+        if (leaveInfo.isHalfDayLeave) {
+          // Half-day unpaid leave: check attendance for the other half
+          if (wasUserPresent && !wasHalfday) {
+            // Full day present covers the working half, LOP only for unpaid leave half
+            lopIsHalfDay = true;
+          } else if (wasUserPresent && wasHalfday) {
+            // Half-day present matches the working half, LOP only for unpaid leave half
+            lopIsHalfDay = true;
+          } else {
+            // Not present at all: full day LOP (half unpaid leave + half absence)
+            lopIsHalfDay = false;
+          }
+        } else {
+          // Full day unpaid leave = full LOP
+          lopIsHalfDay = false;
+        }
       }
     } else if (!isWeeklyOff && !isHoliday) {
-      // Working day, not on unpaid leave
-      shouldInsertLOP = (!wasUserPresent || (wasUserPresent && wasHalfday)) && !isOnLeave;
+      // Working day, not on unpaid leave (could be paid leave or no leave)
+      if (isOnLeave && leaveInfo) {
+        // On paid leave
+        if (leaveInfo.isHalfDayLeave) {
+          // Half-day paid leave: check if other half is covered by attendance
+          if (!wasUserPresent) {
+            // Not present at all: half-day LOP for the absent half
+            shouldInsertLOP = true;
+            lopIsHalfDay = true;
+          } else if (wasHalfday) {
+            // Half-day present matches the working half, no LOP needed
+            shouldInsertLOP = false;
+          } else {
+            // Full-day present with half-day leave, no LOP
+            shouldInsertLOP = false;
+          }
+        } else {
+          // Full-day paid leave: no LOP
+          shouldInsertLOP = false;
+        }
+      } else {
+        // No leave at all
+        if (!wasUserPresent) {
+          // Not present and no leave: full day LOP
+          shouldInsertLOP = true;
+          lopIsHalfDay = false;
+        } else if (wasHalfday) {
+          // Half-day present: half day LOP
+          shouldInsertLOP = true;
+          lopIsHalfDay = true;
+        } else {
+          // Full day present: no LOP
+          shouldInsertLOP = false;
+        }
+      }
     } else {
       // Weekly off or Holiday, not on unpaid leave
       continue;
@@ -3467,7 +3568,8 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
       const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
       if (!existingLOP) {
         await new LOP({ user, date: currentDate, company: companyId, isHalfDay: lopIsHalfDay }).save();
-        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}, isHalfDay: ${lopIsHalfDay}`, constants.LOG_TYPES.INFO);
+        const lopReason = isNegativeLOP ? 'negative leave balance (mark-as-lop policy)' : 'unpaid leave/absence';
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}, isHalfDay: ${lopIsHalfDay}, reason: ${lopReason}`, constants.LOG_TYPES.INFO);
       } else {
         websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
       }
@@ -3476,13 +3578,17 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
 }
 
 async function processLOPForMonthv1({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, holidayDates, companyId, req }) {
+  if (!attendanceTemplate) {
+    websocketHandler.sendLog(req, `❌ Attendance template not found for user ${user}, skipping LOP processing`, constants.LOG_TYPES.ERROR);
+    return;
+  }
   const timeZone = 'Asia/Kolkata';
   const daysInMonth = new Date(year, month, 0).getDate();
-  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays);
+  const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays || []);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
   const isAlternateEven = attendanceTemplate.alternateWeekOffRoutine === 'even';
-  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user });
+  const shiftAssignment = await ShiftTemplateAssignment.findOne({ user: user }).populate('template');
   let fullDayDuration = null;
   let halfDayDuration = null;
   let isHalfDayApplicable = false;
@@ -3519,18 +3625,21 @@ async function processLOPForMonthv1({ user, month, year, attendanceTemplate, att
     let wasHalfday = false;
 
     if (wasPresent) {
-      if (wasPresent?.duration == 0) {
+      if (wasPresent.duration === 0) {
         wasUserPresent = false;
-      }
-      else if (wasPresent?.duration >= fullDayDuration) {
-        wasUserPresent = true;
-      }
-      else if (isHalfDayApplicable && wasPresent?.duration >= halfDayDuration) {
-        wasUserPresent = true;
-        //if(isOnLeave.)
-        wasHalfday = true;
+      } else if (fullDayDuration !== null) {
+        // If shift template is configured, use duration thresholds
+        if (wasPresent.duration >= fullDayDuration) {
+          wasUserPresent = true;
+        } else if (isHalfDayApplicable && halfDayDuration !== null && wasPresent.duration >= halfDayDuration) {
+          wasUserPresent = true;
+          wasHalfday = true;
+        } else {
+          wasUserPresent = false;
+        }
       } else {
-        wasUserPresent = false;
+        // No shift template configured - consider present if duration > 0
+        wasUserPresent = wasPresent.duration > 0;
       }
     }
 
