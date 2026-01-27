@@ -602,7 +602,7 @@ const calculateGratuity = async (req, res, next) => {
 const isProfessionalTaxEnabledForUser = async (userId, req) => {
 
   const statutoryDetails = await EmployeeSalutatoryDetails.findOne({ user: userId });
-  if (!statutoryDetails?.isEmployeeEligibleForPFDeduction) {
+  if (!statutoryDetails?.isTaxDeductedFromPlayslip) {
     websocketHandler.sendLog(req, `ℹ️ PT is not enabled in statutory settings for user`, constants.LOG_TYPES.INFO);
     return false;
   }
