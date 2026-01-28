@@ -253,6 +253,9 @@ assignLeavesByJobs = async (req, res, next) => {
         if (employeeLeaveAssignment) {
           websocketHandler.sendLog(req, `Found leave assignment for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
 
+          // Fetch user's appointment to get joining date for pro-rating
+          const userAppointment = await Appointment.findOne({ user: user._id });
+
           //const leaveTemplateCategory = await LeaveTemplateCategory.findOne({})
           const leaveTemplateCategories = await LeaveTemplateCategory.find({})
             .where('leaveTemplate').equals(employeeLeaveAssignment.leaveTemplate._id.toString());
@@ -280,11 +283,26 @@ assignLeavesByJobs = async (req, res, next) => {
                 var closingBalance = 0;
                 const leaveTaken = 0;
 
+                // Check if this is a new joiner (joined in current month) and apply pro-rating
+                const isNewJoiner = userAppointment && isJoinedInCurrentMonth(userAppointment.joiningDate);
+                const proRateSetting = leaveCategory.isProRateFirstMonthAccrualForNewJoinees;
+                const cutoffDay = leaveCategory.dayOfTheMonthEmployeeNeedJoinToGetCreditForThatMonth || 15;
+
                 const { startMonth, endMonth } = await getPeriodRange(currentMonth, accrualPeriod);
                 console.log(`Determined period range for ${accrualPeriod}, user: ${user._id} - startMonth: ${startMonth}, endMonth: ${endMonth}`);
                 if (accrualPeriod === constants.Leave_Accrual_Period.Monthly) {
                   var accruedBalance = 0;
-                  accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
+                  var baseAccrual = leaveTemplateCategory.accrualRatePerPeriod;
+
+                  // Apply pro-rating for new joiners in current month
+                  if (isNewJoiner && userAppointment?.joiningDate) {
+                    const joiningDay = new Date(userAppointment.joiningDate).getDate();
+                    accruedBalance = calculateProRatedAccrual(baseAccrual, joiningDay, proRateSetting, cutoffDay);
+                    websocketHandler.sendLog(req, `Pro-rated monthly leave for new joiner - base: ${baseAccrual}, prorated: ${accruedBalance}, setting: ${proRateSetting}`, constants.LOG_TYPES.DEBUG);
+                  } else {
+                    accruedBalance = baseAccrual;
+                  }
+
                   websocketHandler.sendLog(req, `Creating monthly leave assignment - accruedBalance: ${accruedBalance}`, constants.LOG_TYPES.DEBUG);
                   openingBalance = accruedBalance;
                   leaveRemaining = accruedBalance;
@@ -325,7 +343,7 @@ assignLeavesByJobs = async (req, res, next) => {
                 }
 
                 if (accrualPeriod === constants.Leave_Accrual_Period.Annually) {
-                  //const assignmentExists = await doesLeaveAssignmentExist(employee, cycle, category);   
+                  //const assignmentExists = await doesLeaveAssignmentExist(employee, cycle, category);
                   //websocketHandler.sendLog(req, `Checking existing annual assignment for user: ${user._id} - exists: ${assignmentExists}`, constants.LOG_TYPES.TRACE);
                   const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
                     employee,
@@ -341,6 +359,17 @@ assignLeavesByJobs = async (req, res, next) => {
                     var balPerMonth = ratePerPeriod / 12;
                     var accruedBalance = 0;
                     var rawBalance = (((12 - currentMonth)) * balPerMonth);
+
+                    // Apply pro-rating for new joiners in current month (for the first month portion)
+                    if (isNewJoiner && userAppointment?.joiningDate) {
+                      const joiningDay = new Date(userAppointment.joiningDate).getDate();
+                      const firstMonthAccrual = calculateProRatedAccrual(balPerMonth, joiningDay, proRateSetting, cutoffDay);
+                      // Remaining months get full accrual, first month is pro-rated
+                      const remainingFullMonths = 12 - currentMonth - 1;
+                      rawBalance = (remainingFullMonths * balPerMonth) + firstMonthAccrual;
+                      websocketHandler.sendLog(req, `Pro-rated annual leave for new joiner - firstMonth: ${firstMonthAccrual}, remainingMonths: ${remainingFullMonths}`, constants.LOG_TYPES.DEBUG);
+                    }
+
                     accruedBalance = Number(rawBalance.toFixed(1));
                     openingBalance = accruedBalance;
                     leaveRemaining = accruedBalance;
@@ -371,7 +400,6 @@ assignLeavesByJobs = async (req, res, next) => {
 
                 if (accrualPeriod === constants.Leave_Accrual_Period.Semi_Annually) {
                   const periodLength = 6;
-                  var accruedBalance = leaveTemplateCategory.accrualRatePerPeriod;
                   websocketHandler.sendLog(req, `Processing semi-annual leave for user: ${user._id}`, constants.LOG_TYPES.DEBUG);
                   const existingLeaveAssignment = await doesLeaveAssignmentExistV1({
                     employee,
@@ -385,7 +413,18 @@ assignLeavesByJobs = async (req, res, next) => {
                     websocketHandler.sendLog(req, `Semi-annual leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
                   } else {
                     const remainingMonths = endMonth - currentMonth;
-                    const rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+                    const balPerMonth = leaveTemplateCategory.accrualRatePerPeriod / periodLength;
+                    var rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+
+                    // Apply pro-rating for new joiners in current month
+                    if (isNewJoiner && userAppointment?.joiningDate) {
+                      const joiningDay = new Date(userAppointment.joiningDate).getDate();
+                      const firstMonthAccrual = calculateProRatedAccrual(balPerMonth, joiningDay, proRateSetting, cutoffDay);
+                      const remainingFullMonths = remainingMonths - 1;
+                      rawBalance = (remainingFullMonths * balPerMonth) + firstMonthAccrual;
+                      websocketHandler.sendLog(req, `Pro-rated semi-annual leave for new joiner - firstMonth: ${firstMonthAccrual}`, constants.LOG_TYPES.DEBUG);
+                    }
+
                     const accruedBalance = Number(rawBalance.toFixed(1));
                     openingBalance = accruedBalance;
                     leaveRemaining = accruedBalance;
@@ -427,7 +466,18 @@ assignLeavesByJobs = async (req, res, next) => {
                   }
                   else {
                     var remainingMonths = endMonth - currentMonth;
+                    const balPerMonth = leaveTemplateCategory.accrualRatePerPeriod / periodLength;
                     var rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+
+                    // Apply pro-rating for new joiners in current month
+                    if (isNewJoiner && userAppointment?.joiningDate) {
+                      const joiningDay = new Date(userAppointment.joiningDate).getDate();
+                      const firstMonthAccrual = calculateProRatedAccrual(balPerMonth, joiningDay, proRateSetting, cutoffDay);
+                      const remainingFullMonths = remainingMonths - 1;
+                      rawBalance = (remainingFullMonths * balPerMonth) + firstMonthAccrual;
+                      websocketHandler.sendLog(req, `Pro-rated bi-monthly leave for new joiner - firstMonth: ${firstMonthAccrual}`, constants.LOG_TYPES.DEBUG);
+                    }
+
                     var accruedBalance = Number(rawBalance.toFixed(1));
                     openingBalance = accruedBalance;
                     leaveRemaining = accruedBalance;
@@ -470,7 +520,18 @@ assignLeavesByJobs = async (req, res, next) => {
                     websocketHandler.sendLog(req, `Quarterly leave assignment already exists for user: ${user._id}`, constants.LOG_TYPES.WARN);
                   } else {
                     var remainingMonths = endMonth - currentMonth;
+                    const balPerMonth = leaveTemplateCategory.accrualRatePerPeriod / periodLength;
                     var rawBalance = leaveTemplateCategory.accrualRatePerPeriod * (remainingMonths / periodLength);
+
+                    // Apply pro-rating for new joiners in current month
+                    if (isNewJoiner && userAppointment?.joiningDate) {
+                      const joiningDay = new Date(userAppointment.joiningDate).getDate();
+                      const firstMonthAccrual = calculateProRatedAccrual(balPerMonth, joiningDay, proRateSetting, cutoffDay);
+                      const remainingFullMonths = remainingMonths - 1;
+                      rawBalance = (remainingFullMonths * balPerMonth) + firstMonthAccrual;
+                      websocketHandler.sendLog(req, `Pro-rated quarterly leave for new joiner - firstMonth: ${firstMonthAccrual}`, constants.LOG_TYPES.DEBUG);
+                    }
+
                     var accruedBalance = Number(rawBalance.toFixed(1));
                     openingBalance = accruedBalance;
                     leaveRemaining = accruedBalance;
@@ -1136,6 +1197,49 @@ function normalizeIndianMobile(mobile) {
   }
   // invalid / unsupported format
   return null;
+}
+
+/**
+ * Check if employee joined in the current month
+ * @param {Date} joiningDate - Employee's joining date
+ * @returns {boolean} - True if joined in current month
+ */
+function isJoinedInCurrentMonth(joiningDate) {
+  if (!joiningDate) return false;
+  const today = new Date();
+  const joining = new Date(joiningDate);
+  return joining.getMonth() === today.getMonth() && joining.getFullYear() === today.getFullYear();
+}
+
+/**
+ * Calculate pro-rated accrual for new joiners based on the setting
+ * @param {number} baseAccrual - Base accrual rate per period
+ * @param {number} joiningDay - Day of month the employee joined (1-31)
+ * @param {string} proRateSetting - 'fixed' or 'pro-ration'
+ * @param {number} cutoffDay - Cutoff day for 'fixed' setting (default 15)
+ * @returns {number} - Pro-rated accrual amount
+ */
+function calculateProRatedAccrual(baseAccrual, joiningDay, proRateSetting, cutoffDay = 15) {
+  if (!proRateSetting) {
+    // Default behavior: full accrual
+    return baseAccrual;
+  }
+
+  if (proRateSetting === 'fixed') {
+    // Fixed cutoff: Employee gets full credit if joined on or before cutoff day, otherwise 0
+    return joiningDay <= cutoffDay ? baseAccrual : 0;
+  }
+
+  if (proRateSetting === 'pro-ration') {
+    // Pro-ration: Calculate based on remaining days in the month
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const remainingDays = daysInMonth - joiningDay + 1;
+    const proRatedAmount = (baseAccrual * remainingDays) / daysInMonth;
+    return Number(proRatedAmount.toFixed(2));
+  }
+
+  // Unknown setting: return full accrual
+  return baseAccrual;
 }
 
 module.exports = {

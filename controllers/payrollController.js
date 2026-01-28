@@ -3045,6 +3045,9 @@ exports.createPayrollUser = catchAsync(async (req, res, next) => {
   try { await payrollCalculationController.StoreInPayrollVariableDeductions(req, res); }
   catch (err) { console.log('Error in StoreInPayrollVariableDeductions:', err.message); }
 
+  try { await payrollCalculationController.calculateLeaveEncashmentRecovery(req, res); }
+  catch (err) { console.log('Error in calculateLeaveEncashmentRecovery:', err.message); }
+
   try { await payrollCalculationController.CalculateOvertime(req, res); }
   catch (err) { console.log('Error in CalculateOvertime:', err.message); }
 
@@ -3680,11 +3683,11 @@ exports.deletePayrollIncomeTax = catchAsync(async (req, res, next) => {
 exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
   const companyId = req.cookies?.companyId || req.body?.companyId;
 
-if (!companyId) {
-  return res.status(400).json({
-    message: 'companyId is required either in cookies or request body',
-  });
-}
+  if (!companyId) {
+    return res.status(400).json({
+      message: 'companyId is required either in cookies or request body',
+    });
+  }
   websocketHandler.sendLog(req, 'Starting getAllGeneratedPayroll process', constants.LOG_TYPES.INFO);
 
   // Validate companyId
@@ -4674,13 +4677,13 @@ exports.getAllGeneratedPayrollByPayrollId = catchAsync(async (req, res, next) =>
       const totalOvertime = Array.isArray(overtime)
         ? overtime.reduce((sum, ot) => sum + (ot.OvertimeAmount || 0), 0)
         : 0;
-      
+
       //const totalIncomeTax = incomeTax && incomeTax.TDSCalculated ? Number(incomeTax.TDSCalculated) : 0;
       const totalIncomeTax = Number(incomeTax?.[0]?.TDSCalculated || 0);
       // Calculate total CTC, gross salary, and take-home
       const totalCTC = (totalFixedAllowance) * 12;
       const totalGrossSalary = totalFixedAllowance;
-      
+
       //LOP calculation can be added here
       const salaryPerDay = totalFixedAllowance / 30; //reference from overtime calculation per day salary
       const payrollAttendanceSummary = await PayrollAttendanceSummary.findOne({
@@ -5363,6 +5366,7 @@ exports.createPayrollFNFUser = catchAsync(async (req, res, next) => {
   await payrollCalculationController.calculateAndStoreIncomeTax(req, res);
   await payrollCalculationController.StoreInPayrollVariableAllowances(req, res);
   await payrollCalculationController.StoreInPayrollVariableDeductions(req, res);
+  await payrollCalculationController.calculateLeaveEncashmentRecovery(req, res);
   await payrollCalculationController.calculateProfessionalTax(req, res);
   await payrollCalculationController.calculateLWF(req, res);
   await payrollCalculationController.calculatePF(req, res);
