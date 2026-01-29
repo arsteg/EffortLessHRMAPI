@@ -293,7 +293,11 @@ exports.getTaskwiseHours = catchAsync(async (req, res, next) => {
                       totalTime: "$totalTime",
                   },
               },
+              projectTotalTime: { $sum: "$totalTime" },
           },
+      },
+      {
+          $sort: { projectTotalTime: -1 },
       },
       {
           $project: {
@@ -403,13 +407,17 @@ exports.getApplicationTimeSummary = catchAsync(async (req, res, next) => {
   });
 
   websocketHandler.sendLog(req, 'Completed getApplicationTimeSummary process', constants.LOG_TYPES.INFO);
+  const data = [
+      { name: "Productive", value: productiveTime / (1000 * 60) },
+      { name: "Non-Productive", value: nonProductiveTime / (1000 * 60) },
+  ];
+  if (neutralTime > 0) {
+      data.push({ name: "Neutral", value: neutralTime / (1000 * 60) });
+  }
+
   res.status(200).json({
       status: constants.APIResponseStatus.Success,
-      data: [
-          { name: "Productive", value: productiveTime / (1000 * 60) },
-          { name: "Non-Productive", value: nonProductiveTime / (1000 * 60) },
-          { name: "Neutral", value: neutralTime / (1000 * 60) },
-      ],
+      data,
   });
 });
 
@@ -541,37 +549,3 @@ function groupByProjectAndCountTasks(timeLogs) {
   return projectsWithTasks;
 }
 
-function groupByProjectAndCountTasks(timeLogs) {
-  const projectTaskCount = timeLogs.reduce((acc, log) => {
-    const projectId = log.project.id;
-    const taskId = log.task.id;
-
-    if (!acc[projectId]) {
-      acc[projectId] = {
-        projectName: log.project.projectName,
-        tasks: {},
-      };
-    }
-
-    if (!acc[projectId].tasks[taskId]) {
-      acc[projectId].tasks[taskId] = {
-        taskName: log.task.taskName,
-        count: 0,
-      };
-    }
-
-    acc[projectId].tasks[taskId].count++;
-    return acc;
-  }, {});
-
-  // Convert the object into an array of projects with tasks
-  const projectsWithTasks = Object.values(projectTaskCount).map((project) => {
-    const tasks = Object.values(project.tasks);
-    return {
-      projectName: project.projectName,
-      tasks,
-    };
-  });
-
-  return projectsWithTasks;
-}
