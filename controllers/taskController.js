@@ -273,7 +273,29 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const search = req.body.search;
   websocketHandler.sendLog(req, `Pagination parameters - skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
+
+  const searchMatchStage = [];
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const orConditions = [
+      { 'taskDetails.taskName': searchRegex },
+      { 'taskDetails.title': searchRegex }
+    ];
+    const digitMatch = search.match(/(\d+)/);
+    if (digitMatch) {
+      orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
+    }
+    const matchingProjects = await Project.find({
+      company: req.cookies.companyId,
+      projectName: searchRegex
+    }).select('_id');
+    if (matchingProjects.length > 0) {
+      orConditions.push({ 'taskDetails.project': { $in: matchingProjects.map(p => p._id) } });
+    }
+    searchMatchStage.push({ $match: { $or: orConditions } });
+  }
 
   const aggregationPipeline = [
     { $match: { user: { $in: objectIdArray }, task: { $exists: true } } },
@@ -286,6 +308,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
       }
     },
     { $unwind: '$taskDetails' },
+    ...searchMatchStage,
     {
       $lookup: {
         from: 'taskusers',
@@ -396,8 +419,29 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
   const userId = new ObjectId(req.body.userId);
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
+  const search = req.body.search;
 
   websocketHandler.sendLog(req, `Processing task list for user ${req.body.userId}, skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
+
+  const searchMatchStage = [];
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const orConditions = [
+      { 'taskDetails.taskName': searchRegex },
+      { 'taskDetails.title': searchRegex }
+    ];
+    const digitMatch = search.match(/(\d+)/);
+    if (digitMatch) {
+      orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
+    }
+    const matchingProjects = await Project.find({
+      projectName: searchRegex
+    }).select('_id');
+    if (matchingProjects.length > 0) {
+      orConditions.push({ 'taskDetails.project': { $in: matchingProjects.map(p => p._id) } });
+    }
+    searchMatchStage.push({ $match: { $or: orConditions } });
+  }
 
   const aggregationPipeline = [
     { $match: { user: userId, task: { $exists: true } } },
@@ -410,6 +454,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
       }
     },
     { $unwind: '$taskDetails' },
+    ...searchMatchStage,
     {
       $lookup: {
         from: 'taskusers',
@@ -1076,14 +1121,37 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
 
   const skip = req.body.skip || 0;
   const limit = req.body.next || 10;
+  const search = req.body.search;
   websocketHandler.sendLog(req, `Fetching tasks for company ${req.cookies.companyId} with skip ${skip} and limit ${limit}`, constants.LOG_TYPES.DEBUG);
 
-  const taskList = await Task.find({})
-    .where('company').equals(req.cookies.companyId)
+  const query = { company: req.cookies.companyId };
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const orConditions = [
+      { taskName: searchRegex },
+      { title: searchRegex }
+    ];
+    // Extract digits from search to match taskNumber (handles "155", "E-155", "E - 155", etc.)
+    const digitMatch = search.match(/(\d+)/);
+    if (digitMatch) {
+      orConditions.push({ taskNumber: Number(digitMatch[1]) });
+    }
+    // Match project name
+    const matchingProjects = await Project.find({
+      company: req.cookies.companyId,
+      projectName: searchRegex
+    }).select('_id');
+    if (matchingProjects.length > 0) {
+      orConditions.push({ project: { $in: matchingProjects.map(p => p._id) } });
+    }
+    query.$or = orConditions;
+  }
+
+  const taskList = await Task.find(query)
     .select('taskName startDate endDate description comment priority status taskNumber parentTask')
     .skip(skip)
     .limit(limit);
-  const taskCount = await Task.countDocuments({ "company": req.cookies.companyId });
+  const taskCount = await Task.countDocuments(query);
   websocketHandler.sendLog(req, `Fetched ${taskList.length} tasks, total count: ${taskCount}`, constants.LOG_TYPES.INFO);
 
   if (taskList) {
@@ -1106,9 +1174,23 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
 
   const skip = req.body.skip || 0;
   const limit = req.body.next || 10;
-  const tasksForProject = await Task.find({})
-    .where('company').equals(req.cookies.companyId)
-    .where('project').equals(req.params.projectId)
+  const search = req.body.search;
+
+  const projectQuery = { company: req.cookies.companyId, project: req.params.projectId };
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const orConditions = [
+      { taskName: searchRegex },
+      { title: searchRegex }
+    ];
+    const digitMatch = search.match(/(\d+)/);
+    if (digitMatch) {
+      orConditions.push({ taskNumber: Number(digitMatch[1]) });
+    }
+    projectQuery.$or = orConditions;
+  }
+
+  const tasksForProject = await Task.find(projectQuery)
     .skip(skip)
     .limit(limit);
   websocketHandler.sendLog(req, `Fetched ${tasksForProject.length} tasks for project ${req.params.projectId}`, constants.LOG_TYPES.DEBUG);
@@ -1292,7 +1374,7 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution (Optimized)', constants.LOG_TYPES.TRACE);
 
-  const { skip, next: limit, projectId, userId } = req.body;
+  const { skip, next: limit, projectId, userId, search } = req.body;
   websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
 
   // Determine if pagination should be applied
@@ -1320,6 +1402,19 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     // 3. Only keep results where a task was found and belongs to the specified project
     { $unwind: '$taskDetails' },
     { $match: { 'taskDetails.project': new mongoose.Types.ObjectId(projectId) } },
+
+    // 3b. Apply search filter if provided
+    ...(search ? (() => {
+      const orConditions = [
+        { 'taskDetails.taskName': new RegExp(search, 'i') },
+        { 'taskDetails.title': new RegExp(search, 'i') }
+      ];
+      const digitMatch = search.match(/(\d+)/);
+      if (digitMatch) {
+        orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
+      }
+      return [{ $match: { $or: orConditions } }];
+    })() : []),
 
     // 4. Project only the Task ID
     { $project: { _id: 0, taskId: '$taskDetails._id' } }
