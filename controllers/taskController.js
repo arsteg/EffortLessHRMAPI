@@ -276,7 +276,21 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   const search = req.body.search;
   websocketHandler.sendLog(req, `Pagination parameters - skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
 
-  const searchMatchStage = [];
+  // Build search conditions for both assigned and created task paths
+  let matchingProjectIds = [];
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const matchingProjects = await Project.find({
+      company: req.cookies.companyId,
+      projectName: searchRegex
+    }).select('_id');
+    if (matchingProjects.length > 0) {
+      matchingProjectIds = matchingProjects.map(p => p._id);
+    }
+  }
+
+  // Search match stage for assigned tasks (nested taskDetails)
+  const searchMatchStageAssigned = [];
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     const orConditions = [
@@ -287,17 +301,14 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
     if (digitMatch) {
       orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
     }
-    const matchingProjects = await Project.find({
-      company: req.cookies.companyId,
-      projectName: searchRegex
-    }).select('_id');
-    if (matchingProjects.length > 0) {
-      orConditions.push({ 'taskDetails.project': { $in: matchingProjects.map(p => p._id) } });
+    if (matchingProjectIds.length > 0) {
+      orConditions.push({ 'taskDetails.project': { $in: matchingProjectIds } });
     }
-    searchMatchStage.push({ $match: { $or: orConditions } });
+    searchMatchStageAssigned.push({ $match: { $or: orConditions } });
   }
 
-  const aggregationPipeline = [
+  // PATH A: Assigned tasks pipeline for team members
+  const assignedTasksPipeline = [
     { $match: { user: { $in: objectIdArray }, task: { $exists: true } } },
     {
       $lookup: {
@@ -308,7 +319,49 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
       }
     },
     { $unwind: '$taskDetails' },
-    ...searchMatchStage,
+    ...searchMatchStageAssigned,
+    { $project: { taskId: '$taskDetails._id', taskDetails: 1 } }
+  ];
+
+  // Main pipeline with union for creator-based tasks
+  const aggregationPipeline = [
+    ...assignedTasksPipeline,
+
+    // PATH B: Created tasks by any team member (new logic)
+    {
+      $unionWith: {
+        coll: 'tasks',
+        pipeline: [
+          {
+            $match: {
+              createdBy: { $in: objectIdArray },
+              isDeleted: { $ne: true }
+            }
+          },
+          // Apply search filter for created tasks
+          ...(search ? (() => {
+            const searchRegex = new RegExp(search, 'i');
+            const orConditions = [
+              { taskName: searchRegex },
+              { title: searchRegex }
+            ];
+            const digitMatch = search.match(/(\d+)/);
+            if (digitMatch) {
+              orConditions.push({ taskNumber: Number(digitMatch[1]) });
+            }
+            if (matchingProjectIds.length > 0) {
+              orConditions.push({ project: { $in: matchingProjectIds } });
+            }
+            return [{ $match: { $or: orConditions } }];
+          })() : []),
+          { $project: { taskId: '$_id', taskDetails: '$$ROOT' } }
+        ]
+      }
+    },
+
+    // Deduplicate by taskId (handles users who are both creator AND assignee)
+    { $group: { _id: '$taskId', taskDetails: { $first: '$taskDetails' } } },
+    { $project: { taskDetails: 1 } },
     {
       $lookup: {
         from: 'taskusers',
@@ -363,6 +416,14 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
     },
     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
     {
+      $lookup: {
+        from: 'comments',
+        localField: 'taskDetails._id',
+        foreignField: 'task',
+        as: 'taskComments'
+      }
+    },
+    {
       $project: {
         _id: 0,
         task: {
@@ -378,6 +439,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
           taskNumber: '$taskDetails.taskNumber',
           parentTask: '$taskDetails.parentTask',
           TaskUsers: '$TaskUsers',
+          commentsCount: { $size: '$taskComments' },
           createdBy: {
             _id: '$taskCreatedBy._id',
             firstName: '$taskCreatedBy.firstName',
@@ -423,7 +485,20 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, `Processing task list for user ${req.body.userId}, skip: ${skip}, limit: ${limit}`, constants.LOG_TYPES.DEBUG);
 
-  const searchMatchStage = [];
+  // Build search conditions for both assigned and created task paths
+  let matchingProjectIds = [];
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const matchingProjects = await Project.find({
+      projectName: searchRegex
+    }).select('_id');
+    if (matchingProjects.length > 0) {
+      matchingProjectIds = matchingProjects.map(p => p._id);
+    }
+  }
+
+  // Search match stage for assigned tasks (nested taskDetails)
+  const searchMatchStageAssigned = [];
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     const orConditions = [
@@ -434,16 +509,14 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     if (digitMatch) {
       orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
     }
-    const matchingProjects = await Project.find({
-      projectName: searchRegex
-    }).select('_id');
-    if (matchingProjects.length > 0) {
-      orConditions.push({ 'taskDetails.project': { $in: matchingProjects.map(p => p._id) } });
+    if (matchingProjectIds.length > 0) {
+      orConditions.push({ 'taskDetails.project': { $in: matchingProjectIds } });
     }
-    searchMatchStage.push({ $match: { $or: orConditions } });
+    searchMatchStageAssigned.push({ $match: { $or: orConditions } });
   }
 
-  const aggregationPipeline = [
+  // PATH A: Assigned tasks pipeline
+  const assignedTasksPipeline = [
     { $match: { user: userId, task: { $exists: true } } },
     {
       $lookup: {
@@ -454,7 +527,50 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
       }
     },
     { $unwind: '$taskDetails' },
-    ...searchMatchStage,
+    ...searchMatchStageAssigned,
+    { $project: { taskId: '$taskDetails._id', taskDetails: 1 } }
+  ];
+
+  // Main pipeline with union for creator-based tasks
+  const aggregationPipeline = [
+    ...assignedTasksPipeline,
+
+    // PATH B: Created tasks (new logic)
+    {
+      $unionWith: {
+        coll: 'tasks',
+        pipeline: [
+          {
+            $match: {
+              createdBy: userId,
+              isDeleted: { $ne: true }
+            }
+          },
+          // Apply search filter for created tasks
+          ...(search ? (() => {
+            const searchRegex = new RegExp(search, 'i');
+            const orConditions = [
+              { taskName: searchRegex },
+              { title: searchRegex }
+            ];
+            const digitMatch = search.match(/(\d+)/);
+            if (digitMatch) {
+              orConditions.push({ taskNumber: Number(digitMatch[1]) });
+            }
+            if (matchingProjectIds.length > 0) {
+              orConditions.push({ project: { $in: matchingProjectIds } });
+            }
+            return [{ $match: { $or: orConditions } }];
+          })() : []),
+          { $project: { taskId: '$_id', taskDetails: '$$ROOT' } }
+        ]
+      }
+    },
+
+    // Deduplicate by taskId (handles user being both creator AND assignee)
+    { $group: { _id: '$taskId', taskDetails: { $first: '$taskDetails' } } },
+    { $project: { taskDetails: 1 } },
+    // Continue with lookups for TaskUsers, creator, and comments
     {
       $lookup: {
         from: 'taskusers',
@@ -509,6 +625,14 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     },
     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
     {
+      $lookup: {
+        from: 'comments',
+        localField: 'taskDetails._id',
+        foreignField: 'task',
+        as: 'taskComments'
+      }
+    },
+    {
       $project: {
         _id: 0,
         task: {
@@ -523,6 +647,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
           taskNumber: '$taskDetails.taskNumber',
           parentTask: '$taskDetails.parentTask',
           TaskUsers: '$TaskUsers',
+          commentsCount: { $size: '$taskComments' },
           createdBy: {
             _id: '$taskCreatedBy._id',
             firstName: '$taskCreatedBy.firstName',
@@ -1155,10 +1280,16 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetched ${taskList.length} tasks, total count: ${taskCount}`, constants.LOG_TYPES.INFO);
 
   if (taskList) {
+    const Comment = require('../models/Task/taskCommentModel');
     for (let i = 0; i < taskList.length; i++) {
       const taskUser = await TaskUser.find({}).where('task').equals(taskList[i]._id).select('user');
       taskList[i].TaskUsers = taskUser || null;
-      websocketHandler.sendLog(req, `Added ${taskUser?.length || 0} users to task ${taskList[i]._id}`, constants.LOG_TYPES.DEBUG);
+
+      // Get comments count for the task
+      const commentsCount = await Comment.countDocuments({ task: taskList[i]._id });
+      taskList[i]._doc.commentsCount = commentsCount;
+
+      websocketHandler.sendLog(req, `Added ${taskUser?.length || 0} users and ${commentsCount} comments to task ${taskList[i]._id}`, constants.LOG_TYPES.DEBUG);
     }
   }
 
@@ -1209,7 +1340,13 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
         .where('task').equals(taskList[i]._id)
         .where('userId').equals(req.body.userId);
       taskList[i].TaskUsers = taskUser && taskUser.length ? taskUser : null;
-      websocketHandler.sendLog(req, `Added ${taskUser?.length || 0} users to task ${taskList[i]._id}`, constants.LOG_TYPES.DEBUG);
+
+      // Get comments count for the task
+      const Comment = require('../models/Task/taskCommentModel');
+      const commentsCount = await Comment.countDocuments({ task: taskList[i]._id });
+      taskList[i]._doc.commentsCount = commentsCount;
+
+      websocketHandler.sendLog(req, `Added ${taskUser?.length || 0} users and ${commentsCount} comments to task ${taskList[i]._id}`, constants.LOG_TYPES.DEBUG);
     }
   }
 
@@ -1386,7 +1523,21 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
 
   // --- PHASE 1: FIND TASK IDs AND COUNT (LIGHTWEIGHT) ---
-  const initialPipeline = [
+  // Build search match stages for reuse in both paths
+  const searchMatchStage = search ? (() => {
+    const orConditions = [
+      { 'taskDetails.taskName': new RegExp(search, 'i') },
+      { 'taskDetails.title': new RegExp(search, 'i') }
+    ];
+    const digitMatch = search.match(/(\d+)/);
+    if (digitMatch) {
+      orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
+    }
+    return [{ $match: { $or: orConditions } }];
+  })() : [];
+
+  // PATH A: Assigned tasks (existing logic)
+  const assignedTasksPipeline = [
     // 1. Filter TaskUser documents by the user ID
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
 
@@ -1404,20 +1555,51 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
     { $match: { 'taskDetails.project': new mongoose.Types.ObjectId(projectId) } },
 
     // 3b. Apply search filter if provided
-    ...(search ? (() => {
-      const orConditions = [
-        { 'taskDetails.taskName': new RegExp(search, 'i') },
-        { 'taskDetails.title': new RegExp(search, 'i') }
-      ];
-      const digitMatch = search.match(/(\d+)/);
-      if (digitMatch) {
-        orConditions.push({ 'taskDetails.taskNumber': Number(digitMatch[1]) });
-      }
-      return [{ $match: { $or: orConditions } }];
-    })() : []),
+    ...searchMatchStage,
 
     // 4. Project only the Task ID
     { $project: { _id: 0, taskId: '$taskDetails._id' } }
+  ];
+
+  // Main pipeline with union to include creator-based tasks
+  const initialPipeline = [
+    ...assignedTasksPipeline,
+
+    // PATH B: Created tasks (new logic)
+    {
+      $unionWith: {
+        coll: 'tasks',
+        pipeline: [
+          {
+            $match: {
+              createdBy: new mongoose.Types.ObjectId(userId),
+              project: new mongoose.Types.ObjectId(projectId),
+              isDeleted: { $ne: true }
+            }
+          },
+          // Apply search filter for created tasks
+          ...(search ? [
+            {
+              $match: {
+                $or: [
+                  { taskName: new RegExp(search, 'i') },
+                  { title: new RegExp(search, 'i') },
+                  ...((() => {
+                    const digitMatch = search.match(/(\d+)/);
+                    return digitMatch ? [{ taskNumber: Number(digitMatch[1]) }] : [];
+                  })())
+                ]
+              }
+            }
+          ] : []),
+          { $project: { _id: 0, taskId: '$_id' } }
+        ]
+      }
+    },
+
+    // Deduplicate by taskId (handles users who are both creator AND assignee)
+    { $group: { _id: '$taskId' } },
+    { $project: { _id: 0, taskId: '$_id' } }
   ];
 
   websocketHandler.sendLog(req, 'Executing Phase 1: ID and Count aggregation', constants.LOG_TYPES.TRACE);
@@ -1452,27 +1634,16 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
 
   // --- PHASE 2: HYDRATE LIMITED TASKS (HEAVY LOOKUPS) ---
   // We perform the lookups only on the small, paginated subset of Task IDs.
+  // NOTE: Starting from Task collection instead of TaskUser to handle creator-only tasks
   const finalLookupPipeline = [
-    // 1. Match only the TaskUser documents for the *limited* set of task IDs
-    { $match: { task: { $in: taskIdsToLookup } } },
-    { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    // 1. Match the Task documents for the *limited* set of task IDs
+    { $match: { _id: { $in: taskIdsToLookup } } },
 
-    // 2. Look up Task Details (must be done again to get full details)
-    {
-      $lookup: {
-        from: 'tasks',
-        localField: 'task',
-        foreignField: '_id',
-        as: 'taskDetails'
-      }
-    },
-    { $unwind: '$taskDetails' },
-
-    // 3. Lookup Task Users/Assignees/Creators (The heavy nested lookups)
+    // 2. Lookup Task Users/Assignees (may be empty for creator-only tasks)
     {
       $lookup: {
         from: 'taskusers',
-        let: { taskId: '$taskDetails._id' },
+        let: { taskId: '$_id' },
         pipeline: [
           { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
           // Nested lookups for createdBy and user details
@@ -1493,28 +1664,32 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
       }
     },
 
-    // 4. Lookup Task Created By User details
-    { $lookup: { from: 'users', localField: 'taskDetails.createdBy', foreignField: '_id', as: 'taskCreatedBy' } },
+    // 3. Lookup Task Created By User details
+    { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'taskCreatedBy' } },
     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
+
+    // 4. Lookup Comments for comment count
+    { $lookup: { from: 'comments', localField: '_id', foreignField: 'task', as: 'taskComments' } },
 
     // 5. Final Projection (Structuring the final output)
     {
       $project: {
         _id: 0,
         task: {
-          _id: '$taskDetails._id',
-          id: '$taskDetails._id',
-          taskName: '$taskDetails.taskName',
-          startDate: '$taskDetails.startDate',
-          endDate: '$taskDetails.endDate',
-          description: '$taskDetails.description',
-          comment: '$taskDetails.comment',
-          priority: '$taskDetails.priority',
-          status: '$taskDetails.status',
-          taskNumber: '$taskDetails.taskNumber',
-          parentTask: '$taskDetails.parentTask',
-          project: '$taskDetails.project',
+          _id: '$_id',
+          id: '$_id',
+          taskName: '$taskName',
+          startDate: '$startDate',
+          endDate: '$endDate',
+          description: '$description',
+          comment: '$comment',
+          priority: '$priority',
+          status: '$status',
+          taskNumber: '$taskNumber',
+          parentTask: '$parentTask',
+          project: '$project',
           TaskUsers: '$TaskUsers',
+          commentsCount: { $size: '$taskComments' },
           createdBy: {
             _id: '$taskCreatedBy._id',
             firstName: '$taskCreatedBy.firstName',
@@ -1526,8 +1701,8 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   ];
 
   websocketHandler.sendLog(req, `Executing Phase 2: Final lookup query for ${taskIdsToLookup.length} tasks`, constants.LOG_TYPES.TRACE);
-  // Execute the final query on the limited set
-  const finalResult = await TaskUser.aggregate(finalLookupPipeline, { allowDiskUse: true }).exec();
+  // Execute the final query on the limited set - now using Task collection instead of TaskUser
+  const finalResult = await Task.aggregate(finalLookupPipeline, { allowDiskUse: true }).exec();
 
   const taskList = finalResult.map(item => item.task);
 

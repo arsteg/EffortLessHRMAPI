@@ -97,6 +97,8 @@ var taskModelSchema = new Schema({
   },
   { collection: 'Task' });
 
+// Compound index for creator-based task queries (optimizes filtering by createdBy + project + isDeleted)
+taskModelSchema.index({ createdBy: 1, project: 1, isDeleted: 1 });
 
   taskModelSchema.pre(/^find/,async function(next) {
     this.populate({
