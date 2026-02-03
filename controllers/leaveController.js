@@ -1696,6 +1696,16 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
       else {
         leaveApplications[i].halfDays = null;
       }
+
+      // Fetch primary approver for this leave application's employee
+      const employeeAssignment = await EmployeeLeaveAssignment.findOne({
+        user: leaveApplications[i].employee
+      })
+      .select('primaryApprover')
+      .populate('primaryApprover', '_id firstName lastName');
+
+      // Attach primary approver to leave application
+      leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1745,6 +1755,16 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
       .equals(leaveApplications[i]._id);
     // Assign halfDays, even if null, to avoid undefined properties and maintain consistency
     leaveApplications[i].halfDays = halfDays.length > 0 ? halfDays : null;
+
+    // Fetch primary approver for this leave application's employee
+    const employeeAssignment = await EmployeeLeaveAssignment.findOne({
+      user: leaveApplications[i].employee
+    })
+    .select('primaryApprover')
+    .populate('primaryApprover', '_id firstName lastName');
+
+    // Attach primary approver to leave application
+    leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
   }
 
   res.status(200).json({
@@ -1811,6 +1831,16 @@ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
       else {
         leaveApplications[i].halfDays = null;
       }
+
+      // Fetch primary approver for this leave application's employee
+      const employeeAssignment = await EmployeeLeaveAssignment.findOne({
+        user: leaveApplications[i].employee
+      })
+      .select('primaryApprover')
+      .populate('primaryApprover', '_id firstName lastName');
+
+      // Attach primary approver to leave application
+      leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1833,6 +1863,16 @@ exports.getEmployeeLeaveApplication = async (req, res, next) => {
     else {
       leaveApplication.halfDays = null;
     }
+
+    // Fetch primary approver for this leave application's employee
+    const employeeAssignment = await EmployeeLeaveAssignment.findOne({
+      user: leaveApplication.employee
+    })
+    .select('primaryApprover')
+    .populate('primaryApprover', '_id firstName lastName');
+
+    // Attach primary approver to leave application
+    leaveApplication._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
 
     if (!leaveApplication) {
       return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
