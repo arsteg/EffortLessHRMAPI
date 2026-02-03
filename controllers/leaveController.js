@@ -1345,7 +1345,11 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         //for (const managerId of managerTeamsIds) {
         const manager = await User.findById(LeaveApproval?.primaryApprover);
         const companyDetails = await Company.findById(req.cookies.companyId);
-        sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails);
+
+        // Generate approval URL
+        const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+
+        sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails, leaveCat.label, approvalUrl);
 
         SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
           constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
@@ -1364,7 +1368,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
   }
 };
 
-const sendEmailToUsers = async (user, manager, email_template_constant, leaveApplication, company) => {
+const sendEmailToUsers = async (user, manager, email_template_constant, leaveApplication, company, leaveCategoryLabel = null, approvalUrl = null) => {
 
 
   const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id);
@@ -1384,19 +1388,25 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
         month: "short",
         year: "numeric"
       });
+console.log('send email approvalUrl' , approvalUrl);
+
+    // Use provided leave category label or fallback to leaveApplication.leaveCategory
+    const leaveTypeDisplay = leaveCategoryLabel || leaveApplication.leaveCategory?.label || leaveApplication.leaveCategory;
+    const approvalLink = approvalUrl || '#';
 
     const message = template
       .replace("{firstName}", manager.firstName)
       .replace("{employeeName}", user.firstName + " " + user.lastName)
       .replace("{employeeName}", user.firstName + " " + user.lastName)
-      .replace("{leaveType}", leaveApplication.leaveCategory)
+      .replace("{leaveType}", leaveTypeDisplay)
       .replace("{startDate}", formatDate(start))
       .replace("{endDate}", formatDate(end))
       .replace("{totalDays}", totalDays)
       .replace("{reason}", leaveApplication.comment || "-")
       .replace("{company}", company.companyName)
       .replace("{company}", company.companyName)
-      .replace("{lastName}", manager.lastName);
+      .replace("{lastName}", manager.lastName)
+      .replace("{leaveUrl}", approvalLink);
     //if (attendanceUser.email == "hrmeffortless@gmail.com") {
     try {
       await sendEmail({
@@ -1497,8 +1507,13 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           // Save the updated leave assigned record
           await leaveAssigned.save();
           console.log('Sending rejection/cancellation email...');
+
+          // Fetch leave category label
+          const leaveCat = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
+          const viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
-          sendEmailToUsers(manager, manager, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, companyDetails);
+          sendEmailToUsers(manager, manager, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
           SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
@@ -1507,8 +1522,13 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           leaveAssigned.leaveApplied = Math.max(0, leaveAssigned.leaveApplied - leaveDays);
           await leaveAssigned.save();
           console.log('Sending approval email...');
+
+          // Fetch leave category label
+          const leaveCat = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
+          viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
-          sendEmailToUsers(manager, manager, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, companyDetails);
+          sendEmailToUsers(manager, manager, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
           SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
         }
 
