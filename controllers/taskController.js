@@ -53,7 +53,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
-  const task = await Task.findById(req.params.id);
+  const task = await Task.findById(req.params.id).populate('project', 'projectName');
   let isUINotificationSentToReporter = false;
 
   if (newTaskUserList && newTaskUserList.length > 0) {
@@ -67,12 +67,12 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
         if (emailTemplate) {
           const contentNewUser = emailTemplate.contentData;
           const emailTemplateNewUser = contentNewUser
-            .replace("{firstName}", user.firstName)
-            .replace("{taskName}", task.taskName)
+            .replace("{firstName}", user?.firstName || 'N/A')
+            .replace("{taskName}", task?.taskName || 'Untitled Task')
             .replace("{date}", formatDateToDDMMYY(new Date()))
-            .replace("{company}", req.cookies.companyName)
-            .replace("{projectName}", task.project.projectName)
-            .replace("{lastName}", user.lastName);
+            .replace("{company}", req.cookies.companyName || 'N/A')
+            .replace("{projectName}", task.project?.projectName || 'N/A')
+            .replace("{lastName}", user?.lastName || 'N/A');
 
           const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
           if (!document) {
@@ -159,22 +159,22 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     .where('company').equals(req.cookies.companyId);
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
-  const updatedTask = await Task.findById(req.params.id);
+  const updatedTask = await Task.findById(req.params.id).populate('project', 'projectName');
 
   if (updatedTask && newTaskUserList.length > 0) {
     const user = await User.findOne({ _id: newTaskUserList[0].user });
     const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
     if (emailTemplate) {
       const emailTemplateNewUser = emailTemplate.contentData
-        .replace("{firstName}", user.firstName)
-        .replace("{taskName}", updatedTask.taskName)
+        .replace("{firstName}", user?.firstName || 'N/A')
+        .replace("{taskName}", updatedTask?.taskName || 'Untitled Task')
         .replace("{date}", formatDateToDDMMYY(new Date()))
-        .replace("{company}", req.cookies.companyName)
-        .replace("{projectName}", updatedTask.project.projectName)
-        .replace("{description}", updatedTask.description)
-        .replace("{priority}", updatedTask.priority)
+        .replace("{company}", req.cookies.companyName || 'N/A')
+        .replace("{projectName}", updatedTask.project?.projectName || 'N/A')
+        //.replace("{description}", updatedTask?.description || 'No description provided')
+        .replace("{priority}", updatedTask?.priority || 'N/A')
         .replace("{taskURL}", taskURL)
-        .replace("{lastName}", user.lastName);
+        .replace("{lastName}", user?.lastName || 'N/A');
 
       try {
         await sendEmail({
@@ -190,12 +190,12 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
     // Add Event Notification for the assigned user
     SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-      constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
+      constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req, taskURL);
 
     if (user?._id?.toString() !== updatedTask?.createdBy?.toString()) {
       // Add Event Notification for the reporter user
       SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-        constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req);
+        constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req, taskURL);
     }
   }
 
@@ -919,15 +919,15 @@ exports.addTask = catchAsync(async (req, res, next) => {
       if (templateNewUser) {
         const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`;
         const emailTemplateNewUser = templateNewUser.contentData
-          .replace("{firstName}", newUser.firstName)
+          .replace("{firstName}", newUser?.firstName || 'N/A')
           .replace("{taskURL}", taskURL)
-          .replace("{startDate}", newTask.startDate)
-          .replace("{endDate}", newTask.endDate)
-          .replace("{company}", req.cookies.companyName)
-          .replace("{description}", newTask.description)
-          .replace("{priority}", newTask.priority)
-          .replace("{taskName}", newTask.taskName)
-          .replace("{lastName}", newUser.lastName);
+          .replace("{startDate}", newTask?.startDate || 'N/A')
+          .replace("{endDate}", newTask?.endDate || 'N/A')
+          .replace("{company}", req.cookies.companyName || 'N/A')
+          //.replace("{description}", newTask?.description || 'No description provided')
+          .replace("{priority}", newTask?.priority || 'N/A')
+          .replace("{taskName}", newTask?.taskName || 'Untitled Task')
+          .replace("{lastName}", newUser?.lastName || 'N/A');
         try {
           await sendEmail({
             email: newUser.email,
@@ -980,7 +980,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   // Add Event Notification for the assigned user
   SendUINotification(`Task Assigned: ${newTask.taskName}`, newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
-    constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req);
+    constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1008,7 +1008,8 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
 
   let emailOldUser = null;
   const taskUsersExists = await TaskUser.find({}).where('task').equals(req.body.task).populate('task');
-  const task = await Task.findById(req.body.task);
+  const task = await Task.findById(req.body.task).populate('project', 'projectName');
+  const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`;
   let newTaskUserItem = null;
 
   if (taskUsersExists.length > 0) {
@@ -1049,14 +1050,15 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       .where('company').equals(req.cookies.companyId);
     if (templateOldUser) {
       const emailTemplateOldUser = templateOldUser.contentData
-        .replace("{firstName}", oldUser.firstName)
-        .replace("{startDate}", task.startDate)
-        .replace("{endDate}", task.endDate)
-        .replace("{taskName}", task.taskName)
+        .replace("{firstName}", oldUser?.firstName || 'N/A')
+        .replace("{startDate}", task?.startDate || 'N/A')
+        .replace("{endDate}", task?.endDate || 'N/A')
+        .replace("{taskName}", task?.taskName || 'Untitled Task')
         .replace("{date}", formatDateToDDMMYY(new Date()))
-        .replace("{company}", req.cookies.companyName)
-        .replace("{projectName}", task.project.projectName)
-        .replace("{lastName}", oldUser.lastName);
+        .replace("{company}", req.cookies.companyName || 'N/A')
+        .replace("{projectName}", task.project?.projectName || 'N/A')
+        .replace("{taskURL}", taskURL)
+        .replace("{lastName}", oldUser?.lastName || 'N/A');
       try {
         await sendEmail({
           email: oldUser.email,
@@ -1070,7 +1072,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
     //Add Event Notification for the assigned user
     SendUINotification(`Task Unassignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been Unassigned to you.`,
-      constants.Event_Notification_Type_Status.task_assignment, emailOldUser?._id?.toString(), req.cookies.companyId, req);
+      constants.Event_Notification_Type_Status.task_assignment, emailOldUser?._id?.toString(), req.cookies.companyId, req, taskURL);
   }
 
   if (newTaskUserItem != null) {
@@ -1079,17 +1081,16 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       .where('Name').equals(constants.Email_template_constant.Task_Assigned)
       .where('company').equals(req.cookies.companyId);
     if (templateNewUser) {
-      const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`;
       const emailTemplateNewUser = templateNewUser.contentData
-        .replace("{firstName}", newUser.firstName)
-        .replace("{startDate}", task.startDate)
-        .replace("{endDate}", task.endDate)
-        .replace("{taskName}", task.taskName)
-        .replace("{company}", req.cookies.companyName)
-        .replace("{description}", task.description)
-        .replace("{priority}", task.priority)
+        .replace("{firstName}", newUser?.firstName || 'N/A')
+        .replace("{startDate}", task?.startDate || 'N/A')
+        .replace("{endDate}", task?.endDate || 'N/A')
+        .replace("{taskName}", task?.taskName || 'Untitled Task')
+        .replace("{company}", req.cookies.companyName || 'N/A')
+        //.replace("{description}", task?.description || 'No description provided')
+        .replace("{priority}", task?.priority || 'N/A')
         .replace("{taskURL}", taskURL)
-        .replace("{lastName}", newUser.lastName);
+        .replace("{lastName}", newUser?.lastName || 'N/A');
       try {
         await sendEmail({
           email: newUser.email,
@@ -1103,7 +1104,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
     //Add Event Notification for the assigned user
     SendUINotification(`Task assignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been assigned to you.`,
-      constants.Event_Notification_Type_Status.task_assignment, newUser?._id?.toString(), req.cookies.companyId, req);
+      constants.Event_Notification_Type_Status.task_assignment, newUser?._id?.toString(), req.cookies.companyId, req, taskURL);
 
   }
 
@@ -1136,11 +1137,11 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 
   if (emailTemplate) {
     const emailTemplateNewUser = emailTemplate.contentData
-      .replace("{firstName}", user.firstName)
-      .replace("{startDate}", task.startDate)
-      .replace("{endDate}", task.endDate)
-      .replace("{taskName}", task.taskName)
-      .replace("{lastName}", user.lastName);
+      .replace("{firstName}", user?.firstName || 'N/A')
+      .replace("{startDate}", task?.startDate || 'N/A')
+      .replace("{endDate}", task?.endDate || 'N/A')
+      .replace("{taskName}", task?.taskName || 'Untitled Task')
+      .replace("{lastName}", user?.lastName || 'N/A');
     try {
       await sendEmail({
         email: user.email,
@@ -1155,7 +1156,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 
   //Add Event Notification for the deleted user
   SendUINotification(`Task Unassigned: ${task.taskName}`, task.description || `Task ${task.taskName} has been unassigned to you.`,
-    constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req);
+    constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -2148,7 +2149,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
             .replace("{company}", req.cookies.companyName)
             .replace("{content}", newComment.content)
             .replace("{author}", user.firstName + " " + user.lastName)
-            .replace("taskURL", taskURL)
+            .replace("{taskURL}", taskURL)
             .replace("{lastName}", user.lastName);
           try {
             await sendEmail({

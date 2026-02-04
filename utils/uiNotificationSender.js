@@ -3,7 +3,7 @@ const eventNotificationType = require('../models/eventNotification/eventNotifica
 const websocketHandler = require('../utils/websocketHandler');
 const constants = require('../constants');
 
-async function SendUINotification(title, message, notificationTypeName, userId, companyId, req) {
+async function SendUINotification(title, message, notificationTypeName, userId, companyId, req, navigationUrl = '') {
     if (!userId) {
         websocketHandler.sendLog(req, `Missing parameters: userId`, constants.LOG_TYPES.ERROR);
         return;
@@ -11,9 +11,9 @@ async function SendUINotification(title, message, notificationTypeName, userId, 
 
     try {
         const notificationType = await eventNotificationType.findOne({ name: notificationTypeName, company: companyId });
-        
-        if (!notificationType) { 
-            websocketHandler.sendLog(req, `Notification type ${notificationTypeName} not found`, constants.LOG_TYPES.WARN); 
+
+        if (!notificationType) {
+            websocketHandler.sendLog(req, `Notification type ${notificationTypeName} not found`, constants.LOG_TYPES.WARN);
         }
 
         const notificationBody = {
@@ -21,7 +21,7 @@ async function SendUINotification(title, message, notificationTypeName, userId, 
             description: message,
             eventNotificationType: notificationType?._id?.toString(),
             date: new Date(),
-            navigationUrl: '',
+            navigationUrl: navigationUrl || '',
             isRecurring: false,
             recurringFrequency: null,
             leadTime: 0,
