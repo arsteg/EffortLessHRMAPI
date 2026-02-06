@@ -27,6 +27,95 @@ const constants = require('../constants');
 const StorageController = require('./storageController');
 const  websocketHandler  = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const EmailTemplate = require('../models/commons/emailTemplateModel');
+const Company = require('../models/companyModel');
+const sendEmail = require('../utils/email');
+
+// Email helper function for Expense Reports
+const sendExpenseEmailToUsers = async (user, recipient, email_template_constant, expenseReport, company, expenseUrl = null) => {
+  console.log('sendExpenseEmailToUsers called with:', { user, recipient, email_template_constant, expenseReport, company, expenseUrl });
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id);
+
+  if (emailTemplate) {
+    const template = emailTemplate.contentData;
+
+    const formatDate = (d) =>
+      new Date(d).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+
+    const expenseLink = expenseUrl || '#';
+    const submissionDate = expenseReport.createdAt ? formatDate(expenseReport.createdAt) : formatDate(new Date());
+
+    const message = template
+      .replace("{firstName}", recipient.firstName)
+      .replace("{lastName}", recipient.lastName)
+      .replace("{employeeName}", user.firstName + " " + user.lastName)
+      .replace("{expenseTitle}", expenseReport.title || "Expense Report")
+      .replace("{expenseAmount}", expenseReport.amount || "0")
+      .replace("{submissionDate}", submissionDate)
+      .replace("{status}", expenseReport.status || "")
+      .replace("{reason}", expenseReport.reason || "-")
+      .replace("{expenseUrl}", expenseLink)
+      .replace("{company}", company.companyName);
+
+    try {
+      await sendEmail({
+        email: recipient.email,
+        subject: emailTemplate.subject,
+        message
+      });
+    } catch (err) {
+      console.error(`Error sending expense email to ${recipient.email}:`, err);
+    }
+  }
+};
+
+// Email helper function for Advance Reports
+const sendAdvanceEmailToUsers = async (user, recipient, email_template_constant, advance, company, category = null, advanceUrl = null) => {
+  console.log('sendAdvanceEmailToUsers called with:', { user, recipient, email_template_constant, advance, company, category, advanceUrl });
+  const emailTemplate = await EmailTemplate.findOne({}).where('Name').equals(email_template_constant).where('company').equals(company._id);
+
+  if (emailTemplate) {
+    const template = emailTemplate.contentData;
+
+    const formatDate = (d) =>
+      new Date(d).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+
+    const advanceLink = advanceUrl || '#';
+    const submissionDate = advance.createdAt ? formatDate(advance.createdAt) : formatDate(new Date());
+    const categoryLabel = category?.label || advance.category?.label || "Advance";
+
+    const message = template
+      .replace("{firstName}", recipient.firstName)
+      .replace("{lastName}", recipient.lastName)
+      .replace("{employeeName}", user.firstName + " " + user.lastName)
+      .replace("{category}", categoryLabel)
+      .replace("{advanceAmount}", advance.amount || "0")
+      .replace("{submissionDate}", submissionDate)
+      .replace("{status}", advance.status || "")
+      .replace("{comment}", advance.comment || "-")
+      .replace("{reason}", advance.reason || "-")
+      .replace("{advanceUrl}", advanceLink)
+      .replace("{company}", company.companyName);
+
+    try {
+      await sendEmail({
+        email: recipient.email,
+        subject: emailTemplate.subject,
+        message
+      });
+    } catch (err) {
+      console.error(`Error sending advance email to ${recipient.email}:`, err);
+    }
+  }
+};
 
 exports.createExpenseCategory = catchAsync(async (req, res, next) => {
     const { type, label , isMandatory} = req.body;
@@ -629,7 +718,7 @@ exports.deleteExpenseTemplate = catchAsync(async (req, res, next) => {
 
 exports.getAllExpenseTemplates = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const limit = parseInt(req.body.next);
   
   const query = { company: req.cookies.companyId };
    // Get the total count of documents matching the query
@@ -955,16 +1044,63 @@ exports.createExpenseReport = catchAsync(async (req, res, next) => {
       })
     );
 
+    // Fetch user, company, and expense assignment details
     const user = await User.findById(expenseReport.employee);
-    const userName = `${user?.firstName} ${user?.lastName}`;
-    const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(user._id);      
-    if(managerTeamsIds)
-    { 
-      for(var j = 0; j < managerTeamsIds.length; j++)
-      {
-        const manager = await User.findById(managerTeamsIds[j]._id);
-        SendUINotification(req.t('expense.expensesCreateionNotificationTitle'), req.t('expense.expensesCreateionNotificationMessage', { fistName: manager?.firstName, lastName: manager?.lastName, teamMember: userName }),
-        constants.Event_Notification_Type_Status.Expense, manager?._id?.toString(), req.cookies.companyId, req);
+    const companyDetails = await Company.findById(req.cookies.companyId);
+    const expenseAssignment = await EmployeeExpenseAssignment.findOne({ user: user._id }).populate('expenseTemplate');
+
+    // Generate navigation URLs
+    const employeeExpenseUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/my-expense`;
+    const managerApprovalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/expense-reports`;
+
+    // Send confirmation notification to employee
+    SendUINotification(
+      req.t('expense.expenseSubmissionNotificationTitle'),
+      req.t('expense.expenseSubmissionNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName, expenseTitle: expenseReport.title }),
+      constants.Event_Notification_Type_Status.Expense,
+      user?._id?.toString(),
+      req.cookies.companyId,
+      req,
+      employeeExpenseUrl
+    );
+
+    // Send confirmation email to employee
+    await sendExpenseEmailToUsers(
+      user,
+      user,
+      constants.Email_template_constant.Expense_Report_Submission_Request,
+      expenseReport,
+      companyDetails,
+      employeeExpenseUrl
+    );
+
+    // Get primary approver and send approval request
+    if (expenseAssignment) {
+      const primaryApproverId = expenseAssignment.primaryApprover;
+      if (primaryApproverId) {
+        const primaryApprover = await User.findById(primaryApproverId);
+        if (primaryApprover) {
+          // Send UI notification to primary approver
+          SendUINotification(
+            req.t('expense.expenseApprovalRequestNotificationTitle'),
+            req.t('expense.expenseApprovalRequestNotificationMessage', { firstName: primaryApprover?.firstName, lastName: primaryApprover?.lastName, employeeName: `${user.firstName} ${user.lastName}` }),
+            constants.Event_Notification_Type_Status.Expense,
+            primaryApprover?._id?.toString(),
+            req.cookies.companyId,
+            req,
+            managerApprovalUrl
+          );
+
+          // Send email to primary approver
+          await sendExpenseEmailToUsers(
+            user,
+            primaryApprover,
+            constants.Email_template_constant.Expense_Report_Approval_Request,
+            expenseReport,
+            companyDetails,
+            managerApprovalUrl
+          );
+        }
       }
     }
     
@@ -1053,10 +1189,60 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
       }
       expenseReport.expenseReportExpense=expenseReportExpenses;
    }
-   
+
+  // Fetch user, company, and expense assignment details for notifications
   const user = await User.findById(expenseReport.employee);
-  SendUINotification(req.t('expense.expensesApprovalNotificationTitle'), req.t('expense.expensesApprovalNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName, status: req.body.status }),
-  constants.Event_Notification_Type_Status.Expense, user?._id?.toString(), req.cookies.companyId, req);
+  const companyDetails = await Company.findById(req.cookies.companyId);
+  const expenseAssignment = await EmployeeExpenseAssignment.findOne({ user: user._id }).populate('expenseTemplate');
+
+  // Generate navigation URLs
+  const employeeExpenseUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/my-expense`;
+  const managerApprovalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/team-expense`;
+
+  // Handle notifications based on status changes
+  if (req.body.status === 'Approved') {
+    // Approval - notify employee
+    SendUINotification(
+      req.t('expense.expenseApprovedNotificationTitle'),
+      req.t('expense.expenseApprovedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
+      constants.Event_Notification_Type_Status.Expense,
+      user?._id?.toString(),
+      req.cookies.companyId,
+      req,
+      employeeExpenseUrl
+    );
+
+    // Send approval email to employee
+    await sendExpenseEmailToUsers(
+      user,
+      user,
+      constants.Email_template_constant.Expense_Report_Approved,
+      expenseReport,
+      companyDetails,
+      employeeExpenseUrl
+    );
+  } else if (req.body.status === 'Rejected') {
+    // Rejection - notify employee
+    SendUINotification(
+      req.t('expense.expenseRejectedNotificationTitle'),
+      req.t('expense.expenseRejectedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
+      constants.Event_Notification_Type_Status.Expense,
+      user?._id?.toString(),
+      req.cookies.companyId,
+      req,
+      employeeExpenseUrl
+    );
+
+    // Send rejection email to employee
+    await sendExpenseEmailToUsers(
+      user,
+      user,
+      constants.Email_template_constant.Expense_Report_Rejected,
+      expenseReport,
+      companyDetails,
+      employeeExpenseUrl
+    );
+  }
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
@@ -1481,19 +1667,82 @@ exports.createAdvance = catchAsync(async (req, res, next) => {
     const { employee, category,amount,comment } = req.body;
 
   
-    // Create ExpenseReport
+    // Create Advance with status "Level 1 Approval Pending"
     const advance = await Advance.create({
       employee,
       category,
       amount,
       comment,
       company: req.cookies.companyId,
-      status: 'Level 1 Approval Pending' // Assuming company ID is stored in cookies
+      status: 'Level 1 Approval Pending'
     });
 
-     res.status(201).json({
-        status: constants.APIResponseStatus.Success,
-        data: advance
+    // Fetch user, company, category, and advance assignment details
+    const user = await User.findById(advance.employee);
+    const companyDetails = await Company.findById(req.cookies.companyId);
+    const categoryDetails = await AdvanceCategory.findById(advance.category);
+    const advanceAssignment = await EmployeeAdvanceAssignment.findOne({ user: user._id }).populate('advanceTemplate');
+
+    // Generate navigation URLs
+    const employeeAdvanceUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/advance-reports`;
+    const managerApprovalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/advance-reports`;
+
+    // Send confirmation notification to employee
+    SendUINotification(
+      req.t('expense.advanceSubmissionNotificationTitle'),
+      req.t('expense.advanceSubmissionNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName, category: categoryDetails?.label }),
+      constants.Event_Notification_Type_Status.Expense,
+      user?._id?.toString(),
+      req.cookies.companyId,
+      req,
+      employeeAdvanceUrl
+    );
+
+    // Send confirmation email to employee
+    await sendAdvanceEmailToUsers(
+      user,
+      user,
+      constants.Email_template_constant.Advance_Submission_Request,
+      advance,
+      companyDetails,
+      categoryDetails,
+      employeeAdvanceUrl
+    );
+
+    // Get primary approver and send approval request
+    if (advanceAssignment) {
+      const primaryApproverId = advanceAssignment.primaryApprover;
+      if (primaryApproverId) {
+        const primaryApprover = await User.findById(primaryApproverId);
+        if (primaryApprover) {
+          // Send UI notification to primary approver
+          SendUINotification(
+            req.t('expense.advanceApprovalRequestNotificationTitle'),
+            req.t('expense.advanceApprovalRequestNotificationMessage', { firstName: primaryApprover?.firstName, lastName: primaryApprover?.lastName, employeeName: `${user.firstName} ${user.lastName}` }),
+            constants.Event_Notification_Type_Status.Expense,
+            primaryApprover?._id?.toString(),
+            req.cookies.companyId,
+            req,
+            managerApprovalUrl
+          );
+
+          // Send email to primary approver
+          await sendAdvanceEmailToUsers(
+            user,
+            primaryApprover,
+            constants.Email_template_constant.Advance_Approval_Request,
+            advance,
+            companyDetails,
+            categoryDetails,
+            managerApprovalUrl
+          );
+        }
+      }
+    }
+
+    res.status(201).json({
+      status: constants.APIResponseStatus.Success,
+      data: advance
     });
 });
 
@@ -1550,7 +1799,65 @@ exports.updateAdvance = catchAsync(async (req, res, next) => {
     const advance = await Advance.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
-    });  
+    });
+
+    // Fetch user, company, category, and advance assignment details for notifications
+    const user = await User.findById(advance.employee);
+    const companyDetails = await Company.findById(req.cookies.companyId);
+    const categoryDetails = await AdvanceCategory.findById(advance.category);
+    const advanceAssignment = await EmployeeAdvanceAssignment.findOne({ user: user._id }).populate('advanceTemplate');
+
+    // Generate navigation URLs
+    const employeeAdvanceUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/advance-reports`;
+    const managerApprovalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/expense/advance-reports`;
+
+    // Handle notifications based on status changes
+    if (req.body.status === 'Approved') {
+      // Final approval - notify employee
+      SendUINotification(
+        req.t('expense.advanceApprovedNotificationTitle'),
+        req.t('expense.advanceApprovedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
+        constants.Event_Notification_Type_Status.Expense,
+        user?._id?.toString(),
+        req.cookies.companyId,
+        req,
+        employeeAdvanceUrl
+      );
+
+      // Send approval email to employee
+      await sendAdvanceEmailToUsers(
+        user,
+        user,
+        constants.Email_template_constant.Advance_Approved,
+        advance,
+        companyDetails,
+        categoryDetails,
+        employeeAdvanceUrl
+      );
+    } else if (req.body.status === 'Rejected') {
+      // Rejection - notify employee
+      SendUINotification(
+        req.t('advance.advanceRejectedNotificationTitle'),
+        req.t('advance.advanceRejectedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
+        constants.Event_Notification_Type_Status.Expense,
+        user?._id?.toString(),
+        req.cookies.companyId,
+        req,
+        employeeAdvanceUrl
+      );
+
+      // Send rejection email to employee
+      await sendAdvanceEmailToUsers(
+        user,
+        user,
+        constants.Email_template_constant.Advance_Rejected,
+        advance,
+        companyDetails,
+        categoryDetails,
+        employeeAdvanceUrl
+      );
+    }
+
     res.status(200).json({
         status: constants.APIResponseStatus.Success,
         data: advance

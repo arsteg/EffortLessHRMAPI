@@ -23,7 +23,17 @@ const Email_template_constant = {
   Work_Anniversary_Email_To_Employee: "Work anniversary email template to employee",
   Work_Anniversary_Email_To_Manager: "Work anniversary email template to manager",
   Appraisal_Email_To_Employee: "Appraisal notification email template to employee",
-  Appraisal_Email_To_Manager: "Appraisal notification email template to manager"
+  Appraisal_Email_To_Manager: "Appraisal notification email template to manager",
+  // Expense Report Templates
+  Expense_Report_Submission_Request: "Expense Report Submission Request",
+  Expense_Report_Approval_Request: "Expense Report Approval Request",
+  Expense_Report_Approved: "Expense Report Approved",
+  Expense_Report_Rejected: "Expense Report Rejected",
+  // Advance Templates
+  Advance_Submission_Request: "Advance Submission Request",
+  Advance_Approval_Request: "Advance Approval Request",
+  Advance_Approved: "Advance Approved",
+  Advance_Rejected: "Advance Rejected"
   // Add other email templates as needed
 };
 const Leave_Accrual_Period = {

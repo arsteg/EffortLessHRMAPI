@@ -103,5 +103,61 @@
     "templateType": 6,
     "contentData": "<p>Dear {firstName} {lastName},</p><p>Your leave application has been rejected or canceled.</p><p>Leave Application Details:</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p>If you believe this is a mistake or need clarification, please contact your manager or HR.</p><p>Best regards,</p><p>{company}</p>",
     "isDelete": false
+  },
+  {
+    "Name": "Expense Report Submission Request",
+    "subject": "Expense Report Submitted Successfully",
+    "templateType": 11,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Your expense report has been submitted successfully and is now pending approval.</p><p><br></p><p>Expense Report Details:</p><p>Expense Title: {expenseTitle}</p><p>Total Amount: {expenseAmount}</p><p>Submission Date: {submissionDate}</p><p>Status: {status}</p><p><br></p><p>You can view your expense report here: {expenseUrl}.</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Expense Report Approval Request",
+    "subject": "Action Required: Expense Report Approval",
+    "templateType": 11,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>{employeeName} has submitted an expense report and requires your approval.</p><p><br></p><p>Expense Report Details:</p><p>Expense Title: {expenseTitle}</p><p>Total Amount: {expenseAmount}</p><p>Submission Date: {submissionDate}</p><p>Reason: {reason}</p><p><br></p><p>Approve or reject this expense report using {expenseUrl} url.</p><p><br></p><p>If no action is taken, the request remains pending.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Expense Report Approved",
+    "subject": "Your Expense Report Has Been Approved",
+    "templateType": 11,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Congratulations! Your expense report has been approved.</p><p><br></p><p>Expense Report Details:</p><p>Expense Title: {expenseTitle}</p><p>Total Amount: {expenseAmount}</p><p>Submission Date: {submissionDate}</p><p>Status: Approved</p><p><br></p><p>You can view your expense report using {expenseUrl} url.</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Expense Report Rejected",
+    "subject": "Your Expense Report Has Been Rejected",
+    "templateType": 11,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Unfortunately, your expense report has been rejected.</p><p><br></p><p>Expense Report Details:</p><p>Expense Title: {expenseTitle}</p><p>Total Amount: {expenseAmount}</p><p>Submission Date: {submissionDate}</p><p>Status: Rejected</p><p>Reason for Rejection: {reason}</p><p><br></p><p>You can view your expense report by using {expenseUrl} url.</p><p><br></p><p>If you believe this is a mistake or need clarification, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Advance Submission Request",
+    "subject": "Advance Request Submitted Successfully",
+    "templateType": 12,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Your advance request has been submitted successfully and is now pending approval.</p><p><br></p><p>Advance Request Details:</p><p>Category: {category}</p><p>Amount: {advanceAmount}</p><p>Submission Date: {submissionDate}</p><p>Comment: {comment}</p><p>Status: {status}</p><p><br></p><p>You can view your advance request by using {advanceUrl} url.</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Advance Approval Request",
+    "subject": "Action Required: Advance Request Approval",
+    "templateType": 12,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>{employeeName} has submitted an advance request and requires your approval.</p><p><br></p><p>Advance Request Details:</p><p>Category: {category}</p><p>Amount: {advanceAmount}</p><p>Submission Date: {submissionDate}</p><p>Comment: {comment}</p><p><br></p><p>Open {advanceUrl} to approve or reject this advance request.</p><p><br></p><p>If no action is taken, the request remains pending.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Advance Approved",
+    "subject": "Your Advance Request Has Been Approved",
+    "templateType": 12,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Congratulations! Your advance request has been approved.</p><p><br></p><p>Advance Request Details:</p><p>Category: {category}</p><p>Amount: {advanceAmount}</p><p>Submission Date: {submissionDate}</p><p>Status: Approved</p><p><br></p><p>You can view your advance request by using {advanceUrl} url.</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Advance Rejected",
+    "subject": "Your Advance Request Has Been Rejected",
+    "templateType": 12,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Unfortunately, your advance request has been rejected.</p><p><br></p><p>Advance Request Details:</p><p>Category: {category}</p><p>Amount: {advanceAmount}</p><p>Submission Date: {submissionDate}</p><p>Status: Rejected</p><p>Reason for Rejection: {reason}</p><p><br></p><p>You can view your advance request by using {advanceUrl} url.</p><p><br></p><p>If you believe this is a mistake or need clarification, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
   }
 ]
