@@ -804,8 +804,10 @@ exports.createEmployeeLeaveGrant = catchAsync(async (req, res, next) => {
 
     console.log('users[i].user', users[i].user);
 
+    // Employee receives notification about their own leave grant (user view)
+    const leaveGrantUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-leave-grant`;
     SendUINotification(req.t('leave.addLeaveRequestNotificationTitle'), req.t('leave.addLeaveRequestNotificationMessage', { date: new Date(grantData.date).toISOString().split('T')[0] }),
-      constants.Event_Notification_Type_Status.leave, users[i].user.toString(), companyId, req);
+      constants.Event_Notification_Type_Status.leave, users[i].user.toString(), companyId, req, leaveGrantUrl);
   }
   // Send success response
   res.status(201).json({
@@ -913,8 +915,11 @@ exports.updateEmployeeLeaveGrant = async (req, res, next) => {
     // Save the updated leave grant
     await leaveGrant.save();
 
+    // Generate navigation URL for leave grant (employee's own view)
+    const leaveGrantUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-leave-grant`;
+
     SendUINotification('Your leave request has been updated', `Your leave request has been ${leaveGrant.status}.`,
-      constants.Event_Notification_Type_Status.leave, existingUser?._id?.toString(), req.cookies.companyId, req);
+      constants.Event_Notification_Type_Status.leave, existingUser?._id?.toString(), req.cookies.companyId, req, leaveGrantUrl);
 
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1336,8 +1341,12 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       //const managerTeamsIds = await userSubordinate.find({}).distinct("subordinateUserId").where('userId').equals(employee);
       const user = await User.findById(req.body.employee);
       const userName = `${user?.firstName} ${user?.lastName}`;
+
+      // Generate navigation URLs
+      const leaveApplicationUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
+
       SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
-        constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+        constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req, leaveApplicationUrl);
 
       const LeaveApproval = await EmployeeLeaveAssignment.findOne({ user: employee })
         .select('primaryApprover');
@@ -1346,13 +1355,13 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         const manager = await User.findById(LeaveApproval?.primaryApprover);
         const companyDetails = await Company.findById(req.cookies.companyId);
 
-        // Generate approval URL
-        const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+        // Generate approval URL for manager (team view)
+        const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/team-application`;
 
         sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails, leaveCat.label, approvalUrl);
 
         SendUINotification(req.t('leave.managerLeaveApprovalNotificationTitle'), req.t('leave.managerLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, days: leaveDays }),
-          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req);
+          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), companyId, req, approvalUrl);
         //}
       }
     } catch (error) {
@@ -1510,11 +1519,11 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
           // Fetch leave category label
           const leaveCat = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
-          const viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+          const viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
 
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, req.cookies.companyId);
           sendEmailToUsers(manager, manager, constants.Email_template_constant.CancelReject_Request_Leave_Application, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
-          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
+          SendUINotification(req.t('leave.leaveRejectNotificationTitle'), req.t('leave.leaveRejectNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req, viewUrl);
         }
         if (req.body.status === constants.Leave_Application_Constant.Approved) {
           console.log(`Leave approved, updating leave balance... ${startDate} # ${endDate} # ${leaveDays}`);
@@ -1525,11 +1534,11 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
           // Fetch leave category label
           const leaveCat = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
-          viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+          const viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
 
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
           sendEmailToUsers(manager, manager, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
-          SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req);
+          SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req, viewUrl);
         }
 
         //Currently do not have the option for edit leave application so commented out the below code
@@ -1601,6 +1610,9 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
     }
 
     try {
+      // Generate navigation URL for leave application (employee's own view)
+      const leaveApplicationUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
+
       if (
         status === constants.Leave_Application_Constant.Cancelled ||
         status === constants.Leave_Application_Constant.Rejected
@@ -1634,7 +1646,8 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
           constants.Event_Notification_Type_Status.leave,
           user._id?.toString(),
           req.cookies.companyId,
-          req
+          req,
+          leaveApplicationUrl
         );
       }
 
@@ -1652,7 +1665,8 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
           constants.Event_Notification_Type_Status.leave,
           updatedLeaveApplication.user._id?.toString(),
           req.cookies.companyId,
-          req
+          req,
+          leaveApplicationUrl
         );
       }
     } catch (error) {
@@ -1896,15 +1910,20 @@ exports.addShortLeave = async (req, res, next) => {
     const user = await User.findById(req.body.employee);
     const userName = `${user?.firstName} ${user?.lastName}`;
 
+    // Generate navigation URL for short leave (employee's own view)
+    const shortLeaveUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-short-leave`;
+
     SendUINotification(req.t('leave.employeeShortLeaveRequestNotificationTitle'), req.t('leave.employeeShortLeaveRequestNotificationMessage', { employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
-      constants.Event_Notification_Type_Status.leave, user?._id?.toString(), company, req);
+      constants.Event_Notification_Type_Status.leave, user?._id?.toString(), company, req, shortLeaveUrl);
     const managerTeamsIds = await userSubordinate.find({}).distinct("userId").where('subordinateUserId').equals(req.body.employee);
     if (managerTeamsIds) {
       for (var j = 0; j < managerTeamsIds.length; j++) {
         const manager = await User.findById(managerTeamsIds[j]._id);
+        // Generate navigation URL for manager (team view)
+        const managerShortLeaveUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/team-short-leave`;
         //send ui notification to manager
         SendUINotification(req.t('leave.managerShortLeaveApprovalNotificationTitle'), req.t('leave.managerShortLeaveApprovalNotificationMessage', { firstName: manager?.firstName, lastName: manager?.lastName, employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date }),
-          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), company, req);
+          constants.Event_Notification_Type_Status.leave, manager?._id?.toString(), company, req, managerShortLeaveUrl);
       }
     }
 
@@ -1955,9 +1974,12 @@ exports.updateShortLeave = async (req, res, next) => {
       const user = await User.findById(req.body.employee);
       const userName = `${user?.firstName} ${user?.lastName}`;
 
+      // Generate navigation URL for short leave (employee's own view)
+      const shortLeaveUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-short-leave`;
+
       if (req.body?.status?.toLowerCase() !== 'pending') {
         SendUINotification(req.t('leave.employeeShortLeaveUpdateNotificationTitle'), req.t('leave.employeeShortLeaveUpdateNotificationMessage', { employeeName: userName, duration: req.body?.durationInMinutes, date: req.body?.date, status: req.body?.status }),
-          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req);
+          constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req, shortLeaveUrl);
       }
       res.status(200).json({
         status: constants.APIResponseStatus.Success,
