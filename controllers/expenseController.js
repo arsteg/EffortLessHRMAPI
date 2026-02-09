@@ -985,8 +985,29 @@ exports.getAllEmployeeExpenseAssignments = catchAsync(async (req, res, next) => 
 
 exports.createExpenseReport = catchAsync(async (req, res, next) => {
   // Extract data from the request body
-  const { employee, title, status,amount, expenseReportExpenses } = req.body;  
+  const { employee, title, status,amount, expenseReportExpenses } = req.body;
   try {
+    // Validate that report amount matches sum of line items (when applicable)
+    if (expenseReportExpenses && expenseReportExpenses.length > 0 && amount !== undefined) {
+      const calculatedSum = expenseReportExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      // Check if template allows manual amount with items
+      const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({ user: employee })
+        .populate('expenseTemplate');
+
+      if (userExpenseAssignment && userExpenseAssignment.expenseTemplate) {
+        const template = userExpenseAssignment.expenseTemplate;
+
+        // If advanceAmount is false, report amount must equal sum of line items
+        if (!template.advanceAmount && Math.abs(amount - calculatedSum) > 0.01) {
+          return res.status(400).json({
+            status: constants.APIResponseStatus.Failure,
+            message: req.t(`Report amount (${amount}) must equal the sum of line items (${calculatedSum.toFixed(2)}).`)
+          });
+        }
+      }
+    }
+
     // Create ExpenseReport
     const expenseReport = await ExpenseReport.create({
       employee,
@@ -1165,6 +1186,33 @@ exports.updateExpenseReport = catchAsync(async (req, res, next) => {
       // }
     }
   }
+
+  // Validate that report amount matches sum of line items (when applicable)
+  const expenseReportId = req.params.id;
+  const lineItems = await ExpenseReportExpense.find({ expenseReport: expenseReportId });
+
+  if (lineItems && lineItems.length > 0 && req.body.amount !== undefined) {
+    const calculatedSum = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const reportAmount = req.body.amount;
+
+    // Check if template allows manual amount with items
+    const report = await ExpenseReport.findById(expenseReportId);
+    const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({ user: report.employee })
+      .populate('expenseTemplate');
+
+    if (userExpenseAssignment && userExpenseAssignment.expenseTemplate) {
+      const template = userExpenseAssignment.expenseTemplate;
+
+      // If advanceAmount is false, report amount must equal sum of line items
+      if (!template.advanceAmount && Math.abs(reportAmount - calculatedSum) > 0.01) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t(`Report amount (${reportAmount}) must equal the sum of line items (${calculatedSum.toFixed(2)}).`)
+        });
+      }
+    }
+  }
+
   const expenseReport = await ExpenseReport.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
