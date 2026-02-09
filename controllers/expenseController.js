@@ -1410,24 +1410,69 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
 });
 
 async function expenseReportValidation(req, res, next) {
-  const {expenseReport, expenseCategory, incurredDate} = req.body;
+  const {expenseReport, expenseCategory, incurredDate, amount, expenseAttachments} = req.body;
   const report = await ExpenseReport.findById(expenseReport);
   const employee = report.employee;
-  const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({user: employee});   
+  const userExpenseAssignment = await EmployeeExpenseAssignment.findOne({user: employee});
   const template = await ExpenseTemplateApplicableCategories.findOne({}).where('expenseCategory').equals(expenseCategory).where('expenseTemplate').equals(userExpenseAssignment.expenseTemplate._id.toString());
-  
+  const expenseTemplateDetails = await ExpenseTemplate.findById(userExpenseAssignment.expenseTemplate._id);
+
   if (template) {
+    // Priority 1 Validation: Maximum Amount Per Expense
+    if (template.isMaximumAmountPerExpenseSet && amount) {
+      if (amount > template.maximumAmountPerExpense) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("Expense amount exceeds the maximum allowed limit of " + template.maximumAmountPerExpense + ".")
+        });
+      }
+    }
+
+    // Priority 1 Validation: Maximum Amount Without Receipt
+    if (template.isMaximumAmountWithoutReceiptSet && amount) {
+      if (amount > template.maximumAmountWithoutReceipt) {
+        // Check if receipt/attachment is provided
+        if (!expenseAttachments || expenseAttachments.length === 0) {
+          return res.status(400).json({
+            status: constants.APIResponseStatus.Failure,
+            message: req.t("Receipt is required for expenses exceeding " + template.maximumAmountWithoutReceipt + ".")
+          });
+        }
+      }
+    }
+
+    // Priority 1 Validation: Duplicate Category-Date Prevention
+    if (expenseTemplateDetails && expenseTemplateDetails.applyforSameCategorySamedate === false) {
+      const startOfDay = new Date(incurredDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(incurredDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const duplicateCount = await ExpenseReportExpense.countDocuments({
+        employee: employee,
+        expenseCategory: expenseCategory,
+        incurredDate: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      if (duplicateCount > 0) {
+        return res.status(400).json({
+          status: constants.APIResponseStatus.Failure,
+          message: req.t("You cannot submit multiple expenses for the same category on the same date.")
+        });
+      }
+    }
+
     if(template.timePeroid && template.maximumExpensesCanApply){
       const timePeriod = template.timePeroid === 'Day' ? 1 : template.timePeroid === 'Week' ? 7 : template.timePeroid === 'Month' ? 30 : 1;
       const timePeriodDate = new Date(incurredDate);
       timePeriodDate.setDate(timePeriodDate.getDate() + timePeriod);
-  
+
       const count = await ExpenseReportExpense.countDocuments({
         employee: employee,
         expenseCategory: expenseCategory,
         incurredDate: { $gte: incurredDate, $lt: timePeriodDate },
       });
-  
+
       if (count >= template.maximumExpensesCanApply) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
@@ -1439,7 +1484,7 @@ async function expenseReportValidation(req, res, next) {
     if(template.expiryDay){
       const expiryDate = new Date(incurredDate);
       expiryDate.setDate(expiryDate.getDate() + template.expiryDay);
-  
+
       if (new Date() > expiryDate) {
         return res.status(400).json({
           status: constants.APIResponseStatus.Failure,
@@ -1453,7 +1498,7 @@ async function expenseReportValidation(req, res, next) {
 exports.createExpenseReportExpense = catchAsync(async (req, res, next) => {
 
   await expenseReportValidation(req, res, next);
-  
+
   // Create ExpenseReportExpense
   const expenseAttachments = req.body.expenseAttachments;
   var documentLink;
@@ -1517,7 +1562,7 @@ exports.getExpenseReportExpense = catchAsync(async (req, res, next) => {
 
 exports.updateExpenseReportExpense = catchAsync(async (req, res, next) => {
   await expenseReportValidation(req, res, next);
-  
+
   const { id } = req.params;
   const expenseAttachments = req.body.expenseAttachments;
   
