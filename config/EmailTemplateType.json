@@ -1,0 +1,57 @@
+[
+  {
+    "emailTemplateTypeId": 1,
+    "name": "Welcome Email",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 2,
+    "name": "Forgot Password",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 3,
+    "name": "Update Profile",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 4,
+    "name": "Task Deleted",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 5,
+    "name": "Task",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 6,
+    "name": "Leave",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 8,
+    "name": "Employee Related",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 9,
+    "name": "Work Anniversary",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 10,
+    "name": "Appraisal Notification",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 11,
+    "name": "Expense",
+    "isDelete": false
+  },
+  {
+    "emailTemplateTypeId": 12,
+    "name": "Advance Expense",
+    "isDelete": false
+  }
+]

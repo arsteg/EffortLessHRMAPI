@@ -18,6 +18,7 @@ const { timeLog } = require('console');
 const TaskStatus = require('../models/commons/taskStatusModel');
 const TaskPriority = require('../models/commons/taskPriorityModel');
 const EmailTemplate = require('../models/commons/emailTemplateModel');
+const EmailTemplateType = require('../models/commons/emailTemplateTypeModel');
 const mongoose = require('mongoose');
 const constants = require('../constants');
 const Subscription = require('../models/pricing/subscriptionModel');
@@ -367,6 +368,7 @@ exports.webSignup = catchAsync(async (req, res, next) => {
 async function seedCompanyData(newCompanyId, req, next) {
   const seedFiles = [
     { model: Role, file: 'Role.json' },
+    { model: EmailTemplateType, file: 'EmailTemplateType.json' },
     { model: EmailTemplate, file: 'EmailTemplate.json' },
     { model: IncomeTaxSection, file: 'IncomeTaxSection.json' },
     { model: TaskPriority, file: 'TaskPriority.json' },
