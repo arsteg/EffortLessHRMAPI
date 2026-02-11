@@ -3746,7 +3746,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
 
       // Get latest PayrollOvertime and PayrollIncomeTax records
       const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
-        PayrollOvertime.findOne({ payrollUser: payrollUser._id, company: companyId })
+        PayrollOvertime.findOne({ PayrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
           .sort({ _id: -1 }),  // sort by newest
@@ -3833,6 +3833,13 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       const totalVariableDeduction = variablePays
         .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
         .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      // Calculate totalOvertime from latestOvertime
+      const totalOvertime = latestOvertime?.OvertimeAmount || 0;
+      // Calculate totallopDaysAmount
+      const salaryPerDay = totalFixedAllowance / 30;
+      const totallopDaysAmount = latestAttendanceSummary && latestAttendanceSummary.lopDays
+        ? Number((latestAttendanceSummary.lopDays * salaryPerDay).toFixed(2))
+        : 0;
       // Return the full PayrollUsers document with related data
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
@@ -3849,7 +3856,9 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
         variableDeductionsList,
         userEmployment,
         appointmentDetails,
-        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime
+        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime,
+        totalOvertime,
+        totallopDaysAmount
       };
     })
   );
@@ -3894,6 +3903,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       path: 'company',
       select: 'name' // Adjust fields as needed
     });
+    //console.log('payrollUsers:', payrollUsers);
   if (!payrollUsers.length) {
     websocketHandler.sendLog(req, `No payroll users found for userId: ${userId}`, constants.LOG_TYPES.INFO);
     return res.status(200).json({
@@ -3917,7 +3927,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       });
       // Get latest PayrollOvertime and PayrollIncomeTax records
       const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
-        PayrollOvertime.findOne({ payrollUser: payrollUser._id })
+        PayrollOvertime.findOne({ PayrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
         PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest
@@ -3933,7 +3943,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       ]);
       // Extract required fields with fallback values
       const tdsCalculated = latestIncomeTax?.TDSCalculated || 0;
-      console.log(fixedPays);
+      //console.log(fixedPays);
       const fixedAllowancesList = fixedPays
         .filter(vp => vp.fixedAllowance)
         .map(vp => ({
@@ -4004,9 +4014,15 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       const totalVariableDeduction = variablePays
         .filter(vp => vp.variableDeduction) // Only include entries with variableDeduction
         .reduce((sum, vp) => sum + (vp.amount || 0), 0);
+      // Calculate totalOvertime from latestOvertime
+      const totalOvertime = latestOvertime?.OvertimeAmount || 0;
 
-      PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
-        .sort({ _id: -1 })  // sort by newest
+      // Calculate totallopDaysAmount
+      const salaryPerDay = totalFixedAllowance / 30;
+      const totallopDaysAmount = latestAttendanceSummary && latestAttendanceSummary.lopDays
+        ? Number((latestAttendanceSummary.lopDays * salaryPerDay).toFixed(2))
+        : 0;
+
       // Return the full PayrollUsers document with populated fields
       return {
         PayrollUser: payrollUser.toObject(), // Include the entire PayrollUsers document
@@ -4023,7 +4039,9 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
         totalVariableAllowance,
         userEmployment,
         appointmentDetails,
-        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime
+        allLoanAdvances, flexiBenefits, manualArrears, latestOvertime,
+        totalOvertime,
+        totallopDaysAmount
       };
     })
   );

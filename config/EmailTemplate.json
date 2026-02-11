@@ -23,7 +23,7 @@
   {
     "Name": "Task Unassigned",
     "subject": "Task Unassigned Notification",
-    "templateType": 6,
+    "templateType": 5,
     "contentData": "<p>Dear {firstName} {lastName},</p><p>We hope this message finds you well. We wanted to inform you that the following task has been unassigned from you in the Effortless HRM management system:</p><p><strong>Task Name:</strong> {taskName}</p><p><strong>Project:</strong> {projectName}</p><p><strong>Date of Unassignment:</strong> {date}</p><p>If you have any questions or concerns, please reach out to us.</p><p>Best regards,</p><p>{company}</p>",
     "isDelete": false
   },

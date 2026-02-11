@@ -2,6 +2,7 @@ const express = require('express');
 const commonController = require('../controllers/commonController');
 const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
+const emailTemplateTypeController = require('../controllers/emailTemplateTypeController');
 const router = express.Router();
 
 // Country Router
@@ -1311,5 +1312,175 @@ router.get('/get-payroll-fnf-status-list', authController.protect, commonControl
  *         description: Internal server error
  */
 router.get('/get-payroll-fnf-user-status-list', authController.protect, commonController.getPayrollFNFUserStatusList);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateType:
+ *   post:
+ *     summary: Add a new email template type
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Name of the email template type
+ *     responses:
+ *       200:
+ *         description: Email template type created successfully
+ *       400:
+ *         description: Validation error or duplicate name
+ *       500:
+ *         description: Server error
+ */
+router.post('/emailTemplateType', authController.protect, emailTemplateTypeController.addEmailTemplateType);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateTypes/{id}:
+ *   put:
+ *     summary: Update an existing email template type
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email template type ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email template type updated successfully
+ *       400:
+ *         description: Validation error or duplicate name
+ *       500:
+ *         description: Server error
+ */
+router.put('/emailTemplateTypes/:id', authController.protect, emailTemplateTypeController.updateEmailTemplateType);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateTypes/changestatus/{id}:
+ *   put:
+ *     summary: Change email template type status
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email template type ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isDelete:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Email template type status updated successfully
+ *       500:
+ *         description: Server error
+ */
+router.put('/emailTemplateTypes/changestatus/:id', authController.protect, emailTemplateTypeController.changeEmailTemplateTypeStatus);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateTypes/{id}:
+ *   delete:
+ *     summary: Delete an email template type
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email template type ID
+ *     responses:
+ *       204:
+ *         description: Email template type deleted successfully
+ *       400:
+ *         description: Template type is in use or cannot be deleted
+ *       404:
+ *         description: Email template type not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/emailTemplateTypes/:id', authController.protect, emailTemplateTypeController.deleteEmailTemplateType);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateType/{id}:
+ *   get:
+ *     summary: Get an email template type by ID
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email template type ID
+ *     responses:
+ *       200:
+ *         description: Email template type retrieved successfully
+ *       404:
+ *         description: Email template type not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/emailTemplateType/:id', authController.protect, emailTemplateTypeController.getEmailTemplateTypeById);
+
+/**
+ * @swagger
+ * /api/v1/common/emailTemplateTypes:
+ *   get:
+ *     summary: Get all email template types for the company
+ *     tags: [Common Management]
+ *     security: [{
+ *         bearerAuth: []
+ *     }]
+ *     responses:
+ *       200:
+ *         description: Email template types retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/emailTemplateTypes', authController.protect, emailTemplateTypeController.getAllEmailTemplateTypes);
 
 module.exports = router;
