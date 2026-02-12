@@ -2299,7 +2299,7 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
 exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
 
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const limit = parseInt(req.body.next);
   const query = { company: req.cookies.companyId };
   const totalCount = await AdvanceTemplate.countDocuments(query);
   const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
