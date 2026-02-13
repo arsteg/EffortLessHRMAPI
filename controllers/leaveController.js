@@ -433,6 +433,14 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       }
     }
 
+    // Retrieve old template to detect approver changes
+    const oldTemplate = await LeaveTemplate.findById(req.params.id);
+    if (!oldTemplate) {
+      return res.status(404).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('leave.leaveTemplateNotFound')
+      });
+    }
 
     const leaveTemplate = await LeaveTemplate.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!leaveTemplate) {
@@ -442,6 +450,41 @@ exports.updateLeaveTemplate = async (req, res, next) => {
       });
       return;
     }
+
+    // Detect if primary approver changed
+    const primaryApproverChanged = req.body.primaryApprover &&
+                                   req.body.primaryApprover !== oldTemplate.primaryApprover;
+
+    // Only sync if primary approver changed AND approvalType is 'template-wise'
+    const shouldSyncApprovers = primaryApproverChanged &&
+                                leaveTemplate.approvalType === 'template-wise';
+
+    if (shouldSyncApprovers) {
+      try {
+        // Bulk update all assignments referencing this template with new primary approver
+        const updateResult = await EmployeeLeaveAssignment.updateMany(
+          { leaveTemplate: req.params.id },
+          { $set: { primaryApprover: leaveTemplate.primaryApprover || null } }
+        );
+
+        // Log for audit trail
+        websocketHandler.sendLog(
+          req,
+          `Updated ${updateResult.modifiedCount} employee leave assignments with new primary approver for template: ${leaveTemplate.label}`,
+          constants.LOG_TYPES.INFO
+        );
+
+      } catch (syncError) {
+        // Log error but don't fail the entire operation (graceful degradation)
+        websocketHandler.sendLog(
+          req,
+          `Warning: Failed to sync primary approver to employee assignments: ${syncError.message}`,
+          constants.LOG_TYPES.WARNING
+        );
+        console.error('Approver sync error:', syncError);
+      }
+    }
+
     const updatedCategories = await updateOrCreateLeaveTemplateCategories(req.params.id, req.body.leaveCategories);
 
     await TemplateCubbingRestriction.deleteMany({
