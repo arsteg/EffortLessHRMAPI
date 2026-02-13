@@ -303,7 +303,7 @@
     "signatoryNotFound": "The signatory was not found.",
     "taxSlabNotFound": "The tax slab was not found.",
     "missingcompanyLogoProperties": "All Company Logo properties must be provided." ,
-    "duplicate_zone_record": "Zone with the same name already exists.",
+    "duplicate_zone_record": "Zone with the same name or code already exists.",
     "duplicateHolidayInYear": "Holiday with the same name already exists in the year.",
     "nameMissing": "Holiday name is missing in request body.",
     "duplicateEntry": "Tax slab already exists for the given company, regime, and financial year.",

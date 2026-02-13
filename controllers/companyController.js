@@ -518,11 +518,20 @@ exports.createZone = async (req, res, next) => {
       return next(new AppError(req.t('company.companyIdMissing'), 400));
     }
 
-    const { zoneName } = req.body;
-    const existingShift = await Zone.findOne({ zoneName: zoneName, company: company, isDelete: { $ne: true } });
+    const { zoneName, zoneCode } = req.body;
 
-    if (existingShift) {
-      websocketHandler.sendLog(req, `Zone with name "${name}" already exists for company ${company}`, constants.LOG_TYPES.ERROR);
+    // Check for duplicate zoneName or zoneCode
+    const existingZone = await Zone.findOne({
+      company: company,
+      isDelete: { $ne: true },
+      $or: [
+        { zoneName: zoneName },
+        { zoneCode: zoneCode }
+      ]
+    });
+
+    if (existingZone) {
+      websocketHandler.sendLog(req, `Zone with name "${zoneName}" or code "${zoneCode}" already exists for company ${company}`, constants.LOG_TYPES.ERROR);
       return next(new AppError(req.t('company.duplicate_zone_record'), 400));
     }
 

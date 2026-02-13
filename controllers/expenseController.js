@@ -1399,8 +1399,19 @@ exports.getExpenseReportsByTeam = catchAsync(async (req, res, next) => {
           const reportObj = expenseReports[j].toObject();
           reportObj.advanceAmountAllowed = expenseTemplate.advanceAmount;
           reportObj.expenseReportExpense = expenseReportExpenses;
+          reportObj.primaryApproverId = userExpenseAssignment.primaryApprover ? userExpenseAssignment.primaryApprover.toString() : null;
+          expenseReports[j] = reportObj;
+        } else {
+          const reportObj = expenseReports[j].toObject();
+          reportObj.expenseReportExpense = expenseReportExpenses;
+          reportObj.primaryApproverId = userExpenseAssignment.primaryApprover ? userExpenseAssignment.primaryApprover.toString() : null;
           expenseReports[j] = reportObj;
         }
+      } else {
+        const reportObj = expenseReports[j].toObject();
+        reportObj.expenseReportExpense = expenseReportExpenses;
+        reportObj.primaryApproverId = null;
+        expenseReports[j] = reportObj;
       }
     }
   }
@@ -1447,8 +1458,19 @@ exports.getAllExpenseReports = catchAsync(async (req, res, next) => {
           const reportObj = expenseReports[j].toObject();
           reportObj.advanceAmountAllowed = expenseTemplate.advanceAmount;
           reportObj.expenseReportExpense = expenseReportExpenses;
+          reportObj.primaryApproverId = userExpenseAssignment.primaryApprover ? userExpenseAssignment.primaryApprover.toString() : null;
+          expenseReports[j] = reportObj;
+        } else {
+          const reportObj = expenseReports[j].toObject();
+          reportObj.expenseReportExpense = expenseReportExpenses;
+          reportObj.primaryApproverId = userExpenseAssignment.primaryApprover ? userExpenseAssignment.primaryApprover.toString() : null;
           expenseReports[j] = reportObj;
         }
+      } else {
+        const reportObj = expenseReports[j].toObject();
+        reportObj.expenseReportExpense = expenseReportExpenses;
+        reportObj.primaryApproverId = null;
+        expenseReports[j] = reportObj;
       }
     }
   }
@@ -1974,9 +1996,35 @@ exports.getAllAdvances = catchAsync(async (req, res, next) => {
   const totalCount = await Advance.countDocuments(query);
   const advances = await Advance.find(query).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
     .limit(parseInt(limit));
+
+  // Enrich advances with primaryApproverId
+  const employeeIds = [...new Set(advances.map(a => a.employee))];
+  const assignments = await EmployeeAdvanceAssignment.find({
+    user: { $in: employeeIds }
+  }).select('user primaryApprover');
+
+  // Create map for O(1) lookup
+  const approverMap = new Map();
+  assignments.forEach(assignment => {
+    approverMap.set(
+      assignment.user.toString(),
+      assignment.primaryApprover ? assignment.primaryApprover.toString() : null
+    );
+  });
+
+  // Add primaryApproverId to each advance
+  const enrichedAdvances = advances.map(advance => {
+    const advanceObj = advance.toObject ? advance.toObject() : advance;
+    const employeeId = advanceObj.employee;
+    return {
+      ...advanceObj,
+      primaryApproverId: approverMap.get(employeeId.toString()) || null
+    };
+  });
+
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: advances,
+    data: enrichedAdvances,
     total: totalCount
   });
 });
@@ -2299,7 +2347,7 @@ exports.deleteAdvanceTemplate = catchAsync(async (req, res, next) => {
 exports.getAllAdvanceTemplates = catchAsync(async (req, res, next) => {
 
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const limit = parseInt(req.body.next);
   const query = { company: req.cookies.companyId };
   const totalCount = await AdvanceTemplate.countDocuments(query);
   const advanceTemplates = await AdvanceTemplate.find({}).where('company').equals(req.cookies.companyId).skip(parseInt(skip))
