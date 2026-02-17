@@ -4,8 +4,7 @@ const emailTemplateTypeSchema = new mongoose.Schema(
   {
     emailTemplateTypeId: {
       type: Number,
-      required: [true, 'Email Template Type ID is required'],
-      unique: true
+      required: [true, 'Email Template Type ID is required']
     },
     name: {
       type: String,
@@ -47,6 +46,9 @@ const emailTemplateTypeSchema = new mongoose.Schema(
 
 // Compound index to ensure unique name per company
 emailTemplateTypeSchema.index({ name: 1, company: 1 }, { unique: true });
+
+// Compound index to ensure unique emailTemplateTypeId per company
+emailTemplateTypeSchema.index({ emailTemplateTypeId: 1, company: 1 }, { unique: true });
 
 // Update the updatedOn field before saving
 emailTemplateTypeSchema.pre('save', function(next) {

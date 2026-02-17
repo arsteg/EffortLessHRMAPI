@@ -306,7 +306,8 @@ return res.status(204).json({
 });
 
 exports.getAllPlan = catchAsync(async (req, res, next) => {
-const plan = await Plan.find({});
+//const plan = await Plan.find({});
+const plan = await Plan.find({}).sort({ currentprice: 1 });
 if(plan) {
   for(var i = 0; i < plan.length; i++) {
     const softwares = await Software.find({})
