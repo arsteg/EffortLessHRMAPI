@@ -323,45 +323,8 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
     { $project: { taskId: '$taskDetails._id', taskDetails: 1 } }
   ];
 
-  // Main pipeline with union for creator-based tasks
   const aggregationPipeline = [
     ...assignedTasksPipeline,
-
-    // PATH B: Created tasks by any team member (new logic)
-    {
-      $unionWith: {
-        coll: 'tasks',
-        pipeline: [
-          {
-            $match: {
-              createdBy: { $in: objectIdArray },
-              isDeleted: { $ne: true }
-            }
-          },
-          // Apply search filter for created tasks
-          ...(search ? (() => {
-            const searchRegex = new RegExp(search, 'i');
-            const orConditions = [
-              { taskName: searchRegex },
-              { title: searchRegex }
-            ];
-            const digitMatch = search.match(/(\d+)/);
-            if (digitMatch) {
-              orConditions.push({ taskNumber: Number(digitMatch[1]) });
-            }
-            if (matchingProjectIds.length > 0) {
-              orConditions.push({ project: { $in: matchingProjectIds } });
-            }
-            return [{ $match: { $or: orConditions } }];
-          })() : []),
-          { $project: { taskId: '$_id', taskDetails: '$$ROOT' } }
-        ]
-      }
-    },
-
-    // Deduplicate by taskId (handles users who are both creator AND assignee)
-    { $group: { _id: '$taskId', taskDetails: { $first: '$taskDetails' } } },
-    { $project: { taskDetails: 1 } },
     {
       $lookup: {
         from: 'taskusers',
@@ -531,45 +494,8 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     { $project: { taskId: '$taskDetails._id', taskDetails: 1 } }
   ];
 
-  // Main pipeline with union for creator-based tasks
   const aggregationPipeline = [
     ...assignedTasksPipeline,
-
-    // PATH B: Created tasks (new logic)
-    {
-      $unionWith: {
-        coll: 'tasks',
-        pipeline: [
-          {
-            $match: {
-              createdBy: userId,
-              isDeleted: { $ne: true }
-            }
-          },
-          // Apply search filter for created tasks
-          ...(search ? (() => {
-            const searchRegex = new RegExp(search, 'i');
-            const orConditions = [
-              { taskName: searchRegex },
-              { title: searchRegex }
-            ];
-            const digitMatch = search.match(/(\d+)/);
-            if (digitMatch) {
-              orConditions.push({ taskNumber: Number(digitMatch[1]) });
-            }
-            if (matchingProjectIds.length > 0) {
-              orConditions.push({ project: { $in: matchingProjectIds } });
-            }
-            return [{ $match: { $or: orConditions } }];
-          })() : []),
-          { $project: { taskId: '$_id', taskDetails: '$$ROOT' } }
-        ]
-      }
-    },
-
-    // Deduplicate by taskId (handles user being both creator AND assignee)
-    { $group: { _id: '$taskId', taskDetails: { $first: '$taskDetails' } } },
-    { $project: { taskDetails: 1 } },
     // Continue with lookups for TaskUsers, creator, and comments
     {
       $lookup: {
