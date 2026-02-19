@@ -38,7 +38,7 @@
     "Name": "Approval Request Leave Application",
     "subject": "Approval Request Leave Application",
     "templateType": 6,
-    "contentData": "<p>Dear {firstName} {lastName},</p><p>{employeeName} has submitted a leave application and requires your approval.</p><p>Leave Application Details:</p><p>Employee Name: {employeeName}</p><p>Type of Leave: {leaveType}</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p>Please log into the {company} portal to approve or decline.</p><p>If no action is taken, the request remains pending.</p><p>Best regards,</p><p>{company}</p>",
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>{employeeName} has submitted a leave application and requires your approval.</p><p>Leave Application Details:</p><p>Employee Name: {employeeName}</p><p>Type of Leave: {leaveType}</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p>{halfDayDetails}<p>Reason: {reason}</p><p>Please log into the {company} portal to approve or decline.</p><p>If no action is taken, the request remains pending.</p><p>Best regards,</p><p>{company}</p>",
     "isDelete": false
   },
   {

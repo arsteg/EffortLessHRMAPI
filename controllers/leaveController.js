@@ -1371,6 +1371,7 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
         dayHalf: halfDay.dayHalf
       })));
       newLeaveApplication.halfDays = createdHalfDays.map(hd => hd._id);
+      newLeaveApplication.markModified('halfDays');
       await newLeaveApplication.save();
     }
 
@@ -1431,8 +1432,7 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
     //const totalDays = leaveApplication.endDate - leaveApplication.startDate;
     const start = new Date(leaveApplication.startDate);
     const end = new Date(leaveApplication.endDate);
-    const diffMs = end - start;
-    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays = leaveApplication.calculatedLeaveDays ?? Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     const formatDate = (d) =>
       new Date(d).toLocaleDateString("en-GB", {
@@ -1441,6 +1441,14 @@ const sendEmailToUsers = async (user, manager, email_template_constant, leaveApp
         year: "numeric"
       });
 console.log('send email approvalUrl' , approvalUrl);
+
+    // Fetch half-day breakdown for this leave application
+    const halfDayRecords = await LeaveApplicationHalfDay.find({ leaveApplication: leaveApplication._id });
+    let halfDayDetails = '';
+    if (halfDayRecords && halfDayRecords.length > 0) {
+      const lines = halfDayRecords.map(hd => `${formatDate(new Date(hd.date))} (${hd.dayHalf})`);
+      halfDayDetails = `<br>Half-Day Breakdown:<br>${lines.join('<br>')}`;
+    }
 
     // Use provided leave category label or fallback to leaveApplication.leaveCategory
     const leaveTypeDisplay = leaveCategoryLabel || leaveApplication.leaveCategory?.label || leaveApplication.leaveCategory;
@@ -1454,6 +1462,7 @@ console.log('send email approvalUrl' , approvalUrl);
       .replace("{startDate}", formatDate(start))
       .replace("{endDate}", formatDate(end))
       .replace("{totalDays}", totalDays)
+      .replace("{halfDayDetails}", halfDayDetails)
       .replace("{reason}", leaveApplication.comment || "-")
       .replace("{company}", company.companyName)
       .replace("{company}", company.companyName)
@@ -1747,12 +1756,7 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
 
     for (var i = 0; i < leaveApplications.length; i++) {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
-      if (halfDays) {
-        leaveApplications[i].halfDays = halfDays;
-      }
-      else {
-        leaveApplications[i].halfDays = null;
-      }
+      leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
       // Fetch primary approver for this leave application's employee
       const employeeAssignment = await EmployeeLeaveAssignment.findOne({
@@ -1810,8 +1814,7 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
     const halfDays = await LeaveApplicationHalfDay.find({})
       .where('leaveApplication')
       .equals(leaveApplications[i]._id);
-    // Assign halfDays, even if null, to avoid undefined properties and maintain consistency
-    leaveApplications[i].halfDays = halfDays.length > 0 ? halfDays : null;
+    leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
     // Fetch primary approver for this leave application's employee
     const employeeAssignment = await EmployeeLeaveAssignment.findOne({
@@ -1882,12 +1885,7 @@ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
       .limit(parseInt(limit));
     for (var i = 0; i < leaveApplications.length; i++) {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
-      if (halfDays) {
-        leaveApplications[i].halfDays = halfDays;
-      }
-      else {
-        leaveApplications[i].halfDays = null;
-      }
+      leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
       // Fetch primary approver for this leave application's employee
       const employeeAssignment = await EmployeeLeaveAssignment.findOne({
@@ -1914,12 +1912,7 @@ exports.getEmployeeLeaveApplication = async (req, res, next) => {
     const { id } = req.params;
     const leaveApplication = await LeaveApplication.findById(id);
     const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplication._id);
-    if (halfDays) {
-      leaveApplication.halfDays = halfDays;
-    }
-    else {
-      leaveApplication.halfDays = null;
-    }
+    leaveApplication._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
     // Fetch primary approver for this leave application's employee
     const employeeAssignment = await EmployeeLeaveAssignment.findOne({
