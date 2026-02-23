@@ -54,6 +54,7 @@ const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollFNFVariablePay = require('../models/Payroll/PayrollFNFVariablePay');
 const VariableAllowance = require("../models/Payroll/variableAllowanceModel");
 const VariableDeduction = require("../models/Payroll/variableDeductionModel");
+const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel");
 const scheduleController = require("./ScheduleController");
 const moment = require("moment");
 // 👉 Utilities and constants
@@ -1030,12 +1031,40 @@ const StoreAttendanceSummary = async (req, res) => {
     // Ensure month is 1-based and convert to 0-based for JavaScript Date
     let startDate = new Date(req.year, req.month - 1, 1); // Start of the month
     let endDate = new Date(req.year, req.month, 1); // Start of the next month
+
     if (req.isFNF) {
-      websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
+      websocketHandler.sendLog(req, `📆 Processing attendance for FNF range`, constants.LOG_TYPES.INFO);
 
       ({ startDate, endDate } = await getFNFDateRange(req, req.user));
       const oneDayInMs = 24 * 60 * 60 * 1000;
       totalDays = Math.round((endDate - startDate) / oneDayInMs) + 1;
+    } else {
+      // For regular payroll, check if attendance cut-off day is configured
+      try {
+        const companyId = req.cookies.companyId;
+        const generalSettings = await GeneralSetting.findOne({ company: companyId });
+
+        if (generalSettings && generalSettings.attendanceCutoffDay && generalSettings.attendanceCutoffDay !== 'all') {
+          const cutoffDay = parseInt(generalSettings.attendanceCutoffDay);
+
+          if (!isNaN(cutoffDay) && cutoffDay > 0) {
+            const maxDaysInMonth = new Date(req.year, req.month, 0).getDate();
+            const effectiveCutoffDay = Math.min(cutoffDay, maxDaysInMonth);
+
+            // Adjust endDate to the cutoff day instead of the full month
+            endDate = new Date(req.year, req.month - 1, effectiveCutoffDay + 1); // +1 because endDate is exclusive
+            totalDays = effectiveCutoffDay; // Only count days up to cutoff
+
+            websocketHandler.sendLog(req, `📅 Attendance cut-off day configured: Processing days 1-${effectiveCutoffDay} of month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
+          } else {
+            websocketHandler.sendLog(req, `📅 No attendance cut-off configured: Processing full month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
+          }
+        } else {
+          websocketHandler.sendLog(req, `📅 No attendance cut-off configured: Processing full month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
+        }
+      } catch (settingsError) {
+        websocketHandler.sendLog(req, `⚠️ Could not fetch general settings for cut-off day: ${settingsError.message}. Using full month.`, constants.LOG_TYPES.WARN);
+      }
     }
     // Fetch records from the database
 
