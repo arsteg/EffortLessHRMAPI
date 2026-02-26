@@ -54,12 +54,13 @@ const PayrollVariablePay = require('../models/Payroll/PayrollVariablePay');
 const PayrollFNFVariablePay = require('../models/Payroll/PayrollFNFVariablePay');
 const VariableAllowance = require("../models/Payroll/variableAllowanceModel");
 const VariableDeduction = require("../models/Payroll/variableDeductionModel");
+const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel");
 const scheduleController = require("./ScheduleController");
 const moment = require("moment");
 // 👉 Utilities and constants
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
-const { getMonthRangeUtc } = require('../utils/utcConverter');
+const { getMonthRangeUtc, getAttendancePeriodRange } = require('../utils/utcConverter');
 //const financialYearConfig = require('../config/financialyear.json');
 const path = require('path');
 const fs = require('fs');
@@ -1023,19 +1024,45 @@ const CalculateOvertime = async (req, res) => {
 const StoreAttendanceSummary = async (req, res) => {
 
   try {
-    // Calculate total days in the month
+    // Calculate total days and date range
     let totalDays = new Date(req.year, req.month, 0).getDate();
+    let startDate = new Date(req.year, req.month - 1, 1);
+    let endDate = new Date(req.year, req.month, 1);
 
-    // Fetch LOP days
-    // Ensure month is 1-based and convert to 0-based for JavaScript Date
-    let startDate = new Date(req.year, req.month - 1, 1); // Start of the month
-    let endDate = new Date(req.year, req.month, 1); // Start of the next month
     if (req.isFNF) {
-      websocketHandler.sendLog(req, `📆 Processing LWF for FNF range`, constants.LOG_TYPES.INFO);
-
+      websocketHandler.sendLog(req, `📆 Processing attendance for FNF range`, constants.LOG_TYPES.INFO);
       ({ startDate, endDate } = await getFNFDateRange(req, req.user));
       const oneDayInMs = 24 * 60 * 60 * 1000;
       totalDays = Math.round((endDate - startDate) / oneDayInMs) + 1;
+    } else {
+      // For regular payroll, use cutoff-aware date range
+      try {
+        const companyId = req.cookies.companyId;
+        const generalSettings = await GeneralSetting.findOne({ company: companyId });
+        const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
+
+        const periodRange = getAttendancePeriodRange(req.year, req.month, cutoffDay);
+        startDate = periodRange.startDate;
+        endDate = periodRange.endDate;
+        totalDays = periodRange.totalDays;
+
+        if (cutoffDay !== 'all') {
+          websocketHandler.sendLog(req,
+            `📅 Cutoff day ${cutoffDay}: Processing ${startDate.toISOString().substring(0,10)} to ${endDate.toISOString().substring(0,10)} (${totalDays} days)`,
+            constants.LOG_TYPES.INFO
+          );
+        } else {
+          websocketHandler.sendLog(req,
+            `📅 No cutoff: Processing full month ${req.month}/${req.year} (${totalDays} days)`,
+            constants.LOG_TYPES.INFO
+          );
+        }
+      } catch (settingsError) {
+        websocketHandler.sendLog(req,
+          `⚠️ Error fetching cutoff settings: ${settingsError.message}. Using full month.`,
+          constants.LOG_TYPES.WARN
+        );
+      }
     }
     // Fetch records from the database
 

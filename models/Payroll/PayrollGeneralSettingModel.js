@@ -32,6 +32,10 @@ const payrollGeneralSettingSchema = new Schema({
     type: Boolean,
     required: true
   },
+  attendanceCutoffDay: {
+    type: String,
+    default: 'all'
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

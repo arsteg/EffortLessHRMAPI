@@ -4,6 +4,7 @@ const AttendanceTemplate = require('../models/attendance/attendanceTemplate');
 const AttendanceTemplateAssignments = require('../models/attendance/attendanceTemplateAssignments');
 const EmployeeOnDutyRequest = require('../models/attendance/employeeOnDutyRequest.js');
 const GeneralSettings = require('../models/attendance/generalSettings');
+const PayrollGeneralSetting = require('../models/Payroll/PayrollGeneralSettingModel');
 const OnDutyReason = require("../models/attendance/onDutyReason");
 const OnDutyTemplate = require('../models/attendance/onDutyTemplate');
 const RegularizationReason = require("../models/attendance/regularizationReason");
@@ -44,7 +45,7 @@ const moment = require('moment'); // Using moment.js for easy date manipulation
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
 const mongoose = require('mongoose'); // Added mongoose import
-const { toUTCDate, toUtcDateOnly, getMonthRangeUtc } = require('../utils/utcConverter');
+const { toUTCDate, toUtcDateOnly, getMonthRangeUtc, getAttendancePeriodRange, getPayrollPeriodForSync } = require('../utils/utcConverter');
 
 // New Attendance Models
 const AttendanceOffice = require('../models/attendance/attendanceOffice');
@@ -2316,12 +2317,19 @@ exports.MappedTimlogToAttendance = async (req, res, next) => {
     return next(new AppError(req.t('attendance.companyIdNotFound'), 400));
   }
   req.body.company = companyId;
+  // Get cutoff day from payroll general settings
+  const generalSettings = await PayrollGeneralSetting.findOne({ company: companyId });
+  const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
   // const startDate = new Date(year, month - 1, 1);
   // //const endDate = new Date(year, month, 0);
   // //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
-  // const lastDay = new Date(Date.UTC(year, month, 0));  
+  // const lastDay = new Date(Date.UTC(year, month, 0));
   // const endDate = toUTCDate(lastDay.setUTCHours(18, 29, 59, 999));
-  const { startDate, endDate } = getMonthRangeUtc(year, month);
+  const { startDate, endDate } = getAttendancePeriodRange(year, month, cutoffDay);
+  websocketHandler.sendLog(req,
+    `📅 Processing payroll period ${month}/${year} (cutoff: ${cutoffDay}): ${startDate.toISOString()} to ${endDate.toISOString()}`,
+    constants.LOG_TYPES.INFO
+  );
   let filter = { status: 'Active', company: req.cookies.companyId };
   websocketHandler.sendLog(req, `Preparing user query with filter: ${JSON.stringify(filter)}`, constants.LOG_TYPES.DEBUG);
 
@@ -2446,26 +2454,28 @@ const cornMappedTimlogToAttendance = async (company) => {
   // if (company.companyId.toString() !== '68a579feda9656f78e4f84d7') {
   //   return;
   // }
-
-  const month = new Date().getMonth(); // +1 since getMonth is 0-based  to test 7 month
-  const year = new Date().getFullYear();
+  const now = new Date(); 
+  const currentMonth = now.getMonth() + 1; // 1-based
+  const currentYear = now.getFullYear();
   const companyId = company.companyId;
 
   if (!companyId) {
     const errorMessage = 'Company ID not found';
     throw new Error(errorMessage);
   }
+  // Get cutoff day from payroll general settings
+  const generalSettings = await PayrollGeneralSetting.findOne({ company: companyId });
+  const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
+  // Determine which payroll period to process
+  const { year, month } = getPayrollPeriodForSync(currentYear, currentMonth, cutoffDay);
 
   // const startDate = new Date(year, month - 1, 1);
   // //const endDate = new Date(year, month, 0);
   // //Replaced the enddate to include time 18:29:59.999 on last day of month according to UTC so that can pull all timelogs entered on that day
   // //const lastDay = new Date(Date.UTC(year, month, 0));
   // const endDate = getEndOfMonthUTC(year, month);
-  const { startDate, endDate } = getMonthRangeUtc(year, month);
-
+  const { startDate, endDate } = getAttendancePeriodRange(year, month, cutoffDay);
   const filter = { status: 'Active', company: companyId };
-  console.log('start date:', startDate, 'end date:', endDate);
-
   const users = await User.find(filter);
 
   await Promise.all(users.map(async (user) => {
@@ -3156,14 +3166,23 @@ exports.ProcessAttendanceAndLOP = catchAsync(async (req, res, next) => {
     const { user, month, year } = req.body;
     const companyId = req.cookies.companyId;
 
-    const { startOfMonth, endOfMonth } = await getStartAndEndDates(req, year, month);
-    websocketHandler.sendLog(req, `Calculated startOfMonth: ${startOfMonth}, endOfMonth: ${endOfMonth}`, constants.LOG_TYPES.DEBUG);
+    // Get cutoff day from payroll general settings
+    const generalSettings = await PayrollGeneralSetting.findOne({ company: companyId });
+    const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
+    // Use cutoff-aware date range
+    const { startDate: startOfMonth, endDate: endOfMonth } = getAttendancePeriodRange(year, month, cutoffDay);
+    websocketHandler.sendLog(req,
+      `Processing attendance for period ${month}/${year} with cutoff ${cutoffDay}: ${startOfMonth.toISOString()} to ${endOfMonth.toISOString()}`,
+      constants.LOG_TYPES.INFO
+    );
+
     const { attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap } =
       await getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, companyId, req);
     websocketHandler.sendLog(req, `Fetched attendance and leave data for user`, constants.LOG_TYPES.DEBUG);
 
     await processLOPForMonth({
-      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req
+      user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req,
+      startDate: startOfMonth, endDate: endOfMonth
     });
     websocketHandler.sendLog(req, `Lop processed`, constants.LOG_TYPES.DEBUG);
 
@@ -3411,12 +3430,11 @@ function toLocalDateStringFromUTC(dateInput) {
 }
 
 // full utc based
-async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req }) {
+async function processLOPForMonth({ user, month, year, attendanceTemplate, attendanceRecords, approvedLeaveDays, notPaidLeaveDays, holidayDates, leaveInfoMap, companyId, req, startDate, endDate }) {
   if (!attendanceTemplate) {
     websocketHandler.sendLog(req, `❌ Attendance template not found for user ${user}, skipping LOP processing`, constants.LOG_TYPES.ERROR);
     return;
   }
-  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const weeklyOffSet = new Set(attendanceTemplate.weeklyOfDays || []);
   const alternateSet = new Set(attendanceTemplate.daysForAlternateWeekOffRoutine || []);
   const isAlternateOdd = attendanceTemplate.alternateWeekOffRoutine === 'odd';
@@ -3442,18 +3460,27 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
   websocketHandler.sendLog(req, `Leave set created with: ${JSON.stringify([...leaveSet])}`, constants.LOG_TYPES.DEBUG);
   const holidaySet = new Set(holidayDates);
   websocketHandler.sendLog(req, `Holiday set created with: ${JSON.stringify([...holidaySet])}`, constants.LOG_TYPES.DEBUG);
-  for (let day = 1; day <= daysInMonth; day++) {
 
-    const currentDate = new Date(Date.UTC(year, month - 1, day));
-    const dateStr = currentDate.toISOString().split('T')[0];
+  // Loop through the actual attendance period (not calendar month)
+  // This handles cutoff dates where period spans across two months (e.g., Feb 26 - Mar 25)
+  const currentDate = new Date(startDate);
+  const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
 
-    const dayName = currentDate.toLocaleDateString('en-US', {
+  while (currentDate <= endDateOnly) {
+    // Store current date for processing (before incrementing)
+    const processDate = new Date(currentDate);
+    const dateStr = processDate.toISOString().split('T')[0];
+
+    // Move to next day FIRST to avoid infinite loop with continue statements
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+
+    const dayName = processDate.toLocaleDateString('en-US', {
       weekday: 'short',
       timeZone: 'UTC'
     });
 
     // Week number (UTC)
-    const weekNumber = getWeekNumber(currentDate);
+    const weekNumber = getWeekNumber(processDate);
     const isOddWeek = weekNumber % 2 !== 0;
 
     const isAlternateOff =
@@ -3565,13 +3592,13 @@ async function processLOPForMonth({ user, month, year, attendanceTemplate, atten
     }
 
     if (shouldInsertLOP) {
-      const existingLOP = await LOP.findOne({ user, date: currentDate, company: companyId });
+      const existingLOP = await LOP.findOne({ user, date: processDate, company: companyId });
       if (!existingLOP) {
-        await new LOP({ user, date: currentDate, company: companyId, isHalfDay: lopIsHalfDay }).save();
+        await new LOP({ user, date: processDate, company: companyId, isHalfDay: lopIsHalfDay }).save();
         const lopReason = isNegativeLOP ? 'negative leave balance (mark-as-lop policy)' : 'unpaid leave/absence';
-        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${currentDate}, isHalfDay: ${lopIsHalfDay}, reason: ${lopReason}`, constants.LOG_TYPES.INFO);
+        websocketHandler.sendLog(req, `Inserted LOP for ${user} on ${processDate.toISOString().split('T')[0]}, isHalfDay: ${lopIsHalfDay}, reason: ${lopReason}`, constants.LOG_TYPES.INFO);
       } else {
-        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${currentDate}`, constants.LOG_TYPES.WARN);
+        websocketHandler.sendLog(req, `LOP already exists for ${user} on ${processDate.toISOString().split('T')[0]}`, constants.LOG_TYPES.WARN);
       }
     }
   }
@@ -3888,11 +3915,26 @@ exports.ProcessAttendance = catchAsync(async (req, res, next) => {
       return next(new AppError(req.t('attendance.companyId　　　NotFound'), 400));
     }
 
+    // Get cutoff day from payroll general settings
+    const generalSettings = await PayrollGeneralSetting.findOne({ company: companyId });
+    const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
+
     req.body.company = companyId;
     if (req.body.isFNF) {
       isFNF = true;
     }
     const { attendanceProcessPeriodMonth, attendanceProcessPeriodYear, runDate, exportToPayroll, users, company } = req.body;
+
+    // Log attendance period info with cutoff awareness
+    const year = parseInt(attendanceProcessPeriodYear);
+    const month = parseInt(attendanceProcessPeriodMonth);
+    if (!isFNF && !isNaN(year) && !isNaN(month)) {
+      const { startDate, endDate, totalDays } = getAttendancePeriodRange(year, month, cutoffDay);
+      websocketHandler.sendLog(req,
+        `Processing attendance period ${month}/${year} with cutoff ${cutoffDay}: ${startDate.toISOString().substring(0,10)} to ${endDate.toISOString().substring(0,10)} (${totalDays} days)`,
+        constants.LOG_TYPES.INFO
+      );
+    }
 
     let existingProcess = await AttendanceProcess.findOne({
       attendanceProcessPeriodMonth: attendanceProcessPeriodMonth,
@@ -4251,14 +4293,74 @@ exports.validateAttendanceProcess = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.MappedTimlogToAttendanceHelper = async () => {
-  let companies = await Company.find({}).select('_id');
-  for (let company of companies) {
-    //console.log(`Processing company ID: ${company._id}`);
-    await cornMappedTimlogToAttendance({
-      companyId: company._id
-    });
+/**
+ * Helper function to sync attendance for companies whose cutoff day was yesterday
+ * @param {number} currentDay - Current day of month (1-31)
+ */
+exports.MappedTimlogToAttendanceHelper = async (currentDay = null) => { 
+  const now = new Date();
+  const today = currentDay || now.getDate();
+  const currentMonth = now.getMonth() + 1; // 1-based
+  const currentYear = now.getFullYear();
+
+  // Calculate yesterday's day (handles month boundaries)
+  let yesterday, yesterdayMonth, yesterdayYear;
+
+  if (today === 1) {
+    // Today is 1st, yesterday was last day of previous month
+    yesterdayMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    yesterdayYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    yesterday = new Date(Date.UTC(yesterdayYear, yesterdayMonth, 0)).getUTCDate(); // Last day of prev month
+  } else {
+    yesterday = today - 1;
+    yesterdayMonth = currentMonth;
+    yesterdayYear = currentYear;
   }
+
+  console.log(`\n=== Attendance Sync Cron (Day ${today}) ===`);
+  console.log(`Checking companies with cutoff day: ${yesterday} or 'all' (if today is 1st)`);
+
+  let companies = await Company.find({}).select('_id');
+  let syncedCount = 0;
+  let skippedCount = 0;
+
+  for (let company of companies) {
+    const generalSettings = await PayrollGeneralSetting.findOne({ company: company._id });
+    const cutoffDay = generalSettings?.attendanceCutoffDay;
+
+    let shouldSync = false;
+    let reason = '';
+
+    if (today === 1 && cutoffDay === 'all') {
+      // First day of month: sync companies with no cutoff (full month)
+      shouldSync = true;
+      reason = `cutoff='all' - syncing previous month`;
+    } else if (cutoffDay && cutoffDay !== 'all') {
+      const cutoffNum = parseInt(cutoffDay);
+
+      // Handle edge case: cutoff > days in previous month
+      // E.g., cutoff=31 but Feb has only 28 days
+      const maxDaysInPrevMonth = new Date(Date.UTC(yesterdayYear, yesterdayMonth, 0)).getUTCDate();
+      const effectiveCutoff = Math.min(cutoffNum, maxDaysInPrevMonth);
+
+      if (effectiveCutoff === yesterday) {
+        shouldSync = true;
+        reason = `cutoff=${cutoffDay} (effective: ${effectiveCutoff}) - yesterday was cutoff day`;
+      }
+      console.log(`Company ${company._id}: cutoff=${cutoffDay}, effectiveCutoff=${effectiveCutoff}, yesterday=${yesterday} - shouldSync=${shouldSync}`);
+    }
+
+    if (shouldSync) {
+      console.log(`✓ Syncing company ${company._id}: ${reason}`);
+      await cornMappedTimlogToAttendance({ companyId: company._id });
+      syncedCount++;
+    } else {
+      skippedCount++;
+    }
+  }
+
+  console.log(`\nSync completed: ${syncedCount} companies synced, ${skippedCount} companies skipped`);
+  console.log(`=================================\n`);
 };
 
 

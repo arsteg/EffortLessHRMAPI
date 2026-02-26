@@ -23,9 +23,10 @@ exports.addEmailTemplateType = catchAsync(async (req, res, next) => {
     return next(new AppError('Email template type ID is required', 400));
   }
 
-  // Check if emailTemplateTypeId already exists
+  // Check if emailTemplateTypeId already exists for this company
   const existingTypeById = await EmailTemplateType.findOne({
-    emailTemplateTypeId: req.body.emailTemplateTypeId
+    emailTemplateTypeId: req.body.emailTemplateTypeId,
+    company: companyId
   });
 
   if (existingTypeById) {

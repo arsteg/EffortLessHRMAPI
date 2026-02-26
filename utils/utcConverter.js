@@ -101,6 +101,108 @@ function getMonthRangeUtc(year, month) {
   return { startDate, endDate };
 }
 
+/**
+ * Get attendance period range based on cutoff day
+ * @param {number} year - Payroll year (e.g., 2025)
+ * @param {number} month - Payroll month (1-12)
+ * @param {string|number} cutoffDay - 'all' or day 1-31
+ * @returns {Object} { startDate, endDate, totalDays }
+ *
+ * Example: cutoffDay=25, month=3, year=2025
+ * Returns: Feb 26 00:00:00.000 UTC to Mar 25 23:59:59.999 UTC, totalDays=28
+ */
+function getAttendancePeriodRange(year, month, cutoffDay) {
+  // If 'all', use full calendar month
+  if (cutoffDay === 'all' || !cutoffDay) {
+    const { startDate, endDate } = getMonthRangeUtc(year, month);
+    const totalDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return { startDate, endDate, totalDays };
+  }
+
+  const cutoff = parseInt(cutoffDay);
+  if (isNaN(cutoff) || cutoff < 1 || cutoff > 31) {
+    throw new Error(`Invalid cutoffDay: ${cutoffDay}`);
+  }
+
+  // Previous month calculation
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+
+  // Handle months with fewer days (Feb, 30-day months)
+  const prevMonthMaxDays = new Date(Date.UTC(prevYear, prevMonth, 0)).getUTCDate();
+  const currentMonthMaxDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const prevMonthCutoff = Math.min(cutoff, prevMonthMaxDays);
+  const currentMonthCutoff = Math.min(cutoff, currentMonthMaxDays);
+
+  // Start: (cutoff + 1) of previous month at midnight UTC
+  const startDate = toUtcDateOnlyFromYMD(prevYear, prevMonth, prevMonthCutoff + 1);
+
+  // End: cutoff of current month at 23:59:59.999 UTC (for inclusive range queries)
+  const endDate = new Date(Date.UTC(year, month - 1, currentMonthCutoff, 23, 59, 59, 999));
+
+  // Calculate total days using UTC date-only comparison
+  const startDateOnly = toUtcDateOnlyFromYMD(prevYear, prevMonth, prevMonthCutoff + 1);
+  const endDateOnly = toUtcDateOnlyFromYMD(year, month, currentMonthCutoff);
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const totalDays = Math.round((endDateOnly - startDateOnly) / oneDayMs) + 1;
+
+  return { startDate, endDate, totalDays };
+}
+
+/**
+ * Determine payroll period for attendance sync (used by cron)
+ * @param {number} currentYear - Current year
+ * @param {number} currentMonth - Current month (1-12)
+ * @param {string|number} cutoffDay - 'all' or day 1-31
+ * @returns {Object} { year, month }
+ *
+ * Example: Today is Feb 23, cutoffDay=22
+ * Cron should sync February payroll (Jan 23 - Feb 22 attendance) - just completed
+ * Returns: { year: 2026, month: 2 }
+ *
+ * Example: Today is Feb 1, cutoffDay='all'
+ * Cron should sync January payroll (Jan 1 - Jan 31 attendance) - now complete
+ * Returns: { year: 2026, month: 1 }
+ */
+function getPayrollPeriodForSync(currentYear, currentMonth, cutoffDay) {
+  if (cutoffDay === 'all' || !cutoffDay) {
+    // Without cutoff: sync previous month's payroll (full calendar month)
+    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    return { year: prevYear, month: prevMonth };
+  }
+
+  // With cutoff: sync current month's payroll
+  // (the period that ends on cutoff day of current month)
+  return { year: currentYear, month: currentMonth };
+}
+
+/**
+ * Generate human-readable period label for display
+ * @param {Date} startDate - Period start date
+ * @param {Date} endDate - Period end date
+ * @returns {string} - Formatted label like "23 Feb - 22 Mar 2024"
+ */
+function formatPeriodLabel(startDate, endDate) {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = d.getUTCDate();
+    const month = monthNames[d.getUTCMonth()];
+
+    // Only include year if different from end date year or if both dates shown
+    return `${day} ${month}`;
+  };
+
+  const start = formatDate(startDate);
+  const end = formatDate(endDate);
+  const endYear = new Date(endDate).getUTCFullYear();
+
+  return `${start} - ${end} ${endYear}`;
+}
+
 //Search for a full day (date-only) how to use
 // const start = toUtcDateOnly(req.query.date);
 // const end = new Date(start);
@@ -116,5 +218,8 @@ module.exports = {
     toUtcDateOnly,
     nowUtc,
     getMonthRangeUtc,
-    toUtcDateOnlyFromYMD 
+    toUtcDateOnlyFromYMD,
+    getAttendancePeriodRange,
+    getPayrollPeriodForSync,
+    formatPeriodLabel
 };
