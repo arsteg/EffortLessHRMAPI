@@ -2859,6 +2859,34 @@ exports.addPayroll = catchAsync(async (req, res, next) => {
   req.body.status = constants.Payroll_Status.InProgress;
   websocketHandler.sendLog(req, 'Assigned companyId to request body', constants.LOG_TYPES.DEBUG);
 
+  // Calculate period dates based on cutoff setting
+  const { getAttendancePeriodRange, formatPeriodLabel } = require('../utils/utcConverter');
+  const GeneralSetting = require("../models/Payroll/PayrollGeneralSettingModel");
+
+  // Fetch cutoff setting for this company
+  const generalSettings = await GeneralSetting.findOne({ company: companyId });
+  const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
+
+  // Convert month name to number (January -> 1, February -> 2, etc.)
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNumber = monthNames.indexOf(month) + 1;
+
+  if (!monthNumber) {
+    websocketHandler.sendLog(req, `Invalid month name: ${month}`, constants.LOG_TYPES.ERROR);
+    return next(new AppError('Invalid month name', 400));
+  }
+
+  // Calculate period dates using existing utility
+  const periodRange = getAttendancePeriodRange(parseInt(year), monthNumber, cutoffDay);
+
+  // Add period information to payroll document
+  req.body.periodStartDate = periodRange.startDate;
+  req.body.periodEndDate = periodRange.endDate;
+  req.body.periodLabel = formatPeriodLabel(periodRange.startDate, periodRange.endDate);
+
+  websocketHandler.sendLog(req, `Calculated period: ${req.body.periodLabel}`, constants.LOG_TYPES.INFO);
+
   const payroll = await Payroll.create(req.body);
   websocketHandler.sendLog(req, `Payroll record created with ID: ${payroll._id}`, constants.LOG_TYPES.INFO);
   const yearStr = year.toString();
@@ -3715,7 +3743,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
     })
     .populate({
       path: 'payroll',
-      select: 'month year date status' // Adjust fields as needed
+      select: 'month year date status periodStartDate periodEndDate periodLabel' // Adjust fields as needed
     })
     .populate({
       path: 'company',
@@ -3748,7 +3776,7 @@ exports.getAllGeneratedPayroll = catchAsync(async (req, res, next) => {
       const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
         PayrollOvertime.findOne({ PayrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
-        PayrollIncomeTax.findOne({ payrollUser: payrollUser._id, company: companyId })
+        PayrollIncomeTax.findOne({ PayrollUser: payrollUser._id, company: companyId })
           .sort({ _id: -1 }),  // sort by newest
         PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest
@@ -3897,7 +3925,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
     })
     .populate({
       path: 'payroll',
-      select: 'month year date status' // Adjust fields as needed
+      select: 'month year date status periodStartDate periodEndDate periodLabel' // Adjust fields as needed
     })
     .populate({
       path: 'company',
@@ -3929,7 +3957,7 @@ exports.getGeneratedPayrollByUserId = catchAsync(async (req, res, next) => {
       const [latestOvertime, latestIncomeTax, latestAttendanceSummary, variablePays, fixedPays] = await Promise.all([
         PayrollOvertime.findOne({ PayrollUser: payrollUser._id })
           .sort({ _id: -1 }), // sort by newest
-        PayrollIncomeTax.findOne({ payrollUser: payrollUser._id })
+        PayrollIncomeTax.findOne({ PayrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest
         PayrollAttendanceSummary.findOne({ payrollUser: payrollUser._id })
           .sort({ _id: -1 }),  // sort by newest

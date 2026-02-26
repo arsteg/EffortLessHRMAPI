@@ -2175,7 +2175,7 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
 });
 exports.getLeaveBalanceByCompany = catchAsync(async (req, res, next) => {
   const skip = parseInt(req.body.skip) || 0;
-  const limit = parseInt(req.body.next) || 10;
+  const limit = parseInt(req.body.next);
   const cycle = await scheduleController.createFiscalCycle();
 
   const totalCount = await LeaveAssigned.countDocuments({ company: req.cookies.companyId, cycle: cycle });

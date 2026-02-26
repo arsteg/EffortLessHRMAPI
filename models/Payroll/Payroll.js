@@ -23,6 +23,20 @@ var payrollSchema = new Schema({
       type: String,
       required: true
     },
+    periodStartDate: {
+      type: Date,
+      required: false,
+      index: true
+    },
+    periodEndDate: {
+      type: Date,
+      required: false,
+      index: true
+    },
+    periodLabel: {
+      type: String,
+      required: false
+    },
     company: {
       type: mongoose.Schema.ObjectId,
       ref: 'Company',

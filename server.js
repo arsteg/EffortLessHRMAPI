@@ -60,16 +60,25 @@ cron.schedule('0 0 1 * *', async () => {
   await updateRecurringNotifications();
   //  leaveController.assignLeavesByJobs(); // Pass the company name as a parameter
 });
-//execute on 1st day of each month
-cron.schedule('0 0 1 * *', async () => {
-//cron.schedule('*/5 * * * *', async () => {
+//Execute attendance sync DAILY at 1 AM (01:00AM)
+//Each day syncs companies whose cutoff day was yesterday
+cron.schedule('0 1 * * *', async () => {
+  const now = new Date();
+  const currentDay = now.getDate();
+  console.log(`Running daily attendance sync cron job (Day ${currentDay})...`);
+
   try {
-    await scheduleController.assignLeavesByJobs();
+    // Only run leave assignment on 1st of month
+    if (currentDay === 1) {
+      await scheduleController.assignLeavesByJobs();
+    }
+
+    // Run attendance sync for companies whose cutoff was yesterday
+    // The helper function internally determines which companies to sync
     await attendanceController.MappedTimlogToAttendanceHelper();
-    //console.log(`${currentTime}: This Job ran successfully.`);
-} catch (error) {
-    console.error('Error occurred:', error);
-}
+  } catch (error) {
+    console.error(`Error occurred in daily attendance sync cron job (day ${currentDay}):`, error);
+  }
 });
 //Execute every 10 minutes
 cron.schedule('0 0 1 * *', async () => {

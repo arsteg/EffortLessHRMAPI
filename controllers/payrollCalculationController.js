@@ -60,7 +60,7 @@ const moment = require("moment");
 // 👉 Utilities and constants
 const constants = require('../constants');
 const websocketHandler = require('../utils/websocketHandler');
-const { getMonthRangeUtc } = require('../utils/utcConverter');
+const { getMonthRangeUtc, getAttendancePeriodRange } = require('../utils/utcConverter');
 //const financialYearConfig = require('../config/financialyear.json');
 const path = require('path');
 const fs = require('fs');
@@ -1024,46 +1024,44 @@ const CalculateOvertime = async (req, res) => {
 const StoreAttendanceSummary = async (req, res) => {
 
   try {
-    // Calculate total days in the month
+    // Calculate total days and date range
     let totalDays = new Date(req.year, req.month, 0).getDate();
-
-    // Fetch LOP days
-    // Ensure month is 1-based and convert to 0-based for JavaScript Date
-    let startDate = new Date(req.year, req.month - 1, 1); // Start of the month
-    let endDate = new Date(req.year, req.month, 1); // Start of the next month
+    let startDate = new Date(req.year, req.month - 1, 1);
+    let endDate = new Date(req.year, req.month, 1);
 
     if (req.isFNF) {
       websocketHandler.sendLog(req, `📆 Processing attendance for FNF range`, constants.LOG_TYPES.INFO);
-
       ({ startDate, endDate } = await getFNFDateRange(req, req.user));
       const oneDayInMs = 24 * 60 * 60 * 1000;
       totalDays = Math.round((endDate - startDate) / oneDayInMs) + 1;
     } else {
-      // For regular payroll, check if attendance cut-off day is configured
+      // For regular payroll, use cutoff-aware date range
       try {
         const companyId = req.cookies.companyId;
         const generalSettings = await GeneralSetting.findOne({ company: companyId });
+        const cutoffDay = generalSettings?.attendanceCutoffDay || 'all';
 
-        if (generalSettings && generalSettings.attendanceCutoffDay && generalSettings.attendanceCutoffDay !== 'all') {
-          const cutoffDay = parseInt(generalSettings.attendanceCutoffDay);
+        const periodRange = getAttendancePeriodRange(req.year, req.month, cutoffDay);
+        startDate = periodRange.startDate;
+        endDate = periodRange.endDate;
+        totalDays = periodRange.totalDays;
 
-          if (!isNaN(cutoffDay) && cutoffDay > 0) {
-            const maxDaysInMonth = new Date(req.year, req.month, 0).getDate();
-            const effectiveCutoffDay = Math.min(cutoffDay, maxDaysInMonth);
-
-            // Adjust endDate to the cutoff day instead of the full month
-            endDate = new Date(req.year, req.month - 1, effectiveCutoffDay + 1); // +1 because endDate is exclusive
-            totalDays = effectiveCutoffDay; // Only count days up to cutoff
-
-            websocketHandler.sendLog(req, `📅 Attendance cut-off day configured: Processing days 1-${effectiveCutoffDay} of month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
-          } else {
-            websocketHandler.sendLog(req, `📅 No attendance cut-off configured: Processing full month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
-          }
+        if (cutoffDay !== 'all') {
+          websocketHandler.sendLog(req,
+            `📅 Cutoff day ${cutoffDay}: Processing ${startDate.toISOString().substring(0,10)} to ${endDate.toISOString().substring(0,10)} (${totalDays} days)`,
+            constants.LOG_TYPES.INFO
+          );
         } else {
-          websocketHandler.sendLog(req, `📅 No attendance cut-off configured: Processing full month ${req.month}/${req.year}`, constants.LOG_TYPES.INFO);
+          websocketHandler.sendLog(req,
+            `📅 No cutoff: Processing full month ${req.month}/${req.year} (${totalDays} days)`,
+            constants.LOG_TYPES.INFO
+          );
         }
       } catch (settingsError) {
-        websocketHandler.sendLog(req, `⚠️ Could not fetch general settings for cut-off day: ${settingsError.message}. Using full month.`, constants.LOG_TYPES.WARN);
+        websocketHandler.sendLog(req,
+          `⚠️ Error fetching cutoff settings: ${settingsError.message}. Using full month.`,
+          constants.LOG_TYPES.WARN
+        );
       }
     }
     // Fetch records from the database
