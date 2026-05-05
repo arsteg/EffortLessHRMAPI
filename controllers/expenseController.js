@@ -1948,8 +1948,8 @@ exports.updateAdvance = catchAsync(async (req, res, next) => {
   } else if (req.body.status === 'Rejected') {
     // Rejection - notify employee
     SendUINotification(
-      req.t('advance.advanceRejectedNotificationTitle'),
-      req.t('advance.advanceRejectedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
+      req.t('expense.advanceRejectedNotificationTitle'),
+      req.t('expense.advanceRejectedNotificationMessage', { firstName: user?.firstName, lastName: user?.lastName }),
       constants.Event_Notification_Type_Status.Expense,
       user?._id?.toString(),
       req.cookies.companyId,
