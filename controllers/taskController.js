@@ -83,7 +83,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
             try {
               await sendEmail({
                 email: user.email,
-                subject: emailTemplate.subject,
+                subject: emailTemplate.Name,
                 message: emailTemplateNewUser
               });
               websocketHandler.sendLog(req, `Deletion email sent to ${user.email}`, constants.LOG_TYPES.INFO);
@@ -171,7 +171,7 @@ exports.updateTask = catchAsync(async (req, res, next) => {
         .replace("{date}", formatDateToDDMMYY(new Date()))
         .replace("{company}", req.cookies.companyName || 'N/A')
         .replace("{projectName}", updatedTask.project?.projectName || 'N/A')
-        .replace("{description}", updatedTask?.description ? (updatedTask.description.length > 500 ? updatedTask.description.substring(0, 500) + '...' : updatedTask.description) : 'No description provided')
+        //.replace("{description}", updatedTask?.description || 'No description provided')
         .replace("{priority}", updatedTask?.priority || 'N/A')
         .replace("{taskURL}", taskURL)
         .replace("{lastName}", user?.lastName || 'N/A');
@@ -850,14 +850,14 @@ exports.addTask = catchAsync(async (req, res, next) => {
           .replace("{startDate}", newTask?.startDate || 'N/A')
           .replace("{endDate}", newTask?.endDate || 'N/A')
           .replace("{company}", req.cookies.companyName || 'N/A')
-          .replace("{description}", newTask?.description ? (newTask.description.length > 500 ? newTask.description.substring(0, 500) + '...' : newTask.description) : 'No description provided')
+          //.replace("{description}", newTask?.description || 'No description provided')
           .replace("{priority}", newTask?.priority || 'N/A')
           .replace("{taskName}", newTask?.taskName || 'Untitled Task')
           .replace("{lastName}", newUser?.lastName || 'N/A');
         try {
           await sendEmail({
             email: newUser.email,
-            subject: templateNewUser.subject,
+            subject: templateNewUser.Name,
             message: emailTemplateNewUser
           });
           websocketHandler.sendLog(req, `Task assignment email sent to ${newUser.email}`, constants.LOG_TYPES.INFO);
@@ -988,7 +988,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
       try {
         await sendEmail({
           email: oldUser.email,
-          subject: templateOldUser.subject,
+          subject: templateOldUser.Name,
           message: emailTemplateOldUser
         });
         websocketHandler.sendLog(req, `Unassignment email sent to ${oldUser.email}`, constants.LOG_TYPES.INFO);
@@ -1013,14 +1013,14 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
         .replace("{endDate}", task?.endDate || 'N/A')
         .replace("{taskName}", task?.taskName || 'Untitled Task')
         .replace("{company}", req.cookies.companyName || 'N/A')
-        .replace("{description}", task?.description ? (task.description.length > 500 ? task.description.substring(0, 500) + '...' : task.description) : 'No description provided')
+        //.replace("{description}", task?.description || 'No description provided')
         .replace("{priority}", task?.priority || 'N/A')
         .replace("{taskURL}", taskURL)
         .replace("{lastName}", newUser?.lastName || 'N/A');
       try {
         await sendEmail({
           email: newUser.email,
-          subject: templateNewUser.subject,
+          subject: templateNewUser.Name,
           message: emailTemplateNewUser
         });
         websocketHandler.sendLog(req, `Assignment email sent to ${newUser.email}`, constants.LOG_TYPES.INFO);
@@ -1071,7 +1071,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
     try {
       await sendEmail({
         email: user.email,
-        subject: emailTemplate.subject,
+        subject: emailTemplate.Name,
         message: emailTemplateNewUser
       });
       websocketHandler.sendLog(req, `Unassignment email sent to ${user.email}`, constants.LOG_TYPES.INFO);
