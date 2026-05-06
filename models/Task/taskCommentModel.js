@@ -1,4 +1,3 @@
-const { stringifyXML } = require('@azure/core-http');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 

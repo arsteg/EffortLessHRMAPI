@@ -1,4 +1,5 @@
 // This is our run file
+require('dns').setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 require('dotenv').config({ path: './config.env' }); // Ensure this is at the very top of the file
 const http = require('https');
 const mongoose = require('mongoose');
@@ -11,6 +12,7 @@ const scheduleController = require('./controllers/ScheduleController');
 const attendanceController = require('./controllers/attendanceController');
 const { getUserNotifications,updateRecurringNotifications } = require('./controllers/eventNotificationController');
 const { initWebSocket } = require('./utils/websocketHandler');
+const { initializeWebSocketManager } = require('./websocket/communicationWSManager');
 //let { setSocketIO } = require('./utils/liveScreenSender');
 
 //  import environment variables
@@ -122,7 +124,10 @@ const port = process.env.PORT || 8080;
 const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
   // Initialize WebSocket
- initWebSocket(server);
+  initWebSocket(server);
+  // Initialize Communication WebSocket Manager
+  initializeWebSocketManager(server);
+  console.log('Communication WebSocket Manager initialized');
 });
  
 

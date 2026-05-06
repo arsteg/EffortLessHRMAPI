@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 const constants = require('../constants'); // Assuming this has content types and notification types
-const { globalStore } = require('./globalStore');
+const globalStore = require('./globalStore');
 
 class WebSocketManager {
   constructor() {
