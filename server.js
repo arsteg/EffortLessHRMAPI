@@ -1,5 +1,5 @@
 // This is our run file
-require('dns').setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+//require('dns').setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 require('dotenv').config({ path: './config.env' }); // Ensure this is at the very top of the file
 const http = require('https');
 const mongoose = require('mongoose');
