@@ -67,6 +67,7 @@ const payrollCalculationController = require('../controllers/payrollCalculationC
 const OvertimeInformation = require('../models/attendance/overtimeInformation');
 const AttendanceRecords = require('../models/attendance/attendanceRecords');
 const LeaveAssigned = require("../models/Leave/LeaveAssignedModel");
+const LeaveCategory = require("../models/Leave/LeaveCategoryModel");
 const scheduleController = require('../controllers/ScheduleController');
 const { getFNFDateRange } = require('../Services/userDates.service');
 const { getTotalPFAmount } = require('../Services/provident_fund.service');
@@ -5654,16 +5655,41 @@ exports.getPayrollFNFUserAttendanceSummaryRecords = catchAsync(async (req, res, 
 
   const payableDays = attendanceRecords.length;
   const cycle = await scheduleController.createFiscalCycle();
-  const leaveBalances = await LeaveAssigned.find({
+  const currentMonth = new Date().getMonth();
+  const companyId = req.cookies.companyId;
+
+  // Get distinct categories for this employee and fetch balances with proper period filtering
+  const distinctCategories = await LeaveAssigned.distinct('category', {
     cycle: cycle,
     employee: userId
   });
 
+  const leaveBalances = [];
+  for (const categoryId of distinctCategories) {
+    const leaveCat = await LeaveCategory.findById(categoryId);
+    const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(
+      currentMonth,
+      leaveCat?.leaveAccrualPeriod
+    );
+
+    const balance = await LeaveAssigned.findOne({
+      cycle: cycle,
+      employee: userId,
+      category: categoryId,
+      startMonth: periodStart,
+      endMonth: periodEnd
+    });
+
+    if (balance) {
+      leaveBalances.push(balance);
+    }
+  }
+
   let leaveRemaining = 0;
 
   if (leaveBalances.length > 0) {
-    // Assuming you want the `leaveRemaining` from the first record
-    leaveRemaining = leaveBalances[0].leaveRemaining || 0;
+    // Sum up leaveRemaining from all categories for total balance
+    leaveRemaining = leaveBalances.reduce((sum, balance) => sum + (balance.leaveRemaining || 0), 0);
   }
 
   // Return result

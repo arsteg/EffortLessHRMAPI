@@ -1231,7 +1231,13 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       });
     }
 
-    const leaveAssigned = await LeaveAssigned.findOne({ employee: employee, cycle: cycle, category: leaveCategory });
+    const leaveAssigned = await LeaveAssigned.findOne({
+      employee: employee,
+      cycle: cycle,
+      category: leaveCategory,
+      startMonth: startMonth,
+      endMonth: endMonth
+    });
     if (!leaveCat) {
       return next(new AppError(req.t('leave.leaveCategoryNotFound'), 400));
     }
@@ -1392,15 +1398,22 @@ exports.createEmployeeLeaveApplication = async (req, res, next) => {
       SendUINotification(req.t('leave.employeeLeaveRequestNotificationTitle'), req.t('leave.employeeLeaveRequestNotificationMessage', { employeeName: userName, days: leaveDays }),
         constants.Event_Notification_Type_Status.leave, user?._id?.toString(), companyId, req, leaveApplicationUrl);
 
+      // Fetch company details for email
+      const companyDetails = await Company.findById(req.cookies.companyId);
+
+      // Send confirmation email to user (employee)
+      const userViewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
+      sendEmailToUsers(user, user, constants.Email_template_constant.Leave_Application_Received_Confiration, newLeaveApplication, companyDetails, leaveCat.label, userViewUrl);
+
+      // Send approval request email to manager
       const LeaveApproval = await EmployeeLeaveAssignment.findOne({ user: employee })
         .select('primaryApprover');
       if (LeaveApproval) {
         //for (const managerId of managerTeamsIds) {
         const manager = await User.findById(LeaveApproval?.primaryApprover);
-        const companyDetails = await Company.findById(req.cookies.companyId);
 
         // Generate approval URL for manager (team view)
-        const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/team-application`;
+        const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
 
         sendEmailToUsers(user, manager, constants.Email_template_constant.Leave_Application_Approval_Request, newLeaveApplication, companyDetails, leaveCat.label, approvalUrl);
 
@@ -1557,7 +1570,19 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
 
         let leaveDays = updatedLeaveApplication.calculatedLeaveDays;
         const cycle = await scheduleController.createFiscalCycle();
-        const leaveAssigned = await LeaveAssigned.findOne({ employee: updatedLeaveApplication.employee?._id, cycle: cycle, category: updatedLeaveApplication.leaveCategory?._id });
+
+        // Calculate period range for multi-period accrual types
+        const leaveStartMonth = new Date(updatedLeaveApplication.startDate).getMonth();
+        const leaveCatForPeriod = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
+        const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(leaveStartMonth, leaveCatForPeriod?.leaveAccrualPeriod);
+
+        const leaveAssigned = await LeaveAssigned.findOne({
+          employee: updatedLeaveApplication.employee?._id,
+          cycle: cycle,
+          category: updatedLeaveApplication.leaveCategory?._id,
+          startMonth: periodStart,
+          endMonth: periodEnd
+        });
         const companyDetails = await Company.findById(req.cookies.companyId);
         const manager = await User.findById(updatedLeaveApplication?.employee?._id);
 
@@ -1673,10 +1698,17 @@ exports.updateEmployeeLeaveStatus = async (req, res, next) => {
         const leaveDays = calculateLeaveDays(startDate, endDate);
         const cycle = await scheduleController.createFiscalCycle();
 
+        // Calculate period range for multi-period accrual types
+        const leaveStartMonth = new Date(startDate).getMonth();
+        const leaveCatForPeriod = await LeaveCategory.findById(leaveCategory);
+        const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(leaveStartMonth, leaveCatForPeriod?.leaveAccrualPeriod);
+
         const leaveAssigned = await LeaveAssigned.findOne({
           employee: user._id,
           cycle,
-          category: leaveCategory
+          category: leaveCategory,
+          startMonth: periodStart,
+          endMonth: periodEnd
         });
 
         if (leaveAssigned) {
@@ -1843,7 +1875,19 @@ exports.deleteEmployeeLeaveApplication = async (req, res, next) => {
       await LeaveApplication.findByIdAndDelete(id);
 
       const cycle = await scheduleController.createFiscalCycle();
-      const leaveAssigned = await LeaveAssigned.findOne({ employee, cycle, category: leaveCategory });
+
+      // Calculate period range for multi-period accrual types
+      const leaveStartMonth = new Date(leaveApplication.startDate).getMonth();
+      const leaveCatForPeriod = await LeaveCategory.findById(leaveCategory);
+      const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(leaveStartMonth, leaveCatForPeriod?.leaveAccrualPeriod);
+
+      const leaveAssigned = await LeaveAssigned.findOne({
+        employee,
+        cycle,
+        category: leaveCategory,
+        startMonth: periodStart,
+        endMonth: periodEnd
+      });
 
       if (leaveAssigned) {
         if (status === constants.Leave_Application_Constant.Approved) {
@@ -2130,7 +2174,22 @@ exports.getAllShortLeave = async (req, res, next) => {
 
 exports.getLeaveBalance = async (req, res, next) => {
   try {
-    const leaveAssigned = await LeaveAssigned.find({ company: req.cookies.companyId }).where('employee').equals(req.body.user).where('cycle').equals(req.body.cycle).where('category').equals(req.body.category);
+    const { user, cycle, category, startMonth, endMonth } = req.body;
+
+    let query = {
+      company: req.cookies.companyId,
+      employee: user,
+      cycle: cycle,
+      category: category
+    };
+
+    // Add period filter if provided (for multi-period accrual types)
+    if (startMonth !== undefined && endMonth !== undefined) {
+      query.startMonth = startMonth;
+      query.endMonth = endMonth;
+    }
+
+    const leaveAssigned = await LeaveAssigned.find(query);
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
       data: leaveAssigned
@@ -2160,11 +2219,26 @@ exports.getLeaveBalanceByTeam = catchAsync(async (req, res, next) => {
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
   const skip = parseInt(req.body.skip) || 0;
   const limit = parseInt(req.body.next) || 10;
-  const totalCount = await LeaveAssigned.countDocuments({ employee: { $in: objectIdArray } });
 
-  const leaveBalances = await LeaveAssigned.find({
-    employee: { $in: objectIdArray }
-  }).skip(parseInt(skip))
+  // Add cycle and period filtering
+  const cycle = await scheduleController.createFiscalCycle();
+
+  // Build base query with cycle filter
+  let query = {
+    employee: { $in: objectIdArray },
+    cycle: cycle
+  };
+
+  // Add period filter if provided in request (for multi-period accrual types)
+  if (req.body.startMonth !== undefined && req.body.endMonth !== undefined) {
+    query.startMonth = req.body.startMonth;
+    query.endMonth = req.body.endMonth;
+  }
+
+  const totalCount = await LeaveAssigned.countDocuments(query);
+
+  const leaveBalances = await LeaveAssigned.find(query)
+    .skip(parseInt(skip))
     .limit(parseInt(limit));
 
   res.status(200).json({

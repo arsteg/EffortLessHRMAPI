@@ -13,6 +13,8 @@ const Shift = require('../models/attendance/shift');
 const RosterShiftAssignment = require('../models/attendance/rosterShiftAssignment');
 const LeaveApplication = require('../models/Leave/LeaveApplicationModel');
 const LeaveAssigned = require('../models/Leave/LeaveAssignedModel');
+const LeaveCategory = require('../models/Leave/LeaveCategoryModel');
+const scheduleController = require('./ScheduleController');
 const ShiftTemplateAssignment = require('../models/attendance/shiftTemplateAssignment');
 const UserOnDutyReason = require('../models/attendance/userOnDutyReason');
 const UserOnDutyTemplate = require('../models/attendance/userOnDutyTemplate');
@@ -3343,11 +3345,21 @@ async function getAttendanceAndLeaveData(user, startOfMonth, endOfMonth, company
     // Check for negative leave balance with mark-as-lop policy
     let negativeLOPDays = 0;
     if (negativePolicy.toLowerCase() === constants.Negative_Balance_Policy.Mark_As_LOP.toLowerCase() && leave.leaveCategory) {
-      // Get the leave balance for this category
+      // Get the leave balance for this category with proper cycle and period filtering
+      const cycle = await scheduleController.createFiscalCycle();
+      const leaveStartMonth = new Date(leave.startDate || new Date()).getMonth();
+      const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(
+        leaveStartMonth,
+        leave.leaveCategory?.leaveAccrualPeriod
+      );
+
       const leaveAssigned = await LeaveAssigned.findOne({
         employee: user,
         category: leave.leaveCategory._id,
-        company: companyId
+        company: companyId,
+        cycle: cycle,
+        startMonth: periodStart,
+        endMonth: periodEnd
       });
       if (leaveAssigned && leaveAssigned.leaveRemaining < 0) {
         // The negative balance represents days that should be LOP
