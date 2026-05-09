@@ -341,7 +341,7 @@ exports.webSignup = catchAsync(async (req, res, next) => {
       const message = emailTemplate.contentData
         .replace("{firstName}", newUser.firstName)
         .replace("{lastName}", newUser.lastName)
-        .replaceAll("{company}", req.cookies.companyName)
+        .replaceAll("{company}", company.companyName)
         .replace("{url}", resetURL);
 
       await sendEmail({
@@ -406,7 +406,7 @@ async function seedCompanyData(newCompanyId, req, next) {
     } catch (err) {
       console.error(`Insert failure for ${file}:`, err);
       // Return upstream if one seeding fails
-      throw new AppError(`Failed to seed ${model.modelName}`,
+      throw new AppError(`Failed to seed ${model.modelName} ${err.message}`,
         500
       );
     }

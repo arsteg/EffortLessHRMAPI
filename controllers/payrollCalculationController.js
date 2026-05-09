@@ -1161,13 +1161,33 @@ const calculateLeaveEncashmentRecovery = async (req, res) => {
     const fixedAllowanceAmount = salaryDetails.Amount || 0;
     const dailyRate = fixedAllowanceAmount / 30;
 
-    // 2. Fetch Leave Assignments for the current cycle
+    // 2. Fetch Leave Assignments for the current cycle with proper period filtering
     const cycle = await scheduleController.createFiscalCycle();
-    const leaveAssignments = await LeaveAssigned.find({
-      employee: userId,
-      cycle: cycle,
-      company: companyId
-    });
+    const currentMonth = month; // Use payroll month for period calculation
+
+    // Get all leave categories for this company to query assignments per category
+    const leaveCategories = await LeaveCategory.find({ company: companyId });
+    const leaveAssignments = [];
+
+    for (const leaveCat of leaveCategories) {
+      const { startMonth: periodStart, endMonth: periodEnd } = await scheduleController.getPeriodRange(
+        currentMonth - 1, // getPeriodRange expects 0-indexed month
+        leaveCat.leaveAccrualPeriod
+      );
+
+      const assignment = await LeaveAssigned.findOne({
+        employee: userId,
+        cycle: cycle,
+        company: companyId,
+        category: leaveCat._id,
+        startMonth: periodStart,
+        endMonth: periodEnd
+      });
+
+      if (assignment) {
+        leaveAssignments.push(assignment);
+      }
+    }
 
     if (!leaveAssignments.length) {
       websocketHandler.sendLog(req, 'ℹ️ No leave assignments found for current cycle', constants.LOG_TYPES.INFO);

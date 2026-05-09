@@ -1,11 +1,19 @@
 const User = require('../models/permissions/userModel');
 const catchAsync = require('../utils/catchAsync');
 
-const { v1: uuidv1} = require('uuid');
-
 const { BlobServiceClient, StorageSharedKeyCredential,  generateBlobSASQueryParameters,  BlobSASPermissions,  SASProtocol } = require('@azure/storage-blob');
 const constants = require('../constants');
 const  websocketHandler  = require('../utils/websocketHandler');
+
+// Helper function to dynamically import uuid ES Module
+let uuidModule = null;
+async function getUuidV1() {
+  if (!uuidModule) {
+    uuidModule = await import('uuid');
+  }
+  return uuidModule.v1;
+}
+
 // AZURE STORAGE CONNECTION DETAILS
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -36,6 +44,7 @@ async function createContainerInContainer(parentContainerName, childContainerNam
   }
 
   // Create a unique blob name for the profile image
+  const uuidv1 = await getUuidV1();
   const profileBlobName = childContainerName + "/"  + uuidv1() + document.filePath;
   const blockBlobClientProfile = parentContainerClient.getBlockBlobClient(profileBlobName);
 
@@ -73,6 +82,7 @@ async function createContainerInContainerSAS(parentContainerName, childContainer
   }
 
   // Create a unique blob name for the profile image
+  const uuidv1 = await getUuidV1();
   const profileBlobName = childContainerName + "/"  + uuidv1() + document.filePath;
   const blockBlobClientProfile = parentContainerClient.getBlockBlobClient(profileBlobName);
 
