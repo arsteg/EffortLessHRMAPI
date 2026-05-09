@@ -2,7 +2,6 @@
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const { ObjectId } = require('mongodb');
-const { v1: uuidv1} = require('uuid');
 const AppError = require('../utils/appError');
 const mongoose = require("mongoose");
 const EventNotification= require('../models/eventNotification/eventNotification');

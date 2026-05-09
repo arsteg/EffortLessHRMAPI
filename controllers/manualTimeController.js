@@ -2,7 +2,6 @@ const manualTimeRequest = require("../models/manualTime/manualTimeRequestModel")
 const TimeLog = require("../models/timeLog");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError.js");
-const { v1: uuidv1 } = require("uuid");
 const { Stream } = require("nodemailer/lib/xoauth2");
 const sendEmail = require("../utils/email");
 const User = require("../models/permissions/userModel");
