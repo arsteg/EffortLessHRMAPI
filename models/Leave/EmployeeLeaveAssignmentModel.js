@@ -33,10 +33,14 @@ employeeLeaveAssignmentSchema.pre(/^find/, async function (next) {
   try {
     this.populate({
       path: 'leaveTemplate',
-      select: 'id label approvalType'
+      select: 'id label approvalType approvalLevel'
     })
     this.populate({
       path: 'primaryApprover',
+      select: 'id firstName lastName'
+    })
+    this.populate({
+      path: 'secondaryApprover',
       select: 'id firstName lastName'
     })
     this.populate({

@@ -105,6 +105,20 @@
     "isDelete": false
   },
   {
+    "Name": "Leave Application Level 1 Approved Pending Level 2",
+    "subject": "Your Leave Application - Level 1 Approved, Pending Level 2",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p>Good news! Your leave application has been approved by <strong>{level1ApproverName}</strong> (Level 1 Approver) and is now pending Level 2 approval.</p><p><br></p><p><strong>Leave Application Details:</strong></p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p><p>Reason: {reason}</p><p><br></p><p><strong>Approval Status:</strong></p><p>✓ Level 1: Approved by {level1ApproverName} on {level1ApprovalDate}</p><p>⏳ Level 2: Pending approval from {level2ApproverName}</p><p><br></p><p>Your leave request will be finalized once the Level 2 approver reviews it. You will be notified of the final decision.</p><p><br></p><p>If you have any questions, please contact your manager or HR.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
+    "Name": "Leave Application Level 2 Approval Request",
+    "subject": "Action Required: Level 2 Leave Approval",
+    "templateType": 6,
+    "contentData": "<p>Dear {firstName} {lastName},</p><p><strong>{employeeName}</strong> has submitted a leave application that has been approved by <strong>{level1ApproverName}</strong> (Level 1 Approver) and now requires your Level 2 approval.</p><p><br></p><p><strong>Leave Application Details:</strong></p><p>Employee Name: {employeeName}</p><p>Type of Leave: {leaveType}</p><p>Leave Period: {startDate} to {endDate}</p><p>Total Days: {totalDays}</p>{halfDayDetails}<p>Reason: {reason}</p><p><br></p><p><strong>Approval Status:</strong></p><p>✓ Level 1: Approved by {level1ApproverName} on {level1ApprovalDate}</p><p>⏳ Level 2: Awaiting your approval</p><p><br></p><p>Please log into the {company} portal using {leaveUrl} to approve or decline this request.</p><p><br></p><p>If no action is taken, the request remains pending.</p><p><br></p><p>Best regards,</p><p>{company}</p>",
+    "isDelete": false
+  },
+  {
     "Name": "Expense Report Submission Request",
     "subject": "Expense Report Submitted Successfully",
     "templateType": 11,

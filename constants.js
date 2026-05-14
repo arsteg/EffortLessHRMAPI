@@ -17,6 +17,8 @@ const Email_template_constant = {
   CancelReject_Request_Leave_Application: "Leave Application Rejected or Canceled",
   Leave_Application_Approval_Request: "Approval Request Leave Application",
   Your_Leave_Application_Has_Been_Approved: "Your Leave Application Has Been Approved",
+  Leave_Level_1_Approved_Pending_Level_2: "Leave Application Level 1 Approved Pending Level 2",
+  Leave_Level_2_Approval_Request: "Leave Application Level 2 Approval Request",
   Employee_Termination: "Termination of Employment",
   Birthday_Email_To_Employee: "Birthday email template to employee",
   Birthday_Email_To_Manager: "Birthday email template to manager",

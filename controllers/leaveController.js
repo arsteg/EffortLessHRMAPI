@@ -1467,20 +1467,56 @@ console.log('send email approvalUrl' , approvalUrl);
     const leaveTypeDisplay = leaveCategoryLabel || leaveApplication.leaveCategory?.label || leaveApplication.leaveCategory;
     const approvalLink = approvalUrl || '#';
 
+    // Fetch approver details with populated data
+    const leaveAppWithApprovers = await LeaveApplication.findById(leaveApplication._id)
+      .populate('level1Approver', 'firstName lastName')
+      .populate('level2Approver', 'firstName lastName');
+
+    // Get leave assignment for secondary approver name
+    const employeeLeaveAssignment = await EmployeeLeaveAssignment.findOne({
+      user: leaveApplication.employee
+    }).populate('secondaryApprover', 'firstName lastName');
+
+    // Format approver information
+    const level1ApproverName = leaveAppWithApprovers?.level1Approver
+      ? `${leaveAppWithApprovers.level1Approver.firstName} ${leaveAppWithApprovers.level1Approver.lastName}`
+      : 'N/A';
+
+    const level1ApprovalDate = leaveAppWithApprovers?.level1ApprovedDate
+      ? formatDate(leaveAppWithApprovers.level1ApprovedDate)
+      : '';
+
+    const level2ApproverName = employeeLeaveAssignment?.secondaryApprover
+      ? `${employeeLeaveAssignment.secondaryApprover.firstName} ${employeeLeaveAssignment.secondaryApprover.lastName}`
+      : 'N/A';
+
+    const level2ApprovalDate = leaveAppWithApprovers?.level2ApprovedDate
+      ? formatDate(leaveAppWithApprovers.level2ApprovedDate)
+      : '';
+
+    // Conditional Level 2 approval info for final approval email
+    const level2ApprovalInfo = leaveAppWithApprovers?.level2Approver && level2ApprovalDate
+      ? `<p>✓ Level 2: Approved by ${level2ApproverName} on ${level2ApprovalDate}</p>`
+      : '';
+
     const message = template
-      .replace("{firstName}", manager.firstName)
-      .replace("{employeeName}", user.firstName + " " + user.lastName)
-      .replace("{employeeName}", user.firstName + " " + user.lastName)
-      .replace("{leaveType}", leaveTypeDisplay)
-      .replace("{startDate}", formatDate(start))
-      .replace("{endDate}", formatDate(end))
-      .replace("{totalDays}", totalDays)
-      .replace("{halfDayDetails}", halfDayDetails)
-      .replace("{reason}", leaveApplication.comment || "-")
-      .replace("{company}", company.companyName)
-      .replace("{company}", company.companyName)
-      .replace("{lastName}", manager.lastName)
-      .replace("{leaveUrl}", approvalLink);
+      .replaceAll("{firstName}", manager.firstName)
+      .replaceAll("{employeeName}", user.firstName + " " + user.lastName)
+      .replaceAll("{leaveType}", leaveTypeDisplay)
+      .replaceAll("{startDate}", formatDate(start))
+      .replaceAll("{endDate}", formatDate(end))
+      .replaceAll("{totalDays}", totalDays)
+      .replaceAll("{halfDayDetails}", halfDayDetails)
+      .replaceAll("{reason}", leaveApplication.comment || "-")
+      .replaceAll("{company}", company.companyName)
+      .replaceAll("{lastName}", manager.lastName)
+      .replaceAll("{leaveUrl}", approvalLink)
+      .replaceAll("{url}", approvalLink)
+      .replaceAll("{level1ApproverName}", level1ApproverName)
+      .replaceAll("{level1ApprovalDate}", level1ApprovalDate)
+      .replaceAll("{level2ApproverName}", level2ApproverName)
+      .replaceAll("{level2ApprovalDate}", level2ApprovalDate)
+      .replaceAll("{level2ApprovalInfo}", level2ApprovalInfo);
     //if (attendanceUser.email == "hrmeffortless@gmail.com") {
     try {
       await sendEmail({
@@ -1526,6 +1562,61 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
     const { id } = req.params;
     // const { halfDays, ...leaveApplicationData } = req.body;
     const { employee, leaveCategory, level1Reason, level2Reason, startDate, endDate, comment, isHalfDayOption, status, halfDays, leaveApplicationAttachments } = req.body;
+
+    // Fetch the leave application to check current status
+    const leave = await LeaveApplication.findById(id);
+    if (!leave) {
+      return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
+    }
+
+    // Fetch leave assignment to get primary and secondary approvers
+    const leaveAssignment = await EmployeeLeaveAssignment.findOne({ user: leave.employee });
+    // Fetch leave template to check approval level
+    const leaveTemplate = await LeaveTemplate.findById(leaveAssignment?.leaveTemplate);
+
+    // Authorization and two-level approval logic
+    if (req.body.status === 'Approved' || req.body.status === 'Rejected') {
+      if (leaveAssignment && leaveTemplate) {
+        // Level 1 Approval Check
+        if (leave.status === 'Level 1 Approval Pending') {
+          // Verify user is primary approver
+          if (leaveAssignment.primaryApprover?._id.toString() !== req.cookies.userId) {
+            return res.status(403).json({
+              status: constants.APIResponseStatus.Failure,
+              message: req.t('Only the designated approver can approve or reject this leave.')
+            });
+          }
+
+          // If 2-level approval and status is Approved, change to Level 2 Approval Pending
+          if (leaveTemplate.approvalLevel === '2 Level' && req.body.status === 'Approved') {
+            req.body.status = 'Level 2 Approval Pending';
+            req.body.level1Approver = req.cookies.userId;
+            req.body.level1ApprovedDate = new Date();
+          } else if (req.body.status === 'Approved') {
+            // 1-level approval - track level 1 approver
+            req.body.level1Approver = req.cookies.userId;
+            req.body.level1ApprovedDate = new Date();
+          }
+        }
+
+        // Level 2 Approval Check
+        if (leave.status === 'Level 2 Approval Pending') {
+          // Verify user is secondary approver
+          if (leaveAssignment.secondaryApprover?._id.toString() !== req.cookies.userId) {
+            return res.status(403).json({
+              status: constants.APIResponseStatus.Failure,
+              message: req.t('Only the designated level 2 approver can approve or reject this leave.')
+            });
+          }
+
+          // Track level 2 approver
+          if (req.body.status === 'Approved') {
+            req.body.level2Approver = req.cookies.userId;
+            req.body.level2ApprovedDate = new Date();
+          }
+        }
+      }
+    }
 
     const updatedLeaveApplication = await LeaveApplication.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -1616,6 +1707,27 @@ exports.updateEmployeeLeaveApplication = async (req, res, next) => {
           //sendEmailToUsers(req.body.employee, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, req.cookies.companyId);
           sendEmailToUsers(manager, manager, constants.Email_template_constant.Your_Leave_Application_Has_Been_Approved, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
           SendUINotification(req.t('leave.leaveApprovalNotificationTitle'), req.t('leave.leaveApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req, viewUrl);
+        }
+
+        // Handle Level 2 Approval Pending status (Level 1 approved for 2-level template)
+        if (req.body.status === constants.Leave_Application_Constant.Level_2_Approval_Pending) {
+          console.log('Level 1 approved, notifying Level 2 approver and employee...');
+
+          // Fetch leave category label
+          const leaveCat = await LeaveCategory.findById(updatedLeaveApplication.leaveCategory?._id || updatedLeaveApplication.leaveCategory);
+          const viewUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/my-application`;
+          const approvalUrl = `${process.env.WEBSITE_DOMAIN}/#/home/leave/leave-application`;
+
+          // Notify employee that Level 1 is approved, pending Level 2
+          sendEmailToUsers(manager, manager, constants.Email_template_constant.Leave_Level_1_Approved_Pending_Level_2, updatedLeaveApplication, companyDetails, leaveCat?.label, viewUrl);
+          SendUINotification(req.t('leave.leaveLevel1ApprovedNotificationTitle'), req.t('leave.leaveLevel1ApprovedNotificationMessage'), constants.Event_Notification_Type_Status.leave, updatedLeaveApplication.employee?._id?.toString(), req.cookies.companyId, req, viewUrl);
+
+          // Notify Level 2 approver
+          const level2Approver = await User.findById(leaveAssignment?.secondaryApprover._id.toString());
+          if (level2Approver) {
+            sendEmailToUsers(manager, level2Approver, constants.Email_template_constant.Leave_Level_2_Approval_Request, updatedLeaveApplication, companyDetails, leaveCat?.label, approvalUrl);
+            SendUINotification(req.t('leave.leavePendingApprovalNotificationTitle'), req.t('leave.leavePendingApprovalNotificationMessage'), constants.Event_Notification_Type_Status.leave, level2Approver._id?.toString(), req.cookies.companyId, req, approvalUrl);
+          }
         }
 
         //Currently do not have the option for edit leave application so commented out the below code
@@ -1774,8 +1886,11 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
     const limit = parseInt(req.body.next);
     const totalCount = await LeaveApplication.countDocuments({ employee: userId });
 
-    const leaveApplications = await LeaveApplication.find({ employee: userId }).skip(parseInt(skip))
-      .limit(parseInt(limit));
+    const leaveApplications = await LeaveApplication.find({ employee: userId })
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .populate('level1Approver', '_id firstName lastName')
+      .populate('level2Approver', '_id firstName lastName');
 
     // If no leave applications are found, return an empty array
     if (leaveApplications.length === 0) {
@@ -1790,15 +1905,19 @@ exports.getEmployeeLeaveApplicationByUser = async (req, res, next) => {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
       leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
-      // Fetch primary approver for this leave application's employee
+      // Fetch primary and secondary approvers for this leave application's employee
       const employeeAssignment = await EmployeeLeaveAssignment.findOne({
         user: leaveApplications[i].employee
       })
-      .select('primaryApprover')
-      .populate('primaryApprover', '_id firstName lastName');
+      .select('primaryApprover secondaryApprover leaveTemplate')
+      .populate('primaryApprover', '_id firstName lastName')
+      .populate('secondaryApprover', '_id firstName lastName')
+      .populate('leaveTemplate', '_id label approvalLevel');
 
-      // Attach primary approver to leave application
+      // Attach approvers and leave template to leave application
       leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
+      leaveApplications[i]._doc.secondaryApprover = employeeAssignment?.secondaryApprover || null;
+      leaveApplications[i]._doc.leaveTemplate = employeeAssignment?.leaveTemplate || null;
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1839,7 +1958,9 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
     employee: { $in: teamIdsArray }
   })
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .populate('level1Approver', '_id firstName lastName')
+    .populate('level2Approver', '_id firstName lastName');
 
   // Populate halfDays for each leave application
   for (let i = 0; i < leaveApplications.length; i++) {
@@ -1848,15 +1969,19 @@ exports.getEmployeeLeaveApplicationByTeam = catchAsync(async (req, res, next) =>
       .equals(leaveApplications[i]._id);
     leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
-    // Fetch primary approver for this leave application's employee
+    // Fetch primary and secondary approvers for this leave application's employee
     const employeeAssignment = await EmployeeLeaveAssignment.findOne({
       user: leaveApplications[i].employee
     })
-    .select('primaryApprover')
-    .populate('primaryApprover', '_id firstName lastName');
+    .select('primaryApprover secondaryApprover leaveTemplate')
+    .populate('primaryApprover', '_id firstName lastName')
+    .populate('secondaryApprover', '_id firstName lastName')
+    .populate('leaveTemplate', '_id label approvalLevel');
 
-    // Attach primary approver to leave application
+    // Attach approvers and leave template to leave application
     leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
+    leaveApplications[i]._doc.secondaryApprover = employeeAssignment?.secondaryApprover || null;
+    leaveApplications[i]._doc.leaveTemplate = employeeAssignment?.leaveTemplate || null;
   }
 
   res.status(200).json({
@@ -1919,27 +2044,40 @@ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
 
     let query = { company: req.cookies.companyId };
     if (status !== null && status !== undefined) {
-      query.status = status;
+      // Handle "Pending" status to include both Level 1 and Level 2 pending
+      if (status === 'Pending') {
+        query.status = { $in: ['Level 1 Approval Pending', 'Level 2 Approval Pending'] };
+      } else {
+        query.status = status;
+      }
     }
 
-    //const totalCount = await LeaveApplication.countDocuments({ company: req.cookies.companyId});  
+    //const totalCount = await LeaveApplication.countDocuments({ company: req.cookies.companyId});
     const totalCount = await LeaveApplication.countDocuments(query);
 
-    const leaveApplications = await LeaveApplication.find(query).skip(parseInt(skip))
-      .limit(parseInt(limit));
+    const leaveApplications = await LeaveApplication.find(query)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .populate('level1Approver', '_id firstName lastName')
+      .populate('level2Approver', '_id firstName lastName');
+
     for (var i = 0; i < leaveApplications.length; i++) {
       const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplications[i]._id);
       leaveApplications[i]._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
-      // Fetch primary approver for this leave application's employee
+      // Fetch primary and secondary approvers for this leave application's employee
       const employeeAssignment = await EmployeeLeaveAssignment.findOne({
         user: leaveApplications[i].employee
       })
-      .select('primaryApprover')
-      .populate('primaryApprover', '_id firstName lastName');
+      .select('primaryApprover secondaryApprover leaveTemplate')
+      .populate('primaryApprover', '_id firstName lastName')
+      .populate('secondaryApprover', '_id firstName lastName')
+      .populate('leaveTemplate', '_id label approvalLevel');
 
-      // Attach primary approver to leave application
+      // Attach approvers and leave template to leave application
       leaveApplications[i]._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
+      leaveApplications[i]._doc.secondaryApprover = employeeAssignment?.secondaryApprover || null;
+      leaveApplications[i]._doc.leaveTemplate = employeeAssignment?.leaveTemplate || null;
     }
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1954,19 +2092,25 @@ exports.getAllEmployeeLeaveApplication = async (req, res, next) => {
 exports.getEmployeeLeaveApplication = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const leaveApplication = await LeaveApplication.findById(id);
+    const leaveApplication = await LeaveApplication.findById(id)
+      .populate('level1Approver', '_id firstName lastName')
+      .populate('level2Approver', '_id firstName lastName');
     const halfDays = await LeaveApplicationHalfDay.find({}).where('leaveApplication').equals(leaveApplication._id);
     leaveApplication._doc.halfDays = halfDays.length > 0 ? halfDays : null;
 
-    // Fetch primary approver for this leave application's employee
+    // Fetch primary and secondary approvers for this leave application's employee
     const employeeAssignment = await EmployeeLeaveAssignment.findOne({
       user: leaveApplication.employee
     })
-    .select('primaryApprover')
-    .populate('primaryApprover', '_id firstName lastName');
+    .select('primaryApprover secondaryApprover leaveTemplate')
+    .populate('primaryApprover', '_id firstName lastName')
+    .populate('secondaryApprover', '_id firstName lastName')
+    .populate('leaveTemplate', '_id label approvalLevel');
 
-    // Attach primary approver to leave application
+    // Attach approvers and leave template to leave application
     leaveApplication._doc.primaryApprover = employeeAssignment?.primaryApprover || null;
+    leaveApplication._doc.secondaryApprover = employeeAssignment?.secondaryApprover || null;
+    leaveApplication._doc.leaveTemplate = employeeAssignment?.leaveTemplate || null;
 
     if (!leaveApplication) {
       return next(new AppError(req.t('leave.leaveApplicationNotFound'), 404));
