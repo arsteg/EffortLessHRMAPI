@@ -42,6 +42,20 @@ var leaveApplicationSchema = new Schema({
   level2Reason: {
     type: String
   },
+  level1Approver: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
+  level1ApprovedDate: {
+    type: Date
+  },
+  level2Approver: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
+  level2ApprovedDate: {
+    type: Date
+  },
   company: {
     type: String,
     required: true
