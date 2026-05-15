@@ -11,6 +11,11 @@ const attendanceLogSchema = new mongoose.Schema({
         ref: 'Company',
         required: [true, 'Company is required.']
     },
+    office: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'AttendanceOffice',
+        required: [true, 'Office is required.']
+    },
     type: {
         type: String,
         enum: ['check-in', 'check-out'],
