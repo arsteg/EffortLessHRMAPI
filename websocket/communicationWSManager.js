@@ -20,13 +20,14 @@ class CommunicationWebSocketManager {
   initialize(server) {
     this.io = new Server(server, {
       cors: {
-        origin: process.env.ALLOWED_ORIGIN || '*',
+        origin: '*',
         methods: ['GET', 'POST'],
         credentials: true
       },
       pingTimeout: 60000,
       pingInterval: 25000,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      allowEIO3: true
     });
 
     // Setup namespaces
@@ -183,13 +184,19 @@ class CommunicationWebSocketManager {
   setupMessageHandlers(socket) {
     const { userId } = socket;
 
-    // Join conversation room
+    // Join conversation room (support both naming conventions)
     socket.on('conversation:join', ({ conversationId }) => {
       socket.join(`conversation:${conversationId}`);
     });
+    socket.on('join_conversation', ({ conversationId }) => {
+      socket.join(`conversation:${conversationId}`);
+    });
 
-    // Leave conversation room
+    // Leave conversation room (support both naming conventions)
     socket.on('conversation:leave', ({ conversationId }) => {
+      socket.leave(`conversation:${conversationId}`);
+    });
+    socket.on('leave_conversation', ({ conversationId }) => {
       socket.leave(`conversation:${conversationId}`);
     });
 
@@ -254,8 +261,8 @@ class CommunicationWebSocketManager {
       }
     });
 
-    // Status update
-    socket.on('presence:status', async ({ status, customStatus }) => {
+    // Status update (support both naming conventions)
+    const handlePresenceUpdate = async ({ status, customStatus, customMessage }) => {
       try {
         const presence = await UserPresence.findOne({ userId });
         if (presence) {
@@ -265,6 +272,9 @@ class CommunicationWebSocketManager {
           if (customStatus) {
             presence.setCustomStatus(customStatus.text, customStatus.emoji, customStatus.duration);
           }
+          if (customMessage) {
+            presence.setCustomStatus(customMessage, null, null);
+          }
           await presence.save();
 
           this.broadcastPresenceChange(userId, companyId, presence.effectiveStatus, presence.customStatus);
@@ -272,7 +282,10 @@ class CommunicationWebSocketManager {
       } catch (error) {
         console.error('Error handling status update:', error);
       }
-    });
+    };
+
+    socket.on('presence:status', handlePresenceUpdate);
+    socket.on('presence_update', handlePresenceUpdate);
   }
 
   /**
@@ -323,49 +336,68 @@ class CommunicationWebSocketManager {
    * Setup typing indicator handlers
    */
   setupTypingHandlers(socket) {
-    const { userId } = socket;
+    const { userId, userName } = socket;
 
-    socket.on('typing:start', ({ conversationId }) => {
+    const handleTypingStart = ({ conversationId }) => {
       // Clear existing timeout
       const conversationTyping = this.typingUsers.get(conversationId) || new Map();
       if (conversationTyping.has(userId)) {
         clearTimeout(conversationTyping.get(userId));
       }
 
-      // Broadcast typing start
-      socket.to(`conversation:${conversationId}`).emit('typing:update', {
+      // Broadcast typing start to conversation room
+      socket.to(`conversation:${conversationId}`).emit('user_typing', {
         conversationId,
         userId,
-        isTyping: true
+        userName: userName || ''
+      });
+
+      // Also emit to both namespaces for users not in the room
+      this.emitToConversation(conversationId, 'user_typing', {
+        conversationId,
+        userId,
+        userName: userName || ''
       });
 
       // Set auto-stop timeout (5 seconds)
       const timeout = setTimeout(() => {
-        socket.to(`conversation:${conversationId}`).emit('typing:update', {
+        socket.to(`conversation:${conversationId}`).emit('user_stopped_typing', {
           conversationId,
-          userId,
-          isTyping: false
+          userId
+        });
+        this.emitToConversation(conversationId, 'user_stopped_typing', {
+          conversationId,
+          userId
         });
         conversationTyping.delete(userId);
       }, 5000);
 
       conversationTyping.set(userId, timeout);
       this.typingUsers.set(conversationId, conversationTyping);
-    });
+    };
 
-    socket.on('typing:stop', ({ conversationId }) => {
+    const handleTypingStop = ({ conversationId }) => {
       const conversationTyping = this.typingUsers.get(conversationId);
       if (conversationTyping && conversationTyping.has(userId)) {
         clearTimeout(conversationTyping.get(userId));
         conversationTyping.delete(userId);
       }
 
-      socket.to(`conversation:${conversationId}`).emit('typing:update', {
+      socket.to(`conversation:${conversationId}`).emit('user_stopped_typing', {
         conversationId,
-        userId,
-        isTyping: false
+        userId
       });
-    });
+      this.emitToConversation(conversationId, 'user_stopped_typing', {
+        conversationId,
+        userId
+      });
+    };
+
+    // Support both naming conventions
+    socket.on('typing:start', handleTypingStart);
+    socket.on('typing_start', handleTypingStart);
+    socket.on('typing:stop', handleTypingStop);
+    socket.on('typing_stop', handleTypingStop);
   }
 
   // ==================== Utility Methods ====================
@@ -387,7 +419,11 @@ class CommunicationWebSocketManager {
 
     if (socketIds && socketIds.size > 0) {
       socketIds.forEach(socketId => {
+        // Emit to both default namespace and /communication namespace
         this.io.to(socketId).emit(event, data);
+        if (this.commNs) {
+          this.commNs.to(socketId).emit(event, data);
+        }
       });
       return true;
     }
@@ -407,14 +443,22 @@ class CommunicationWebSocketManager {
    * Emit event to a conversation room
    */
   emitToConversation(conversationId, event, data) {
+    // Emit to both default namespace and /communication namespace
     this.io.to(`conversation:${conversationId}`).emit(event, data);
+    if (this.commNs) {
+      this.commNs.to(`conversation:${conversationId}`).emit(event, data);
+    }
   }
 
   /**
    * Emit event to a company room
    */
   emitToCompany(companyId, event, data) {
+    // Emit to both default namespace and /communication namespace
     this.io.to(`company:${companyId}`).emit(event, data);
+    if (this.commNs) {
+      this.commNs.to(`company:${companyId}`).emit(event, data);
+    }
   }
 
   /**
@@ -428,12 +472,15 @@ class CommunicationWebSocketManager {
    * Broadcast presence change to all relevant users
    */
   broadcastPresenceChange(userId, companyId, status, customStatus = null) {
-    this.emitToCompany(companyId, 'presence:update', {
+    // Emit with both event name formats for compatibility
+    const data = {
       userId,
       status,
       customStatus,
       timestamp: new Date()
-    });
+    };
+    this.emitToCompany(companyId, 'presence:update', data);
+    this.emitToCompany(companyId, 'presence_update', data);
   }
 
   /**

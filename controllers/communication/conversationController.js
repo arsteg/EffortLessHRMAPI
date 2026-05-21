@@ -121,28 +121,58 @@ exports.getConversation = catchAsync(async (req, res, next) => {
 exports.createDirectConversation = catchAsync(async (req, res, next) => {
   const { targetUserId } = req.body;
   const userId = req.user._id;
-  const companyId = req.user.company;
+  // Handle company as ObjectId or populated object
+  const companyId = req.user.company?._id?.toString() || req.user.company?.id?.toString() || req.user.company?.toString();
+
+  console.log('=== createDirectConversation ===');
+  console.log('userId:', userId?.toString());
+  console.log('targetUserId:', targetUserId);
+  console.log('companyId:', companyId);
+  console.log('req.user.company:', req.user.company);
 
   if (!targetUserId) {
+    console.log('ERROR: Target user ID is required');
     return next(new AppError('Target user ID is required', 400));
   }
 
   if (targetUserId === userId.toString()) {
+    console.log('ERROR: Cannot create conversation with yourself');
     return next(new AppError('Cannot create conversation with yourself', 400));
   }
 
-  // Check if target user exists and is in same company
-  const targetUser = await User.findOne({
-    _id: targetUserId,
-    company: companyId
-  });
+  // First find the target user without company filter
+  const targetUser = await User.findById(targetUserId);
+
+  console.log('targetUser found:', targetUser ? 'yes' : 'no');
 
   if (!targetUser) {
+    console.log('ERROR: User not found at all');
     return next(new AppError('User not found', 404));
   }
 
+  // Get target user's company ID for comparison
+  const targetCompanyId = targetUser.company?._id?.toString() || targetUser.company?.id?.toString() || targetUser.company?.toString();
+  console.log('targetUser.company:', targetUser.company);
+  console.log('targetCompanyId:', targetCompanyId);
+  console.log('companyId match:', targetCompanyId === companyId);
+
+  if (targetCompanyId !== companyId) {
+    console.log('ERROR: User is in different company');
+    return next(new AppError('User not found in your company', 404));
+  }
+
   // Check if conversation already exists
-  let conversation = await Conversation.findDirectConversation(userId, targetUserId, companyId);
+  console.log('Checking for existing conversation...');
+  let conversation = await Conversation.findOne({
+    type: 'direct',
+    isDeleted: { $ne: true },
+    $and: [
+      { 'participants.userId': userId },
+      { 'participants.userId': targetUserId }
+    ]
+  });
+
+  console.log('Existing conversation found:', conversation ? conversation._id : 'no');
 
   if (conversation) {
     // Return existing conversation

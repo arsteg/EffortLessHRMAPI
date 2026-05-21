@@ -1,6 +1,5 @@
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
-const ErrorLog = require('../models/errorLogModel');
 const ApplicationStatus = require(`../models/InterviewProcess/applicationStatus`);
 const CandidateDataField = require(`../models/InterviewProcess/candidateDataField`);
 const FeedbackFieldValue = require(`../models/InterviewProcess/feedbackFieldValue`);
