@@ -110,14 +110,23 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
       .map(p => p.userId.toString())
       .filter(id => id !== userId.toString());
 
-    wsManager.emitToUsers(participantIds, 'message:received', {
-      message,
+    // Transform message for WebSocket clients
+    // senderId is populated, so we need to restructure for clients that expect senderId as string
+    const messageObj = message.toObject();
+    const wsMessage = {
+      ...messageObj,
+      sender: messageObj.senderId, // Copy populated user to sender field
+      senderId: messageObj.senderId?._id?.toString() || userId.toString() // Keep senderId as string ID
+    };
+
+    wsManager.emitToUsers(participantIds, 'new_message', {
+      message: wsMessage,
       conversationId
     });
 
     // Send acknowledgement to sender
     wsManager.emitToUser(userId, 'message:sent', {
-      message,
+      message: wsMessage,
       conversationId
     });
 
@@ -574,8 +583,16 @@ exports.forwardMessage = catchAsync(async (req, res, next) => {
         .map(p => p.userId.toString())
         .filter(id => id !== userId.toString());
 
-      wsManager.emitToUsers(participantIds, 'message:received', {
-        message: forwardedMessage,
+      // Transform message for WebSocket clients
+      const messageObj = forwardedMessage.toObject();
+      const wsMessage = {
+        ...messageObj,
+        sender: messageObj.senderId,
+        senderId: messageObj.senderId?._id?.toString() || userId.toString()
+      };
+
+      wsManager.emitToUsers(participantIds, 'new_message', {
+        message: wsMessage,
         conversationId: targetConversationId
       });
     }
