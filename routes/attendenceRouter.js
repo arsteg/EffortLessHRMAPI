@@ -4060,4 +4060,106 @@ attendanceRouter.post('/manual-requests/approve', authController.protect, attend
  */
 attendanceRouter.post('/reports', authController.protect, attendanceController.getAttendanceReport);
 
+/**
+ * @swagger
+ * /api/v1/attendance/mobile-overview:
+ *   get:
+ *     summary: Get mobile app attendance overview with real-time WebSocket updates
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: officeId
+ *         schema:
+ *           type: string
+ *         description: Office ID to filter (optional, defaults to all offices)
+ *       - in: query
+ *         name: viewType
+ *         schema:
+ *           type: string
+ *           enum: [daily, weekly, monthly]
+ *         description: View type (defaults to daily)
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Target date (defaults to today)
+ *     responses:
+ *       200:
+ *         description: Mobile attendance overview data with summary stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         totalEmployees:
+ *                           type: number
+ *                         checkedInToday:
+ *                           type: number
+ *                         checkedOutToday:
+ *                           type: number
+ *                         attendanceRate:
+ *                           type: string
+ *                         avgWorkingHours:
+ *                           type: string
+ *                         avgCheckInTime:
+ *                           type: string
+ *                     attendanceData:
+ *                       type: array
+ *                     viewType:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ */
+attendanceRouter.get('/mobile-overview', authController.protect, attendanceController.getMobileAttendanceOverview);
+
+/**
+ * @swagger
+ * /api/v1/attendance/offices:
+ *   get:
+ *     summary: Get all attendance offices for a company
+ *     tags: [Attendance Management]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of attendance offices
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: number
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     offices:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           city:
+ *                             type: string
+ *                           state:
+ *                             type: string
+ *                           country:
+ *                             type: string
+ */
+attendanceRouter.get('/offices', authController.protect, attendanceController.getAttendanceOffices);
+
 module.exports = attendanceRouter;
