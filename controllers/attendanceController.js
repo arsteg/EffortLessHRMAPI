@@ -4956,3 +4956,276 @@ exports.getAttendanceReport = catchAsync(async (req, res, next) => {
   });
 });
 
+// Mobile App Attendance Overview
+exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getMobileAttendanceOverview', constants.LOG_TYPES.INFO);
+
+  const companyId = req.cookies.companyId;
+  const { officeId, viewType = 'daily', date } = req.query;
+
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
+
+  websocketHandler.sendLog(req, `Fetching attendance overview for company: ${companyId}, office: ${officeId || 'all'}, viewType: ${viewType}`, constants.LOG_TYPES.DEBUG);
+
+  // Parse date or default to today
+  const targetDate = date ? new Date(date) : new Date();
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Build match criteria
+  const matchCriteria = {
+    company: mongoose.Types.ObjectId(companyId),
+    status: { $in: ['auto-approved', 'approved'] }
+  };
+
+  if (officeId && officeId !== 'all') {
+    matchCriteria.office = mongoose.Types.ObjectId(officeId);
+  }
+
+  // Determine date range based on viewType
+  let dateRange = {};
+  if (viewType === 'daily') {
+    dateRange = { $gte: startOfDay, $lte: endOfDay };
+  } else if (viewType === 'weekly') {
+    const startOfWeek = new Date(targetDate);
+    startOfWeek.setDate(targetDate.getDate() - targetDate.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    dateRange = { $gte: startOfWeek, $lte: endOfWeek };
+  } else if (viewType === 'monthly') {
+    const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
+    dateRange = { $gte: startOfMonth, $lte: endOfMonth };
+  }
+
+  matchCriteria.timestamp = dateRange;
+
+  // Get attendance logs with user details
+  const attendanceLogs = await AttendanceLog.aggregate([
+    { $match: matchCriteria },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails'
+      }
+    },
+    { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        user: 1,
+        type: 1,
+        timestamp: 1,
+        office: 1,
+        firstName: '$userDetails.firstName',
+        lastName: '$userDetails.lastName',
+        position: '$userDetails.jobTitle',
+        email: '$userDetails.email',
+        status: '$userDetails.status',
+        date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
+      }
+    },
+    { $sort: { timestamp: 1 } }
+  ]);
+
+  websocketHandler.sendLog(req, `Found ${attendanceLogs.length} attendance logs`, constants.LOG_TYPES.DEBUG);
+
+  // Debug: Log first few logs to verify data
+  if (attendanceLogs.length > 0) {
+    websocketHandler.sendLog(req, `Sample log: ${JSON.stringify(attendanceLogs[0])}`, constants.LOG_TYPES.DEBUG);
+  }
+
+  // Get all active users in the company
+  const userMatchCriteria = {
+    company: mongoose.Types.ObjectId(companyId),
+    status: 'Active'
+  };
+
+  const totalEmployees = await User.countDocuments(userMatchCriteria);
+  websocketHandler.sendLog(req, `Total active employees: ${totalEmployees}`, constants.LOG_TYPES.DEBUG);
+
+  // Group logs by user and date
+  const userAttendanceMap = {};
+  const checkedInUsers = new Set();
+  const checkedOutUsers = new Set();
+
+  attendanceLogs.forEach(log => {
+    const userId = log.user.toString();
+    const dateKey = log.date;
+
+    if (!userAttendanceMap[userId]) {
+      userAttendanceMap[userId] = {
+        userId: log.user,
+        firstName: log.firstName,
+        lastName: log.lastName,
+        position: log.position || 'N/A',
+        email: log.email,
+        dates: {}
+      };
+    }
+
+    if (!userAttendanceMap[userId].dates[dateKey]) {
+      userAttendanceMap[userId].dates[dateKey] = {
+        checkIn: null,
+        checkOut: null,
+        status: 'Absent'
+      };
+    }
+
+    if (log.type === 'check-in') {
+      if (!userAttendanceMap[userId].dates[dateKey].checkIn || log.timestamp < userAttendanceMap[userId].dates[dateKey].checkIn) {
+        userAttendanceMap[userId].dates[dateKey].checkIn = log.timestamp;
+      }
+      checkedInUsers.add(userId);
+    } else if (log.type === 'check-out') {
+      if (!userAttendanceMap[userId].dates[dateKey].checkOut || log.timestamp > userAttendanceMap[userId].dates[dateKey].checkOut) {
+        userAttendanceMap[userId].dates[dateKey].checkOut = log.timestamp;
+      }
+      checkedOutUsers.add(userId);
+    }
+
+    // Update status
+    const dateData = userAttendanceMap[userId].dates[dateKey];
+    if (dateData.checkIn) {
+      dateData.status = dateData.checkOut ? 'Present' : 'Checked In';
+    }
+  });
+
+  // Format attendance data based on view type
+  const attendanceData = Object.values(userAttendanceMap).map(user => {
+    const userData = {
+      userId: user.userId,
+      name: `${user.firstName} ${user.lastName}`,
+      position: user.position,
+      email: user.email
+    };
+
+    if (viewType === 'daily') {
+      const todayKey = moment(targetDate).format('YYYY-MM-DD');
+      const todayData = user.dates[todayKey] || { checkIn: null, checkOut: null, status: 'Absent' };
+
+      let workingHours = 0;
+      if (todayData.checkIn) {
+        const checkOutTime = todayData.checkOut || new Date();
+        workingHours = (checkOutTime - todayData.checkIn) / (1000 * 60 * 60); // hours
+      }
+
+      userData.checkIn = todayData.checkIn ? moment(todayData.checkIn).format('hh:mm A') : '-';
+      userData.checkOut = todayData.checkOut ? moment(todayData.checkOut).format('hh:mm A') : todayData.checkIn ? 'Still Working' : '-';
+      userData.workingHours = workingHours > 0 ? `${Math.floor(workingHours)}h ${Math.round((workingHours % 1) * 60)}m` : '-';
+      userData.status = todayData.status;
+    } else if (viewType === 'weekly' || viewType === 'monthly') {
+      userData.dailyRecords = user.dates;
+    }
+
+    return userData;
+  });
+
+  // Calculate statistics
+  const checkedInToday = checkedInUsers.size;
+  const checkedOutToday = checkedOutUsers.size;
+
+  let totalWorkingHours = 0;
+  let totalCheckIns = 0;
+  let checkInTimes = [];
+
+  attendanceData.forEach(user => {
+    Object.values(user.dailyRecords || {}).forEach(dayData => {
+      if (dayData.checkIn) {
+        totalCheckIns++;
+        checkInTimes.push(dayData.checkIn);
+
+        if (dayData.checkOut) {
+          const hours = (dayData.checkOut - dayData.checkIn) / (1000 * 60 * 60);
+          totalWorkingHours += hours;
+        }
+      }
+    });
+  });
+
+  const avgWorkingHours = totalCheckIns > 0 ? (totalWorkingHours / totalCheckIns).toFixed(1) : 0;
+
+  // Calculate average check-in time
+  let avgCheckInTime = '-';
+  if (checkInTimes.length > 0) {
+    const totalMinutes = checkInTimes.reduce((sum, time) => {
+      const hours = new Date(time).getHours();
+      const minutes = new Date(time).getMinutes();
+      return sum + (hours * 60 + minutes);
+    }, 0);
+    const avgMinutes = Math.round(totalMinutes / checkInTimes.length);
+    const avgHours = Math.floor(avgMinutes / 60);
+    const avgMins = avgMinutes % 60;
+    avgCheckInTime = moment().set({ hour: avgHours, minute: avgMins }).format('hh:mm A');
+  }
+
+  const attendanceRate = totalEmployees > 0 ? Math.round((checkedInToday / totalEmployees) * 100) : 0;
+
+  const response = {
+    status: 'success',
+    data: {
+      summary: {
+        totalEmployees,
+        checkedInToday,
+        checkedOutToday,
+        attendanceRate: `${attendanceRate}%`,
+        avgWorkingHours: `${avgWorkingHours}h`,
+        avgCheckInTime
+      },
+      attendanceData,
+      viewType,
+      date: targetDate
+    }
+  };
+
+  websocketHandler.sendLog(req, `Mobile attendance overview fetched successfully - Total Employees: ${totalEmployees}, Checked In: ${checkedInToday}, Attendance Data Count: ${attendanceData.length}`, constants.LOG_TYPES.INFO);
+
+  // Emit WebSocket update to connected users
+  const connectedUsers = websocketHandler.getConnectedUsers();
+  const companyUsers = await User.find({ company: companyId }).select('_id');
+  const companyUserIds = companyUsers.map(u => u._id.toString()).filter(id => connectedUsers.includes(id));
+
+  if (companyUserIds.length > 0) {
+    websocketHandler.sendAttendanceUpdate(companyUserIds, {
+      type: 'mobile-overview-update',
+      data: response.data
+    });
+    websocketHandler.sendLog(req, `Sent WebSocket update to ${companyUserIds.length} users`, constants.LOG_TYPES.DEBUG);
+  }
+
+  res.status(200).json(response);
+});
+
+// Get all offices for a company (for office dropdown)
+exports.getAttendanceOffices = catchAsync(async (req, res, next) => {
+  websocketHandler.sendLog(req, 'Starting getAttendanceOffices', constants.LOG_TYPES.INFO);
+
+  const companyId = req.cookies.companyId;
+
+  if (!companyId) {
+    websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
+    return next(new AppError(req.t('common.companyIdMissing'), 400));
+  }
+
+  const offices = await AttendanceOffice.find({
+    company: companyId,
+    active: true
+  }).select('name city state country _id');
+
+  websocketHandler.sendLog(req, `Found ${offices.length} offices for company ${companyId}`, constants.LOG_TYPES.INFO);
+
+  res.status(200).json({
+    status: 'success',
+    results: offices.length,
+    data: { offices }
+  });
+});
+
