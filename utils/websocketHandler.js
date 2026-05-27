@@ -146,6 +146,18 @@ class WebSocketManager {
     console.log("Screenshot sent to users:", userIds);
   }
 
+  sendAttendanceUpdate(userIds, attendanceData) {
+    this.sendMessage(userIds, constants.WEB_SOCKET_NOTIFICATION_TYPES.ATTENDANCE_UPDATE, attendanceData, constants.webSocketContentType.JSON);
+  }
+
+  // Broadcast attendance update to all users in a company
+  broadcastAttendanceUpdate(companyId, attendanceData) {
+    const connectedUsers = this.getConnectedUsers();
+    // In a real scenario, you'd filter users by company
+    // For now, broadcast to all connected users
+    this.sendAttendanceUpdate(connectedUsers, attendanceData);
+  }
+
   // Get connected users
   getConnectedUsers() {
     return Array.from(this.connectedUsers.keys());
@@ -162,5 +174,7 @@ module.exports = {
   sendAlert: (userIds, content) => wsManager.sendAlert(userIds, content),
   sendChat: (userIds, content) => wsManager.sendChat(userIds, content),
   sendScreenshot: (userIds, base64Image) => wsManager.sendScreenshot(userIds, base64Image),
+  sendAttendanceUpdate: (userIds, attendanceData) => wsManager.sendAttendanceUpdate(userIds, attendanceData),
+  broadcastAttendanceUpdate: (companyId, attendanceData) => wsManager.broadcastAttendanceUpdate(companyId, attendanceData),
   getConnectedUsers: () => wsManager.getConnectedUsers(),
 };
