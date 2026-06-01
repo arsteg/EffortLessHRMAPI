@@ -174,37 +174,37 @@ router.post('/setLiveTrackingByUser', authController.protect, liveTrackingContro
  */
 router.post('/removeUserFromLiveTracking', authController.protect, liveTrackingController.removeUserFromLiveTracking);
 
-// Read live tracking
-/**
- * @swagger
- * /api/v1/liveTracking/getLiveTrackingByUserId:
- *   post:
- *     tags:
- *       - Live Tracking
- *     summary: "Get a live tracking entry by ID"
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     requestBody:
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                         user:
- *                              type: string
- *                              items:
- *                                type: string
- *                                example: ""
- *     responses:
- *       200:
- *         description: Successfully retrieved the live tracking entry
- *       404:
- *         description: Live tracking entry not found
- *       500:
- *         description: Internal server error
- */
-router.post('/getLiveTrackingByUserId', authController.protect, liveTrackingController.getLiveTrackingByUserId);
+// // Read live tracking
+// /**
+//  * @swagger
+//  * /api/v1/liveTracking/getLiveTrackingByUserId:
+//  *   post:
+//  *     tags:
+//  *       - Live Tracking
+//  *     summary: "Get a live tracking entry by ID"
+//  *     security: [{
+//  *         bearerAuth: []
+//  *     }] 
+//  *     requestBody:
+//  *          content:
+//  *              application/json:
+//  *                  schema:
+//  *                      type: object
+//  *                      properties:
+//  *                         user:
+//  *                              type: string
+//  *                              items:
+//  *                                type: string
+//  *                                example: ""
+//  *     responses:
+//  *       200:
+//  *         description: Successfully retrieved the live tracking entry
+//  *       404:
+//  *         description: Live tracking entry not found
+//  *       500:
+//  *         description: Internal server error
+//  */
+// router.post('/getLiveTrackingByUserId', authController.protect, liveTrackingController.getLiveTrackingByUserId);
 
 // Read live tracking
 /**
@@ -228,34 +228,34 @@ router.post('/getLiveTrackingByUserId', authController.protect, liveTrackingCont
  */
 router.post('/getLiveTrackingTestData', liveTrackingController.getLiveTrackingTestData);
 
-// Create
-/**
- * @swagger
- * /api/v1/liveTracking/updateUserScreen:
- *   post:
- *     tags:
- *       - Live Tracking
- *     summary: "Create a new live tracking entry"
- *     security: [{
- *         bearerAuth: []
- *     }] 
- *     requestBody:
- *       content:
- *         application/json:
- *                  schema:
- *                      type: object
- *                      properties:
- *                          fileString:
- *                              type: string
- *     responses:
- *       200:
- *         description: Successfully created a live tracking entry
- *       400:
- *         description: Invalid request body
- *       500:
- *         description: Internal server error
- */
-router.post('/updateUserScreen', authController.protect, liveTrackingController.updateUserScreen);
+// // Create
+// /**
+//  * @swagger
+//  * /api/v1/liveTracking/updateUserScreen:
+//  *   post:
+//  *     tags:
+//  *       - Live Tracking
+//  *     summary: "Create a new live tracking entry"
+//  *     security: [{
+//  *         bearerAuth: []
+//  *     }] 
+//  *     requestBody:
+//  *       content:
+//  *         application/json:
+//  *                  schema:
+//  *                      type: object
+//  *                      properties:
+//  *                          fileString:
+//  *                              type: string
+//  *     responses:
+//  *       200:
+//  *         description: Successfully created a live tracking entry
+//  *       400:
+//  *         description: Invalid request body
+//  *       500:
+//  *         description: Internal server error
+//  */
+// router.post('/updateUserScreen', authController.protect, liveTrackingController.updateUserScreen);
 
 // Read live tracking
 /**
