@@ -5076,9 +5076,16 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
       userAttendanceMap[userId].dates[dateKey] = {
         checkIn: null,
         checkOut: null,
-        status: 'Absent'
+        status: 'Absent',
+        allLogs: [] // Store all check-in/check-out entries for the day
       };
     }
+
+    // Store all logs for the day
+    userAttendanceMap[userId].dates[dateKey].allLogs.push({
+      type: log.type,
+      timestamp: log.timestamp
+    });
 
     if (log.type === 'check-in') {
       if (!userAttendanceMap[userId].dates[dateKey].checkIn || log.timestamp < userAttendanceMap[userId].dates[dateKey].checkIn) {
@@ -5092,9 +5099,13 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
       checkedOutUsers.add(userId);
     }
 
-    // Update status
+    // Update status and validate check-out is after check-in
     const dateData = userAttendanceMap[userId].dates[dateKey];
     if (dateData.checkIn) {
+      // Only set checkOut if it's after checkIn
+      if (dateData.checkOut && dateData.checkOut <= dateData.checkIn) {
+        dateData.checkOut = null; // Invalid checkout, ignore it
+      }
       dateData.status = dateData.checkOut ? 'Present' : 'Checked In';
     }
   });
@@ -5110,21 +5121,87 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
 
     if (viewType === 'daily') {
       const todayKey = moment(targetDate).format('YYYY-MM-DD');
-      const todayData = user.dates[todayKey] || { checkIn: null, checkOut: null, status: 'Absent' };
+      const todayData = user.dates[todayKey] || { checkIn: null, checkOut: null, status: 'Absent', allLogs: [] };
+
+      // Check if the date is in the past (not today)
+      const now = new Date();
+      const targetDateEnd = new Date(targetDate);
+      targetDateEnd.setHours(23, 59, 59, 999);
+      const isPastDate = targetDateEnd < now;
+
+      // Validate check-out is after check-in
+      let validCheckOut = todayData.checkOut;
+      if (validCheckOut && todayData.checkIn && validCheckOut <= todayData.checkIn) {
+        validCheckOut = null; // Invalid checkout
+      }
 
       let workingHours = 0;
+      let checkOutDisplay = '-';
+      let status = todayData.status;
+
       if (todayData.checkIn) {
-        const checkOutTime = todayData.checkOut || new Date();
-        workingHours = (checkOutTime - todayData.checkIn) / (1000 * 60 * 60); // hours
+        if (validCheckOut) {
+          // Valid check-out exists
+          workingHours = (validCheckOut - todayData.checkIn) / (1000 * 60 * 60); // hours
+          checkOutDisplay = validCheckOut.toISOString();
+          status = 'Present';
+        } else if (isPastDate) {
+          // Past date with missing check-out
+          workingHours = 0;
+          checkOutDisplay = 'Checkout Missing';
+          status = 'Absent';
+        } else {
+          // Today and still working
+          const checkOutTime = new Date();
+          workingHours = (checkOutTime - todayData.checkIn) / (1000 * 60 * 60); // hours
+          checkOutDisplay = 'Working...';
+          status = 'Checked In';
+        }
       }
 
       // Send ISO timestamps instead of formatted strings so frontend can convert to user's local timezone
       userData.checkIn = todayData.checkIn ? todayData.checkIn.toISOString() : '-';
-      userData.checkOut = todayData.checkOut ? todayData.checkOut.toISOString() : todayData.checkIn ? 'Working...' : '-';
+      userData.checkOut = checkOutDisplay;
       userData.workingHours = workingHours > 0 ? `${Math.floor(workingHours)}h ${Math.round((workingHours % 1) * 60)}m` : '-';
-      userData.status = todayData.status;
+      userData.status = status;
+      // Include all logs for the day so frontend can show them in a popup
+      userData.allLogs = todayData.allLogs || [];
     } else if (viewType === 'weekly' || viewType === 'monthly') {
-      userData.dailyRecords = user.dates;
+      // Process each date to validate checkout for past dates
+      const processedDates = {};
+      const now = new Date();
+
+      Object.keys(user.dates).forEach(dateKey => {
+        const dateData = user.dates[dateKey];
+        const recordDate = new Date(dateKey);
+        recordDate.setHours(23, 59, 59, 999);
+        const isPastDate = recordDate < now;
+
+        // Validate check-out is after check-in
+        let validCheckOut = dateData.checkOut;
+        if (validCheckOut && dateData.checkIn && validCheckOut <= dateData.checkIn) {
+          validCheckOut = null; // Invalid checkout
+        }
+
+        // Handle missing checkout for past dates
+        if (dateData.checkIn && !validCheckOut && isPastDate) {
+          processedDates[dateKey] = {
+            ...dateData,
+            checkOut: null,
+            status: 'Absent'
+          };
+        } else if (dateData.checkIn && validCheckOut) {
+          processedDates[dateKey] = {
+            ...dateData,
+            checkOut: validCheckOut,
+            status: 'Present'
+          };
+        } else {
+          processedDates[dateKey] = dateData;
+        }
+      });
+
+      userData.dailyRecords = processedDates;
     }
 
     return userData;
