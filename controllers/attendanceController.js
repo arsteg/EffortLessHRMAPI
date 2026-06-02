@@ -5118,8 +5118,9 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
         workingHours = (checkOutTime - todayData.checkIn) / (1000 * 60 * 60); // hours
       }
 
-      userData.checkIn = todayData.checkIn ? moment(todayData.checkIn).format('hh:mm A') : '-';
-      userData.checkOut = todayData.checkOut ? moment(todayData.checkOut).format('hh:mm A') : todayData.checkIn ? 'Still Working' : '-';
+      // Send ISO timestamps instead of formatted strings so frontend can convert to user's local timezone
+      userData.checkIn = todayData.checkIn ? todayData.checkIn.toISOString() : '-';
+      userData.checkOut = todayData.checkOut ? todayData.checkOut.toISOString() : todayData.checkIn ? 'Working...' : '-';
       userData.workingHours = workingHours > 0 ? `${Math.floor(workingHours)}h ${Math.round((workingHours % 1) * 60)}m` : '-';
       userData.status = todayData.status;
     } else if (viewType === 'weekly' || viewType === 'monthly') {
