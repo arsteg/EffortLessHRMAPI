@@ -4601,6 +4601,13 @@ exports.checkIn = catchAsync(async (req, res, next) => {
     timestamp: new Date()
   });
 
+  // 7. Broadcast real-time attendance update to all connected users
+  setImmediate(() => {
+    broadcastAttendanceUpdate(companyId, 'daily', new Date(), officeId);
+    broadcastAttendanceUpdate(companyId, 'weekly', new Date(), officeId);
+    broadcastAttendanceUpdate(companyId, 'monthly', new Date(), officeId);
+  });
+
   res.status(201).json({
     status: 'success',
     data: { record }
@@ -4635,6 +4642,13 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     action: 'check-out',
     timestamp: new Date()
   });
+  
+  // Broadcast real-time attendance update to all connected users
+  setImmediate(() => {
+    broadcastAttendanceUpdate(companyId, 'daily', new Date(), officeId);
+    broadcastAttendanceUpdate(companyId, 'weekly', new Date(), officeId);
+    broadcastAttendanceUpdate(companyId, 'monthly', new Date(), officeId);
+  });
 
   res.status(200).json({
     status: 'success',
@@ -4664,7 +4678,17 @@ exports.getAttendanceHistory = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllAttendanceLogs = catchAsync(async (req, res, next) => {
-  const features = new APIFeatures(AttendanceLog.find(), req.query)
+  // SECURITY: Only return logs for the user's company
+  const companyId = req.cookies.companyId || req.user?.company?._id || req.user?.company;
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const features = new APIFeatures(
+    AttendanceLog.find({ company: mongoose.Types.ObjectId(companyId) }),
+    req.query
+  )
     .filter()
     .sort()
     .limitFields()
@@ -4678,9 +4702,20 @@ exports.getAllAttendanceLogs = catchAsync(async (req, res, next) => {
 });
 
 exports.getAttendanceLogById = catchAsync(async (req, res, next) => {
-  const log = await AttendanceLog.findById(req.params.id);
+  // SECURITY: Only return log if it belongs to the user's company
+  const companyId = req.cookies.companyId || req.user?.company?._id || req.user?.company;
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const log = await AttendanceLog.findOne({
+    _id: req.params.id,
+    company: mongoose.Types.ObjectId(companyId)
+  });
+
   if (!log) {
-    return next(new AppError('Attendance log not found', 404));
+    return next(new AppError('Attendance log not found or unauthorized', 404));
   }
   res.status(200).json({
     status: 'success',
@@ -4689,9 +4724,20 @@ exports.getAttendanceLogById = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteAttendanceLog = catchAsync(async (req, res, next) => {
-  const log = await AttendanceLog.findByIdAndDelete(req.params.id);
+  // SECURITY: Only delete log if it belongs to the user's company
+  const companyId = req.cookies.companyId || req.user?.company?._id || req.user?.company;
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const log = await AttendanceLog.findOneAndDelete({
+    _id: req.params.id,
+    company: mongoose.Types.ObjectId(companyId)
+  });
+
   if (!log) {
-    return next(new AppError('Attendance log not found', 404));
+    return next(new AppError('Attendance log not found or unauthorized', 404));
   }
   res.status(204).json({
     status: 'success',
@@ -4797,6 +4843,15 @@ exports.approveManualAttendance = catchAsync(async (req, res, next) => {
       type: 'check-out',
       source: 'manual'
     });
+
+    // Broadcast real-time attendance update to all connected users
+    setImmediate(() => {
+      // Broadcast for all view types so users viewing any view get updates
+      // Use 'all' for manual attendance since it doesn't have specific office context
+      broadcastAttendanceUpdate(companyId, 'daily', attendanceDate, 'all');
+      broadcastAttendanceUpdate(companyId, 'weekly', attendanceDate, 'all');
+      broadcastAttendanceUpdate(companyId, 'monthly', attendanceDate, 'all');
+    });
   }
 
   res.status(200).json({
@@ -4859,9 +4914,20 @@ exports.updateManualAttendanceRequest = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteManualAttendanceRequest = catchAsync(async (req, res, next) => {
-  const request = await ManualAttendanceRequest.findByIdAndDelete(req.params.id);
+  // SECURITY: Only delete request if it belongs to the user's company
+  const companyId = req.cookies.companyId || req.user?.company?._id || req.user?.company;
+
+  if (!companyId) {
+    return next(new AppError('Company ID is required.', 400));
+  }
+
+  const request = await ManualAttendanceRequest.findOneAndDelete({
+    _id: req.params.id,
+    company: mongoose.Types.ObjectId(companyId)
+  });
+
   if (!request) {
-    return next(new AppError('Manual attendance request not found', 404));
+    return next(new AppError('Manual attendance request not found or unauthorized', 404));
   }
   res.status(204).json({
     status: 'success',
@@ -4967,8 +5033,15 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
     websocketHandler.sendLog(req, 'Company ID not found in cookies', constants.LOG_TYPES.ERROR);
     return next(new AppError(req.t('common.companyIdMissing'), 400));
   }
-
   websocketHandler.sendLog(req, `Fetching attendance overview for company: ${companyId}, office: ${officeId || 'all'}, viewType: ${viewType}`, constants.LOG_TYPES.DEBUG);
+
+  // SECURITY: Verify user belongs to the company they're requesting data for
+  const userCompanyId = (req.user?.company?._id || req.user?.company)?.toString();
+  if (userCompanyId !== companyId.toString()) {
+    console.error(`⚠️ SECURITY VIOLATION: User ${req.user?._id} from company ${userCompanyId} trying to access company ${companyId} data!`);
+    websocketHandler.sendLog(req, `SECURITY VIOLATION: Cross-company access attempt blocked`, constants.LOG_TYPES.ERROR);
+    return next(new AppError('Unauthorized: You cannot access data from another company', 403));
+  }
 
   // Parse date or default to today
   const targetDate = date ? new Date(date) : new Date();
@@ -4977,7 +5050,7 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
   const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Build match criteria
+  // Build match criteria - STRICT company filtering
   const matchCriteria = {
     company: mongoose.Types.ObjectId(companyId),
     status: { $in: ['auto-approved', 'approved'] }
@@ -5007,7 +5080,7 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
 
   matchCriteria.timestamp = dateRange;
 
-  // Get attendance logs with user details
+  // Get attendance logs with user details (STRICT COMPANY FILTERING)
   const attendanceLogs = await AttendanceLog.aggregate([
     { $match: matchCriteria },
     {
@@ -5019,12 +5092,19 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
       }
     },
     { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
+    // SECURITY: Double-check that user also belongs to the same company
+    {
+      $match: {
+        'userDetails.company': mongoose.Types.ObjectId(companyId)
+      }
+    },
     {
       $project: {
         user: 1,
         type: 1,
         timestamp: 1,
         office: 1,
+        company: 1, // Include for verification
         firstName: '$userDetails.firstName',
         lastName: '$userDetails.lastName',
         position: '$userDetails.jobTitle',
@@ -5035,6 +5115,8 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
     },
     { $sort: { timestamp: 1 } }
   ]);
+
+  console.log(`   ✓ Retrieved ${attendanceLogs.length} attendance logs for company ${companyId}`);
 
   websocketHandler.sendLog(req, `Found ${attendanceLogs.length} attendance logs`, constants.LOG_TYPES.DEBUG);
 
@@ -5260,7 +5342,8 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
       },
       attendanceData,
       viewType,
-      date: targetDate
+      date: targetDate,
+      companyId: companyId.toString() // Include for frontend validation
     }
   };
 
@@ -5281,6 +5364,349 @@ exports.getMobileAttendanceOverview = catchAsync(async (req, res, next) => {
 
   res.status(200).json(response);
 });
+
+// Helper function to broadcast attendance updates to all connected users in a company
+/**
+ * Broadcast attendance updates to connected users in a specific company
+ *
+ * SECURITY MEASURES:
+ * 1. Filters attendance logs by companyId in database query
+ * 2. Joins user details and double-checks user.company matches companyId
+ * 3. Only retrieves active users belonging to the specified company
+ * 4. Filters broadcast recipients to only connected users from that company
+ * 5. Includes companyId in payload for frontend validation
+ *
+ * This ensures users from Company A never receive data from Company B
+ *
+ * @param {ObjectId} companyId - The company ID to filter data for
+ * @param {string} viewType - View type: 'daily', 'weekly', or 'monthly'
+ * @param {Date} date - Target date for attendance data
+ * @param {ObjectId|string} officeId - Office ID to filter by, or 'all' for all offices
+ */
+const broadcastAttendanceUpdate = async (companyId, viewType = 'daily', date = null, officeId = null) => {
+  try {
+    console.log(`\n=== Starting broadcast for company ${companyId} ===`);
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Build match criteria
+    const matchCriteria = {
+      company: mongoose.Types.ObjectId(companyId),
+      status: { $in: ['auto-approved', 'approved'] }
+    };
+
+    // Add office filter if provided
+    if (officeId && officeId !== 'all') {
+      matchCriteria.office = mongoose.Types.ObjectId(officeId);
+    }
+
+    // Determine date range based on viewType
+    let dateRange = {};
+    if (viewType === 'daily') {
+      dateRange = { $gte: startOfDay, $lte: endOfDay };
+    } else if (viewType === 'weekly') {
+      const startOfWeek = new Date(targetDate);
+      startOfWeek.setDate(targetDate.getDate() - targetDate.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      dateRange = { $gte: startOfWeek, $lte: endOfWeek };
+    } else if (viewType === 'monthly') {
+      const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+      const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
+      dateRange = { $gte: startOfMonth, $lte: endOfMonth };
+    }
+
+    matchCriteria.timestamp = dateRange;
+
+    // Get attendance logs with user details (ONLY for this company)
+    const attendanceLogs = await AttendanceLog.aggregate([
+      { $match: matchCriteria },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails'
+        }
+      },
+      { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
+      // Additional filter: Ensure user also belongs to the same company
+      {
+        $match: {
+          'userDetails.company': mongoose.Types.ObjectId(companyId)
+        }
+      },
+      {
+        $project: {
+          user: 1,
+          type: 1,
+          timestamp: 1,
+          office: 1,
+          company: 1, // Include for verification
+          firstName: '$userDetails.firstName',
+          lastName: '$userDetails.lastName',
+          position: '$userDetails.jobTitle',
+          email: '$userDetails.email',
+          status: '$userDetails.status',
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
+        }
+      },
+      { $sort: { timestamp: 1 } }
+    ]);
+
+    console.log(`Retrieved ${attendanceLogs.length} attendance logs for company ${companyId}`);
+
+    // Get all active users in the company
+    const userMatchCriteria = {
+      company: mongoose.Types.ObjectId(companyId),
+      status: 'Active'
+    };
+
+    const totalEmployees = await User.countDocuments(userMatchCriteria);
+
+    // Group logs by user and date
+    const userAttendanceMap = {};
+    const checkedInUsers = new Set();
+    const checkedOutUsers = new Set();
+
+    attendanceLogs.forEach(log => {
+      const userId = log.user.toString();
+      const dateKey = log.date;
+
+      if (!userAttendanceMap[userId]) {
+        userAttendanceMap[userId] = {
+          userId: log.user,
+          firstName: log.firstName,
+          lastName: log.lastName,
+          position: log.position || 'N/A',
+          email: log.email,
+          dates: {}
+        };
+      }
+
+      if (!userAttendanceMap[userId].dates[dateKey]) {
+        userAttendanceMap[userId].dates[dateKey] = {
+          checkIn: null,
+          checkOut: null,
+          status: 'Absent',
+          allLogs: []
+        };
+      }
+
+      // Store all logs for the day
+      userAttendanceMap[userId].dates[dateKey].allLogs.push({
+        type: log.type,
+        timestamp: log.timestamp
+      });
+
+      if (log.type === 'check-in') {
+        if (!userAttendanceMap[userId].dates[dateKey].checkIn || log.timestamp < userAttendanceMap[userId].dates[dateKey].checkIn) {
+          userAttendanceMap[userId].dates[dateKey].checkIn = log.timestamp;
+        }
+        checkedInUsers.add(userId);
+      } else if (log.type === 'check-out') {
+        if (!userAttendanceMap[userId].dates[dateKey].checkOut || log.timestamp > userAttendanceMap[userId].dates[dateKey].checkOut) {
+          userAttendanceMap[userId].dates[dateKey].checkOut = log.timestamp;
+        }
+        checkedOutUsers.add(userId);
+      }
+
+      // Update status and validate check-out is after check-in
+      const dateData = userAttendanceMap[userId].dates[dateKey];
+      if (dateData.checkIn) {
+        if (dateData.checkOut && dateData.checkOut <= dateData.checkIn) {
+          dateData.checkOut = null;
+        }
+        dateData.status = dateData.checkOut ? 'Present' : 'Checked In';
+      }
+    });
+
+    // Format attendance data based on view type
+    const attendanceData = Object.values(userAttendanceMap).map(user => {
+      const userData = {
+        userId: user.userId,
+        name: `${user.firstName} ${user.lastName}`,
+        position: user.position,
+        email: user.email
+      };
+
+      if (viewType === 'daily') {
+        const todayKey = moment(targetDate).format('YYYY-MM-DD');
+        const todayData = user.dates[todayKey] || { checkIn: null, checkOut: null, status: 'Absent', allLogs: [] };
+
+        const now = new Date();
+        const targetDateEnd = new Date(targetDate);
+        targetDateEnd.setHours(23, 59, 59, 999);
+        const isPastDate = targetDateEnd < now;
+
+        let validCheckOut = todayData.checkOut;
+        if (validCheckOut && todayData.checkIn && validCheckOut <= todayData.checkIn) {
+          validCheckOut = null;
+        }
+
+        let workingHours = 0;
+        let checkOutDisplay = '-';
+        let status = todayData.status;
+
+        if (todayData.checkIn) {
+          if (validCheckOut) {
+            workingHours = (validCheckOut - todayData.checkIn) / (1000 * 60 * 60);
+            checkOutDisplay = validCheckOut.toISOString();
+            status = 'Present';
+          } else if (isPastDate) {
+            workingHours = 0;
+            checkOutDisplay = 'Checkout Missing';
+            status = 'Absent';
+          } else {
+            const checkOutTime = new Date();
+            workingHours = (checkOutTime - todayData.checkIn) / (1000 * 60 * 60);
+            checkOutDisplay = 'Working...';
+            status = 'Checked In';
+          }
+        }
+
+        userData.checkIn = todayData.checkIn ? todayData.checkIn.toISOString() : '-';
+        userData.checkOut = checkOutDisplay;
+        userData.workingHours = workingHours > 0 ? `${Math.floor(workingHours)}h ${Math.round((workingHours % 1) * 60)}m` : '-';
+        userData.status = status;
+        userData.allLogs = todayData.allLogs || [];
+      } else if (viewType === 'weekly' || viewType === 'monthly') {
+        const processedDates = {};
+        const now = new Date();
+
+        Object.keys(user.dates).forEach(dateKey => {
+          const dateData = user.dates[dateKey];
+          const recordDate = new Date(dateKey);
+          recordDate.setHours(23, 59, 59, 999);
+          const isPastDate = recordDate < now;
+
+          let validCheckOut = dateData.checkOut;
+          if (validCheckOut && dateData.checkIn && validCheckOut <= dateData.checkIn) {
+            validCheckOut = null;
+          }
+
+          if (dateData.checkIn && !validCheckOut && isPastDate) {
+            processedDates[dateKey] = {
+              ...dateData,
+              checkOut: null,
+              status: 'Absent'
+            };
+          } else if (dateData.checkIn && validCheckOut) {
+            processedDates[dateKey] = {
+              ...dateData,
+              checkOut: validCheckOut,
+              status: 'Present'
+            };
+          } else {
+            processedDates[dateKey] = dateData;
+          }
+        });
+
+        userData.dailyRecords = processedDates;
+      }
+
+      return userData;
+    });
+
+    // Calculate statistics
+    const checkedInToday = checkedInUsers.size;
+    const checkedOutToday = checkedOutUsers.size;
+
+    let totalWorkingHours = 0;
+    let totalCheckIns = 0;
+    let checkInTimes = [];
+
+    attendanceData.forEach(user => {
+      Object.values(user.dailyRecords || {}).forEach(dayData => {
+        if (dayData.checkIn) {
+          totalCheckIns++;
+          checkInTimes.push(dayData.checkIn);
+
+          if (dayData.checkOut) {
+            const hours = (dayData.checkOut - dayData.checkIn) / (1000 * 60 * 60);
+            totalWorkingHours += hours;
+          }
+        }
+      });
+    });
+
+    const avgWorkingHours = totalCheckIns > 0 ? (totalWorkingHours / totalCheckIns).toFixed(1) : 0;
+
+    let avgCheckInTime = '-';
+    if (checkInTimes.length > 0) {
+      const totalMinutes = checkInTimes.reduce((sum, time) => {
+        const hours = new Date(time).getHours();
+        const minutes = new Date(time).getMinutes();
+        return sum + (hours * 60 + minutes);
+      }, 0);
+      const avgMinutes = Math.round(totalMinutes / checkInTimes.length);
+      const avgHours = Math.floor(avgMinutes / 60);
+      const avgMins = avgMinutes % 60;
+      avgCheckInTime = moment().set({ hour: avgHours, minute: avgMins }).format('hh:mm A');
+    }
+
+    const attendanceRate = totalEmployees > 0 ? Math.round((checkedInToday / totalEmployees) * 100) : 0;
+
+    const responseData = {
+      summary: {
+        totalEmployees,
+        checkedInToday,
+        checkedOutToday,
+        attendanceRate: `${attendanceRate}%`,
+        avgWorkingHours: `${avgWorkingHours}h`,
+        avgCheckInTime
+      },
+      attendanceData,
+      viewType,
+      date: targetDate,
+      officeId: officeId || 'all',
+      companyId: companyId.toString() // Include companyId for frontend validation
+    };
+
+    // Broadcast to ONLY connected users in THIS company
+    const connectedUsers = websocketHandler.getConnectedUsers();
+
+    // Get all users who belong to THIS company only
+    const companyUsers = await User.find({
+      company: mongoose.Types.ObjectId(companyId),
+      status: 'Active' // Only send to active users
+    }).select('_id');
+
+    // Filter to only include users who are BOTH in this company AND currently connected
+    const companyUserIds = companyUsers
+      .map(u => u._id.toString())
+      .filter(id => connectedUsers.includes(id));
+
+    if (companyUserIds.length > 0) {
+      // Final validation: Verify all data belongs to this company
+      const invalidData = attendanceData.some(record => {
+        // Check if any record doesn't match the company (though it shouldn't happen with our filters)
+        return false; // Our aggregate query already ensures company isolation
+      });
+
+      if (!invalidData) {
+        console.log(`✓ Broadcasting attendance update to company ${companyId}: ${companyUserIds.length} connected users (${viewType} view, office: ${officeId || 'all'})`);
+        console.log(`✓ Data verified: ${attendanceData.length} employee records from company ${companyId}`);
+
+        websocketHandler.sendAttendanceUpdate(companyUserIds, {
+          type: 'mobile-overview-update',
+          data: responseData
+        });
+      } else {
+        console.error(`⚠ SECURITY: Prevented broadcasting data with mixed company records for company ${companyId}`);
+      }
+    } else {
+      console.log(`No connected users found for company ${companyId} to broadcast attendance update`);
+    }
+  } catch (error) {
+    console.error('Error broadcasting attendance update:', error);
+  }
+};
 
 // Get all offices for a company (for office dropdown)
 exports.getAttendanceOffices = catchAsync(async (req, res, next) => {

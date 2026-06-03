@@ -36,13 +36,13 @@ class WebSocketManager {
         // For backwards compatibility
         ws.userId = data.userId;
 
-        console.log(`User ${data.userId} authenticated. Total mappings: ${this.connectedUsers.size}`);
+        //console.log(`User ${data.userId} authenticated. Total mappings: ${this.connectedUsers.size}`);
 
         // Broadcast online status to all connected users
         const allUsers = Array.from(this.connectedUsers.keys());
         this.sendAlert(allUsers, JSON.stringify({ userId: data.userId, isOnline: true }));
       } else {
-        console.log(`Received message from ${Array.from(ws.userIds || [ws.userId || 'unknown']).join(', ')}: ${message}`);
+        //console.log(`Received message from ${Array.from(ws.userIds || [ws.userId || 'unknown']).join(', ')}: ${message}`);
       }
     } catch (error) {
       console.error('Invalid message format:', error);
@@ -85,9 +85,9 @@ class WebSocketManager {
       const client = this.connectedUsers.get(userId);
       if (client && client.readyState === WebSocket.OPEN) {
         client.send(messageString);
-        console.log(`Sent ${notificationType} (${contentType}) to user ${userId}`);
+        //console.log(`Sent ${notificationType} (${contentType}) to user ${userId}`);
       } else {
-        console.warn(`User ${userId} not connected or WebSocket closed`);
+        //console.warn(`User ${userId} not connected or WebSocket closed`);
       }
     });
   }
@@ -96,16 +96,16 @@ class WebSocketManager {
   sendLog(req, message, logType) {
     const userId = req?.cookies?.userId || req?.user?.id || '';
     if (!userId) {
-      console.warn('sendLog: No userId found in request');
+      //console.warn('sendLog: No userId found in request');
       return; // Exit if no userId
     }
 
     if (!this.connectedUsers.has(userId)) {
-      console.warn(`sendLog: User ${userId} is not connected via WebSocket`);
+      //console.warn(`sendLog: User ${userId} is not connected via WebSocket`);
       return; // Exit if user isn’t connected
     }
 
-    console.log(`sendLog: Sending log type ${logType}`);
+    //console.log(`sendLog: Sending log type ${logType}`);
     // Check if the logType is in globalStore.logLevels
     if (globalStore?.logLevels.length > 0 && !globalStore?.logLevels?.includes(logType)) {
       return; // Exit if logType isn’t in the allowed levels

@@ -191,7 +191,8 @@ const WEB_SOCKET_NOTIFICATION_TYPES = {
   ALERT: 'alert',
   NOTIFICATION: 'notification',
   SCREENSHOT: 'screenshot',
-  CHAT: 'chat'
+  CHAT: 'chat',
+  ATTENDANCE_UPDATE: 'attendance_update'
 };
 
 const LOG_TYPES = {
