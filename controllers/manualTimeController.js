@@ -97,7 +97,7 @@ exports.addManualTimeRequest = catchAsync(async (req, res, next) => {
   });
   websocketHandler.sendLog(req, `Created manual time request with ID: ${mtRequest._id}`, constants.LOG_TYPES.INFO);
 
-  const requestApprovalLink = `${process.env.WEBSITE_DOMAIN}/#/home/approvals`;
+  const requestApprovalLink = `${process.env.WEBSITE_DOMAIN}/#/home/approvals?tab=manual-time`;
   const managerName = `${manager.firstName} ${manager.lastName}`;
   const userName = `${user.firstName} ${user.lastName}`;
   const emailSubject = `Manual Time Request By ${userName}`;

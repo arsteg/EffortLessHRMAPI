@@ -336,7 +336,6 @@ exports.webSignup = catchAsync(async (req, res, next) => {
       Name: constants.Email_template_constant.UPDATE_PROFILE,
       company: company.id
     });
-    console.log(newUser);
     if (emailTemplate) {
       const message = emailTemplate.contentData
         .replace("{firstName}", newUser.firstName)
@@ -349,9 +348,15 @@ exports.webSignup = catchAsync(async (req, res, next) => {
         subject: emailTemplate.subject,
         message
       });
+      console.log('Email sent successfully');
+    } else {
+      console.log('❌ EMAIL NOT SENT: Email template not found for company:', company.companyName);
+      console.log('   Template Name Looking For:', constants.Email_template_constant.UPDATE_PROFILE);
+      console.log('   Company ID:', company.id);
     }
+    console.log('=== EMAIL SENDING DEBUG END ===');
   } catch (err) {
-    console.log(err.message);
+    console.log('❌ EMAIL ERROR:', err.message);
     return next(new AppError(req.t('auth.emailSendError') || 'Failed to send welcome email.', 500));
   }
   res.status(200).json({
