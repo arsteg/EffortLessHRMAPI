@@ -1437,7 +1437,7 @@ async function seedRolePermissions(company) {
 exports.testApi = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    message: 'API called 2',
+    message: 'API called successfully',
     data: {
       timestamp: new Date().toISOString(),
       endpoint: '/test'
