@@ -1432,3 +1432,15 @@ async function seedRolePermissions(company) {
     console.error('Error while seeding RolePermissions:', error);
   }
 }
+
+// Simple test API endpoint - no authentication required
+exports.testApi = catchAsync(async (req, res, next) => {
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    message: 'API called',
+    data: {
+      timestamp: new Date().toISOString(),
+      endpoint: '/test'
+    }
+  });
+});

@@ -9,6 +9,33 @@ var authRouter = express.Router();
 authRouter
   .route('/signup')
   .post(authController.signup);
+
+/**
+ * @swagger
+ * /api/v1/auth/test:
+ *  get:
+ *      tags:
+ *          - Authentication
+ *      summary: "Test API endpoint - no authentication required"
+ *      produces:
+ *          - application/json
+ *      responses:
+ *          200:
+ *              description: "API called successfully"
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              status:
+ *                                  type: string
+ *                              message:
+ *                                  type: string
+ *                              data:
+ *                                  type: object
+ */
+authRouter.get('/test', authController.testApi);
+
 /**
  * @swagger
  * /api/v1/auth/role:
