@@ -36,7 +36,7 @@ class WebSocketManager {
         // For backwards compatibility
         ws.userId = data.userId;
 
-        //console.log(`User ${data.userId} authenticated. Total mappings: ${this.connectedUsers.size}`);
+        console.log(`User ${data.userId} authenticated. Total mappings: ${this.connectedUsers.size}`);
 
         // Broadcast online status to all connected users
         const allUsers = Array.from(this.connectedUsers.keys());
