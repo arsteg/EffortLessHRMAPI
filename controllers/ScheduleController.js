@@ -714,7 +714,7 @@ function getNextDate(currentDate, frequency) {
 const sendUINotification = async (req, user, managerList, notificationTypeId, notification, company) => {
   try {
     let eventNotificationType = null;
-    if (!notificationTypeId) {
+    if (notificationTypeId) {
       eventNotificationType = await EventNotificationType.findById(notificationTypeId);
     }
 
@@ -1003,10 +1003,10 @@ const sendEmailNotifications = async (user, managerList, notificationType, compa
 
     if (employeeTemplate && user.email) {
       const employeeMessage = replaceTemplateVariables(employeeTemplate.contentData, employeeReplacements);
-      //console.log('employeeMessage', employeeMessage);
+      const employeeSubject = replaceTemplateVariables(employeeTemplate.subject, employeeReplacements);
       await sendEmail({
         email: user.email,
-        subject: employeeTemplate.subject,
+        subject: employeeSubject,
         message: employeeMessage
       });
     }
@@ -1026,13 +1026,13 @@ const sendEmailNotifications = async (user, managerList, notificationType, compa
         };
 
         const managerMessage = replaceTemplateVariables(managerTemplate.contentData, replacementsWithManagerName);
+        const managerSubject = replaceTemplateVariables(managerTemplate.subject, replacementsWithManagerName);
 
-        //console.log('managerMessage', managerMessage);
 
         if (manager.email) {
           await sendEmail({
             email: manager.email,
-            subject: managerTemplate.subject,
+            subject: managerSubject,
             message: managerMessage
           });
         }
@@ -1091,7 +1091,7 @@ const sendWhatsAppNotification = async (req, user, managerList, notificationType
   console.log('sendWhatsAppNotification called');
   try {
     let eventNotificationType = null;
-    if (!notificationTypeId) {
+    if (notificationTypeId) {
       eventNotificationType = await EventNotificationType.findById(notificationTypeId);
     }
 
