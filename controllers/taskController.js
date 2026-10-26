@@ -21,6 +21,14 @@ const constants = require('../constants');
 const StorageController = require('./storageController');
 const websocketHandler = require('../utils/websocketHandler');
 const { SendUINotification } = require('../utils/uiNotificationSender');
+const TaskCounter = require('../models/taskCounterModel');
+// Ensure TaskCounter's unique {company, project} index is built as early as
+// possible. Without this, a burst of concurrent task-creation requests
+// against a brand-new project (whose counter index may not have finished
+// building yet) could momentarily allow duplicate counter documents, which
+// would defeat the atomicity TM-012 relies on. This is a one-time, fire-and-
+// forget call — safe to await or ignore its result.
+TaskCounter.init().catch(() => {});
 
 function formatDateToDDMMYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -29,8 +37,171 @@ function formatDateToDDMMYY(date) {
 
   return `${day}/${month}/${year}`;
 }
+
+// --- Authorization helpers (TM-002 / TM-004) -------------------------------
+// Tenant scoping and destructive-action authorization must be derived from
+// the authenticated session (req.user, set by authController.protect), never
+// from client-controlled input. These helpers centralize that logic so every
+// task/attachment/comment/tag handler enforces it the same way.
+
+function isAdminRole(user) {
+  const roleName = (user && user.role && (user.role.name || user.role.Name)) || '';
+  const normalized = String(roleName).toLowerCase();
+  return normalized === 'admin' || normalized === 'super admin';
+}
+
+/** Loads a task and verifies it belongs to the caller's company. Returns
+ * null (not an error) when the task doesn't exist or belongs to another
+ * company, so callers can respond with an identical 404 either way and not
+ * reveal whether a task id exists in a different tenant. */
+async function findOwnTask(req, taskId, populate) {
+  if (!mongoose.Types.ObjectId.isValid(taskId)) return null;
+  let query = Task.findById(taskId);
+  if (populate) query = query.populate(populate);
+  const task = await query;
+  if (!task || !task.company || task.company.toString() !== req.user.company.id.toString()) {
+    return null;
+  }
+  return task;
+}
+
+/** True if the user created the task, is assigned to it, or holds an Admin
+ * role in the task's company. Used to gate update/delete/reassign actions. */
+async function canManageTask(user, task) {
+  if (!user || !task) return false;
+  if (isAdminRole(user)) return true;
+  // taskModel's pre-find hook populates createdBy with a User document, so
+  // it may be either a populated doc or a raw ObjectId depending on the
+  // query path that loaded `task` — handle both.
+  const createdById = task.createdBy && (task.createdBy._id || task.createdBy);
+  if (createdById && createdById.toString() === user.id.toString()) return true;
+  const assignment = await TaskUser.findOne({ task: task._id, user: user._id });
+  return !!assignment;
+}
+
+/** Replaces each attachment's stored (token-free, non-public) blob address
+ * with a freshly minted short-lived SAS read URL, right before the response
+ * is sent to an already-authorized caller (TM-005). */
+function withFreshAttachmentUrls(list) {
+  return (list || []).map((attachment) => {
+    const plain = attachment.toObject ? attachment.toObject() : { ...attachment };
+    plain.url = StorageController.getTaskAttachmentReadUrl(plain.url);
+    return plain;
+  });
+}
+
+/** Atomically allocates the next per-project task number (TM-012). Seeds the
+ * counter from the existing task count the first time a project is seen, so
+ * projects created before this counter existed don't collide with tasks
+ * numbered under the old countDocuments()+1 scheme. */
+async function getNextTaskNumber(companyId, projectId) {
+  let counter = await TaskCounter.findOneAndUpdate(
+    { company: companyId, project: projectId },
+    { $inc: { seq: 1 } },
+    { new: true }
+  );
+  if (counter) return counter.seq;
+
+  // No counter yet for this project — seed it from the existing task count.
+  const existingCount = await Task.countDocuments({ company: companyId, project: projectId });
+  try {
+    counter = await TaskCounter.create({ company: companyId, project: projectId, seq: existingCount + 1 });
+    return counter.seq;
+  } catch (err) {
+    // Lost the race to another concurrent request seeding the same
+    // counter — it now exists, so fall back to a normal atomic increment.
+    if (err.code === 11000) {
+      counter = await TaskCounter.findOneAndUpdate(
+        { company: companyId, project: projectId },
+        { $inc: { seq: 1 } },
+        { new: true }
+      );
+      return counter.seq;
+    }
+    throw err;
+  }
+}
+
+/** TM-019: applies optional status/priority filters (array or single value)
+ * to a Mongo query object in place. Previously, status/priority "filters"
+ * in the web UI only hid/showed rows already present on the current page
+ * client-side — they were never sent to the server, so pagination and
+ * total counts were wrong for a filtered view. */
+function applyStatusPriorityFilters(query, { status, priority }) {
+  const asArray = (value) => (value == null ? null : Array.isArray(value) ? value : [value]);
+  const statuses = asArray(status);
+  const priorities = asArray(priority);
+  if (statuses && statuses.length > 0) query.status = { $in: statuses };
+  if (priorities && priorities.length > 0) query.priority = { $in: priorities };
+}
+
+// Fields a client is allowed to set via PUT /task/update/:id (TM-003). Never
+// includes company/createdBy/taskNumber/isDeleted — those are server-managed.
+const UPDATABLE_TASK_FIELDS = [
+  'taskName', 'title', 'description', 'priority', 'status', 'project',
+  'parentTask', 'startDate', 'endDate', 'startTime', 'comment', 'estimate',
+  'timeTaken', 'dueDate',
+];
+
+// TM-011: assignment model is "one primary owner + optional watchers".
+const TASKUSER_ROLE = { OWNER: 'owner', WATCHER: 'watcher' };
+// Treat a missing role as 'owner': rows created before the `role` field
+// existed were the task's single assignee, i.e. its de-facto owner.
+const isOwnerRow = (taskUser) => !taskUser.role || taskUser.role === TASKUSER_ROLE.OWNER;
+// A TaskUser row's user may be a populated doc (pre-find hook) or a raw id.
+const taskUserUserId = (taskUser) => {
+  const user = taskUser && taskUser.user;
+  if (!user) return null;
+  return (user._id || user.id || user).toString();
+};
+
+/** TM-011: adds each given user as a watcher on the task, skipping anyone who
+ * is already the owner or already a watcher. Fires a best-effort in-app
+ * notification per newly added watcher. Returns the created rows. */
+async function assignTaskWatchers(task, watcherIds, req) {
+  const created = [];
+  for (const rawId of (watcherIds || [])) {
+    const watcherId = rawId && (rawId._id || rawId.id || rawId).toString();
+    if (!watcherId) continue;
+    const already = await TaskUser.findOne({ task: task._id, user: watcherId });
+    if (already) continue; // owner or existing watcher — don't duplicate
+    const row = await TaskUser.create({
+      task: task._id,
+      user: watcherId,
+      role: TASKUSER_ROLE.WATCHER,
+      company: req.user.company.id,
+      status: 'Active',
+      createdOn: new Date(),
+      updatedOn: new Date(),
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
+    });
+    created.push(row);
+    SendUINotification(
+      `Added as watcher: ${task.taskName}`,
+      task.description || `You were added as a watcher on task ${task.taskName}.`,
+      constants.Event_Notification_Type_Status.task_assignment,
+      watcherId,
+      req.user.company.id,
+      req,
+      `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`
+    );
+  }
+  return created;
+}
+
 exports.deleteTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting task deletion process', constants.LOG_TYPES.TRACE);
+
+  const taskForAuth = await findOwnTask(req, req.params.id);
+  if (!taskForAuth) {
+    websocketHandler.sendLog(req, `Task ${req.params.id} not found in caller's company`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('task.taskNotFound'), 404));
+  }
+  if (!(await canManageTask(req.user, taskForAuth))) {
+    websocketHandler.sendLog(req, `User ${req.user.id} is not authorized to delete task ${req.params.id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError('You do not have permission to delete this task', 403));
+  }
 
   const timeLogExists = await timeLog.find({}).where('task').equals(req.params.id);
   const manualTimeRequest = await ManualTimeRequest.find({}).where('task').equals(req.params.id);
@@ -48,7 +219,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.DELETE_TASK)
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
 
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
@@ -67,12 +238,12 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
         if (emailTemplate) {
           const contentNewUser = emailTemplate.contentData;
           const emailTemplateNewUser = contentNewUser
-            .replace("{firstName}", user?.firstName || 'N/A')
-            .replace("{taskName}", task?.taskName || 'Untitled Task')
-            .replace("{date}", formatDateToDDMMYY(new Date()))
-            .replace("{company}", req.cookies.companyName || 'N/A')
-            .replace("{projectName}", task.project?.projectName || 'N/A')
-            .replace("{lastName}", user?.lastName || 'N/A');
+            .replaceAll("{firstName}", user?.firstName || 'N/A')
+            .replaceAll("{taskName}", task?.taskName || 'Untitled Task')
+            .replaceAll("{date}", formatDateToDDMMYY(new Date()))
+            .replaceAll("{company}", req.user.company.companyName || 'N/A')
+            .replaceAll("{projectName}", task.project?.projectName || 'N/A')
+            .replaceAll("{lastName}", user?.lastName || 'N/A');
 
           const document = await TaskUser.findByIdAndDelete(newTaskUserList[j]._id);
           if (!document) {
@@ -95,7 +266,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 
         //Add Event Notification for delete task
         SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
-          constants.Event_Notification_Type_Status.task_delete, user?._id?.toString(), req.cookies.companyId, req);
+          constants.Event_Notification_Type_Status.task_delete, user?._id?.toString(), req.user.company.id, req);
 
         if (user._id.toString() === task?.createdBy?._id?.toString()) {
           isUINotificationSentToReporter = true;
@@ -105,7 +276,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
     if (!isUINotificationSentToReporter) {
       //Add Event Notification for delete task to reporter
       SendUINotification(`Task deleted: ${task.taskName}`, task.description || `Task ${task.taskName} has been deleted.`,
-        constants.Event_Notification_Type_Status.task_delete, task?.createdBy?._id?.toString(), req.cookies.companyId, req);
+        constants.Event_Notification_Type_Status.task_delete, task?.createdBy?._id?.toString(), req.user.company.id, req);
     }
   }
 
@@ -124,25 +295,47 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
 exports.updateTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting task update for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
-  const existingProject = await Project.findById(req.body.project);
-  if (!existingProject) {
-    websocketHandler.sendLog(req, `Invalid project ${req.body.project} for task update`, constants.LOG_TYPES.WARN);
-    return res.status(400).json({
-      status: constants.APIResponseStatus.Failure,
-      message: req.t('task.invalidProject')
-      ,
-    });
+  const taskForAuth = await findOwnTask(req, req.params.id);
+  if (!taskForAuth) {
+    websocketHandler.sendLog(req, `Task ${req.params.id} not found in caller's company`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('task.taskNotFound'), 404));
+  }
+  if (!(await canManageTask(req.user, taskForAuth))) {
+    websocketHandler.sendLog(req, `User ${req.user.id} is not authorized to update task ${req.params.id}`, constants.LOG_TYPES.WARN);
+    return next(new AppError('You do not have permission to update this task', 403));
   }
 
+  // The project reference should only be (re-)validated when the caller is
+  // actually trying to change it. A partial update (e.g. status-only or
+  // priority-only, as sent by the web sub-task quick actions and the mobile
+  // status-cycle control) must not be rejected just because `project` was
+  // omitted from the payload (TM-007).
+  if (Object.prototype.hasOwnProperty.call(req.body, 'project')) {
+    const existingProject = await Project.findOne({ _id: req.body.project, company: req.user.company.id });
+    if (!existingProject) {
+      websocketHandler.sendLog(req, `Invalid project ${req.body.project} for task update`, constants.LOG_TYPES.WARN);
+      return res.status(400).json({
+        status: constants.APIResponseStatus.Failure,
+        message: req.t('task.invalidProject')
+        ,
+      });
+    }
+  }
+
+  // Only a known, explicit set of fields may be written via this endpoint —
+  // never company/createdBy/taskNumber/isDeleted from the raw request body
+  // (TM-003, mass-assignment).
   const updates = {};
-  Object.keys(req.body).forEach((key) => {
-    updates[key] = req.body[key];
+  UPDATABLE_TASK_FIELDS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
   });
 
   websocketHandler.sendLog(req, `Applying updates: ${JSON.stringify(updates)}`, constants.LOG_TYPES.DEBUG);
 
-  const task = await Task.findByIdAndUpdate(
-    req.params.id,
+  const task = await Task.findOneAndUpdate(
+    { _id: req.params.id, company: req.user.company.id },
     { $set: updates },
     { new: false, runValidators: true }
   );
@@ -156,7 +349,7 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.Update_Task_Notification)
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id);
   const updatedTask = await Task.findById(req.params.id).populate('project', 'projectName');
@@ -166,15 +359,15 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${updatedTask._id}`;
     if (emailTemplate) {
       const emailTemplateNewUser = emailTemplate.contentData
-        .replace("{firstName}", user?.firstName || 'N/A')
-        .replace("{taskName}", updatedTask?.taskName || 'Untitled Task')
-        .replace("{date}", formatDateToDDMMYY(new Date()))
-        .replace("{company}", req.cookies.companyName || 'N/A')
-        .replace("{projectName}", updatedTask.project?.projectName || 'N/A')
-        .replace("{description}", updatedTask?.description ? (updatedTask.description.length > 500 ? updatedTask.description.substring(0, 500) + '...' : updatedTask.description) : 'No description provided')
-        .replace("{priority}", updatedTask?.priority || 'N/A')
-        .replace("{taskURL}", taskURL)
-        .replace("{lastName}", user?.lastName || 'N/A');
+        .replaceAll("{firstName}", user?.firstName || 'N/A')
+        .replaceAll("{taskName}", updatedTask?.taskName || 'Untitled Task')
+        .replaceAll("{date}", formatDateToDDMMYY(new Date()))
+        .replaceAll("{company}", req.user.company.companyName || 'N/A')
+        .replaceAll("{projectName}", updatedTask.project?.projectName || 'N/A')
+        .replaceAll("{description}", updatedTask?.description ? (updatedTask.description.length > 500 ? updatedTask.description.substring(0, 500) + '...' : updatedTask.description) : 'No description provided')
+        .replaceAll("{priority}", updatedTask?.priority || 'N/A')
+        .replaceAll("{taskURL}", taskURL)
+        .replaceAll("{lastName}", user?.lastName || 'N/A');
 
       try {
         await sendEmail({
@@ -190,12 +383,12 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 
     // Add Event Notification for the assigned user
     SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-      constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req, taskURL);
+      constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.user.company.id, req, taskURL);
 
     if (user?._id?.toString() !== updatedTask?.createdBy?.toString()) {
       // Add Event Notification for the reporter user
       SendUINotification(`Task update: ${updatedTask.taskName}`, updatedTask.description || `Task ${updatedTask.taskName} has been updated.`,
-        constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.cookies.companyId, req, taskURL);
+        constants.Event_Notification_Type_Status.task_assignment, updatedTask?.createdBy?._id?.toString(), req.user.company.id, req, taskURL);
     }
   }
 
@@ -214,7 +407,11 @@ exports.updateTask = catchAsync(async (req, res, next) => {
 exports.getTask = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Fetching task ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
-  const task = await Task.findById(req.params.id);
+  const task = await findOwnTask(req, req.params.id);
+  if (!task) {
+    websocketHandler.sendLog(req, `Task ${req.params.id} not found in caller's company`, constants.LOG_TYPES.WARN);
+    return next(new AppError(req.t('task.taskNotFound'), 404));
+  }
   const newTaskUserList = await TaskUser.find({}).where('task').equals(req.params.id).populate('task');
   const newTaskAttachmentList = await TaskAttachments.find({}).where('task').equals(req.params.id);
 
@@ -225,7 +422,7 @@ exports.getTask = catchAsync(async (req, res, next) => {
     data: {
       task: task,
       newTaskUserList: newTaskUserList,
-      newTaskAttachmentList: newTaskAttachmentList
+      newTaskAttachmentList: withFreshAttachmentUrls(newTaskAttachmentList)
     }
   });
 });
@@ -253,7 +450,7 @@ exports.getTaskAttachments = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
-      newTaskAttachmentList: newTaskAttachmentList
+      newTaskAttachmentList: withFreshAttachmentUrls(newTaskAttachmentList)
     }
   });
 });
@@ -262,12 +459,12 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getTaskListByTeam execution', constants.LOG_TYPES.TRACE);
 
   // Fetch subordinate user IDs and include current user
-  websocketHandler.sendLog(req, `Fetching subordinate users for user ${req.cookies.userId}`, constants.LOG_TYPES.TRACE);
+  websocketHandler.sendLog(req, `Fetching subordinate users for user ${req.user.id}`, constants.LOG_TYPES.TRACE);
   const subordinateIds = await userSubordinate
-    .find({ userId: req.cookies.userId })
+    .find({ userId: req.user.id })
     .distinct('subordinateUserId');
 
-  const teamIdsArray = [...subordinateIds, req.cookies.userId];
+  const teamIdsArray = [...subordinateIds, req.user.id];
   websocketHandler.sendLog(req, `Processing ${teamIdsArray.length} team members`, constants.LOG_TYPES.DEBUG);
 
   const objectIdArray = teamIdsArray.map(id => new ObjectId(id));
@@ -281,7 +478,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     const matchingProjects = await Project.find({
-      company: req.cookies.companyId,
+      company: req.user.company.id,
       projectName: searchRegex
     }).select('_id');
     if (matchingProjects.length > 0) {
@@ -400,6 +597,7 @@ exports.getTaskListByTeam = catchAsync(async (req, res, next) => {
           priority: '$taskDetails.priority',
           status: '$taskDetails.status',
           taskNumber: '$taskDetails.taskNumber',
+          dueDate: '$taskDetails.dueDate',
           parentTask: '$taskDetails.parentTask',
           TaskUsers: '$TaskUsers',
           commentsCount: { $size: '$taskComments' },
@@ -478,6 +676,20 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     searchMatchStageAssigned.push({ $match: { $or: orConditions } });
   }
 
+  // TM-019: status/priority filters, applied server-side so pagination and
+  // the total count stay correct for a filtered view (previously these
+  // "filters" only hid/showed rows already present on the current,
+  // unfiltered page, client-side, in the web UI).
+  const statusPriorityMatch = {};
+  applyStatusPriorityFilters(statusPriorityMatch, { status: req.body.status, priority: req.body.priority });
+  const statusPriorityMatchStage = Object.keys(statusPriorityMatch).length > 0
+    ? [{
+        $match: Object.fromEntries(
+          Object.entries(statusPriorityMatch).map(([key, value]) => [`taskDetails.${key}`, value])
+        )
+      }]
+    : [];
+
   // PATH A: Assigned tasks pipeline
   const assignedTasksPipeline = [
     { $match: { user: userId, task: { $exists: true } } },
@@ -491,6 +703,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
     },
     { $unwind: '$taskDetails' },
     ...searchMatchStageAssigned,
+    ...statusPriorityMatchStage,
     { $project: { taskId: '$taskDetails._id', taskDetails: 1 } }
   ];
 
@@ -571,6 +784,7 @@ exports.getTaskListByUser = catchAsync(async (req, res, next) => {
           priority: '$taskDetails.priority',
           status: '$taskDetails.status',
           taskNumber: '$taskDetails.taskNumber',
+          dueDate: '$taskDetails.dueDate',
           parentTask: '$taskDetails.parentTask',
           TaskUsers: '$TaskUsers',
           commentsCount: { $size: '$taskComments' },
@@ -671,7 +885,7 @@ exports.updateTaskUser = catchAsync(async (req, res, next) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals("Test")
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
   if (emailTemplate) {
@@ -710,26 +924,10 @@ exports.getTaskAttachment = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'TaskAttachment retrieval completed', constants.LOG_TYPES.TRACE);
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: { newTaskAttachment }
+    data: { newTaskAttachment: withFreshAttachmentUrls(newTaskAttachment) }
   });
 });
 
-exports.updateTaskAttachments = catchAsync(async (req, res, next) => {
-  const document = await TaskAttachments.findByIdAndUpdate(req.params.id, req.body, {
-    new: true, // If not found - add new
-    runValidators: true // Validate data
-  });
-  if (!document) {
-    return next(new AppError(req.t('task.documentNotFound')
-      , 404));
-  }
-  res.status(201).json({
-    status: constants.APIResponseStatus.Success,
-    data: {
-      data: document
-    }
-  });
-});
 exports.updateTaskAttachments = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting updateTaskAttachments for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
@@ -756,7 +954,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   websocketHandler.sendLog(req, `Checking for existing task ${req.body.taskName}`, constants.LOG_TYPES.TRACE);
   const existingTask = await Task.findOne({
-    company: req.cookies.companyId,
+    company: req.user.company.id,
     taskName: req.body.taskName,
   });
 
@@ -792,11 +990,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
   }
   websocketHandler.sendLog(req, 'User and project validated', constants.LOG_TYPES.DEBUG);
 
-  const taskCount = await Task.countDocuments({
-    company: req.cookies.companyId,
-    project: req.body.project
-  });
-  const taskNumber = taskCount + 1;
+  // TM-012: atomic counter instead of countDocuments()+1, which races under
+  // concurrent task creation for the same project.
+  const taskNumber = await getNextTaskNumber(req.user.company.id, req.body.project);
   websocketHandler.sendLog(req, `Generated task number: ${taskNumber}`, constants.LOG_TYPES.DEBUG);
 
   const newTask = await Task.create({
@@ -808,7 +1004,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     comment: req.body.comment,
     isSubTask: false,
     priority: req.body.priority,
-    company: req.cookies.companyId,
+    company: req.user.company.id,
     project: req.body.project,
     status: req.body.status,
     title: req.body.title,
@@ -816,10 +1012,11 @@ exports.addTask = catchAsync(async (req, res, next) => {
     estimate: req.body.estimate,
     timeTaken: req.body.timeTaken,
     isDeleted: req.body.isDeleted,
+    dueDate: req.body.dueDate, // TM-014: field existed on the schema but was never actually written by addTask
     createdOn: new Date(),
     updatedOn: new Date(),
-    createdBy: req.cookies.userId,
-    updatedBy: req.cookies.userId,
+    createdBy: req.user.id,
+    updatedBy: req.user.id,
     taskNumber
   });
   websocketHandler.sendLog(req, `Created new task ${newTask._id}`, constants.LOG_TYPES.INFO);
@@ -828,12 +1025,13 @@ exports.addTask = catchAsync(async (req, res, next) => {
     const newTaskUserItem = await TaskUser.create({
       task: newTask._id,
       user: req.body.user,
-      company: req.cookies.companyId,
+      role: TASKUSER_ROLE.OWNER, // TM-011: the create-time assignee is the primary owner
+      company: req.user.company.id,
       status: "Active",
       createdOn: new Date(),
       updatedOn: new Date(),
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId
+      createdBy: req.user.id,
+      updatedBy: req.user.id
     });
     websocketHandler.sendLog(req, `Assigned user ${req.body.user} to task ${newTask._id}`, constants.LOG_TYPES.INFO);
 
@@ -841,19 +1039,19 @@ exports.addTask = catchAsync(async (req, res, next) => {
       const newUser = await User.findOne({ _id: newTaskUserItem.user });
       const templateNewUser = await EmailTemplate.findOne({})
         .where('Name').equals(constants.Email_template_constant.Task_Assigned)
-        .where('company').equals(req.cookies.companyId);
+        .where('company').equals(req.user.company.id);
       if (templateNewUser) {
         const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`;
         const emailTemplateNewUser = templateNewUser.contentData
-          .replace("{firstName}", newUser?.firstName || 'N/A')
-          .replace("{taskURL}", taskURL)
-          .replace("{startDate}", newTask?.startDate || 'N/A')
-          .replace("{endDate}", newTask?.endDate || 'N/A')
-          .replace("{company}", req.cookies.companyName || 'N/A')
-          .replace("{description}", newTask?.description ? (newTask.description.length > 500 ? newTask.description.substring(0, 500) + '...' : newTask.description) : 'No description provided')
-          .replace("{priority}", newTask?.priority || 'N/A')
-          .replace("{taskName}", newTask?.taskName || 'Untitled Task')
-          .replace("{lastName}", newUser?.lastName || 'N/A');
+          .replaceAll("{firstName}", newUser?.firstName || 'N/A')
+          .replaceAll("{taskURL}", taskURL)
+          .replaceAll("{startDate}", newTask?.startDate || 'N/A')
+          .replaceAll("{endDate}", newTask?.endDate || 'N/A')
+          .replaceAll("{company}", req.user.company.companyName || 'N/A')
+          .replaceAll("{description}", newTask?.description ? (newTask.description.length > 500 ? newTask.description.substring(0, 500) + '...' : newTask.description) : 'No description provided')
+          .replaceAll("{priority}", newTask?.priority || 'N/A')
+          .replaceAll("{taskName}", newTask?.taskName || 'Untitled Task')
+          .replaceAll("{lastName}", newUser?.lastName || 'N/A');
         try {
           await sendEmail({
             email: newUser.email,
@@ -880,7 +1078,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
         });
       }
       req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
-      const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+      const url = await StorageController.createPrivateContainerInContainer(req.user.company.id, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
       const newTaskAttachments = await TaskAttachments.create({
         task: newTask._id,
         attachmentType: req.body.taskAttachments[i].attachmentType,
@@ -891,9 +1089,9 @@ exports.addTask = catchAsync(async (req, res, next) => {
         status: "Active",
         createdOn: new Date(),
         updatedOn: new Date(),
-        createdBy: req.cookies.userId,
-        updatedBy: req.cookies.userId,
-        company: req.cookies.companyId,
+        createdBy: req.user.id,
+        updatedBy: req.user.id,
+        company: req.user.company.id,
         url
       });
       websocketHandler.sendLog(req, `Added attachment ${newTaskAttachments._id} to task ${newTask._id}`, constants.LOG_TYPES.INFO);
@@ -906,14 +1104,14 @@ exports.addTask = catchAsync(async (req, res, next) => {
 
   // Add Event Notification for the assigned user
   SendUINotification(`Task Assigned: ${newTask.taskName}`, newTask.description || `Task ${newTask.taskName} has been assigned to you.`,
-    constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.cookies.companyId, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`);
+    constants.Event_Notification_Type_Status.task_assignment, req.body.user, req.user.company.id, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${newTask._id}`);
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
     data: {
       newTask,
       newTaskUserList,
-      newTaskAttachmentList
+      newTaskAttachmentList: withFreshAttachmentUrls(newTaskAttachmentList)
     }
   });
 });
@@ -959,12 +1157,12 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     newTaskUserItem = await TaskUser.create({
       task: req.body.task,
       user: req.body.user,
-      company: req.cookies.companyId,
+      company: req.user.company.id,
       status: "Active",
       createdOn: new Date(),
       updatedOn: new Date(),
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId
+      createdBy: req.user.id,
+      updatedBy: req.user.id
     });
     websocketHandler.sendLog(req, `Created new TaskUser ${newTaskUserItem._id}`, constants.LOG_TYPES.INFO);
   }
@@ -973,18 +1171,18 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     const oldUser = await User.findOne({ _id: emailOldUser });
     const templateOldUser = await EmailTemplate.findOne({})
       .where('Name').equals(constants.Email_template_constant.Task_Unassigned)
-      .where('company').equals(req.cookies.companyId);
+      .where('company').equals(req.user.company.id);
     if (templateOldUser) {
       const emailTemplateOldUser = templateOldUser.contentData
-        .replace("{firstName}", oldUser?.firstName || 'N/A')
-        .replace("{startDate}", task?.startDate || 'N/A')
-        .replace("{endDate}", task?.endDate || 'N/A')
-        .replace("{taskName}", task?.taskName || 'Untitled Task')
-        .replace("{date}", formatDateToDDMMYY(new Date()))
-        .replace("{company}", req.cookies.companyName || 'N/A')
-        .replace("{projectName}", task.project?.projectName || 'N/A')
-        .replace("{taskURL}", taskURL)
-        .replace("{lastName}", oldUser?.lastName || 'N/A');
+        .replaceAll("{firstName}", oldUser?.firstName || 'N/A')
+        .replaceAll("{startDate}", task?.startDate || 'N/A')
+        .replaceAll("{endDate}", task?.endDate || 'N/A')
+        .replaceAll("{taskName}", task?.taskName || 'Untitled Task')
+        .replaceAll("{date}", formatDateToDDMMYY(new Date()))
+        .replaceAll("{company}", req.user.company.companyName || 'N/A')
+        .replaceAll("{projectName}", task.project?.projectName || 'N/A')
+        .replaceAll("{taskURL}", taskURL)
+        .replaceAll("{lastName}", oldUser?.lastName || 'N/A');
       try {
         await sendEmail({
           email: oldUser.email,
@@ -998,25 +1196,25 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
     //Add Event Notification for the assigned user
     SendUINotification(`Task Unassignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been Unassigned to you.`,
-      constants.Event_Notification_Type_Status.task_assignment, emailOldUser?._id?.toString(), req.cookies.companyId, req, taskURL);
+      constants.Event_Notification_Type_Status.task_assignment, emailOldUser?._id?.toString(), req.user.company.id, req, taskURL);
   }
 
   if (newTaskUserItem != null) {
     const newUser = await User.findOne({ _id: newTaskUserItem.user });
     const templateNewUser = await EmailTemplate.findOne({})
       .where('Name').equals(constants.Email_template_constant.Task_Assigned)
-      .where('company').equals(req.cookies.companyId);
+      .where('company').equals(req.user.company.id);
     if (templateNewUser) {
       const emailTemplateNewUser = templateNewUser.contentData
-        .replace("{firstName}", newUser?.firstName || 'N/A')
-        .replace("{startDate}", task?.startDate || 'N/A')
-        .replace("{endDate}", task?.endDate || 'N/A')
-        .replace("{taskName}", task?.taskName || 'Untitled Task')
-        .replace("{company}", req.cookies.companyName || 'N/A')
-        .replace("{description}", task?.description ? (task.description.length > 500 ? task.description.substring(0, 500) + '...' : task.description) : 'No description provided')
-        .replace("{priority}", task?.priority || 'N/A')
-        .replace("{taskURL}", taskURL)
-        .replace("{lastName}", newUser?.lastName || 'N/A');
+        .replaceAll("{firstName}", newUser?.firstName || 'N/A')
+        .replaceAll("{startDate}", task?.startDate || 'N/A')
+        .replaceAll("{endDate}", task?.endDate || 'N/A')
+        .replaceAll("{taskName}", task?.taskName || 'Untitled Task')
+        .replaceAll("{company}", req.user.company.companyName || 'N/A')
+        .replaceAll("{description}", task?.description ? (task.description.length > 500 ? task.description.substring(0, 500) + '...' : task.description) : 'No description provided')
+        .replaceAll("{priority}", task?.priority || 'N/A')
+        .replaceAll("{taskURL}", taskURL)
+        .replaceAll("{lastName}", newUser?.lastName || 'N/A');
       try {
         await sendEmail({
           email: newUser.email,
@@ -1030,7 +1228,7 @@ exports.addTaskUser = catchAsync(async (req, res, next) => {
     }
     //Add Event Notification for the assigned user
     SendUINotification(`Task assignment: ${task.taskName}`, task.description || `Task ${task.taskName}, has been assigned to you.`,
-      constants.Event_Notification_Type_Status.task_assignment, newUser?._id?.toString(), req.cookies.companyId, req, taskURL);
+      constants.Event_Notification_Type_Status.task_assignment, newUser?._id?.toString(), req.user.company.id, req, taskURL);
 
   }
 
@@ -1048,7 +1246,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.Task_Unassigned)
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
   const taskUser = await TaskUser.findOne({ _id: req.params.id });
   const task = await Task.findOne({ _id: taskUser.task });
   const user = await User.findOne({ _id: taskUser.user });
@@ -1063,11 +1261,11 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 
   if (emailTemplate) {
     const emailTemplateNewUser = emailTemplate.contentData
-      .replace("{firstName}", user?.firstName || 'N/A')
-      .replace("{startDate}", task?.startDate || 'N/A')
-      .replace("{endDate}", task?.endDate || 'N/A')
-      .replace("{taskName}", task?.taskName || 'Untitled Task')
-      .replace("{lastName}", user?.lastName || 'N/A');
+      .replaceAll("{firstName}", user?.firstName || 'N/A')
+      .replaceAll("{startDate}", task?.startDate || 'N/A')
+      .replaceAll("{endDate}", task?.endDate || 'N/A')
+      .replaceAll("{taskName}", task?.taskName || 'Untitled Task')
+      .replaceAll("{lastName}", user?.lastName || 'N/A');
     try {
       await sendEmail({
         email: user.email,
@@ -1082,7 +1280,7 @@ exports.deleteTaskUser = catchAsync(async (req, res, next) => {
 
   //Add Event Notification for the deleted user
   SendUINotification(`Task Unassigned: ${task.taskName}`, task.description || `Task ${task.taskName} has been unassigned to you.`,
-    constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.cookies.companyId, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`);
+    constants.Event_Notification_Type_Status.task_assignment, user?._id?.toString(), req.user.company.id, req, `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${task._id}`);
 
   res.status(204).json({
     status: constants.APIResponseStatus.Success,
@@ -1103,6 +1301,14 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
   }
   websocketHandler.sendLog(req, `Validated task ${req.body.taskId}`, constants.LOG_TYPES.DEBUG);
 
+  if (!Array.isArray(req.body.taskAttachments) || req.body.taskAttachments.length === 0) {
+    websocketHandler.sendLog(req, 'No taskAttachments provided', constants.LOG_TYPES.WARN);
+    return res.status(400).json({
+      status: constants.APIResponseStatus.Failure,
+      message: req.t('task.invalidAttachmentProperties'),
+    });
+  }
+
   for (let i = 0; i < req.body.taskAttachments.length; i++) {
     if (!req.body.taskAttachments[i].attachmentType || !req.body.taskAttachments[i].attachmentName ||
       !req.body.taskAttachments[i].attachmentSize || !req.body.taskAttachments[i].extention ||
@@ -1114,7 +1320,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
       });
     }
     req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
-    const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+    const url = await StorageController.createPrivateContainerInContainer(req.user.company.id, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
     const newTaskAttachment = await TaskAttachments.create({
       task: req.body.taskId,
       attachmentType: req.body.taskAttachments[i].attachmentType,
@@ -1126,9 +1332,9 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
       comment: req.body.comment,
       createdOn: new Date(),
       updatedOn: new Date(),
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId,
-      company: req.cookies.companyId,
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
+      company: req.user.company.id,
       url
     });
     websocketHandler.sendLog(req, `Added attachment ${newTaskAttachment._id} to task ${req.body.taskId}`, constants.LOG_TYPES.INFO);
@@ -1145,7 +1351,7 @@ exports.addTaskAttachment = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: { taskAttachmentList: newTaskAttachmentList }
+    data: { taskAttachmentList: withFreshAttachmentUrls(newTaskAttachmentList) }
   });
 });
 
@@ -1174,9 +1380,9 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
   const skip = req.body.skip || 0;
   const limit = req.body.next || 10;
   const search = req.body.search;
-  websocketHandler.sendLog(req, `Fetching tasks for company ${req.cookies.companyId} with skip ${skip} and limit ${limit}`, constants.LOG_TYPES.DEBUG);
+  websocketHandler.sendLog(req, `Fetching tasks for company ${req.user.company.id} with skip ${skip} and limit ${limit}`, constants.LOG_TYPES.DEBUG);
 
-  const query = { company: req.cookies.companyId };
+  const query = { company: req.user.company.id };
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     const orConditions = [
@@ -1190,7 +1396,7 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
     }
     // Match project name
     const matchingProjects = await Project.find({
-      company: req.cookies.companyId,
+      company: req.user.company.id,
       projectName: searchRegex
     }).select('_id');
     if (matchingProjects.length > 0) {
@@ -1198,9 +1404,10 @@ exports.getTaskList = catchAsync(async (req, res, next) => {
     }
     query.$or = orConditions;
   }
+  applyStatusPriorityFilters(query, { status: req.body.status, priority: req.body.priority });
 
   const taskList = await Task.find(query)
-    .select('taskName startDate endDate description comment priority status taskNumber parentTask')
+    .select('taskName startDate endDate dueDate description comment priority status taskNumber parentTask')
     .skip(skip)
     .limit(limit);
   const taskCount = await Task.countDocuments(query);
@@ -1234,7 +1441,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
   const limit = req.body.next || 10;
   const search = req.body.search;
 
-  const projectQuery = { company: req.cookies.companyId, project: req.params.projectId };
+  const projectQuery = { company: req.user.company.id, project: req.params.projectId };
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     const orConditions = [
@@ -1253,9 +1460,12 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
     .limit(limit);
   websocketHandler.sendLog(req, `Fetched ${tasksForProject.length} tasks for project ${req.params.projectId}`, constants.LOG_TYPES.DEBUG);
 
+  // NOTE (TM-010): TaskUser has no `userId` field — the assignee reference is
+  // `user`. The previous `.where('userId')` always matched zero documents,
+  // so this endpoint always returned an empty list regardless of input.
   const userTaskIds = (await TaskUser.find({})
-    .where('userId').equals(req.body.userId))
-    .map(taskUser => taskUser.task);
+    .where('user').equals(req.body.userId))
+    .map(taskUser => taskUser.task.toString());
   websocketHandler.sendLog(req, `Found ${userTaskIds.length} task IDs for user ${req.body.userId}`, constants.LOG_TYPES.DEBUG);
 
   const taskList = tasksForProject.filter(task => userTaskIds.includes(task._id.toString()));
@@ -1265,7 +1475,7 @@ exports.getTaskListByProject = catchAsync(async (req, res, next) => {
     for (let i = 0; i < taskList.length; i++) {
       const taskUser = await TaskUser.find({})
         .where('task').equals(taskList[i]._id)
-        .where('userId').equals(req.body.userId);
+        .where('user').equals(req.body.userId);
       taskList[i].TaskUsers = taskUser && taskUser.length ? taskUser : null;
 
       // Get comments count for the task
@@ -1303,138 +1513,6 @@ exports.getTaskListByParentTask = catchAsync(async (req, res, next) => {
     data: { taskList }
   });
 });
-//old
-// exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
-//   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution', constants.LOG_TYPES.TRACE);
-//   const { skip, next: limit, projectId, userId } = req.body;
-//   websocketHandler.sendLog(req, `Parameters: userId=${userId}, projectId=${projectId}, skip=${skip}, limit=${limit}`, constants.LOG_TYPES.DEBUG);
-
-//   // Determine if pagination should be applied
-//   const applyPagination = skip !== '' && limit !== '' && skip !== undefined && limit !== undefined;
-//   const adjustedSkip = applyPagination ? parseInt(skip) || 0 : 0;
-//   const adjustedLimit = applyPagination ? Math.min(parseInt(limit) || 10, 100) : Number.MAX_SAFE_INTEGER;
-//   websocketHandler.sendLog(req, `Pagination: ${applyPagination}, Adjusted skip: ${adjustedSkip}, Adjusted limit: ${adjustedLimit}`, constants.LOG_TYPES.DEBUG);
-
-//   const aggregationPipeline = [
-//     { $match: { user: new mongoose.Types.ObjectId(userId) } },
-//     {
-//       $lookup: {
-//         from: 'tasks',
-//         let: { taskId: '$task' },
-//         pipeline: [
-//           { $match: { $expr: { $and: [{ $eq: ['$_id', '$$taskId'] }, { $eq: ['$project', new mongoose.Types.ObjectId(projectId)] }] } } },
-//         ],
-//         as: 'taskDetails'
-//       }
-//     },
-//     { $unwind: { path: '$taskDetails', preserveNullAndEmptyArrays: true } },
-//     { $match: { 'taskDetails': { $ne: null } } },
-//     {
-//       $lookup: {
-//         from: 'taskusers',
-//         let: { taskId: '$taskDetails._id' },
-//         pipeline: [
-//           { $match: { $expr: { $eq: ['$task', '$$taskId'] } } },
-//           {
-//             $lookup: {
-//               from: 'users',
-//               localField: 'createdBy',
-//               foreignField: '_id',
-//               as: 'createdBy'
-//             }
-//           },
-//           { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
-//           {
-//             $lookup: {
-//               from: 'users',
-//               localField: 'user',
-//               foreignField: '_id',
-//               as: 'user'
-//             }
-//           },
-//           { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-//           {
-//             $project: {
-//               _id: 1,
-//               task: 1,
-//               createdBy: {
-//                 _id: '$createdBy._id',
-//                 firstName: '$createdBy.firstName',
-//                 lastName: '$createdBy.lastName'
-//               },
-//               user: {
-//                 _id: '$user._id',
-//                 firstName: '$user.firstName',
-//                 lastName: '$user.lastName'
-//               }
-//             }
-//           }
-//         ],
-//         as: 'TaskUsers'
-//       }
-//     },
-//     {
-//       $lookup: {
-//         from: 'users',
-//         localField: 'taskDetails.createdBy',
-//         foreignField: '_id',
-//         as: 'taskCreatedBy'
-//       }
-//     },
-//     { $unwind: { path: '$taskCreatedBy', preserveNullAndEmptyArrays: true } },
-//     {
-//       $project: {
-//         _id: 0,
-//         task: {
-//           _id: '$taskDetails._id',
-//           id: '$taskDetails._id',
-//           taskName: '$taskDetails.taskName',
-//           startDate: '$taskDetails.startDate',
-//           endDate: '$taskDetails.endDate',
-//           description: '$taskDetails.description',
-//           comment: '$taskDetails.comment',
-//           priority: '$taskDetails.priority',
-//           status: '$taskDetails.status',
-//           taskNumber: '$taskDetails.taskNumber',
-//           parentTask: '$taskDetails.parentTask',
-//           project: '$taskDetails.project',
-//           TaskUsers: '$TaskUsers',
-//           createdBy: {
-//             _id: '$taskCreatedBy._id',
-//             firstName: '$taskCreatedBy.firstName',
-//             lastName: '$taskCreatedBy.lastName'
-//           }
-//         }
-//       }
-//     },
-//     {
-//       $facet: {
-//         taskList: applyPagination ? [{ $skip: adjustedSkip }, { $limit: adjustedLimit }] : [],
-//         taskCount: [{ $count: 'count' }]
-//       }
-//     }
-//   ];
-
-//   websocketHandler.sendLog(req, 'Executing task aggregation query', constants.LOG_TYPES.TRACE);
-//   const [result] = await TaskUser.aggregate(aggregationPipeline).exec();
-//   if (!result || !result.taskList || !result.taskCount) {
-//     websocketHandler.sendLog(req, 'Failed to execute aggregation query', constants.LOG_TYPES.ERROR);
-//     return next(new AppError(req.t('task.failedToFetchTaskList'), 500));
-//   }
-
-//   const taskList = result.taskList.map(item => item.task);
-//   const taskCount = result.taskCount[0]?.count || 0;
-
-
-//   websocketHandler.sendLog(req, `Returning ${taskList.length} tasks with total count ${taskCount}`, constants.LOG_TYPES.INFO);
-
-//   res.status(200).json({
-//     status: constants.APIResponseStatus.Success,
-//     taskList,
-//     taskCount
-//   });
-// });
-
 exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, 'Starting getUserTaskListByProject execution (Optimized)', constants.LOG_TYPES.TRACE);
 
@@ -1613,6 +1691,7 @@ exports.getUserTaskListByProject = catchAsync(async (req, res, next) => {
           priority: '$priority',
           status: '$status',
           taskNumber: '$taskNumber',
+          dueDate: '$dueDate',
           parentTask: '$parentTask',
           project: '$project',
           TaskUsers: '$TaskUsers',
@@ -1698,7 +1777,7 @@ exports.addTag = catchAsync(async (req, res, next) => {
 
   const tagExists = await Tag.find({
     "title": { $regex: new RegExp("^" + req.body.title.toLowerCase(), "i") }
-  }).where('company').equals(req.cookies.companyId);
+  }).where('company').equals(req.user.company.id);
   websocketHandler.sendLog(req, `Checked for existing tag, found ${tagExists.length}`, constants.LOG_TYPES.DEBUG);
 
   if (tagExists.length > 0) {
@@ -1710,11 +1789,11 @@ exports.addTag = catchAsync(async (req, res, next) => {
   } else {
     const newTag = await Tag.create({
       title: req.body.title,
-      company: req.cookies.companyId,
+      company: req.user.company.id,
       createdOn: new Date(),
       updatedOn: new Date(),
-      createdBy: req.cookies.userId,
-      updatedBy: req.cookies.userId
+      createdBy: req.user.id,
+      updatedBy: req.user.id
     });
     websocketHandler.sendLog(req, `Created new tag ${newTag._id}`, constants.LOG_TYPES.INFO);
 
@@ -1736,25 +1815,29 @@ exports.addTag = catchAsync(async (req, res, next) => {
 exports.updateTag = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting updateTag for ID ${req.body.id}`, constants.LOG_TYPES.TRACE);
 
-  let tagExists = await Tag.find({ "_id": req.body.id }).where('company').equals(req.cookies.companyId);
-  websocketHandler.sendLog(req, `Checked for tag existence, found ${tagExists.length}`, constants.LOG_TYPES.DEBUG);
+  // TM-015: the existence check used req.body.id while the actual update
+  // used req.body._id (almost always undefined) and attempted to $set the
+  // immutable _id field — the rename never actually persisted. Use a single
+  // id field throughout, and update+return in one atomic, company-scoped
+  // operation.
+  const updatedTag = await Tag.findOneAndUpdate(
+    { _id: req.body.id, company: req.user.company.id },
+    { $set: { title: req.body.title, updatedOn: new Date(), updatedBy: req.user.id } },
+    { new: true, runValidators: true }
+  );
 
-  if (tagExists.length === 0) {
+  if (!updatedTag) {
     websocketHandler.sendLog(req, `Tag ${req.body.id} does not exist`, constants.LOG_TYPES.ERROR);
-    res.status(403).send({
+    return res.status(404).send({
       error: req.t('task.documentNotFound')
-
-    });
-  } else {
-    tagExists.title = req.body.title;
-    const newTag = await Tag.updateOne({ _id: req.body._id }, { $set: { _id: req.body._id, title: req.body.title } }).exec();
-    websocketHandler.sendLog(req, `Updated tag ${req.body.id}`, constants.LOG_TYPES.INFO);
-
-    res.status(200).json({
-      status: constants.APIResponseStatus.Success,
-      data: newTag
     });
   }
+
+  websocketHandler.sendLog(req, `Updated tag ${req.body.id}`, constants.LOG_TYPES.INFO);
+  res.status(200).json({
+    status: constants.APIResponseStatus.Success,
+    data: updatedTag
+  });
 });
 
 exports.deleteTagById = async (req, res) => {
@@ -1814,7 +1897,7 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
   const taskId = req.params.taskId;
   if (taskId.length <= 1) {
     websocketHandler.sendLog(req, 'Fetching all tags due to short taskId', constants.LOG_TYPES.DEBUG);
-    const allTags = await Tag.find({ company: req.cookies.companyId }).sort({ title: 1 });
+    const allTags = await Tag.find({ company: req.user.company.id }).sort({ title: 1 });
     websocketHandler.sendLog(req, `Retrieved ${allTags.length} tags`, constants.LOG_TYPES.INFO);
     res.status(200).json({
       status: constants.APIResponseStatus.Success,
@@ -1835,10 +1918,10 @@ exports.getTagsByTaskId = catchAsync(async (req, res, next) => {
 });
 
 exports.getTags = async (req, res) => {
-  websocketHandler.sendLog(req, `Starting getTags for company ${req.cookies.companyId}`, constants.LOG_TYPES.TRACE);
+  websocketHandler.sendLog(req, `Starting getTags for company ${req.user.company.id}`, constants.LOG_TYPES.TRACE);
 
   try {
-    const tags = await Tag.find({ company: req.cookies.companyId });
+    const tags = await Tag.find({ company: req.user.company.id });
     websocketHandler.sendLog(req, `Retrieved ${tags.length} tags`, constants.LOG_TYPES.INFO);
     res.send(tags);
   } catch (err) {
@@ -1885,7 +1968,11 @@ exports.getAllTaskTags = async (req, res) => {
   websocketHandler.sendLog(req, 'Starting getAllTaskTags execution', constants.LOG_TYPES.TRACE);
 
   try {
-    const taskTags = await TaskTag.find();
+    // Scoped to the caller's company via its tags — TaskTag itself has no
+    // `company` field, and this previously returned every company's
+    // task/tag associations with no tenant scoping at all.
+    const companyTagIds = await Tag.find({ company: req.user.company.id }).distinct('_id');
+    const taskTags = await TaskTag.find({ tag: { $in: companyTagIds } });
     websocketHandler.sendLog(req, `Retrieved ${taskTags.length} TaskTags`, constants.LOG_TYPES.INFO);
     res.send(taskTags);
   } catch (err) {
@@ -1894,36 +1981,11 @@ exports.getAllTaskTags = async (req, res) => {
   }
 };
 
-exports.getCommentsByTaskId = async (req, res) => {
-  websocketHandler.sendLog(req, `Starting getCommentsByTaskId for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
-
-  Comment.find({ task: req.params.id })
-    .sort('commentedAt')
-    .populate('author', 'username')
-    .populate({
-      path: 'parent',
-      populate: { path: 'author', select: 'username' }
-    })
-    .exec((err, comments) => {
-      if (err) {
-        websocketHandler.sendLog(req, `Error fetching comments: ${err.message}`, constants.LOG_TYPES.ERROR);
-        console.log(err);
-        return;
-      }
-      const nestedComments = comments.reduce((acc, comment) => {
-        if (!comment.parent) {
-          acc.push(comment);
-        } else {
-          const parent = acc.find(c => c._id.equals(comment.parent._id));
-          parent.replies = parent.replies || [];
-          parent.replies.push(comment);
-        }
-        return acc;
-      }, []);
-      websocketHandler.sendLog(req, `Retrieved ${nestedComments.length} top-level comments`, constants.LOG_TYPES.INFO);
-      res.send(nestedComments);
-    });
-};
+// NOTE (TM-016): getCommentsByTaskId used to live here. It was mounted on
+// `GET /Comment/` — a route with no `:id` param — so `req.params.id` was
+// always undefined and the handler could never correctly filter by task.
+// Its (now-fixed) thread-nesting logic was moved into getAllComments below,
+// which is the endpoint the web client actually calls.
 
 exports.getTaskTagById = async (req, res) => {
   websocketHandler.sendLog(req, `Starting getTaskTagById for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -2018,7 +2080,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.Comment_Added_Notification)
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
   websocketHandler.sendLog(req, `Email template found: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
   const { content, author, task, commentedAt, parent, status, commentType } = req.body;
@@ -2038,7 +2100,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
         });
       }
       req.body.taskAttachments[i].filePath = req.body.taskAttachments[i].attachmentName;
-      const url = await StorageController.createContainerInContainer(req.cookies.companyId, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
+      const url = await StorageController.createPrivateContainerInContainer(req.user.company.id, constants.SubContainers.TaskAttachment, req.body.taskAttachments[i]);
       const newTaskUserItem = await TaskAttachments.create({
         task: newComment.task,
         attachmentType: req.body.taskAttachments[i].attachmentType,
@@ -2050,9 +2112,9 @@ exports.createComment = catchAsync(async (req, res, next) => {
         status: "Active",
         createdOn: new Date(),
         updatedOn: new Date(),
-        createdBy: req.cookies.userId,
-        updatedBy: req.cookies.userId,
-        company: req.cookies.companyId,
+        createdBy: req.user.id,
+        updatedBy: req.user.id,
+        company: req.user.company.id,
         url
       });
       websocketHandler.sendLog(req, `Added attachment ${newTaskUserItem._id} to comment ${newComment._id}`, constants.LOG_TYPES.INFO);
@@ -2061,22 +2123,24 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
   const newTaskUserList = await TaskUser.find({}).where('task').equals(newComment.task);
   const currentTask = await Task.findById(newComment.task);
+  const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
+  const notifiedUserIds = new Set();
+
   if (newTaskUserList) {
     for (let j = 0; j < newTaskUserList.length; j++) {
       const user = await User.findOne({ _id: newTaskUserList[j].user });
       if (user) {
-        const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
         if (emailTemplate) {
           const emailTemplateNewUser = emailTemplate.contentData
-            .replace("{firstName}", user.firstName)
-            .replace("{taskName}", currentTask.taskName)
-            .replace("{taskName1}", currentTask.taskName)
-            .replace("{date}", formatDateToDDMMYY(new Date()))
-            .replace("{company}", req.cookies.companyName)
-            .replace("{content}", newComment.content)
-            .replace("{author}", user.firstName + " " + user.lastName)
-            .replace("{taskURL}", taskURL)
-            .replace("{lastName}", user.lastName);
+            .replaceAll("{firstName}", user.firstName)
+            .replaceAll("{taskName}", currentTask.taskName)
+            .replaceAll("{taskName1}", currentTask.taskName)
+            .replaceAll("{date}", formatDateToDDMMYY(new Date()))
+            .replaceAll("{company}", req.user.company.companyName)
+            .replaceAll("{content}", newComment.content)
+            .replaceAll("{author}", user.firstName + " " + user.lastName)
+            .replaceAll("{taskURL}", taskURL)
+            .replaceAll("{lastName}", user.lastName);
           try {
             await sendEmail({
               email: user.email,
@@ -2088,8 +2152,23 @@ exports.createComment = catchAsync(async (req, res, next) => {
             websocketHandler.sendLog(req, `Failed to send comment notification: ${error.message}`, constants.LOG_TYPES.ERROR);
           }
         }
+        // TM-017: comments previously only ever sent email (and only if an
+        // email template happened to be configured) — no in-app
+        // notification at all, unlike every other task action.
+        SendUINotification(`New comment: ${currentTask.taskName}`, newComment.content,
+          constants.Event_Notification_Type_Status.task_assignment, user._id.toString(), req.user.company.id, req, taskURL);
+        notifiedUserIds.add(user._id.toString());
       }
     }
+  }
+  // Also notify the task's creator/reporter if they aren't already an
+  // assignee who was just notified above. taskModel's pre-find hook
+  // populates createdBy with a User document, so it may be either a
+  // populated doc or a raw ObjectId depending on the query path.
+  const creatorId = currentTask?.createdBy && (currentTask.createdBy._id || currentTask.createdBy).toString();
+  if (creatorId && !notifiedUserIds.has(creatorId)) {
+    SendUINotification(`New comment: ${currentTask.taskName}`, newComment.content,
+      constants.Event_Notification_Type_Status.task_assignment, creatorId, req.user.company.id, req, taskURL);
   }
 
   res.status(200).json({
@@ -2097,19 +2176,6 @@ exports.createComment = catchAsync(async (req, res, next) => {
     data: newComment
   });
 });
-
-exports.getAllTaskTags = async (req, res) => {
-  websocketHandler.sendLog(req, 'Starting getAllTaskTags execution', constants.LOG_TYPES.TRACE);
-
-  try {
-    const taskTags = await TaskTag.find();
-    websocketHandler.sendLog(req, `Retrieved ${taskTags.length} TaskTags`, constants.LOG_TYPES.INFO);
-    res.send(taskTags);
-  } catch (err) {
-    websocketHandler.sendLog(req, `Error fetching TaskTags: ${err.message}`, constants.LOG_TYPES.ERROR);
-    res.status(500).send({ error: 'Server error' });
-  }
-};
 
 exports.getCommentById = async (req, res) => {
   websocketHandler.sendLog(req, `Starting getCommentById for ID ${req.params.id}`, constants.LOG_TYPES.TRACE);
@@ -2156,6 +2222,18 @@ exports.updateComment = async (req, res) => {
   }
   websocketHandler.sendLog(req, `Updated comment ${req.params.id}`, constants.LOG_TYPES.INFO);
 
+  // TM-017: in-app notification for comment edits, matching the pattern
+  // used for every other task action (create/update/delete/assign).
+  const taskUsersForUpdate = await TaskUser.find({}).where('task').equals(document.task);
+  const taskURLForUpdate = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${document.task}`;
+  taskUsersForUpdate.forEach((taskUser) => {
+    // TaskUser's pre-find hook populates `user`, so it may be a populated
+    // doc or a raw ObjectId depending on the query path.
+    const assigneeId = taskUser.user && (taskUser.user._id || taskUser.user).toString();
+    SendUINotification(`Comment updated: ${existingTask.taskName}`, document.content,
+      constants.Event_Notification_Type_Status.task_assignment, assigneeId, req.user.company.id, req, taskURLForUpdate);
+  });
+
   res.status(201).json({
     status: constants.APIResponseStatus.Success,
     data: { data: document }
@@ -2168,7 +2246,7 @@ exports.deleteComment = async (req, res) => {
 
   const emailTemplate = await EmailTemplate.findOne({})
     .where('Name').equals(constants.Email_template_constant.Delete_Comment_Notification)
-    .where('company').equals(req.cookies.companyId);
+    .where('company').equals(req.user.company.id);
   const comment = await Comment.findById(req.params.id);
   websocketHandler.sendLog(req, `Retrieved comment ${req.params.id} and email template: ${!!emailTemplate}`, constants.LOG_TYPES.DEBUG);
 
@@ -2182,14 +2260,14 @@ exports.deleteComment = async (req, res) => {
           const taskURL = `${process.env.WEBSITE_DOMAIN}/#/home/edit-task?taskId=${currentTask._id}`;
           if (emailTemplate) {
             const emailTemplateNewUser = emailTemplate.contentData
-              .replace("{firstName}", user.firstName)
-              .replace("{taskName}", currentTask.taskName)
-              .replace("{date}", formatDateToDDMMYY(new Date()))
-              .replace("{company}", req.cookies.companyName)
-              .replace("{content}", comment.content)
-              .replace("{author}", user.firstName + " " + user.lastName)
-              .replace("{taskURL}", taskURL)
-              .replace("{lastName}", user.lastName);
+              .replaceAll("{firstName}", user.firstName)
+              .replaceAll("{taskName}", currentTask.taskName)
+              .replaceAll("{date}", formatDateToDDMMYY(new Date()))
+              .replaceAll("{company}", req.user.company.companyName)
+              .replaceAll("{content}", comment.content)
+              .replaceAll("{author}", user.firstName + " " + user.lastName)
+              .replaceAll("{taskURL}", taskURL)
+              .replaceAll("{lastName}", user.lastName);
             try {
               await sendEmail({
                 email: user.email,
@@ -2201,6 +2279,9 @@ exports.deleteComment = async (req, res) => {
               websocketHandler.sendLog(req, `Failed to send deletion notification: ${error.message}`, constants.LOG_TYPES.ERROR);
             }
           }
+          // TM-017: in-app notification, matching other task actions.
+          SendUINotification(`Comment deleted: ${currentTask.taskName}`, comment.content,
+            constants.Event_Notification_Type_Status.task_assignment, user._id.toString(), req.user.company.id, req, taskURL);
         }
       }
     }
@@ -2225,12 +2306,34 @@ exports.deleteComment = async (req, res) => {
 exports.getAllComments = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, `Starting getAllComments for task ${req.params.id}`, constants.LOG_TYPES.TRACE);
 
-  let comments = await Comment.find({ task: req.params.id });
+  const comments = await Comment.find({ task: req.params.id }).sort('commentedAt');
   websocketHandler.sendLog(req, `Retrieved ${comments.length} comments for task ${req.params.id}`, constants.LOG_TYPES.INFO);
+
+  // TM-016: nest replies under their parent comment. This previously lived
+  // in a dead function (getCommentsByTaskId) mounted on a route with no
+  // :id param, so it could never actually run; the endpoint clients really
+  // use returned a flat list even though Comment.parent exists specifically
+  // to support threading. Built with a map rather than acc.find() so a
+  // reply that happens to sort before its parent (e.g. clock skew between
+  // commentedAt values) still nests correctly instead of crashing.
+  const nodesById = new Map();
+  comments.forEach((comment) => {
+    nodesById.set(comment._id.toString(), { ...comment.toObject(), replies: [] });
+  });
+  const nestedComments = [];
+  comments.forEach((comment) => {
+    const node = nodesById.get(comment._id.toString());
+    const parentId = comment.parent && (comment.parent._id || comment.parent).toString();
+    if (parentId && nodesById.has(parentId)) {
+      nodesById.get(parentId).replies.push(node);
+    } else {
+      nestedComments.push(node);
+    }
+  });
 
   res.status(200).json({
     status: constants.APIResponseStatus.Success,
-    data: comments
+    data: nestedComments
   });
 });
 

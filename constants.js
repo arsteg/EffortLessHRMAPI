@@ -67,6 +67,30 @@ const SubContainers = {
 };
 const Active_Statuses = [User_Status.Active, User_Status.Resigned];
 
+// Canonical Task Management status/priority vocabulary (TM-008/TM-009).
+// These exact literal strings are the single source of truth — the Angular
+// web app and the React Native mobile app must both send/display these
+// values verbatim so a task's status/priority renders identically and
+// matches the same board/filter grouping regardless of which client wrote
+// it. Web already used this status list before this fix; mobile previously
+// used a different, incompatible set ("To Do" instead of "ToDo", no
+// "Closed", and a different priority scale) — see the audit report for
+// details.
+const Task_Status = {
+  ToDo: 'ToDo',
+  InProgress: 'In Progress',
+  Done: 'Done',
+  Closed: 'Closed',
+};
+const Task_Statuses = Object.values(Task_Status);
+
+const Task_Priority = {
+  Urgent: 'Urgent',
+  High: 'High',
+  Normal: 'Normal',
+};
+const Task_Priorities = Object.values(Task_Priority);
+
 const Subscription_Status = {
   Active: 'active',
   Authenticated: 'authenticated',
@@ -259,7 +283,8 @@ module.exports = {
   Payroll_User_Status, Payroll_FNF_Status, Salaray_Default_Fixed_Allowance,
   Payroll_User_FNF_Status, payroll_LoanAdvance_Status, Payroll_LoanAdvance_Type, Active_Statuses, APIResponseStatus, SubContainers,
   Subscription_Status, Active_Subscription, WEB_SOCKET_NOTIFICATION_TYPES, webSocketContentType, LOG_TYPES,
-  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap, Payroll_User_Status_New, Payroll_FNF_Status_New, Negative_Balance_Policy
+  Resignation_Status, Termination_status, Termination_Appealed_status, Employee_Loan_Advance_status, Payroll_Loan_Advance_status, Payroll_FNF_Loan_Advance_status, Event_Notification_Type_Status, monthMap, Payroll_User_Status_New, Payroll_FNF_Status_New, Negative_Balance_Policy,
+  Task_Status, Task_Statuses, Task_Priority, Task_Priorities
 };
 
 

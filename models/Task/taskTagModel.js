@@ -18,4 +18,4 @@ var taskTagSchema = new Schema({
   toObject: { virtuals: true } // Use virtuals when outputing as Object
 },
 { collection: 'TaskTag' });
-module.exports = mongoose.model('tagTag', taskTagSchema);
+module.exports = mongoose.model('TaskTag', taskTagSchema);

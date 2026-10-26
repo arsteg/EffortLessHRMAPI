@@ -4,11 +4,14 @@ var Schema = mongoose.Schema;
 const taskAttachment = require('./taskAttachmentModel');
 const taskComment = require('./Task/taskCommentModel');
 const taskTag = require('./Task/taskTagModel');
+const { Task_Status, Task_Statuses, Task_Priorities } = require('../constants');
 var taskModelSchema = new Schema({ 
   taskName: {
     type: String,
-    required: true,
-    unique: true
+    required: true
+    // NOTE (TM-006): uniqueness is enforced per-company by the compound
+    // index below, not globally — a single-field `unique: true` here would
+    // mean two unrelated companies could never use the same task name.
    },
    title: {
     type: String,
@@ -33,8 +36,9 @@ var taskModelSchema = new Schema({
     type:Boolean
   },
   priority:{
-    type:String
-  },  
+    type: String,
+    enum: { values: Task_Priorities, message: '{VALUE} is not a valid task priority' }
+  },
   taskNumber:{
     type:Number,
     required: true
@@ -75,7 +79,8 @@ var taskModelSchema = new Schema({
   TaskUsers:[],
   status:
   {
-    type: String
+    type: String,
+    enum: { values: Task_Statuses, message: '{VALUE} is not a valid task status' }
   },
   isDeleted:
   {
@@ -100,6 +105,9 @@ var taskModelSchema = new Schema({
 // Compound index for creator-based task queries (optimizes filtering by createdBy + project + isDeleted)
 taskModelSchema.index({ createdBy: 1, project: 1, isDeleted: 1 });
 
+// TM-006: taskName must be unique within a company, not globally.
+taskModelSchema.index({ company: 1, taskName: 1 }, { unique: true });
+
   taskModelSchema.pre(/^find/,async function(next) {
     this.populate({
       path: 'project',
@@ -109,6 +117,14 @@ taskModelSchema.index({ createdBy: 1, project: 1, isDeleted: 1 });
       select: 'firstName lastName'
     });
     next();
+  });
+  // TM-014: a single server-computed source of truth for "is this task
+  // overdue", so web and mobile don't each reimplement the rule (and
+  // potentially disagree) against their own local clocks/timezones.
+  taskModelSchema.virtual('isOverdue').get(function () {
+    if (!this.dueDate) return false;
+    if (this.status === Task_Status.Done || this.status === Task_Status.Closed) return false;
+    return new Date(this.dueDate).getTime() < Date.now();
   });
   taskModelSchema.virtual('taskAttachments', {
     ref: 'TaskAttachments',
