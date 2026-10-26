@@ -1086,7 +1086,9 @@ router.post('/comment/', authController.protect, taskController.createComment);
   *                          type: object
   *
   */ 
-router.get('/Comment/', authController.protect, taskController.getCommentsByTaskId);
+// NOTE (TM-016): `GET /Comment/` (getCommentsByTaskId) was removed — it had
+// no :id parameter so it could never filter by task. Use `GET /Comments/:id`
+// (getAllComments) instead, which now returns a correctly nested reply tree.
 
 // Get a single taskTag by ID
 /**
@@ -1241,5 +1243,12 @@ router.get('/Comments/:id', authController.protect, taskController.getAllComment
 
 //END of Task Tag routes
 
+// Task-router-scoped error handling: translates Mongoose CastError /
+// ValidationError / duplicate-key (E11000) errors raised by task endpoints
+// (e.g. an invalid status/priority enum value, TM-008/TM-009) into clear
+// 400 responses instead of an opaque generic 500. Scoped to this router
+// only, so it does not change error-handling behavior for any other module.
+const errorController = require('../controllers/errorController');
+router.use(errorController);
 
 module.exports = router;

@@ -14,6 +14,16 @@ var taskUsersModelSchema = new Schema({
     index: true,
     required: [true, 'User must belong to a User']
   },
+  // TM-011: a task has exactly one primary "owner" (the accountable assignee)
+  // plus zero or more "watchers" (collaborators who also see the task in their
+  // "My Tasks" list). Legacy rows created before this field existed have no
+  // `role`; controller logic treats a missing role as 'owner' so historical
+  // single-assignee tasks keep their assignee as the owner.
+  role: {
+    type: String,
+    enum: ['owner', 'watcher'],
+    default: 'owner'
+  },
   createdOn: {
     type: Date,
     required: true    

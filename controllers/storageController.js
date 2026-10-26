@@ -38,6 +38,11 @@ async function createContainerInContainer(parentContainerName, childContainerNam
   } else {
     console.log(`Parent container "${parentContainerName}" already exists`);
   }
+  // NOTE: this function keeps its historical public-container behavior for
+  // existing callers (leave/expense/timelog/profile documents) that were not
+  // in scope for the task-management audit. Task/comment attachments use
+  // createPrivateContainerInContainer + getTaskAttachmentReadUrl below
+  // instead (TM-005), which never grants anonymous container access.
 
   if (!document.filePath) {
     console.log(`File Path Not Exists`);
@@ -124,6 +129,78 @@ async function createContainerInContainerSAS(parentContainerName, childContainer
 return profileImageUrl;
 }
 
+// --- Private attachment storage for Task Management (TM-005) --------------
+// Task and comment attachments must not be readable without authentication.
+// This uploads into a container that is left at its Azure default (private,
+// no anonymous access) and returns only a stable, token-free "address" for
+// the blob; getTaskAttachmentReadUrl() below mints a short-lived, read-only
+// SAS URL on demand whenever the API actually serves the attachment to an
+// authenticated, authorized caller, instead of baking a long-lived or
+// permanent public link into the database.
+async function createPrivateContainerInContainer(parentContainerName, childContainerName, document) {
+  const parentContainerClient = blobServiceClient.getContainerClient(parentContainerName);
+
+  const parentExists = await parentContainerClient.exists();
+  if (!parentExists) {
+    // Intentionally do NOT call setAccessPolicy here — Azure containers are
+    // private by default, which is what we want for task/comment attachments.
+    await parentContainerClient.create();
+    console.log(`Parent container "${parentContainerName}" created successfully (private)`);
+  }
+
+  if (!document.filePath) {
+    console.log(`File Path Not Exists`);
+  }
+
+  const uuidv1 = await getUuidV1();
+  const blobName = childContainerName + "/" + uuidv1() + document.filePath;
+  const blockBlobClient = parentContainerClient.getBlockBlobClient(blobName);
+
+  const buffer = Buffer.from(document.file, 'base64');
+  await blockBlobClient.upload(buffer, buffer.length);
+
+  // Stored for reference only — not usable to fetch the file without a SAS
+  // token, since the container grants no anonymous access.
+  const storedUrl = process.env.CONTAINER_URL_BASE_URL + parentContainerName + "/" + blobName;
+  return storedUrl;
+}
+
+/** Mints a short-lived, read-only SAS URL for a blob address previously
+ * returned by createPrivateContainerInContainer. Call this only after
+ * verifying the requesting user is authorized to see the attachment. */
+function getTaskAttachmentReadUrl(storedUrl, expiryMinutes = 60) {
+  if (!storedUrl) return storedUrl;
+
+  const baseUrl = process.env.CONTAINER_URL_BASE_URL;
+  let relativePath = storedUrl;
+  if (baseUrl && storedUrl.startsWith(baseUrl)) {
+    relativePath = storedUrl.slice(baseUrl.length);
+  }
+  const [containerName, ...blobNameParts] = relativePath.split('/');
+  const blobName = blobNameParts.join('/');
+  if (!containerName || !blobName) return storedUrl;
+
+  const connStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
+  const accountName = connStr.match(/AccountName=([^;]+)/)[1];
+  const accountKey = connStr.match(/AccountKey=([^;]+)/)[1];
+  const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+
+  const sasOptions = {
+    containerName,
+    blobName,
+    permissions: BlobSASPermissions.parse('r'),
+    // Small buffer for clock skew between this server and Azure.
+    startsOn: new Date(Date.now() - 5 * 60 * 1000),
+    expiresOn: new Date(Date.now() + expiryMinutes * 60 * 1000),
+    protocol: SASProtocol.Https,
+  };
+  const sasToken = generateBlobSASQueryParameters(sasOptions, sharedKeyCredential).toString();
+
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  return `${blockBlobClient.url}?${sasToken}`;
+}
+
 async function deleteBlobFromContainer(containerName, blobUrl) {
   try {
     // Step 1: Extract the relative blob path from the full URL
@@ -157,6 +234,8 @@ async function deleteBlobFromContainer(containerName, blobUrl) {
   module.exports = {
     createContainerInContainer,
     createContainerInContainerSAS,
+    createPrivateContainerInContainer,
+    getTaskAttachmentReadUrl,
     deleteBlobFromContainer
     // other methods...
 };
