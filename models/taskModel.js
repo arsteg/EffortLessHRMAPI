@@ -37,7 +37,8 @@ var taskModelSchema = new Schema({
   },
   priority:{
     type: String,
-    enum: { values: Task_Priorities, message: '{VALUE} is not a valid task priority' }
+    enum: { values: Task_Priorities, message: '{VALUE} is not a valid task priority' },
+    default: 'Normal'
   },
   taskNumber:{
     type:Number,
