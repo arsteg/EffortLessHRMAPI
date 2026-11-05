@@ -332,6 +332,14 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     }
   });
 
+  // Sanitize priority: default to 'Normal' if null, empty, undefined, or invalid
+  if (Object.prototype.hasOwnProperty.call(updates, 'priority')) {
+    const validPriorities = constants.Task_Priorities;
+    if (!validPriorities.includes(updates.priority)) {
+      updates.priority = 'Normal';
+    }
+  }
+
   websocketHandler.sendLog(req, `Applying updates: ${JSON.stringify(updates)}`, constants.LOG_TYPES.DEBUG);
 
   const task = await Task.findOneAndUpdate(
@@ -995,6 +1003,10 @@ exports.addTask = catchAsync(async (req, res, next) => {
   const taskNumber = await getNextTaskNumber(req.user.company.id, req.body.project);
   websocketHandler.sendLog(req, `Generated task number: ${taskNumber}`, constants.LOG_TYPES.DEBUG);
 
+  // Sanitize priority: default to 'Normal' if null, empty, undefined, or invalid
+  const validPriorities = constants.Task_Priorities;
+  const sanitizedPriority = validPriorities.includes(req.body.priority) ? req.body.priority : 'Normal';
+
   const newTask = await Task.create({
     taskName: req.body.taskName,
     startDate: req.body.startDate,
@@ -1003,7 +1015,7 @@ exports.addTask = catchAsync(async (req, res, next) => {
     description: req.body.description,
     comment: req.body.comment,
     isSubTask: false,
-    priority: req.body.priority,
+    priority: sanitizedPriority,
     company: req.user.company.id,
     project: req.body.project,
     status: req.body.status,
