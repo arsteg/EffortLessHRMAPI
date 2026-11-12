@@ -5,8 +5,34 @@ const  websocketHandler  = require('../utils/websocketHandler');
 const HelpdeskTicket = require('../models/helpdeskModel');
 const sendEmail = require('../utils/email');
 const User = require('../models/permissions/userModel');
-const { BlobServiceClient } = require('@azure/storage-blob');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require("crypto");
+
+// AWS S3 Configuration
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+const AWS_S3_REGION = process.env.AWS_S3_REGION || 'ap-south-1';
+
+// Create S3 client (lazy initialization to avoid startup errors if credentials not set)
+let s3Client = null;
+function getS3Client() {
+  if (!s3Client) {
+    if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_S3_BUCKET_NAME) {
+      throw new Error("AWS S3 configuration not found. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET_NAME environment variables.");
+    }
+    s3Client = new S3Client({
+      region: AWS_S3_REGION,
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return s3Client;
+}
 
 exports.createHelpdesk = catchAsync(async (req, res, next) => {
   websocketHandler.sendLog(req, "Creating helpdesk ticket", constants.LOG_TYPES.TRACE);
@@ -29,7 +55,7 @@ exports.createHelpdesk = catchAsync(async (req, res, next) => {
       if (typeof base64File !== "string" || !base64File.startsWith("data:")) {
         throw new Error("Invalid file format: Must be a base64 string.");
       }
-      const fileUrl = await uploadBase64ToBlob(base64File, "file", companyId, req.cookies.userId);
+      const fileUrl = await uploadBase64ToS3(base64File, "file", companyId, req.cookies.userId);
       console.log(`Uploaded file: ${fileUrl}`);
       fileUrls.push(fileUrl);
     }
@@ -39,7 +65,7 @@ exports.createHelpdesk = catchAsync(async (req, res, next) => {
       if (typeof videoBase64 !== "string" || !videoBase64.startsWith("data:video/")) {
         throw new Error("Invalid video format: Must be a base64 video string.");
       }
-      videoUrl = await uploadBase64ToBlob(videoBase64, "video", companyId, req.cookies.userId);
+      videoUrl = await uploadBase64ToS3(videoBase64, "video", companyId, req.cookies.userId);
       console.log(`Uploaded video: ${videoUrl}`);
     }
   } catch (uploadError) {
@@ -96,7 +122,7 @@ exports.createHelpdesk = catchAsync(async (req, res, next) => {
       const helpdeskMessage = `<p>Hello Helpdesk Team,</p>
         <p>A new helpdesk ticket has been created in the Effortless HRM management system and requires your attention.</p>
         <p>Ticket URL: <a href="${ticketUrl}">${ticketUrl}</a></p>
-        <p>Description: ${description}</p> 
+        <p>Description: ${description}</p>
         <p>Created By: ${newUser.firstName} ${newUser.lastName} (${newUser.email})</p>
         <p>Please review and resolve the ticket at your earliest convenience.</p>
         <p>Thank you,</p>
@@ -117,7 +143,7 @@ exports.createHelpdesk = catchAsync(async (req, res, next) => {
     } else {
       websocketHandler.sendLog(req, "No helpdesk emails configured", constants.LOG_TYPES.WARN);
     }
-    
+
     const allUserTickets = await HelpdeskTicket.find({
       company: companyId,
       createdBy: req.cookies.userId
@@ -194,7 +220,7 @@ exports.getAllHelpdeskByUserId = catchAsync(async (req, res, next) => {
 
        // Get the total count of documents matching the query
     const totalCount = await HelpdeskTicket.countDocuments(query);
-    
+
     const tickets = await HelpdeskTicket.find(query).skip(parseInt(skip))
       .limit(parseInt(limit));
 
@@ -299,7 +325,15 @@ exports.deleteHelpdeskById = catchAsync(async (req, res, next) => {
   }
 });
 
-async function uploadBase64ToBlob(file, fileType, companyId, userId) {
+/**
+ * Uploads a base64 file to AWS S3 and returns a presigned URL.
+ * @param {string} file - Base64 encoded file string (data:mime;base64,...)
+ * @param {string} fileType - Type of file: 'file' or 'video'
+ * @param {string} companyId - Company ID
+ * @param {string} userId - User ID
+ * @returns {Promise<string>} - Presigned URL for the uploaded file
+ */
+async function uploadBase64ToS3(file, fileType, companyId, userId) {
   if (!file || typeof file !== "string") {
     throw new Error("Invalid input: File must be a base64 string.");
   }
@@ -310,28 +344,7 @@ async function uploadBase64ToBlob(file, fileType, companyId, userId) {
     throw new Error("File type must be 'file' or 'video'.");
   }
 
-  const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-  if (!AZURE_STORAGE_CONNECTION_STRING) {
-    throw new Error("Azure Storage Connection string not found");
-  }
-
-  let blobServiceClient;
-  try {
-    blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-  } catch (error) {
-    console.error("Failed to initialize BlobServiceClient:", error.message);
-    throw new Error(`Failed to initialize Azure client: ${error.message}`);
-  }
-
-  const containerName = "helpdesk";
-  const containerClient = blobServiceClient.getContainerClient(containerName);
-  try {
-    await containerClient.createIfNotExists({ access: "container" });
-    console.log(`Container '${containerName}' ready`);
-  } catch (error) {
-    console.error("Failed to create container:", error.message);
-    throw new Error(`Failed to create container: ${error.message}`);
-  }
+  const client = getS3Client();
 
   const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
   console.log(`Generated unique suffix: ${uniqueSuffix}`);
@@ -396,16 +409,29 @@ async function uploadBase64ToBlob(file, fileType, companyId, userId) {
   extension = extensionMap[contentType] || "bin";
   console.log(`Determined extension: ${extension}`);
 
-  const blobName = `${companyId}/${userId}/${fileType}/${uniqueSuffix}.${extension}`;
-  console.log(`Blob name: ${blobName}`);
+  // S3 object key: helpdesk/{companyId}/{userId}/{fileType}/{uniqueSuffix}.{extension}
+  const objectKey = `helpdesk/${companyId}/${userId}/${fileType}/${uniqueSuffix}.${extension}`;
+  console.log(`S3 object key: ${objectKey}`);
 
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   try {
-    await blockBlobClient.uploadData(fileBuffer, {
-      blobHTTPHeaders: { blobContentType: contentType },
+    const uploadCommand = new PutObjectCommand({
+      Bucket: AWS_S3_BUCKET_NAME,
+      Key: objectKey,
+      Body: fileBuffer,
+      ContentType: contentType,
     });
-    console.log(`Uploaded ${fileType} to: ${blockBlobClient.url}`);
-    return blockBlobClient.url;
+
+    await client.send(uploadCommand);
+    console.log(`Uploaded ${fileType} to S3: ${objectKey}`);
+
+    // Generate a presigned URL for accessing the file (valid for 7 days)
+    const getCommand = new GetObjectCommand({
+      Bucket: AWS_S3_BUCKET_NAME,
+      Key: objectKey,
+    });
+    const presignedUrl = await getSignedUrl(client, getCommand, { expiresIn: 604800 }); // 7 days
+
+    return presignedUrl;
   } catch (error) {
     console.error(`Failed to upload ${fileType}:`, error.message);
     throw new Error(`Failed to upload ${fileType}: ${error.message}`);
