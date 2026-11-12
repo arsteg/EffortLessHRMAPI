@@ -20,7 +20,6 @@ const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const constants = require('../constants');
-const { Constants } = require('azure-storage');
 const  websocketHandler  = require('../utils/websocketHandler');
 
 const razorpay = new Razorpay({
